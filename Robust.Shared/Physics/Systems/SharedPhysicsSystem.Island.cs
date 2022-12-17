@@ -580,6 +580,8 @@ public abstract partial class SharedPhysicsSystem
         var solvedAngles = ArrayPool<float>.Shared.Rent(totalBodies);
         var linearVelocities = ArrayPool<Vector2>.Shared.Rent(totalBodies);
         var angularVelocities = ArrayPool<float>.Shared.Rent(totalBodies);
+        var sleepStatus = ArrayPool<bool>.Shared.Rent(totalBodies);
+
         var options = new ParallelOptions()
         {
             MaxDegreeOfParallelism = _parallel.ParallelProcessCount,
@@ -592,14 +594,14 @@ public abstract partial class SharedPhysicsSystem
             if (!InternalParallel(island))
                 break;
 
-            SolveIsland(ref island, in data, options, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities);
+            SolveIsland(ref island, in data, options, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
             iBegin++;
         }
 
         Parallel.For(iBegin, actualIslands.Length, options, i =>
         {
             ref var island = ref actualIslands[i];
-            SolveIsland(ref island, in data, null, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities);
+            SolveIsland(ref island, in data, null, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
         });
 
         // Update data sequentially
@@ -611,7 +613,7 @@ public abstract partial class SharedPhysicsSystem
             var island = actualIslands[i];
 
             UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities, xformQuery, metaQuery);
-            SleepBodies(in island, in data, prediction);
+            SleepBodies(in island, sleepStatus);
         }
 
         // Cleanup
@@ -619,6 +621,11 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<float>.Shared.Return(solvedAngles);
         ArrayPool<Vector2>.Shared.Return(linearVelocities);
         ArrayPool<float>.Shared.Return(angularVelocities);
+        for (var i = 0; i < totalBodies; i++)
+        {
+            sleepStatus[i] = false;
+        }
+        ArrayPool<bool>.Shared.Return(sleepStatus);
     }
 
     /// <summary>
@@ -643,7 +650,8 @@ public abstract partial class SharedPhysicsSystem
         Vector2[] solvedPositions,
         float[] solvedAngles,
         Vector2[] linearVelocities,
-        float[] angularVelocities)
+        float[] angularVelocities,
+        bool[] sleepStatus)
     {
         var bodyCount = island.Bodies.Count;
         var positions = ArrayPool<Vector2>.Shared.Rent(bodyCount);
@@ -801,6 +809,7 @@ public abstract partial class SharedPhysicsSystem
         // We can safely do this in parallel.
         var xformQuery = GetEntityQuery<TransformComponent>();
 
+        // Solve positions now and store for later; we can't write this safely in parallel.
         for (var i = 0; i < bodyCount; i++)
         {
             var body = island.Bodies[i];
@@ -823,11 +832,85 @@ public abstract partial class SharedPhysicsSystem
             solvedAngles[offset + i] = angles[i] - worldRot;
         }
 
+        // Check sleep status for all of the bodies
+        // Writing sleep timer is safe but updating awake or not is not safe.
+
+        // We have a special island for no-contact no-joint bodies and just run this custom sleeping behaviour
+        // for it while still keeping the benefits of a big island.
+        if (island.LoneIsland)
+        {
+            if (!prediction && data.SleepAllowed)
+            {
+                for (var i = 0; i < bodyCount; i++)
+                {
+                    var body = island.Bodies[i];
+
+                    if (body.BodyType == BodyType.Static) continue;
+
+                    if (!body.SleepingAllowed ||
+                        body.AngularVelocity * body.AngularVelocity > data.AngTolSqr ||
+                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > data.LinTolSqr)
+                    {
+                        SetSleepTime(body, 0f);
+                    }
+                    else
+                    {
+                        SetSleepTime(body, body.SleepTime + data.FrameTime);
+                    }
+
+                    if (body.SleepTime >= data.TimeToSleep && island.PositionSolved)
+                    {
+                        sleepStatus[offset + i] = true;
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Sleep bodies if needed. Prediction won't accumulate sleep-time for bodies.
+            if (!prediction && data.SleepAllowed)
+            {
+                var minSleepTime = float.MaxValue;
+
+                for (var i = 0; i < bodyCount; i++)
+                {
+                    var body = island.Bodies[i];
+
+                    if (body.BodyType == BodyType.Static) continue;
+
+                    if (!body.SleepingAllowed ||
+                        body.AngularVelocity * body.AngularVelocity > data.AngTolSqr ||
+                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > data.LinTolSqr)
+                    {
+                        SetSleepTime(body, 0f);
+                        minSleepTime = 0.0f;
+                    }
+                    else
+                    {
+                        SetSleepTime(body, body.SleepTime + data.FrameTime);
+                        minSleepTime = MathF.Min(minSleepTime, body.SleepTime);
+                    }
+                }
+
+                if (minSleepTime >= data.TimeToSleep && island.PositionSolved)
+                {
+                    for (var i = 0; i < island.Bodies.Count; i++)
+                    {
+                        sleepStatus[offset + i] = true;
+                    }
+                }
+            }
+        }
+
         // Cleanup
         ArrayPool<ContactVelocityConstraint>.Shared.Return(velocityConstraints);
         ArrayPool<ContactPositionConstraint>.Shared.Return(positionConstraints);
     }
 
+    /// <summary>
+    /// Updates the positions, rotations, and velocities of all of the solved bodies.
+    /// Run sequentially to avoid threading issues.
+    /// </summary>
     private void UpdateBodies(
         in IslandData island,
         Vector2[] positions,
@@ -839,10 +922,10 @@ public abstract partial class SharedPhysicsSystem
     {
         foreach (var (joint, error) in island.BrokenJoints)
         {
-            var msg = new Joint.JointBreakMessage(joint, MathF.Sqrt(error));
-            RaiseLocalEvent(joint.BodyAUid, msg);
-            RaiseLocalEvent(joint.BodyBUid, msg);
-            RaiseLocalEvent(msg);
+            var ev = new JointBreakMessage(joint, MathF.Sqrt(error));
+            RaiseLocalEvent(joint.BodyAUid, ref ev);
+            RaiseLocalEvent(joint.BodyBUid, ref ev);
+            RaiseLocalEvent(ref ev);
         }
 
         var offset = island.Offset;
@@ -879,77 +962,23 @@ public abstract partial class SharedPhysicsSystem
                 SetAngularVelocity(body, angVelocity, false);
             }
 
+            // TODO: Should check if the values update.
             Dirty(body, metaQuery.GetComponent(body.Owner));
         }
     }
 
-    private void SleepBodies(in IslandData island, in SolverData data, bool prediction)
+    private void SleepBodies(in IslandData island, bool[] sleepStatus)
     {
-        // TODO: Easily parallelisable as long as we don't raise SetAwake in the loop.
-        if (island.LoneIsland)
+        var offset = island.Offset;
+
+        for (var i = 0; i < island.Bodies.Count; i++)
         {
-            if (!prediction && data.SleepAllowed)
-            {
-                for (var i = 0; i < island.Bodies.Count; i++)
-                {
-                    var body = island.Bodies[i];
+            var sleep = sleepStatus[offset + i];
 
-                    if (body.BodyType == BodyType.Static) continue;
+            if (!sleep)
+                continue;
 
-                    if (!body.SleepingAllowed ||
-                        body.AngularVelocity * body.AngularVelocity > data.AngTolSqr ||
-                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > data.LinTolSqr)
-                    {
-                        SetSleepTime(body, 0f);
-                    }
-                    else
-                    {
-                        SetSleepTime(body, body.SleepTime + data.FrameTime);
-                    }
-
-                    if (body.SleepTime >= data.TimeToSleep && island.PositionSolved)
-                    {
-                        SetAwake(body, false);
-                    }
-                }
-            }
-        }
-        else
-        {
-            // Sleep bodies if needed. Prediction won't accumulate sleep-time for bodies.
-            if (!prediction && data.SleepAllowed)
-            {
-                var minSleepTime = float.MaxValue;
-
-                for (var i = 0; i < island.Bodies.Count; i++)
-                {
-                    var body = island.Bodies[i];
-
-                    if (body.BodyType == BodyType.Static) continue;
-
-                    if (!body.SleepingAllowed ||
-                        body.AngularVelocity * body.AngularVelocity > data.AngTolSqr ||
-                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > data.LinTolSqr)
-                    {
-                        SetSleepTime(body, 0f);
-                        minSleepTime = 0.0f;
-                    }
-                    else
-                    {
-                        SetSleepTime(body, body.SleepTime + data.FrameTime);
-                        minSleepTime = MathF.Min(minSleepTime, body.SleepTime);
-                    }
-                }
-
-                if (minSleepTime >= data.TimeToSleep && island.PositionSolved)
-                {
-                    for (var i = 0; i < island.Bodies.Count; i++)
-                    {
-                        var body = island.Bodies[i];
-                        SetAwake(body, false);
-                    }
-                }
-            }
+            SetAwake(island.Bodies[i], false);
         }
     }
 }

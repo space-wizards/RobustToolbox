@@ -334,17 +334,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             hashcode = hashcode * 397 ^ JointType.GetHashCode();
             return hashcode;
         }
-
-        public sealed class JointBreakMessage : EntityEventArgs
-        {
-            public Joint Joint { get; }
-            public float JointError { get; }
-
-            public JointBreakMessage(Joint joint, float jointError)
-            {
-                Joint = joint;
-                JointError = jointError;
-            }
-        }
     }
+
+    [ByRefEvent]
+    public readonly record struct JointBreakMessage(Joint Joint, float JointError) {}
 }

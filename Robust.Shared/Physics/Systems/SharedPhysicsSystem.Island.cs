@@ -558,7 +558,7 @@ public abstract partial class SharedPhysicsSystem
         );
 
         // We'll sort islands from internally parallel (due to lots of contacts) to running all the islands in parallel
-        islands.Sort((x, y) => x.Contacts.Count.CompareTo(y.Contacts.Count) + x.Joints.Count.CompareTo(y.Joints.Count));
+        islands.Sort((x, y) => InternalParallel(y).CompareTo(InternalParallel(x)));
 
         var totalBodies = 0;
         var actualIslands = islands.ToArray();
@@ -636,7 +636,8 @@ public abstract partial class SharedPhysicsSystem
     /// <returns></returns>
     private bool InternalParallel(IslandData island)
     {
-        return island.Contacts.Count > 128 || island.Joints.Count > 128;
+        // Should lone island most times as well.
+        return island.Bodies.Count > 128 || island.Contacts.Count > 128 || island.Joints.Count > 128;
     }
 
     /// <summary>

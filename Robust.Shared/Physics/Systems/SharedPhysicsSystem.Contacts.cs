@@ -51,7 +51,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (preventCollideMessage.Cancelled) return false;
 
-        preventCollideMessage = new PreventCollideEvent(otherBody, body, fixture, otherFixture);
+        preventCollideMessage = new PreventCollideEvent(otherBody, body, otherFixture, fixture);
         RaiseLocalEvent(otherBody.Owner, ref preventCollideMessage);
 
         if (preventCollideMessage.Cancelled) return false;

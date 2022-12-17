@@ -746,7 +746,7 @@ public abstract partial class SharedPhysicsSystem
                     island.BrokenJoints.Add((joint, error));
             }
 
-            SolveVelocityConstraints(in data, island, options, velocityConstraints, linearVelocities, angularVelocities);
+            SolveVelocityConstraints(island, options, velocityConstraints, linearVelocities, angularVelocities);
         }
 
         // Store for warm starting.

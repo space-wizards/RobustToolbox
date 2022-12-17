@@ -330,9 +330,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void SolveVelocityConstraints(
-        in SolverData data,
-        IslandData island,
+    private void SolveVelocityConstraints(IslandData island,
         ParallelOptions? options,
         ContactVelocityConstraint[] velocityConstraints,
         Vector2[] linearVelocities,

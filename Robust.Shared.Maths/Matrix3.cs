@@ -941,7 +941,7 @@ namespace Robust.Shared.Maths
 
         public readonly Box2 TransformBox(in Box2 box)
         {
-            if (Sse.IsSupported && NumericsHelpers.Enabled)
+            if (Sse.IsSupported)
             {
                 return TransformBoxSse(box);
             }
@@ -975,10 +975,10 @@ namespace Robust.Shared.Maths
             modY = Sse.Add(modY, Vector128.Create(R1C2));
 
             // Get bounding box by finding the min and max X and Y values.
-            var l = SimdHelpers.MinHorizontalSse(modX);
-            var b = SimdHelpers.MinHorizontalSse(modY);
-            var r = SimdHelpers.MaxHorizontalSse(modX);
-            var t = SimdHelpers.MaxHorizontalSse(modY);
+            var l = SimdHelpers.MinHorizontal128(modX);
+            var b = SimdHelpers.MinHorizontal128(modY);
+            var r = SimdHelpers.MaxHorizontal128(modX);
+            var t = SimdHelpers.MaxHorizontal128(modY);
 
             // Convert to Box2
             var lb = Sse.UnpackLow(l, b);

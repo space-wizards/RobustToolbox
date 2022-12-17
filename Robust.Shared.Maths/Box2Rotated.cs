@@ -60,7 +60,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         public readonly Box2 CalcBoundingBox()
         {
-            if (Sse.IsSupported && NumericsHelpers.Enabled)
+            if (Sse.IsSupported)
             {
                 return CalcBoundingBoxSse();
             }
@@ -95,10 +95,10 @@ namespace Robust.Shared.Maths
             allX = Sse.Add(modX, originX);
             allY = Sse.Add(modY, originY);
 
-            var l = SimdHelpers.MinHorizontalSse(allX);
-            var b = SimdHelpers.MinHorizontalSse(allY);
-            var r = SimdHelpers.MaxHorizontalSse(allX);
-            var t = SimdHelpers.MaxHorizontalSse(allY);
+            var l = SimdHelpers.MinHorizontal128(allX);
+            var b = SimdHelpers.MinHorizontal128(allY);
+            var r = SimdHelpers.MaxHorizontal128(allX);
+            var t = SimdHelpers.MaxHorizontal128(allY);
 
             var lb = Sse.UnpackLow(l, b);
             var rt = Sse.UnpackLow(r, t);

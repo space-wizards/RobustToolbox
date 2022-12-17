@@ -17,28 +17,26 @@ namespace Robust.UnitTesting.Shared.Maths
     {
         #region Utils
 
-        private static RemoteInvokeOptions GetInvokeOptions(bool enabled = false, bool avxEnabled = false)
+        private static RemoteInvokeOptions GetInvokeOptions(bool avxEnabled = false)
         {
             var processStartInfo = new ProcessStartInfo();
 
-            processStartInfo.Environment[NumericsHelpers.DisabledEnvironmentVariable] = (!enabled).ToString();
             processStartInfo.Environment[NumericsHelpers.AvxEnvironmentVariable] = avxEnabled.ToString();
 
-
-            return new RemoteInvokeOptions() {StartInfo = processStartInfo};
+            return new RemoteInvokeOptions() { StartInfo = processStartInfo };
         }
 
         [Flags]
         enum Intrinsics : byte
         {
             None = 0,
-            Sse  = 1 << 1,
+            Sse = 1 << 1,
             Sse2 = 1 << 2,
             Sse3 = 1 << 3,
-            Avx  = 1 << 4,
+            Avx = 1 << 4,
             Avx2 = 1 << 5,
 
-            AdvSimd      = 1 << 6,
+            AdvSimd = 1 << 6,
             AdvSimdArm64 = 1 << 7,
 
             AllX86 = Sse | Sse2 | Sse3 | Avx | Avx2,
@@ -91,27 +89,6 @@ namespace Robust.UnitTesting.Shared.Maths
         #endregion
 
         [Test]
-        public void EnvironmentVariablesWork()
-        {
-            if (!ValidComputer())
-                Assert.Ignore();
-
-            // Disabling both.
-            RemoteExecutor.Invoke(() =>
-            {
-                Assert.That(NumericsHelpers.Enabled, Is.False);
-                Assert.That(NumericsHelpers.AvxEnabled, Is.False);
-            }, GetInvokeOptions()).Dispose();
-
-            // Enabling NumericsHelper, but not enabling AVX.
-            RemoteExecutor.Invoke(() =>
-            {
-                Assert.That(NumericsHelpers.Enabled, Is.True);
-                Assert.That(NumericsHelpers.AvxEnabled, Is.False);
-            }, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
         public void EnvironmentVariablesWorkAvx()
         {
             // The next one is only valid if the computer supports AVX.
@@ -119,1125 +96,907 @@ namespace Robust.UnitTesting.Shared.Maths
                 Assert.Ignore();
 
             // Enabling NumericsHelper and enabling AVX.
-            RemoteExecutor.Invoke(() =>
-            {
-                Assert.That(NumericsHelpers.Enabled, Is.True);
-                Assert.That(NumericsHelpers.AvxEnabled, Is.True);
-            }, GetInvokeOptions(true, true)).Dispose();
-
-            // Disabling NumericsHelper and enabling AVX.
-            RemoteExecutor.Invoke(() =>
-            {
-                Assert.That(NumericsHelpers.Enabled, Is.False);
-                Assert.That(NumericsHelpers.AvxEnabled, Is.False);
-            }, GetInvokeOptions(false, true)).Dispose();
+            RemoteExecutor.Invoke(() => { Assert.That(NumericsHelpers.Vector256Enabled, Is.True); },
+                GetInvokeOptions(true)).Dispose();
         }
 
         #region Multiply
 
-        private void Multiply()
+        private static readonly float[] MultiplyA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                1f,
-                2f,
-                10f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            1f,
+            2f,
+            10f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            float[] b = new[]
-            {
-                1f,
-                0f,
-                0f,
-                2f,
-                10f,
-                1f,
-                4321f,
-                567.123f,
-            };
+        private static readonly float[] MultiplyB =
+        {
+            1f,
+            0f,
+            0f,
+            2f,
+            10f,
+            1f,
+            4321f,
+            567.123f,
+        };
 
-            float[] r = new[]
-            {
-                1f,
-                0f,
-                0f,
-                4f,
-                100f,
-                0.1f,
-                5332114f,
-                384642.101f,
-            };
+        private static readonly float[] MultiplyResult =
+        {
+            1f,
+            0f,
+            0f,
+            4f,
+            100f,
+            0.1f,
+            5332114f,
+            384642.101f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void MultiplyScalar()
+        {
+            Span<float> s = stackalloc float[MultiplyResult.Length];
 
-            NumericsHelpers.Multiply(a, b, s);
+            NumericsHelpers.MultiplyScalar(MultiplyA, MultiplyB, s, 0, MultiplyA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(MultiplyResult, s);
         }
 
         [Test]
-        public void MultiplyNaive()
+        public void Multiply128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MultiplyResult.Length];
 
-            RemoteExecutor.Invoke(Multiply, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Multiply128(MultiplyA, MultiplyB, s);
+
+            EqualsApprox(MultiplyResult, s);
         }
 
         [Test]
-        public void MultiplySse()
+        public void Multiply256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MultiplyResult.Length];
 
-            RemoteExecutor.Invoke(Multiply, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Multiply256(MultiplyA, MultiplyB, s);
 
-        [Test]
-        public void MultiplyAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Multiply, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void MultiplyAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Multiply, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(MultiplyResult, s);
         }
 
         #endregion
 
         #region MultiplyByScalar
 
-        private void MultiplyByScalar()
+        private static readonly float[] MultiplyByScalarA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                0.01f,
-                2f,
-                10f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            0.01f,
+            2f,
+            10f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            const float b = 50f;
+        private const float MultiplyByScalarB = 50f;
 
-            float[] r = new[]
-            {
-                50f,
-                0f,
-                0.5f,
-                100f,
-                500f,
-                5f,
-                61700f,
-                33911.7f,
-            };
+        private static readonly float[] MultiplyByScalarResult =
+        {
+            50f,
+            0f,
+            0.5f,
+            100f,
+            500f,
+            5f,
+            61700f,
+            33911.7f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
 
-            NumericsHelpers.Multiply(a, b, s);
+        [Test]
+        public void MultiplyByScalarScalar()
+        {
+            Span<float> s = stackalloc float[MultiplyByScalarResult.Length];
 
-            EqualsApprox(r, s);
+            NumericsHelpers.MultiplyScalar(MultiplyByScalarA, MultiplyByScalarB, s, 0, MultiplyByScalarA.Length);
+
+            EqualsApprox(MultiplyByScalarResult, s);
         }
 
         [Test]
-        public void MultiplyByScalarNaive()
+        public void MultiplyByScalar128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MultiplyByScalarResult.Length];
 
-            RemoteExecutor.Invoke(MultiplyByScalar, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Multiply128(MultiplyByScalarA, MultiplyByScalarB, s);
+
+            EqualsApprox(MultiplyByScalarResult, s);
         }
 
         [Test]
-        public void MultiplyByScalarSse()
+        public void MultiplyByScalar256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MultiplyByScalarResult.Length];
 
-            RemoteExecutor.Invoke(MultiplyByScalar, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Multiply256(MultiplyByScalarA, MultiplyByScalarB, s);
 
-        [Test]
-        public void MultiplyByScalarAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(MultiplyByScalar, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void MultiplyByScalarAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(MultiplyByScalar, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(MultiplyByScalarResult, s);
         }
 
         #endregion
 
         #region Divide
 
-        private void Divide()
+        private static readonly float[] DivideA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                1f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            1f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            float[] b = new[]
-            {
-                1f,
-                1f,
-                2f,
-                2f,
-                10f,
-                1f,
-                4321f,
-                567.123f,
-            };
+        private static readonly float[] DivideB =
+        {
+            1f,
+            1f,
+            2f,
+            2f,
+            10f,
+            1f,
+            4321f,
+            567.123f,
+        };
 
-            float[] r = new[]
-            {
-                1f,
-                0f,
-                0.5f,
-                1f,
-                10f,
-                0.1f,
-                0.285582041f,
-                1.19592046f,
-            };
+        private static readonly float[] DivideResult =
+        {
+            1f,
+            0f,
+            0.5f,
+            1f,
+            10f,
+            0.1f,
+            0.285582041f,
+            1.19592046f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void DivideScalar()
+        {
+            Span<float> s = stackalloc float[DivideResult.Length];
 
-            NumericsHelpers.Divide(a, b, s);
+            NumericsHelpers.DivideScalar(DivideA, DivideB, s, 0, DivideA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(DivideResult, s);
         }
 
         [Test]
-        public void DivideNaive()
+        public void Divide128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[DivideResult.Length];
 
-            RemoteExecutor.Invoke(Divide, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Divide128(DivideA, DivideB, s);
+
+            EqualsApprox(DivideResult, s);
         }
 
         [Test]
-        public void DivideSse()
+        public void Divide256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[DivideResult.Length];
 
-            RemoteExecutor.Invoke(Divide, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Divide256(DivideA, DivideB, s);
 
-        [Test]
-        public void DivideAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Divide, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void DivideAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Divide, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(DivideResult, s);
         }
 
         #endregion
 
         #region DivideByScalar
 
-        private void DivideByScalar()
+        private static readonly float[] DivideByScalarA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                10000f,
-                2000f,
-                1234f,
-                9999f,
-                12340f,
-                678.234f,
-            };
+            1f,
+            0f,
+            10000f,
+            2000f,
+            1234f,
+            9999f,
+            12340f,
+            678.234f,
+        };
 
-            float b = 1234f;
+        private const float DivideByScalarB = 1234f;
 
-            float[] r = new[]
-            {
-                0.000810372771f,
-                0f,
-                8.10372771f,
-                1.62074554f,
-                1f,
-                8.10291734f,
-                10f,
-                0.549622366f,
-            };
+        private static readonly float[] DivideByScalarResult =
+        {
+            0.000810372771f,
+            0f,
+            8.10372771f,
+            1.62074554f,
+            1f,
+            8.10291734f,
+            10f,
+            0.549622366f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void DivideByScalarScalar()
+        {
+            Span<float> s = stackalloc float[DivideByScalarResult.Length];
 
-            NumericsHelpers.Divide(a, b, s);
+            NumericsHelpers.DivideScalar(DivideByScalarA, DivideByScalarB, s, 0, DivideByScalarA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(DivideByScalarResult, s);
         }
 
         [Test]
-        public void DivideByScalarNaive()
+        public void DivideByScalar128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[DivideByScalarResult.Length];
 
-            RemoteExecutor.Invoke(DivideByScalar, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Divide128(DivideByScalarA, DivideByScalarB, s);
+
+            EqualsApprox(DivideByScalarResult, s);
         }
 
         [Test]
-        public void DivideByScalarSse()
+        public void DivideByScalar256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[DivideByScalarResult.Length];
 
-            RemoteExecutor.Invoke(DivideByScalar, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Divide256(DivideByScalarA, DivideByScalarB, s);
 
-        [Test]
-        public void DivideByScalarAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(DivideByScalar, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void DivideByScalarAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(DivideByScalar, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(DivideByScalarResult, s);
         }
 
         #endregion
 
         #region Add
 
-        private void Add()
+        private static readonly float[] AddA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                1f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            1f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+            1f,
+        };
 
-            float[] b = new[]
-            {
-                1f,
-                1f,
-                2f,
-                2f,
-                10f,
-                1f,
-                4321f,
-                567.123f,
-            };
+        private static readonly float[] AddB =
+        {
+            1f,
+            1f,
+            2f,
+            2f,
+            10f,
+            1f,
+            4321f,
+            567.123f,
+            -1f,
+        };
 
-            float[] r = new[]
-            {
-                2f,
-                1f,
-                3f,
-                4f,
-                110f,
-                1.1f,
-                5555f,
-                1245.357f,
-            };
+        private static readonly float[] AddResult =
+        {
+            2f,
+            1f,
+            3f,
+            4f,
+            110f,
+            1.1f,
+            5555f,
+            1245.357f,
+            0f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void AddScalar()
+        {
+            Span<float> s = stackalloc float[AddResult.Length];
 
-            NumericsHelpers.Add(a, b, s);
+            NumericsHelpers.AddScalar(AddA, AddB, s, 0, AddA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(AddResult, s);
         }
 
         [Test]
-        public void AddNaive()
+        public void Add128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[AddResult.Length];
 
-            RemoteExecutor.Invoke(Add, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Add128(AddA, AddB, s);
+
+            EqualsApprox(AddResult, s);
         }
 
         [Test]
-        public void AddSse()
+        public void Add256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[AddResult.Length];
 
-            RemoteExecutor.Invoke(Add, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Add256(AddA, AddB, s);
 
-        [Test]
-        public void AddAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Add, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void AddAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Add, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(AddResult, s);
         }
 
         #endregion
 
         #region AddByScalar
 
-        private void AddByScalar()
+        private static readonly float[] AddByScalarA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                15f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            15f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            const float b = 100f;
+        private const float AddByScalarB = 100f;
 
-            float[] r = new[]
-            {
-                101f,
-                100f,
-                115f,
-                102f,
-                200f,
-                100.1f,
-                1334f,
-                778.234f,
-            };
+        private static readonly float[] AddByScalarResult =
+        {
+            101f,
+            100f,
+            115f,
+            102f,
+            200f,
+            100.1f,
+            1334f,
+            778.234f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void AddByScalarScalar()
+        {
+            Span<float> s = stackalloc float[AddByScalarResult.Length];
 
-            NumericsHelpers.Add(a, b, s);
+            NumericsHelpers.AddScalar(AddByScalarA, AddByScalarB, s, 0, AddByScalarA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(AddByScalarResult, s);
         }
 
         [Test]
-        public void AddByScalarNaive()
+        public void AddByScalar128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[AddByScalarResult.Length];
 
-            RemoteExecutor.Invoke(AddByScalar, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Add128(AddByScalarA, AddByScalarB, s);
+
+            EqualsApprox(AddByScalarResult, s);
         }
 
         [Test]
-        public void AddByScalarSse()
+        public void AddByScalar256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[AddByScalarResult.Length];
 
-            RemoteExecutor.Invoke(AddByScalar, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Add256(AddByScalarA, AddByScalarB, s);
 
-        [Test]
-        public void AddByScalarAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(AddByScalar, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void AddByScalarAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(AddByScalar, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(AddByScalarResult, s);
         }
 
         #endregion
 
         #region HorizontalAdd
 
-        private void HorizontalAdd()
+        private static readonly float[] HorizontalAddA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                1f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-                10f,
-                1f,
-                0f,
-                1f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            1f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+            10f,
+            1f,
+            0f,
+            1f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            const float r = 4042.668f;
+        private const float HorizontalAddResult = 4042.668f;
 
-            Assert.That(NumericsHelpers.HorizontalAdd(a), Is.Approximately(r));
+        [Test]
+        public void HorizontalAddScalar()
+        {
+            var added = NumericsHelpers.HorizontalAddScalar(HorizontalAddA, 0, HorizontalAddA.Length);
+
+            Assert.That(added, Is.Approximately(HorizontalAddResult));
         }
 
         [Test]
-        public void HorizontalAddNaive()
+        public void HorizontalAdd128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            var added = NumericsHelpers.HorizontalAdd128(HorizontalAddA);
 
-            RemoteExecutor.Invoke(HorizontalAdd, GetInvokeOptions()).Dispose();
+            Assert.That(added, Is.Approximately(HorizontalAddResult));
         }
 
         [Test]
-        public void HorizontalAddSse()
+        public void HorizontalAdd256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            var added = NumericsHelpers.HorizontalAdd256(HorizontalAddA);
 
-            RemoteExecutor.Invoke(HorizontalAdd, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void HorizontalAddAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(HorizontalAdd, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void HorizontalAddAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(HorizontalAdd, GetInvokeOptions(true, true)).Dispose();
+            Assert.That(added, Is.Approximately(HorizontalAddResult));
         }
 
         #endregion
 
         #region Sub
 
-        private void Sub()
+        private static readonly float[] SubA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                1f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            1f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            float[] b = new[]
-            {
-                1f,
-                1f,
-                2f,
-                2f,
-                10f,
-                1f,
-                4321f,
-                567.123f,
-            };
+        private static readonly float[] SubB =
+        {
+            1f,
+            1f,
+            2f,
+            2f,
+            10f,
+            1f,
+            4321f,
+            567.123f,
+        };
 
-            float[] r = new[]
-            {
-                0f,
-                -1f,
-                -1f,
-                0f,
-                90f,
-                -0.9f,
-                -3087f,
-                111.11100f,
-            };
+        private static readonly float[] SubResult =
+        {
+            0f,
+            -1f,
+            -1f,
+            0f,
+            90f,
+            -0.9f,
+            -3087f,
+            111.11100f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void SubScalar()
+        {
+            Span<float> s = stackalloc float[SubResult.Length];
 
-            NumericsHelpers.Sub(a, b, s);
+            NumericsHelpers.SubScalar(SubA, SubB, s, 0, SubA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(SubResult, s);
         }
 
         [Test]
-        public void SubNaive()
+        public void Sub128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[SubResult.Length];
 
-            RemoteExecutor.Invoke(Sub, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Sub128(SubA, SubB, s);
+
+            EqualsApprox(SubResult, s);
         }
 
         [Test]
-        public void SubSse()
+        public void Sub256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[SubResult.Length];
 
-            RemoteExecutor.Invoke(Sub, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Sub256(SubA, SubB, s);
 
-        [Test]
-        public void SubAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Sub, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void SubAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Sub, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(SubResult, s);
         }
 
         #endregion
 
         #region SubByScalar
 
-        private void SubByScalar()
+        private static readonly float[] SubByScalarA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                15f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            15f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            const float b = 100f;
+        private const float SubByScalarB = 100f;
 
-            float[] r = new[]
-            {
-                -99f,
-                -100f,
-                -85f,
-                -98f,
-                0f,
-                -99.9f,
-                1134f,
-                578.234f,
-            };
+        private static readonly float[] SubByScalarResult =
+        {
+            -99f,
+            -100f,
+            -85f,
+            -98f,
+            0f,
+            -99.9f,
+            1134f,
+            578.234f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void SubByScalarScalar()
+        {
+            Span<float> s = stackalloc float[SubByScalarResult.Length];
 
-            NumericsHelpers.Sub(a, b, s);
+            NumericsHelpers.SubScalar(SubByScalarA, SubByScalarB, s, 0, SubByScalarA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(SubByScalarResult, s);
         }
 
         [Test]
-        public void SubByScalarNaive()
+        public void SubByScalar128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[SubByScalarResult.Length];
 
-            RemoteExecutor.Invoke(SubByScalar, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Sub128(SubByScalarA, SubByScalarB, s);
+
+            EqualsApprox(SubByScalarResult, s);
         }
 
         [Test]
-        public void SubByScalarSse()
+        public void SubByScalar256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[SubByScalarResult.Length];
 
-            RemoteExecutor.Invoke(SubByScalar, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Sub256(SubByScalarA, SubByScalarB, s);
 
-        [Test]
-        public void SubByScalarAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(SubByScalar, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void SubByScalarAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(SubByScalar, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(SubByScalarResult, s);
         }
 
         #endregion
 
         #region Abs
 
-        private void Abs()
+        private static readonly float[] AbsA =
         {
-            float[] a = new[]
-            {
-                -1f,
-                0f,
-                -0f,
-                -15f,
-                -2f,
-                100f,
-                0.1f,
-                -1234f,
-                -678.234f,
-            };
+            -1f,
+            0f,
+            -0f,
+            -15f,
+            -2f,
+            100f,
+            0.1f,
+            -1234f,
+            -678.234f,
+        };
 
-            float[] r = new[]
-            {
-                1f,
-                0f,
-                0f,
-                15f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+        private static readonly float[] AbsResult =
+        {
+            1f,
+            0f,
+            0f,
+            15f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void AbsScalar()
+        {
+            Span<float> s = stackalloc float[AbsResult.Length];
 
-            NumericsHelpers.Abs(a, s);
+            NumericsHelpers.AbsScalar(AbsA, s, 0, AbsA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(AbsResult, s);
         }
 
         [Test]
-        public void AbsNaive()
+        public void Abs128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[AbsResult.Length];
 
-            RemoteExecutor.Invoke(Abs, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Abs128(AbsA, s);
+
+            EqualsApprox(AbsResult, s);
         }
 
         [Test]
-        public void AbsSse()
+        public void Abs256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[AbsResult.Length];
 
-            RemoteExecutor.Invoke(Abs, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Abs256(AbsA, s);
 
-        [Test]
-        public void AbsAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Abs, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void AbsAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Abs, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(AbsResult, s);
         }
 
         #endregion
 
         #region Min
 
-        private void Min()
+        private static readonly float[] MinA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                1f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            1f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            float[] b = new[]
-            {
-                1f,
-                1f,
-                2f,
-                2f,
-                10f,
-                1f,
-                4321f,
-                567.123f,
-            };
+        private static readonly float[] MinB =
+        {
+            1f,
+            1f,
+            2f,
+            2f,
+            10f,
+            1f,
+            4321f,
+            567.123f,
+        };
 
-            float[] r = new[]
-            {
-                1f,
-                0f,
-                1f,
-                2f,
-                10f,
-                0.1f,
-                1234f,
-                567.123f,
-            };
+        private static readonly float[] MinResult =
+        {
+            1f,
+            0f,
+            1f,
+            2f,
+            10f,
+            0.1f,
+            1234f,
+            567.123f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void MinScalar()
+        {
+            Span<float> s = stackalloc float[MinResult.Length];
 
-            NumericsHelpers.Min(a, b, s);
+            NumericsHelpers.MinScalar(MinA, MinB, s, 0, MinA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(MinResult, s);
         }
 
         [Test]
-        public void MinNaive()
+        public void Min128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MinResult.Length];
 
-            RemoteExecutor.Invoke(Min, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Min128(MinA, MinB, s);
+
+            EqualsApprox(MinResult, s);
         }
 
         [Test]
-        public void MinSse()
+        public void Min256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MinResult.Length];
 
-            RemoteExecutor.Invoke(Min, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Min256(MinA, MinB, s);
 
-        [Test]
-        public void MinAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Min, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void MinAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                return;
-
-            RemoteExecutor.Invoke(Min, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(MinResult, s);
         }
 
         #endregion
 
         #region MinByScalar
 
-        private void MinByScalar()
+        private static readonly float[] MinByScalarA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                1f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-                0.05f,
-                0.5f,
-                -12.5f,
-            };
+            1f,
+            0f,
+            1f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+            0.05f,
+            0.5f,
+            -12.5f,
+        };
 
-            float b = 1f;
+        private const float MinByScalarB = 1f;
 
-            float[] r = new[]
-            {
-                1f,
-                0f,
-                1f,
-                1f,
-                1f,
-                0.1f,
-                1f,
-                1f,
-                0.05f,
-                0.5f,
-                -12.5f,
-            };
+        private static readonly float[] MinByScalarR =
+        {
+            1f,
+            0f,
+            1f,
+            1f,
+            1f,
+            0.1f,
+            1f,
+            1f,
+            0.05f,
+            0.5f,
+            -12.5f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void MinByScalarScalar()
+        {
+            Span<float> s = stackalloc float[MinByScalarR.Length];
 
-            NumericsHelpers.Min(a, b, s);
+            NumericsHelpers.MinScalar(MinByScalarA, MinByScalarB, s, 0, MinByScalarA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(MinByScalarR, s);
         }
 
         [Test]
-        public void MinByScalarNaive()
+        public void MinByScalar128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MinByScalarR.Length];
 
-            RemoteExecutor.Invoke(MinByScalar, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Min128(MinByScalarA, MinByScalarB, s);
+
+            EqualsApprox(MinByScalarR, s);
         }
 
         [Test]
-        public void MinByScalarSse()
+        public void MinByScalar256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MinByScalarR.Length];
 
-            RemoteExecutor.Invoke(MinByScalar, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Min256(MinByScalarA, MinByScalarB, s);
 
-        [Test]
-        public void MinByScalarAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(MinByScalar, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void MinByScalarAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(MinByScalar, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(MinByScalarR, s);
         }
 
         #endregion
 
         #region Max
 
-        private void Max()
+        private static readonly float[] MaxA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                1f,
-                2f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            1f,
+            2f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            float[] b = new[]
-            {
-                1f,
-                1f,
-                2f,
-                2f,
-                10f,
-                1f,
-                4321f,
-                567.123f,
-            };
+        private static readonly float[] MaxB =
+        {
+            1f,
+            1f,
+            2f,
+            2f,
+            10f,
+            1f,
+            4321f,
+            567.123f,
+        };
 
-            float[] r = new[]
-            {
-                1f,
-                1f,
-                2f,
-                2f,
-                100f,
-                1f,
-                4321f,
-                678.234f,
-            };
+        private static readonly float[] MaxResult =
+        {
+            1f,
+            1f,
+            2f,
+            2f,
+            100f,
+            1f,
+            4321f,
+            678.234f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void MaxScalar()
+        {
+            Span<float> s = stackalloc float[MaxResult.Length];
 
-            NumericsHelpers.Max(a, b, s);
+            NumericsHelpers.MaxScalar(MaxA, MaxB, s, 0, MaxA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(MaxResult, s);
         }
 
         [Test]
-        public void MaxNaive()
+        public void Max128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MaxResult.Length];
 
-            RemoteExecutor.Invoke(Max, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Max128(MaxA, MaxB, s);
+
+            EqualsApprox(MaxResult, s);
         }
 
         [Test]
-        public void MaxSse()
+        public void Max256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MaxResult.Length];
 
-            RemoteExecutor.Invoke(Max, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Max256(MaxA, MaxB, s);
 
-        [Test]
-        public void MaxAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Max, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void MaxAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(Max, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(MaxResult, s);
         }
 
         #endregion
 
         #region MaxByScalar
 
-        private void MaxByScalar()
+        private static readonly float[] MaxByScalarA =
         {
-            float[] a = new[]
-            {
-                1f,
-                0f,
-                1f,
-                200f,
-                100f,
-                0.1f,
-                1234f,
-                678.234f,
-            };
+            1f,
+            0f,
+            1f,
+            200f,
+            100f,
+            0.1f,
+            1234f,
+            678.234f,
+        };
 
-            float b = 100f;
+        private const float MaxByScalarB = 100f;
 
-            float[] r = new[]
-            {
-                100f,
-                100f,
-                100f,
-                200f,
-                100f,
-                100f,
-                1234f,
-                678.234f,
-            };
+        private static readonly float[] MaxByScalarResult =
+        {
+            100f,
+            100f,
+            100f,
+            200f,
+            100f,
+            100f,
+            1234f,
+            678.234f,
+        };
 
-            Span<float> s = stackalloc float[r.Length];
+        [Test]
+        public void MaxByScalarScalar()
+        {
+            Span<float> s = stackalloc float[MaxByScalarResult.Length];
 
-            NumericsHelpers.Max(a, b, s);
+            NumericsHelpers.MaxScalar(MaxByScalarA, MaxByScalarB, s, 0, MaxByScalarA.Length);
 
-            EqualsApprox(r, s);
+            EqualsApprox(MaxByScalarResult, s);
         }
 
         [Test]
-        public void MaxByScalarNaive()
+        public void MaxByScalar128()
         {
-            if (!ValidComputer())
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MaxByScalarResult.Length];
 
-            RemoteExecutor.Invoke(MaxByScalar, GetInvokeOptions()).Dispose();
+            NumericsHelpers.Max128(MaxByScalarA, MaxByScalarB, s);
+
+            EqualsApprox(MaxByScalarResult, s);
         }
 
         [Test]
-        public void MaxByScalarSse()
+        public void MaxByScalar256()
         {
-            if (!ValidComputer(Intrinsics.Sse))
-                Assert.Ignore();
+            Span<float> s = stackalloc float[MaxByScalarResult.Length];
 
-            RemoteExecutor.Invoke(MaxByScalar, GetInvokeOptions(true)).Dispose();
-        }
+            NumericsHelpers.Max256(MaxByScalarA, MaxByScalarB, s);
 
-        [Test]
-        public void MaxByScalarAdvSimd()
-        {
-            if (!ValidComputer(Intrinsics.AdvSimd))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(MaxByScalar, GetInvokeOptions(true)).Dispose();
-        }
-
-        [Test]
-        public void MaxByScalarAvx()
-        {
-            if (!ValidComputer(Intrinsics.Avx))
-                Assert.Ignore();
-
-            RemoteExecutor.Invoke(MaxByScalar, GetInvokeOptions(true, true)).Dispose();
+            EqualsApprox(MaxByScalarResult, s);
         }
 
         #endregion

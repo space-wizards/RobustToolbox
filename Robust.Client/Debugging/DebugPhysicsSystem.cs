@@ -55,6 +55,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
@@ -276,7 +277,7 @@ namespace Robust.Client.Debugging
 
                 foreach (var grid in _mapManager.FindGridsIntersecting(mapId, viewBounds))
                 {
-                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid.GridEntityId);
+                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid.Owner);
                     var color = Color.Orange.WithAlpha(Alpha);
                     var transform = physBody.GetTransform();
                     worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 1f, color);

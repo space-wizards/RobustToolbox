@@ -14,6 +14,8 @@ namespace Robust.Client.Physics
 {
     internal sealed class PhysicsIslandCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+
         public override string Command => "showislands";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -24,13 +26,16 @@ namespace Robust.Client.Physics
                 return;
             }
 
-            EntitySystem.Get<DebugPhysicsIslandSystem>().Mode ^= DebugPhysicsIslandMode.Solve;
+            var system = _entitySystemManager.GetEntitySystem<DebugPhysicsIslandSystem>();
+            system.Mode ^= DebugPhysicsIslandMode.Solve;
         }
     }
 
     internal sealed class DebugPhysicsIslandSystem : EntitySystem
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IOverlayManager _overlayManager = default!;
 
         public DebugPhysicsIslandMode Mode { get; set; } = DebugPhysicsIslandMode.None;
 
@@ -45,15 +50,18 @@ namespace Robust.Client.Physics
         public override void Initialize()
         {
             base.Initialize();
+
             SubscribeLocalEvent<IslandSolveMessage>(HandleIslandSolveMessage);
-            IoCManager.Resolve<IOverlayManager>().AddOverlay(new PhysicsIslandOverlay());
+
+            var overlay = new PhysicsIslandOverlay(this, _gameTiming, _eyeManager);
+            _overlayManager.AddOverlay(overlay);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
 
-            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsIslandOverlay));
+            _overlayManager.RemoveOverlay(typeof(PhysicsIslandOverlay));
         }
 
         public override void FrameUpdate(float frameTime)
@@ -89,18 +97,17 @@ namespace Robust.Client.Physics
 
     internal sealed class PhysicsIslandOverlay : Overlay
     {
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-
-        private DebugPhysicsIslandSystem _islandSystem = default!;
+        private readonly IEyeManager _eyeManager;
+        private readonly IGameTiming _gameTiming;
+        private readonly DebugPhysicsIslandSystem _islandSystem;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        public PhysicsIslandOverlay()
+        public PhysicsIslandOverlay(DebugPhysicsIslandSystem system, IGameTiming gameTiming, IEyeManager eyeManager)
         {
-            _islandSystem = EntitySystem.Get<DebugPhysicsIslandSystem>();
-            _eyeManager = IoCManager.Resolve<IEyeManager>();
-            _gameTiming = IoCManager.Resolve<IGameTiming>();
+            _islandSystem = system;
+            _gameTiming = gameTiming;
+            _eyeManager = eyeManager;
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)

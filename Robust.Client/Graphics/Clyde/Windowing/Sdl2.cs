@@ -25,10 +25,10 @@ internal partial class Clyde
         private readonly ISawmill _sawmill;
         private readonly ISawmill _sawmillSdl2;
 
-        public Sdl2WindowingImpl(Clyde clyde)
+        public Sdl2WindowingImpl(Clyde clyde, IDependencyCollection deps)
         {
             _clyde = clyde;
-            IoCManager.InjectDependencies(this);
+            deps.InjectDependencies(this, true);
 
             _sawmill = _logManager.GetSawmill("clyde.win");
             _sawmillSdl2 = _logManager.GetSawmill("clyde.win.sdl2");
@@ -127,6 +127,17 @@ internal partial class Clyde
         public unsafe void* GLGetProcAddress(string procName)
         {
             return (void*) SDL_GL_GetProcAddress(procName);
+        }
+
+        public string GetDescription()
+        {
+            SDL_GetVersion(out var version);
+            _sawmill.Debug(
+                "SDL2 initialized, version: {major}.{minor}.{patch}", version.major, version.minor, version.patch);
+
+            var videoDriver = SDL_GetCurrentVideoDriver();
+
+            return $"SDL2 {version.major}.{version.minor}.{version.patch} ({videoDriver})";
         }
 
         [UnmanagedCallersOnly(CallConvs = new []{typeof(CallConvCdecl)})]

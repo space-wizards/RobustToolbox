@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Timing;
@@ -152,7 +151,7 @@ namespace Robust.Client.GameStates
             return applyNextState;
         }
 
-        public void UpdateFullRep(GameState state, IEntityManager entMan)
+        public void UpdateFullRep(GameState state, bool cloneDelta = false)
         {
             // Note: the most recently received server state currently doesn't include pvs-leave messages (detaching
             // transform to null-space). This is because a client should never predict an entity being moved back from
@@ -177,11 +176,36 @@ namespace Robust.Client.GameStates
                 {
                     compData = new Dictionary<ushort, ComponentState>();
                     _lastStateFullRep.Add(entityState.Uid, compData);
+
+#if DEBUG
+                    foreach (var comp in entityState.ComponentChanges.Span)
+                    {
+                        DebugTools.Assert(comp.State is not IComponentDeltaState delta || delta.FullState);
+                    }
+#endif
                 }
 
                 foreach (var change in entityState.ComponentChanges.Span)
                 {
-                    compData[change.NetID] = change.State;
+                    var compState = change.State;
+
+                    if (compState is IComponentDeltaState delta && !delta.FullState)
+                    {
+                        var old = compData[change.NetID];
+
+                        if (cloneDelta)
+                        {
+                            compState = delta.CreateNewFullState(old);
+                        }
+                        else
+                        {
+                            delta.ApplyToFullState(old);
+                            compState = old;
+                        }
+                        DebugTools.Assert(compState is IComponentDeltaState newState && newState.FullState);
+                    }
+
+                    compData[change.NetID] = compState;
                 }
 
                 if (entityState.NetComponents == null)

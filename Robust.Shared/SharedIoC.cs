@@ -22,34 +22,35 @@ namespace Robust.Shared
 {
     internal static class SharedIoC
     {
-        public static void RegisterIoC()
+        public static void RegisterIoC(IDependencyCollection deps)
         {
-            IoCManager.Register<ISerializationManager, SerializationManager>();
-            IoCManager.Register<IConfigurationManager, NetConfigurationManager>();
-            IoCManager.Register<INetConfigurationManager, NetConfigurationManager>();
-            IoCManager.Register<IConfigurationManagerInternal, NetConfigurationManager>();
-            IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
-            IoCManager.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
-            IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
-            IoCManager.Register<ILocalizationManager, LocalizationManager>();
-            IoCManager.Register<ILocalizationManagerInternal, LocalizationManager>();
-            IoCManager.Register<ILogManager, LogManager>();
-            IoCManager.Register<IModLoader, ModLoader>();
-            IoCManager.Register<IModLoaderInternal, ModLoader>();
-            IoCManager.Register<INetManager, NetManager>();
-            IoCManager.Register<IRobustSerializer, RobustSerializer>();
-            IoCManager.Register<IRuntimeLog, RuntimeLog>();
-            IoCManager.Register<ITaskManager, TaskManager>();
-            IoCManager.Register<TaskManager, TaskManager>();
-            IoCManager.Register<ITimerManager, TimerManager>();
-            IoCManager.Register<ProfManager, ProfManager>();
-            IoCManager.Register<IRobustRandom, RobustRandom>();
-            IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
-            IoCManager.Register<ISandboxHelper, SandboxHelper>();
-            IoCManager.Register<IManifoldManager, CollisionManager>();
-            IoCManager.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
-            IoCManager.Register<IParallelManager, ParallelManager>();
-            IoCManager.Register<IParallelManagerInternal, ParallelManager>();
+            deps.Register<ISerializationManager, SerializationManager>();
+            deps.Register<IConfigurationManager, NetConfigurationManager>();
+            deps.Register<INetConfigurationManager, NetConfigurationManager>();
+            deps.Register<IConfigurationManagerInternal, NetConfigurationManager>();
+            deps.Register<INetConfigurationManagerInternal, NetConfigurationManager>();
+            deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
+            deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
+            deps.Register<IEntitySystemManager, EntitySystemManager>();
+            deps.Register<ILocalizationManager, LocalizationManager>();
+            deps.Register<ILocalizationManagerInternal, LocalizationManager>();
+            deps.Register<ILogManager, LogManager>();
+            deps.Register<IModLoader, ModLoader>();
+            deps.Register<IModLoaderInternal, ModLoader>();
+            deps.Register<INetManager, NetManager>();
+            deps.Register<IRobustSerializer, RobustSerializer>();
+            deps.Register<IRuntimeLog, RuntimeLog>();
+            deps.Register<ITaskManager, TaskManager>();
+            deps.Register<TaskManager, TaskManager>();
+            deps.Register<ITimerManager, TimerManager>();
+            deps.Register<ProfManager, ProfManager>();
+            deps.Register<IRobustRandom, RobustRandom>();
+            deps.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
+            deps.Register<ISandboxHelper, SandboxHelper>();
+            deps.Register<IManifoldManager, CollisionManager>();
+            deps.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
+            deps.Register<IParallelManager, ParallelManager>();
+            deps.Register<IParallelManagerInternal, ParallelManager>();
         }
     }
 }

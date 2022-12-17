@@ -42,8 +42,7 @@ namespace Robust.Shared.Physics.Components
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 
-        [DataField("status", readOnly: true)]
-        private BodyStatus _bodyStatus = BodyStatus.OnGround;
+        [DataField("status", readOnly: true)] internal BodyStatus _bodyStatus = BodyStatus.OnGround;
 
         /// <summary>
         ///     Has this body been added to an island previously in this tick.
@@ -400,14 +399,8 @@ namespace Robust.Shared.Physics.Components
         public BodyStatus BodyStatus
         {
             get => _bodyStatus;
-            set
-            {
-                if (_bodyStatus == value)
-                    return;
-
-                _bodyStatus = value;
-                Dirty(_entMan);
-            }
+            [Obsolete("Use SharedPhysicsSystem.SetBodyStatus")]
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetBodyStatus(this, value);
         }
 
         [ViewVariables(VVAccess.ReadWrite)]

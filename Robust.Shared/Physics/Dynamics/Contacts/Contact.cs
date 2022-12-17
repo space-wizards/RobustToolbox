@@ -41,7 +41,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 {
     public sealed class Contact : IEquatable<Contact>
     {
-        [Dependency] private readonly IManifoldManager _manifoldManager = default!;
+        private readonly IManifoldManager _manifoldManager;
+
 #if DEBUG
         internal SharedDebugPhysicsSystem _debugPhysics = default!;
 #endif
@@ -73,8 +74,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         internal ContactFlags Flags = ContactFlags.None;
 
-        public Contact()
+        internal Contact(IManifoldManager manifoldManager)
         {
+            _manifoldManager = manifoldManager;
+
             MapNode = new LinkedListNode<Contact>(this);
             BodyANode = new LinkedListNode<Contact>(this);
             BodyBNode = new LinkedListNode<Contact>(this);

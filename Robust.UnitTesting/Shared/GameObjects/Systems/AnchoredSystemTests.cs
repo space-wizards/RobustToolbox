@@ -47,7 +47,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             // Add grid 1, as the default grid to anchor things to.
             var grid = mapManager.CreateGrid(TestMapId);
 
-            return (sim, grid.GridEntityId);
+            return (sim, grid.Owner);
         }
 
         // An entity is anchored to the tile it is over on the target grid.
@@ -164,7 +164,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             // Act
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.GridEntityId));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.Owner));
             Assert.That(calledCount, Is.EqualTo(1));
             void ParentChangedHandler(ref EntParentChangedMessage ev)
             {
@@ -217,7 +217,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
             Assert.That(IoCManager.Resolve<IEntityManager>().HasComponent<PhysicsComponent>(ent1), Is.False);
-            var tempQualifier = grid.GridEntityId;
+            var tempQualifier = grid.Owner;
             Assert.That(IoCManager.Resolve<IEntityManager>().HasComponent<PhysicsComponent>(tempQualifier), Is.True);
         }
 
@@ -305,7 +305,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
-            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(ent1, grid.GridEntityId);
+            entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(ent1, grid.Owner);
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
@@ -358,7 +358,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // Act
             // We purposefully use the grid as container so parent stays the same, reparent will unanchor
-            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(grid.GridEntityId);
+            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(grid.Owner);
             var container = containerMan.MakeContainer<Container>("TestContainer");
             container.Insert(ent1);
 
@@ -477,7 +477,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
-            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(grid.GridEntityId);
+            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(grid.Owner);
             var container = containerMan.MakeContainer<Container>("TestContainer");
             container.Insert(ent1);
 
@@ -542,7 +542,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = false;
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.GridEntityId));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).ParentUid, Is.EqualTo(grid.Owner));
         }
     }
 }

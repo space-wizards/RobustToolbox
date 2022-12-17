@@ -20,6 +20,9 @@
   <PropertyGroup Condition="'$(FullRelease)' == 'True'">
     <DefineConstants>$(DefineConstants);FULL_RELEASE</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(FullRelease)' != 'True'">
+    <DefineConstants>$(DefineConstants);DEVELOPMENT</DefineConstants>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <DefineConstants>$(DefineConstants);EXCEPTION_TOLERANCE</DefineConstants>
   </PropertyGroup>

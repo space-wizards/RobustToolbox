@@ -8,6 +8,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
@@ -51,9 +52,14 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
+        [Dependency] private readonly IManifoldManager _manifoldManager = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IParallelManager _parallel = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        [Dependency] private readonly IIslandManager _islandManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IDependencyCollection _deps = default!;
 
         public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
@@ -106,12 +112,13 @@ namespace Robust.Shared.Physics.Systems
 
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
         {
-            IoCManager.InjectDependencies(component);
+            _deps.InjectDependencies(component);
             component.BroadphaseSystem = _broadphase;
-            component.ContactManager = new();
+            component.Physics = this;
+            component.ContactManager = new(_debugPhysics, _manifoldManager, EntityManager, _physicsManager, _cfg);
             component.ContactManager.Initialize();
             component.ContactManager.MapId = component.MapId;
-            component.AutoClearForces = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.AutoClearForces);
+            component.AutoClearForces = _cfg.GetCVar(CVars.AutoClearForces);
 
             component.ContactManager.KinematicControllerCollision += KinematicControllerCollision;
         }
@@ -178,20 +185,11 @@ namespace Robust.Shared.Physics.Systems
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
             var jointQuery = GetEntityQuery<JointComponent>();
-            var fixturesQuery = GetEntityQuery<FixturesComponent>();
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
 
             TryComp(MapManager.GetMapEntityId(oldMapId), out SharedPhysicsMapComponent? oldMap);
             TryComp(MapManager.GetMapEntityId(newMapId), out SharedPhysicsMapComponent? newMap);
 
-            Dictionary<FixtureProxy, Box2>? oldMoveBuffer = null;
-
-            if (oldMap != null)
-            {
-                oldMoveBuffer = oldMap.MoveBuffer;
-            }
-
-            RecursiveMapUpdate(xform, body, newMapId, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
+            RecursiveMapUpdate(xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
         }
 
         /// <summary>
@@ -200,18 +198,13 @@ namespace Robust.Shared.Physics.Systems
         private void RecursiveMapUpdate(
             TransformComponent xform,
             PhysicsComponent? body,
-            MapId newMapId,
             SharedPhysicsMapComponent? newMap,
             SharedPhysicsMapComponent? oldMap,
-            Dictionary<FixtureProxy, Box2>? oldMoveBuffer,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<FixturesComponent> fixturesQuery,
-            EntityQuery<JointComponent> jointQuery,
-            EntityQuery<BroadphaseComponent> broadQuery)
+            EntityQuery<JointComponent> jointQuery)
         {
             var uid = xform.Owner;
-
             DebugTools.Assert(!Deleted(uid));
 
             // This entity may not have a body, but some of its children might:
@@ -241,9 +234,8 @@ namespace Robust.Shared.Physics.Systems
                 if (xformQuery.TryGetComponent(child, out var childXform))
                 {
                     bodyQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(childXform, childBody, newMapId, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
+                    RecursiveMapUpdate(childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
                 }
-
             }
         }
 
@@ -251,10 +243,11 @@ namespace Robust.Shared.Physics.Systems
         {
             var guid = ev.EntityUid;
 
-            if (!EntityManager.EntityExists(guid) || HasComp<PhysicsComponent>(guid))
+            // If it's mapgrid then no physics.
+            if (HasComp<MapComponent>(guid))
                 return;
 
-            var body = AddComp<PhysicsComponent>(guid);
+            var body = EnsureComp<PhysicsComponent>(guid);
             SetCanCollide(body, true);
             SetBodyType(body, BodyType.Static);
         }

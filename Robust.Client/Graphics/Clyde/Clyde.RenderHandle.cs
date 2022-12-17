@@ -2,7 +2,6 @@ using System;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using OpenToolkit.Graphics.OpenGL4;
 
@@ -17,13 +16,15 @@ namespace Robust.Client.Graphics.Clyde
         private sealed class RenderHandle : IRenderHandle
         {
             private readonly Clyde _clyde;
+            private readonly IEntityManager _entities;
 
             public DrawingHandleScreen DrawingHandleScreen { get; }
             public DrawingHandleWorld DrawingHandleWorld { get; }
 
-            public RenderHandle(Clyde clyde)
+            public RenderHandle(Clyde clyde, IEntityManager entities)
             {
                 _clyde = clyde;
+                _entities = entities;
 
                 DrawingHandleScreen = new DrawingHandleScreenImpl(this);
                 DrawingHandleWorld = new DrawingHandleWorldImpl(this);
@@ -126,14 +127,12 @@ namespace Robust.Client.Graphics.Clyde
 
             public void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
             {
-                var entMan = IoCManager.Resolve<IEntityManager>();
-
-                if (entMan.Deleted(entity))
+                if (_entities.Deleted(entity))
                 {
                     throw new ArgumentException("Tried to draw an entity has been deleted.", nameof(entity));
                 }
 
-                var sprite = entMan.GetComponent<SpriteComponent>(entity);
+                var sprite = _entities.GetComponent<SpriteComponent>(entity);
 
                 var oldProj = _clyde._currentMatrixProj;
                 var oldView = _clyde._currentMatrixView;
@@ -166,7 +165,7 @@ namespace Robust.Client.Graphics.Clyde
                     DrawingHandleWorld,
                     Angle.Zero,
                     overrideDirection == null
-                        ? entMan.GetComponent<TransformComponent>(entity).WorldRotation
+                        ? _entities.GetComponent<TransformComponent>(entity).WorldRotation
                         : Angle.Zero,
                     overrideDirection);
 
@@ -351,7 +350,7 @@ namespace Robust.Client.Graphics.Clyde
                         var endPos = new Vector2(MathF.Cos(arcLength * (i+1)) * radius, MathF.Sin(arcLength * (i + 1)) * radius);
 
                         if(!filled)
-                            _renderHandle.DrawLine(startPos, endPos, colorReal);
+                            _renderHandle.DrawLine(startPos + position, endPos + position, colorReal);
                         else
                         {
                             filledTriangle[0] = new DrawVertexUV2DColor(startPos + position, colorReal);

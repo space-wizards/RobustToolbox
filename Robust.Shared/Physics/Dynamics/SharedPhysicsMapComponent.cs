@@ -38,6 +38,7 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
+        internal SharedPhysicsSystem Physics = default!;
 
         internal ContactManager ContactManager = default!;
 
@@ -76,7 +77,7 @@ namespace Robust.Shared.Physics.Dynamics
             if (bodyQuery.TryGetComponent(uid, out var body) &&
                 body.BodyType == BodyType.Dynamic)
             {
-                body.WakeBody();
+                Physics.WakeBody(uid, body);
             }
 
             var xform = xformQuery.GetComponent(uid);

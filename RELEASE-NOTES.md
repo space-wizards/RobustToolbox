@@ -35,11 +35,12 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The entity lookup flag `LookupFlags.Anchored` has been replaced with `LookupFlags.Static`.
 
 ### New features
 
-*None yet*
+* The server will now check for any unknown CVars at startup, to possibly locate typos in your config file.
+* `IDependencyCollection` is now thread safe.
 
 ### Bugfixes
 
@@ -47,11 +48,277 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Removed some cruft from the `server_config.toml` default config file that ships with Robust.
 
 ### Internal
 
 *None yet*
+
+
+## 0.72.0.0
+
+### Breaking changes
+
+* EntityPausedEvent has been split into EntityPausedEvent and EntityUnpausedEvent. The unpaused version now has information about how long an entity has been paused.
+
+## 0.71.1.4
+
+### Bugfixes
+
+* Fixed CVars not being saved correctly to config file.
+
+### Other
+
+* Mark `validate_rsis.py` as `+x` in Git.
+* Made config system more robust against accidental corruption when saving.
+
+
+## 0.71.1.3
+
+
+## 0.71.1.2
+
+### Bugfixes
+
+* Fixed UI ScrollContainer infinite loop freezing client.
+
+
+## 0.71.1.1
+
+### Bugfixes
+
+* Fixed client memory leaks and improved performance in integration testing.
+
+
+## 0.71.1.0
+
+### New features
+
+* Better RSI validator script.
+* When a new map file is loaded onto an existing map the entities will be transferred over.
+* Add an API to get the hard layer / mask for a particular physics body.
+
+### Bugfixes
+
+* Fixed non-filled circle drawing via world handle.
+* Fix max_connections in the default server config.
+* Fix removal of PVS states for players without ingame status.
+* Fix max rotation from the physics solver.
+
+### Internal
+
+* Wrap window rendering in a try-catch.
+
+
+## 0.71.0.0
+
+### Breaking changes
+
+* `DebugTimePanel`, `DebugNetPanel` and `DebugNetBandwidthPanel` have been made internal.
+* RSIs with trailing commas in the JSON metadata are no longer allowed.
+
+### Bugfixes
+
+* `csi` doesn't throw a `NullReferenceException` anymore.
+
+### Other
+
+* The `game.maxplayers` CVar has been deprecated in favor of the new `net.max_connections` CVar. Functionality is the same, just renamed to avoid confusion. The old CVar still exists, so if `game.maxplayers` is set it will be preferred over the new one.
+* The new default for `net.max_connections` is 256.
+* Debug monitors (F3) now have margin between them.
+* F3 (clyde monitor) now lists the windowing API and version in use.
+* Added system monitor to F3 with various info like OS version, .NET runtime version, etc...
+* The engine now warns when loading `.png` textures inside a `.rsi`. This will be blocked in the future.
+
+
+## 0.70.0.0
+
+### New features
+
+* `game.desc` CVar for a server description to show in the launcher.
+* New system for exposing links to e.g. a Discord in the launcher.
+  * The engine does not have a built-in method for configuring these, but it does now have a `StatusHostHelpers.AddLink` method to correctly format these from content. The idea is that content wires the types of links (with icon names) up itself via `IStatusHost.OnInfoRequest`.
+  * See also [the HTTP API documentation](https://docs.spacestation14.io/en/engine/http-api) for reference.
+* `GameShared` now has a `Dependencies` property to allow access to the game's `IDependencyCollection`. This makes it possible to avoid using static `IoCManager` in `EntryPoint`-type content code.
+* A new define constant `DEVELOPMENT` has been defined, equivalent to `!FULL_RELEASE`. See [the docs](https://docs.spacestation14.io/en/technical-docs/preprocessor-defines) for details.
+* `IConfigurationManager` has new functions for reading and writing CVar directly from a TOML file `Stream`.
+* New `IConfigurationManager.LoadDefaultsFromTomlStream` to load a TOML file as CVar default overrides.
+* Added new serializers to support Queue<T> data-fields.
+* Added a `FromParent()` function to `IDependencyCollection`, enabling dependencies to be passed to parallel threads.
+* `IClientStateManager` now has a `PartialStateReset()` function to make it easier for content to rewind to previous game states.
+* Added `IClientNetManager.DispatchLocalNetMessage()`, which allows a client to raise a local message that triggers networked event subscriptions.
+
+### Bugfixes
+
+* `IPlayerSession.OnConnect()` now actually gets called when players connect.
+* `MapLoaderSystem.TryLoad(.., out rootUids)` now properly only returns entities parented to the map.
+
+### Other
+
+* Invalid placement types for the entity spawn menu now log warnings.
+* Slightly improved sprite y-sorting performance.
+
+### Internal
+
+* The current physics map that an entity is on is now cached in the transform component alongside other cached broadphase data. This helps to fix some broadphase/lookup bugs.
+
+## 0.69.0.0
+
+
+## 0.68.0.0
+
+### Breaking changes
+
+* Updated yml schema validator to remove the `grids` node.
+
+### Bugfixes
+
+* Fixed position-less audio playing.
+* Stop mapgrids from serializing their fixtures.
+
+### Other
+
+* Removed the `restart` command, since it never worked properly and just confused people.
+* Add virtual to some UIScreen methods.
+* Add public parameterless ctor to MenuBar.
+
+
+## 0.67.2.2
+
+### Bugfixes
+
+* Fix double MapGrid chunk subscription.
+* Fix grid contacts short-circuiting collision.
+
+
+## 0.67.2.1
+
+### Bugfixes
+
+* Fix MapChunks not being subscribed to by MapGridComponents in some instances.
+
+
+## 0.67.2.0
+
+### New features
+
+* Add submenu support to menubar controls.
+
+### Bugfixes
+
+* Fix gridtree returning mapgrid maps twice.
+
+
+## 0.67.1.3
+
+### Bugfixes
+
+* Fix Map regression so now they can be MapGrids again without the client crashing.
+
+
+## 0.67.1.2
+
+### Bugfixes
+
+* Fix some mapgrids not being marked as dirty and never being sent to clients (thanks checkraze).
+
+
+## 0.67.1.1
+
+### Bugfixes
+
+* Fix some merge artifacts from mapgrid support for maps.
+
+
+## 0.67.1.0
+
+### New features
+
+- Maps can now have MapGridComponent added to them.
+
+
+## 0.67.0.0
+
+### Breaking changes
+
+* MapGrid is deprecated and has been merged into MapGridComponent. This is subject to further changes as it gets ECSd more in future.
+* The `grids` yaml node on map files is deprecated and has been merged onto MapGridComponent. Loading maps is backwards compatible for now but is subject to change in future. Saving maps will save in the new format.
+
+
+## 0.66.0.0
+
+### Breaking changes
+
+* AudioSystem functions for playing audio have changed. Functions that take in filters now require an additional argument that will determine whether sounds are recorded by replays. Additionally, there are several new overrides that take in a recipient session or entity.
+
+### Bugfixes
+
+* Script globals for C# interactive were not having dependencies injected correctly.
+* GetWorldPosition() now returns the correct positions even prior to transform initialization.
+* Fix map loading not properly offsetting some entities that were directly parented to the map.
+
+### Internal
+
+* Added lookup/broadphase re-parenting tests.
+
+
+## 0.65.2.1
+
+### Bugfixes
+
+* Fix empty MetaData components being serialized to map files.
+* Fix saving a grid as a map not marking it as pre-mapinit.
+
+### Other
+
+* Set `ValidateExecutableReferencesMatchSelfContained` in the server project, which may help with publishing issues. I hope.
+* Move pinned font data over to Pinned Object Heap.
+* Improved shader code generation for uniform arrays to be more compatible.
+* Server now has server GC enabled by default.
+
+### Internal
+
+* Remove some unnecessary dependency resolves from filters making audio much more performant.
+
+
+## 0.65.2.0
+
+### New features
+
+* Added ClydeAudio.StopAllAudio()
+* Expose more tick logic to content.
+
+### Bugfixes
+
+* Fix bad reference in WebView.
+
+### Internal
+
+* Add Robust.Packaging to solution.
+* Add WebView to solution.
+* Physics contacts are now parallel and much faster.
+
+## 0.65.1.0
+
+### New features
+
+* Implement value prototype id dictionary serializer.
+
+### Bugfixes
+
+* Fixes lerping clean up issue added in #3472.
+
+### Internal
+
+* Add test for (de)serializing data record structs.
+
+
+## 0.65.0.1
+
+### Bugfixes
+
+- Fix SetLocalPositionRotation raising 2 moveevents. This should help physics performance significantly.
+- Fix tpgrid responses and command error.
 
 
 ## 0.65.0.0
@@ -137,6 +404,7 @@ END TEMPLATE-->
 * Some internal logic in `LineEdit` has been shared with `TextEdit` by moving it to a new `TextEditShared` file.
 * SDL2 backend now uses `[UnmanagedCallersOnly]` instead of `GetFunctionPointerForDelegate`-style P/Invoke marshalling.
 * Entity prototype reloading logic has been moved out of `PrototypeManager` and into a new `PrototypeReloadSystem`.
+* Most usages of `IoCManager.` statically have been removed in favor of dependency injection.
 
 ## 0.62.1.0
 

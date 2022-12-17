@@ -1,7 +1,9 @@
 using System;
 using System.Globalization;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -19,7 +21,8 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
     public TimeSpan Read(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,
         bool skipHook,
-        ISerializationContext? context = null, TimeSpan value = default)
+        ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
     {
         var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
         var curTime = dependencies.Resolve<IGameTiming>().CurTime;
@@ -40,14 +43,12 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         ISerializationContext? context = null)
     {
         var curTime = dependencies.Resolve<IGameTiming>().CurTime;
-        return new ValueDataNode((value - curTime).TotalSeconds.ToString(CultureInfo.InvariantCulture));
-    }
 
-    [MustUseReturnValue]
-    public TimeSpan Copy(ISerializationManager serializationManager, TimeSpan source, TimeSpan target,
-        bool skipHook,
-        ISerializationContext? context = null)
-    {
-        return source;
+        if (context is MapSerializationContext mapContext)
+        {
+            curTime -= mapContext.PauseTime;
+        }
+
+        return new ValueDataNode((value - curTime).TotalSeconds.ToString(CultureInfo.InvariantCulture));
     }
 }

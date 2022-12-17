@@ -305,6 +305,8 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
+            public bool IsGlobal { get; }
+
             public bool SetPosition(Vector2 position)
             {
                 return true;
@@ -325,7 +327,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void SetVolumeDirect(float scale)
+            public void SetVolumeDirect(float gain)
             {
                 // Nada.
             }
@@ -564,6 +566,7 @@ namespace Robust.Client.Graphics.Clyde
             public string Vendor => "Space Wizards Federation";
             public string VersionString { get; } = $"3.3.0 WIZARDS {typeof(DummyDebugInfo).Assembly.GetName().Version}";
             public bool Overriding => false;
+            public string WindowingApi => "The vast abyss";
         }
 
         private sealed class Viewport : IClydeViewport

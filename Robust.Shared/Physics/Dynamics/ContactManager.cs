@@ -34,7 +34,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
@@ -49,8 +48,10 @@ namespace Robust.Shared.Physics.Dynamics
 {
     internal sealed class ContactManager
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        private readonly IEntityManager _entityManager;
+        private readonly IPhysicsManager _physicsManager;
+        private readonly IConfigurationManager _cfg;
+
         private EntityLookupSystem _lookup = default!;
         private SharedPhysicsSystem _physics = default!;
         private SharedTransformSystem _transform = default!;
@@ -97,7 +98,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private int ContactPoolInitialSize = 64;
 
-        private ObjectPool<Contact> _contactPool = new DefaultObjectPool<Contact>(new ContactPoolPolicy(), 1024);
+        private readonly ObjectPool<Contact> _contactPool;
 
         internal LinkedList<Contact> _activeContacts = new();
 
@@ -113,12 +114,20 @@ namespace Robust.Shared.Physics.Dynamics
 
         private sealed class ContactPoolPolicy : IPooledObjectPolicy<Contact>
         {
+            private readonly SharedDebugPhysicsSystem _debugPhysicsSystem;
+            private readonly IManifoldManager _manifoldManager;
+
+            public ContactPoolPolicy(SharedDebugPhysicsSystem debugPhysicsSystem, IManifoldManager manifoldManager)
+            {
+                _debugPhysicsSystem = debugPhysicsSystem;
+                _manifoldManager = manifoldManager;
+            }
+
             public Contact Create()
             {
-                var contact = new Contact();
-                IoCManager.InjectDependencies(contact);
+                var contact = new Contact(_manifoldManager);
 #if DEBUG
-                contact._debugPhysics = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedDebugPhysicsSystem>();
+                contact._debugPhysics = _debugPhysicsSystem;
 #endif
                 contact.Manifold = new Manifold
                 {
@@ -133,6 +142,22 @@ namespace Robust.Shared.Physics.Dynamics
                 SetContact(obj, null, 0, null, 0);
                 return true;
             }
+        }
+
+        public ContactManager(
+            SharedDebugPhysicsSystem debugPhysicsSystem,
+            IManifoldManager manifoldManager,
+            IEntityManager entityManager,
+            IPhysicsManager physicsManager,
+            IConfigurationManager cfg)
+        {
+            _entityManager = entityManager;
+            _physicsManager = physicsManager;
+            _cfg = cfg;
+
+            _contactPool = new DefaultObjectPool<Contact>(
+                new ContactPoolPolicy(debugPhysicsSystem, manifoldManager),
+                1024);
         }
 
         private static void SetContact(Contact contact, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
@@ -162,7 +187,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void Initialize()
         {
-            IoCManager.InjectDependencies(this);
             _lookup = _entityManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
             _physics = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
             _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
@@ -332,6 +356,7 @@ namespace Robust.Shared.Physics.Dynamics
             while (node != null)
             {
                 var contact = node.Value;
+                node = node.Next;
 
                 Fixture fixtureA = contact.FixtureA!;
                 Fixture fixtureB = contact.FixtureB!;
@@ -344,7 +369,6 @@ namespace Robust.Shared.Physics.Dynamics
                 // Do not try to collide disabled bodies
                 if (!bodyA.CanCollide || !bodyB.CanCollide)
                 {
-                    node = node.Next;
                     Destroy(contact);
                     continue;
                 }
@@ -355,7 +379,6 @@ namespace Robust.Shared.Physics.Dynamics
                     // Should these bodies collide?
                     if (_physics.ShouldCollide(bodyB, bodyA) == false)
                     {
-                        node = node.Next;
                         Destroy(contact);
                         continue;
                     }
@@ -363,21 +386,9 @@ namespace Robust.Shared.Physics.Dynamics
                     // Check default filtering
                     if (ShouldCollide(fixtureA, fixtureB) == false)
                     {
-                        node = node.Next;
                         Destroy(contact);
                         continue;
                     }
-
-                    // Check user filtering.
-                    /*
-                    if (ContactFilter != null && ContactFilter(fixtureA, fixtureB) == false)
-                    {
-                        Contact cNuke = c;
-                        c = c.Next;
-                        Destroy(cNuke);
-                        continue;
-                    }
-                    */
 
                     // Clear the filtering flag.
                     contact.Flags &= ~ContactFlags.Filter;
@@ -389,7 +400,6 @@ namespace Robust.Shared.Physics.Dynamics
                 // At least one body must be awake and it must be dynamic or kinematic.
                 if (activeA == false && activeB == false)
                 {
-                    node = node.Next;
                     continue;
                 }
 
@@ -411,7 +421,6 @@ namespace Robust.Shared.Physics.Dynamics
                         contacts[index++] = contact;
                     }
 
-                    node = node.Next;
                     continue;
                 }
 
@@ -442,13 +451,11 @@ namespace Robust.Shared.Physics.Dynamics
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (!overlap)
                 {
-                    node = node.Next;
                     Destroy(contact);
                     continue;
                 }
 
                 contacts[index++] = contact;
-                node = node.Next;
             }
 
             var status = ArrayPool<ContactStatus>.Shared.Rent(index);

@@ -1,24 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
-using Robust.Shared.Serialization.Markdown.Sequence;
-using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Prototypes
 {
+
     /// <summary>
     /// Prototype that represents game entities.
     /// </summary>
@@ -50,15 +46,12 @@ namespace Robust.Shared.Prototypes
         ///     You probably want <see cref="Name"/> instead.
         /// </summary>
         /// <seealso cref="Name"/>
-        [ViewVariables]
         [DataField("name")]
         public string? SetName { get; private set; }
 
-        [ViewVariables]
         [DataField("description")]
         public string? SetDesc { get; private set; }
 
-        [ViewVariables]
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
 
@@ -87,7 +80,6 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Fluent messageId used to lookup the entity's name and localization attributes.
         /// </summary>
-        [ViewVariables]
         [DataField("localizationId")]
         public string? CustomLocalizationID { get; private set; }
 
@@ -100,7 +92,8 @@ namespace Robust.Shared.Prototypes
         [DataField("noSpawn")]
         public bool NoSpawn { get; private set; }
 
-        [DataField("placement")] private EntityPlacementProperties PlacementProperties = new();
+        [DataField("placement")]
+        private EntityPlacementProperties PlacementProperties = new();
 
         /// <summary>
         /// The different mounting points on walls. (If any).
@@ -129,7 +122,6 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// True if this entity will be saved by the map loader.
         /// </summary>
-        [ViewVariables]
         [DataField("save")]
         public bool MapSavable { get; set; } = true;
 
@@ -198,12 +190,6 @@ namespace Robust.Shared.Prototypes
             ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
         {
-            /*YamlObjectSerializer.Context? defaultContext = null;
-            if (context == null)
-            {
-                defaultContext = new PrototypeSerializationContext(prototype);
-            }*/
-
             if (prototype != null)
             {
                 foreach (var (name, entry) in prototype.Components)
@@ -211,10 +197,7 @@ namespace Robust.Shared.Prototypes
                     if (context != null && context.ShouldSkipComponent(name))
                         continue;
 
-                    var fullData = entry.Mapping;
-
-                    if (context != null)
-                        fullData = context.GetComponentData(name, fullData);
+                    var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
 
                     EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
                 }
@@ -232,9 +215,13 @@ namespace Robust.Shared.Prototypes
                         continue;
                     }
 
-                    var ser = context.GetComponentData(name, null);
+                    if (!context.TryGetComponent(name, out var data))
+                    {
+                        throw new InvalidOperationException(
+                            $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
+                    }
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, ser, context as ISerializationContext);
+                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, data, context as ISerializationContext);
                 }
             }
         }
@@ -244,7 +231,7 @@ namespace Robust.Shared.Prototypes
             IEntityManager entityManager,
             ISerializationManager serManager,
             string compName,
-            MappingDataNode data,
+            IComponent data,
             ISerializationContext? context)
         {
             var compReg = factory.GetRegistration(compName);
@@ -257,8 +244,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            // TODO use this value to support struct components
-            serManager.Read(compReg.Type, data, context, value: component);
+            serManager.CopyTo(data, ref component, context);
         }
 
         public override string ToString()
@@ -277,18 +263,8 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public sealed class ComponentRegistryEntry
-        {
-            public readonly IComponent Component;
-            // Mapping is just a quick reference to speed up entity creation.
-            public readonly MappingDataNode Mapping;
-
-            public ComponentRegistryEntry(IComponent component, MappingDataNode mapping)
-            {
-                Component = component;
-                Mapping = mapping;
-            }
-        }
+        [DataRecord]
+        public record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
 
         [DataDefinition]
         public sealed class EntityPlacementProperties

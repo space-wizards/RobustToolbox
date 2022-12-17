@@ -165,7 +165,7 @@ namespace Robust.UnitTesting
         {
             await instance.WaitPost(() =>
             {
-                var config = IoCManager.Resolve<IConfigurationManagerInternal>();
+                var config = instance.InstanceDependencyCollection.Resolve<IConfigurationManagerInternal>();
                 var overrides = new[]
                 {
                     (RTCVars.FailureLogLevel.Name, (instance.Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
@@ -589,21 +589,22 @@ namespace Robust.UnitTesting
 
             private BaseServer Init()
             {
-                IoCManager.InitThread(DependencyCollection, replaceExisting: true);
-                ServerIoC.RegisterIoC();
-                IoCManager.Register<INetManager, IntegrationNetManager>(true);
-                IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
-                IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
-                IoCManager.Register<ISystemConsoleManager, SystemConsoleManagerDummy>(true);
-                IoCManager.Register<IModLoader, TestingModLoader>(true);
-                IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
-                IoCManager.Register<TestingModLoader, TestingModLoader>(true);
-                IoCManager.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
-                IoCManager.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
+                var deps = DependencyCollection;
+                IoCManager.InitThread(deps, replaceExisting: true);
+                ServerIoC.RegisterIoC(deps);
+                deps.Register<INetManager, IntegrationNetManager>(true);
+                deps.Register<IServerNetManager, IntegrationNetManager>(true);
+                deps.Register<IntegrationNetManager, IntegrationNetManager>(true);
+                deps.Register<ISystemConsoleManager, SystemConsoleManagerDummy>(true);
+                deps.Register<IModLoader, TestingModLoader>(true);
+                deps.Register<IModLoaderInternal, TestingModLoader>(true);
+                deps.Register<TestingModLoader, TestingModLoader>(true);
+                deps.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
+                deps.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
                 Options?.InitIoC?.Invoke();
-                IoCManager.BuildGraph();
+                deps.BuildGraph();
                 //ServerProgram.SetupLogging();
-                ServerProgram.InitReflectionManager();
+                ServerProgram.InitReflectionManager(deps);
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
@@ -619,17 +620,17 @@ namespace Robust.UnitTesting
                 Options?.BeforeRegisterComponents?.Invoke();
                 if (!Options?.ContentStart ?? true)
                 {
-                    var componentFactory = IoCManager.Resolve<IComponentFactory>();
+                    var componentFactory = deps.Resolve<IComponentFactory>();
                     componentFactory.DoAutoRegistrations();
                     componentFactory.GenerateNetIds();
                 }
 
                 if (Options?.ContentAssemblies != null)
                 {
-                    IoCManager.Resolve<TestingModLoader>().Assemblies = Options.ContentAssemblies;
+                    deps.Resolve<TestingModLoader>().Assemblies = Options.ContentAssemblies;
                 }
 
-                var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
+                var cfg = deps.Resolve<IConfigurationManagerInternal>();
 
                 cfg.LoadCVarsFromAssembly(typeof(RobustIntegrationTest).Assembly);
 
@@ -640,7 +641,7 @@ namespace Robust.UnitTesting
 
                     if (Options.ExtraPrototypes != null)
                     {
-                        IoCManager.Resolve<IResourceManagerInternal>()
+                        deps.Resolve<IResourceManagerInternal>()
                             .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
                     }
                 }
@@ -649,6 +650,7 @@ namespace Robust.UnitTesting
                 {
                     ("log.runtimelog", "false"),
                     (CVars.SysWinTickPeriod.Name, "-1"),
+                    (CVars.SysGCCollectStart.Name, "false"),
                     (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
                 });
 
@@ -750,19 +752,20 @@ namespace Robust.UnitTesting
 
             private GameController Init()
             {
-                IoCManager.InitThread(DependencyCollection, replaceExisting: true);
-                ClientIoC.RegisterIoC(GameController.DisplayMode.Headless);
-                IoCManager.Register<INetManager, IntegrationNetManager>(true);
-                IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
-                IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
-                IoCManager.Register<IModLoader, TestingModLoader>(true);
-                IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
-                IoCManager.Register<TestingModLoader, TestingModLoader>(true);
-                IoCManager.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
+                var deps = DependencyCollection;
+                IoCManager.InitThread(deps, replaceExisting: true);
+                ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
+                deps.Register<INetManager, IntegrationNetManager>(true);
+                deps.Register<IClientNetManager, IntegrationNetManager>(true);
+                deps.Register<IntegrationNetManager, IntegrationNetManager>(true);
+                deps.Register<IModLoader, TestingModLoader>(true);
+                deps.Register<IModLoaderInternal, TestingModLoader>(true);
+                deps.Register<TestingModLoader, TestingModLoader>(true);
+                deps.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
                 Options?.InitIoC?.Invoke();
-                IoCManager.BuildGraph();
+                deps.BuildGraph();
 
-                GameController.RegisterReflection();
+                GameController.RegisterReflection(deps);
 
                 var client = DependencyCollection.Resolve<GameController>();
 
@@ -778,17 +781,17 @@ namespace Robust.UnitTesting
                 Options?.BeforeRegisterComponents?.Invoke();
                 if (!Options?.ContentStart ?? true)
                 {
-                    var componentFactory = IoCManager.Resolve<IComponentFactory>();
+                    var componentFactory = deps.Resolve<IComponentFactory>();
                     componentFactory.DoAutoRegistrations();
                     componentFactory.GenerateNetIds();
                 }
 
                 if (Options?.ContentAssemblies != null)
                 {
-                    IoCManager.Resolve<TestingModLoader>().Assemblies = Options.ContentAssemblies;
+                    deps.Resolve<TestingModLoader>().Assemblies = Options.ContentAssemblies;
                 }
 
-                var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
+                var cfg = deps.Resolve<IConfigurationManagerInternal>();
 
                 cfg.LoadCVarsFromAssembly(typeof(RobustIntegrationTest).Assembly);
 
@@ -799,7 +802,7 @@ namespace Robust.UnitTesting
 
                     if (Options.ExtraPrototypes != null)
                     {
-                        IoCManager.Resolve<IResourceManagerInternal>()
+                        deps.Resolve<IResourceManagerInternal>()
                             .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
                     }
                 }
@@ -815,6 +818,8 @@ namespace Robust.UnitTesting
                     // Avoid preloading textures.
                     (CVars.ResTexturePreloadingEnabled.Name, "false"),
 
+                    (CVars.SysGCCollectStart.Name, "false"),
+
                     (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
                 });
 
@@ -823,7 +828,10 @@ namespace Robust.UnitTesting
 
                 client.OverrideMainLoop(GameLoop);
                 client.ContentStart = Options?.ContentStart ?? false;
-                client.StartupSystemSplash(clientOptions, () => new TestLogHandler(cfg, "CLIENT"));
+                client.StartupSystemSplash(
+                    clientOptions,
+                    () => new TestLogHandler(cfg, "CLIENT"),
+                    globalExceptionLog: false);
                 client.StartupContinue(GameController.DisplayMode.Headless);
 
                 GameLoop.RunInit();

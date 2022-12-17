@@ -8,7 +8,7 @@ namespace Robust.Shared.IoC
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The dependency is resolved as if <see cref="IoCManager.Resolve{T}" /> were to be called,
+    /// The dependency is resolved as if <see cref="IoCManager.Resolve{T}()" /> were to be called,
     /// but it avoids circular references and init order issues due to internal code in the <see cref="IoCManager" />.
     /// </para>
     /// <para>

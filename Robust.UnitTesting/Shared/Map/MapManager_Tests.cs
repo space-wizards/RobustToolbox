@@ -4,6 +4,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
 using System.Management;
+using Robust.Shared.Map.Components;
 
 namespace Robust.UnitTesting.Shared.Map
 {
@@ -51,7 +52,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             mapMan.Restart();
 
-            Assert.That(mapMan.GridExists(grid.GridEntityId), Is.False);
+            Assert.That(mapMan.GridExists(grid.Owner), Is.False);
         }
 
         /// <summary>

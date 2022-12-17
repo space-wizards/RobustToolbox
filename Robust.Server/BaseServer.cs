@@ -66,7 +66,7 @@ namespace Robust.Server
                 Buckets = Histogram.ExponentialBuckets(0.000_01, 2, 13)
             });
 
-        [Dependency] private readonly IConfigurationManagerInternal _config = default!;
+        [Dependency] private readonly INetConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
         [Dependency] private readonly ILogManager _log = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
@@ -87,10 +87,15 @@ namespace Robust.Server
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
-        [Dependency] private readonly INetConfigurationManager _netCfgMan = default!;
         [Dependency] private readonly IServerConsoleHost _consoleHost = default!;
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
         [Dependency] private readonly ProfManager _prof = default!;
+        [Dependency] private readonly IPrototypeManager _prototype = default!;
+        [Dependency] private readonly IPlacementManager _placement = default!;
+        [Dependency] private readonly IServerViewVariablesInternal _viewVariables = default!;
+        [Dependency] private readonly ISerializationManager _serialization = default!;
+        [Dependency] private readonly IStatusHost _statusHost = default!;
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -107,7 +112,7 @@ namespace Robust.Server
         public ServerOptions Options { get; private set; } = new();
 
         /// <inheritdoc />
-        public int MaxPlayers => _config.GetCVar(CVars.GameMaxPlayers);
+        public int MaxPlayers => _config.GetEffectiveMaxConnections();
 
         /// <inheritdoc />
         public string ServerName => _config.GetCVar(CVars.GameHostName);
@@ -257,15 +262,14 @@ namespace Robust.Server
             // Load metrics really early so that we can profile startup times in the future maybe.
             _metricsManager.Initialize();
 
-            var netMan = IoCManager.Resolve<IServerNetManager>();
             try
             {
-                netMan.Initialize(true);
-                netMan.StartServer();
+                _network.Initialize(true);
+                _network.StartServer();
             }
             catch (Exception e)
             {
-                var port = netMan.Port;
+                var port = _network.Port;
                 Logger.Fatal(
                     "Unable to setup networking manager. Check port {0} is not already in use and that all binding addresses are correct!\n{1}",
                     port, e);
@@ -313,7 +317,7 @@ namespace Robust.Server
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
-            IoCManager.Resolve<IPrototypeManager>().LoadedData += (yaml, name) =>
+            _prototype.LoadedData += (yaml, name) =>
             {
                 if (!_stringSerializer.Locked)
                 {
@@ -322,27 +326,26 @@ namespace Robust.Server
             };
 
             // Initialize Tier 2 services
-            IoCManager.Resolve<IGameTiming>().InSimulation = true;
+            _time.InSimulation = true;
 
-            IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
+            _config.SetupNetworking();
             _playerManager.Initialize(MaxPlayers);
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-            IoCManager.Resolve<IPlacementManager>().Initialize();
-            IoCManager.Resolve<IServerViewVariablesInternal>().Initialize();
+            _placement.Initialize();
+            _viewVariables.Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
             _entityManager.Initialize();
             _mapManager.Initialize();
 
-            IoCManager.Resolve<ISerializationManager>().Initialize();
+            _serialization.Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
-            var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.Initialize();
-            prototypeManager.LoadDirectory(Options.PrototypeDirectory);
-            prototypeManager.ResolveResults();
+            _prototype.Initialize();
+            _prototype.LoadDirectory(Options.PrototypeDirectory);
+            _prototype.ResolveResults();
 
             _consoleHost.Initialize();
             _entityManager.Startup();
@@ -359,8 +362,8 @@ namespace Robust.Server
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
-            IoCManager.Resolve<IStatusHost>().Start();
-            IoCManager.Resolve<HubManager>().Start();
+            _statusHost.Start();
+            _hubManager.Start();
 
             AppDomain.CurrentDomain.ProcessExit += ProcessExiting;
 
@@ -374,7 +377,12 @@ namespace Robust.Server
                 WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
             }
 
-            GC.Collect();
+            _config.CheckUnusedCVars();
+
+            if (_config.GetCVar(CVars.SysGCCollectStart))
+            {
+                GC.Collect();
+            }
 
             ProgramShared.RunExecCommands(_consoleHost, _commandLineArgs?.ExecCommands);
 
@@ -383,10 +391,9 @@ namespace Robust.Server
 
         private void AddFinalStringsToSerializer()
         {
-            var factory = IoCManager.Resolve<IComponentFactory>();
-            foreach (var regType in factory.AllRegisteredTypes)
+            foreach (var regType in _componentFactory.AllRegisteredTypes)
             {
-                var reg = factory.GetRegistration(regType);
+                var reg = _componentFactory.GetRegistration(regType);
                 _stringSerializer.AddString(reg.Name);
             }
 
@@ -533,9 +540,7 @@ namespace Robust.Server
         /// </summary>
         private void LoadSettings()
         {
-            var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
-
-            cfgMgr.OnValueChanged(CVars.NetTickrate, i =>
+            _config.OnValueChanged(CVars.NetTickrate, i =>
             {
                 var b = (byte) i;
                 _time.TickRate = b;
@@ -551,7 +556,7 @@ namespace Robust.Server
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
             Logger.InfoS("srv", $"Max players: {MaxPlayers}");
 
-            cfgMgr.OnValueChanged(CVars.GameAutoPauseEmpty, UpdateAutoPause, true);
+            _config.OnValueChanged(CVars.GameAutoPauseEmpty, UpdateAutoPause, true);
         }
 
         private void UpdateAutoPause(bool doAutoPause)
@@ -655,7 +660,7 @@ namespace Robust.Server
 
             using (TickUsage.WithLabels("NetworkedCVar").NewTimer())
             {
-                _netCfgMan.TickProcessMessages();
+                _config.TickProcessMessages();
             }
 
             using (TickUsage.WithLabels("Timers").NewTimer())

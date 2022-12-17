@@ -392,6 +392,14 @@ namespace Robust.UnitTesting
                 channel.OtherChannel.TryWrite(new DataMessage(message, channel.RemoteUid));
             }
 
+            public void DispatchLocalNetMessage(NetMessage message)
+            {
+                if (_callbacks.TryGetValue(message.GetType(), out var callback))
+                {
+                    callback(message);
+                }
+            }
+
             private sealed class IntegrationNetChannel : INetChannel
             {
                 private readonly IntegrationNetManager _owner;

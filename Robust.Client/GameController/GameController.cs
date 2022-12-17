@@ -40,7 +40,7 @@ namespace Robust.Client
 {
     internal sealed partial class GameController : IGameControllerInternal
     {
-        [Dependency] private readonly IConfigurationManagerInternal _configurationManager = default!;
+        [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
@@ -72,6 +72,7 @@ namespace Robust.Client
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -124,14 +125,14 @@ namespace Robust.Client
                 _configurationManager.LoadCVarsFromAssembly(loadedModule);
             }
 
-            IoCManager.Resolve<ISerializationManager>().Initialize();
+            _serializationManager.Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
             _resourceCache.PreloadTextures();
             _networkManager.Initialize(false);
-            IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
+            _configurationManager.SetupNetworking();
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
@@ -159,8 +160,11 @@ namespace Robust.Client
 
             _authManager.LoadFromEnv();
 
-            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
+            if (_configurationManager.GetCVar(CVars.SysGCCollectStart))
+            {
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect();
+            }
 
             // Setup main loop
             if (_mainLoop == null)
@@ -273,12 +277,15 @@ namespace Robust.Client
             return new ResourceManifestData(modules, assemblyPrefix, defaultWindowTitle, windowIconSet, splashLogo, autoConnect);
         }
 
-        internal bool StartupSystemSplash(GameControllerOptions options, Func<ILogHandler>? logHandlerFactory)
+        internal bool StartupSystemSplash(
+            GameControllerOptions options,
+            Func<ILogHandler>? logHandlerFactory,
+            bool globalExceptionLog = false)
         {
             Options = options;
             ReadInitialLaunchState();
 
-            SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()));
+            SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()), globalExceptionLog);
 
             if (_commandLineArgs != null)
             {
@@ -517,9 +524,16 @@ namespace Robust.Client
             {
                 using (_prof.Group("Entity"))
                 {
-                    // The last real tick is the current tick! This way we won't be in "prediction" mode.
-                    _gameTiming.LastRealTick = _gameTiming.LastProcessedTick = _gameTiming.CurTick;
-                    _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
+                    if (ContentEntityTickUpdate != null)
+                    {
+                        ContentEntityTickUpdate.Invoke(frameEventArgs);
+                    }
+                    else
+                    {
+                        // The last real tick is the current tick! This way we won't be in "prediction" mode.
+                        _gameTiming.LastRealTick = _gameTiming.LastProcessedTick = _gameTiming.CurTick;
+                        _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
+                    }
                 }
             }
 
@@ -588,7 +602,10 @@ namespace Robust.Client
             }
         }
 
-        internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)
+        internal static void SetupLogging(
+            ILogManager logManager,
+            Func<ILogHandler> logHandlerFactory,
+            bool globalExceptionLog)
         {
             logManager.RootSawmill.AddHandler(logHandlerFactory());
 
@@ -605,34 +622,37 @@ namespace Robust.Client
             logManager.GetSawmill("szr").Level = LogLevel.Info;
             logManager.GetSawmill("loc").Level = LogLevel.Warning;
 
+            if (globalExceptionLog)
+            {
 #if DEBUG_ONLY_FCE_INFO
 #if DEBUG_ONLY_FCE_LOG
-            var fce = logManager.GetSawmill("fce");
+                var fce = logManager.GetSawmill("fce");
 #endif
-            AppDomain.CurrentDomain.FirstChanceException += (sender, args) =>
-            {
-                // TODO: record FCE stats
+                AppDomain.CurrentDomain.FirstChanceException += (sender, args) =>
+                {
+                    // TODO: record FCE stats
 #if DEBUG_ONLY_FCE_LOG
-                fce.Fatal(message);
+                    fce.Fatal(message);
 #endif
-            }
+                }
 #endif
 
-            var uh = logManager.GetSawmill("unhandled");
-            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
-            {
-                var message = ((Exception)args.ExceptionObject).ToString();
-                uh.Log(args.IsTerminating ? LogLevel.Fatal : LogLevel.Error, message);
-            };
+                var uh = logManager.GetSawmill("unhandled");
+                AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+                {
+                    var message = ((Exception)args.ExceptionObject).ToString();
+                    uh.Log(args.IsTerminating ? LogLevel.Fatal : LogLevel.Error, message);
+                };
 
-            var uo = logManager.GetSawmill("unobserved");
-            TaskScheduler.UnobservedTaskException += (sender, args) =>
-            {
-                uo.Error(args.Exception!.ToString());
+                var uo = logManager.GetSawmill("unobserved");
+                TaskScheduler.UnobservedTaskException += (sender, args) =>
+                {
+                    uo.Error(args.Exception!.ToString());
 #if EXCEPTION_TOLERANCE
-                args.SetObserved(); // don't crash
+                    args.SetObserved(); // don't crash
 #endif
-            };
+                };
+            }
         }
 
         private string GetUserDataDir()
@@ -650,7 +670,7 @@ namespace Robust.Client
                 return Path.Combine(exeDir ?? throw new InvalidOperationException(), "user_data");
             }
 
-            return UserDataDir.GetUserDataDir();
+            return UserDataDir.GetUserDataDir(this);
         }
 
 
@@ -686,5 +706,7 @@ namespace Robust.Client
             string? SplashLogo,
             bool AutoConnect
         );
+
+        public event Action<FrameEventArgs>? ContentEntityTickUpdate;
     }
 }

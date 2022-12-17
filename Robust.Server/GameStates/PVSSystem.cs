@@ -13,6 +13,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
@@ -97,7 +98,6 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
     private readonly List<(uint, IChunkIndexLocation)> _chunkList = new(64);
-    private readonly List<MapGrid> _gridsPool = new(8);
 
     private ISawmill _sawmill = default!;
 
@@ -288,7 +288,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private PVSCollection<TIndex> RegisterPVSCollection<TIndex>() where TIndex : IComparable<TIndex>, IEquatable<TIndex>
     {
-        var collection = new PVSCollection<TIndex>();
+        var collection = new PVSCollection<TIndex>(EntityManager);
         _pvsCollections.Add(collection);
         return collection;
     }
@@ -406,14 +406,14 @@ internal sealed partial class PVSSystem : EntitySystem
         if (e.NewStatus != SessionStatus.Disconnected)
             return;
 
+        if (!_playerVisibleSets.Remove(e.Session, out var data))
+            return;
+
         foreach (var pvsCollection in _pvsCollections)
         {
             if (!pvsCollection.RemovePlayer(e.Session))
                 _sawmill.Error($"Attempted to remove player from pvsCollection, but they were already removed? Session:{e.Session}");
         }
-
-        if (!_playerVisibleSets.Remove(e.Session, out var data))
-            return;
 
         if (data.Overflow != null)
             _visSetPool.Return(data.Overflow.Value.SentEnts);
@@ -545,38 +545,46 @@ internal sealed partial class PVSSystem : EntitySystem
                     _gridIndices[visMask] = gridDict;
                 }
 
-                _gridsPool.Clear();
+                var state = (i, transformQuery, viewPos, range, visMask, gridDict, playerChunks, _chunkList);
 
-                foreach (var mapGrid in _mapManager.FindGridsIntersecting(
-                             mapId,
-                             new Box2(viewPos - range, viewPos + range),
-                             _gridsPool,
-                             xformQuery,
-                             physicsQuery,
-                             true))
-                {
-                    var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
-
-                    var gridChunkEnumerator =
-                        new ChunkIndicesEnumerator(localPos, range, ChunkSize);
-
-                    while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
+                _mapManager.FindGridsIntersectingApprox(mapId, new Box2(viewPos - range, viewPos + range),
+                    ref state, static (
+                        MapGridComponent mapGrid,
+                        ref (int i,
+                            EntityQuery<TransformComponent> transformQuery,
+                            Vector2 viewPos,
+                            float range,
+                            uint visMask,
+                            Dictionary<GridChunkLocation, int> gridDict,
+                            HashSet<int>[] playerChunks,
+                            List<(uint, IChunkIndexLocation)> _chunkList) tuple) =>
                     {
-                        var chunkLocation = new GridChunkLocation(mapGrid.GridEntityId, gridChunkIndices.Value);
-                        var entry = (visMask, chunkLocation);
+                        {
+                            var localPos = tuple.transformQuery.GetComponent(((Component) mapGrid).Owner).InvWorldMatrix.Transform(tuple.viewPos);
 
-                        if (gridDict.TryGetValue(chunkLocation, out var indexOf))
-                        {
-                            playerChunks[i].Add(indexOf);
+                            var gridChunkEnumerator =
+                                new ChunkIndicesEnumerator(localPos, tuple.range, ChunkSize);
+
+                            while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
+                            {
+                                var chunkLocation = new GridChunkLocation(((Component) mapGrid).Owner, gridChunkIndices.Value);
+                                var entry = (tuple.visMask, chunkLocation);
+
+                                if (tuple.gridDict.TryGetValue(chunkLocation, out var indexOf))
+                                {
+                                    tuple.playerChunks[tuple.i].Add(indexOf);
+                                }
+                                else
+                                {
+                                    tuple.playerChunks[tuple.i].Add(tuple._chunkList.Count);
+                                    tuple.gridDict.Add(chunkLocation, tuple._chunkList.Count);
+                                    tuple._chunkList.Add(entry);
+                                }
+                            }
+
+                            return true;
                         }
-                        else
-                        {
-                            playerChunks[i].Add(_chunkList.Count);
-                            gridDict.Add(chunkLocation, _chunkList.Count);
-                            _chunkList.Add(entry);
-                        }
-                    }
-                }
+                    });
             }
         }
 
@@ -1146,7 +1154,8 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null);
+            var state = EntityManager.GetComponentState(bus, component, player, fromTick);
+            DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState delta || delta.FullState);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (sendCompList)
@@ -1180,7 +1189,9 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            var state = EntityManager.GetComponentState(bus, component, player, GameTick.Zero);
+            DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+            changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
             netComps.Add(netId);
         }
 

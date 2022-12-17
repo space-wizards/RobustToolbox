@@ -16,11 +16,13 @@ namespace Robust.Client.Console.Commands
 
     sealed class QuitCommand : LocalizedCommands
     {
+        [Dependency] private readonly IGameController _gameController = default!;
+
         public override string Command => "quit";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<IGameController>().Shutdown("quit command used");
+            _gameController.Shutdown("quit command used");
         }
     }
 }

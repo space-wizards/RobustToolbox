@@ -143,6 +143,8 @@ namespace Robust.Client.WebView.Cef
 
             private const int ScrollSpeed = 50;
 
+            private bool _textInputActive;
+
             private readonly RobustRequestHandler _requestHandler = new(Logger.GetSawmill("root"));
             private LiveData? _data;
             private string _startUrl = "about:blank";
@@ -360,24 +362,21 @@ namespace Robust.Client.WebView.Cef
                 return modifiers;
             }
 
-            public void TextEntered(GUITextEventArgs args)
+            public void TextEntered(GUITextEnteredEventArgs args)
             {
                 if (_data == null)
                     return;
 
                 var host = _data.Browser.GetHost();
 
-                Span<char> buf = stackalloc char[2];
-                var written = args.AsRune.EncodeToUtf16(buf);
-
-                for (var i = 0; i < written; i++)
+                foreach (var chr in args.Text)
                 {
                     host.SendKeyEvent(new CefKeyEvent
                     {
                         EventType = CefKeyEventType.Char,
-                        WindowsKeyCode = buf[i],
-                        Character = buf[i],
-                        UnmodifiedCharacter = buf[i]
+                        WindowsKeyCode = chr,
+                        Character = chr,
+                        UnmodifiedCharacter = chr
                     });
                 }
             }
@@ -481,6 +480,32 @@ namespace Robust.Client.WebView.Cef
                 _requestHandler.RemoveBeforeBrowseHandler(handler);
             }
 
+            public void FocusEntered()
+            {
+                if (_textInputActive)
+                    _clyde.TextInputStart();
+            }
+
+            public void FocusExited()
+            {
+                if (_textInputActive)
+                    _clyde.TextInputStop();
+            }
+
+            public void TextInputStart()
+            {
+                _textInputActive = true;
+                if (Owner.HasKeyboardFocus())
+                    _clyde.TextInputStart();
+            }
+
+            public void TextInputStop()
+            {
+                _textInputActive = false;
+                if (Owner.HasKeyboardFocus())
+                    _clyde.TextInputStop();
+            }
+
             private sealed class LiveData
             {
                 public OwnedTexture Texture;
@@ -578,6 +603,22 @@ namespace Robust.Client.WebView.Cef
             {
                 if (_control.Owner.Disposed)
                     return;
+            }
+
+            protected override void OnVirtualKeyboardRequested(CefBrowser browser, CefTextInputMode inputMode)
+            {
+                base.OnVirtualKeyboardRequested(browser, inputMode);
+
+                // Treat virtual keyboard requests as a guide for whether we should accept text input.
+
+                if (inputMode == CefTextInputMode.None)
+                {
+                    _control.TextInputStop();
+                }
+                else
+                {
+                    _control.TextInputStart();
+                }
             }
         }
     }

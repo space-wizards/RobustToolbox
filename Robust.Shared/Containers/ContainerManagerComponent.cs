@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -11,7 +10,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
 {
@@ -27,7 +25,6 @@ namespace Robust.Shared.Containers
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly INetManager _netMan = default!;
 
-        [ViewVariables]
         [DataField("containers")]
         public Dictionary<string, IContainer> Containers = new();
 
@@ -160,7 +157,7 @@ namespace Robust.Shared.Containers
             container.Manager = this;
 
             Containers[id] = container;
-            Dirty();
+            _entMan.Dirty(this);
             return container;
         }
 

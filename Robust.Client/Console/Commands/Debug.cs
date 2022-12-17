@@ -21,6 +21,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Reflection;
@@ -33,22 +34,25 @@ namespace Robust.Client.Console.Commands
 {
     internal sealed class DumpEntitiesCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         public override string Command => "dumpentities";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-
-            foreach (var e in entityManager.GetEntities().OrderBy(e => e))
+            foreach (var e in _entityManager.GetEntities().OrderBy(e => e))
             {
                 shell.WriteLine(
-                    $"entity {e}, {entityManager.GetComponent<MetaDataComponent>(e).EntityPrototype?.ID}, {entityManager.GetComponent<TransformComponent>(e).Coordinates}.");
+                    $"entity {e}, {_entityManager.GetComponent<MetaDataComponent>(e).EntityPrototype?.ID}, {_entityManager.GetComponent<TransformComponent>(e).Coordinates}.");
             }
         }
     }
 
     internal sealed class GetComponentRegistrationCommand : LocalizedCommands
     {
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
+
+
         public override string Command => "getcomponentregistration";
 
 
@@ -60,11 +64,9 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var componentFactory = IoCManager.Resolve<IComponentFactory>();
-
             try
             {
-                var registration = componentFactory.GetRegistration(args[0]);
+                var registration = _componentFactory.GetRegistration(args[0]);
 
                 var message = new StringBuilder($"'{registration.Name}': (type: {registration.Type}, ");
                 if (registration.NetID == null)
@@ -94,6 +96,9 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ToggleMonitorCommand : LocalizedCommands
     {
+        [Dependency] private readonly IUserInterfaceManager _uiMgr = default!;
+
+
         public override string Command => "monitor";
 
         public override string Help
@@ -107,7 +112,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var monitors = IoCManager.Resolve<IUserInterfaceManager>().DebugMonitors;
+            var monitors = _uiMgr.DebugMonitors;
 
             if (args.Length != 1)
             {
@@ -175,17 +180,21 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ShowPositionsCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+
         public override string Command => "showpos";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<DebugDrawingSystem>();
+            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
             mgr.DebugPositions = !mgr.DebugPositions;
         }
     }
 
     internal sealed class ShowRayCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+
         public override string Command => "showrays";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -202,7 +211,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var mgr = EntitySystem.Get<DebugRayDrawingSystem>();
+            var mgr = _entitySystems.GetEntitySystem<DebugRayDrawingSystem>();
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
             shell.WriteError("Toggled showing rays to:" + mgr.DebugDrawRays);
             mgr.DebugRayLifetime = TimeSpan.FromSeconds(duration);
@@ -211,16 +220,20 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class DisconnectCommand : LocalizedCommands
     {
+        [Dependency] private readonly IClientNetManager _netManager = default!;
+
         public override string Command => "disconnect";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<IClientNetManager>().ClientDisconnect("Disconnect command used.");
+            _netManager.ClientDisconnect("Disconnect command used.");
         }
     }
 
     internal sealed class EntityInfoCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         public override string Command => "entfo";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -238,7 +251,7 @@ namespace Robust.Client.Console.Commands
             }
 
             var uid = EntityUid.Parse(args[0]);
-            var entmgr = IoCManager.Resolve<IEntityManager>();
+            var entmgr = _entityManager;
             if (!entmgr.EntityExists(uid))
             {
                 shell.WriteError("That entity does not exist. Sorry lad.");
@@ -270,6 +283,8 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class SnapGridGetCell : LocalizedCommands
     {
+        [Dependency] private readonly IMapManager _map = default!;
+
         public override string Command => "sggcell";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -294,8 +309,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            if (mapMan.TryGetGrid(gridUid, out var grid))
+            if (_map.TryGetGrid(gridUid, out var grid))
             {
                 foreach (var entity in grid.GetAnchoredEntities(new Vector2i(
                              int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
@@ -313,6 +327,8 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class SetPlayerName : LocalizedCommands
     {
+        [Dependency] private readonly IBaseClient _baseClient = default!;
+
         public override string Command => "overrideplayername";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -323,8 +339,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var client = IoCManager.Resolve<IBaseClient>();
-            client.PlayerNameOverride = args[0];
+            _baseClient.PlayerNameOverride = args[0];
 
             shell.WriteLine($"Overriding player name to \"{args[0]}\".");
         }
@@ -332,6 +347,9 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class LoadResource : LocalizedCommands
     {
+        [Dependency] private readonly IResourceCache _res = default!;
+        [Dependency] private readonly IReflectionManager _reflection = default!;
+
         public override string Command => "ldrsc";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -342,13 +360,11 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var resourceCache = IoCManager.Resolve<IResourceCache>();
-            var reflection = IoCManager.Resolve<IReflectionManager>();
             Type type;
 
             try
             {
-                type = reflection.LooseGetType(args[1]);
+                type = _reflection.LooseGetType(args[1]);
             }
             catch (ArgumentException)
             {
@@ -357,17 +373,20 @@ namespace Robust.Client.Console.Commands
             }
 
             var getResourceMethod =
-                resourceCache
+                _res
                     .GetType()
                     .GetMethod("GetResource", new[] { typeof(string), typeof(bool) });
             DebugTools.Assert(getResourceMethod != null);
             var generic = getResourceMethod!.MakeGenericMethod(type);
-            generic.Invoke(resourceCache, new object[] { args[0], true });
+            generic.Invoke(_res, new object[] { args[0], true });
         }
     }
 
     internal sealed class ReloadResource : LocalizedCommands
     {
+        [Dependency] private readonly IResourceCache _res = default!;
+        [Dependency] private readonly IReflectionManager _reflection = default!;
+
         public override string Command => "rldrsc";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -378,13 +397,10 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var resourceCache = IoCManager.Resolve<IResourceCache>();
-            var reflection = IoCManager.Resolve<IReflectionManager>();
-
             Type type;
             try
             {
-                type = reflection.LooseGetType(args[1]);
+                type = _reflection.LooseGetType(args[1]);
             }
             catch (ArgumentException)
             {
@@ -392,15 +408,17 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var getResourceMethod = resourceCache.GetType().GetMethod("ReloadResource", new[] { typeof(string) });
+            var getResourceMethod = _res.GetType().GetMethod("ReloadResource", new[] { typeof(string) });
             DebugTools.Assert(getResourceMethod != null);
             var generic = getResourceMethod!.MakeGenericMethod(type);
-            generic.Invoke(resourceCache, new object[] { args[0] });
+            generic.Invoke(_res, new object[] { args[0] });
         }
     }
 
     internal sealed class GridTileCount : LocalizedCommands
     {
+        [Dependency] private readonly IMapManager _map = default!;
+
         public override string Command => "gridtc";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -417,8 +435,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var mapManager = IoCManager.Resolve<IMapManager>();
-            if (mapManager.TryGetGrid(gridUid, out var grid))
+            if (_map.TryGetGrid(gridUid, out var grid))
             {
                 shell.WriteLine(grid.GetAllTiles().Count().ToString());
             }
@@ -431,16 +448,16 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class GuiDumpCommand : LocalizedCommands
     {
+        [Dependency] private readonly IUserInterfaceManager _ui = default!;
+        [Dependency] private readonly IResourceCache _res = default!;
+
         public override string Command => "guidump";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
-            var res = IoCManager.Resolve<IResourceManager>();
+            using var writer = _res.UserData.OpenWriteText(new ResourcePath("/guidump.txt"));
 
-            using var writer = res.UserData.OpenWriteText(new ResourcePath("/guidump.txt"));
-
-            foreach (var root in uiMgr.AllRoots)
+            foreach (var root in _ui.AllRoots)
             {
                 writer.WriteLine($"ROOT: {root}");
                 _writeNode(root, 0, writer);
@@ -503,115 +520,122 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class SetClipboardCommand : LocalizedCommands
     {
+        [Dependency] private readonly IClipboardManager _clipboard = default!;
+
         public override string Command => "setclipboard";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<IClipboardManager>();
-            mgr.SetText(args[0]);
+            _clipboard.SetText(args[0]);
         }
     }
 
     internal sealed class GetClipboardCommand : LocalizedCommands
     {
+        [Dependency] private readonly IClipboardManager _clipboard = default!;
+
         public override string Command => "getclipboard";
 
         public override async void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<IClipboardManager>();
-            shell.WriteLine(await mgr.GetText());
+            shell.WriteLine(await _clipboard.GetText());
         }
     }
 
     internal sealed class ToggleLight : LocalizedCommands
     {
+        [Dependency] private readonly ILightManager _light = default!;
+
         public override string Command => "togglelight";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            if (!mgr.LockConsoleAccess)
-                mgr.Enabled = !mgr.Enabled;
+            if (!_light.LockConsoleAccess)
+                _light.Enabled = !_light.Enabled;
         }
     }
 
     internal sealed class ToggleFOV : LocalizedCommands
     {
+        [Dependency] private readonly IEyeManager _eye = default!;
+
         public override string Command => "togglefov";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<IEyeManager>();
-            if (mgr.CurrentEye != null)
-                mgr.CurrentEye.DrawFov = !mgr.CurrentEye.DrawFov;
+            _eye.CurrentEye.DrawFov = !_eye.CurrentEye.DrawFov;
         }
     }
 
     internal sealed class ToggleHardFOV : LocalizedCommands
     {
+        [Dependency] private readonly ILightManager _light = default!;
+
         public override string Command => "togglehardfov";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            if (!mgr.LockConsoleAccess)
-                mgr.DrawHardFov = !mgr.DrawHardFov;
+            if (!_light.LockConsoleAccess)
+                _light.DrawHardFov = !_light.DrawHardFov;
         }
     }
 
     internal sealed class ToggleShadows : LocalizedCommands
     {
+        [Dependency] private readonly ILightManager _light = default!;
+
         public override string Command => "toggleshadows";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            if (!mgr.LockConsoleAccess)
-                mgr.DrawShadows = !mgr.DrawShadows;
+            if (!_light.LockConsoleAccess)
+                _light.DrawShadows = !_light.DrawShadows;
         }
     }
 
     internal sealed class ToggleLightBuf : LocalizedCommands
     {
+        [Dependency] private readonly ILightManager _light = default!;
+
         public override string Command => "togglelightbuf";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<ILightManager>();
-            if (!mgr.LockConsoleAccess)
-                mgr.DrawLighting = !mgr.DrawLighting;
+            if (!_light.LockConsoleAccess)
+                _light.DrawLighting = !_light.DrawLighting;
         }
     }
 
     internal sealed class ChunkInfoCommand : LocalizedCommands
     {
+        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private readonly IEyeManager _eye = default!;
+        [Dependency] private readonly IInputManager _input = default!;
+
         public override string Command => "chunkinfo";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            var inputMan = IoCManager.Resolve<IInputManager>();
-            var eyeMan = IoCManager.Resolve<IEyeManager>();
+            var mousePos = _eye.ScreenToMap(_input.MouseScreenPosition);
 
-            var mousePos = eyeMan.ScreenToMap(inputMan.MouseScreenPosition);
-
-            if (!mapMan.TryFindGridAt(mousePos, out var grid))
+            if (!_map.TryFindGridAt(mousePos, out var grid))
             {
                 shell.WriteLine("No grid under your mouse cursor.");
                 return;
             }
 
-            var internalGrid = (IMapGridInternal)grid;
-
             var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
-            var chunk = internalGrid.GetChunk(chunkIndex);
+            var chunk = grid.GetOrAddChunk(chunkIndex);
 
-            shell.WriteLine($"worldBounds: {internalGrid.CalcWorldAABB(chunk)} localBounds: {chunk.CachedBounds}");
+            shell.WriteLine($"worldBounds: {grid.CalcWorldAABB(chunk)} localBounds: {chunk.CachedBounds}");
         }
     }
 
     internal sealed class ReloadShadersCommand : LocalizedCommands
     {
+        [Dependency] private readonly IResourceCacheInternal _res = default!;
+        [Dependency] private readonly ITaskManager _taskManager = default!;
+
         public override string Command => "rldshader";
 
         public static Dictionary<string, FileSystemWatcher>? _watchers;
@@ -620,7 +644,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IResourceCacheInternal resC;
+            var resC = _res;
             if (args.Length == 1)
             {
                 if (args[0] == "+watch")
@@ -631,8 +655,6 @@ namespace Robust.Client.Console.Commands
                         return;
                     }
 
-                    resC = IoCManager.Resolve<IResourceCacheInternal>();
-
                     _watchers = new Dictionary<string, FileSystemWatcher>();
 
                     var stringComparer = PathHelpers.IsFileSystemCaseSensitive()
@@ -641,7 +663,7 @@ namespace Robust.Client.Console.Commands
 
                     var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResourcePath>>(stringComparer);
 
-                    var taskManager = IoCManager.Resolve<ITaskManager>();
+                    var taskManager = _taskManager;
 
                     var shaderCount = 0;
                     var created = 0;
@@ -697,8 +719,7 @@ namespace Robust.Client.Console.Commands
                                     {
                                         try
                                         {
-                                            IoCManager.Resolve<IResourceCache>()
-                                                .ReloadResource<ShaderSourceResource>(resPath);
+                                            resC.ReloadResource<ShaderSourceResource>(resPath);
                                             shell.WriteLine($"Reloaded shader: {resPath}");
                                         }
                                         catch (Exception)
@@ -759,8 +780,6 @@ namespace Robust.Client.Console.Commands
 
             shell.WriteLine("Reloading content shader resources...");
 
-            resC = IoCManager.Resolve<IResourceCacheInternal>();
-
             foreach (var (path, _) in resC.GetAllResources<ShaderSourceResource>())
             {
                 try
@@ -779,19 +798,19 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ClydeDebugLayerCommand : LocalizedCommands
     {
+        [Dependency] private readonly IClydeInternal _clyde = default!;
+
         public override string Command => "cldbglyr";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var clyde = IoCManager.Resolve<IClydeInternal>();
-
             if (args.Length < 1)
             {
-                clyde.DebugLayers = ClydeDebugLayers.None;
+                _clyde.DebugLayers = ClydeDebugLayers.None;
                 return;
             }
 
-            clyde.DebugLayers = args[0] switch
+            _clyde.DebugLayers = args[0] switch
             {
                 "fov" => ClydeDebugLayers.Fov,
                 "light" => ClydeDebugLayers.Light,
@@ -802,6 +821,8 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class GetKeyInfoCommand : LocalizedCommands
     {
+        [Dependency] private readonly IClydeInternal _clyde = default!;
+
         public override string Command => "keyinfo";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -812,13 +833,11 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var clyde = IoCManager.Resolve<IClydeInternal>();
-
             if (Enum.TryParse(typeof(Keyboard.Key), args[0], true, out var parsed))
             {
                 var key = (Keyboard.Key)parsed!;
 
-                var name = clyde.GetKeyName(key);
+                var name = _clyde.GetKeyName(key);
 
                 shell.WriteLine($"name: '{name}' ");
             }

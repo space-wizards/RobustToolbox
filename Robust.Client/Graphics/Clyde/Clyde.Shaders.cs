@@ -269,7 +269,14 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else
                 {
-                    headerUniforms.AppendFormat("uniform {0} {1};\n", uniform.Type.GetNativeType(), uniform.Name);
+                    if (uniform.Type.IsArray)
+                    {
+                        headerUniforms.AppendFormat($"uniform {uniform.Type.GetNativeTypeWithoutArray()} {uniform.Name}[{uniform.Type.Count}];\n");
+                    }
+                    else
+                    {
+                        headerUniforms.AppendFormat("uniform {0} {1};\n", uniform.Type.GetNativeType(), uniform.Name);
+                    }
                 }
             }
 
@@ -386,7 +393,18 @@ namespace Robust.Client.Graphics.Clyde
                 return new ClydeShaderInstance(newHandle, Parent);
             }
 
-            protected override void Dispose(bool disposing)
+            public override void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            ~ClydeShaderInstance()
+            {
+                Dispose(false);
+            }
+
+            private void Dispose(bool disposing)
             {
                 Parent._deadShaderInstances.Enqueue(Handle);
             }

@@ -28,7 +28,7 @@ namespace Robust.Shared.Serialization.Markdown
         {
             return node switch
             {
-                ValueDataNode valueDataNode => new YamlScalarNode(valueDataNode.Value){Tag = valueDataNode.Tag},
+                ValueDataNode valueDataNode => (YamlScalarNode)valueDataNode,
                 MappingDataNode mappingDataNode => mappingDataNode.ToYaml(),
                 SequenceDataNode sequenceNode => sequenceNode.ToSequenceNode(),
                 _ => throw new ArgumentOutOfRangeException(nameof(node))

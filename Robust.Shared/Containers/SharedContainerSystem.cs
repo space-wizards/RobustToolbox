@@ -21,7 +21,7 @@ namespace Robust.Shared.Containers
         public override void Initialize()
         {
             base.Initialize();
-            
+
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
         }
@@ -344,7 +344,7 @@ namespace Robust.Shared.Containers
                 if (!force)
                     return container.Remove(entity);
 
-                container.ForceRemove(entity);
+                container.Remove(entity, EntityManager, force: true);
                 return true;
             }
 
@@ -369,12 +369,11 @@ namespace Robust.Shared.Containers
         public void EmptyContainer(IContainer container, bool force = false, EntityCoordinates? moveTo = null,
             bool attachToGridOrMap = false, IEntityManager? entMan = null)
         {
-            IoCManager.Resolve(ref entMan);
-            var query = entMan.GetEntityQuery<TransformComponent>();
+            var query = EntityManager.GetEntityQuery<TransformComponent>();
             foreach (var entity in container.ContainedEntities.ToArray())
             {
                 if (query.TryGetComponent(entity, out var xform))
-                    container.Remove(entity, entMan, xform, null, attachToGridOrMap, force, moveTo);
+                    container.Remove(entity, EntityManager, xform, null, attachToGridOrMap, force, moveTo);
             }
         }
 
@@ -386,7 +385,7 @@ namespace Robust.Shared.Containers
             foreach (var ent in container.ContainedEntities.ToArray())
             {
                 if (Deleted(ent)) continue;
-                container.ForceRemove(ent);
+                container.Remove(ent, EntityManager, force: true);
                 Del(ent);
             }
         }

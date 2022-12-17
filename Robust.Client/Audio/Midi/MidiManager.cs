@@ -25,7 +25,7 @@ namespace Robust.Client.Audio.Midi;
 internal sealed partial class MidiManager : IMidiManager
 {
     [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
+    [Dependency] private readonly IResourceCacheInternal _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IConfigurationManager _cfgMan = default!;
     [Dependency] private readonly IClydeAudio _clydeAudio = default!;
@@ -107,7 +107,7 @@ internal sealed partial class MidiManager : IMidiManager
 
     private static ResourcePath CustomSoundfontDirectory = new ResourcePath("/soundfonts/");
 
-    private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks = new();
+    private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks;
 
     private bool FluidsynthInitialized;
     private bool _failedInitialize;
@@ -117,6 +117,11 @@ internal sealed partial class MidiManager : IMidiManager
 
     [ViewVariables(VVAccess.ReadWrite)]
     public int OcclusionCollisionMask { get; set; }
+
+    public MidiManager()
+    {
+        _soundfontLoaderCallbacks = new ResourceLoaderCallbacks(this);
+    }
 
     private void InitializeFluidsynth()
     {
@@ -181,7 +186,7 @@ internal sealed partial class MidiManager : IMidiManager
         _midiThread = new Thread(ThreadUpdate);
         _midiThread.Start();
 
-        _broadPhaseSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
+        _broadPhaseSystem = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
         FluidsynthInitialized = true;
     }
 
@@ -444,8 +449,14 @@ internal sealed partial class MidiManager : IMidiManager
     /// </summary>
     private sealed class ResourceLoaderCallbacks : SoundFontLoaderCallbacks
     {
+        private readonly MidiManager _parent;
         private readonly Dictionary<int, Stream> _openStreams = new();
         private int _nextStreamId = 1;
+
+        public ResourceLoaderCallbacks(MidiManager parent)
+        {
+            _parent = parent;
+        }
 
         public override IntPtr Open(string filename)
         {
@@ -455,7 +466,7 @@ internal sealed partial class MidiManager : IMidiManager
             }
 
             Stream? stream;
-            var resourceCache = IoCManager.Resolve<IResourceCache>();
+            var resourceCache = _parent._resourceManager;
             var resourcePath = new ResourcePath(filename);
 
             if (resourcePath.IsRooted)

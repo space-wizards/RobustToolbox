@@ -81,7 +81,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <summary>
         /// Network identifier of this joint.
         /// </summary>
-        [ViewVariables]
         [DataField("id")]
         public string ID { get; set; } = string.Empty;
 

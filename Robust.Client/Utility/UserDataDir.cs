@@ -8,7 +8,7 @@ namespace Robust.Client.Utility
     internal static class UserDataDir
     {
         [Pure]
-        public static string GetUserDataDir()
+        public static string GetUserDataDir(IGameControllerInternal gameController)
         {
             string appDataDir;
 
@@ -30,7 +30,7 @@ namespace Robust.Client.Utility
             appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 #endif
 
-            return Path.Combine(appDataDir, IoCManager.Resolve<IGameControllerInternal>().Options.UserDataDirectoryName, "data");
+            return Path.Combine(appDataDir, gameController.Options.UserDataDirectoryName, "data");
         }
 
     }

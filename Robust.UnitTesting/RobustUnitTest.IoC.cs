@@ -13,27 +13,29 @@ namespace Robust.UnitTesting
         /// </summary>
         private void RegisterIoC()
         {
+            var dependencies = IoCManager.Instance!;
+
             switch (Project)
             {
                 case UnitTestProject.Client:
-                    ClientIoC.RegisterIoC(GameController.DisplayMode.Headless);
+                    ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, dependencies);
                     break;
 
                 case UnitTestProject.Server:
-                    ServerIoC.RegisterIoC();
+                    ServerIoC.RegisterIoC(dependencies);
                     break;
 
                 default:
                     throw new NotSupportedException($"Unknown testing project: {Project}");
             }
 
-            IoCManager.Register<IModLoader, TestingModLoader>(overwrite: true);
-            IoCManager.Register<IModLoaderInternal, TestingModLoader>(overwrite: true);
-            IoCManager.Register<TestingModLoader, TestingModLoader>(overwrite: true);
+            dependencies.Register<IModLoader, TestingModLoader>(overwrite: true);
+            dependencies.Register<IModLoaderInternal, TestingModLoader>(overwrite: true);
+            dependencies.Register<TestingModLoader, TestingModLoader>(overwrite: true);
 
             OverrideIoC();
 
-            IoCManager.BuildGraph();
+            dependencies.BuildGraph();
         }
     }
 }

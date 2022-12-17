@@ -889,11 +889,11 @@ public abstract partial class SharedTransformSystem
         if (!xform.NoLocalRotation)
             xform._localRotation = rot;
 
+        xform.MatricesDirty = true;
         Dirty(xform);
 
         if (!xform.DeferUpdates)
         {
-            xform.MatricesDirty = true;
             if (!xform.Initialized)
                 return;
 

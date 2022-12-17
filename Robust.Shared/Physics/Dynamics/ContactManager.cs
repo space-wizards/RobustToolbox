@@ -273,7 +273,7 @@ namespace Robust.Shared.Physics.Dynamics
             DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
 
             // Does a joint override collision? Is at least one body dynamic?
-            if (!_physics.ShouldCollide(bodyB, bodyA))
+            if (!_physics.ShouldCollide(fixtureB, fixtureA))
                 return;
 
             // Call the factory.
@@ -393,7 +393,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if ((contact.Flags & ContactFlags.Filter) != 0x0)
                 {
                     // Should these bodies collide?
-                    if (_physics.ShouldCollide(bodyB, bodyA) == false)
+                    if (_physics.ShouldCollide(fixtureB, fixtureA) == false)
                     {
                         Destroy(contact);
                         continue;

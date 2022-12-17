@@ -222,6 +222,6 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Calculate the rotated sprite bounding box in world-space coordinates.
         /// </summary>
-        Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, IEye? eye = null);
+        Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, Angle eye);
     }
 }

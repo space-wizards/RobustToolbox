@@ -63,6 +63,9 @@ namespace Robust.UnitTesting.Shared.Maths
 
             var rotated = new Box2Rotated(baseBox, rotation, origin);
             Assert.That(rotated.CalcBoundingBoxSlow(), Is.Approximately(expected));
+
+            if (Sse.IsSupported)
+                Assert.That(rotated.CalcBoundingBoxSse(), Is.Approximately(expected));
         }
 
         [Test]

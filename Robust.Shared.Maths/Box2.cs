@@ -424,5 +424,12 @@ namespace Robust.Shared.Maths
                    && MathHelper.CloseToPercent(Right, other.Right, tolerance)
                    && MathHelper.CloseToPercent(Top, other.Top, tolerance);
         }
+        public bool EqualsApproxAbs(Box2 other, double tolerance)
+        {
+            return MathHelper.CloseTo(Left, other.Left, tolerance)
+                   && MathHelper.CloseTo(Bottom, other.Bottom, tolerance)
+                   && MathHelper.CloseTo(Right, other.Right, tolerance)
+                   && MathHelper.CloseTo(Top, other.Top, tolerance);
+        }
     }
 }

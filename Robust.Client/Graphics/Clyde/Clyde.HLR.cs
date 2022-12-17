@@ -1,20 +1,17 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Utility;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
-using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -24,11 +21,6 @@ namespace Robust.Client.Graphics.Clyde
     internal partial class Clyde
     {
         public ClydeDebugLayers DebugLayers { get; set; }
-
-        private readonly RefList<(SpriteComponent sprite, Vector2 worldPos, Angle worldRotation, Box2 spriteScreenBB)>
-            _drawingSpriteList
-                =
-                new();
 
         // TODO allow this scale to be passed with PostShader as variable
         /// <summary>
@@ -234,25 +226,14 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB, worldBounds);
-
-            var screenSize = viewport.Size;
-
-            ProcessSpriteEntities(mapId, viewport, eye, worldBounds, _drawingSpriteList);
-
             var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
 
-            // We use a separate list for indexing so that the sort is faster.
-            var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
+            GetSprites(mapId, viewport, eye, worldBounds, out var indexList);
 
-            for (var i = 0; i < _drawingSpriteList.Count; i++)
-            {
-                indexList[i] = i;
-            }
-
+            var screenSize = viewport.Size;
             var overlayIndex = 0;
-            RenderTexture? entityPostRenderTarget = null;
-            Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
 
+            RenderTexture? entityPostRenderTarget = null;
             bool flushed = false;
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
@@ -262,7 +243,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     var overlay = worldOverlays[overlayIndex];
 
-                    if (overlay.ZIndex > entry.sprite.DrawDepth)
+                    if (overlay.ZIndex > entry.Sprite.DrawDepth)
                     {
                         flushed = false;
                         break;
@@ -278,10 +259,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 Vector2i roundedPos = default;
-                if (entry.sprite.PostShader != null)
+                if (entry.Sprite.PostShader != null)
                 {
                     // get the size of the sprite on screen, scaled slightly to allow for shaders that increase the final sprite size.
-                    var screenSpriteSize = (Vector2i)(entry.spriteScreenBB.Size * PostShadeScale).Rounded();
+                    var screenSpriteSize = (Vector2i)(entry.SpriteScreenBB.Size * PostShadeScale).Rounded();
 
                     // I'm not 100% sure why it works, but without it post-shader
                     // can be lower or upper by 1px than original sprite depending on sprite rotation or scale
@@ -292,14 +273,14 @@ namespace Robust.Client.Graphics.Clyde
                         screenSpriteSize.Y++;
 
                     bool exit = false;
-                    if (entry.sprite.GetScreenTexture)
+                    if (entry.Sprite.GetScreenTexture)
                     {
                         FlushRenderQueue();
                         var tex = CopyScreenTexture(viewport.RenderTarget);
                         if (tex == null)
                             exit = true;
                         else
-                            entry.sprite.PostShader.SetParameter("SCREEN_TEXTURE", tex);
+                            entry.Sprite.PostShader.SetParameter("SCREEN_TEXTURE", tex);
                     }
 
                     // check that sprite size is valid
@@ -332,20 +313,20 @@ namespace Robust.Client.Graphics.Clyde
                         // Calculate viewport so that the entity thinks it's drawing to the same position,
                         // which is necessary for light application,
                         // but it's ACTUALLY drawing into the center of the render target.
-                        roundedPos = (Vector2i) entry.spriteScreenBB.Center;
+                        roundedPos = (Vector2i) entry.SpriteScreenBB.Center;
                         var flippedPos = new Vector2i(roundedPos.X, screenSize.Y - roundedPos.Y);
                         flippedPos -= entityPostRenderTarget.Size / 2;
                         _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
 
-                        if (entry.sprite.RaiseShaderEvent)
-                            _entityManager.EventBus.RaiseLocalEvent(entry.sprite.Owner,
-                                new BeforePostShaderRenderEvent(entry.sprite, viewport), false);
+                        if (entry.Sprite.RaiseShaderEvent)
+                            _entityManager.EventBus.RaiseLocalEvent(entry.Sprite.Owner,
+                                new BeforePostShaderRenderEvent(entry.Sprite, viewport), false);
                     }
                 }
 
-                entry.sprite.Render(_renderHandle.DrawingHandleWorld, eye.Rotation, in entry.worldRotation, in entry.worldPos);
+                entry.Sprite.Render(_renderHandle.DrawingHandleWorld, eye.Rotation, in entry.WorldRot, in entry.WorldPos);
 
-                if (entry.sprite.PostShader != null && entityPostRenderTarget != null)
+                if (entry.Sprite.PostShader != null && entityPostRenderTarget != null)
                 {
                     var oldProj = _currentMatrixProj;
                     var oldView = _currentMatrixView;
@@ -353,7 +334,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.UseRenderTarget(viewport.RenderTarget);
                     _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
 
-                    _renderHandle.UseShader(entry.sprite.PostShader);
+                    _renderHandle.UseShader(entry.Sprite.PostShader);
                     CalcScreenMatrices(viewport.Size, out var proj, out var view);
                     _renderHandle.SetProjView(proj, view);
                     _renderHandle.SetModelTransform(Matrix3.Identity);
@@ -388,41 +369,6 @@ namespace Robust.Client.Graphics.Clyde
 
             _drawingSpriteList.Clear();
             FlushRenderQueue();
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds,
-            RefList<(SpriteComponent sprite, Vector2 worldPos, Angle worldRot, Box2 spriteScreenBB)> list)
-        {
-            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
-            var xformSys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>();
-
-            // matrix equivalent for Viewport.WorldToLocal()
-            var worldToLocal = view.GetWorldToLocalMatrix();
-            var spriteState = (list, xformSys, xforms, eye, worldToLocal);
-
-            foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
-            {
-                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
-
-                comp.SpriteTree.QueryAabb(ref spriteState, static
-                (ref (RefList<(SpriteComponent sprite, Vector2 worldPos, Angle worldRot, Box2 spriteScreenBB)> list,
-                        TransformSystem xformSys,
-                        EntityQuery<TransformComponent> xforms,
-                        IEye eye,
-                        Matrix3 worldToLocal) state,
-                    in ComponentTreeEntry<SpriteComponent> value) =>
-                {
-                    ref var entry = ref state.list.AllocAdd();
-                    entry.sprite = value.Component;
-                    (entry.worldPos, entry.worldRot) = state.xformSys.GetWorldPositionRotation(value.Transform, state.xforms);
-
-                    var spriteWorldBB = entry.sprite.CalculateRotatedBoundingBox(entry.worldPos, entry.worldRot, state.eye);
-                    entry.spriteScreenBB = state.worldToLocal.TransformBox(spriteWorldBB);
-                    return true;
-
-                }, bounds, true);
-            }
         }
 
         private void DrawSplash(IRenderHandle handle)

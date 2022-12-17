@@ -95,15 +95,10 @@ namespace Robust.Shared.Maths
             allX = Sse.Add(modX, originX);
             allY = Sse.Add(modY, originY);
 
-            var l = SimdHelpers.MinHorizontalSse(allX);
-            var b = SimdHelpers.MinHorizontalSse(allY);
-            var r = SimdHelpers.MaxHorizontalSse(allX);
-            var t = SimdHelpers.MaxHorizontalSse(allY);
-
-            var lb = Sse.UnpackLow(l, b);
-            var rt = Sse.UnpackLow(r, t);
-
-            var lbrt = Sse.Shuffle(lb, rt, 0b11_10_01_00);
+            // lrlr = vector containing [left right left right]
+            var lrlr = SimdHelpers.MinMaxHorizontalSse(allX);
+            var btbt = SimdHelpers.MinMaxHorizontalSse(allY);
+            var lbrt = Sse.UnpackLow(lrlr, btbt);
 
             return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
         }

@@ -581,6 +581,11 @@ public abstract partial class SharedPhysicsSystem
         var linearVelocities = ArrayPool<Vector2>.Shared.Rent(totalBodies);
         var angularVelocities = ArrayPool<float>.Shared.Rent(totalBodies);
         var sleepStatus = ArrayPool<bool>.Shared.Rent(totalBodies);
+        // Cleanup any potentially stale data first.
+        for (var i = 0; i < totalBodies; i++)
+        {
+            sleepStatus[i] = false;
+        }
 
         var options = new ParallelOptions()
         {
@@ -621,10 +626,6 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<float>.Shared.Return(solvedAngles);
         ArrayPool<Vector2>.Shared.Return(linearVelocities);
         ArrayPool<float>.Shared.Return(angularVelocities);
-        for (var i = 0; i < totalBodies; i++)
-        {
-            sleepStatus[i] = false;
-        }
         ArrayPool<bool>.Shared.Return(sleepStatus);
     }
 

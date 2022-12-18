@@ -192,7 +192,7 @@ namespace Robust.Client.GameStates
                 AckGameState(message.State.ToSequence);
         }
 
-        public void UpdateFullRep(GameState state) => _processor.UpdateFullRep(state);
+        public void UpdateFullRep(GameState state, bool cloneDelta = false) => _processor.UpdateFullRep(state, cloneDelta);
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
         {
@@ -578,8 +578,12 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, component) in _entityManager.GetNetComponents(createdEntity))
                 {
-                    if (component.NetSyncEnabled)
-                        compData.Add(netId, _entityManager.GetComponentState(bus, component, _players.LocalPlayer?.Session));
+                    if (!component.NetSyncEnabled)
+                        continue;
+
+                    var state = _entityManager.GetComponentState(bus, component, _players.LocalPlayer?.Session, GameTick.Zero);
+                    DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+                    compData.Add(netId, state);
                 }
             }
 
@@ -598,11 +602,6 @@ namespace Robust.Client.GameStates
             using (_prof.Group("Config"))
             {
                 _config.TickProcessMessages();
-            }
-
-            using (_prof.Group("Map Pre"))
-            {
-                _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates.Span);
             }
 
             (IEnumerable<EntityUid> Created, List<EntityUid> Detached) output;
@@ -851,7 +850,7 @@ namespace Robust.Client.GameStates
             SharedTransformSystem xformSys)
         {
             // Processing deletions is non-trivial, because by default deletions will also delete all child entities.
-            // 
+            //
             // Naively: easy, just apply server states to process any transform states before deleting, right? But now
             // that PVS detach messages are sent separately & processed over time, the entity may have left our view,
             // but not yet been moved to null-space. In that case, the server would not send us transform states, and
@@ -1222,7 +1221,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <summary>
-        ///     Resets all entities to the most recently received server state. This only impacts entities that have not been detached to null-space. 
+        ///     Resets all entities to the most recently received server state. This only impacts entities that have not been detached to null-space.
         /// </summary>
         private void ResetAllEnts(IConsoleShell shell, string argStr, string[] args)
         {

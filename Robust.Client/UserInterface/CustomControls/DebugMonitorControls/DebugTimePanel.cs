@@ -1,4 +1,3 @@
-using System;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Timing;
@@ -7,9 +6,9 @@ using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.UserInterface.CustomControls
+namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
-    public sealed class DebugTimePanel : PanelContainer
+    internal sealed class DebugTimePanel : PanelContainer
     {
         private readonly IClientGameTiming _gameTiming;
         private readonly IClientGameStateManager _gameState;

@@ -22,5 +22,10 @@ namespace Robust.Shared.Configuration
         ///     Specifies the location where the config file should be saved, without trying to load from it.
         /// </summary>
         void SetSaveFile(string configFile);
+
+        /// <summary>
+        /// Check the list of CVars to make sure there's no unused CVars set, which might indicate a typo or such.
+        /// </summary>
+        void CheckUnusedCVars();
     }
 }

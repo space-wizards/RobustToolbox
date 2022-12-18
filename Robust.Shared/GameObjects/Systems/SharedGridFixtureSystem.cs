@@ -170,6 +170,8 @@ namespace Robust.Shared.GameObjects
 
             foreach (var fixture in toRemove)
             {
+                // TODO add a DestroyFixture() override that takes in a list.
+                // reduced broadphase lookups
                 chunk.Fixtures.Remove(fixture);
                 _fixtures.DestroyFixture(fixture, false, fixturesComponent);
             }

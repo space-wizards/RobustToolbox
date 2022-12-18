@@ -21,6 +21,7 @@ namespace Robust.Shared.Configuration
     internal class ConfigurationManager : IConfigurationManagerInternal
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private const char TABLE_DELIMITER = '.';
         protected readonly Dictionary<string, ConfigVar> _configVars = new();
@@ -28,6 +29,8 @@ namespace Robust.Shared.Configuration
         protected bool _isServer;
 
         protected readonly ReaderWriterLockSlim Lock = new();
+
+        private ISawmill _sawmill = default!;
 
         /// <summary>
         ///     Constructs a new ConfigurationManager.
@@ -39,6 +42,8 @@ namespace Robust.Shared.Configuration
         public void Initialize(bool isServer)
         {
             _isServer = isServer;
+
+            _sawmill = _logManager.GetSawmill("cfg");
         }
 
         public virtual void Shutdown()
@@ -55,14 +60,16 @@ namespace Robust.Shared.Configuration
             var loaded = new HashSet<string>();
             try
             {
-                var tblRoot = Toml.ReadStream(file);
-
                 var callbackEvents = new ValueList<ValueChangedInvoke>();
 
                 // Ensure callbacks are raised OUTSIDE the write lock.
                 using (Lock.WriteGuard())
                 {
-                    ProcessTomlObject(tblRoot, ref callbackEvents, loaded);
+                    foreach (var (cvar, value) in ParseCVarValuesFromToml(file))
+                    {
+                        loaded.Add(cvar);
+                        LoadTomlVar(cvar, value, ref callbackEvents);
+                    }
                 }
 
                 foreach (var callback in callbackEvents)
@@ -74,6 +81,42 @@ namespace Robust.Shared.Configuration
             {
                 loaded.Clear();
                 Logger.WarningS("cfg", "Unable to load configuration from stream:\n{0}", e);
+            }
+
+            return loaded;
+        }
+
+        private void LoadTomlVar(
+            string cvar,
+            object value,
+            ref ValueList<ValueChangedInvoke> changedInvokes)
+        {
+            if (_configVars.TryGetValue(cvar, out var cfgVar))
+            {
+                // overwrite the value with the saved one
+                cfgVar.Value = value;
+                if (SetupInvokeValueChanged(cfgVar, value) is { } invoke)
+                    changedInvokes.Add(invoke);
+            }
+            else
+            {
+                //or add another unregistered CVar
+                //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
+                cfgVar = new ConfigVar(cvar, 0, CVar.NONE) { Value = value };
+                _configVars.Add(cvar, cfgVar);
+            }
+
+            cfgVar.ConfigModified = true;
+        }
+
+        public HashSet<string> LoadDefaultsFromTomlStream(Stream stream)
+        {
+            var loaded = new HashSet<string>();
+
+            foreach (var (cvar, value) in ParseCVarValuesFromToml(stream))
+            {
+                loaded.Add(cvar);
+                OverrideDefault(cvar, value);
             }
 
             return loaded;
@@ -102,54 +145,20 @@ namespace Robust.Shared.Configuration
             _configFile = configFile;
         }
 
-        /// <summary>
-        /// A recursive function that walks over the config tree, transforming all key nodes into CVars.
-        /// </summary>
-        /// <param name="obj">The root table of the TOML document.</param>
-        /// <param name="changedInvokes">List of CVars that will need to have their InvokeValueChanged ran.</param>
-        /// <param name="tablePath">For internal use only, the current path to the node.</param>
-        private void ProcessTomlObject(
-            TomlObject obj,
-            ref ValueList<ValueChangedInvoke> changedInvokes,
-            HashSet<string> loadedCvars,
-            string tablePath = "")
+        public void CheckUnusedCVars()
         {
-            if (obj is TomlTable table) // this is a table
+            if (!GetCVar(CVars.CfgCheckUnused))
+                return;
+
+            using (Lock.ReadGuard())
             {
-                foreach (var kvTml in table)
+                foreach (var cVar in _configVars.Values)
                 {
-                    string newPath;
+                    if (cVar.Registered)
+                        continue;
 
-                    if ((kvTml.Value is TomlTable))
-                        newPath = tablePath + kvTml.Key + TABLE_DELIMITER;
-                    else
-                        newPath = tablePath + kvTml.Key;
-
-                    ProcessTomlObject(kvTml.Value, ref changedInvokes, loadedCvars, newPath);
+                    _sawmill.Warning("Unknown CVar found (typo in config?): {CVar}", cVar.Name);
                 }
-            }
-            else // this is a key, add CVar
-            {
-                // if the CVar has already been registered
-                var tomlValue = TypeConvert(obj);
-                if (_configVars.TryGetValue(tablePath, out var cfgVar))
-                {
-                    // overwrite the value with the saved one
-                    cfgVar.Value = tomlValue;
-                    loadedCvars.Add(cfgVar.Name);
-                    if (SetupInvokeValueChanged(cfgVar, tomlValue) is { } invoke)
-                        changedInvokes.Add(invoke);
-                }
-                else
-                {
-                    //or add another unregistered CVar
-                    //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
-                    cfgVar = new ConfigVar(tablePath, 0, CVar.NONE) { Value = tomlValue };
-                    _configVars.Add(tablePath, cfgVar);
-                    loadedCvars.Add(cfgVar.Name);
-                }
-
-                cfgVar.ConfigModified = true;
             }
         }
 
@@ -244,10 +253,15 @@ namespace Robust.Shared.Configuration
                 // Don't write if Archive flag is not set.
                 // Don't write if the cVar is the default value.
                 var cvars = _configVars.Where(x => x.Value.ConfigModified
-                    || ((x.Value.Flags & CVar.ARCHIVE) == 0 && x.Value.Value != null && !x.Value.Value.Equals(x.Value.DefaultValue))).Select(x => x.Key);
+                                                   || ((x.Value.Flags & CVar.ARCHIVE) != 0 && x.Value.Value != null &&
+                                                       !x.Value.Value.Equals(x.Value.DefaultValue))).Select(x => x.Key);
 
+                // Write in-memory to avoid bulldozing config file on exception.
+                var memoryStream = new MemoryStream();
+                SaveToTomlStream(memoryStream, cvars);
+                memoryStream.Position = 0;
                 using var file = File.OpenWrite(_configFile);
-                SaveToTomlStream(file, cvars);
+                memoryStream.CopyTo(file);
                 Logger.InfoS("cfg", $"config saved to '{_configFile}'.");
             }
             catch (Exception e)
@@ -635,6 +649,39 @@ namespace Robust.Shared.Configuration
                 Invoke = var.ValueChanged,
                 Value = value
             };
+        }
+
+        private IEnumerable<(string cvar, object value)> ParseCVarValuesFromToml(Stream stream)
+        {
+            var tblRoot = Toml.ReadStream(stream);
+
+            return ProcessTomlObject(tblRoot, "");
+
+            IEnumerable<(string cvar, object value)> ProcessTomlObject(TomlObject obj, string tablePath)
+            {
+                if (obj is TomlTable table)
+                {
+                    foreach (var kvTml in table)
+                    {
+                        string newPath;
+
+                        if ((kvTml.Value is TomlTable))
+                            newPath = tablePath + kvTml.Key + TABLE_DELIMITER;
+                        else
+                            newPath = tablePath + kvTml.Key;
+
+                        foreach (var tuple in ProcessTomlObject(kvTml.Value, newPath))
+                        {
+                            yield return tuple;
+                        }
+                    }
+
+                    yield break;
+                }
+
+                var tomlValue = TypeConvert(obj);
+                yield return (tablePath, tomlValue);
+            }
         }
 
         /// <summary>

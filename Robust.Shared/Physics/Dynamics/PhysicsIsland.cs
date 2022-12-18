@@ -159,8 +159,8 @@ stored in a single array since multiple arrays lead to multiple misses.
         private float _linTolSqr;
         private bool _warmStarting;
         private int _velocityIterations;
-        private float _maxLinearVelocity;
-        private float _maxAngularVelocity;
+        private float _maxTranslation;
+        private float _maxRotation;
         private float _maxLinearCorrection;
         private float _maxAngularCorrection;
         private int _positionIterations;
@@ -231,8 +231,8 @@ stored in a single array since multiple arrays lead to multiple misses.
             _linTolSqr = cfg.LinTolSqr;
             _warmStarting = cfg.WarmStarting;
             _velocityIterations = cfg.VelocityIterations;
-            _maxLinearVelocity = cfg.MaxLinearVelocity;
-            _maxAngularVelocity = cfg.MaxAngularVelocity;
+            _maxTranslation = cfg.MaxTranslationPerTick;
+            _maxRotation = cfg.MaxRotationPerTick;
             _maxLinearCorrection = cfg.MaxLinearCorrection;
             _maxAngularCorrection = cfg.MaxAngularCorrection;
             _positionIterations = cfg.PositionIterations;
@@ -427,37 +427,33 @@ stored in a single array since multiple arrays lead to multiple misses.
             // Store for warm starting.
             _contactSolver.StoreImpulses();
 
-            // Integrate positions
+            var maxVel = _maxTranslation / frameTime;
+            var maxVelSq = maxVel * maxVel;
+            var maxAngVel = _maxRotation / frameTime;
+            var maxAngVelSq = maxAngVel * maxAngVel;
+
+            // Apply velocity limits and Integrate positions
             for (var i = 0; i < BodyCount; i++)
             {
                 var linearVelocity = _linearVelocities[i];
                 var angularVelocity = _angularVelocities[i];
 
-                var position = _positions[i];
-                var angle = _angles[i];
-
-                var translation = linearVelocity * frameTime;
-                if (translation.Length > _maxLinearVelocity)
+                var velSqr = linearVelocity.LengthSquared;
+                if (velSqr > maxVelSq)
                 {
-                    var ratio = _maxLinearVelocity / translation.Length;
-                    linearVelocity *= ratio;
+                    linearVelocity *= maxVel / MathF.Sqrt(velSqr);
+                    _linearVelocities[i] = linearVelocity;
                 }
 
-                var rotation = angularVelocity * frameTime;
-                if (rotation * rotation > _maxAngularVelocity)
+                if (angularVelocity * angularVelocity > maxAngVelSq)
                 {
-                    var ratio = _maxAngularVelocity / MathF.Abs(rotation);
-                    angularVelocity *= ratio;
+                    angularVelocity *= maxAngVel / MathF.Abs(angularVelocity);
+                    _angularVelocities[i] = angularVelocity;
                 }
 
                 // Integrate
-                position += linearVelocity * frameTime;
-                angle += angularVelocity * frameTime;
-
-                _linearVelocities[i] = linearVelocity;
-                _angularVelocities[i] = angularVelocity;
-                _positions[i] = position;
-                _angles[i] = angle;
+                _positions[i] += linearVelocity * frameTime;
+                _angles[i] += angularVelocity * frameTime;
             }
 
             _positionSolved = false;
@@ -658,8 +654,8 @@ stored in a single array since multiple arrays lead to multiple misses.
         public bool SleepAllowed;
         public bool WarmStarting;
         public int VelocityIterations;
-        public float MaxLinearVelocity;
-        public float MaxAngularVelocity;
+        public float MaxTranslationPerTick;
+        public float MaxRotationPerTick;
         public int PositionIterations;
         public float TimeToSleep;
         public float VelocityThreshold;

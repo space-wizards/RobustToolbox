@@ -67,6 +67,7 @@ namespace Robust.Client.Graphics.Clyde
             void TextInputSetRect(UIBox2i rect);
             void TextInputStart();
             void TextInputStop();
+            string GetDescription();
         }
     }
 }

@@ -35,14 +35,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The entity lookup flag `LookupFlags.Anchored` has been replaced with `LookupFlags.Static`.
+* We are now using **.NET 7**.
 
 ### New features
 
-* `game.desc` CVar for a server description to show in the launcher.
-* New system for exposing links to e.g. a Discord in the launcher.
-  * The engine does not have a built-in method for configuring these, but it does now have a `StatusHostHelpers.AddLink` method to correctly format these from content. The idea is that content wires the types of links (with icon names) up itself via `IStatusHost.OnInfoRequest`.
-  * See also [the HTTP API documentation](https://docs.spacestation14.io/en/engine/http-api) for reference.
+* The server will now check for any unknown CVars at startup, to possibly locate typos in your config file.
+* `IDependencyCollection` is now thread safe.
 
 ### Bugfixes
 
@@ -50,12 +49,119 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Removed some cruft from the `server_config.toml` default config file that ships with Robust.
 
 ### Internal
 
 *None yet*
 
+
+## 0.72.0.0
+
+### Breaking changes
+
+* EntityPausedEvent has been split into EntityPausedEvent and EntityUnpausedEvent. The unpaused version now has information about how long an entity has been paused.
+
+## 0.71.1.4
+
+### Bugfixes
+
+* Fixed CVars not being saved correctly to config file.
+
+### Other
+
+* Mark `validate_rsis.py` as `+x` in Git.
+* Made config system more robust against accidental corruption when saving.
+
+
+## 0.71.1.3
+
+
+## 0.71.1.2
+
+### Bugfixes
+
+* Fixed UI ScrollContainer infinite loop freezing client.
+
+
+## 0.71.1.1
+
+### Bugfixes
+
+* Fixed client memory leaks and improved performance in integration testing.
+
+
+## 0.71.1.0
+
+### New features
+
+* Better RSI validator script.
+* When a new map file is loaded onto an existing map the entities will be transferred over.
+* Add an API to get the hard layer / mask for a particular physics body.
+
+### Bugfixes
+
+* Fixed non-filled circle drawing via world handle.
+* Fix max_connections in the default server config.
+* Fix removal of PVS states for players without ingame status.
+* Fix max rotation from the physics solver.
+
+### Internal
+
+* Wrap window rendering in a try-catch.
+
+
+## 0.71.0.0
+
+### Breaking changes
+
+* `DebugTimePanel`, `DebugNetPanel` and `DebugNetBandwidthPanel` have been made internal.
+* RSIs with trailing commas in the JSON metadata are no longer allowed.
+
+### Bugfixes
+
+* `csi` doesn't throw a `NullReferenceException` anymore.
+
+### Other
+
+* The `game.maxplayers` CVar has been deprecated in favor of the new `net.max_connections` CVar. Functionality is the same, just renamed to avoid confusion. The old CVar still exists, so if `game.maxplayers` is set it will be preferred over the new one.
+* The new default for `net.max_connections` is 256.
+* Debug monitors (F3) now have margin between them.
+* F3 (clyde monitor) now lists the windowing API and version in use.
+* Added system monitor to F3 with various info like OS version, .NET runtime version, etc...
+* The engine now warns when loading `.png` textures inside a `.rsi`. This will be blocked in the future.
+
+
+## 0.70.0.0
+
+### New features
+
+* `game.desc` CVar for a server description to show in the launcher.
+* New system for exposing links to e.g. a Discord in the launcher.
+  * The engine does not have a built-in method for configuring these, but it does now have a `StatusHostHelpers.AddLink` method to correctly format these from content. The idea is that content wires the types of links (with icon names) up itself via `IStatusHost.OnInfoRequest`.
+  * See also [the HTTP API documentation](https://docs.spacestation14.io/en/engine/http-api) for reference.
+* `GameShared` now has a `Dependencies` property to allow access to the game's `IDependencyCollection`. This makes it possible to avoid using static `IoCManager` in `EntryPoint`-type content code.
+* A new define constant `DEVELOPMENT` has been defined, equivalent to `!FULL_RELEASE`. See [the docs](https://docs.spacestation14.io/en/technical-docs/preprocessor-defines) for details.
+* `IConfigurationManager` has new functions for reading and writing CVar directly from a TOML file `Stream`.
+* New `IConfigurationManager.LoadDefaultsFromTomlStream` to load a TOML file as CVar default overrides.
+* Added new serializers to support Queue<T> data-fields.
+* Added a `FromParent()` function to `IDependencyCollection`, enabling dependencies to be passed to parallel threads.
+* `IClientStateManager` now has a `PartialStateReset()` function to make it easier for content to rewind to previous game states.
+* Added `IClientNetManager.DispatchLocalNetMessage()`, which allows a client to raise a local message that triggers networked event subscriptions.
+
+### Bugfixes
+
+* `IPlayerSession.OnConnect()` now actually gets called when players connect.
+* `MapLoaderSystem.TryLoad(.., out rootUids)` now properly only returns entities parented to the map.
+
+### Other
+
+* Invalid placement types for the entity spawn menu now log warnings.
+* Slightly improved sprite y-sorting performance.
+
+### Internal
+
+* The current physics map that an entity is on is now cached in the transform component alongside other cached broadphase data. This helps to fix some broadphase/lookup bugs.
 
 ## 0.69.0.0
 

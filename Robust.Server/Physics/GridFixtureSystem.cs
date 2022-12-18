@@ -242,10 +242,10 @@ namespace Robust.Server.Physics
                 var xformQuery = GetEntityQuery<TransformComponent>();
                 var bodyQuery = GetEntityQuery<PhysicsComponent>();
                 var gridQuery = GetEntityQuery<MapGridComponent>();
-                var oldGridXform = xformQuery.GetComponent(mapGrid.GridEntityId);
+                var oldGridXform = xformQuery.GetComponent(mapGrid.Owner);
                 var (gridPos, gridRot) = oldGridXform.GetWorldPositionRotation(xformQuery);
-                var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
-                var oldGridComp = gridQuery.GetComponent(mapGrid.GridEntityId);
+                var mapBody = bodyQuery.GetComponent(mapGrid.Owner);
+                var oldGridComp = gridQuery.GetComponent(mapGrid.Owner);
                 var newGrids = new EntityUid[grids.Count - 1];
                 var mapId = oldGridXform.MapID;
 
@@ -253,17 +253,17 @@ namespace Robust.Server.Physics
                 {
                     var group = grids[i];
                     var splitGrid = _mapManager.CreateGrid(mapId);
-                    var splitXform = xformQuery.GetComponent(splitGrid.GridEntityId);
-                    newGrids[i] = splitGrid.GridEntityId;
+                    var splitXform = xformQuery.GetComponent(splitGrid.Owner);
+                    newGrids[i] = splitGrid.Owner;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
                     splitXform.WorldPosition = gridPos;
                     splitXform.WorldRotation = gridRot;
-                    var splitBody = bodyQuery.GetComponent(splitGrid.GridEntityId);
+                    var splitBody = bodyQuery.GetComponent(splitGrid.Owner);
                     splitBody.LinearVelocity = mapBody.LinearVelocity;
                     splitBody.AngularVelocity = mapBody.AngularVelocity;
 
-                    var gridComp = gridQuery.GetComponent(splitGrid.GridEntityId);
+                    var gridComp = gridQuery.GetComponent(splitGrid.Owner);
                     var tileData = new List<(Vector2i GridIndices, Tile Tile)>(group.Sum(o => o.Indices.Count));
 
                     // Gather all tiles up front and set once to minimise fixture change events
@@ -279,7 +279,7 @@ namespace Robust.Server.Physics
                     }
 
                     splitGrid.SetTiles(tileData);
-                    DebugTools.Assert(_mapManager.IsGrid(splitGrid.GridEntityId), "A split grid had no tiles?");
+                    DebugTools.Assert(_mapManager.IsGrid(splitGrid.Owner), "A split grid had no tiles?");
 
                     // Set tiles on new grid + update anchored entities
                     foreach (var node in group)
@@ -311,22 +311,22 @@ namespace Robust.Server.Physics
                             var tilePos = offset + tile;
                             var bounds = _lookup.GetLocalBounds(tilePos, mapGrid.TileSize);
 
-                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.GridEntityId, tilePos, LookupFlags.Dynamic | LookupFlags.Sundries))
+                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.Owner, tilePos, LookupFlags.Dynamic | LookupFlags.Sundries))
                             {
                                 // Consider centre of entity position maybe?
                                 var entXform = xformQuery.GetComponent(ent);
 
-                                if (entXform.ParentUid != mapGrid.GridEntityId ||
+                                if (entXform.ParentUid != mapGrid.Owner ||
                                     !bounds.Contains(entXform.LocalPosition)) continue;
 
                                 _xformSystem.SetParent(entXform, splitXform.Owner, xformQuery, splitXform);
                             }
                         }
 
-                        _nodes[mapGrid.GridEntityId][node.Group.Chunk.Indices].Nodes.Remove(node);
+                        _nodes[mapGrid.Owner][node.Group.Chunk.Indices].Nodes.Remove(node);
                     }
 
-                    var eevee = new PostGridSplitEvent(mapGrid.GridEntityId, splitGrid.GridEntityId);
+                    var eevee = new PostGridSplitEvent(mapGrid.Owner, splitGrid.Owner);
                     RaiseLocalEvent(uid, ref eevee, true);
 
                     for (var j = 0; j < tileData.Count; j++)
@@ -338,13 +338,13 @@ namespace Robust.Server.Physics
                     // Set tiles on old grid
                     mapGrid.SetTiles(tileData);
                     GenerateSplitNodes((MapGridComponent) splitGrid);
-                    SendNodeDebug(splitGrid.GridEntityId);
+                    SendNodeDebug(splitGrid.Owner);
                 }
 
                 // Cull all of the old chunk nodes.
                 var toRemove = new RemQueue<ChunkNodeGroup>();
 
-                foreach (var (_, group) in _nodes[mapGrid.GridEntityId])
+                foreach (var (_, group) in _nodes[mapGrid.Owner])
                 {
                     if (group.Nodes.Count > 0) continue;
                     toRemove.Add(group);
@@ -352,11 +352,11 @@ namespace Robust.Server.Physics
 
                 foreach (var group in toRemove)
                 {
-                    _nodes[mapGrid.GridEntityId].Remove(group.Chunk.Indices);
+                    _nodes[mapGrid.Owner].Remove(group.Chunk.Indices);
                 }
 
                 // Allow content to react to the grid being split...
-                var ev = new GridSplitEvent(newGrids, mapGrid.GridEntityId);
+                var ev = new GridSplitEvent(newGrids, mapGrid.Owner);
                 RaiseLocalEvent(uid, ref ev, true);
 
                 _logger.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
@@ -364,15 +364,15 @@ namespace Robust.Server.Physics
 
             _logger.Debug($"Stopped split check for {ToPrettyString(uid)}");
             _isSplitting = false;
-            SendNodeDebug(mapGrid.GridEntityId);
+            SendNodeDebug(mapGrid.Owner);
         }
 
         private void GenerateSplitNodes(MapGridComponent grid)
         {
             foreach (var (_, chunk) in grid.GetMapChunks())
             {
-                var group = CreateNodes(grid.GridEntityId, grid, chunk);
-                _nodes[grid.GridEntityId].Add(chunk.Indices, group);
+                var group = CreateNodes(grid.Owner, grid, chunk);
+                _nodes[grid.Owner].Add(chunk.Indices, group);
             }
         }
 

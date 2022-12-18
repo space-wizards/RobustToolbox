@@ -26,10 +26,15 @@ namespace Robust.Shared.IoC
     /// To use the IoCManager, it first needs some types registered through <see cref="Register{TInterface, TImplementation}"/>.
     /// These implementations can then be fetched with <see cref="Resolve{T}"/>, or through field injection with <see cref="DependencyAttribute" />.
     /// </para>
+    /// <para>
+    /// This type is thread safe: registration and <see cref="BuildGraph"/> can run concurrently with resolves.
+    /// </para>
     /// </remarks>
     /// <seealso cref="IReflectionManager"/>
     public interface IDependencyCollection
     {
+        IDependencyCollection FromParent(IDependencyCollection parentCollection);
+
         /// <summary>
         /// Enumerates over all registered types.
         /// </summary>
@@ -110,13 +115,7 @@ namespace Robust.Shared.IoC
         ///     If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
         ///     replace the current implementation instead.
         /// </param>
-        /// <param name="deferInject">
-        ///     Defer field injection until <see cref="IDependencyCollection.BuildGraph"/> is called.
-        ///     If this is false, dependencies will be immediately injected. If the registered type requires dependencies
-        ///     that don't exist yet because you have not called BuildGraph, set this to true.
-        /// </param>
-        void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
-            where TInterface : class;
+        void RegisterInstance<TInterface>(object implementation, bool overwrite = false) where TInterface : class;
 
         /// <summary>
         ///     Registers an interface to an existing instance of an implementation,
@@ -130,12 +129,7 @@ namespace Robust.Shared.IoC
         ///     If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
         ///     replace the current implementation instead.
         /// </param>
-        /// <param name="deferInject">
-        ///     Defer field injection until <see cref="IDependencyCollection.BuildGraph"/> is called.
-        ///     If this is false, dependencies will be immediately injected. If the registered type requires dependencies
-        ///     that don't exist yet because you have not called BuildGraph, set this to true.
-        /// </param>
-        void RegisterInstance(Type type, object implementation, bool overwrite = false, bool deferInject = false);
+        void RegisterInstance(Type type, object implementation, bool overwrite = false);
 
         /// <summary>
         /// Clear all services and types.

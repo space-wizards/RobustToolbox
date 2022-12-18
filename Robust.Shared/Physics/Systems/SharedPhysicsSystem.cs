@@ -111,6 +111,7 @@ namespace Robust.Shared.Physics.Systems
         {
             _deps.InjectDependencies(component);
             component.BroadphaseSystem = _broadphase;
+            component.Physics = this;
             component.ContactManager = new(_debugPhysics, _manifoldManager, EntityManager, _physicsManager, _cfg);
             component.ContactManager.Initialize();
             component.ContactManager.MapId = component.MapId;
@@ -181,20 +182,11 @@ namespace Robust.Shared.Physics.Systems
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
             var jointQuery = GetEntityQuery<JointComponent>();
-            var fixturesQuery = GetEntityQuery<FixturesComponent>();
-            var broadQuery = GetEntityQuery<BroadphaseComponent>();
 
             TryComp(MapManager.GetMapEntityId(oldMapId), out SharedPhysicsMapComponent? oldMap);
             TryComp(MapManager.GetMapEntityId(newMapId), out SharedPhysicsMapComponent? newMap);
 
-            Dictionary<FixtureProxy, Box2>? oldMoveBuffer = null;
-
-            if (oldMap != null)
-            {
-                oldMoveBuffer = oldMap.MoveBuffer;
-            }
-
-            RecursiveMapUpdate(xform, body, newMapId, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
+            RecursiveMapUpdate(xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
         }
 
         /// <summary>
@@ -203,18 +195,13 @@ namespace Robust.Shared.Physics.Systems
         private void RecursiveMapUpdate(
             TransformComponent xform,
             PhysicsComponent? body,
-            MapId newMapId,
             SharedPhysicsMapComponent? newMap,
             SharedPhysicsMapComponent? oldMap,
-            Dictionary<FixtureProxy, Box2>? oldMoveBuffer,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<FixturesComponent> fixturesQuery,
-            EntityQuery<JointComponent> jointQuery,
-            EntityQuery<BroadphaseComponent> broadQuery)
+            EntityQuery<JointComponent> jointQuery)
         {
             var uid = xform.Owner;
-
             DebugTools.Assert(!Deleted(uid));
 
             // This entity may not have a body, but some of its children might:
@@ -244,9 +231,8 @@ namespace Robust.Shared.Physics.Systems
                 if (xformQuery.TryGetComponent(child, out var childXform))
                 {
                     bodyQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(childXform, childBody, newMapId, newMap, oldMap, oldMoveBuffer, bodyQuery, xformQuery, fixturesQuery, jointQuery, broadQuery);
+                    RecursiveMapUpdate(childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
                 }
-
             }
         }
 

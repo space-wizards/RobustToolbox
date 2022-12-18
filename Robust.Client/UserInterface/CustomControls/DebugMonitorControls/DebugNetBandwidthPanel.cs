@@ -7,9 +7,9 @@ using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.UserInterface.CustomControls
+namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
-    public sealed class DebugNetBandwidthPanel : PanelContainer
+    internal sealed class DebugNetBandwidthPanel : PanelContainer
     {
         private const int OneKibibyte = 1024;
 

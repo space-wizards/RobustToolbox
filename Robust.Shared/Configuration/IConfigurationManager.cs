@@ -53,6 +53,15 @@ namespace Robust.Shared.Configuration
         HashSet<string> LoadFromTomlStream(Stream stream);
 
         /// <summary>
+        /// Load a TOML config file and use the CVar values specified as an <see cref="OverrideDefault"/>.
+        /// </summary>
+        /// <remarks>
+        /// All CVars in the TOML file must be registered when this function is called.
+        /// </remarks>
+        /// <returns>A set of all CVars touched.</returns>
+        HashSet<string> LoadDefaultsFromTomlStream(Stream stream);
+
+        /// <summary>
         /// Register a CVar with the system. This must be done before the CVar is accessed.
         /// </summary>
         /// <param name="name">The name of the CVar. This needs to contain only printable characters.

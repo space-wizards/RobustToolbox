@@ -198,7 +198,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var sim = SimulationFactory();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var grid = sim.Resolve<IMapManager>().CreateGrid(new MapId(1)).GridEntityId;
+            var grid = sim.Resolve<IMapManager>().CreateGrid(new MapId(1)).Owner;
             var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 

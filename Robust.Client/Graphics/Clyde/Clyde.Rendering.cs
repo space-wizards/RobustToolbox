@@ -1019,16 +1019,16 @@ namespace Robust.Client.Graphics.Clyde
 
             public int Compare(int x, int y)
             {
-                var a = _drawList[x].Item1;
-                var b = _drawList[y].Item1;
+                var a = _drawList[x];
+                var b = _drawList[y];
 
-                var cmp = a.DrawDepth.CompareTo(b.DrawDepth);
+                var cmp = a.Item1.DrawDepth.CompareTo(b.Item1.DrawDepth);
                 if (cmp != 0)
                 {
                     return cmp;
                 }
 
-                cmp = a.RenderOrder.CompareTo(b.RenderOrder);
+                cmp = a.Item1.RenderOrder.CompareTo(b.Item1.RenderOrder);
 
                 if (cmp != 0)
                 {
@@ -1036,14 +1036,14 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 // compare the top of the sprite's BB for y-sorting. Because screen coordinates are flipped, the "top" of the BB is actually the "bottom".
-                cmp = _drawList[x].Item4.Top.CompareTo(_drawList[y].Item4.Top);
+                cmp = a.Item4.Top.CompareTo(b.Item4.Top);
 
                 if (cmp != 0)
                 {
                     return cmp;
                 }
 
-                return a.Owner.CompareTo(b.Owner);
+                return a.Item1.Owner.CompareTo(b.Item1.Owner);
             }
         }
 

@@ -121,13 +121,12 @@ namespace Robust.Shared.Physics.Dynamics
 
             public Contact Create()
             {
-                var contact = new Contact(_manifoldManager);
-#if DEBUG
-                contact._debugPhysics = _debugPhysicsSystem;
-#endif
-                contact.Manifold = new Manifold
+                var contact = new Contact(_manifoldManager)
                 {
-                    Points = new ManifoldPoint[2]
+                    Manifold = new Manifold
+                    {
+                        Points = new ManifoldPoint[2]
+                    }
                 };
 
                 return contact;

@@ -764,7 +764,6 @@ public abstract partial class SharedTransformSystem
         return (pos, rot);
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(EntityUid uid, Vector2 worldPos)
     {

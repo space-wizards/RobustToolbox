@@ -37,7 +37,6 @@ namespace Robust.Shared.Maths
             return Sse.Shuffle(tmp, tmp, 0b00_11_00_11);
         }
 
-
         /// <returns>The min value is broadcast to the whole vector.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<float> MinHorizontal128(Vector128<float> v)

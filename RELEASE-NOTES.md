@@ -37,6 +37,8 @@ END TEMPLATE-->
 
 * The entity lookup flag `LookupFlags.Anchored` has been replaced with `LookupFlags.Static`.
 * We are now using **.NET 7**.
+* `IDependencyCollection`/`IoCManager` `RegisterInstance` does not automatically add the instance to object graph, so `BuildGraph()` must now be called to see the new instances.
+  * `deferInject` parameteres have been removed.
 
 ### New features
 

@@ -55,7 +55,7 @@ internal partial class Clyde
         };
 
         // We need to batch the actual tree query, or alternatively we need just get the list of sprites and then
-        // prallelize the rotation & bounding box calculations.
+        // parallelize the rotation & bounding box calculations.
         var index = 0;
         var added = 0;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
@@ -119,7 +119,7 @@ internal partial class Clyde
             DebugTools.Assert(data.Sprite.Visible);
 
             // To help explain the remainder of this function, it should be functionally equivalent to the following
-            // tree lines of code, but has been expanded & simplified to speed up the calculation:
+            // three lines of code, but has been expanded & simplified to speed up the calculation:
             // 
             // (data.WorldPos, data.WorldRot) = batch.Sys.GetWorldPositionRotation(data.Xform, batch.Query);
             // var spriteWorldBB = data.Sprite.CalculateRotatedBoundingBox(data.WorldPos, data.WorldRot, batch.ViewRotation);

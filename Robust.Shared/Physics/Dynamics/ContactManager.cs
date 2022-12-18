@@ -114,7 +114,7 @@ namespace Robust.Shared.Physics.Dynamics
         {
             private readonly IManifoldManager _manifoldManager;
 
-            public ContactPoolPolicy(IManifoldManager manifoldManager)
+            public ContactPoolPolicy(SharedDebugPhysicsSystem debugPhysicsSystem, IManifoldManager manifoldManager)
             {
                 _manifoldManager = manifoldManager;
             }
@@ -149,7 +149,7 @@ namespace Robust.Shared.Physics.Dynamics
             _physicsManager = physicsManager;
 
             _contactPool = new DefaultObjectPool<Contact>(
-                new ContactPoolPolicy(manifoldManager),
+                new ContactPoolPolicy(debugPhysicsSystem, manifoldManager),
                 4096);
         }
 

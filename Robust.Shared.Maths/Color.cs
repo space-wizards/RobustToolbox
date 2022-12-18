@@ -820,7 +820,6 @@ namespace Robust.Shared.Maths
         ///     with 0.5 being 50% of both colors, 0.25 being 25% of <paramref name="β" /> and 75%
         ///     <paramref name="α" />.
         /// </param>
-#if NETCOREAPP
         public static Color InterpolateBetween(Color α, Color β, float λ)
         {
             if (Sse.IsSupported && Fma.IsSupported)
@@ -839,17 +838,6 @@ namespace Robust.Shared.Maths
 
             return Unsafe.As<SysVector4, Color>(ref res);
         }
-#else
-        public static Color InterpolateBetween(in Color α, in Color β, float λ)
-        {
-            return new Color(
-                (β.R - α.R) * λ + α.R,
-                (β.G - α.G) * λ + α.G,
-                (β.B - α.B) * λ + α.B,
-                (β.A - α.A) * λ + α.A
-            );
-        }
-#endif
 
         public static Color? TryFromHex(ReadOnlySpan<char> hexColor)
         {

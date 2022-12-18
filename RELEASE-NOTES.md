@@ -37,6 +37,8 @@ END TEMPLATE-->
 
 * The entity lookup flag `LookupFlags.Anchored` has been replaced with `LookupFlags.Static`.
 * We are now using **.NET 7**.
+* `IDependencyCollection`/`IoCManager` `RegisterInstance` does not automatically add the instance to object graph, so `BuildGraph()` must now be called to see the new instances.
+  * `deferInject` parameteres have been removed.
 
 ### New features
 
@@ -45,11 +47,17 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed config files not being truncated before write, resulting in corruption.
 
 ### Other
 
 * Removed some cruft from the `server_config.toml` default config file that ships with Robust.
+* Most usages of x86 SIMD intrinsics have been replaced with cross-platform versions using the new .NET cross-platform intrinsics.
+  * This reduces code to maintain and improves performance on ARM.
+* Tiny optimization to rendering code.
+  * Sprite processing & bounding box calculations should be slightly faster now.
+* `RobustSerializer` no longer needs to be called from threads with an active IoC context.
+  * This makes it possible to use from thread pool threads without `IoCManager.InitThread`.
 
 ### Internal
 

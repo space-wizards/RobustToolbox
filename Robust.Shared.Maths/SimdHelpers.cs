@@ -1,4 +1,6 @@
-﻿using System.Runtime.Intrinsics;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace Robust.Shared.Maths
 {
@@ -8,6 +10,7 @@ namespace Robust.Shared.Maths
     internal static class SimdHelpers
     {
         /// <returns>The min value is broadcast to the whole vector.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<float> MinHorizontal128(Vector128<float> v)
         {
             var b = Vector128.Shuffle(v, Vector128.Create(1, 0, 3, 2));
@@ -17,6 +20,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <returns>The max value is broadcast to the whole vector.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<float> MaxHorizontal128(Vector128<float> v)
         {
             var b = Vector128.Shuffle(v, Vector128.Create(1, 0, 3, 2));
@@ -26,23 +30,52 @@ namespace Robust.Shared.Maths
         }
 
         /// <returns>The added value is broadcast to the whole vector.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<float> AddHorizontal128(Vector128<float> v)
         {
             var b = Vector128.Shuffle(v, Vector128.Create(1, 0, 3, 2));
-            var m = Vector128.Add(b, v);
+            var m = b + v;
             var c = Vector128.Shuffle(m, Vector128.Create(2, 3, 0, 1));
-            return Vector128.Add(c, m);
+            return c + m;
         }
 
         /// <returns>The added value is broadcast to the whole vector.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector256<float> AddHorizontal256(Vector256<float> v)
         {
             var b = Vector256.Shuffle(v, Vector256.Create(1, 0, 3, 2, 5, 4, 7, 6));
-            var m = Vector256.Add(b, v);
+            var m = b + v;
             var c = Vector256.Shuffle(m, Vector256.Create(2, 3, 0, 1, 6, 7, 4, 5));
-            var n = Vector256.Add(c, m);
+            var n = c + m;
             var d = Vector256.Shuffle(n, Vector256.Create(4, 5, 6, 7, 0, 1, 2, 3));
-            return Vector256.Add(n, d);
+            return n + d;
+        }
+
+        // Given the following vectors:
+        // x:       X X X X
+        // y:       Y Y Y Y
+        // z:       Z Z Z Z
+        // w:       W W W W
+        // Returns: X Y Z W
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> MergeRows128(
+            Vector128<float> x,
+            Vector128<float> y,
+            Vector128<float> z,
+            Vector128<float> w)
+        {
+            if (Sse.IsSupported)
+            {
+                var xy = Sse.UnpackLow(x, y);
+                var zw = Sse.UnpackLow(z, w);
+                return Sse.Shuffle(xy, zw, 0b11_10_01_00);
+            }
+
+            return Vector128.Create(
+                x.GetElement(0),
+                y.GetElement(0),
+                z.GetElement(0),
+                w.GetElement(0));
         }
     }
 }

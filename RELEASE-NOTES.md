@@ -52,6 +52,7 @@ END TEMPLATE-->
 * Removed some cruft from the `server_config.toml` default config file that ships with Robust.
 * Most usages of x86 SIMD intrinsics have been replaced with cross-platform versions using the new .NET cross-platform intrinsics.
   * This reduces code to maintain and improves performance on ARM.
+* Tiny optimization to rendering code.
 
 ### Internal
 

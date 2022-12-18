@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed config files not being truncated before write, resulting in corruption.
 
 ### Other
 

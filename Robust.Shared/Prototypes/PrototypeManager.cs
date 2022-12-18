@@ -213,30 +213,30 @@ namespace Robust.Shared.Prototypes
 
             var pushed = new Dictionary<Type, HashSet<string>>();
 
-            foreach (var type in prototypeTypeOrder)
+            foreach (var kind in prototypeTypeOrder)
             {
-                var typeData = _kinds[type];
-                if (!type.IsAssignableTo(typeof(IInheritingPrototype)))
+                var kindData = _kinds[kind];
+                if (!kind.IsAssignableTo(typeof(IInheritingPrototype)))
                 {
-                    foreach (var id in prototypes[type])
+                    foreach (var id in prototypes[kind])
                     {
-                        var prototype = (IPrototype)_serializationManager.Read(type, typeData.Results[id])!;
-                        typeData.Instances[id] = prototype;
+                        var prototype = (IPrototype)_serializationManager.Read(kind, kindData.Results[id])!;
+                        kindData.Instances[id] = prototype;
                     }
 
                     continue;
                 }
 
-                var tree = typeData.Inheritance!;
+                var tree = kindData.Inheritance!;
                 var processQueue = new Queue<string>();
-                foreach (var id in prototypes[type])
+                foreach (var id in prototypes[kind])
                 {
                     processQueue.Enqueue(id);
                 }
 
                 while (processQueue.TryDequeue(out var id))
                 {
-                    var pushedSet = pushed.GetOrNew(type);
+                    var pushedSet = pushed.GetOrNew(kind);
 
                     if (tree.TryGetParents(id, out var parents))
                     {
@@ -244,7 +244,7 @@ namespace Robust.Shared.Prototypes
                         foreach (var parent in parents)
                         {
                             //our parent has been reloaded and has not been added to the pushedSet yet
-                            if (prototypes[type].Contains(parent) && !pushedSet.Contains(parent))
+                            if (prototypes[kind].Contains(parent) && !pushedSet.Contains(parent))
                             {
                                 //we re-queue ourselves at the end of the queue
                                 processQueue.Enqueue(id);
@@ -262,7 +262,12 @@ namespace Robust.Shared.Prototypes
                         }*/
                     }
 
-                    TryReadPrototype(type, id, typeData.Results[id], SerializationHookContext.DontSkipHooks);
+
+                    var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
+                    if (prototype == null)
+                        continue;
+
+                    kindData.Instances[id] = prototype;
 
                     pushedSet.Add(id);
                 }

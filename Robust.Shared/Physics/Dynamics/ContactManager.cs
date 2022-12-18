@@ -112,10 +112,12 @@ namespace Robust.Shared.Physics.Dynamics
 
         private sealed class ContactPoolPolicy : IPooledObjectPolicy<Contact>
         {
+            private readonly SharedDebugPhysicsSystem _debugPhysicsSystem;
             private readonly IManifoldManager _manifoldManager;
 
             public ContactPoolPolicy(SharedDebugPhysicsSystem debugPhysicsSystem, IManifoldManager manifoldManager)
             {
+                _debugPhysicsSystem = debugPhysicsSystem;
                 _manifoldManager = manifoldManager;
             }
 

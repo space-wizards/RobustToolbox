@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Components;
@@ -12,6 +14,56 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedMapSystem
 {
+    #region Chunk helpers
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i GetChunkIndices(Vector2 tile, int chunkSize)
+    {
+        return new Vector2i ((int) Math.Floor(tile.X / chunkSize), (int) Math.Floor(tile.Y / chunkSize));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i GetChunkIndices(Vector2 tile, byte chunkSize)
+    {
+        return new Vector2i ((int) Math.Floor(tile.X / chunkSize), (int) Math.Floor(tile.Y / chunkSize));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i GetChunkIndices(Vector2i tile, int chunkSize)
+    {
+        return new Vector2i ((int) Math.Floor(tile.X / (float) chunkSize), (int) Math.Floor(tile.Y / (float) chunkSize));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i GetChunkIndices(Vector2i tile, byte chunkSize)
+    {
+        return new Vector2i ((int) Math.Floor(tile.X / (float) chunkSize), (int) Math.Floor(tile.Y / (float) chunkSize));
+    }
+
+    /// <summary>
+    /// Returns the tile offset to a chunk origin based on the provided size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i GetChunkRelative(Vector2i tile, int chunkSize)
+    {
+        var x = MathHelper.Mod(tile.X, chunkSize);
+        var y = MathHelper.Mod(tile.Y, chunkSize);
+        return new Vector2i(x, y);
+    }
+
+    /// <summary>
+    /// Returns the tile offset to a chunk origin based on the provided size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i GetChunkRelative(Vector2i tile, byte chunkSize)
+    {
+        var x = MathHelper.Mod(tile.X, chunkSize);
+        var y = MathHelper.Mod(tile.Y, chunkSize);
+        return new Vector2i(x, y);
+    }
+
+    #endregion
+
     private void InitializeGrid()
     {
         SubscribeLocalEvent<MapGridComponent, ComponentGetState>(OnGridGetState);

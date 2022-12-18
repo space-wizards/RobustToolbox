@@ -260,7 +260,7 @@ namespace Robust.Shared.Configuration
                 var memoryStream = new MemoryStream();
                 SaveToTomlStream(memoryStream, cvars);
                 memoryStream.Position = 0;
-                using var file = File.OpenWrite(_configFile);
+                using var file = File.Open(_configFile, FileMode.Create, FileAccess.Write);
                 memoryStream.CopyTo(file);
                 Logger.InfoS("cfg", $"config saved to '{_configFile}'.");
             }

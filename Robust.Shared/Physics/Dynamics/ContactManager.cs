@@ -32,7 +32,6 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
-using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -50,7 +49,6 @@ namespace Robust.Shared.Physics.Dynamics
     {
         private readonly IEntityManager _entityManager;
         private readonly IPhysicsManager _physicsManager;
-        private readonly IConfigurationManager _cfg;
 
         private EntityLookupSystem _lookup = default!;
         private SharedPhysicsSystem _physics = default!;
@@ -100,7 +98,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private readonly ObjectPool<Contact> _contactPool;
 
-        internal LinkedList<Contact> _activeContacts = new();
+        internal readonly LinkedList<Contact> _activeContacts = new();
 
         // Didn't use the eventbus because muh allocs on something being run for every collision every frame.
         /// <summary>
@@ -114,12 +112,10 @@ namespace Robust.Shared.Physics.Dynamics
 
         private sealed class ContactPoolPolicy : IPooledObjectPolicy<Contact>
         {
-            private readonly SharedDebugPhysicsSystem _debugPhysicsSystem;
             private readonly IManifoldManager _manifoldManager;
 
             public ContactPoolPolicy(SharedDebugPhysicsSystem debugPhysicsSystem, IManifoldManager manifoldManager)
             {
-                _debugPhysicsSystem = debugPhysicsSystem;
                 _manifoldManager = manifoldManager;
             }
 
@@ -148,16 +144,14 @@ namespace Robust.Shared.Physics.Dynamics
             SharedDebugPhysicsSystem debugPhysicsSystem,
             IManifoldManager manifoldManager,
             IEntityManager entityManager,
-            IPhysicsManager physicsManager,
-            IConfigurationManager cfg)
+            IPhysicsManager physicsManager)
         {
             _entityManager = entityManager;
             _physicsManager = physicsManager;
-            _cfg = cfg;
 
             _contactPool = new DefaultObjectPool<Contact>(
                 new ContactPoolPolicy(debugPhysicsSystem, manifoldManager),
-                1024);
+                4096);
         }
 
         private static void SetContact(Contact contact, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)

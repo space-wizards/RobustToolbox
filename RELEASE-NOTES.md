@@ -55,6 +55,8 @@ END TEMPLATE-->
 * Most usages of x86 SIMD intrinsics have been replaced with cross-platform versions using the new .NET cross-platform intrinsics.
   * This reduces code to maintain and improves performance on ARM.
 * Tiny optimization to rendering code.
+* `RobustSerializer` no longer needs to be called from threads with an active IoC context.
+  * This makes it possible to use from thread pool threads without `IoCManager.InitThread`.
 
 ### Internal
 

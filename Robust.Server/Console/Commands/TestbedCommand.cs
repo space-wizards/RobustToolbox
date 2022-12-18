@@ -129,6 +129,7 @@ namespace Robust.Server.Console.Commands
         private void CreateBoxStack(MapId mapId)
         {
             var physics = _ent.System<SharedPhysicsSystem>();
+            var fixtures = _ent.System<FixtureSystem>();
 
             var groundUid = _ent.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
@@ -141,9 +142,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            var broadphase = EntitySystem.Get<FixtureSystem>();
-
-            broadphase.CreateFixture(ground, horizontalFixture);
+            fixtures.CreateFixture(ground, horizontalFixture);
 
             var vertical = new EdgeShape(new Vector2(20, 0), new Vector2(20, 20));
             var verticalFixture = new Fixture(ground, vertical)
@@ -153,7 +152,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            broadphase.CreateFixture(ground, verticalFixture);
+            fixtures.CreateFixture(ground, verticalFixture);
 
             var xs = new[]
             {
@@ -189,7 +188,7 @@ namespace Robust.Server.Console.Commands
                         Friction = 0.3f,
                     };
 
-                    broadphase.CreateFixture(box, fixture);
+                    fixtures.CreateFixture(box, fixture);
                     physics.WakeBody(box);
                 }
             }
@@ -200,6 +199,7 @@ namespace Robust.Server.Console.Commands
         private void CreateCircleStack(MapId mapId)
         {
             var physics = _ent.System<SharedPhysicsSystem>();
+            var fixtures = _ent.System<FixtureSystem>();
 
             var groundUid = _ent.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
@@ -212,8 +212,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            var broadphase = EntitySystem.Get<FixtureSystem>();
-            broadphase.CreateFixture(ground, horizontalFixture);
+            fixtures.CreateFixture(ground, horizontalFixture);
 
             var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
             var verticalFixture = new Fixture(ground, vertical)
@@ -223,7 +222,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            broadphase.CreateFixture(ground, verticalFixture);
+            fixtures.CreateFixture(ground, verticalFixture);
 
             var xs = new[]
             {
@@ -257,7 +256,7 @@ namespace Robust.Server.Console.Commands
                         Density = 5.0f,
                     };
 
-                    broadphase.CreateFixture(box, fixture);
+                    fixtures.CreateFixture(box, fixture);
                     physics.WakeBody(box);
                 }
             }
@@ -271,6 +270,7 @@ namespace Robust.Server.Console.Commands
 
             // Setup ground
             var physics = _ent.System<SharedPhysicsSystem>();
+            var fixtures = _ent.System<FixtureSystem>();
             var groundUid = _ent.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
 
@@ -282,8 +282,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            var broadphase = EntitySystem.Get<FixtureSystem>();
-            broadphase.CreateFixture(ground, horizontalFixture);
+            fixtures.CreateFixture(ground, horizontalFixture);
             physics.WakeBody(ground);
 
             // Setup boxes
@@ -306,7 +305,7 @@ namespace Robust.Server.Console.Commands
                     var box = _ent.AddComponent<PhysicsComponent>(boxUid);
                     box.BodyType = BodyType.Dynamic;
                     _ent.GetComponent<TransformComponent>(box.Owner).WorldPosition = y;
-                    broadphase.CreateFixture(box,
+                    fixtures.CreateFixture(box,
                         new Fixture(box, shape) {
                         CollisionLayer = 2,
                         CollisionMask = 2,
@@ -325,13 +324,13 @@ namespace Robust.Server.Console.Commands
         private void CreateTumbler(MapId mapId)
         {
             var physics = _ent.System<SharedPhysicsSystem>();
-            var broadphaseSystem = EntitySystem.Get<FixtureSystem>();
+            var fixtures = _ent.System<FixtureSystem>();
 
             var groundUid = _ent.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
             // Due to lookup changes fixtureless bodies are invalid, so
             var cShape = new PhysShapeCircle();
-            broadphaseSystem.CreateFixture(ground, cShape);
+            fixtures.CreateFixture(ground, cShape);
 
             var bodyUid = _ent.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
             var body = _ent.AddComponent<PhysicsComponent>(bodyUid);
@@ -343,19 +342,19 @@ namespace Robust.Server.Console.Commands
             // TODO: Box2D just derefs, bleh shape structs someday
             var shape1 = new PolygonShape();
             shape1.SetAsBox(0.5f, 10.0f, new Vector2(10.0f, 0.0f), 0.0f);
-            broadphaseSystem.CreateFixture(body, shape1, 20.0f, 2, 0);
+            fixtures.CreateFixture(body, shape1, 20.0f, 2, 0);
 
             var shape2 = new PolygonShape();
             shape2.SetAsBox(0.5f, 10.0f, new Vector2(-10.0f, 0.0f), 0f);
-            broadphaseSystem.CreateFixture(body, shape2, 20.0f, 2, 0);
+            fixtures.CreateFixture(body, shape2, 20.0f, 2, 0);
 
             var shape3 = new PolygonShape();
             shape3.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, 10.0f), 0f);
-            broadphaseSystem.CreateFixture(body, shape3, 20.0f, 2, 0);
+            fixtures.CreateFixture(body, shape3, 20.0f, 2, 0);
 
             var shape4 = new PolygonShape();
             shape4.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, -10.0f), 0f);
-            broadphaseSystem.CreateFixture(body, shape4, 20.0f, 2, 0);
+            fixtures.CreateFixture(body, shape4, 20.0f, 2, 0);
 
             physics.WakeBody(ground);
             physics.WakeBody(body);
@@ -383,7 +382,7 @@ namespace Robust.Server.Console.Commands
                     box.FixedRotation = false;
                     var shape = new PolygonShape();
                     shape.SetAsBox(0.125f, 0.125f);
-                    broadphaseSystem.CreateFixture(box, shape, 0.0625f, 2, 2);
+                    fixtures.CreateFixture(box, shape, 0.0625f, 2, 2);
                     physics.WakeBody(box);
                 });
             }

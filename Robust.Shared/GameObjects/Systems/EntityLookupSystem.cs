@@ -45,12 +45,6 @@ namespace Robust.Shared.GameObjects
         Sundries = 1 << 3,
 
         /// <summary>
-        /// Also return entities from an anchoring query.
-        /// </summary>
-        [Obsolete("Use Static")]
-        Anchored = 1 << 4,
-
-        /// <summary>
         /// Include entities that are currently in containers.
         /// </summary>
         Contained = 1 << 5,
@@ -154,7 +148,7 @@ namespace Robust.Shared.GameObjects
         {
             if (ev.Created && ev.Map != MapId.Nullspace)
             {
-                EnsureComp<BroadphaseComponent>(_mapManager.GetMapEntityId(ev.Map));
+                EnsureComp<BroadphaseComponent>(ev.Uid);
             }
         }
 

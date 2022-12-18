@@ -105,7 +105,7 @@ namespace Robust.UnitTesting.Shared.Maths
                 3, 7, 2,
                 1, 8, 4,
                 2, 1, 9
-                );
+            );
 
             // invert it (1/matrix)
             var invMatrix = Matrix3.Invert(normalMatrix);
@@ -163,6 +163,27 @@ namespace Robust.UnitTesting.Shared.Maths
             // Assert
             Assert.That(MathHelper.CloseToPercent(startPoint.X, result.X), Is.True, result.ToString);
             Assert.That(MathHelper.CloseToPercent(startPoint.Y, result.Y), Is.True, result.ToString);
+        }
+
+        private static readonly (Box2, Box2)[] TestTransformBoxData =
+        {
+            (new Box2(-1, -1, 1, 1), new Box2(8.718287f, 8.718287f, 11.281713f, 11.281713f)),
+            (new Box2(0, 0, 1, 1), new Box2(10, 9.65798f, 11.281713f, 10.9396925f)),
+        };
+
+        [Test]
+        public void TestTransformBox([ValueSource(nameof(TestTransformBoxData))] (Box2 box, Box2 expected) set)
+        {
+            var (box, expected) = set;
+
+            var matrix = Matrix3.Identity;
+            matrix.Rotate(Angle.FromDegrees(20));
+            matrix.R0C2 += 10;
+            matrix.R1C2 += 10;
+
+            var transformed = matrix.TransformBox(box);
+
+            Assert.That(transformed, Is.Approximately(expected));
         }
     }
 }

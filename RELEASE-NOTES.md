@@ -35,11 +35,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The entity lookup flag `LookupFlags.Anchored` has been replaced with `LookupFlags.Static`.
+* We are now using **.NET 7**.
 
 ### New features
 
-*None yet*
+* The server will now check for any unknown CVars at startup, to possibly locate typos in your config file.
+* `IDependencyCollection` is now thread safe.
 
 ### Bugfixes
 
@@ -47,11 +49,69 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Removed some cruft from the `server_config.toml` default config file that ships with Robust.
+* Most usages of x86 SIMD intrinsics have been replaced with cross-platform versions using the new .NET cross-platform intrinsics.
+  * This reduces code to maintain and improves performance on ARM.
+* Tiny optimization to rendering code.
 
 ### Internal
 
 *None yet*
+
+
+## 0.72.0.0
+
+### Breaking changes
+
+* EntityPausedEvent has been split into EntityPausedEvent and EntityUnpausedEvent. The unpaused version now has information about how long an entity has been paused.
+
+## 0.71.1.4
+
+### Bugfixes
+
+* Fixed CVars not being saved correctly to config file.
+
+### Other
+
+* Mark `validate_rsis.py` as `+x` in Git.
+* Made config system more robust against accidental corruption when saving.
+
+
+## 0.71.1.3
+
+
+## 0.71.1.2
+
+### Bugfixes
+
+* Fixed UI ScrollContainer infinite loop freezing client.
+
+
+## 0.71.1.1
+
+### Bugfixes
+
+* Fixed client memory leaks and improved performance in integration testing.
+
+
+## 0.71.1.0
+
+### New features
+
+* Better RSI validator script.
+* When a new map file is loaded onto an existing map the entities will be transferred over.
+* Add an API to get the hard layer / mask for a particular physics body.
+
+### Bugfixes
+
+* Fixed non-filled circle drawing via world handle.
+* Fix max_connections in the default server config.
+* Fix removal of PVS states for players without ingame status.
+* Fix max rotation from the physics solver.
+
+### Internal
+
+* Wrap window rendering in a try-catch.
 
 
 ## 0.71.0.0

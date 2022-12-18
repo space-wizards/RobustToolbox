@@ -417,6 +417,16 @@ public partial class SharedPhysicsSystem
         }
     }
 
+    public void SetBodyStatus(PhysicsComponent body, BodyStatus status, bool dirty = true)
+    {
+        if (body.BodyStatus == status)
+            return;
+
+        body._bodyStatus = status;
+
+        if (dirty)
+            Dirty(body);
+    }
 
     /// <summary>
     /// Sets the <see cref="PhysicsComponent.CanCollide"/> property; this handles whether the body is enabled.
@@ -621,5 +631,27 @@ public partial class SharedPhysicsSystem
         }
 
         return bounds;
+    }
+
+    public (int Layer, int Mask) GetHardCollision(EntityUid uid, FixturesComponent? manager = null)
+    {
+        if (!Resolve(uid, ref manager))
+        {
+            return (0, 0);
+        }
+
+        var layer = 0;
+        var mask = 0;
+
+        foreach (var fixture in manager.Fixtures.Values)
+        {
+            if (!fixture.Hard)
+                continue;
+
+            layer |= fixture._collisionLayer;
+            mask |= fixture._collisionMask;
+        }
+
+        return (layer, mask);
     }
 }

@@ -941,73 +941,31 @@ namespace Robust.Shared.Maths
 
         public readonly Box2 TransformBox(in Box2 box)
         {
-            if (Sse.IsSupported && NumericsHelpers.Enabled)
-            {
-                return TransformBoxSse(box);
-            }
+            // Do transformation on all 4 corners of the box at once.
+            // Then min/max the results to get the new AABB.
 
-            return TransformBoxSlow(box);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal readonly unsafe Box2 TransformBoxSse(in Box2 box)
-        {
-            // This code was largely pilfered from Box2Rotated.CalcBoundingBox(), but instead of transforming the
-            // corners using the rotated box transform, this applies a general matrix transform before obtaining the
-            // bounding box.
-
-            Vector128<float> boxVec;
-            fixed (float* lPtr = &box.Left)
-            {
-                boxVec = Sse.LoadVector128(lPtr);
-            }
+            var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in box));
 
             // Convert box into list of X and Y values for each of the 4 corners
-            var allX = Sse.Shuffle(boxVec, boxVec, 0b10_10_00_00);
-            var allY = Sse.Shuffle(boxVec, boxVec, 0b01_11_11_01);
+            var allX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
+            var allY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
 
             // Transform coordinates
-            var modX = Sse.Multiply(allX, Vector128.Create(R0C0));
-            var modY = Sse.Multiply(allX, Vector128.Create(R1C0));
-            modX = Sse.Add(modX, Sse.Multiply(allY, Vector128.Create(R0C1)));
-            modY = Sse.Add(modY, Sse.Multiply(allY, Vector128.Create(R1C1)));
-            modX = Sse.Add(modX, Vector128.Create(R0C2));
-            modY = Sse.Add(modY, Vector128.Create(R1C2));
+            var modX = allX * Vector128.Create(R0C0);
+            var modY = allX * Vector128.Create(R1C0);
+            modX += allY * Vector128.Create(R0C1);
+            modY += allY * Vector128.Create(R1C1);
+            modX += Vector128.Create(R0C2);
+            modY += Vector128.Create(R1C2);
 
             // Get bounding box by finding the min and max X and Y values.
-            var l = SimdHelpers.MinHorizontalSse(modX);
-            var b = SimdHelpers.MinHorizontalSse(modY);
-            var r = SimdHelpers.MaxHorizontalSse(modX);
-            var t = SimdHelpers.MaxHorizontalSse(modY);
+            var l = SimdHelpers.MinHorizontal128(modX);
+            var b = SimdHelpers.MinHorizontal128(modY);
+            var r = SimdHelpers.MaxHorizontal128(modX);
+            var t = SimdHelpers.MaxHorizontal128(modY);
 
-            // Convert to Box2
-            var lb = Sse.UnpackLow(l, b);
-            var rt = Sse.UnpackLow(r, t);
-            var lbrt = Sse.Shuffle(lb, rt, 0b11_10_01_00);
+            var lbrt = SimdHelpers.MergeRows128(l, b, r, t);
             return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal readonly Box2 TransformBoxSlow(in Box2 box)
-        {
-            Span<Vector2> vertices = stackalloc Vector2[4];
-            vertices[0] = Transform(box.BottomLeft);
-            vertices[1] = Transform(box.BottomRight);
-            vertices[2] = Transform(box.TopRight);
-            vertices[3] = vertices[0] + vertices[2] - vertices[1]; // Transformed TopLeft
-
-            var botLeft = vertices[0];
-            var topRight = vertices[0];
-
-            for (var i = 1; i < 4; i++)
-            {
-                var vertex = vertices[i];
-
-                botLeft = Vector2.ComponentMin(vertex, botLeft);
-                topRight = Vector2.ComponentMax(vertex, topRight);
-            }
-
-            return new Box2(botLeft, topRight);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

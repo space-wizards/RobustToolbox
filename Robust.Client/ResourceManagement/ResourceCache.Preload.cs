@@ -145,15 +145,16 @@ namespace Robust.Client.ResourceManagement
             // atlas should somehow try to group things by draw-depth & frequency to minimize batches? But currently
             // everything fits onto a single 8k x 8k image so as long as the computer can manage that, it should be
             // fine.
-            //
-            // Also giant RSIs (boardgames, singularity, etc) should just get their own atlas or just shouldn't be RSIs
+            
+            // TODO allow RSIs to opt out (useful for very big & rare RSIs)
             // TODO combine with (non-rsi) texture atlas?
 
             Array.Sort(rsiList, (b, a) => b.AtlasSheet.Height.CompareTo(a.AtlasSheet.Height));
+
             // Each RSI sub atlas has a different size.
             // Even if we iterate through them once to estimate total area, I have NFI how to sanely estimate an optimal square-texture size.
             // So fuck it, just default to letting it be as large as it needs to and crop it as needed?
-            var maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), 16384);
+            var maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
             var sheet = new Image<Rgba32>(maxSize, maxSize);
 
             var deltaY = 0;

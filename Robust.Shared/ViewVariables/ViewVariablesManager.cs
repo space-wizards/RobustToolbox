@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Reflection;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.ViewVariables;
 
@@ -35,6 +37,27 @@ internal abstract partial class ViewVariablesManager : IViewVariablesManager
     public object? ReadPath(string path)
     {
         return ResolvePath(path)?.Get();
+    }
+
+    public string? ReadPathSerialized(string path)
+    {
+        if (ResolvePath(path) is not {} p)
+            return null;
+
+        var obj = p.Get();
+
+        if (obj == null)
+            return "null";
+
+        // This will throw if the object cannot be serialized, resort to ToString if so.
+        try
+        {
+            return SerializeValue(p.Type, obj);
+        }
+        catch (Exception e)
+        {
+            return obj.ToString();
+        }
     }
 
     public void WritePath(string path, string value)

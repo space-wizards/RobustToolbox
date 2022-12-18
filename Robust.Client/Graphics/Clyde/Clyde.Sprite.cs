@@ -149,7 +149,7 @@ internal partial class Clyde
             pos = batch.ViewRotation.RotateVec(pos - batch.ViewPosition);
 
             // special casing angle = n*pi/2 to avoid box rotation & bounding calculations doesn't seem to give significant speedups.
-            data.SpriteScreenBB = TransformCenteredBoxSse(
+            data.SpriteScreenBB = TransformCenteredBox(
                 data.Sprite.Bounds,
                 finalRotation,
                 pos + batch.PreScaleViewOffset,
@@ -163,51 +163,44 @@ internal partial class Clyde
     /// bounds.
     /// </summary> 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe Box2 TransformCenteredBoxSse(in Box2 box, float angle, in Vector2 offset, in Vector2 scale)
+    private static unsafe Box2 TransformCenteredBox(in Box2 box, float angle, in Vector2 offset, in Vector2 scale)
     {
         // This function is for sprites, which flip the y axis, so here we flip the definition of t and b relative to the normal function.
         DebugTools.Assert(scale.Y < 0);
         DebugTools.Assert(box.Center.EqualsApprox(Vector2.Zero));
 
-        if (!Sse.IsSupported || !NumericsHelpers.Enabled)
+        var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in box));
+
+        var sin = Vector128.Create(MathF.Sin(angle));
+        var cos = Vector128.Create(MathF.Cos(angle));
+        var allX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
+        var allY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
+        var modX = allX * cos - allY * sin;
+        var modY = allX * sin + allY * cos;
+
+        var offsetVec = Unsafe.As<Vector2, Vector128<float>>(ref Unsafe.AsRef(in offset)); // upper undefined
+        var scaleVec = Unsafe.As<Vector2, Vector128<float>>(ref Unsafe.AsRef(in scale)); // upper undefined
+        offsetVec = Vector128.Shuffle(offsetVec, Vector128.Create(0, 1, 0, 1));
+        scaleVec = Vector128.Shuffle(scaleVec, Vector128.Create(0, 1, 0, 1));
+
+        Vector128<float> lbrt;
+        if (Sse.IsSupported)
         {
-            var bound = new Box2Rotated(box, angle, Vector2.Zero).CalcBoundingBoxSlow();
-            return new Box2(
-                (bound.Left + offset.X) * scale.X,
-                (bound.Top + offset.Y) * scale.Y,
-                (bound.Right + offset.X) * scale.X,
-                (bound.Bottom + offset.Y) * scale.Y);
+            var lrlr = SimdHelpers.MinMaxHorizontalSse(modX);
+            var btbt = SimdHelpers.MaxMinHorizontalSse(modY);
+            lbrt = Sse.UnpackLow(lrlr, btbt);
         }
-
-        Vector128<float> boxVec;
-        Vector128<float> offsetVec;
-        Vector128<float> scaleVec;
-        fixed (float* lPtr = &box.Left, offsetPtr = &offset.X, scalePtr = &scale.X)
+        else
         {
-            boxVec = Sse.LoadVector128(lPtr);
-            offsetVec = Sse.LoadVector128(offsetPtr); // upper undefined
-            scaleVec = Sse.LoadVector128(scalePtr); // upper undefined
+            var l = SimdHelpers.MinHorizontal128(allX);
+            var b = SimdHelpers.MaxHorizontal128(allY);
+            var r = SimdHelpers.MaxHorizontal128(allX);
+            var t = SimdHelpers.MinHorizontal128(allY);
+            lbrt = SimdHelpers.MergeRows128(l, b, r, t);
         }
-
-        offsetVec = Sse.MoveLowToHigh(offsetVec, offsetVec);
-        scaleVec = Sse.MoveLowToHigh(scaleVec, scaleVec);
-
-        var originX = Vector128.Create(offset.X);
-        var originY = Vector128.Create(offset.Y);
-        var sinVec = Vector128.Create(MathF.Sin(angle));
-        var cosVec = Vector128.Create(MathF.Cos(angle));
-        var allX = Sse.Shuffle(boxVec, boxVec, 0b10_10_00_00);
-        var allY = Sse.Shuffle(boxVec, boxVec, 0b01_11_11_01);
-        var modX = Sse.Subtract(Sse.Multiply(allX, cosVec), Sse.Multiply(allY, sinVec));
-        var modY = Sse.Add(Sse.Multiply(allX, sinVec), Sse.Multiply(allY, cosVec));
-
-        var lrlr = SimdHelpers.MinMaxHorizontalSse(modX);
-        var btbt = SimdHelpers.MaxMinHorizontalSse(modY);
-        var lbrt = Sse.UnpackLow(lrlr, btbt);
 
         // offset and scale box.
-        lbrt = Sse.Add(lbrt, offsetVec);
-        lbrt = Sse.Multiply(lbrt, scaleVec);
+        lbrt = (lbrt + offsetVec) * scaleVec;
 
         return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
     }

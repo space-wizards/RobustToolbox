@@ -92,7 +92,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void EnvironmentVariablesWorkAvx()
         {
             // The next one is only valid if the computer supports AVX.
-            if (!ValidComputer(Intrinsics.Avx))
+            if (!ValidComputer(Intrinsics.Avx2))
                 Assert.Ignore();
 
             // Enabling NumericsHelper and enabling AVX.

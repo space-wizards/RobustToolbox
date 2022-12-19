@@ -1214,6 +1214,15 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ResStreamSeekMode =
             CVarDef.Create("res.stream_seek_mode", (int)ContentPack.StreamSeekMode.None);
 
+        /// <summary>
+        /// Whether to watch prototype files for prototype reload on the client. Only applies to development builds.
+        /// </summary>
+        /// <remarks>
+        /// The client sends a reload signal to the server on refocus, if you're wondering why this is client-only.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResPrototypeReloadWatch =
+            CVarDef.Create("res.prototype_reload_watch", true, CVar.CLIENTONLY);
+
         /*
          * DEBUG
          */

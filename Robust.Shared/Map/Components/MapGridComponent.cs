@@ -728,6 +728,12 @@ namespace Robust.Shared.Map.Components
             return new Vector2i(x, y);
         }
 
+        public Vector2i LocalToTile(EntityCoordinates coordinates)
+        {
+            var position = LocalToGrid(coordinates);
+            return new Vector2i((int) Math.Floor(position.X / TileSize), (int) Math.Floor(position.Y / TileSize));
+        }
+
         /// <inheritdoc />
         public Vector2i CoordinatesToTile(MapCoordinates coords)
         {

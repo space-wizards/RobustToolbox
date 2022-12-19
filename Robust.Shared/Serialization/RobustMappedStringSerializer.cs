@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -40,7 +41,7 @@ namespace Robust.Shared.Serialization
     /// send the constant value instead - and at the other end, the
     /// serializer can use the same mapping to recover the original string.
     /// </remarks>
-    internal sealed partial class RobustMappedStringSerializer : IStaticTypeSerializer, IRobustMappedStringSerializer
+    internal sealed partial class RobustMappedStringSerializer : IDynamicTypeSerializer, IRobustMappedStringSerializer
     {
         private static readonly Counter StringsHitMetric = Metrics.CreateCounter(
             "robust_net_string_hit",
@@ -53,16 +54,6 @@ namespace Robust.Shared.Serialization
         private static readonly Counter StringsMissCharsMetric = Metrics.CreateCounter(
             "robust_net_string_miss_chars",
             "Amount of extra chars (UTF-16, not bytes!!!) that have to be sent due to mapped string misses.");
-
-        private delegate void WriteStringDelegate(Stream stream, string? value);
-
-        private delegate void ReadStringDelegate(Stream stream, out string? value);
-
-        private static MethodInfo WriteMappedStringMethodInfo
-            => ((WriteStringDelegate) StaticWriteMappedString).Method;
-
-        private static MethodInfo ReadMappedStringMethodInfo
-            => ((ReadStringDelegate) StaticReadMappedString).Method;
 
         private static readonly char[] TrimmableSymbolChars =
         {
@@ -582,48 +573,68 @@ namespace Robust.Shared.Serialization
         /// </summary>
         IEnumerable<Type> ITypeSerializer.GetSubtypes(Type type) => Type.EmptyTypes;
 
-        /// <summary>
-        /// Implements <see cref="IStaticTypeSerializer.GetStaticWriter"/>.
-        /// </summary>
-        /// <seealso cref="WriteMappedString"/>
-        MethodInfo IStaticTypeSerializer.GetStaticWriter(Type type)
+        void IDynamicTypeSerializer.GenerateWriterMethod(Serializer serializer, Type type, ILGenerator il)
         {
-            return WriteMappedStringMethodInfo;
+            // Get context and then call WriteMappedString to do the actual work.
+
+            var contextIdx = serializer.RegisterContext(this);
+
+            var method = typeof(RobustMappedStringSerializer).GetMethod(
+                nameof(WriteMappedString),
+                BindingFlags.Instance | BindingFlags.NonPublic
+            )!;
+
+            var methodGetContext = typeof(Serializer).GetMethod(
+                "GetContext",
+                BindingFlags.Instance | BindingFlags.Public)!;
+
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldc_I4, contextIdx);
+            il.EmitCall(OpCodes.Callvirt, methodGetContext, null);
+            il.Emit(OpCodes.Castclass, typeof(RobustMappedStringSerializer));
+
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldarg_2);
+            il.EmitCall(OpCodes.Callvirt, method, null);
+
+            il.Emit(OpCodes.Ret);
         }
 
-        /// <summary>
-        /// Implements <see cref="IStaticTypeSerializer.GetStaticReader"/>.
-        /// </summary>
-        /// <seealso cref="ReadMappedString"/>
-        MethodInfo IStaticTypeSerializer.GetStaticReader(Type type)
+        void IDynamicTypeSerializer.GenerateReaderMethod(Serializer serializer, Type type, ILGenerator il)
         {
-            return ReadMappedStringMethodInfo;
+            // Get context and then call ReadMappedString to do the actual work.
+
+            var contextIdx = serializer.RegisterContext(this);
+
+            var method = typeof(RobustMappedStringSerializer).GetMethod(
+                nameof(ReadMappedString),
+                BindingFlags.Instance | BindingFlags.NonPublic
+            )!;
+
+            var methodGetContext = typeof(Serializer).GetMethod(
+                "GetContext",
+                BindingFlags.Instance | BindingFlags.Public)!;
+
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldc_I4, contextIdx);
+            il.EmitCall(OpCodes.Callvirt, methodGetContext, null);
+            il.Emit(OpCodes.Castclass, typeof(RobustMappedStringSerializer));
+
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldarg_2);
+            il.EmitCall(OpCodes.Callvirt, method, null);
+
+            il.Emit(OpCodes.Ret);
         }
 
-        /// <summary>
-        /// Write the encoding of the given string to the stream.
-        /// Static form of <see cref="WriteMappedString"/> for use by <see cref="NetSerializer"/>.
-        /// </summary>
-        /// <param name="stream">The stream to write to.</param>
-        /// <param name="value"> The (possibly null) string to write.</param>
-        private static void StaticWriteMappedString(Stream stream, string? value)
+        private void WriteMappedString(Stream stream, string? value)
         {
-            var mss = (RobustMappedStringSerializer) IoCManager.Resolve<IRobustMappedStringSerializer>();
-            mss._dict.WriteMappedString(stream, value);
+            _dict.WriteMappedString(stream, value);
         }
-        /// <summary>
-        /// Try to read a string from the given stream.
-        /// Static form of <see cref="ReadMappedString"/> for use by <see cref="NetSerializer"/>.
-        /// </summary>
-        /// <param name="stream">The stream to read from.</param>
-        /// <param name="value"> The (possibly null) string read.</param>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if the mapping is not locked.
-        /// </exception>
-        private static void StaticReadMappedString(Stream stream, out string? value)
+
+        private void ReadMappedString(Stream stream, out string? value)
         {
-            var mss = (RobustMappedStringSerializer) IoCManager.Resolve<IRobustMappedStringSerializer>();
-            mss._dict.ReadMappedString(stream, out value);
+            _dict.ReadMappedString(stream, out value);
         }
 
         /// <summary>

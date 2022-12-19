@@ -58,6 +58,7 @@ END TEMPLATE-->
 * `RobustSerializer` no longer needs to be called from threads with an active IoC context.
   * This makes it possible to use from thread pool threads without `IoCManager.InitThread`.
 * Removed finalizer dispose from `Overlay`.
+* Stopped integration tests watching for prototype reload file changes, speeding stuff up.
 
 ### Internal
 

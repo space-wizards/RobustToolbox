@@ -57,6 +57,7 @@ END TEMPLATE-->
 * Tiny optimization to rendering code.
 * `RobustSerializer` no longer needs to be called from threads with an active IoC context.
   * This makes it possible to use from thread pool threads without `IoCManager.InitThread`.
+* Removed finalizer dispose from `Overlay`.
 
 ### Internal
 

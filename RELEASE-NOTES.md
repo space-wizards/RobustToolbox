@@ -62,8 +62,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
-
+* Moved `SerializationManager`'s data definition storage over to a `ConcurrentDictionary` to improve GC behavior in integration tests.
 
 ## 0.72.0.0
 

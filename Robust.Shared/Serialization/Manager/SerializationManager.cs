@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using Robust.Shared.IoC;
@@ -28,8 +27,7 @@ namespace Robust.Shared.Serialization.Manager
         private bool _initializing;
         private bool _initialized;
 
-        // Using CWT<,> here in case we ever want assembly unloading.
-        private readonly ConditionalWeakTable<Type, DataDefinition> _dataDefinitions = new();
+        private readonly ConcurrentDictionary<Type, DataDefinition> _dataDefinitions = new();
         private readonly HashSet<Type> _copyByRefRegistrations = new();
 
         [field: IoC.Dependency]
@@ -126,7 +124,7 @@ namespace Robust.Shared.Serialization.Manager
                     return;
                 }
 
-                _dataDefinitions.GetValue(type, t => CreateDataDefinition(t, DependencyCollection, isRecord));
+                _dataDefinitions.GetOrAdd(type, static (t, s) => s.Item1.CreateDataDefinition(t, s.isRecord), (this, isRecord));
             });
 
             var duplicateErrors = new StringBuilder();
@@ -215,7 +213,7 @@ namespace Robust.Shared.Serialization.Manager
             });
         }
 
-        private DataDefinition CreateDataDefinition(Type t, IDependencyCollection collection, bool isRecord)
+        private DataDefinition CreateDataDefinition(Type t, bool isRecord)
         {
             return (DataDefinition)typeof(DataDefinition<>).MakeGenericType(t)
                 .GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, new[]

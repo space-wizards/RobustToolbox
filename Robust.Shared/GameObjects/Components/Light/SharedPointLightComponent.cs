@@ -35,7 +35,7 @@ namespace Robust.Shared.GameObjects
 
         [Access(typeof(SharedPointLightSystem))]
         [DataField("enabled")]
-        public bool _enabled;
+        public bool _enabled = true;
 
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable] // please somebody ECS animations

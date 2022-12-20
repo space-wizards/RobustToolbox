@@ -35,12 +35,31 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `ITypeReader<,>.Read(...)` and `ITypeCopier<>.Copy(...)` have had their `bool skipHook` parameter replaced with a `SerializationHookContext` to facilitate multithreaded prototype loading.
-* Prototypes are now loaded in parallel across multiple threads. Type serializers, property setters, etc... must be thread safe and not rely on an active IoC instance.
+*None yet*
 
 ### New features
 
 *None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.74.0.0
+
+### Breaking changes
+
+* `ITypeReader<,>.Read(...)` and `ITypeCopier<>.Copy(...)` have had their `bool skipHook` parameter replaced with a `SerializationHookContext` to facilitate multithreaded prototype loading.
+* Prototypes are now loaded in parallel across multiple threads. Type serializers, property setters, etc... must be thread safe and not rely on an active IoC instance.
 
 ### Bugfixes
 

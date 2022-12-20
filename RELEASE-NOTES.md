@@ -35,8 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Changed default for `net.buffer_size` to `2`.
-* Changed default for `auth.mode` to `Required`. On development builds, the default is overriden to remain at `Optional`, so this only affects published servers.
+*None yet*
 
 ### New features
 
@@ -48,11 +47,23 @@ END TEMPLATE-->
 
 ### Other
 
-* Cleaned up some `FULL_RELEASE` CVar default value overrides into `CVarDefaultOverrides.cs`.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 0.75.0.0
+
+### Breaking changes
+
+* Changed default for `net.buffer_size` to `2`.
+* Changed default for `auth.mode` to `Required`. On development builds, the default is overriden to remain at `Optional`, so this only affects published servers.
+
+### Other
+
+* Cleaned up some `FULL_RELEASE` CVar default value overrides into `CVarDefaultOverrides.cs`.
 
 
 ## 0.74.0.0

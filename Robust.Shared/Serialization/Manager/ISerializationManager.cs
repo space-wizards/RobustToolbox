@@ -261,10 +261,10 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
-        void CopyTo<T>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))]  bool notNullableOverride = false);
+        void CopyTo<T>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))]  bool notNullableOverride = false);
         void CopyTo<T>(
             T source,
-            ref T? target,
+            ref T target,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
@@ -281,11 +281,11 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
-        void CopyTo<T>(ITypeCopier<T> copier, T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))]  bool notNullableOverride = false);
+        void CopyTo<T>(ITypeCopier<T> copier, T source, ref T target, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))]  bool notNullableOverride = false);
         void CopyTo<T>(
             ITypeCopier<T> copier,
             T source,
-            ref T? target,
+            ref T target,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
@@ -302,10 +302,10 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
         /// <typeparam name="TCopier">The type of the <see cref="ITypeCopier{TType}"/>.</typeparam>
-        void CopyTo<T, TCopier>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))]  bool notNullableOverride = false) where TCopier : ITypeCopier<T>;
+        void CopyTo<T, TCopier>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))]  bool notNullableOverride = false) where TCopier : ITypeCopier<T>;
         void CopyTo<T, TCopier>(
             T source,
-            ref T? target,
+            ref T target,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             [NotNullableFlag(nameof(T))] bool notNullableOverride = false)

@@ -224,7 +224,7 @@ public partial class PrototypeManager
         {
             if (dataNode.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
             {
-                parents = _serializationManager.Read<string[]>(parentNode);
+                parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
             }
         }
 

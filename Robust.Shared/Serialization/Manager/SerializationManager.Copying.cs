@@ -393,7 +393,7 @@ public sealed partial class SerializationManager
 
     public void CopyTo<T>(
         T source,
-        ref T? target,
+        ref T target,
         SerializationHookContext hookCtx,
         ISerializationContext? context = null,
         bool notNullableOverride = false)
@@ -434,7 +434,7 @@ public sealed partial class SerializationManager
     public void CopyTo<T>(
         ITypeCopier<T> copier,
         T source,
-        ref T? target,
+        ref T target,
         SerializationHookContext hookCtx,
         ISerializationContext? context = null,
         bool notNullableOverride = false)
@@ -466,7 +466,7 @@ public sealed partial class SerializationManager
 
     public void CopyTo<T, TCopier>(
         T source,
-        ref T? target,
+        ref T target,
         SerializationHookContext hookCtx,
         ISerializationContext? context = null,
         bool notNullableOverride = false)

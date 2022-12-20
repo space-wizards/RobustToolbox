@@ -183,6 +183,8 @@ namespace Robust.Server
             _config.LoadCVarsFromAssembly(typeof(BaseServer).Assembly); // Robust.Server
             _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
 
+            CVarDefaultOverrides.OverrideServer(_config);
+
             _config.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 
             if (_commandLineArgs != null)

@@ -13,7 +13,6 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 namespace Robust.Server.GameObjects
 {
     [ComponentReference(typeof(SharedSpriteComponent))]
-    [RegisterComponent]
     [Obsolete("Use client-side systems, or appearance data & visualizers instead")]
     public sealed class SpriteComponent : SharedSpriteComponent, ISerializationHooks
     {

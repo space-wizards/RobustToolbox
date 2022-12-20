@@ -10,7 +10,6 @@ using System;
 namespace Robust.Shared.GameObjects;
 
 [NetworkedComponent()]
-[RegisterComponent]
 [Access(typeof(OccluderSystem))]
 public sealed class OccluderComponent : Component, IComponentTreeEntry<OccluderComponent>
 {

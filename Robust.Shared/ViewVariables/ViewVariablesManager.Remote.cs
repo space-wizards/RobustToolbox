@@ -136,26 +136,15 @@ internal abstract partial class ViewVariablesManager
             return;
         }
 
-        var obj = ReadPath(req.Path);
+        var val = ReadPathSerialized(req.Path);
 
-        if (obj == null)
+        if (val == null)
         {
             SendMessage(new MsgViewVariablesReadPathRes(req)
             {
                 ResponseCode = ViewVariablesResponseCode.NoObject,
             }, req.MsgChannel);
             return;
-        }
-
-        string val;
-
-        try
-        {
-            val = SerializeValue(obj.GetType(), obj) ?? obj.ToString() ?? "null";
-        }
-        catch (Exception)
-        {
-            val = obj.ToString() ?? "null";
         }
 
         SendMessage(new MsgViewVariablesReadPathRes(req)

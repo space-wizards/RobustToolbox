@@ -21,6 +21,13 @@ public abstract partial class SharedMapSystem
             return;
 
         component.WorldMap = state.MapId;
+
+        if (!MapManager.MapExists(state.MapId))
+        {
+            var mapInternal = (IMapManagerInternal)MapManager;
+            mapInternal.CreateMap(state.MapId, uid);
+        }
+
         component.LightingEnabled = state.LightingEnabled;
         var xformQuery = GetEntityQuery<TransformComponent>();
 

@@ -61,14 +61,13 @@ internal partial class MapManager
 
         foreach (var grid in grids)
         {
-            DeleteGrid(grid.GridEntityId);
+            DeleteGrid(grid.Owner);
         }
 
         if (mapId != MapId.Nullspace)
         {
             var args = new MapEventArgs(mapId);
             OnMapDestroyedGridTree(args);
-            MapDestroyed?.Invoke(this, args);
             _mapEntities.Remove(mapId);
         }
 
@@ -78,7 +77,7 @@ internal partial class MapManager
     /// <inheritdoc />
     public MapId CreateMap(MapId? mapId = null)
     {
-        return CreateMap(mapId, default);
+        return ((IMapManagerInternal) this).CreateMap(mapId, default);
     }
 
     /// <inheritdoc />
@@ -223,13 +222,7 @@ internal partial class MapManager
         return _highestMapId = new MapId(_highestMapId.Value + 1);
     }
 
-    /// <inheritdoc />
-    public event EventHandler<MapEventArgs>? MapCreated;
-
-    /// <inheritdoc />
-    public event EventHandler<MapEventArgs>? MapDestroyed;
-
-    protected MapId CreateMap(MapId? mapId, EntityUid entityUid)
+    MapId IMapManagerInternal.CreateMap(MapId? mapId, EntityUid entityUid)
     {
         if (mapId == MapId.Nullspace)
             throw new InvalidOperationException("Attempted to create a null-space map.");
@@ -283,8 +276,6 @@ internal partial class MapManager
 
         var args = new MapEventArgs(actualId);
         OnMapCreatedGridTree(args);
-        MapCreated?.Invoke(this, args);
-
         return actualId;
     }
 }

@@ -249,10 +249,6 @@ namespace Robust.Server.GameStates
             {
                 var session = players[sessionIndex];
 
-                // KILL IT WITH FIRE
-                if (mainThread != Thread.CurrentThread)
-                    IoCManager.InitThread(new DependencyCollection(parentDeps), true);
-
                 var channel = session.ConnectedClient;
 
                 if (!_ackedStates.TryGetValue(channel.ConnectionId, out var lastAck))
@@ -265,7 +261,6 @@ namespace Robust.Server.GameStates
                         playerChunks[sessionIndex], metadataQuery, transformQuery, viewerEntities[sessionIndex])
                     : _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
-                var mapData = _mapManager.GetStateData(lastAck);
 
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
@@ -277,8 +272,7 @@ namespace Robust.Server.GameStates
                     Math.Max(lastInputCommand, lastSystemMessage),
                     entStates,
                     playerStates,
-                    deletions,
-                    mapData);
+                    deletions);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -23,15 +22,16 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public ComponentRegistry Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<ComponentRegistry>? instanceProvider = null)
         {
             var factory = dependencies.Resolve<IComponentFactory>();
             var components = instanceProvider != null ? instanceProvider() : new ComponentRegistry();
 
-            foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
+            foreach (var sequenceEntry in node.Sequence)
             {
+                var componentMapping = (MappingDataNode)sequenceEntry;
                 string compType = ((ValueDataNode) componentMapping.Get("type")).Value;
                 // See if type exists to detect errors.
                 switch (factory.GetComponentAvailability(compType))
@@ -48,7 +48,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 }
 
                 // Has this type already been added?
-                if (components.Keys.Contains(compType))
+                if (components.ContainsKey(compType))
                 {
                     Logger.ErrorS(SerializationManager.LogCategory, $"Component of type '{compType}' defined twice in prototype!");
                     continue;
@@ -58,7 +58,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
-                var read = (IComponent)serializationManager.Read(type, copy, skipHook: skipHook)!;
+                var read = (IComponent)serializationManager.Read(type, copy, hookCtx)!;
 
                 components[compType] = new ComponentRegistryEntry(read, copy);
             }
@@ -92,8 +92,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             var components = new ComponentRegistry();
             var list = new List<ValidationNode>();
 
-            foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
+            foreach (var sequenceEntry in node.Sequence)
             {
+                var componentMapping = (MappingDataNode)sequenceEntry;
                 string compType = ((ValueDataNode) componentMapping.Get("type")).Value;
                 // See if type exists to detect errors.
                 switch (factory.GetComponentAvailability(compType))
@@ -111,7 +112,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 }
 
                 // Has this type already been added?
-                if (components.Keys.Contains(compType))
+                if (components.ContainsKey(compType))
                 {
                     list.Add(new ErrorNode(componentMapping, "Duplicate Component."));
                     continue;
@@ -170,7 +171,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public void CopyTo(ISerializationManager serializationManager, ComponentRegistry source, ref ComponentRegistry target,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);
@@ -192,16 +193,29 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             foreach (var (reg, mapping) in parentDict)
             {
-                if (newCompRegDict.TryFirstOrNull(childReg => reg.References.Any(x => childReg.Key.References.Contains(x)), out var entry))
+                foreach (var (childReg, idx) in newCompRegDict)
                 {
-                    newCompReg[entry.Value.Value] = serializationManager.PushCompositionWithGenericNode(reg.Type,
-                        new[] { parent[mapping] }, newCompReg[entry.Value.Value], context);
+                    foreach (var x in reg.References)
+                    {
+                        if (childReg.References.Contains(x))
+                        {
+                            newCompReg[idx] = serializationManager.PushCompositionWithGenericNode(
+                                reg.Type,
+                                new[] { parent[mapping] },
+                                newCompReg[idx],
+                                context);
+
+                            goto found;
+                        }
+                    }
                 }
-                else
-                {
-                    newCompReg.Add(parent[mapping]);
-                    newCompRegDict[reg] = newCompReg.Count-1;
-                }
+
+                // Not found.
+
+                newCompReg.Add(parent[mapping]);
+                newCompRegDict[reg] = newCompReg.Count-1;
+
+                found: ;
             }
 
             return newCompReg;

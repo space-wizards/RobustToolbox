@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             mapMan.Restart();
 
-            Assert.That(mapMan.GridExists(grid.GridEntityId), Is.False);
+            Assert.That(mapMan.GridExists(grid.Owner), Is.False);
         }
 
         /// <summary>

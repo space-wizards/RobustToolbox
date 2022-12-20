@@ -12,6 +12,8 @@ public abstract class MetaDataSystem : EntitySystem
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
 
+    private EntityPausedEvent _pausedEvent = new();
+
     public override void Initialize()
     {
         SubscribeLocalEvent<MetaDataComponent, ComponentHandleState>(OnMetaDataHandle);
@@ -55,14 +57,16 @@ public abstract class MetaDataSystem : EntitySystem
         {
             DebugTools.Assert(metadata.PauseTime == null);
             metadata.PauseTime = _timing.CurTime;
+            RaiseLocalEvent(uid, ref _pausedEvent);
         }
         else
         {
             DebugTools.Assert(metadata.PauseTime != null);
+            var ev = new EntityUnpausedEvent(_timing.CurTime - metadata.PauseTime!.Value);
             metadata.PauseTime = null;
+            RaiseLocalEvent(uid, ref ev);
         }
 
-        RaiseLocalEvent(uid, new EntityPausedEvent(uid, value));
         Dirty(metadata);
     }
 

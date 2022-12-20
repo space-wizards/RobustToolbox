@@ -83,7 +83,7 @@ internal partial class MapManager
 
     private Box2 GetWorldAABB(MapGridComponent grid, TransformComponent? xform = null)
     {
-        xform ??= EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+        xform ??= EntityManager.GetComponent<TransformComponent>(grid.Owner);
 
         var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
@@ -106,7 +106,7 @@ internal partial class MapManager
 
     private void AddGrid(MapGridComponent grid, MapId mapId)
     {
-        DebugTools.Assert(!EntityManager.HasComponent<MapComponent>(grid.Owner));
+        DebugTools.Assert(!EntityManager.HasComponent<MapComponent>(((Component) grid).Owner));
         var aabb = GetWorldAABB(grid);
         var proxy = _gridTrees[mapId].CreateProxy(in aabb, grid);
         DebugTools.Assert(grid.MapProxy == DynamicTree.Proxy.Free);

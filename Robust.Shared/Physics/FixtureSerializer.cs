@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -31,13 +32,13 @@ public sealed class FixtureSerializer : ITypeSerializer<List<Fixture>, SequenceD
     }
 
     public List<Fixture> Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies,
-        bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<List<Fixture>>? instantiation = default)
+        SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<List<Fixture>>? instantiation = default)
     {
         var value = instantiation != null ? instantiation() : new List<Fixture>(node.Count);
 
         foreach (var subNode in node)
         {
-            var fixture = serializationManager.Read<Fixture>(subNode, context, skipHook, notNullableOverride: true);
+            var fixture = serializationManager.Read<Fixture>(subNode, hookCtx, context, notNullableOverride: true);
             value.Add(fixture);
         }
 

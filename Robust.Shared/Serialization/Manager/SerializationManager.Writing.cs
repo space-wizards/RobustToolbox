@@ -253,18 +253,6 @@ public sealed partial class SerializationManager
         return WriteValue(GetOrCreateCustomTypeSerializer<TWriter>(), value, alwaysWrite, context, notNullableOverride);
     }
 
-    public DataNode WriteValue(object? value, bool alwaysWrite = false,
-        ISerializationContext? context = null, bool notNullableOverride = false)
-    {
-        if (value == null)
-        {
-            if (notNullableOverride) throw new NullNotAllowedException();
-            return NullNode();
-        }
-
-        return WriteValue(value.GetType(), value, alwaysWrite, context);
-    }
-
     public DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false)
     {
         if (value == null)

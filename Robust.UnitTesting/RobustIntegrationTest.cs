@@ -820,7 +820,9 @@ namespace Robust.UnitTesting
 
                     (CVars.SysGCCollectStart.Name, "false"),
 
-                    (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
+                    (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString()),
+
+                    (CVars.ResPrototypeReloadWatch.Name, "false"),
                 });
 
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),

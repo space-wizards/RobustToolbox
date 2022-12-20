@@ -72,9 +72,9 @@ namespace Robust.Client.Debugging
             var tile = grid.GetTileRef(spot);
             _label.Position = mouseSpot.Position + new Vector2(32, 0);
 
-            if (_hovered?.GridId == grid.GridEntityId && _hovered?.Tile == tile) return;
+            if (_hovered?.GridId == grid.Owner && _hovered?.Tile == tile) return;
 
-            _hovered = (grid.GridEntityId, tile);
+            _hovered = (grid.Owner, tile);
 
             var text = new StringBuilder();
 

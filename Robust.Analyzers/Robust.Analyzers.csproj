@@ -22,4 +22,9 @@
     <Compile Include="..\Robust.Shared\Analyzers\AccessPermissions.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Needed for PreferGenericVariantAnalyzer. -->
+    <Compile Include="..\Robust.Shared\Analyzers\PreferGenericVariantAttribute.cs" />
+  </ItemGroup>
+
 </Project>

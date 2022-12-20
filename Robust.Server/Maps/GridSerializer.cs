@@ -5,6 +5,7 @@ using Robust.Server.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -25,9 +26,9 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
     }
 
     public MapChunk Read(ISerializationManager serializationManager, MappingDataNode node,
-        IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<MapChunk>? instantiationDelegate = null)
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<MapChunk>? instantiationDelegate = null)
     {
-        var ind = (Vector2i) serializationManager.Read(typeof(Vector2i), node["ind"], context, skipHook)!;
+        var ind = (Vector2i) serializationManager.Read(typeof(Vector2i), node["ind"], hookCtx, context)!;
         var tileNode = (ValueDataNode)node["tiles"];
         var tileBytes = Convert.FromBase64String(tileNode.Value);
 
@@ -128,7 +129,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         return Convert.ToBase64String(barr);
     }
 
-    public MapChunk CreateCopy(ISerializationManager serializationManager, MapChunk source, bool skipHook,
+    public MapChunk CreateCopy(ISerializationManager serializationManager, MapChunk source, SerializationHookContext hookCtx,
         ISerializationContext? context = null)
     {
         var mapManager = ((SerializationManager)serializationManager).DependencyCollection.Resolve<IMapManager>();

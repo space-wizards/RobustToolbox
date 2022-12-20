@@ -14,7 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     public sealed class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>, ITypeCopyCreator<FormattedMessage>
     {
         public FormattedMessage Read(ISerializationManager serializationManager,
-            ValueDataNode node, IDependencyCollection dependencies, bool skipHook,
+            ValueDataNode node, IDependencyCollection dependencies, SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<FormattedMessage>? instanceProvider = null)
         {
@@ -40,7 +40,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public FormattedMessage CreateCopy(ISerializationManager serializationManager, FormattedMessage source,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source);
         }

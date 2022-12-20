@@ -38,27 +38,27 @@ public abstract partial class SharedTransformSystem
         xform._anchored = false;
         oldGridXform._children.Remove(xform.Owner);
         newGridXform._children.Add(xform.Owner);
-        xform._parent = newGrid.Owner;
+        xform._parent = ((Component) newGrid).Owner;
         xform._anchored = true;
 
-        SetGridId(xform, newGrid.Owner, xformQuery);
-        var reParent = new EntParentChangedMessage(xform.Owner, oldGrid.Owner, xform.MapID, xform);
+        SetGridId(xform, ((Component) newGrid).Owner, xformQuery);
+        var reParent = new EntParentChangedMessage(xform.Owner, ((Component) oldGrid).Owner, xform.MapID, xform);
         RaiseLocalEvent(xform.Owner, ref reParent, true);
         // TODO: Ideally shouldn't need to call the moveevent
         var movEevee = new MoveEvent(xform.Owner,
-            new EntityCoordinates(oldGrid.Owner, xform._localPosition),
-            new EntityCoordinates(newGrid.Owner, xform._localPosition),
+            new EntityCoordinates(((Component) oldGrid).Owner, xform._localPosition),
+            new EntityCoordinates(((Component) newGrid).Owner, xform._localPosition),
             xform.LocalRotation,
             xform.LocalRotation,
             xform,
             _gameTiming.ApplyingState);
         RaiseLocalEvent(xform.Owner, ref movEevee, true);
 
-        DebugTools.Assert(xformQuery.GetComponent(oldGrid.Owner).MapID == xformQuery.GetComponent(newGrid.Owner).MapID);
+        DebugTools.Assert(xformQuery.GetComponent(((Component) oldGrid).Owner).MapID == xformQuery.GetComponent(((Component) newGrid).Owner).MapID);
         DebugTools.Assert(xform._anchored);
 
         Dirty(xform);
-        var ev = new ReAnchorEvent(xform.Owner, oldGrid.Owner, newGrid.Owner, tilePos);
+        var ev = new ReAnchorEvent(xform.Owner, ((Component) oldGrid).Owner, ((Component) newGrid).Owner, tilePos);
         RaiseLocalEvent(xform.Owner, ref ev);
     }
 
@@ -80,7 +80,7 @@ public abstract partial class SharedTransformSystem
         }
 
         // Anchor snapping. Note that set coordiantes will dirty the component for us.
-        var pos = new EntityCoordinates(grid.GridEntityId, grid.GridTileToLocal(tileIndices).Position);
+        var pos = new EntityCoordinates(grid.Owner, grid.GridTileToLocal(tileIndices).Position);
         SetCoordinates(xform, pos, unanchor: false);
 
         return true;
@@ -889,11 +889,11 @@ public abstract partial class SharedTransformSystem
         if (!xform.NoLocalRotation)
             xform._localRotation = rot;
 
+        xform.MatricesDirty = true;
         Dirty(xform);
 
         if (!xform.DeferUpdates)
         {
-            xform.MatricesDirty = true;
             if (!xform.Initialized)
                 return;
 

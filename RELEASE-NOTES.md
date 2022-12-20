@@ -35,7 +35,8 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `ITypeReader<,>.Read(...)` and `ITypeCopier<>.Copy(...)` have had their `bool skipHook` parameter replaced with a `SerializationHookContext` to facilitate multithreaded prototype loading.
+* Prototypes are now loaded in parallel across multiple threads. Type serializers, property setters, etc... must be thread safe and not rely on an active IoC instance.
 
 ### New features
 
@@ -43,16 +44,21 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Mapped string serializer once again is initialized with prototype strongs, reducing bandwidth usage.
 
 ### Other
 
-*None yet*
+* Drastically improved startup time by running prototype loading in parallel.
+  * `AfterDeserialization` hooks are still ran on the main thread during load to avoid issues.
+* Various systems in the serialization system such as `SerializationManager` or `ReflectionManager` have had various methods made thread safe.
+* `TileAliasPrototype` no longer has a load priority set.
+* Straightened out terminology in prototypes: to refer to the type of a prototype (e.g. `EntityPrototype` itself), use "kind".
+  * This was previously mixed between "type" and "variant".
 
 ### Internal
 
-*None yet*
-
+* `SpanSplitExtensions` has been taken behind the shed for being horrifically wrong unsafe code that should never have been entered into a keyboard ever. A simpler helper method replaces its use in `Box2Serializer`.
+* `PrototypeManager.cs` has been split apart into multiple files.
 
 ## 0.73.0.0
 

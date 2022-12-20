@@ -26,8 +26,8 @@ public sealed class OccluderComponent : Component, IComponentTreeEntry<OccluderC
     public bool AddToTree => Enabled;
     public bool TreeUpdateQueued { get; set; } = false;
 
-    [ViewVariables] internal (EntityUid Grid, Vector2i Tile)? LastPosition;
-    [ViewVariables] internal OccluderDir Occluding;
+    [ViewVariables] public (EntityUid Grid, Vector2i Tile)? LastPosition;
+    [ViewVariables] public OccluderDir Occluding;
 
     [Flags]
     public enum OccluderDir : byte

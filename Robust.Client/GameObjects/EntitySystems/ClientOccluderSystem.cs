@@ -151,6 +151,16 @@ internal sealed class ClientOccluderSystem : OccluderSystem
         EntityQuery<TransformComponent> xforms,
         EntityQuery<MapGridComponent> grids)
     {
+        // Content may want to override the default behavior for occlusion.
+        // Apparently OD needs this?
+        {
+            var ev = new OccluderDirectionsEvent(uid, occluder);
+            RaiseLocalEvent(uid, ref ev, true);
+
+            if (ev.Handled)
+                return;
+        }
+
         if (!occluder.Enabled)
         {
             DebugTools.Assert(occluder.Occluding == OccluderDir.None);
@@ -224,5 +234,22 @@ internal sealed class ClientOccluderSystem : OccluderSystem
             Direction.West => OccluderDir.West,
             _ => throw new ArgumentException($"Invalid dir: {dir}.")
         };
+    }
+
+    /// <summary>
+    /// Raised by occluders when trying to get occlusion directions.
+    /// </summary>
+    [ByRefEvent]
+    public struct OccluderDirectionsEvent
+    {
+        public bool Handled = false;
+        public readonly EntityUid Sender = default!;
+        public readonly OccluderComponent Occluder = default!;
+
+        public OccluderDirectionsEvent(EntityUid sender, OccluderComponent occluder)
+        {
+            Sender = sender;
+            Occluder = occluder;
+        }
     }
 }

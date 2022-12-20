@@ -166,11 +166,11 @@ namespace Robust.Shared.GameObjects
 
                 var oldRotation = _localRotation;
                 _localRotation = value;
+                MatricesDirty = true;
                 _entMan.Dirty(this);
 
                 if (!DeferUpdates)
                 {
-                    MatricesDirty = true;
                     if (!Initialized)
                         return;
 
@@ -354,11 +354,11 @@ namespace Robust.Shared.GameObjects
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;
+                MatricesDirty = true;
                 _entMan.Dirty(this);
 
                 if (!DeferUpdates)
                 {
-                    MatricesDirty = true;
                     if (!Initialized)
                         return;
 

@@ -57,7 +57,7 @@ public sealed class DataRecordTest : SerializationTest
             {"anotherTest", "2"}
         };
 
-        var val = Serialization.Read<TwoIntRecord>(mapping);
+        var val = Serialization.Read<TwoIntRecord>(mapping, notNullableOverride: true);
 
         Assert.Multiple(() =>
         {
@@ -83,7 +83,7 @@ public sealed class DataRecordTest : SerializationTest
     public void OneByteOneDefaultIntRecordTest()
     {
         var mapping = new MappingDataNode {{"a", "1"}};
-        var val = Serialization.Read<OneByteOneDefaultIntRecord>(mapping);
+        var val = Serialization.Read<OneByteOneDefaultIntRecord>(mapping, notNullableOverride: true);
 
         Assert.Multiple(() =>
         {
@@ -96,7 +96,7 @@ public sealed class DataRecordTest : SerializationTest
     public void OneLongRecordTest()
     {
         var mapping = new MappingDataNode {{"a", "1"}};
-        var val = Serialization.Read<OneLongRecord>(mapping);
+        var val = Serialization.Read<OneLongRecord>(mapping, notNullableOverride: true);
 
         Assert.That(val.A, Is.EqualTo(1));
     }
@@ -105,7 +105,7 @@ public sealed class DataRecordTest : SerializationTest
     public void OneLongMinValueRecordTest()
     {
         var mapping = new MappingDataNode {{"a", long.MinValue.ToString()}};
-        var val = Serialization.Read<OneLongRecord>(mapping);
+        var val = Serialization.Read<OneLongRecord>(mapping, notNullableOverride: true);
 
         Assert.That(val.A, Is.EqualTo(long.MinValue));
     }
@@ -114,7 +114,7 @@ public sealed class DataRecordTest : SerializationTest
     public void OneLongMaxValueRecordTest()
     {
         var mapping = new MappingDataNode {{"a", long.MaxValue.ToString()}};
-        var val = Serialization.Read<OneLongRecord>(mapping);
+        var val = Serialization.Read<OneLongRecord>(mapping, notNullableOverride: true);
 
         Assert.That(val.A, Is.EqualTo(long.MaxValue));
     }
@@ -123,7 +123,7 @@ public sealed class DataRecordTest : SerializationTest
     public void OneLongDefaultRecordTest()
     {
         var mapping = new MappingDataNode();
-        var val = Serialization.Read<OneLongDefaultRecord>(mapping);
+        var val = Serialization.Read<OneLongDefaultRecord>(mapping, notNullableOverride: true);
 
         Assert.That(val.A, Is.EqualTo(5));
     }
@@ -132,7 +132,7 @@ public sealed class DataRecordTest : SerializationTest
     public void OneULongRecordMaxValueTest()
     {
         var mapping = new MappingDataNode {{"a", ulong.MaxValue.ToString()}};
-        var val = Serialization.Read<OneULongRecord>(mapping);
+        var val = Serialization.Read<OneULongRecord>(mapping, notNullableOverride: true);
 
         Assert.That(val.A, Is.EqualTo(ulong.MaxValue));
     }
@@ -141,7 +141,7 @@ public sealed class DataRecordTest : SerializationTest
     public void PrototypeTest()
     {
         var mapping = new MappingDataNode {{"id", "ABC"}};
-        var val = Serialization.Read<PrototypeRecord>(mapping);
+        var val = Serialization.Read<PrototypeRecord>(mapping, notNullableOverride: true);
 
         Assert.That(val.ID, Is.EqualTo("ABC"));
     }
@@ -167,7 +167,7 @@ public sealed class DataRecordTest : SerializationTest
                 }
             }
         };
-        var val = Serialization.Read<IntStructHolder>(mapping);
+        var val = Serialization.Read<IntStructHolder>(mapping, notNullableOverride: true);
 
         Assert.That(val.Struct.Value, Is.EqualTo(42));
     }
@@ -190,7 +190,7 @@ public sealed class DataRecordTest : SerializationTest
                 }
             }
         };
-        var val = Serialization.Read<TwoIntStructHolder>(mapping);
+        var val = Serialization.Read<TwoIntStructHolder>(mapping, notNullableOverride: true);
 
         Assert.Multiple(() =>
         {

@@ -345,10 +345,13 @@ public sealed partial class SerializationManager
         return target!;
     }
 
-    private void NotNullOverrideCheck(bool notNullableOverride)
+    private void NotNullOverrideCheck(bool notNullableOverride, Type? type = null)
     {
-        if (notNullableOverride) throw new NullNotAllowedException();
+        if (notNullableOverride || (type != null && !type.IsNullable())) throw new NullNotAllowedException();
     }
+
+    private void NotNullOverrideCheck<T>(bool notNullableOverride) =>
+        NotNullOverrideCheck(notNullableOverride, typeof(T));
 
     public void CopyTo(object? source, ref object? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
     {
@@ -383,22 +386,22 @@ public sealed partial class SerializationManager
         GetOrCreateCopyToBoxingDelegate(commonType)(source, ref target, hookCtx, context);
     }
 
-    public void CopyTo<T>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
+    public void CopyTo<T>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
     {
         CopyTo<T>(source, ref target, SerializationHookContext.ForSkipHooks(skipHook), context, notNullableOverride);
     }
 
     public void CopyTo<T>(
         T source,
-        ref T? target,
+        ref T target,
         SerializationHookContext hookCtx,
         ISerializationContext? context = null,
         bool notNullableOverride = false)
     {
         if (source == null)
         {
-            NotNullOverrideCheck(notNullableOverride);
-            target = default;
+            NotNullOverrideCheck<T>(notNullableOverride);
+            target = default!;
             return;
         }
 
@@ -416,7 +419,7 @@ public sealed partial class SerializationManager
         RunAfterHook(target, hookCtx);
     }
 
-    public void CopyTo<T>(ITypeCopier<T> copier, T source, ref T? target, ISerializationContext? context = null,
+    public void CopyTo<T>(ITypeCopier<T> copier, T source, ref T target, ISerializationContext? context = null,
         bool skipHook = false, bool notNullableOverride = false)
     {
         CopyTo<T>(
@@ -431,15 +434,15 @@ public sealed partial class SerializationManager
     public void CopyTo<T>(
         ITypeCopier<T> copier,
         T source,
-        ref T? target,
+        ref T target,
         SerializationHookContext hookCtx,
         ISerializationContext? context = null,
         bool notNullableOverride = false)
     {
         if (source == null)
         {
-            NotNullOverrideCheck(notNullableOverride);
-            target = default;
+            NotNullOverrideCheck<T>(notNullableOverride);
+            target = default!;
             return;
         }
 
@@ -450,7 +453,7 @@ public sealed partial class SerializationManager
         RunAfterHook(target, hookCtx);
     }
 
-    public void CopyTo<T, TCopier>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
+    public void CopyTo<T, TCopier>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
         where TCopier : ITypeCopier<T>
     {
         CopyTo<T, TCopier>(
@@ -463,7 +466,7 @@ public sealed partial class SerializationManager
 
     public void CopyTo<T, TCopier>(
         T source,
-        ref T? target,
+        ref T target,
         SerializationHookContext hookCtx,
         ISerializationContext? context = null,
         bool notNullableOverride = false)
@@ -505,7 +508,7 @@ public sealed partial class SerializationManager
     {
         if (source == null)
         {
-            NotNullOverrideCheck(notNullableOverride);
+            NotNullOverrideCheck<T>(notNullableOverride);
             return default!;
         }
 
@@ -535,7 +538,7 @@ public sealed partial class SerializationManager
     {
         if (source == null)
         {
-            NotNullOverrideCheck(notNullableOverride);
+            NotNullOverrideCheck<T>(notNullableOverride);
             return default!;
         }
 

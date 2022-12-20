@@ -12,6 +12,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Needed for NotNullableFlagAnalyzer. -->
+    <Compile Include="..\Robust.Shared\Analyzers\NotNullableFlagAttribute.cs" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <!-- Needed for FriendAnalyzer. -->
     <Compile Include="..\Robust.Shared\Analyzers\AccessAttribute.cs" />
     <Compile Include="..\Robust.Shared\Analyzers\AccessPermissions.cs" />

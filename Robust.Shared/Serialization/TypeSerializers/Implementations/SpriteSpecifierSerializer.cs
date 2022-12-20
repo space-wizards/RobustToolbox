@@ -31,7 +31,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             SerializationHookContext hookCtx, ISerializationContext? context,
             ISerializationManager.InstantiationDelegate<Texture>? instanceProvider = null)
         {
-            var path = serializationManager.Read<ResourcePath>(node, hookCtx, context);
+            var path = serializationManager.Read<ResourcePath>(node, hookCtx, context, notNullableOverride: true);
             return new Texture(path);
         }
 
@@ -69,7 +69,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 throw new InvalidMappingException("Expected state-node as a valuenode");
             }
 
-            var path = serializationManager.Read<ResourcePath>(pathNode, hookCtx, context);
+            var path = serializationManager.Read<ResourcePath>(pathNode, hookCtx, context, notNullableOverride: true);
             return new Rsi(path, valueDataNode.Value);
         }
 
@@ -145,7 +145,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return serializationManager.WriteValue(value.TexturePath, alwaysWrite, context);
+            return serializationManager.WriteValue(value.TexturePath, alwaysWrite, context, notNullableOverride: true);
         }
 
         public DataNode Write(ISerializationManager serializationManager, EntityPrototype value,
@@ -162,7 +162,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
-            mapping.Add("sprite", serializationManager.WriteValue(value.RsiPath));
+            mapping.Add("sprite", serializationManager.WriteValue(value.RsiPath, notNullableOverride: true));
             mapping.Add("state", new ValueDataNode(value.RsiState));
             return mapping;
         }

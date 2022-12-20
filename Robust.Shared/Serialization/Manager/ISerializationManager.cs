@@ -105,13 +105,13 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
-        T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false);
+        T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
         T Read<T>(
             DataNode node,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             InstantiationDelegate<T>? instanceProvider = null,
-            bool notNullableOverride = false);
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
 
 
         /// <summary>
@@ -127,7 +127,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="TNode">The node type that will be returned by the <see cref="ITypeReader{TType,TNode}"/></typeparam>
         /// <returns>The deserialized object, or null.</returns>
         T Read<T, TNode>(ITypeReader<T, TNode> reader, TNode node, ISerializationContext? context = null,
-            bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false) where TNode : DataNode;
+            bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where TNode : DataNode;
 
         T Read<T, TNode>(
             ITypeReader<T, TNode> reader,
@@ -151,7 +151,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="TReader">The type of the <see cref="ITypeReader{TType,TNode}"/>.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
         T Read<T, TNode, TReader>(TNode node, ISerializationContext? context = null,
-            bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false) where TNode : DataNode where TReader : ITypeReader<T, TNode>;
+            bool skipHook = false, InstantiationDelegate<T>? instanceProvider = null, [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where TNode : DataNode where TReader : ITypeReader<T, TNode>;
 
         T Read<T, TNode, TReader>(
             TNode node,
@@ -178,7 +178,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type to serialize.</typeparam>
         /// <returns>A <see cref="DataNode"/> created from the given <see cref="value"/>.</returns>
-        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
+        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null, [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
 
         /// <summary>
         ///     Serializes a value into a node using a <see cref="ITypeWriter{TType}"/> instance.
@@ -193,7 +193,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type to serialize.</typeparam>
         /// <returns>A serialized datanode created from the given <see cref="value"/> by using the typewriter.</returns>
-        DataNode WriteValue<T>(ITypeWriter<T> writer, T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
+        DataNode WriteValue<T>(ITypeWriter<T> writer, T value, bool alwaysWrite = false, ISerializationContext? context = null, [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
 
         /// <summary>
         ///     Serializes a value into a node using a <see cref="ITypeWriter{TType}"/> type.
@@ -208,7 +208,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type to serialize.</typeparam>
         /// <typeparam name="TWriter">The type of the <see cref="ITypeWriter{TType}"/>.</typeparam>
         /// <returns>A serialized datanode created from the given <see cref="value"/> by using the typewriter.</returns>
-        DataNode WriteValue<T, TWriter>(T value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false) where TWriter : ITypeWriter<T>;
+        DataNode WriteValue<T, TWriter>(T value, bool alwaysWrite = false, ISerializationContext? context = null, [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where TWriter : ITypeWriter<T>;
 
         /// <summary>
         ///     Serializes a value into a node.
@@ -261,13 +261,13 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
-        void CopyTo<T>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
+        void CopyTo<T>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))]  bool notNullableOverride = false);
         void CopyTo<T>(
             T source,
-            ref T? target,
+            ref T target,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool notNullableOverride = false);
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
 
         /// <summary>
         ///     Copies the values of one object into another using a specified <see cref="ITypeCopier{TType}"/> instance.
@@ -281,14 +281,14 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
-        void CopyTo<T>(ITypeCopier<T> copier, T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
+        void CopyTo<T>(ITypeCopier<T> copier, T source, ref T target, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))]  bool notNullableOverride = false);
         void CopyTo<T>(
             ITypeCopier<T> copier,
             T source,
-            ref T? target,
+            ref T target,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool notNullableOverride = false);
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
 
         /// <summary>
         ///     Copies the values of one object into another using a specified <see cref="ITypeCopier{TType}"/> type.
@@ -302,13 +302,13 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
         /// <typeparam name="TCopier">The type of the <see cref="ITypeCopier{TType}"/>.</typeparam>
-        void CopyTo<T, TCopier>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false) where TCopier : ITypeCopier<T>;
+        void CopyTo<T, TCopier>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))]  bool notNullableOverride = false) where TCopier : ITypeCopier<T>;
         void CopyTo<T, TCopier>(
             T source,
-            ref T? target,
+            ref T target,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool notNullableOverride = false)
+            [NotNullableFlag(nameof(T))] bool notNullableOverride = false)
             where TCopier : ITypeCopier<T>;
 
         /// <summary>
@@ -339,7 +339,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type of the object to copy.</typeparam>
         /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
-        T CreateCopy<T>(T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
+        T CreateCopy<T>(T source, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
 
         [MustUseReturnValue]
         T CreateCopy<T>(
@@ -359,7 +359,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type of the object to copy.</typeparam>
         /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
-        T CreateCopy<T>(ITypeCopyCreator<T> copyCreator, T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false);
+        T CreateCopy<T>(ITypeCopyCreator<T> copyCreator, T source, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))] bool notNullableOverride = false);
 
         [MustUseReturnValue]
         T CreateCopy<T>(
@@ -380,7 +380,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="TCopyCreator">The type of the <see cref="ITypeCopier{TType}"/> to use.</typeparam>
         /// <returns>A copy of the given object.</returns>
         [MustUseReturnValue]
-        T CreateCopy<T, TCopyCreator>(T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false) where TCopyCreator : ITypeCopyCreator<T>;
+        T CreateCopy<T, TCopyCreator>(T source, ISerializationContext? context = null, bool skipHook = false, [NotNullableFlag(nameof(T))] bool notNullableOverride = false) where TCopyCreator : ITypeCopyCreator<T>;
 
         [MustUseReturnValue]
         T CreateCopy<T, TCopyCreator>(

@@ -90,7 +90,7 @@ namespace Robust.Server
         [Dependency] private readonly IServerConsoleHost _consoleHost = default!;
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
         [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly IPrototypeManager _prototype = default!;
+        [Dependency] private readonly IPrototypeManagerInternal _prototype = default!;
         [Dependency] private readonly IPlacementManager _placement = default!;
         [Dependency] private readonly IServerViewVariablesInternal _viewVariables = default!;
         [Dependency] private readonly ISerializationManager _serialization = default!;
@@ -319,11 +319,11 @@ namespace Robust.Server
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
-            _prototype.LoadedData += (yaml, name) =>
+            _prototype.LoadedData += data =>
             {
                 if (!_stringSerializer.Locked)
                 {
-                    _stringSerializer.AddStrings(yaml);
+                    _stringSerializer.AddStrings(data.Root);
                 }
             };
 
@@ -379,7 +379,12 @@ namespace Robust.Server
                 WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
             }
 
-            GC.Collect();
+            _config.CheckUnusedCVars();
+
+            if (_config.GetCVar(CVars.SysGCCollectStart))
+            {
+                GC.Collect();
+            }
 
             ProgramShared.RunExecCommands(_consoleHost, _commandLineArgs?.ExecCommands);
 

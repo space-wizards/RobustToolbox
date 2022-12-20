@@ -40,6 +40,7 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
+        internal SharedPhysicsSystem Physics = default!;
 
         internal ContactManager ContactManager = default!;
 
@@ -77,7 +78,7 @@ namespace Robust.Shared.Physics.Dynamics
             if (bodyQuery.TryGetComponent(uid, out var body) &&
                 body.BodyType == BodyType.Dynamic)
             {
-                body.WakeBody();
+                Physics.WakeBody(uid, body);
             }
 
             var xform = xformQuery.GetComponent(uid);
@@ -269,7 +270,7 @@ namespace Robust.Shared.Physics.Dynamics
                     if (body.BodyType == BodyType.Static) continue;
 
                     // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                    body.SetAwake(true, updateSleepTime: false);
+                    Physics.SetAwake(body, true, updateSleepTime: false);
 
                     var node = body.Contacts.First;
 

@@ -10,8 +10,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
         public delegate void PopulateDelegateSignature(
             ref T target,
             MappingDataNode mappingDataNode,
-            ISerializationContext? context,
-            bool skipHook);
+            SerializationHookContext hookCtx,
+            ISerializationContext? context);
 
         public delegate MappingDataNode SerializeDelegateSignature(
             T obj,
@@ -21,8 +21,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
         public delegate void CopyDelegateSignature(
             T source,
             ref T target,
-            ISerializationContext? context,
-            bool skipHook);
+            SerializationHookContext hookCtx,
+            ISerializationContext? context);
 
         private delegate ValidationNode ValidateFieldDelegate(
             DataNode node,

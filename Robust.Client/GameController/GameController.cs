@@ -160,8 +160,11 @@ namespace Robust.Client
 
             _authManager.LoadFromEnv();
 
-            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
+            if (_configurationManager.GetCVar(CVars.SysGCCollectStart))
+            {
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect();
+            }
 
             // Setup main loop
             if (_mainLoop == null)
@@ -274,12 +277,15 @@ namespace Robust.Client
             return new ResourceManifestData(modules, assemblyPrefix, defaultWindowTitle, windowIconSet, splashLogo, autoConnect);
         }
 
-        internal bool StartupSystemSplash(GameControllerOptions options, Func<ILogHandler>? logHandlerFactory)
+        internal bool StartupSystemSplash(
+            GameControllerOptions options,
+            Func<ILogHandler>? logHandlerFactory,
+            bool globalExceptionLog = false)
         {
             Options = options;
             ReadInitialLaunchState();
 
-            SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()));
+            SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()), globalExceptionLog);
 
             if (_commandLineArgs != null)
             {
@@ -595,7 +601,10 @@ namespace Robust.Client
             }
         }
 
-        internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)
+        internal static void SetupLogging(
+            ILogManager logManager,
+            Func<ILogHandler> logHandlerFactory,
+            bool globalExceptionLog)
         {
             logManager.RootSawmill.AddHandler(logHandlerFactory());
 
@@ -612,34 +621,37 @@ namespace Robust.Client
             logManager.GetSawmill("szr").Level = LogLevel.Info;
             logManager.GetSawmill("loc").Level = LogLevel.Warning;
 
+            if (globalExceptionLog)
+            {
 #if DEBUG_ONLY_FCE_INFO
 #if DEBUG_ONLY_FCE_LOG
-            var fce = logManager.GetSawmill("fce");
+                var fce = logManager.GetSawmill("fce");
 #endif
-            AppDomain.CurrentDomain.FirstChanceException += (sender, args) =>
-            {
-                // TODO: record FCE stats
+                AppDomain.CurrentDomain.FirstChanceException += (sender, args) =>
+                {
+                    // TODO: record FCE stats
 #if DEBUG_ONLY_FCE_LOG
-                fce.Fatal(message);
+                    fce.Fatal(message);
 #endif
-            }
+                }
 #endif
 
-            var uh = logManager.GetSawmill("unhandled");
-            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
-            {
-                var message = ((Exception)args.ExceptionObject).ToString();
-                uh.Log(args.IsTerminating ? LogLevel.Fatal : LogLevel.Error, message);
-            };
+                var uh = logManager.GetSawmill("unhandled");
+                AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+                {
+                    var message = ((Exception)args.ExceptionObject).ToString();
+                    uh.Log(args.IsTerminating ? LogLevel.Fatal : LogLevel.Error, message);
+                };
 
-            var uo = logManager.GetSawmill("unobserved");
-            TaskScheduler.UnobservedTaskException += (sender, args) =>
-            {
-                uo.Error(args.Exception!.ToString());
+                var uo = logManager.GetSawmill("unobserved");
+                TaskScheduler.UnobservedTaskException += (sender, args) =>
+                {
+                    uo.Error(args.Exception!.ToString());
 #if EXCEPTION_TOLERANCE
-                args.SetObserved(); // don't crash
+                    args.SetObserved(); // don't crash
 #endif
-            };
+                };
+            }
         }
 
         private string GetUserDataDir()

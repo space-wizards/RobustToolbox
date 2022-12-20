@@ -10,6 +10,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -43,7 +44,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
-                var tempQualifier = grid.GridEntityId;
+                var tempQualifier = grid.Owner;
                 yield return EntityManager.GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
@@ -57,7 +58,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
-                var tempQualifier = grid.GridEntityId;
+                var tempQualifier = grid.Owner;
                 yield return EntityManager.GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
@@ -129,6 +130,8 @@ namespace Robust.Client.GameObjects
             EntityQuery<SpriteComponent> spriteQuery,
             EntityQuery<RenderingTreeComponent> renderingQuery)
         {
+            DebugTools.Assert(xform.Owner == uid);
+
             // To avoid doing redundant updates (and we don't need to update a grid's children ever)
             if (!_checkedChildren.Add(uid) || renderingQuery.HasComponent(uid)) return;
 
@@ -146,7 +149,7 @@ namespace Robust.Client.GameObjects
 
             while (childEnumerator.MoveNext(out var child))
             {
-                if (xformQuery.TryGetComponent(uid, out var childXform))
+                if (xformQuery.TryGetComponent(child.Value, out var childXform))
                     AnythingMovedSubHandler(child.Value, childXform, xformQuery, pointQuery, spriteQuery, renderingQuery);
             }
         }
@@ -227,12 +230,12 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetMapEntityId(e.Map));
+            EntityManager.EnsureComponent<RenderingTreeComponent>(e.Uid);
         }
 
         private void MapManagerOnGridCreated(GridInitializeEvent ev)
         {
-            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(ev.EntityUid).GridEntityId);
+            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(ev.EntityUid).Owner);
         }
 
         private RenderingTreeComponent? GetRenderTree(EntityUid entity, TransformComponent xform, EntityQuery<TransformComponent> xforms)

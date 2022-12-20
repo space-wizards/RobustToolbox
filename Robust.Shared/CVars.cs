@@ -311,6 +311,12 @@ namespace Robust.Shared
         public static readonly CVarDef<int> SysGameThreadPriority =
             CVarDef.Create("sys.game_thread_priority", (int) ThreadPriority.AboveNormal);
 
+        /// <summary>
+        /// Whether to run a <see cref="GC.Collect()"/> operation after the engine is finished initializing.
+        /// </summary>
+        public static readonly CVarDef<bool> SysGCCollectStart =
+            CVarDef.Create("sys.gc_collect_start", true);
+
         /*
          * METRICS
          */
@@ -1202,6 +1208,15 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ResStreamSeekMode =
             CVarDef.Create("res.stream_seek_mode", (int)ContentPack.StreamSeekMode.None);
 
+        /// <summary>
+        /// Whether to watch prototype files for prototype reload on the client. Only applies to development builds.
+        /// </summary>
+        /// <remarks>
+        /// The client sends a reload signal to the server on refocus, if you're wondering why this is client-only.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResPrototypeReloadWatch =
+            CVarDef.Create("res.prototype_reload_watch", true, CVar.CLIENTONLY);
+
         /*
          * DEBUG
          */
@@ -1369,5 +1384,20 @@ namespace Robust.Shared
         /// Index log buffer size for the profiling system.
         /// </summary>
         public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", 128);
+
+        /*
+         * CFG
+         */
+
+        /// <summary>
+        /// If set, check for any unknown CVars once the game is initialized to try the spot any unknown ones.
+        /// </summary>
+        /// <remarks>
+        /// CVars can be dynamically registered instead of just being statically known ahead of time,
+        /// so the engine is not capable of immediately telling if a CVar is a typo or such.
+        /// This check after game initialization assumes all CVars have been registered,
+        /// and will complain if anything unknown is found (probably indicating a typo of some kind).
+        /// </remarks>
+        public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
     }
 }

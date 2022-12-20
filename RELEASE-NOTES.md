@@ -55,6 +55,119 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.74.0.0
+
+### Breaking changes
+
+* `ITypeReader<,>.Read(...)` and `ITypeCopier<>.Copy(...)` have had their `bool skipHook` parameter replaced with a `SerializationHookContext` to facilitate multithreaded prototype loading.
+* Prototypes are now loaded in parallel across multiple threads. Type serializers, property setters, etc... must be thread safe and not rely on an active IoC instance.
+
+### Bugfixes
+
+* Mapped string serializer once again is initialized with prototype strongs, reducing bandwidth usage.
+
+### Other
+
+* Drastically improved startup time by running prototype loading in parallel.
+  * `AfterDeserialization` hooks are still ran on the main thread during load to avoid issues.
+* Various systems in the serialization system such as `SerializationManager` or `ReflectionManager` have had various methods made thread safe.
+* `TileAliasPrototype` no longer has a load priority set.
+* Straightened out terminology in prototypes: to refer to the type of a prototype (e.g. `EntityPrototype` itself), use "kind".
+  * This was previously mixed between "type" and "variant".
+
+### Internal
+
+* `SpanSplitExtensions` has been taken behind the shed for being horrifically wrong unsafe code that should never have been entered into a keyboard ever. A simpler helper method replaces its use in `Box2Serializer`.
+* `PrototypeManager.cs` has been split apart into multiple files.
+
+## 0.73.0.0
+
+### Breaking changes
+
+* The entity lookup flag `LookupFlags.Anchored` has been replaced with `LookupFlags.Static`.
+* We are now using **.NET 7**.
+* `IDependencyCollection`/`IoCManager` `RegisterInstance` does not automatically add the instance to object graph, so `BuildGraph()` must now be called to see the new instances.
+  * `deferInject` parameteres have been removed.
+
+### New features
+
+* The server will now check for any unknown CVars at startup, to possibly locate typos in your config file.
+* `IDependencyCollection` is now thread safe.
+
+### Bugfixes
+
+* Fixed config files not being truncated before write, resulting in corruption.
+
+### Other
+
+* Removed some cruft from the `server_config.toml` default config file that ships with Robust.
+* Most usages of x86 SIMD intrinsics have been replaced with cross-platform versions using the new .NET cross-platform intrinsics.
+  * This reduces code to maintain and improves performance on ARM.
+* Tiny optimization to rendering code.
+* `RobustSerializer` no longer needs to be called from threads with an active IoC context.
+  * This makes it possible to use from thread pool threads without `IoCManager.InitThread`.
+* Removed finalizer dispose from `Overlay`.
+* Stopped integration tests watching for prototype reload file changes, speeding stuff up.
+
+### Internal
+
+* Moved `SerializationManager`'s data definition storage over to a `ConcurrentDictionary` to improve GC behavior in integration tests.
+
+## 0.72.0.0
+
+### Breaking changes
+
+* EntityPausedEvent has been split into EntityPausedEvent and EntityUnpausedEvent. The unpaused version now has information about how long an entity has been paused.
+
+## 0.71.1.4
+
+### Bugfixes
+
+* Fixed CVars not being saved correctly to config file.
+
+### Other
+
+* Mark `validate_rsis.py` as `+x` in Git.
+* Made config system more robust against accidental corruption when saving.
+
+
+## 0.71.1.3
+
+
+## 0.71.1.2
+
+### Bugfixes
+
+* Fixed UI ScrollContainer infinite loop freezing client.
+
+
+## 0.71.1.1
+
+### Bugfixes
+
+* Fixed client memory leaks and improved performance in integration testing.
+
+
+## 0.71.1.0
+
+### New features
+
+* Better RSI validator script.
+* When a new map file is loaded onto an existing map the entities will be transferred over.
+* Add an API to get the hard layer / mask for a particular physics body.
+
+### Bugfixes
+
+* Fixed non-filled circle drawing via world handle.
+* Fix max_connections in the default server config.
+* Fix removal of PVS states for players without ingame status.
+* Fix max rotation from the physics solver.
+
+### Internal
+
+* Wrap window rendering in a try-catch.
+
+
 ## 0.71.0.0
 
 ### Breaking changes

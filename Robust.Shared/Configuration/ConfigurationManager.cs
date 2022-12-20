@@ -21,6 +21,7 @@ namespace Robust.Shared.Configuration
     internal class ConfigurationManager : IConfigurationManagerInternal
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private const char TABLE_DELIMITER = '.';
         protected readonly Dictionary<string, ConfigVar> _configVars = new();
@@ -28,6 +29,8 @@ namespace Robust.Shared.Configuration
         protected bool _isServer;
 
         protected readonly ReaderWriterLockSlim Lock = new();
+
+        private ISawmill _sawmill = default!;
 
         /// <summary>
         ///     Constructs a new ConfigurationManager.
@@ -39,6 +42,8 @@ namespace Robust.Shared.Configuration
         public void Initialize(bool isServer)
         {
             _isServer = isServer;
+
+            _sawmill = _logManager.GetSawmill("cfg");
         }
 
         public virtual void Shutdown()
@@ -140,6 +145,23 @@ namespace Robust.Shared.Configuration
             _configFile = configFile;
         }
 
+        public void CheckUnusedCVars()
+        {
+            if (!GetCVar(CVars.CfgCheckUnused))
+                return;
+
+            using (Lock.ReadGuard())
+            {
+                foreach (var cVar in _configVars.Values)
+                {
+                    if (cVar.Registered)
+                        continue;
+
+                    _sawmill.Warning("Unknown CVar found (typo in config?): {CVar}", cVar.Name);
+                }
+            }
+        }
+
         /// <inheritdoc />
         public void SaveToTomlStream(Stream stream, IEnumerable<string> cvars)
         {
@@ -231,11 +253,15 @@ namespace Robust.Shared.Configuration
                 // Don't write if Archive flag is not set.
                 // Don't write if the cVar is the default value.
                 var cvars = _configVars.Where(x => x.Value.ConfigModified
-                                                   || ((x.Value.Flags & CVar.ARCHIVE) == 0 && x.Value.Value != null &&
+                                                   || ((x.Value.Flags & CVar.ARCHIVE) != 0 && x.Value.Value != null &&
                                                        !x.Value.Value.Equals(x.Value.DefaultValue))).Select(x => x.Key);
 
-                using var file = File.OpenWrite(_configFile);
-                SaveToTomlStream(file, cvars);
+                // Write in-memory to avoid bulldozing config file on exception.
+                var memoryStream = new MemoryStream();
+                SaveToTomlStream(memoryStream, cvars);
+                memoryStream.Position = 0;
+                using var file = File.Create(_configFile);
+                memoryStream.CopyTo(file);
                 Logger.InfoS("cfg", $"config saved to '{_configFile}'.");
             }
             catch (Exception e)

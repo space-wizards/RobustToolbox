@@ -61,14 +61,13 @@ internal partial class MapManager
 
         foreach (var grid in grids)
         {
-            DeleteGrid(grid.GridEntityId);
+            DeleteGrid(grid.Owner);
         }
 
         if (mapId != MapId.Nullspace)
         {
             var args = new MapEventArgs(mapId);
             OnMapDestroyedGridTree(args);
-            MapDestroyed?.Invoke(this, args);
             _mapEntities.Remove(mapId);
         }
 
@@ -78,7 +77,7 @@ internal partial class MapManager
     /// <inheritdoc />
     public MapId CreateMap(MapId? mapId = null)
     {
-        return CreateMap(mapId, default);
+        return ((IMapManagerInternal) this).CreateMap(mapId, default);
     }
 
     /// <inheritdoc />
@@ -105,7 +104,7 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public void SetMapEntity(MapId mapId, EntityUid newMapEntity)
+    public void SetMapEntity(MapId mapId, EntityUid newMapEntity, bool updateChildren = true)
     {
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
@@ -139,6 +138,8 @@ internal partial class MapManager
                 preInit = mapComp.MapPreInit;
                 paused = mapComp.MapPaused;
             }
+
+            EntityManager.System<SharedTransformSystem>().ReparentChildren(oldEntId, newMapEntity);
 
             //Note: EntityUid.Invalid gets passed in here
             //Note: This prevents setting a subgraph as the root, since the subgraph will be deleted
@@ -175,7 +176,7 @@ internal partial class MapManager
         {
             var args = new MapEventArgs(mapId);
             OnMapCreatedGridTree(args);
-            var ev = new MapChangedEvent(mapId, true);
+            var ev = new MapChangedEvent(newMapEntity, mapId, true);
             EntityManager.EventBus.RaiseLocalEvent(newMapEntity, ev, true);
         }
     }
@@ -221,13 +222,7 @@ internal partial class MapManager
         return _highestMapId = new MapId(_highestMapId.Value + 1);
     }
 
-    /// <inheritdoc />
-    public event EventHandler<MapEventArgs>? MapCreated;
-
-    /// <inheritdoc />
-    public event EventHandler<MapEventArgs>? MapDestroyed;
-
-    protected MapId CreateMap(MapId? mapId, EntityUid entityUid)
+    MapId IMapManagerInternal.CreateMap(MapId? mapId, EntityUid entityUid)
     {
         if (mapId == MapId.Nullspace)
             throw new InvalidOperationException("Attempted to create a null-space map.");
@@ -281,8 +276,6 @@ internal partial class MapManager
 
         var args = new MapEventArgs(actualId);
         OnMapCreatedGridTree(args);
-        MapCreated?.Invoke(this, args);
-
         return actualId;
     }
 }

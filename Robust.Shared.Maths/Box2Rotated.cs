@@ -60,22 +60,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         public readonly Box2 CalcBoundingBox()
         {
-            if (Sse.IsSupported && NumericsHelpers.Enabled)
-            {
-                return CalcBoundingBoxSse();
-            }
-
-            return CalcBoundingBoxSlow();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal readonly unsafe Box2 CalcBoundingBoxSse()
-        {
-            Vector128<float> boxVec;
-            fixed (float* lPtr = &Box.Left)
-            {
-                boxVec = Sse.LoadVector128(lPtr);
-            }
+            var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in Box));
 
             var originX = Vector128.Create(Origin.X);
             var originY = Vector128.Create(Origin.Y);
@@ -83,74 +68,26 @@ namespace Robust.Shared.Maths
             var cos = Vector128.Create((float) Math.Cos(Rotation));
             var sin = Vector128.Create((float) Math.Sin(Rotation));
 
-            var allX = Sse.Shuffle(boxVec, boxVec, 0b10_10_00_00);
-            var allY = Sse.Shuffle(boxVec, boxVec, 0b01_11_11_01);
+            var allX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
+            var allY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
 
-            allX = Sse.Subtract(allX, originX);
-            allY = Sse.Subtract(allY, originY);
+            allX -= originX;
+            allY -= originY;
 
-            var modX = Sse.Subtract(Sse.Multiply(allX, cos), Sse.Multiply(allY, sin));
-            var modY = Sse.Add(Sse.Multiply(allX, sin), Sse.Multiply(allY, cos));
+            var modX = allX * cos - allY * sin;
+            var modY = allX * sin + allY * cos;
 
-            allX = Sse.Add(modX, originX);
-            allY = Sse.Add(modY, originY);
+            allX = modX + originX;
+            allY = modY + originY;
 
-            var l = SimdHelpers.MinHorizontalSse(allX);
-            var b = SimdHelpers.MinHorizontalSse(allY);
-            var r = SimdHelpers.MaxHorizontalSse(allX);
-            var t = SimdHelpers.MaxHorizontalSse(allY);
+            var l = SimdHelpers.MinHorizontal128(allX);
+            var b = SimdHelpers.MinHorizontal128(allY);
+            var r = SimdHelpers.MaxHorizontal128(allX);
+            var t = SimdHelpers.MaxHorizontal128(allY);
 
-            var lb = Sse.UnpackLow(l, b);
-            var rt = Sse.UnpackLow(r, t);
-
-            var lbrt = Sse.Shuffle(lb, rt, 0b11_10_01_00);
+            var lbrt = SimdHelpers.MergeRows128(l, b, r, t);
 
             return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal readonly unsafe Box2 CalcBoundingBoxSlow()
-        {
-            Span<float> allX = stackalloc float[4];
-            Span<float> allY = stackalloc float[4];
-            (allX[0], allY[0]) = BottomLeft;
-            (allX[1], allY[1]) = TopRight;
-            (allX[2], allY[2]) = TopLeft;
-            (allX[3], allY[3]) = BottomRight;
-
-            var X0 = allX[0];
-            var X1 = allX[0];
-            for (int i = 1; i < allX.Length; i++)
-            {
-                if (allX[i] > X1)
-                {
-                    X1 = allX[i];
-                    continue;
-                }
-
-                if (allX[i] < X0)
-                {
-                    X0 = allX[i];
-                }
-            }
-
-            var Y0 = allY[0];
-            var Y1 = allY[0];
-            for (int i = 1; i < allY.Length; i++)
-            {
-                if (allY[i] > Y1)
-                {
-                    Y1 = allY[i];
-                    continue;
-                }
-
-                if (allY[i] < Y0)
-                {
-                    Y0 = allY[i];
-                }
-            }
-
-            return new Box2(X0, Y0, X1, Y1);
         }
 
         public bool Contains(Vector2 worldPoint)

@@ -217,7 +217,7 @@ namespace Robust.Shared.GameObjects
             EntityCoordinates coords;
             if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var grid))
             {
-                coords = new(grid.GridEntityId, grid.WorldToLocal(coordinates.Position));
+                coords = new(grid.Owner, grid.WorldToLocal(coordinates.Position));
                 _xforms.SetCoordinates(transform, coords, unanchor: false);
             }
             else

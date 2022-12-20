@@ -21,6 +21,13 @@ public abstract partial class SharedMapSystem
             return;
 
         component.WorldMap = state.MapId;
+
+        if (!MapManager.MapExists(state.MapId))
+        {
+            var mapInternal = (IMapManagerInternal)MapManager;
+            mapInternal.CreateMap(state.MapId, uid);
+        }
+
         component.LightingEnabled = state.LightingEnabled;
         var xformQuery = GetEntityQuery<TransformComponent>();
 
@@ -36,7 +43,7 @@ public abstract partial class SharedMapSystem
 
     private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
     {
-        var msg = new MapChangedEvent(component.WorldMap, true);
+        var msg = new MapChangedEvent(uid, component.WorldMap, true);
         RaiseLocalEvent(uid, msg, true);
     }
 
@@ -46,7 +53,7 @@ public abstract partial class SharedMapSystem
 
         iMap.TrueDeleteMap(component.WorldMap);
 
-        var msg = new MapChangedEvent(component.WorldMap, false);
+        var msg = new MapChangedEvent(uid, component.WorldMap, false);
         RaiseLocalEvent(uid, msg, true);
     }
 }

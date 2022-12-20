@@ -35,6 +35,10 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+* ClientOccluderComponent has been removed & OccluderComponent component functions have been moved to the occluder system.
+* The OccluderDirectionsEvent namespace and properties have changed.
+* The rendering and occluder trees have been refactored to use generic render tree systems.
+* Several pointlight and occluder component properties now need to be set via system methods.
 * The entity lookup flag `LookupFlags.Anchored` has been replaced with `LookupFlags.Static`.
 * We are now using **.NET 7**.
 * `IDependencyCollection`/`IoCManager` `RegisterInstance` does not automatically add the instance to object graph, so `BuildGraph()` must now be called to see the new instances.

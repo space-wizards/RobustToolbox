@@ -35,6 +35,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     A node with whether or not <see cref="node"/> is valid and which of its fields
         ///     are invalid, if any.
         /// </returns>
+        [PreferGenericVariant]
         ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null);
 
         /// <summary>
@@ -224,22 +225,8 @@ namespace Robust.Shared.Serialization.Manager
         ///     A serialized datanode created from the given <see cref="value"/>
         ///     of type <see cref="type"/>.
         /// </returns>
+        [PreferGenericVariant]
         DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
-
-        /// <summary>
-        ///     Serializes a value into a node.
-        /// </summary>
-        /// <param name="value">The value to serialize.</param>
-        /// <param name="alwaysWrite">
-        ///     Whether or not to always write the given values into the resulting node,
-        ///     even if they are the default.
-        /// </param>
-        /// <param name="context">The context to use, if any.</param>
-        /// <param name="notNullableOverride">Set true if a reference Type should not allow null. Not necessary for value types.</param>
-        /// <returns>
-        ///     A serialized datanode created from the given <see cref="value"/>.
-        /// </returns>
-        DataNode WriteValue(object? value, bool alwaysWrite = false, ISerializationContext? context = null, bool notNullableOverride = false);
 
         #endregion
 

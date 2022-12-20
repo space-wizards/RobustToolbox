@@ -33,7 +33,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
         {
             mappingNode.Add(
                 serializationManager.WriteValue(key, alwaysWrite, context),
-                serializationManager.WriteValue(typeof(TValue), val, alwaysWrite, context));
+                serializationManager.WriteValue(val, alwaysWrite, context));
         }
 
         return mappingNode;
@@ -81,8 +81,8 @@ public sealed class DictionarySerializer<TKey, TValue> :
         var mapping = new Dictionary<ValidationNode, ValidationNode>();
         foreach (var (key, val) in node.Children)
         {
-            mapping.Add(serializationManager.ValidateNode(typeof(TKey), key, context),
-                serializationManager.ValidateNode(typeof(TValue), val, context));
+            mapping.Add(serializationManager.ValidateNode<TKey>(key, context),
+                serializationManager.ValidateNode<TValue>(val, context));
         }
 
         return new ValidatedMappingNode(mapping);

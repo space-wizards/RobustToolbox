@@ -15,6 +15,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Profiling;
 using Robust.Shared.Physics;
+using Robust.Client.ComponentTrees;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -401,28 +402,23 @@ namespace Robust.Client.Graphics.Clyde
             var worldToLocal = view.GetWorldToLocalMatrix();
             var spriteState = (list, xformSys, xforms, eye, worldToLocal);
 
-            foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
-            {
-                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
-
-                comp.SpriteTree.QueryAabb(ref spriteState, static
+            _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().QueryAabb(ref spriteState, static
                 (ref (RefList<(SpriteComponent sprite, Vector2 worldPos, Angle worldRot, Box2 spriteScreenBB)> list,
                         TransformSystem xformSys,
                         EntityQuery<TransformComponent> xforms,
                         IEye eye,
                         Matrix3 worldToLocal) state,
                     in ComponentTreeEntry<SpriteComponent> value) =>
-                {
-                    ref var entry = ref state.list.AllocAdd();
-                    entry.sprite = value.Component;
-                    (entry.worldPos, entry.worldRot) = state.xformSys.GetWorldPositionRotation(value.Transform, state.xforms);
+            {
+                ref var entry = ref state.list.AllocAdd();
+                entry.sprite = value.Component;
+                (entry.worldPos, entry.worldRot) = state.xformSys.GetWorldPositionRotation(value.Transform, state.xforms);
 
-                    var spriteWorldBB = entry.sprite.CalculateRotatedBoundingBox(entry.worldPos, entry.worldRot, state.eye);
-                    entry.spriteScreenBB = state.worldToLocal.TransformBox(spriteWorldBB);
-                    return true;
+                var spriteWorldBB = entry.sprite.CalculateRotatedBoundingBox(entry.worldPos, entry.worldRot, state.eye);
+                entry.spriteScreenBB = state.worldToLocal.TransformBox(spriteWorldBB);
+                return true;
 
-                }, bounds, true);
-            }
+            }, map, worldBounds, true);
         }
 
         private void DrawSplash(IRenderHandle handle)

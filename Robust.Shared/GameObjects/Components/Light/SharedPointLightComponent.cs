@@ -1,30 +1,20 @@
-using System;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
+using System;
 
 namespace Robust.Shared.GameObjects
 {
     [NetworkedComponent]
     public abstract class SharedPointLightComponent : Component
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
-
-        [DataField("enabled")]
-        protected bool _enabled = true;
+        [Dependency] private readonly IEntitySystemManager _sysMan = default!;
 
         [DataField("color")]
         protected Color _color = Color.White;
-
-        /// <summary>
-        /// How far the light projects.
-        /// </summary>
-        [DataField("radius")]
-        protected float _radius = 5f;
 
         /// <summary>
         /// Offset from the center of the entity.
@@ -43,17 +33,16 @@ namespace Robust.Shared.GameObjects
         [DataField("castShadows")]
         public bool CastShadows = true;
 
+        [Access(typeof(SharedPointLightSystem))]
+        [DataField("enabled")]
+        public bool _enabled;
+
         [ViewVariables(VVAccess.ReadWrite)]
-        public virtual bool Enabled
+        public bool Enabled
         {
             get => _enabled;
-            set
-            {
-                if (_enabled == value) return;
-                _enabled = value;
-                _entMan.EventBus.RaiseLocalEvent(Owner, new PointLightToggleEvent(_enabled), true);
-                Dirty();
-            }
+            [Obsolete("Use the system's setter")]
+            set => _sysMan.GetEntitySystem<SharedPointLightSystem>().SetEnabled(Owner, value, this);
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -68,16 +57,19 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <summary>
+        /// How far the light projects.
+        /// </summary>
+        [DataField("radius")]
+        [Access(typeof(SharedPointLightSystem))]
+        public float _radius = 5f;
+
         [ViewVariables(VVAccess.ReadWrite)]
-        public virtual float Radius
+        public float Radius
         {
             get => _radius;
-            set
-            {
-                if (MathHelper.CloseToPercent(_radius, value)) return;
-                _radius = MathF.Max(value, 0.01f); // setting radius to 0 causes exceptions, so just use a value close enough to zero that it's unnoticeable.
-                Dirty();
-            }
+            [Obsolete("Use the system's setter")]
+            set => _sysMan.GetEntitySystem<SharedPointLightSystem>().SetRadius(Owner, value, this);
         }
 
         [ViewVariables(VVAccess.ReadWrite)]

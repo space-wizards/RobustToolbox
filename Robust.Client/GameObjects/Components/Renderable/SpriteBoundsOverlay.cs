@@ -1,6 +1,5 @@
-using System.Collections.Generic;
+using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Clyde;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -22,10 +21,9 @@ namespace Robust.Client.GameObjects
 
     public sealed class SpriteBoundsSystem : EntitySystem
     {
-        [Dependency] private readonly IEyeManager _eye = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly RenderingTreeSystem _renderingTree = default!;
+        [Dependency] private readonly SpriteTreeSystem _spriteTree = default!;
 
         private SpriteBoundsOverlay? _overlay;
 
@@ -41,7 +39,7 @@ namespace Robust.Client.GameObjects
                 if (_enabled)
                 {
                     DebugTools.AssertNull(_overlay);
-                    _overlay = new SpriteBoundsOverlay(_renderingTree, _eye, _entityManager);
+                    _overlay = new SpriteBoundsOverlay(_spriteTree, _entityManager);
                     _overlayManager.AddOverlay(_overlay);
                 }
                 else
@@ -60,14 +58,12 @@ namespace Robust.Client.GameObjects
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        private readonly IEyeManager _eyeManager;
         private readonly IEntityManager _entityManager;
-        private RenderingTreeSystem _renderTree;
+        private SpriteTreeSystem _renderTree;
 
-        public SpriteBoundsOverlay(RenderingTreeSystem renderTree, IEyeManager eyeManager, IEntityManager entityManager)
+        public SpriteBoundsOverlay(SpriteTreeSystem renderTree, IEntityManager entityManager)
         {
             _renderTree = renderTree;
-            _eyeManager = eyeManager;
             _entityManager = entityManager;
         }
 
@@ -77,23 +73,18 @@ namespace Robust.Client.GameObjects
             var currentMap = args.MapId;
             var viewport = args.WorldBounds;
 
-            foreach (var comp in _renderTree.GetRenderTrees(currentMap, viewport))
+            foreach (var (sprite, xform) in _renderTree.QueryAabb(currentMap, viewport))
             {
-                var localAABB = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(viewport);
+                var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+                var bounds = sprite.CalculateRotatedBoundingBox(worldPos, worldRot);
 
-                foreach (var (sprite, xform) in comp.SpriteTree.QueryAabb(localAABB))
-                {
-                    var (worldPos, worldRot) = xform.GetWorldPositionRotation();
-                    var bounds = sprite.CalculateRotatedBoundingBox(worldPos, worldRot);
+                // Get scaled down bounds used to indicate the "south" of a sprite.
+                var localBound = bounds.Box;
+                var smallLocal = localBound.Scale(0.2f).Translated(-new Vector2(0f, localBound.Extents.Y));
+                var southIndicator = new Box2Rotated(smallLocal, bounds.Rotation, bounds.Origin);
 
-                    // Get scaled down bounds used to indicate the "south" of a sprite.
-                    var localBound = bounds.Box;
-                    var smallLocal = localBound.Scale(0.2f).Translated(-new Vector2(0f, localBound.Extents.Y));
-                    var southIndicator = new Box2Rotated(smallLocal, bounds.Rotation, bounds.Origin);
-
-                    handle.DrawRect(bounds, Color.Red.WithAlpha(0.2f));
-                    handle.DrawRect(southIndicator, Color.Blue.WithAlpha(0.5f));
-                }
+                handle.DrawRect(bounds, Color.Red.WithAlpha(0.2f));
+                handle.DrawRect(southIndicator, Color.Blue.WithAlpha(0.5f));
             }
         }
     }

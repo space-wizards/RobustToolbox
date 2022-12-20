@@ -9,11 +9,13 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Animations;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
@@ -21,7 +23,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using TerraFX.Interop.Windows;
+using static Robust.Client.ComponentTrees.SpriteTreeSystem;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using RSIDirection = Robust.Client.Graphics.RSI.State.Direction;
 
@@ -30,7 +32,7 @@ namespace Robust.Client.GameObjects
     [ComponentReference(typeof(SharedSpriteComponent))]
     [ComponentReference(typeof(ISpriteComponent))]
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
-        IComponentDebug, ISerializationHooks
+        IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
@@ -149,7 +151,13 @@ namespace Robust.Client.GameObjects
         }
 
         [ViewVariables]
-        internal RenderingTreeComponent? RenderTree { get; set; } = null;
+        public DynamicTree<ComponentTreeEntry<SpriteComponent>>? Tree { get; set; }
+
+        public EntityUid? TreeUid { get; set; }
+
+        public bool AddToTree => Visible && !ContainerOccluded && Layers.Count > 0;
+
+        public bool TreeUpdateQueued { get; set; }
 
         [DataField("layerDatums")]
         private List<PrototypeLayerData> LayerDatums
@@ -253,10 +261,7 @@ namespace Robust.Client.GameObjects
 
         public Box2 Bounds => _bounds;
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool TreeUpdateQueued { get; set; }
-
-        [ViewVariables(VVAccess.ReadWrite)] private bool _inertUpdateQueued;
+        [ViewVariables(VVAccess.ReadWrite)] internal bool _inertUpdateQueued;
 
         /// <summary>
         ///     Shader instance to use when drawing the final sprite to the world.
@@ -1395,22 +1400,22 @@ namespace Robust.Client.GameObjects
 
         private void QueueUpdateRenderTree()
         {
-            if (TreeUpdateQueued || Owner == default || entities?.EventBus == null)
+            if (TreeUpdateQueued || entities?.EventBus == null)
                 return;
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
-            TreeUpdateQueued = true;
-            entities.EventBus.RaiseLocalEvent(Owner, new UpdateSpriteTreeEvent());
+            var ev = new QueueSpriteTreeUpdateEvent(entities.GetComponent<TransformComponent>(Owner));
+            entities.EventBus.RaiseComponentEvent(this, ref ev);
         }
 
         private void QueueUpdateIsInert()
         {
-            if (_inertUpdateQueued || Owner == default || entities?.EventBus == null)
+            if (_inertUpdateQueued || entities?.EventBus == null)
                 return;
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
-            _inertUpdateQueued = true;
-            entities.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+            var ev = new SpriteUpdateInertEvent();
+            entities.EventBus.RaiseComponentEvent(this, ref ev);
         }
 
         internal void DoUpdateIsInert()
@@ -2212,14 +2217,9 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
-    internal sealed class UpdateSpriteTreeEvent : EntityEventArgs
-    {
 
-    }
-
+    [ByRefEvent]
     internal struct SpriteUpdateInertEvent
     {
-        public SpriteComponent Sprite;
     }
 }

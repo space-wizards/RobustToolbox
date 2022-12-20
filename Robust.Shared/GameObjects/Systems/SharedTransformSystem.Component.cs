@@ -58,7 +58,7 @@ public abstract partial class SharedTransformSystem
         DebugTools.Assert(xform._anchored);
 
         Dirty(xform);
-        var ev = new ReAnchorEvent(xform.Owner, ((Component) oldGrid).Owner, ((Component) newGrid).Owner, tilePos);
+        var ev = new ReAnchorEvent(xform.Owner, ((Component) oldGrid).Owner, ((Component) newGrid).Owner, tilePos, xform);
         RaiseLocalEvent(xform.Owner, ref ev);
     }
 
@@ -729,6 +729,69 @@ public abstract partial class SharedTransformSystem
     public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
         return component.GetWorldPositionRotation(xformQuery);
+    }
+
+    /// <summary>
+    ///     Returns the position and rotation relative to some entity higher up in the component's transform hierarchy.
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 Position, Angle Rotation) GetRelativePositionRotation(
+        TransformComponent component,
+        EntityUid relative,
+        EntityQuery<TransformComponent> query)
+    {
+        var rot = component._localRotation;
+        var pos = component._localPosition;
+        var xform = component;
+        while (xform.ParentUid != relative)
+        {
+            if (xform.ParentUid.IsValid() && query.TryGetComponent(xform.ParentUid, out xform))
+            {
+                rot += xform._localRotation;
+                pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
+                continue;
+            }
+
+            // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
+            Logger.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
+            var relXform = query.GetComponent(relative);
+            pos = relXform.InvWorldMatrix.Transform(pos);
+            rot = rot - relXform.WorldRotation;
+            break;
+        }
+
+        return (pos, rot);
+    }
+
+    /// <summary>
+    ///     Returns the position and rotation relative to some entity higher up in the component's transform hierarchy.
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 GetRelativePosition(
+        TransformComponent component,
+        EntityUid relative,
+        EntityQuery<TransformComponent> query)
+    {
+        var pos = component._localPosition;
+        var xform = component;
+        while (xform.ParentUid != relative)
+        {
+            if (xform.ParentUid.IsValid() && query.TryGetComponent(xform.ParentUid, out xform))
+            {
+                pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
+                continue;
+            }
+
+            // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
+            Logger.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
+            var relXform = query.GetComponent(relative);
+            pos = relXform.InvWorldMatrix.Transform(pos);
+            break;
+        }
+
+        return pos;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

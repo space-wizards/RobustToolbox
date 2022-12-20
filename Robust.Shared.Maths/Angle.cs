@@ -74,10 +74,19 @@ namespace Robust.Shared.Maths
         {
             var ang = Theta % (2 * Math.PI);
 
-            if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
-                ang += 2 * (float) Math.PI;
+            if (ang < 0) // convert -PI > PI to 0 > 2PI
+                ang += 2 * Math.PI;
 
             return (Direction) (Math.Floor((ang + Offset) / Segment) % 8);
+        }
+
+        public Direction RotateDir(Direction dir)
+        {
+            var ang = (Theta + Segment * (int)dir) % (2 * Math.PI);
+            if (ang < 0)
+                ang += 2 * Math.PI;
+
+            return (Direction)(Math.Floor((ang + Offset) / Segment) % 8);
         }
 
         private const double CardinalSegment = 2 * Math.PI / 4.0; // Cut the circle into 4 pieces

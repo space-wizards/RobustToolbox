@@ -10,6 +10,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -129,6 +130,8 @@ namespace Robust.Client.GameObjects
             EntityQuery<SpriteComponent> spriteQuery,
             EntityQuery<RenderingTreeComponent> renderingQuery)
         {
+            DebugTools.Assert(xform.Owner == uid);
+
             // To avoid doing redundant updates (and we don't need to update a grid's children ever)
             if (!_checkedChildren.Add(uid) || renderingQuery.HasComponent(uid)) return;
 
@@ -146,7 +149,7 @@ namespace Robust.Client.GameObjects
 
             while (childEnumerator.MoveNext(out var child))
             {
-                if (xformQuery.TryGetComponent(uid, out var childXform))
+                if (xformQuery.TryGetComponent(child.Value, out var childXform))
                     AnythingMovedSubHandler(child.Value, childXform, xformQuery, pointQuery, spriteQuery, renderingQuery);
             }
         }

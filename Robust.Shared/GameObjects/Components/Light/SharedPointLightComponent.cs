@@ -38,6 +38,7 @@ namespace Robust.Shared.GameObjects
         public bool _enabled;
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable] // please somebody ECS animations
         public bool Enabled
         {
             get => _enabled;
@@ -65,6 +66,7 @@ namespace Robust.Shared.GameObjects
         public float _radius = 5f;
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable] // please somebody ECS animations
         public float Radius
         {
             get => _radius;

@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.75.1.0
+
+### New features
+
 * Serv4's notNullableOverride parameter is now enforced by analyzer. For more info, see [the docs](https://docs.spacestation14.io/en/engine/serialization).
 * Added command to dump injector cache list.
 
@@ -51,10 +70,6 @@ END TEMPLATE-->
 
 * Transform matrix dirtying is deferred again (undo change in v0.75.0.0
 * Added two new serv3 analysers (NotNullableFlagAnalyzer and PreferGenericVariantAnalyzer)
-
-### Internal
-
-*None yet*
 
 
 ## 0.75.0.0

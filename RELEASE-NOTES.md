@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* UPnP port forwarding now has better logging.
 
 ### Internal
 

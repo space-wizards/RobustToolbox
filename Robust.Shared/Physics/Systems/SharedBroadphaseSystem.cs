@@ -25,6 +25,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
+        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
 
         private ISawmill _logger = default!;
 
@@ -106,6 +107,8 @@ namespace Robust.Shared.Physics.Systems
             foreach (var (proxy, worldAABB) in gridMoveBuffer)
             {
                 moveBuffer[proxy] = worldAABB;
+                // If something is in our AABB then try grid traversal for it
+                _traversal.CheckTraverse(proxy.Fixture.Body.Owner, xformQuery.GetComponent(proxy.Fixture.Body.Owner));
             }
         }
 

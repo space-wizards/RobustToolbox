@@ -40,14 +40,17 @@ END TEMPLATE-->
 ### New features
 
 * Serv4's notNullableOverride parameter is now enforced by analyzer. For more info, see [the docs](https://docs.spacestation14.io/en/engine/serialization).
+* Added command to dump injector cache list.
 
 ### Bugfixes
 
-*None yet*
+* Fix generic visualisers not working because of recent appearance system changes in v0.75.0.0
+* Fix physics not working properly on moving grids (transform matrix deferral).
 
 ### Other
 
-*None yet*
+* Transform matrix dirtying is deferred again (undo change in v0.75.0.0
+* Added two new serv3 analysers (NotNullableFlagAnalyzer and PreferGenericVariantAnalyzer)
 
 ### Internal
 
@@ -60,10 +63,23 @@ END TEMPLATE-->
 
 * Changed default for `net.buffer_size` to `2`.
 * Changed default for `auth.mode` to `Required`. On development builds, the default is overriden to remain at `Optional`, so this only affects published servers.
+* The default value for the `outsidePrediction` argument of the `InputCmdHandler.FromDelegate()`  has changed from false to true.
+
+### New features
+
+* Appearance system now has generic `TryGetData<T>()` functions.
+
+### Bugfixes
+
+* Mapped string serializer once again is initialized with prototype strongs, reducing bandwidth usage.
+* Fixed various keybindings not working while prediction was disabled.
+* Fixed a bug causing rendering trees to not properly recursively update when entities move.
 
 ### Other
 
+* Transform matrix dirtying is no longer deferred.
 * Cleaned up some `FULL_RELEASE` CVar default value overrides into `CVarDefaultOverrides.cs`.
+* VVRead now attempts to serialize data to yaml
 
 
 ## 0.74.0.0

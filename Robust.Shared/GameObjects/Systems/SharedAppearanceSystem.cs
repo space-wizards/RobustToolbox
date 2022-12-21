@@ -65,6 +65,17 @@ public abstract class SharedAppearanceSystem : EntitySystem
         value = default!;
         return false;
     }
+
+    public bool TryGetData(EntityUid uid, Enum key, [NotNullWhen(true)] out object? value, AppearanceComponent? component = null)
+    {
+        if (!Resolve(uid, ref component))
+        {
+            value = null;
+            return false;
+        }
+
+        return component.AppearanceData.TryGetValue(key, out value);
+    }
 }
 
 [Serializable, NetSerializable]

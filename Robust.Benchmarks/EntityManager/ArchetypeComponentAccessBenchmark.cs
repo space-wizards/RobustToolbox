@@ -293,8 +293,6 @@ public class ArchetypeComponentAccessBenchmark
         );
     }
 
-    // Just a bunch of types to pad the size of the arrays and such.
-
     // @formatter:off
     // ReSharper disable UnusedType.Local
     public struct Type1{}

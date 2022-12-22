@@ -246,10 +246,15 @@ public class ArchetypeComponentAccessBenchmark
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void IteratorSingle(Type1 t1)
+    {
+    }
+
     [Benchmark]
     public void IterateDelegateSingleComponentArchetype()
     {
-        _archetype.IterateSingleDelegate<Type1>(static _ => {});
+        _archetype.IterateSingleDelegate<Type1>(static t1 => IteratorSingle(t1));
     }
 
     [Benchmark]
@@ -272,16 +277,20 @@ public class ArchetypeComponentAccessBenchmark
         }
     }
 
-    [Benchmark]
-    public void IterateTenComponentsArchetype()
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void IteratorTen(ref Type1 t1, ref Type2 t2, ref Type3 t3, ref Type4 t4, ref Type5 t5, ref Type6 t6,
+        ref Type7 t7, ref Type8 t8, ref Type9 t9, ref Type10 t10)
     {
-        _archetype.IterateSingleDelegate<Type1>(static _ => {});
     }
 
     [Benchmark]
     public void IterateDelegateTenComponentsArchetype()
     {
-        _archetype.IterateDelegate(static (ref Type1 _, ref Type2 _, ref Type3 _, ref Type4 _, ref Type5 _, ref Type6 _, ref Type7 _, ref Type8 _, ref Type9 _, ref Type10 _) => {});
+        _archetype.IterateDelegate(
+            static (ref Type1 t1, ref Type2 t2, ref Type3 t3, ref Type4 t4, ref Type5 t5, ref Type6 t6, ref Type7 t7,
+                    ref Type8 t8, ref Type9 t9, ref Type10 t10) =>
+                IteratorTen(ref t1, ref t2, ref t3, ref t4, ref t5, ref t6, ref t7, ref t8, ref t9, ref t10)
+        );
     }
 
     // Just a bunch of types to pad the size of the arrays and such.

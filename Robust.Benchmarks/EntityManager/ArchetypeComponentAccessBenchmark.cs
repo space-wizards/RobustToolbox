@@ -231,7 +231,7 @@ public class ArchetypeComponentAccessBenchmark
     [Benchmark]
     public void IterateSingleComponentDictionary()
     {
-        foreach (var value in _componentDictionary[typeof(Type1)].Values.Cast<Type1>())
+        foreach (Type1 value in _componentDictionary[typeof(Type1)].Values)
         {
             _consumer.Consume(value);
         }
@@ -263,16 +263,16 @@ public class ArchetypeComponentAccessBenchmark
         for (var i = 0; i < N; i++)
         {
             _consumer.Consume((
-                _componentDictionary[typeof(Type1)][i],
-                _componentDictionary[typeof(Type2)][i],
-                _componentDictionary[typeof(Type3)][i],
-                _componentDictionary[typeof(Type4)][i],
-                _componentDictionary[typeof(Type5)][i],
-                _componentDictionary[typeof(Type6)][i],
-                _componentDictionary[typeof(Type7)][i],
-                _componentDictionary[typeof(Type8)][i],
-                _componentDictionary[typeof(Type9)][i],
-                _componentDictionary[typeof(Type10)][i]
+                (Type1) _componentDictionary[typeof(Type1)][i],
+                (Type2) _componentDictionary[typeof(Type2)][i],
+                (Type3) _componentDictionary[typeof(Type3)][i],
+                (Type4) _componentDictionary[typeof(Type4)][i],
+                (Type5) _componentDictionary[typeof(Type5)][i],
+                (Type6) _componentDictionary[typeof(Type6)][i],
+                (Type7) _componentDictionary[typeof(Type7)][i],
+                (Type8) _componentDictionary[typeof(Type8)][i],
+                (Type9) _componentDictionary[typeof(Type9)][i],
+                (Type10) _componentDictionary[typeof(Type10)][i]
             ));
         }
     }

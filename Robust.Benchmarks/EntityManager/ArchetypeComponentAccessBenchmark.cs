@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Engines;
+using JetBrains.Annotations;
 using Robust.Shared.Analyzers;
 
 namespace Robust.Benchmarks.EntityManager;
@@ -15,6 +18,7 @@ public class ArchetypeComponentAccessBenchmark
 
     private Dictionary<Type, Dictionary<int, object>> _componentDictionary = default!;
     private Archetype<Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10> _archetype = default!;
+    private Consumer _consumer = default!;
 
     [GlobalSetup]
     public void GlobalSetup()
@@ -59,6 +63,8 @@ public class ArchetypeComponentAccessBenchmark
             _archetype.AddComponent(i, new Type9());
             _archetype.AddComponent(i, new Type10());
         }
+
+        _consumer = new Consumer();
     }
 
     [Benchmark]
@@ -220,6 +226,62 @@ public class ArchetypeComponentAccessBenchmark
                _archetype.HasComponent<Type8>() &&
                _archetype.HasComponent<Type9>() &&
                _archetype.HasComponent<Type10>();
+    }
+
+    [Benchmark]
+    public void IterateSingleComponentDictionary()
+    {
+        foreach (var value in _componentDictionary[typeof(Type1)].Values.Cast<Type1>())
+        {
+            _consumer.Consume(value);
+        }
+    }
+
+    [Benchmark]
+    public void IterateCastSingleComponentArchetype()
+    {
+        foreach (var value in _archetype.IterateSingleCast<Type1>())
+        {
+            _consumer.Consume(value);
+        }
+    }
+
+    [Benchmark]
+    public void IterateDelegateSingleComponentArchetype()
+    {
+        _archetype.IterateSingleDelegate<Type1>(static _ => {});
+    }
+
+    [Benchmark]
+    public void IterateTenComponentsDictionary()
+    {
+        for (var i = 0; i < N; i++)
+        {
+            _consumer.Consume((
+                _componentDictionary[typeof(Type1)][i],
+                _componentDictionary[typeof(Type2)][i],
+                _componentDictionary[typeof(Type3)][i],
+                _componentDictionary[typeof(Type4)][i],
+                _componentDictionary[typeof(Type5)][i],
+                _componentDictionary[typeof(Type6)][i],
+                _componentDictionary[typeof(Type7)][i],
+                _componentDictionary[typeof(Type8)][i],
+                _componentDictionary[typeof(Type9)][i],
+                _componentDictionary[typeof(Type10)][i]
+            ));
+        }
+    }
+
+    [Benchmark]
+    public void IterateTenComponentsArchetype()
+    {
+        _archetype.IterateSingleDelegate<Type1>(static _ => {});
+    }
+
+    [Benchmark]
+    public void IterateDelegateTenComponentsArchetype()
+    {
+        _archetype.IterateDelegate(static (ref Type1 _, ref Type2 _, ref Type3 _, ref Type4 _, ref Type5 _, ref Type6 _, ref Type7 _, ref Type8 _, ref Type9 _, ref Type10 _) => {});
     }
 
     // Just a bunch of types to pad the size of the arrays and such.
@@ -386,31 +448,31 @@ public class ArchetypeComponentAccessBenchmark
             }
         }
 
-        public ref T GetComponentUnsafeHandle<T>(int handle) where T : struct
+        public T GetComponentUnsafeHandle<T>(int handle) where T : struct
         {
             Unsafe.SkipInit(out T val);
             switch (val)
             {
                 case T1:
-                    return ref Unsafe.As<T1, T>(ref _t1Comps[handle]);
+                    return Unsafe.As<T1, T>(ref _t1Comps[handle]);
                 case T2:
-                    return ref Unsafe.As<T2, T>(ref _t2Comps[handle]);
+                    return Unsafe.As<T2, T>(ref _t2Comps[handle]);
                 case T3:
-                    return ref Unsafe.As<T3, T>(ref _t3Comps[handle]);
+                    return Unsafe.As<T3, T>(ref _t3Comps[handle]);
                 case T4:
-                    return ref Unsafe.As<T4, T>(ref _t4Comps[handle]);
+                    return Unsafe.As<T4, T>(ref _t4Comps[handle]);
                 case T5:
-                    return ref Unsafe.As<T5, T>(ref _t5Comps[handle]);
+                    return Unsafe.As<T5, T>(ref _t5Comps[handle]);
                 case T6:
-                    return ref Unsafe.As<T6, T>(ref _t6Comps[handle]);
+                    return Unsafe.As<T6, T>(ref _t6Comps[handle]);
                 case T7:
-                    return ref Unsafe.As<T7, T>(ref _t7Comps[handle]);
+                    return Unsafe.As<T7, T>(ref _t7Comps[handle]);
                 case T8:
-                    return ref Unsafe.As<T8, T>(ref _t8Comps[handle]);
+                    return Unsafe.As<T8, T>(ref _t8Comps[handle]);
                 case T9:
-                    return ref Unsafe.As<T9, T>(ref _t9Comps[handle]);
+                    return Unsafe.As<T9, T>(ref _t9Comps[handle]);
                 case T10:
-                    return ref Unsafe.As<T10, T>(ref _t10Comps[handle]);
+                    return Unsafe.As<T10, T>(ref _t10Comps[handle]);
                 default:
                     throw new ArgumentException($"Unknown type: {typeof(T)}");
             }
@@ -433,6 +495,106 @@ public class ArchetypeComponentAccessBenchmark
                 T10 => true,
                 _ => false,
             };
+        }
+
+        public IEnumerable<T> IterateSingleCast<T>()
+        {
+            Unsafe.SkipInit(out T val);
+            return val switch
+            {
+                T1 => _t1Comps.Cast<T>(),
+                T2 => _t2Comps.Cast<T>(),
+                T3 => _t3Comps.Cast<T>(),
+                T4 => _t4Comps.Cast<T>(),
+                T5 => _t5Comps.Cast<T>(),
+                T6 => _t6Comps.Cast<T>(),
+                T7 => _t7Comps.Cast<T>(),
+                T8 => _t8Comps.Cast<T>(),
+                T9 => _t9Comps.Cast<T>(),
+                T10 => _t10Comps.Cast<T>(),
+                _ => throw new ArgumentException($"Unknown type: {typeof(T)}")
+            };
+        }
+
+        private void IterateSingleSpan<T, TComp>([RequireStaticDelegate] Action<T> action, TComp[] array) where T : struct
+        {
+            foreach (ref var comp in array.AsSpan())
+            {
+                action(Unsafe.As<TComp, T>(ref comp));
+            }
+        }
+
+        public void IterateSingleDelegate<T>([RequireStaticDelegate] Action<T> action) where T : struct
+        {
+            Unsafe.SkipInit(out T val);
+            switch (val)
+            {
+                case T1:
+                    IterateSingleSpan(action, _t1Comps);
+                    break;
+                case T2:
+                    IterateSingleSpan(action, _t2Comps);
+                    break;
+                case T3:
+                    IterateSingleSpan(action, _t3Comps);
+                    break;
+                case T4:
+                    IterateSingleSpan(action, _t4Comps);
+                    break;
+                case T5:
+                    IterateSingleSpan(action, _t5Comps);
+                    break;
+                case T6:
+                    IterateSingleSpan(action, _t6Comps);
+                    break;
+                case T7:
+                    IterateSingleSpan(action, _t7Comps);
+                    break;
+                case T8:
+                    IterateSingleSpan(action, _t8Comps);
+                    break;
+                case T9:
+                    IterateSingleSpan(action, _t9Comps);
+                    break;
+                case T10:
+                    IterateSingleSpan(action, _t10Comps);
+                    break;
+                default:
+                    throw new ArgumentException($"Unknown type: {typeof(T)}");
+            }
+        }
+
+        public delegate void Iterator(ref T1 t1, ref T2 t2, ref T3 t3, ref T4 t4, ref T5 t5, ref T6 t6, ref T7 t7,
+            ref T8 t8, ref T9 t9, ref T10 t10);
+
+        public void IterateDelegate([RequireStaticDelegate] Iterator action)
+        {
+            var t1Span = _t1Comps.AsSpan();
+            var t2Span = _t2Comps.AsSpan();
+            var t3Span = _t3Comps.AsSpan();
+            var t4Span = _t4Comps.AsSpan();
+            var t5Span = _t5Comps.AsSpan();
+            var t6Span = _t6Comps.AsSpan();
+            var t7Span = _t7Comps.AsSpan();
+            var t8Span = _t8Comps.AsSpan();
+            var t9Span = _t9Comps.AsSpan();
+            var t10Span = _t10Comps.AsSpan();
+
+            for (var i = 0; i < _ids.Count; i++)
+            {
+                action(
+                    ref t1Span[i],
+                    ref t2Span[i],
+                    ref t3Span[i],
+                    ref t4Span[i],
+                    ref t5Span[i],
+                    ref t6Span[i],
+                    ref t7Span[i],
+                    ref t8Span[i],
+                    ref t9Span[i],
+                    ref t10Span[i]
+                );
+            }
         }
     }
 }

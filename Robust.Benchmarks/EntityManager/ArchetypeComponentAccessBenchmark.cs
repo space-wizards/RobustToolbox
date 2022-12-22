@@ -11,6 +11,7 @@ namespace Robust.Benchmarks.EntityManager;
 public class ArchetypeComponentAccessBenchmark
 {
     private const int N = 10000;
+    private const int Entity = 1584;
 
     private Dictionary<Type, Dictionary<int, object>> _componentDictionary = default!;
     private Archetype<Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10> _archetype = default!;
@@ -61,51 +62,51 @@ public class ArchetypeComponentAccessBenchmark
     }
 
     [Benchmark]
-    public Type1 GetSingleComponentsDictionary()
+    public Type1 GetSingleComponentDictionary()
     {
-        return (Type1) _componentDictionary[typeof(Type1)][1584];
+        return (Type1) _componentDictionary[typeof(Type1)][Entity];
     }
 
     [Benchmark]
-    public Type1 GetSingleComponentsArchetypeCast()
+    public Type1 GetSingleComponentArchetypeCast()
     {
-        return _archetype.GetComponentCast<Type1>(1584);
+        return _archetype.GetComponentCast<Type1>(Entity);
     }
 
     [Benchmark]
-    public Type1 GetSingleComponentsArchetypeCastHandle()
+    public Type1 GetSingleComponentArchetypeCastHandle()
     {
         // Handle is the same as the id
-        return _archetype.GetComponentCastHandle<Type1>(1584);
+        return _archetype.GetComponentCastHandle<Type1>(Entity);
     }
 
     [Benchmark]
-    public Type1 GetSingleComponentsArchetypeUnsafe()
+    public Type1 GetSingleComponentArchetypeUnsafe()
     {
-        return _archetype.GetComponentUnsafe<Type1>(1584);
+        return _archetype.GetComponentUnsafe<Type1>(Entity);
     }
 
     [Benchmark]
-    public Type1 GetSingleComponentsArchetypeUnsafeHandle()
+    public Type1 GetSingleComponentArchetypeUnsafeHandle()
     {
         // Handle is the same as the id
-        return _archetype.GetComponentUnsafeHandle<Type1>(1584);
+        return _archetype.GetComponentUnsafeHandle<Type1>(Entity);
     }
 
     [Benchmark]
     public (Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10) GetTenComponentsDictionary()
     {
         return (
-            (Type1) _componentDictionary[typeof(Type1)][1584],
-            (Type2) _componentDictionary[typeof(Type2)][1584],
-            (Type3) _componentDictionary[typeof(Type3)][1584],
-            (Type4) _componentDictionary[typeof(Type4)][1584],
-            (Type5) _componentDictionary[typeof(Type5)][1584],
-            (Type6) _componentDictionary[typeof(Type6)][1584],
-            (Type7) _componentDictionary[typeof(Type7)][1584],
-            (Type8) _componentDictionary[typeof(Type8)][1584],
-            (Type9) _componentDictionary[typeof(Type9)][1584],
-            (Type10) _componentDictionary[typeof(Type10)][1584]
+            (Type1) _componentDictionary[typeof(Type1)][Entity],
+            (Type2) _componentDictionary[typeof(Type2)][Entity],
+            (Type3) _componentDictionary[typeof(Type3)][Entity],
+            (Type4) _componentDictionary[typeof(Type4)][Entity],
+            (Type5) _componentDictionary[typeof(Type5)][Entity],
+            (Type6) _componentDictionary[typeof(Type6)][Entity],
+            (Type7) _componentDictionary[typeof(Type7)][Entity],
+            (Type8) _componentDictionary[typeof(Type8)][Entity],
+            (Type9) _componentDictionary[typeof(Type9)][Entity],
+            (Type10) _componentDictionary[typeof(Type10)][Entity]
         );
     }
 
@@ -113,16 +114,16 @@ public class ArchetypeComponentAccessBenchmark
     public (Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10) GetTenComponentsArchetypeCast()
     {
         return (
-            _archetype.GetComponentCast<Type1>(1584),
-            _archetype.GetComponentCast<Type2>(1584),
-            _archetype.GetComponentCast<Type3>(1584),
-            _archetype.GetComponentCast<Type4>(1584),
-            _archetype.GetComponentCast<Type5>(1584),
-            _archetype.GetComponentCast<Type6>(1584),
-            _archetype.GetComponentCast<Type7>(1584),
-            _archetype.GetComponentCast<Type8>(1584),
-            _archetype.GetComponentCast<Type9>(1584),
-            _archetype.GetComponentCast<Type10>(1584)
+            _archetype.GetComponentCast<Type1>(Entity),
+            _archetype.GetComponentCast<Type2>(Entity),
+            _archetype.GetComponentCast<Type3>(Entity),
+            _archetype.GetComponentCast<Type4>(Entity),
+            _archetype.GetComponentCast<Type5>(Entity),
+            _archetype.GetComponentCast<Type6>(Entity),
+            _archetype.GetComponentCast<Type7>(Entity),
+            _archetype.GetComponentCast<Type8>(Entity),
+            _archetype.GetComponentCast<Type9>(Entity),
+            _archetype.GetComponentCast<Type10>(Entity)
         );
     }
 
@@ -131,16 +132,16 @@ public class ArchetypeComponentAccessBenchmark
     {
         // Handle is the same as the id
         return (
-            _archetype.GetComponentCastHandle<Type1>(1584),
-            _archetype.GetComponentCastHandle<Type2>(1584),
-            _archetype.GetComponentCastHandle<Type3>(1584),
-            _archetype.GetComponentCastHandle<Type4>(1584),
-            _archetype.GetComponentCastHandle<Type5>(1584),
-            _archetype.GetComponentCastHandle<Type6>(1584),
-            _archetype.GetComponentCastHandle<Type7>(1584),
-            _archetype.GetComponentCastHandle<Type8>(1584),
-            _archetype.GetComponentCastHandle<Type9>(1584),
-            _archetype.GetComponentCastHandle<Type10>(1584)
+            _archetype.GetComponentCastHandle<Type1>(Entity),
+            _archetype.GetComponentCastHandle<Type2>(Entity),
+            _archetype.GetComponentCastHandle<Type3>(Entity),
+            _archetype.GetComponentCastHandle<Type4>(Entity),
+            _archetype.GetComponentCastHandle<Type5>(Entity),
+            _archetype.GetComponentCastHandle<Type6>(Entity),
+            _archetype.GetComponentCastHandle<Type7>(Entity),
+            _archetype.GetComponentCastHandle<Type8>(Entity),
+            _archetype.GetComponentCastHandle<Type9>(Entity),
+            _archetype.GetComponentCastHandle<Type10>(Entity)
         );
     }
 
@@ -148,16 +149,16 @@ public class ArchetypeComponentAccessBenchmark
     public (Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10) GetTenComponentsArchetypeUnsafe()
     {
         return (
-            _archetype.GetComponentUnsafe<Type1>(1584),
-            _archetype.GetComponentUnsafe<Type2>(1584),
-            _archetype.GetComponentUnsafe<Type3>(1584),
-            _archetype.GetComponentUnsafe<Type4>(1584),
-            _archetype.GetComponentUnsafe<Type5>(1584),
-            _archetype.GetComponentUnsafe<Type6>(1584),
-            _archetype.GetComponentUnsafe<Type7>(1584),
-            _archetype.GetComponentUnsafe<Type8>(1584),
-            _archetype.GetComponentUnsafe<Type9>(1584),
-            _archetype.GetComponentUnsafe<Type10>(1584)
+            _archetype.GetComponentUnsafe<Type1>(Entity),
+            _archetype.GetComponentUnsafe<Type2>(Entity),
+            _archetype.GetComponentUnsafe<Type3>(Entity),
+            _archetype.GetComponentUnsafe<Type4>(Entity),
+            _archetype.GetComponentUnsafe<Type5>(Entity),
+            _archetype.GetComponentUnsafe<Type6>(Entity),
+            _archetype.GetComponentUnsafe<Type7>(Entity),
+            _archetype.GetComponentUnsafe<Type8>(Entity),
+            _archetype.GetComponentUnsafe<Type9>(Entity),
+            _archetype.GetComponentUnsafe<Type10>(Entity)
         );
     }
 
@@ -166,17 +167,59 @@ public class ArchetypeComponentAccessBenchmark
     {
         // Handle is the same as the id
         return (
-            _archetype.GetComponentUnsafeHandle<Type1>(1584),
-            _archetype.GetComponentUnsafeHandle<Type2>(1584),
-            _archetype.GetComponentUnsafeHandle<Type3>(1584),
-            _archetype.GetComponentUnsafeHandle<Type4>(1584),
-            _archetype.GetComponentUnsafeHandle<Type5>(1584),
-            _archetype.GetComponentUnsafeHandle<Type6>(1584),
-            _archetype.GetComponentUnsafeHandle<Type7>(1584),
-            _archetype.GetComponentUnsafeHandle<Type8>(1584),
-            _archetype.GetComponentUnsafeHandle<Type9>(1584),
-            _archetype.GetComponentUnsafeHandle<Type10>(1584)
+            _archetype.GetComponentUnsafeHandle<Type1>(Entity),
+            _archetype.GetComponentUnsafeHandle<Type2>(Entity),
+            _archetype.GetComponentUnsafeHandle<Type3>(Entity),
+            _archetype.GetComponentUnsafeHandle<Type4>(Entity),
+            _archetype.GetComponentUnsafeHandle<Type5>(Entity),
+            _archetype.GetComponentUnsafeHandle<Type6>(Entity),
+            _archetype.GetComponentUnsafeHandle<Type7>(Entity),
+            _archetype.GetComponentUnsafeHandle<Type8>(Entity),
+            _archetype.GetComponentUnsafeHandle<Type9>(Entity),
+            _archetype.GetComponentUnsafeHandle<Type10>(Entity)
         );
+    }
+
+    [Benchmark]
+    public bool HasSingleComponentDictionary()
+    {
+        return _componentDictionary[typeof(Type1)].ContainsKey(Entity);
+    }
+
+    [Benchmark]
+    public bool HasSingleComponentArchetype()
+    {
+        return _archetype.HasComponent<Type1>();
+    }
+
+    [Benchmark]
+    public bool HasTenComponentsDictionary()
+    {
+        return _componentDictionary[typeof(Type1)].ContainsKey(Entity) &&
+               _componentDictionary[typeof(Type2)].ContainsKey(Entity) &&
+               _componentDictionary[typeof(Type3)].ContainsKey(Entity) &&
+               _componentDictionary[typeof(Type4)].ContainsKey(Entity) &&
+               _componentDictionary[typeof(Type5)].ContainsKey(Entity) &&
+               _componentDictionary[typeof(Type6)].ContainsKey(Entity) &&
+               _componentDictionary[typeof(Type7)].ContainsKey(Entity) &&
+               _componentDictionary[typeof(Type8)].ContainsKey(Entity) &&
+               _componentDictionary[typeof(Type9)].ContainsKey(Entity) &&
+               _componentDictionary[typeof(Type10)].ContainsKey(Entity);
+    }
+
+    [Benchmark]
+    public bool HasTenComponentsArchetype()
+    {
+        return _archetype.HasComponent<Type1>() &&
+               _archetype.HasComponent<Type2>() &&
+               _archetype.HasComponent<Type3>() &&
+               _archetype.HasComponent<Type4>() &&
+               _archetype.HasComponent<Type5>() &&
+               _archetype.HasComponent<Type6>() &&
+               _archetype.HasComponent<Type7>() &&
+               _archetype.HasComponent<Type8>() &&
+               _archetype.HasComponent<Type9>() &&
+               _archetype.HasComponent<Type10>();
     }
 
     // Just a bunch of types to pad the size of the arrays and such.
@@ -271,8 +314,9 @@ public class ArchetypeComponentAccessBenchmark
             }
         }
 
-        public T GetComponentCast<T>(int entity, T val = default) where T : struct
+        public T GetComponentCast<T>(int entity) where T : struct
         {
+            Unsafe.SkipInit(out T val);
             var id = _ids[entity];
 
             return val switch
@@ -291,8 +335,9 @@ public class ArchetypeComponentAccessBenchmark
             };
         }
 
-        public T GetComponentCastHandle<T>(int handle, T val = default) where T : struct
+        public T GetComponentCastHandle<T>(int handle) where T : struct
         {
+            Unsafe.SkipInit(out T val);
             return val switch
             {
                 T1 => (T) (object) _t1Comps[handle]!,
@@ -309,8 +354,9 @@ public class ArchetypeComponentAccessBenchmark
             };
         }
 
-        public ref T GetComponentUnsafe<T>(int entity, T val = default) where T : struct
+        public ref T GetComponentUnsafe<T>(int entity) where T : struct
         {
+            Unsafe.SkipInit(out T val);
             var id = _ids[entity];
 
             switch (val)
@@ -340,8 +386,9 @@ public class ArchetypeComponentAccessBenchmark
             }
         }
 
-        public ref T GetComponentUnsafeHandle<T>(int handle, T val = default) where T : struct
+        public ref T GetComponentUnsafeHandle<T>(int handle) where T : struct
         {
+            Unsafe.SkipInit(out T val);
             switch (val)
             {
                 case T1:
@@ -367,6 +414,25 @@ public class ArchetypeComponentAccessBenchmark
                 default:
                     throw new ArgumentException($"Unknown type: {typeof(T)}");
             }
+        }
+
+        public bool HasComponent<T>()
+        {
+            Unsafe.SkipInit(out T val);
+            return val switch
+            {
+                T1 => true,
+                T2 => true,
+                T3 => true,
+                T4 => true,
+                T5 => true,
+                T6 => true,
+                T7 => true,
+                T8 => true,
+                T9 => true,
+                T10 => true,
+                _ => false,
+            };
         }
     }
 }

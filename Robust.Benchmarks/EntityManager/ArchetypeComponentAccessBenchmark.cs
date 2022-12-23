@@ -455,31 +455,31 @@ public class ArchetypeComponentAccessBenchmark
             }
         }
 
-        public T GetComponentUnsafeHandle<T>(int handle) where T : struct
+        public ref T GetComponentUnsafeHandle<T>(int handle) where T : struct
         {
             Unsafe.SkipInit(out T val);
             switch (val)
             {
                 case T1:
-                    return Unsafe.As<T1, T>(ref _t1Comps[handle]);
+                    return ref Unsafe.As<T1, T>(ref _t1Comps[handle]);
                 case T2:
-                    return Unsafe.As<T2, T>(ref _t2Comps[handle]);
+                    return ref Unsafe.As<T2, T>(ref _t2Comps[handle]);
                 case T3:
-                    return Unsafe.As<T3, T>(ref _t3Comps[handle]);
+                    return ref Unsafe.As<T3, T>(ref _t3Comps[handle]);
                 case T4:
-                    return Unsafe.As<T4, T>(ref _t4Comps[handle]);
+                    return ref Unsafe.As<T4, T>(ref _t4Comps[handle]);
                 case T5:
-                    return Unsafe.As<T5, T>(ref _t5Comps[handle]);
+                    return ref Unsafe.As<T5, T>(ref _t5Comps[handle]);
                 case T6:
-                    return Unsafe.As<T6, T>(ref _t6Comps[handle]);
+                    return ref Unsafe.As<T6, T>(ref _t6Comps[handle]);
                 case T7:
-                    return Unsafe.As<T7, T>(ref _t7Comps[handle]);
+                    return ref Unsafe.As<T7, T>(ref _t7Comps[handle]);
                 case T8:
-                    return Unsafe.As<T8, T>(ref _t8Comps[handle]);
+                    return ref Unsafe.As<T8, T>(ref _t8Comps[handle]);
                 case T9:
-                    return Unsafe.As<T9, T>(ref _t9Comps[handle]);
+                    return ref Unsafe.As<T9, T>(ref _t9Comps[handle]);
                 case T10:
-                    return Unsafe.As<T10, T>(ref _t10Comps[handle]);
+                    return ref Unsafe.As<T10, T>(ref _t10Comps[handle]);
                 default:
                     throw new ArgumentException($"Unknown type: {typeof(T)}");
             }
@@ -523,15 +523,17 @@ public class ArchetypeComponentAccessBenchmark
             };
         }
 
-        private void IterateSingleSpan<T, TComp>([RequireStaticDelegate] Action<T> action, TComp[] array) where T : struct
+        private void IterateSingleSpan<T, TComp>([RequireStaticDelegate] IteratorSingle<T> action, TComp[] array) where T : struct
         {
             foreach (ref var comp in array.AsSpan())
             {
-                action(Unsafe.As<TComp, T>(ref comp));
+                action(ref Unsafe.As<TComp, T>(ref comp));
             }
         }
 
-        public void IterateSingleDelegate<T>([RequireStaticDelegate] Action<T> action) where T : struct
+        public delegate void IteratorSingle<T>(ref T t1);
+
+        public void IterateSingleDelegate<T>([RequireStaticDelegate] IteratorSingle<T> action) where T : struct
         {
             Unsafe.SkipInit(out T val);
             switch (val)
@@ -571,10 +573,10 @@ public class ArchetypeComponentAccessBenchmark
             }
         }
 
-        public delegate void Iterator(ref T1 t1, ref T2 t2, ref T3 t3, ref T4 t4, ref T5 t5, ref T6 t6, ref T7 t7,
+        public delegate void IteratorTen(ref T1 t1, ref T2 t2, ref T3 t3, ref T4 t4, ref T5 t5, ref T6 t6, ref T7 t7,
             ref T8 t8, ref T9 t9, ref T10 t10);
 
-        public void IterateDelegate([RequireStaticDelegate] Iterator action)
+        public void IterateDelegate([RequireStaticDelegate] IteratorTen action)
         {
             var t1Span = _t1Comps.AsSpan();
             var t2Span = _t2Comps.AsSpan();

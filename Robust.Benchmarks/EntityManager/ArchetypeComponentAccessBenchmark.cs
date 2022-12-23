@@ -18,7 +18,7 @@ public class ArchetypeComponentAccessBenchmark
 
     private Dictionary<Type, Dictionary<int, object>> _componentDictionary = default!;
     private Archetype<Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10> _archetype = default!;
-    private Consumer _consumer = default!;
+    private static readonly Consumer Consumer = new();
 
     [GlobalSetup]
     public void GlobalSetup()
@@ -63,8 +63,6 @@ public class ArchetypeComponentAccessBenchmark
             _archetype.AddComponent(i, new Type9());
             _archetype.AddComponent(i, new Type10());
         }
-
-        _consumer = new Consumer();
     }
 
     [Benchmark]
@@ -233,7 +231,7 @@ public class ArchetypeComponentAccessBenchmark
     {
         foreach (Type1 value in _componentDictionary[typeof(Type1)].Values)
         {
-            _consumer.Consume(value);
+            Consumer.Consume(value);
         }
     }
 
@@ -242,19 +240,14 @@ public class ArchetypeComponentAccessBenchmark
     {
         foreach (var value in _archetype.IterateSingleCast<Type1>())
         {
-            _consumer.Consume(value);
+            Consumer.Consume(value);
         }
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void IteratorSingle(Type1 t1)
-    {
     }
 
     [Benchmark]
     public void IterateDelegateSingleComponentArchetype()
     {
-        _archetype.IterateSingleDelegate<Type1>(static t1 => IteratorSingle(t1));
+        _archetype.IterateSingleDelegate(static (ref Type1 t1) => Consumer.Consume(t1));
     }
 
     [Benchmark]
@@ -262,7 +255,7 @@ public class ArchetypeComponentAccessBenchmark
     {
         for (var i = 0; i < N; i++)
         {
-            _consumer.Consume((
+            Consumer.Consume((
                 (Type1) _componentDictionary[typeof(Type1)][i],
                 (Type2) _componentDictionary[typeof(Type2)][i],
                 (Type3) _componentDictionary[typeof(Type3)][i],
@@ -277,19 +270,13 @@ public class ArchetypeComponentAccessBenchmark
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void IteratorTen(ref Type1 t1, ref Type2 t2, ref Type3 t3, ref Type4 t4, ref Type5 t5, ref Type6 t6,
-        ref Type7 t7, ref Type8 t8, ref Type9 t9, ref Type10 t10)
-    {
-    }
-
     [Benchmark]
     public void IterateDelegateTenComponentsArchetype()
     {
         _archetype.IterateDelegate(
             static (ref Type1 t1, ref Type2 t2, ref Type3 t3, ref Type4 t4, ref Type5 t5, ref Type6 t6, ref Type7 t7,
                     ref Type8 t8, ref Type9 t9, ref Type10 t10) =>
-                IteratorTen(ref t1, ref t2, ref t3, ref t4, ref t5, ref t6, ref t7, ref t8, ref t9, ref t10)
+                Consumer.Consume((t1, t2, t3, t4, t5, t6, t7, t8, t9, t10))
         );
     }
 
@@ -455,31 +442,31 @@ public class ArchetypeComponentAccessBenchmark
             }
         }
 
-        public T GetComponentUnsafeHandle<T>(int handle) where T : struct
+        public ref T GetComponentUnsafeHandle<T>(int handle) where T : struct
         {
             Unsafe.SkipInit(out T val);
             switch (val)
             {
                 case T1:
-                    return Unsafe.As<T1, T>(ref _t1Comps[handle]);
+                    return ref Unsafe.As<T1, T>(ref _t1Comps[handle]);
                 case T2:
-                    return Unsafe.As<T2, T>(ref _t2Comps[handle]);
+                    return ref Unsafe.As<T2, T>(ref _t2Comps[handle]);
                 case T3:
-                    return Unsafe.As<T3, T>(ref _t3Comps[handle]);
+                    return ref Unsafe.As<T3, T>(ref _t3Comps[handle]);
                 case T4:
-                    return Unsafe.As<T4, T>(ref _t4Comps[handle]);
+                    return ref Unsafe.As<T4, T>(ref _t4Comps[handle]);
                 case T5:
-                    return Unsafe.As<T5, T>(ref _t5Comps[handle]);
+                    return ref Unsafe.As<T5, T>(ref _t5Comps[handle]);
                 case T6:
-                    return Unsafe.As<T6, T>(ref _t6Comps[handle]);
+                    return ref Unsafe.As<T6, T>(ref _t6Comps[handle]);
                 case T7:
-                    return Unsafe.As<T7, T>(ref _t7Comps[handle]);
+                    return ref Unsafe.As<T7, T>(ref _t7Comps[handle]);
                 case T8:
-                    return Unsafe.As<T8, T>(ref _t8Comps[handle]);
+                    return ref Unsafe.As<T8, T>(ref _t8Comps[handle]);
                 case T9:
-                    return Unsafe.As<T9, T>(ref _t9Comps[handle]);
+                    return ref Unsafe.As<T9, T>(ref _t9Comps[handle]);
                 case T10:
-                    return Unsafe.As<T10, T>(ref _t10Comps[handle]);
+                    return ref Unsafe.As<T10, T>(ref _t10Comps[handle]);
                 default:
                     throw new ArgumentException($"Unknown type: {typeof(T)}");
             }
@@ -523,15 +510,17 @@ public class ArchetypeComponentAccessBenchmark
             };
         }
 
-        private void IterateSingleSpan<T, TComp>([RequireStaticDelegate] Action<T> action, TComp[] array) where T : struct
+        private void IterateSingleSpan<T, TComp>([RequireStaticDelegate] IteratorSingle<T> action, TComp[] array) where T : struct
         {
             foreach (ref var comp in array.AsSpan())
             {
-                action(Unsafe.As<TComp, T>(ref comp));
+                action(ref Unsafe.As<TComp, T>(ref comp));
             }
         }
 
-        public void IterateSingleDelegate<T>([RequireStaticDelegate] Action<T> action) where T : struct
+        public delegate void IteratorSingle<T>(ref T t1);
+
+        public void IterateSingleDelegate<T>([RequireStaticDelegate] IteratorSingle<T> action) where T : struct
         {
             Unsafe.SkipInit(out T val);
             switch (val)
@@ -571,10 +560,10 @@ public class ArchetypeComponentAccessBenchmark
             }
         }
 
-        public delegate void Iterator(ref T1 t1, ref T2 t2, ref T3 t3, ref T4 t4, ref T5 t5, ref T6 t6, ref T7 t7,
+        public delegate void IteratorTen(ref T1 t1, ref T2 t2, ref T3 t3, ref T4 t4, ref T5 t5, ref T6 t6, ref T7 t7,
             ref T8 t8, ref T9 t9, ref T10 t10);
 
-        public void IterateDelegate([RequireStaticDelegate] Iterator action)
+        public void IterateDelegate([RequireStaticDelegate] IteratorTen action)
         {
             var t1Span = _t1Comps.AsSpan();
             var t2Span = _t2Comps.AsSpan();

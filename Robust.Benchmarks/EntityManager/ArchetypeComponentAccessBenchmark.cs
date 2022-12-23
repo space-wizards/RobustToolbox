@@ -18,7 +18,7 @@ public class ArchetypeComponentAccessBenchmark
 
     private Dictionary<Type, Dictionary<int, object>> _componentDictionary = default!;
     private Archetype<Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10> _archetype = default!;
-    private Consumer _consumer = default!;
+    private static readonly Consumer Consumer = new();
 
     [GlobalSetup]
     public void GlobalSetup()
@@ -63,8 +63,6 @@ public class ArchetypeComponentAccessBenchmark
             _archetype.AddComponent(i, new Type9());
             _archetype.AddComponent(i, new Type10());
         }
-
-        _consumer = new Consumer();
     }
 
     [Benchmark]
@@ -233,7 +231,7 @@ public class ArchetypeComponentAccessBenchmark
     {
         foreach (Type1 value in _componentDictionary[typeof(Type1)].Values)
         {
-            _consumer.Consume(value);
+            Consumer.Consume(value);
         }
     }
 
@@ -242,19 +240,14 @@ public class ArchetypeComponentAccessBenchmark
     {
         foreach (var value in _archetype.IterateSingleCast<Type1>())
         {
-            _consumer.Consume(value);
+            Consumer.Consume(value);
         }
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void IteratorSingle(Type1 t1)
-    {
     }
 
     [Benchmark]
     public void IterateDelegateSingleComponentArchetype()
     {
-        _archetype.IterateSingleDelegate<Type1>(static t1 => IteratorSingle(t1));
+        _archetype.IterateSingleDelegate(static (ref Type1 t1) => Consumer.Consume(t1));
     }
 
     [Benchmark]
@@ -262,7 +255,7 @@ public class ArchetypeComponentAccessBenchmark
     {
         for (var i = 0; i < N; i++)
         {
-            _consumer.Consume((
+            Consumer.Consume((
                 (Type1) _componentDictionary[typeof(Type1)][i],
                 (Type2) _componentDictionary[typeof(Type2)][i],
                 (Type3) _componentDictionary[typeof(Type3)][i],
@@ -277,19 +270,13 @@ public class ArchetypeComponentAccessBenchmark
         }
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void IteratorTen(ref Type1 t1, ref Type2 t2, ref Type3 t3, ref Type4 t4, ref Type5 t5, ref Type6 t6,
-        ref Type7 t7, ref Type8 t8, ref Type9 t9, ref Type10 t10)
-    {
-    }
-
     [Benchmark]
     public void IterateDelegateTenComponentsArchetype()
     {
         _archetype.IterateDelegate(
             static (ref Type1 t1, ref Type2 t2, ref Type3 t3, ref Type4 t4, ref Type5 t5, ref Type6 t6, ref Type7 t7,
                     ref Type8 t8, ref Type9 t9, ref Type10 t10) =>
-                IteratorTen(ref t1, ref t2, ref t3, ref t4, ref t5, ref t6, ref t7, ref t8, ref t9, ref t10)
+                Consumer.Consume((t1, t2, t3, t4, t5, t6, t7, t8, t9, t10))
         );
     }
 

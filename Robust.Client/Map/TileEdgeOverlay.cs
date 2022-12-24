@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.Collections;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -20,7 +18,7 @@ public sealed class TileEdgeOverlay : Overlay
     private readonly IResourceCache _resource;
     private readonly ITileDefinitionManager _tileDefManager;
 
-    public override OverlaySpace Space => OverlaySpace.WorldSpaceEntities;
+    public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowEntities;
 
     public TileEdgeOverlay(IEntityManager entManager, IMapManager mapManager, IResourceCache resource, ITileDefinitionManager tileDefManager)
     {
@@ -28,6 +26,7 @@ public sealed class TileEdgeOverlay : Overlay
         _mapManager = mapManager;
         _resource = resource;
         _tileDefManager = tileDefManager;
+        ZIndex = -1;
     }
 
     protected internal override void Draw(in OverlayDrawArgs args)
@@ -35,17 +34,28 @@ public sealed class TileEdgeOverlay : Overlay
         if (args.MapId == MapId.Nullspace)
             return;
 
-        var neighborGroups = new Dictionary<ushort, ValueList<Direction>>();
         var xformQuery = _entManager.GetEntityQuery<TransformComponent>();
 
         foreach (var grid in _mapManager.FindGridsIntersecting(args.MapId, args.WorldBounds))
         {
             var tileSize = grid.TileSize;
+            var tileDimensions = new Vector2(tileSize, tileSize);
             var xform = xformQuery.GetComponent(grid.Owner);
             args.WorldHandle.SetTransform(xform.WorldMatrix);
 
             foreach (var tileRef in grid.GetTilesIntersecting(args.WorldBounds, false))
             {
+                var tileDef = _tileDefManager[tileRef.Tile.TypeId];
+                var cornerTexture = tileDef.CornerSprite != null
+                    ? _resource.GetResource<TextureResource>(tileDef.CornerSprite).Texture
+                    : null;
+                var cardinalTexture = tileDef.CardinalSprite != null
+                    ? _resource.GetResource<TextureResource>(tileDef.CardinalSprite).Texture
+                    : null;
+
+                if (cornerTexture == null && cardinalTexture == null)
+                    continue;
+
                 // Get what tiles border us to determine what sprites we need to draw.
                 for (var x = -1; x <= 1; x++)
                 {
@@ -63,126 +73,67 @@ public sealed class TileEdgeOverlay : Overlay
                         // If the neighboring tile doesn't support edges then ignore it.
                         switch (direction)
                         {
-                            case Direction.West:
-                            case Direction.North:
-                            case Direction.East:
-                            case Direction.South:
-                                if (_tileDefManager[neighborTile.Tile.TypeId].CardinalSprite == null)
-                                    continue;
-                                break;
-                            case Direction.SouthEast:
-                            case Direction.NorthEast:
-                            case Direction.NorthWest:
-                            case Direction.SouthWest:
-                                if (_tileDefManager[neighborTile.Tile.TypeId].CornerSprite == null)
-                                    continue;
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-
-                        if (!neighborGroups.TryGetValue(neighborTile.Tile.TypeId, out var directions))
-                        {
-                            directions = new ValueList<Direction>();
-                        }
-
-                        directions.Add(direction);
-                        neighborGroups[neighborTile.Tile.TypeId] = directions;
-                    }
-                }
-
-                if (neighborGroups.Count == 0)
-                    continue;
-
-                foreach (var (neighborGroup, flags) in neighborGroups)
-                {
-                    var tile = _tileDefManager[neighborGroup];
-                    var cornerTexture = tile.CornerSprite != null
-                        ? _resource.GetResource<TextureResource>(tile.CornerSprite).Texture
-                        : null;
-                    var cardinalTexture = tile.CardinalSprite != null
-                        ? _resource.GetResource<TextureResource>(tile.CardinalSprite).Texture
-                        : null;
-                    var indices = (Vector2)tileRef.GridIndices;
-                    var tileDimensions = (Vector2)(tileSize, tileSize);
-
-                    foreach (var dir in flags)
-                    {
-                        switch (dir)
-                        {
                             // Corner sprites
-                            case Direction.NorthWest:
-                                if (cornerTexture != null &&
-                                    !flags.Contains(Direction.West) &&
-                                    !flags.Contains(Direction.North))
+                            case Direction.SouthEast:
+                                if (cornerTexture != null)
                                 {
-                                    var box = Box2.FromDimensions(indices, tileDimensions);
+                                    var box = Box2.FromDimensions(neighborIndices, tileDimensions);
                                     args.WorldHandle.DrawTextureRect(cornerTexture, box);
                                 }
                                 break;
-                            case Direction.SouthWest:
-                                if (cornerTexture != null &&
-                                    !flags.Contains(Direction.West) &&
-                                    !flags.Contains(Direction.South))
+                            case Direction.NorthEast:
+                                if (cornerTexture != null)
                                 {
-                                    var box = Box2.FromDimensions(indices, tileDimensions);
+                                    var box = Box2.FromDimensions(neighborIndices, tileDimensions);
                                     args.WorldHandle.DrawTextureRect(cornerTexture, new Box2Rotated(box, new Angle(MathF.PI / 2f), box.Center));
                                 }
                                 break;
-                            case Direction.SouthEast:
-                                if (cornerTexture != null &&
-                                    !flags.Contains(Direction.East) &&
-                                    !flags.Contains(Direction.South))
+                            case Direction.NorthWest:
+                                if (cornerTexture != null)
                                 {
-                                    var box = Box2.FromDimensions(indices, tileDimensions);
+                                    var box = Box2.FromDimensions(neighborIndices, tileDimensions);
                                     args.WorldHandle.DrawTextureRect(cornerTexture, new Box2Rotated(box, new Angle(MathF.PI), box.Center));
                                 }
                                 break;
-                            case Direction.NorthEast:
-                                if (cornerTexture != null &&
-                                    !flags.Contains(Direction.East) &&
-                                    !flags.Contains(Direction.North))
+                            case Direction.SouthWest:
+                                if (cornerTexture != null)
                                 {
-                                    var box = Box2.FromDimensions(indices, tileDimensions);
+                                    var box = Box2.FromDimensions(neighborIndices, tileDimensions);
                                     args.WorldHandle.DrawTextureRect(cornerTexture, new Box2Rotated(box, new Angle(MathF.PI * 1.5f), box.Center));
                                 }
                                 break;
                             // Edge sprites
-                            case Direction.North:
-                                if (cardinalTexture != null)
-                                {
-                                    var box = Box2.FromDimensions(indices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cardinalTexture, box);
-                                }
-                                break;
-                            case Direction.West:
-                                if (cardinalTexture != null)
-                                {
-                                    var box = Box2.FromDimensions(indices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cardinalTexture, new Box2Rotated(box, new Angle(MathF.PI / 2f), box.Center));
-                                }
-                                break;
                             case Direction.South:
                                 if (cardinalTexture != null)
                                 {
-                                    var box = Box2.FromDimensions(indices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cardinalTexture, new Box2Rotated(box, new Angle(MathF.PI), box.Center));
+                                    var box = Box2.FromDimensions(neighborIndices, tileDimensions);
+                                    args.WorldHandle.DrawTextureRect(cardinalTexture, box);
                                 }
                                 break;
                             case Direction.East:
                                 if (cardinalTexture != null)
                                 {
-                                    var box = Box2.FromDimensions(indices, tileDimensions);
+                                    var box = Box2.FromDimensions(neighborIndices, tileDimensions);
+                                    args.WorldHandle.DrawTextureRect(cardinalTexture, new Box2Rotated(box, new Angle(MathF.PI / 2f), box.Center));
+                                }
+                                break;
+                            case Direction.North:
+                                if (cardinalTexture != null)
+                                {
+                                    var box = Box2.FromDimensions(neighborIndices, tileDimensions);
+                                    args.WorldHandle.DrawTextureRect(cardinalTexture, new Box2Rotated(box, new Angle(MathF.PI), box.Center));
+                                }
+                                break;
+                            case Direction.West:
+                                if (cardinalTexture != null)
+                                {
+                                    var box = Box2.FromDimensions(neighborIndices, tileDimensions);
                                     args.WorldHandle.DrawTextureRect(cardinalTexture, new Box2Rotated(box, new Angle(MathF.PI * 1.5f), box.Center));
                                 }
                                 break;
                         }
                     }
-
-                    flags.Clear();
                 }
-
-                neighborGroups.Clear();
             }
         }
 

@@ -61,6 +61,9 @@ public sealed class TileEdgeOverlay : Overlay
                 {
                     for (var y = -1; y <= 1; y++)
                     {
+                        if (x == 0 && y == 0)
+                            continue;
+
                         var neighborIndices = new Vector2i(tileRef.GridIndices.X + x, tileRef.GridIndices.Y + y);
                         var neighborTile = grid.GetTileRef(neighborIndices);
 
@@ -70,7 +73,6 @@ public sealed class TileEdgeOverlay : Overlay
 
                         var direction = new Vector2i(x, y).AsDirection();
 
-                        // If the neighboring tile doesn't support edges then ignore it.
                         switch (direction)
                         {
                             // Corner sprites

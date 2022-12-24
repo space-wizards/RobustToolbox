@@ -12,7 +12,6 @@ namespace Robust.Shared.Map
         protected readonly List<ITileDefinition> TileDefs;
         private readonly Dictionary<string, ITileDefinition> _tileNames;
         private readonly Dictionary<string, List<string>> _awaitingAliases;
-        private readonly Dictionary<ITileDefinition, ushort> _tileIds;
 
         /// <summary>
         /// Default Constructor.
@@ -21,7 +20,6 @@ namespace Robust.Shared.Map
         {
             TileDefs = new List<ITileDefinition>();
             _tileNames = new Dictionary<string, ITileDefinition>();
-            _tileIds = new Dictionary<ITileDefinition, ushort>();
             _awaitingAliases = new();
         }
 
@@ -45,7 +43,6 @@ namespace Robust.Shared.Map
             tileDef.AssignTileId(id);
             TileDefs.Add(tileDef);
             _tileNames[name] = tileDef;
-            _tileIds[tileDef] = id;
 
             AliasingHandleDeferred(name);
         }

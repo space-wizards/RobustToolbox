@@ -1,32 +1,43 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Robust.Client.Map
 {
-    internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
+    internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClientTileDefinitionManager, IClydeTileDefinitionManager
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
+        private ISawmill _sawmill = default!;
         private Texture? _tileTextureAtlas;
-
-        public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
-
+        private readonly Dictionary<ushort, Texture[]> _variantTextures = new();
         private readonly Dictionary<ushort, Box2[]> _tileRegions = new();
 
+        public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
         public Box2 ErrorTileRegion { get; private set; }
+
+        public Texture GetTexture(Tile tile)
+        {
+            try
+            {
+                return _variantTextures[tile.TypeId][tile.Variant];
+            }
+            catch (KeyNotFoundException)
+            {
+                _sawmill.Error($"Unable to find tile texture for {tile}");
+                return Texture.Transparent;
+            }
+        }
 
         /// <inheritdoc />
         public Box2[]? TileAtlasRegion(Tile tile)
@@ -48,11 +59,48 @@ namespace Robust.Client.Map
         public override void Initialize()
         {
             base.Initialize();
+            _sawmill = Logger.GetSawmill("tiledefman");
 
-            _genTextureAtlas();
+            GenTextureAtlas();
+            GenVariantTextures();
         }
 
-        private void _genTextureAtlas()
+        /// <summary>
+        /// Creates textures for content use where they may want to get the texture of a specific variant.
+        /// </summary>
+        private void GenVariantTextures()
+        {
+            var defList = TileDefs.Where(t => t.Sprite != null).ToList();
+
+            // If there are no tile definitions, we do nothing.
+            if (defList.Count <= 0)
+                return;
+
+            const int tileSize = EyeManager.PixelsPerMeter;
+
+            foreach (var def in defList)
+            {
+                var variants = new Texture[def.Variants];
+                _variantTextures.Add(def.TileId, variants);
+
+                Image<Rgba32> image;
+                // Already know it's not null above
+                var path = def.Sprite!;
+
+                using (var stream = _resourceCache.ContentFileRead(path))
+                {
+                    image = Image.Load<Rgba32>(stream);
+                }
+
+                for (var j = 0; j < def.Variants; j++)
+                {
+                    var variantImage = image.Clone(o => o.Crop(new Rectangle(j * tileSize, 0, tileSize, tileSize)));
+                    variants[j] = Texture.LoadFromImage(variantImage);
+                }
+            }
+        }
+
+        private void GenTextureAtlas()
         {
             var defList = TileDefs.Where(t => t.Sprite != null).ToList();
 

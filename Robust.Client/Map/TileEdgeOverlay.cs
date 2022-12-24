@@ -43,17 +43,15 @@ public sealed class TileEdgeOverlay : Overlay
             var xform = xformQuery.GetComponent(grid.Owner);
             args.WorldHandle.SetTransform(xform.WorldMatrix);
 
+            // TODO: Add support for edge variants
+            // TODO: List of edges supported for the thing
+            // Then, each tile needs to store its cardinal / corner variants.
+
             foreach (var tileRef in grid.GetTilesIntersecting(args.WorldBounds, false))
             {
                 var tileDef = _tileDefManager[tileRef.Tile.TypeId];
-                var cornerTexture = tileDef.CornerSprite != null
-                    ? _resource.GetResource<TextureResource>(tileDef.CornerSprite).Texture
-                    : null;
-                var cardinalTexture = tileDef.CardinalSprite != null
-                    ? _resource.GetResource<TextureResource>(tileDef.CardinalSprite).Texture
-                    : null;
 
-                if (cornerTexture == null && cardinalTexture == null)
+                if (tileDef.CardinalSprites.Count == 0 && tileDef.CornerSprites.Count == 0)
                     continue;
 
                 // Get what tiles border us to determine what sprites we need to draw.
@@ -77,60 +75,100 @@ public sealed class TileEdgeOverlay : Overlay
                         {
                             // Corner sprites
                             case Direction.SouthEast:
-                                if (cornerTexture != null)
+                                if (tileDef.CornerSprites.Count > 0)
                                 {
                                     var box = Box2.FromDimensions(neighborIndices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cornerTexture, box);
+                                    var variants = tileDef.CornerSprites.Count;
+                                    var variant = (tileRef.GridIndices.X + tileRef.GridIndices.Y * 4) % variants;
+                                    var tex = _resource.GetResource<TextureResource>(tileDef.CornerSprites[variant])
+                                        .Texture;
+
+                                    args.WorldHandle.DrawTextureRect(tex, box);
                                 }
                                 break;
                             case Direction.NorthEast:
-                                if (cornerTexture != null)
+                                if (tileDef.CornerSprites.Count > 0)
                                 {
                                     var box = Box2.FromDimensions(neighborIndices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cornerTexture, new Box2Rotated(box, new Angle(MathF.PI / 2f), box.Center));
+                                    var variants = tileDef.CornerSprites.Count;
+                                    var variant = (tileRef.GridIndices.X + tileRef.GridIndices.Y * 4) % variants;
+                                    var tex = _resource.GetResource<TextureResource>(tileDef.CornerSprites[variant])
+                                        .Texture;
+
+                                    args.WorldHandle.DrawTextureRect(tex, new Box2Rotated(box, new Angle(MathF.PI / 2f), box.Center));
                                 }
                                 break;
                             case Direction.NorthWest:
-                                if (cornerTexture != null)
+                                if (tileDef.CornerSprites.Count > 0)
                                 {
                                     var box = Box2.FromDimensions(neighborIndices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cornerTexture, new Box2Rotated(box, new Angle(MathF.PI), box.Center));
+                                    var variants = tileDef.CornerSprites.Count;
+                                    var variant = (tileRef.GridIndices.X + tileRef.GridIndices.Y * 4) % variants;
+                                    var tex = _resource.GetResource<TextureResource>(tileDef.CornerSprites[variant])
+                                        .Texture;
+
+                                    args.WorldHandle.DrawTextureRect(tex, new Box2Rotated(box, new Angle(MathF.PI), box.Center));
                                 }
                                 break;
                             case Direction.SouthWest:
-                                if (cornerTexture != null)
+                                if (tileDef.CornerSprites.Count > 0)
                                 {
                                     var box = Box2.FromDimensions(neighborIndices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cornerTexture, new Box2Rotated(box, new Angle(MathF.PI * 1.5f), box.Center));
+                                    var variants = tileDef.CornerSprites.Count;
+                                    var variant = (tileRef.GridIndices.X + tileRef.GridIndices.Y * 4) % variants;
+                                    var tex = _resource.GetResource<TextureResource>(tileDef.CornerSprites[variant])
+                                        .Texture;
+
+                                    args.WorldHandle.DrawTextureRect(tex, new Box2Rotated(box, new Angle(MathF.PI * 1.5f), box.Center));
                                 }
                                 break;
                             // Edge sprites
                             case Direction.South:
-                                if (cardinalTexture != null)
+                                if (tileDef.CardinalSprites.Count > 0)
                                 {
                                     var box = Box2.FromDimensions(neighborIndices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cardinalTexture, box);
+                                    var variants = tileDef.CardinalSprites.Count;
+                                    var variant = (tileRef.GridIndices.X + tileRef.GridIndices.Y * 4) % variants;
+                                    var tex = _resource.GetResource<TextureResource>(tileDef.CardinalSprites[variant])
+                                        .Texture;
+
+                                    args.WorldHandle.DrawTextureRect(tex, box);
                                 }
                                 break;
                             case Direction.East:
-                                if (cardinalTexture != null)
+                                if (tileDef.CardinalSprites.Count > 0)
                                 {
                                     var box = Box2.FromDimensions(neighborIndices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cardinalTexture, new Box2Rotated(box, new Angle(MathF.PI / 2f), box.Center));
+                                    var variants = tileDef.CardinalSprites.Count;
+                                    var variant = (tileRef.GridIndices.X + tileRef.GridIndices.Y * 4) % variants;
+                                    var tex = _resource.GetResource<TextureResource>(tileDef.CardinalSprites[variant])
+                                        .Texture;
+
+                                    args.WorldHandle.DrawTextureRect(tex, new Box2Rotated(box, new Angle(MathF.PI / 2f), box.Center));
                                 }
                                 break;
                             case Direction.North:
-                                if (cardinalTexture != null)
+                                if (tileDef.CardinalSprites.Count > 0)
                                 {
                                     var box = Box2.FromDimensions(neighborIndices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cardinalTexture, new Box2Rotated(box, new Angle(MathF.PI), box.Center));
+                                    var variants = tileDef.CardinalSprites.Count;
+                                    var variant = (tileRef.GridIndices.X + tileRef.GridIndices.Y * 4) % variants;
+                                    var tex = _resource.GetResource<TextureResource>(tileDef.CardinalSprites[variant])
+                                        .Texture;
+
+                                    args.WorldHandle.DrawTextureRect(tex, new Box2Rotated(box, new Angle(MathF.PI), box.Center));
                                 }
                                 break;
                             case Direction.West:
-                                if (cardinalTexture != null)
+                                if (tileDef.CardinalSprites.Count > 0)
                                 {
                                     var box = Box2.FromDimensions(neighborIndices, tileDimensions);
-                                    args.WorldHandle.DrawTextureRect(cardinalTexture, new Box2Rotated(box, new Angle(MathF.PI * 1.5f), box.Center));
+                                    var variants = tileDef.CardinalSprites.Count;
+                                    var variant = (tileRef.GridIndices.X + tileRef.GridIndices.Y * 4) % variants;
+                                    var tex = _resource.GetResource<TextureResource>(tileDef.CardinalSprites[variant])
+                                        .Texture;
+
+                                    args.WorldHandle.DrawTextureRect(tex, new Box2Rotated(box, new Angle(MathF.PI * 1.5f), box.Center));
                                 }
                                 break;
                         }

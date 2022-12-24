@@ -507,8 +507,6 @@ namespace Robust.Shared.Prototypes
 
         #endregion IPrototypeManager members
 
-
-
         private void ReloadPrototypeKinds()
         {
             Clear();

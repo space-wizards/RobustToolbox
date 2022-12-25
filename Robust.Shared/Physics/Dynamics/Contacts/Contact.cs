@@ -35,6 +35,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
@@ -139,7 +140,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             var bodyATransform = physicsManager.EnsureTransform(bodyA);
             var bodyBTransform = physicsManager.EnsureTransform(bodyB);
 
-            ContactSolver.InitializeManifold(ref Manifold, bodyATransform, bodyBTransform, shapeA.Radius, shapeB.Radius, out normal, points);
+            SharedPhysicsSystem.InitializeManifold(ref Manifold, bodyATransform, bodyBTransform, shapeA.Radius, shapeB.Radius, out normal, points);
         }
 
         /// <summary>

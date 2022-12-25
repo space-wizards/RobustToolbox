@@ -26,6 +26,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -169,10 +170,19 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return invDt * _angularImpulse;
         }
 
-        internal override void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB)
+        internal override void InitVelocityConstraints(
+            in SolverData data,
+            in SharedPhysicsSystem.IslandData island,
+            PhysicsComponent bodyA,
+            PhysicsComponent bodyB,
+            Vector2[] positions,
+            float[] angles,
+            Vector2[] linearVelocities,
+            float[] angularVelocities)
         {
-            _indexA = bodyA.IslandIndex[data.IslandIndex];
-            _indexB = bodyB.IslandIndex[data.IslandIndex];
+            var offset = island.Offset;
+            _indexA = bodyA.IslandIndex[island.Index];
+            _indexB = bodyB.IslandIndex[island.Index];
             _localCenterA = bodyA.LocalCenter;
             _localCenterB = bodyB.LocalCenter;
             _invMassA = bodyA.InvMass;
@@ -180,13 +190,13 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             _invIA = bodyA.InvI;
             _invIB = bodyB.InvI;
 
-            float aA = data.Angles[_indexA];
-            Vector2 vA = data.LinearVelocities[_indexA];
-            float wA = data.AngularVelocities[_indexA];
+            float aA = angles[_indexA];
+            Vector2 vA = linearVelocities[offset + _indexA];
+            float wA = angularVelocities[offset + _indexA];
 
-            float aB = data.Angles[_indexB];
-            Vector2 vB = data.LinearVelocities[_indexB];
-            float wB = data.AngularVelocities[_indexB];
+            float aB = angles[_indexB];
+            Vector2 vB = linearVelocities[offset + _indexB];
+            float wB = angularVelocities[offset + _indexB];
 
             Quaternion2D qA = new(aA), qB = new(aB);
 
@@ -239,18 +249,23 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 _angularImpulse = 0.0f;
             }
 
-            data.LinearVelocities[_indexA] = vA;
-            data.AngularVelocities[_indexA] = wA;
-            data.LinearVelocities[_indexB] = vB;
-            data.AngularVelocities[_indexB] = wB;
+            linearVelocities[offset + _indexA] = vA;
+            angularVelocities[offset + _indexA] = wA;
+            linearVelocities[offset + _indexB] = vB;
+            angularVelocities[offset + _indexB] = wB;
         }
 
-        internal override void SolveVelocityConstraints(SolverData data)
+        internal override void SolveVelocityConstraints(
+            in SolverData data,
+            in SharedPhysicsSystem.IslandData island,
+            Vector2[] linearVelocities,
+            float[] angularVelocities)
         {
-            Vector2 vA = data.LinearVelocities[_indexA];
-            float wA = data.AngularVelocities[_indexA];
-            Vector2 vB = data.LinearVelocities[_indexB];
-            float wB = data.AngularVelocities[_indexB];
+            var offset = island.Offset;
+            Vector2 vA = linearVelocities[offset + _indexA];
+            float wA = angularVelocities[offset + _indexA];
+            Vector2 vB = linearVelocities[offset + _indexB];
+            float wB = angularVelocities[offset + _indexB];
 
             float mA = _invMassA, mB = _invMassB;
             float iA = _invIA, iB = _invIB;
@@ -296,13 +311,16 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 wB += iB * Vector2.Cross(_rB, impulse);
             }
 
-            data.LinearVelocities[_indexA] = vA;
-            data.AngularVelocities[_indexA] = wA;
-            data.LinearVelocities[_indexB] = vB;
-            data.AngularVelocities[_indexB] = wB;
+            linearVelocities[offset + _indexA] = vA;
+            angularVelocities[offset + _indexA] = wA;
+            linearVelocities[offset + _indexB] = vB;
+            angularVelocities[offset + _indexB] = wB;
         }
 
-        internal override bool SolvePositionConstraints(SolverData data)
+        internal override bool SolvePositionConstraints(
+            in SolverData data,
+            Vector2[] positions,
+            float[] angles)
         {
             return true;
         }

@@ -186,7 +186,7 @@ namespace Robust.Shared.Physics.Systems
                 pMoveBuffer[idx++] = (proxy, aabb);
             }
 
-            var options = new ParallelOptions()
+            var options = new ParallelOptions
             {
                 MaxDegreeOfParallelism = _parallel.ParallelProcessCount,
             };
@@ -219,7 +219,7 @@ namespace Robust.Shared.Physics.Systems
                             EntityQuery<BroadphaseComponent> broadphaseQuery) tuple) =>
                         {
                             ref var buffer = ref tuple.pairBuffer;
-                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, ((Component) grid).Owner, buffer, tuple.xformQuery, tuple.broadphaseQuery);
+                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, grid.Owner, buffer, tuple.xformQuery, tuple.broadphaseQuery);
                             return true;
                         });
 

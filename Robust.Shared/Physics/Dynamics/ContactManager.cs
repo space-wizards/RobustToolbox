@@ -32,7 +32,6 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
-using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -50,7 +49,6 @@ namespace Robust.Shared.Physics.Dynamics
     {
         private readonly IEntityManager _entityManager;
         private readonly IPhysicsManager _physicsManager;
-        private readonly IConfigurationManager _cfg;
 
         private EntityLookupSystem _lookup = default!;
         private SharedPhysicsSystem _physics = default!;
@@ -100,7 +98,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private readonly ObjectPool<Contact> _contactPool;
 
-        internal LinkedList<Contact> _activeContacts = new();
+        internal readonly LinkedList<Contact> _activeContacts = new();
 
         // Didn't use the eventbus because muh allocs on something being run for every collision every frame.
         /// <summary>
@@ -108,8 +106,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         internal event Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
-        private int _contactMultithreadThreshold;
-        private int _contactMinimumThreads;
+        private const int ContactsPerThread = 32;
 
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
 
@@ -149,16 +146,14 @@ namespace Robust.Shared.Physics.Dynamics
             SharedDebugPhysicsSystem debugPhysicsSystem,
             IManifoldManager manifoldManager,
             IEntityManager entityManager,
-            IPhysicsManager physicsManager,
-            IConfigurationManager cfg)
+            IPhysicsManager physicsManager)
         {
             _entityManager = entityManager;
             _physicsManager = physicsManager;
-            _cfg = cfg;
 
             _contactPool = new DefaultObjectPool<Contact>(
                 new ContactPoolPolicy(debugPhysicsSystem, manifoldManager),
-                1024);
+                4096);
         }
 
         private static void SetContact(Contact contact, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
@@ -192,26 +187,11 @@ namespace Robust.Shared.Physics.Dynamics
             _physics = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
             _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
 
-            _cfg.OnValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold, true);
-            _cfg.OnValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads, true);
-
             InitializePool();
         }
 
         public void Shutdown()
         {
-            _cfg.UnsubValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold);
-            _cfg.UnsubValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads);
-        }
-
-        private void OnContactMultithreadThreshold(int value)
-        {
-            _contactMultithreadThreshold = value;
-        }
-
-        private void OnContactMinimumThreads(int value)
-        {
-            _contactMinimumThreads = value;
         }
 
         private void InitializePool()
@@ -552,14 +532,14 @@ namespace Robust.Shared.Physics.Dynamics
         {
             var wake = ArrayPool<bool>.Shared.Rent(count);
 
-            if (count > _contactMultithreadThreshold * _contactMinimumThreads)
+            if (count > ContactsPerThread * 2)
             {
-                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(count, _contactMultithreadThreshold);
+                var batches = (int) Math.Ceiling((float) count / ContactsPerThread);
 
                 Parallel.For(0, batches, i =>
                 {
-                    var start = i * batchSize;
-                    var end = Math.Min(start + batchSize, count);
+                    var start = i * ContactsPerThread;
+                    var end = Math.Min(start + ContactsPerThread, count);
                     UpdateContacts(contacts, start, end, status, wake);
                 });
 

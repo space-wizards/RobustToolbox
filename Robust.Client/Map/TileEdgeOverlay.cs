@@ -43,10 +43,6 @@ public sealed class TileEdgeOverlay : Overlay
             var xform = xformQuery.GetComponent(grid.Owner);
             args.WorldHandle.SetTransform(xform.WorldMatrix);
 
-            // TODO: Add support for edge variants
-            // TODO: List of edges supported for the thing
-            // Then, each tile needs to store its cardinal / corner variants.
-
             foreach (var tileRef in grid.GetTilesIntersecting(args.WorldBounds, false))
             {
                 var tileDef = _tileDefManager[tileRef.Tile.TypeId];

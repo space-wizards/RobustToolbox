@@ -354,7 +354,8 @@ namespace Robust.Shared.Physics.Systems
             foreach (var (uid, (parentUid, position, rotation)) in component.LerpData)
             {
                 if (!xformQuery.TryGetComponent(uid, out var xform) ||
-                    !parentUid.IsValid())
+                    !parentUid.IsValid() ||
+                    xform.ParentUid != parentUid)
                 {
                     continue;
                 }

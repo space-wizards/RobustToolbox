@@ -42,7 +42,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         internal SharedPhysicsSystem Physics = default!;
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
-        internal SharedPhysicsSystem Physics = default!;
 
         internal ContactManager ContactManager = default!;
 

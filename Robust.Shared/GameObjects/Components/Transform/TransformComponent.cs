@@ -690,7 +690,7 @@ namespace Robust.Shared.GameObjects
             return (worldPosition, worldRot, worldMatrix, invMatrix);
         }
 
-        private void RebuildMatrices()
+        public void RebuildMatrices()
         {
             MatricesDirty = false;
 

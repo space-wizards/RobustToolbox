@@ -47,11 +47,30 @@ END TEMPLATE-->
 
 ### Other
 
-* UPnP port forwarding now has better logging.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 0.76.0.0
+
+### Breaking changes
+
+* Physics contact multi-threading cvars have been removed as the parallelism is now handled by IParallelManager.
+
+### New features
+
+* Physics now supports substepping, this is under physics.target_minimum_tickrate. This means physics steps will run at a constant rate and not be affected by the server's tickrate which can reduce the prevalence of tunneling.
+* FastNoise API is now public.
+
+### Other
+
+* UPnP port forwarding now has better logging.
+* Physics solver has been refactored to take more advantage of parallelism and ECS some internal code.
+* Sprite processing & bounding box calculations should be slightly faster now.
+* Nullspace maps no longer have entities attached.
 
 
 ## 0.75.1.0
@@ -146,7 +165,6 @@ END TEMPLATE-->
 * Most usages of x86 SIMD intrinsics have been replaced with cross-platform versions using the new .NET cross-platform intrinsics.
   * This reduces code to maintain and improves performance on ARM.
 * Tiny optimization to rendering code.
-  * Sprite processing & bounding box calculations should be slightly faster now.
 * `RobustSerializer` no longer needs to be called from threads with an active IoC context.
   * This makes it possible to use from thread pool threads without `IoCManager.InitThread`.
 * Removed finalizer dispose from `Overlay`.

@@ -266,7 +266,7 @@ namespace Robust.Client.Placement
                         _gridFrameBuffer = false;
                         _placenextframe = false;
                         return true;
-                    }))
+                    }, true))
                 .Bind(EngineKeyFunctions.EditorRotateObject, InputCmdHandler.FromDelegate(
                     session =>
                     {
@@ -280,7 +280,7 @@ namespace Robust.Client.Placement
                         if (DeactivateSpecialPlacement())
                             return;
                         Clear();
-                    }))
+                    }, outsidePrediction: true))
                 .Register<PlacementManager>();
 
             var localPlayer = PlayerManager.LocalPlayer;

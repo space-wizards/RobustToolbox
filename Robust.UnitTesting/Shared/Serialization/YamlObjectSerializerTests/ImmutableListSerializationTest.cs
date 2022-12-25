@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             // Arrange
             var data = _serializableList;
             var serMan = IoCManager.Resolve<ISerializationManager>();
-            var sequence = (SequenceDataNode) serMan.WriteValue(data);
+            var sequence = (SequenceDataNode) serMan.WriteValue(data, notNullableOverride: true);
             var mapping = new MappingDataNode();
             mapping.Add("datalist", sequence);
 
@@ -45,7 +45,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var rootNode = YamlTextToNode(_serializedListYaml);
 
             // Act
-            var data = serMan.Read<ImmutableList<int>>(new SequenceDataNode((YamlSequenceNode)rootNode.Children[0].Value));
+            var data = serMan.Read<ImmutableList<int>>(new SequenceDataNode((YamlSequenceNode)rootNode.Children[0].Value), notNullableOverride: true);
 
             // Assert
             Assert.That(data, Is.Not.Null);

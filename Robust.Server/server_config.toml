@@ -33,8 +33,6 @@ enabled = true
 
 [game]
 hostname = "MyServer"
-# map = "Saltern"
-welcomemsg = "Welcome to the server!"
 
 [console]
 # If this is true, people connecting from this machine (loopback)

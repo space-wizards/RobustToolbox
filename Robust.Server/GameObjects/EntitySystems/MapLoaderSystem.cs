@@ -154,11 +154,21 @@ public sealed class MapLoaderSystem : EntitySystem
             var mapEnt = _mapManager.GetMapEntityId(mapId);
             var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
             var rootEnts = new List<EntityUid>();
-            foreach (var ent in data.Entities)
+            // aeoeoeieioe content
+
+            if (HasComp<MapGridComponent>(mapEnt))
             {
-               if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
-                    rootEnts.Add(ent);
+                rootEnts.Add(mapEnt);
             }
+            else
+            {
+                foreach (var ent in data.Entities)
+                {
+                    if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
+                        rootEnts.Add(ent);
+                }
+            }
+
             rootUids = rootEnts;
         }
 
@@ -356,7 +366,9 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         _stopwatch.Restart();
         var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
-        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>());
+        var mapUid = _mapManager.GetMapEntityId(data.TargetMap);
+        var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
+        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), pauseTime);
         data.Entities.EnsureCapacity(entities.Count);
         data.UidEntityMap.EnsureCapacity(entities.Count);
         data.EntitiesToDeserialize.EnsureCapacity(entities.Count);
@@ -515,6 +527,14 @@ public sealed class MapLoaderSystem : EntitySystem
                 if (data.Options.LoadMap)
                 {
                     _logLoader.Info($"Loading map file with a root node onto an existing map!");
+
+                    // Smelly
+                    if (HasComp<MapGridComponent>(rootNode))
+                    {
+                        data.Options.Offset = Vector2.Zero;
+                        data.Options.Rotation = Angle.Zero;
+                    }
+
                     _mapManager.SetMapEntity(data.TargetMap, rootNode);
                 }
                 // Otherwise just ignore the map in the file.
@@ -644,7 +664,7 @@ public sealed class MapLoaderSystem : EntitySystem
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY));
+                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY), notNullableOverride: true);
             }
         }
     }
@@ -799,7 +819,8 @@ public sealed class MapLoaderSystem : EntitySystem
         _stopwatch.Restart();
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
-        _context.Set(uidEntityMap, entityUidMap);
+        var pauseTime = _meta.GetPauseTime(uid);
+        _context.Set(uidEntityMap, entityUidMap, pauseTime);
 
         _stopwatch.Restart();
         WriteEntitySection(data, uidEntityMap, entityUidMap);

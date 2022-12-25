@@ -27,7 +27,7 @@ namespace Robust.Shared.Input.Binding
         /// <param name="disabled">The delegate to be ran when this command is disabled.</param>
         /// <returns>The new input command.</returns>
         public static InputCmdHandler FromDelegate(StateInputCmdDelegate? enabled = null,
-            StateInputCmdDelegate? disabled = null, bool handle=true, bool outsidePrediction=false)
+            StateInputCmdDelegate? disabled = null, bool handle=true, bool outsidePrediction=true)
         {
             return new StateInputCmdHandler
             {

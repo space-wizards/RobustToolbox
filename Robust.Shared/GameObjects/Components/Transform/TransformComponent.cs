@@ -144,7 +144,7 @@ namespace Robust.Shared.GameObjects
                     LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
-                Dirty(_entMan);
+                _entMan.Dirty(this);
             }
         }
 
@@ -166,7 +166,7 @@ namespace Robust.Shared.GameObjects
 
                 var oldRotation = _localRotation;
                 _localRotation = value;
-                Dirty(_entMan);
+                _entMan.Dirty(this);
 
                 if (!DeferUpdates)
                 {
@@ -291,7 +291,7 @@ namespace Robust.Shared.GameObjects
                 if (_parent.IsValid())
                 {
                     // parent coords to world coords
-                    return Parent!.WorldMatrix.Transform(_localPosition);
+                    return _entMan.GetComponent<TransformComponent>(ParentUid).WorldMatrix.Transform(_localPosition);
                 }
                 else
                 {
@@ -307,7 +307,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 // world coords to parent coords
-                var newPos = Parent!.InvWorldMatrix.Transform(value);
+                var newPos = _entMan.GetComponent<TransformComponent>(ParentUid).InvWorldMatrix.Transform(value);
 
                 LocalPosition = newPos;
             }
@@ -325,10 +325,7 @@ namespace Robust.Shared.GameObjects
                 return new EntityCoordinates(valid ? _parent : Owner, valid ? LocalPosition : Vector2.Zero);
             }
             [Obsolete("Use the system's setter method instead.")]
-            set
-            {
-                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, value);
-            }
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, value);
         }
 
         /// <summary>
@@ -357,7 +354,7 @@ namespace Robust.Shared.GameObjects
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;
-                Dirty(_entMan);
+                _entMan.Dirty(this);
 
                 if (!DeferUpdates)
                 {
@@ -449,7 +446,7 @@ namespace Robust.Shared.GameObjects
                     return parentXform.FindGridEntityId(xformQuery);
             }
 
-            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.GridEntityId : null;
+            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Owner : null;
         }
 
         /// <summary>
@@ -490,9 +487,9 @@ namespace Robust.Shared.GameObjects
             var mapPos = MapPosition;
 
             EntityUid newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.GridEntityId))
+            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.Owner))
             {
-                newMapEntity = mapGrid.GridEntityId;
+                newMapEntity = mapGrid.Owner;
             }
             else if (_mapManager.HasMapEntity(mapPos.MapId)
                      && _mapManager.GetMapEntityIdOrThrow(mapPos.MapId) is var mapEnt
@@ -515,14 +512,14 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            AttachParent(newMapEntity);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(this, newMapEntity);
 
             // Technically we're not moving, just changing parent.
             DeferUpdates = true;
             WorldPosition = mapPos.Position;
             DeferUpdates = false;
 
-            Dirty(_entMan);
+            _entMan.Dirty(this);
         }
 
         /// <summary>

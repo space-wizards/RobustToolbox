@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Markdown;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting
@@ -44,6 +45,11 @@ namespace Robust.UnitTesting
         }
 
         public void AddStrings(YamlStream yaml)
+        {
+            // Nada.
+        }
+
+        public void AddStrings(DataNode dataNode)
         {
             // Nada.
         }

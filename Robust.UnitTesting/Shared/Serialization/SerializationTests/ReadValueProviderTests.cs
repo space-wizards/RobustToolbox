@@ -47,7 +47,7 @@ public sealed class ReadValueProviderTests : SerializationTest
     {
         var data = "someData";
         var instance = new SelfSerializeValueProviderTestDummy();
-        var result = Serialization.Read(new ValueDataNode(data), instanceProvider: () => instance);
+        var result = Serialization.Read(new ValueDataNode(data), instanceProvider: () => instance, notNullableOverride: true);
         Assert.That(result, Is.SameAs(instance));
         Assert.That(result.Data, Is.EqualTo(instance.Data));
     }
@@ -57,7 +57,7 @@ public sealed class ReadValueProviderTests : SerializationTest
     {
         var data = "someData";
         var instance = new SelfSerializeValueProviderTestDummy();
-        var result = Serialization.Read<IBaseInterface>(new ValueDataNode(data){Tag = $"!type:{nameof(SelfSerializeValueProviderTestDummy)}"}, instanceProvider: () => instance);
+        var result = Serialization.Read<IBaseInterface>(new ValueDataNode(data){Tag = $"!type:{nameof(SelfSerializeValueProviderTestDummy)}"}, instanceProvider: () => instance, notNullableOverride: true);
         Assert.That(result, Is.SameAs(instance));
         Assert.That(((SelfSerializeValueProviderTestDummy)result).Data, Is.EqualTo(instance.Data));
     }
@@ -68,7 +68,7 @@ public sealed class ReadValueProviderTests : SerializationTest
         var data = "someData";
         var mapping = new MappingDataNode { { "data", data } };
         var instance = new DataDefinitionValueProviderTestDummy();
-        var result = Serialization.Read(mapping, instanceProvider: () => instance);
+        var result = Serialization.Read(mapping, instanceProvider: () => instance, notNullableOverride: true);
         Assert.That(result, Is.SameAs(instance));
         Assert.That(result.Data, Is.EqualTo(instance.Data));
     }
@@ -82,7 +82,7 @@ public sealed class ReadValueProviderTests : SerializationTest
             Tag = $"!type:{nameof(DataDefinitionValueProviderTestDummy)}"
         };
         var instance = new DataDefinitionValueProviderTestDummy();
-        var result = Serialization.Read<IBaseInterface>(mapping, instanceProvider: () => instance);
+        var result = Serialization.Read<IBaseInterface>(mapping, instanceProvider: () => instance, notNullableOverride: true);
         Assert.That(result, Is.SameAs(instance));
         Assert.That(((DataDefinitionValueProviderTestDummy)result).Data, Is.EqualTo(instance.Data));
     }
@@ -91,7 +91,7 @@ public sealed class ReadValueProviderTests : SerializationTest
     public void DataDefinitionValueBaseTest()
     {
         var instance = new DataDefinitionValueProviderTestDummy();
-        var result = Serialization.Read<IBaseInterface>(new ValueDataNode{Tag = $"!type:{nameof(DataDefinitionValueProviderTestDummy)}"}, instanceProvider: () => instance);
+        var result = Serialization.Read<IBaseInterface>(new ValueDataNode{Tag = $"!type:{nameof(DataDefinitionValueProviderTestDummy)}"}, instanceProvider: () => instance, notNullableOverride: true);
         Assert.That(result, Is.SameAs(instance));
     }
 
@@ -99,6 +99,6 @@ public sealed class ReadValueProviderTests : SerializationTest
     public void DataDefinitionValueBaseInvalidTest()
     {
         var instance = new OtherDataDefinitionValueProviderTestDummy();
-        Assert.That(() => Serialization.Read<IBaseInterface>(new ValueDataNode{Tag = $"!type:{nameof(DataDefinitionValueProviderTestDummy)}"}, instanceProvider: () => instance),Throws.InstanceOf<InvalidInstanceReturnedException>());
+        Assert.That(() => Serialization.Read<IBaseInterface>(new ValueDataNode{Tag = $"!type:{nameof(DataDefinitionValueProviderTestDummy)}"}, instanceProvider: () => instance, notNullableOverride: true),Throws.InstanceOf<InvalidInstanceReturnedException>());
     }
 }

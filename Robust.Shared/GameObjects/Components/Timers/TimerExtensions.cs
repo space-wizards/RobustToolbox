@@ -8,6 +8,7 @@ namespace Robust.Shared.GameObjects
 {
     public static class TimerExtensions
     {
+        [Obsolete("Use a system update loop instead")]
         private static TimerComponent EnsureTimerComponent(this EntityUid entity)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
@@ -59,6 +60,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="milliseconds">The length of time, in milliseconds, to wait before firing the action.</param>
         /// <param name="onFired">The action to fire.</param>
         /// <param name="cancellationToken"></param>
+        [Obsolete("Use a system update loop instead")]
         public static void SpawnTimer(this EntityUid entity, int milliseconds, Action onFired, CancellationToken cancellationToken = default)
         {
             entity
@@ -74,6 +76,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="duration">The length of time, to wait before firing the action.</param>
         /// <param name="onFired">The action to fire.</param>
         /// <param name="cancellationToken"></param>
+        [Obsolete("Use a system update loop instead")]
         public static void SpawnTimer(this EntityUid entity, TimeSpan duration, Action onFired, CancellationToken cancellationToken = default)
         {
             entity
@@ -88,6 +91,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="milliseconds">The length of time, in milliseconds, to delay before firing the repeated action.</param>
         /// <param name="onFired">The action to fire.</param>
         /// <param name="cancellationToken">The CancellationToken for stopping the Timer.</param>
+        [Obsolete("Use a system update loop instead")]
         public static void SpawnRepeatingTimer(this EntityUid entity, int milliseconds, Action onFired, CancellationToken cancellationToken)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
@@ -103,6 +107,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="duration">The length of time to delay before firing the repeated action.</param>
         /// <param name="onFired">The action to fire.</param>
         /// <param name="cancellationToken">The CancellationToken for stopping the Timer.</param>
+        [Obsolete("Use a system update loop instead")]
         public static void SpawnRepeatingTimer(this EntityUid entity, TimeSpan duration, Action onFired, CancellationToken cancellationToken)
         {
             entity

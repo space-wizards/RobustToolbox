@@ -112,6 +112,7 @@ namespace Robust.Shared.Physics.Systems
         {
             _deps.InjectDependencies(component);
             component.BroadphaseSystem = _broadphase;
+            component.Physics = this;
             component.ContactManager = new(_debugPhysics, _manifoldManager, EntityManager, _physicsManager, _cfg);
             component.ContactManager.Initialize();
             component.ContactManager.MapId = component.MapId;

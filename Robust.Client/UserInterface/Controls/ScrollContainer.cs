@@ -150,7 +150,7 @@ namespace Robust.Client.UserInterface.Controls
                     sWidth -= vBarSize;
                 }
 
-                if (sWidth < cWidth && _hScrollEnabled)
+                if (sWidth < cWidth && _hScrollEnabled && !MathHelper.CloseTo(sWidth, cWidth, 1e-3))
                 {
                     _hScrollBar.Visible = _hScrollVisible = true;
                     _hScrollBar.Page = sWidth;
@@ -161,7 +161,7 @@ namespace Robust.Client.UserInterface.Controls
                     _hScrollBar.Visible = _hScrollVisible = false;
                 }
 
-                if (sHeight < cHeight && _vScrollEnabled)
+                if (sHeight < cHeight && _vScrollEnabled && !MathHelper.CloseTo(sHeight, cHeight, 1e-3))
                 {
                     _vScrollBar.Visible = _vScrollVisible = true;
                     _vScrollBar.Page = sHeight;

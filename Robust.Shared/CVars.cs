@@ -992,6 +992,14 @@ namespace Robust.Shared
         public static readonly CVarDef<float> BroadphaseExpand =
             CVarDef.Create("physics.broadphase_expand", 2f, CVar.ARCHIVE | CVar.REPLICATED);
 
+        /// <summary>
+        /// The target minimum ticks per second on the server.
+        /// This is used for substepping and will help with clipping/physics issues and such.
+        /// Ideally 50-60 is the minimum.
+        /// </summary>
+        public static readonly CVarDef<int> TargetMinimumTickrate =
+            CVarDef.Create("physics.target_minimum_tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
         // Grid fixtures
         /// <summary>
         /// I'ma be real with you: the only reason this exists is to get tests working.

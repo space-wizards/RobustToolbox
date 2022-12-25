@@ -21,6 +21,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -39,12 +40,18 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
-        internal SharedBroadphaseSystem BroadphaseSystem = default!;
         internal SharedPhysicsSystem Physics = default!;
+        internal SharedBroadphaseSystem BroadphaseSystem = default!;
 
         internal ContactManager ContactManager = default!;
 
         public bool AutoClearForces;
+
+        /// <summary>
+        /// When substepping the client needs to know about the first position to use for lerping.
+        /// </summary>
+        public readonly Dictionary<EntityUid, (EntityUid ParentUid, Vector2 LocalPosition, Angle LocalRotation)>
+            LerpData = new();
 
         /// <summary>
         /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
@@ -92,12 +99,12 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
-        private HashSet<TransformComponent> _deferredUpdates = new();
+        protected readonly HashSet<TransformComponent> DeferredUpdates = new();
 
         /// <summary>
         ///     All awake bodies on this map.
         /// </summary>
-        public HashSet<PhysicsComponent> AwakeBodies = new();
+        public readonly HashSet<PhysicsComponent> AwakeBodies = new();
 
         /// <summary>
         ///     Temporary body storage during solving.
@@ -158,9 +165,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Where the magic happens.
         /// </summary>
-        /// <param name="frameTime"></param>
-        /// <param name="prediction"></param>
-        public void Step(float frameTime, bool prediction)
+        public void Step(float frameTime, bool prediction, bool substepping = false)
         {
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
@@ -179,7 +184,7 @@ namespace Robust.Shared.Physics.Dynamics
                 ContactManager.PreSolve(frameTime);
 
             // Integrate velocities, solve velocity constraints, and do integration.
-            Solve(frameTime, dtRatio, invDt, prediction);
+            Solve(frameTime, dtRatio, invDt, prediction, substepping);
 
             // TODO: SolveTOI
 
@@ -196,18 +201,18 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Go through all of the deferred MoveEvents and then run them
         /// </summary>
-        public void ProcessQueue()
+        public virtual void ProcessQueue()
         {
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
-            foreach (var xform in _deferredUpdates)
+            foreach (var xform in DeferredUpdates)
             {
                 xform.RunDeferred();
             }
 
-            _deferredUpdates.Clear();
+            DeferredUpdates.Clear();
         }
 
-        private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
+        private void Solve(float frameTime, float dtRatio, float invDt, bool prediction, bool substepping)
         {
             _islandManager.InitializePools();
 
@@ -344,7 +349,7 @@ namespace Robust.Shared.Physics.Dynamics
                 }
             }
 
-            SolveIslands(frameTime, dtRatio, invDt, prediction);
+            SolveIslands(frameTime, dtRatio, invDt, prediction, substepping);
             Cleanup(frameTime);
         }
 
@@ -375,9 +380,34 @@ namespace Robust.Shared.Physics.Dynamics
             _joints.Clear();
         }
 
-        private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction)
+        private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction, bool substepping)
         {
             var islands = _islandManager.GetActive;
+
+            // Update cached data for lerping if we're substepping before any writes happen
+            // TODO: Do it client only
+            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+
+            foreach (var island in islands)
+            {
+                for (var i = 0; i < island.BodyCount; i++)
+                {
+                    var body = island.Bodies[i];
+
+                    if (body.BodyType == BodyType.Static)
+                        continue;
+
+                    if (LerpData.TryGetValue(body.Owner, out var data) ||
+                        !xformQuery.TryGetComponent(body.Owner, out var xform) ||
+                        data.ParentUid == xform.ParentUid)
+                    {
+                        continue;
+                    }
+
+                    LerpData[xform.Owner] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
+                }
+            }
+
             // Islands are already pre-sorted
             var iBegin = 0;
 
@@ -396,7 +426,7 @@ namespace Robust.Shared.Physics.Dynamics
             // but easier to just do this for now.
             foreach (var island in islands)
             {
-                island.UpdateBodies(_deferredUpdates);
+                island.UpdateBodies(DeferredUpdates, substepping);
                 island.SleepBodies(prediction, frameTime);
             }
         }

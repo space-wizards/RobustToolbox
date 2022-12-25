@@ -562,11 +562,13 @@ public abstract partial class SharedPhysicsSystem
 
         var totalBodies = 0;
         var actualIslands = islands.ToArray();
+        var xformQuery = GetEntityQuery<TransformComponent>();
 
         for (var i = 0; i < islands.Count; i++)
         {
             ref var island = ref actualIslands[i];
             island.Offset = totalBodies;
+            UpdateLerpData(component, island.Bodies, xformQuery);
 
 #if DEBUG
             RaiseLocalEvent(new IslandSolveMessage(island.Bodies));
@@ -610,7 +612,6 @@ public abstract partial class SharedPhysicsSystem
         });
 
         // Update data sequentially
-        var xformQuery = GetEntityQuery<TransformComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
 
         for (var i = 0; i < actualIslands.Length; i++)
@@ -627,6 +628,15 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<Vector2>.Shared.Return(linearVelocities);
         ArrayPool<float>.Shared.Return(angularVelocities);
         ArrayPool<bool>.Shared.Return(sleepStatus);
+    }
+
+    /// <summary>
+    /// If this is the first time a body has been updated this tick update its position for lerping.
+    /// Due to substepping we have to check it every time.
+    /// </summary>
+    protected virtual void UpdateLerpData(SharedPhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+    {
+
     }
 
     /// <summary>

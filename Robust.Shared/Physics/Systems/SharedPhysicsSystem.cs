@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -62,6 +61,8 @@ namespace Robust.Shared.Physics.Systems
 
         public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
+        private int _substeps;
+
         public bool MetricsEnabled { get; protected set; }
 
         private ISawmill _sawmill = default!;
@@ -88,6 +89,8 @@ namespace Robust.Shared.Physics.Systems
             InitializeIsland();
 
             _configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+            _configManager.OnValueChanged(CVars.NetTickrate, UpdateSubsteps, true);
+            _configManager.OnValueChanged(CVars.TargetMinimumTickrate, UpdateSubsteps, true);
         }
 
         private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
@@ -130,6 +133,13 @@ namespace Robust.Shared.Physics.Systems
             {
                 comp.AutoClearForces = value;
             }
+        }
+
+        private void UpdateSubsteps(int obj)
+        {
+            var targetMinTickrate = (float) _configManager.GetCVar(CVars.TargetMinimumTickrate);
+            var serverTickrate = (float) _configManager.GetCVar(CVars.NetTickrate);
+            _substeps = (int)Math.Ceiling(targetMinTickrate / serverTickrate);
         }
 
         private void HandlePhysicsMapRemove(EntityUid uid, SharedPhysicsMapComponent component, ComponentRemove args)
@@ -300,26 +310,18 @@ namespace Robust.Shared.Physics.Systems
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            var targetMinTickrate = (float) _configurationManager.GetCVar(CVars.TargetMinimumTickrate);
-            var serverTickrate = (float) _configurationManager.GetCVar(CVars.NetTickrate);
-            var substeps = (int)Math.Ceiling(targetMinTickrate / serverTickrate);
+            var frameTime = deltaTime / _substeps;
 
-            var substepping = false;
-            var frameTime = deltaTime / substeps;
-
-            for (int i = 0; i < substeps; i++)
+            for (int i = 0; i < _substeps; i++)
             {
                 var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
                 RaiseLocalEvent(ref updateBeforeSolve);
-
-                if (substeps > 1)
-                    substepping = true;
 
                 var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
 
                 while (enumerator.MoveNext(out var comp))
                 {
-                    comp.Step(frameTime, prediction, substepping);
+                    Step(comp, frameTime, prediction);
                 }
 
                 var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
@@ -334,7 +336,8 @@ namespace Robust.Shared.Physics.Systems
                     comp.ProcessQueue();
                 }
 
-                if (i == substeps - 1)
+                // On last substep (or main step where no substeps occured) we'll update all of the lerp data.
+                if (i == _substeps - 1)
                 {
                     enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
 
@@ -349,26 +352,9 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void FinalStep(SharedPhysicsMapComponent component)
+        protected virtual void FinalStep(SharedPhysicsMapComponent component)
         {
-            var xformQuery = GetEntityQuery<TransformComponent>();
 
-            foreach (var (uid, (parentUid, position, rotation)) in component.LerpData)
-            {
-                if (!xformQuery.TryGetComponent(uid, out var xform) ||
-                    !parentUid.IsValid())
-                {
-                    continue;
-                }
-
-                xform.PrevPosition = position;
-                xform.PrevRotation = rotation;
-                xform.LerpParent = parentUid;
-                xform.NextPosition = xform.LocalPosition;
-                xform.NextRotation = xform.LocalRotation;
-            }
-
-            component.LerpData.Clear();
         }
     }
 

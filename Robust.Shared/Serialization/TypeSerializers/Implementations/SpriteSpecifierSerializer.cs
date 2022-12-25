@@ -28,27 +28,27 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<Texture>? instanceProvider = null)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<Texture>? instanceProvider)
         {
-            var path = serializationManager.Read<ResourcePath>(node, context, skipHook);
+            var path = serializationManager.Read<ResourcePath>(node, hookCtx, context, notNullableOverride: true);
             return new Texture(path);
         }
 
         SpriteSpecifier ITypeReader<SpriteSpecifier, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<SpriteSpecifier>? instanceProvider = null)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<SpriteSpecifier>? instanceProvider)
         {
-            return ((ITypeReader<Texture, ValueDataNode>)this).Read(serializationManager, node, dependencies, skipHook, context, (ISerializationManager.InstantiationDelegate<Texture>?)instanceProvider);
+            return ((ITypeReader<Texture, ValueDataNode>)this).Read(serializationManager, node, dependencies, hookCtx, context, (ISerializationManager.InstantiationDelegate<Texture>?)instanceProvider);
         }
 
         EntityPrototype ITypeReader<EntityPrototype, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<EntityPrototype>? instanceProvider = null)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<EntityPrototype>? instanceProvider)
         {
             return new EntityPrototype(node.Value);
         }
@@ -56,8 +56,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         Rsi ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<Rsi>? instanceProvider = null)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<Rsi>? instanceProvider)
         {
             if (!node.TryGet("sprite", out var pathNode))
             {
@@ -69,20 +69,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 throw new InvalidMappingException("Expected state-node as a valuenode");
             }
 
-            var path = serializationManager.Read<ResourcePath>(pathNode, context, skipHook);
+            var path = serializationManager.Read<ResourcePath>(pathNode, hookCtx, context, notNullableOverride: true);
             return new Rsi(path, valueDataNode.Value);
         }
 
         SpriteSpecifier ITypeReader<SpriteSpecifier, MappingDataNode>.Read(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<SpriteSpecifier>? instanceProvider = null)
+            SerializationHookContext hookCtx, ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<SpriteSpecifier>? instanceProvider)
         {
             if (node.TryGet("entity", out var entityNode) && entityNode is ValueDataNode entityValueNode)
-                return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Read(serializationManager, entityValueNode, dependencies, skipHook, context, (ISerializationManager.InstantiationDelegate<EntityPrototype>?)instanceProvider);
+                return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Read(serializationManager, entityValueNode, dependencies, hookCtx, context, (ISerializationManager.InstantiationDelegate<EntityPrototype>?)instanceProvider);
 
-            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, (ISerializationManager.InstantiationDelegate<Rsi>?)instanceProvider);
+            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, hookCtx, context, (ISerializationManager.InstantiationDelegate<Rsi>?)instanceProvider);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager,
@@ -108,7 +108,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            return serializationManager.ValidateNode(typeof(ResourcePath), new ValueDataNode($"{SharedSpriteComponent.TextureRoot / node.Value}"), context);
+            return serializationManager.ValidateNode<ResourcePath>(new ValueDataNode($"{SharedSpriteComponent.TextureRoot / node.Value}"), context);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, MappingDataNode>.Validate(
@@ -145,7 +145,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return serializationManager.WriteValue(value.TexturePath, alwaysWrite, context);
+            return serializationManager.WriteValue(value.TexturePath, alwaysWrite, context, notNullableOverride: true);
         }
 
         public DataNode Write(ISerializationManager serializationManager, EntityPrototype value,
@@ -162,24 +162,24 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
-            mapping.Add("sprite", serializationManager.WriteValue(value.RsiPath));
+            mapping.Add("sprite", serializationManager.WriteValue(value.RsiPath, notNullableOverride: true));
             mapping.Add("state", new ValueDataNode(value.RsiState));
             return mapping;
         }
 
-        public Texture CreateCopy(ISerializationManager serializationManager, Texture source, bool skipHook,
+        public Texture CreateCopy(ISerializationManager serializationManager, Texture source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.TexturePath);
         }
 
         public EntityPrototype CreateCopy(ISerializationManager serializationManager, EntityPrototype source,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.EntityPrototypeId);
         }
 
-        public Rsi CreateCopy(ISerializationManager serializationManager, Rsi source, bool skipHook,
+        public Rsi CreateCopy(ISerializationManager serializationManager, Rsi source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.RsiPath, source.RsiState);
@@ -205,31 +205,31 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public SpriteSpecifier CreateCopy(ISerializationManager serializationManager, SpriteSpecifier source,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return source switch
             {
                 Rsi rsi
-                    => CreateCopy(serializationManager, rsi, skipHook, context),
+                    => CreateCopy(serializationManager, rsi, hookCtx, context),
 
                 Texture texture
-                    => CreateCopy(serializationManager, texture, skipHook, context),
+                    => CreateCopy(serializationManager, texture, hookCtx, context),
 
                 EntityPrototype entityPrototype
-                    => CreateCopy(serializationManager, entityPrototype, skipHook, context),
+                    => CreateCopy(serializationManager, entityPrototype, hookCtx, context),
 
                 _ => throw new InvalidOperationException("Invalid SpriteSpecifier specified!")
             };
         }
 
-        public void CopyTo(ISerializationManager serializationManager, Rsi source, ref Rsi target, bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, Rsi source, ref Rsi target, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.RsiPath = source.RsiPath;
             target.RsiState = source.RsiState;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, Texture source, ref Texture target, bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, Texture source, ref Texture target, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.TexturePath = source.TexturePath;

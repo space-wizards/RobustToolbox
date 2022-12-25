@@ -21,6 +21,7 @@
 */
 
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -37,12 +38,18 @@ namespace Robust.Shared.Physics.Dynamics
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        internal SharedBroadphaseSystem BroadphaseSystem = default!;
         internal SharedPhysicsSystem Physics = default!;
+        internal SharedBroadphaseSystem BroadphaseSystem = default!;
 
         internal ContactManager ContactManager = default!;
 
         public bool AutoClearForces;
+
+        /// <summary>
+        /// When substepping the client needs to know about the first position to use for lerping.
+        /// </summary>
+        public readonly Dictionary<EntityUid, (EntityUid ParentUid, Vector2 LocalPosition, Angle LocalRotation)>
+            LerpData = new();
 
         /// <summary>
         /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
@@ -91,12 +98,12 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
-        private HashSet<TransformComponent> _deferredUpdates = new();
+        protected readonly HashSet<TransformComponent> DeferredUpdates = new();
 
         /// <summary>
         ///     All awake bodies on this map.
         /// </summary>
-        public HashSet<PhysicsComponent> AwakeBodies = new();
+        public readonly HashSet<PhysicsComponent> AwakeBodies = new();
 
         /// <summary>
         ///     Store last tick's invDT
@@ -137,15 +144,15 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Go through all of the deferred MoveEvents and then run them
         /// </summary>
-        public void ProcessQueue()
+        public virtual void ProcessQueue()
         {
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
-            foreach (var xform in _deferredUpdates)
+            foreach (var xform in DeferredUpdates)
             {
                 xform.RunDeferred();
             }
 
-            _deferredUpdates.Clear();
+            DeferredUpdates.Clear();
         }
     }
 

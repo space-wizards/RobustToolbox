@@ -15,14 +15,14 @@ public sealed class QueueSerializer<T> : ITypeSerializer<Queue<T>, SequenceDataN
     Queue<T> ITypeReader<Queue<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
         SequenceDataNode node,
         IDependencyCollection dependencies,
-        bool skipHook,
-        ISerializationContext? context, ISerializationManager.InstantiationDelegate<Queue<T>>? instanceProvider = null)
+        SerializationHookContext hookCtx,
+        ISerializationContext? context, ISerializationManager.InstantiationDelegate<Queue<T>>? instanceProvider)
     {
         var queue = instanceProvider != null ? instanceProvider() : new Queue<T>();
 
         foreach (var dataNode in node.Sequence)
         {
-            queue.Enqueue(serializationManager.Read<T>(dataNode, context, skipHook));
+            queue.Enqueue(serializationManager.Read<T>(dataNode, hookCtx, context));
         }
 
         return queue;
@@ -55,14 +55,14 @@ public sealed class QueueSerializer<T> : ITypeSerializer<Queue<T>, SequenceDataN
         return sequence;
     }
 
-    public void CopyTo(ISerializationManager serializationManager, Queue<T> source, ref Queue<T> target, bool skipHook, ISerializationContext? context = null)
+    public void CopyTo(ISerializationManager serializationManager, Queue<T> source, ref Queue<T> target, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
         target.Clear();
         target.EnsureCapacity(source.Count);
 
         foreach (var val in source)
         {
-            target.Enqueue(serializationManager.CreateCopy(val, context, skipHook));
+            target.Enqueue(serializationManager.CreateCopy(val, hookCtx, context));
         }
     }
 }

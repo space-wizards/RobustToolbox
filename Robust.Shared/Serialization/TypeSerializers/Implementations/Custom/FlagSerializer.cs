@@ -19,7 +19,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
         }
 
         public int Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
         {
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
@@ -76,7 +76,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
         }
 
         public int Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
         {
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
@@ -91,7 +91,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             return flags;
         }
 
-        public int CreateCopy(ISerializationManager serializationManager, int source, bool skipHook,
+        public int CreateCopy(ISerializationManager serializationManager, int source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return source;

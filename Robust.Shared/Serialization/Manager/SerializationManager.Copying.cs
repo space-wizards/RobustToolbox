@@ -7,6 +7,9 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
+// Avoid accidentally mixing up overloads.
+// ReSharper disable RedundantTypeArgumentsOfMethod
+
 namespace Robust.Shared.Serialization.Manager;
 
 public sealed partial class SerializationManager
@@ -14,14 +17,14 @@ public sealed partial class SerializationManager
     private delegate void CopyToBoxingDelegate(
             object source,
             ref object target,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null);
 
     private delegate bool CopyToGenericDelegate<T>(
         T source,
         ref T target,
-        ISerializationContext? context = null,
-        bool skipHook = false);
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null);
 
     private readonly ConcurrentDictionary<Type, object> _copyToGenericDelegates = new();
     private readonly ConcurrentDictionary<(Type baseType, Type actualType), object> _copyToGenericBaseDelegates = new();
@@ -34,7 +37,7 @@ public sealed partial class SerializationManager
             var managerConst = Expression.Constant(manager);
             var sourceParam = Expression.Parameter(typeof(object), "source");
             var targetParam = Expression.Parameter(typeof(object).MakeByRefType(), "target");
-            var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+            var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext), "hookCtx");
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
             var targetVar = Expression.Variable(type);
@@ -48,8 +51,8 @@ public sealed partial class SerializationManager
                     new[] { type },
                     Expression.Convert(sourceParam, type),
                     targetVar,
+                    hookCtxParam,
                     contextParam,
-                    skipHookParam,
                     Expression.Constant(false)), //we already handled the override before calling this
                 Expression.Assign(targetParam, Expression.Convert(targetVar, typeof(object))));
 
@@ -57,7 +60,7 @@ public sealed partial class SerializationManager
                 block,
                 sourceParam,
                 targetParam,
-                skipHookParam,
+                hookCtxParam,
                 contextParam).Compile();
         }, this);
     }
@@ -69,7 +72,7 @@ public sealed partial class SerializationManager
             var instanceParam = Expression.Constant(manager);
             var sourceParam = Expression.Parameter(baseType, "source");
             var targetParam = Expression.Parameter(baseType.MakeByRefType(), "target");
-            var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+            var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext), "hookCtx");
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
             Expression call;
@@ -90,8 +93,8 @@ public sealed partial class SerializationManager
                         copierConstant,
                         sourceVar,
                         targetVar,
+                        hookCtxParam,
                         contextParam,
-                        skipHookParam,
                         Expression.Constant(false)),
                     Expression.Constant(true));
             }
@@ -99,7 +102,7 @@ public sealed partial class SerializationManager
             {
                 call = Expression.Call(instanceParam, nameof(CopyToInternal), new[] { actualType }, sourceVar, targetVar,
                     Expression.Constant(manager.GetDefinition(actualType), typeof(DataDefinition<>).MakeGenericType(actualType)),
-                    instanceParam, skipHookParam, contextParam);
+                    instanceParam, hookCtxParam, contextParam);
             }
 
             if (!sameType)
@@ -113,7 +116,13 @@ public sealed partial class SerializationManager
                     returnVar);
             }
 
-            return Expression.Lambda<CopyToGenericDelegate<T>>(call, sourceParam, targetParam, contextParam, skipHookParam).Compile();
+            return Expression.Lambda<CopyToGenericDelegate<T>>(
+                call,
+                sourceParam,
+                targetParam,
+                hookCtxParam,
+                contextParam)
+                .Compile();
         }
 
         var type = typeof(T);
@@ -129,12 +138,12 @@ public sealed partial class SerializationManager
 
     private delegate object CreateCopyBoxingDelegate(
         object source,
-        bool skipHook,
+        SerializationHookContext hookCtx,
         ISerializationContext? context = null);
 
     private delegate T CreateCopyGenericDelegate<T>(
         T source,
-        bool skipHook,
+        SerializationHookContext hookCtx,
         ISerializationContext? context = null);
 
     private readonly ConcurrentDictionary<Type, object> _createCopyGenericDelegates = new();
@@ -146,7 +155,7 @@ public sealed partial class SerializationManager
         {
             var managerConst = Expression.Constant(manager);
             var sourceParam = Expression.Parameter(typeof(object), "source");
-            var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+            var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext), "hookCtx");
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
             return Expression.Lambda<CreateCopyBoxingDelegate>(
@@ -155,11 +164,11 @@ public sealed partial class SerializationManager
                     nameof(CreateCopy),
                     new[] { type },
                     Expression.Convert(sourceParam, type),
+                    hookCtxParam,
                     contextParam,
-                    skipHookParam,
                     Expression.Constant(false)), typeof(object)),
                 sourceParam,
-                skipHookParam,
+                hookCtxParam,
                 contextParam).Compile();
         }, this);
     }
@@ -171,7 +180,7 @@ public sealed partial class SerializationManager
             {
                 var instanceParam = Expression.Constant(manager);
                 var sourceParam = Expression.Parameter(type, "source");
-                var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext), "hookCtx");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
                 var actualType = type;
@@ -188,8 +197,8 @@ public sealed partial class SerializationManager
                         new []{type},
                         copierConst,
                         sourceParamAccess,
+                        hookCtxParam,
                         contextParam,
-                        skipHookParam,
                         Expression.Constant(false));
                 }
                 else if (type.IsArray)
@@ -199,8 +208,8 @@ public sealed partial class SerializationManager
                         nameof(CreateArrayCopy),
                         new[]{type.GetElementType()!},
                         sourceParamAccess,
-                        contextParam,
-                        skipHookParam);
+                        hookCtxParam,
+                        contextParam);
                 }
                 else
                 {
@@ -211,8 +220,8 @@ public sealed partial class SerializationManager
                             nameof(CreateCopy),
                             Type.EmptyTypes,
                             Expression.Convert(sourceParam, typeof(object)),
+                            hookCtxParam,
                             contextParam,
-                            skipHookParam,
                             Expression.Constant(false)), type);
                     }
                     else
@@ -222,8 +231,8 @@ public sealed partial class SerializationManager
                             nameof(CreateCopyInternal),
                             new[] {type},
                             sourceParamAccess,
+                            hookCtxParam,
                             contextParam,
-                            skipHookParam,
                             Expression.Constant(manager.GetDefinition(type), typeof(DataDefinition<>).MakeGenericType(type)));
                     }
                 }
@@ -231,7 +240,7 @@ public sealed partial class SerializationManager
                 return Expression.Lambda<CreateCopyGenericDelegate<T>>(
                     Expression.Convert(call, actualType),
                     sourceParam,
-                    skipHookParam,
+                    hookCtxParam,
                     contextParam).Compile();
             }, this);
     }
@@ -249,7 +258,7 @@ public sealed partial class SerializationManager
         ref TCommon target,
         DataDefinition<TCommon>? definition,
         ISerializationManager serializationManager,
-        bool skipHook,
+        SerializationHookContext hookCtx,
         ISerializationContext? context)
         where TCommon : notnull
     {
@@ -257,7 +266,7 @@ public sealed partial class SerializationManager
             context.SerializerProvider.TryGetTypeSerializer<ITypeCopier<TCommon>, TCommon>(out var copier))
         {
             var commonTarget = target;
-            copier.CopyTo(this, source, ref commonTarget, skipHook, context);
+            copier.CopyTo(this, source, ref commonTarget, hookCtx, context);
         }
 
         if (ShouldReturnSource(typeof(TCommon))) //todo paul can be precomputed
@@ -289,7 +298,7 @@ public sealed partial class SerializationManager
 
             for (var i = 0; i < sourceArray.Length; i++)
             {
-                newArray.SetValue(CreateCopy(sourceArray.GetValue(i), context, skipHook), i);
+                newArray.SetValue(CreateCopy(sourceArray.GetValue(i), hookCtx, context), i);
             }
 
             //todo paul serv3 fix
@@ -303,22 +312,22 @@ public sealed partial class SerializationManager
             return false;
         }
 
-        definition.CopyTo(source, ref target, context, skipHook);
+        definition.CopyTo(source, ref target, hookCtx, context);
         return true;
     }
 
-    private T[] CreateArrayCopy<T>(T[] source, ISerializationContext context, bool skipHook)
+    private T[] CreateArrayCopy<T>(T[] source, SerializationHookContext hookCtx, ISerializationContext context)
     {
         var copy = new T[source.Length];
         for (int i = 0; i < source.Length; i++)
         {
-            copy[i] = CreateCopy(source[i], context, skipHook);
+            copy[i] = CreateCopy(source[i], hookCtx, context);
         }
 
         return copy;
     }
 
-    private T CreateCopyInternal<T>(T source, ISerializationContext context, bool skipHook, DataDefinition<T>? definition) where T : notnull
+    private T CreateCopyInternal<T>(T source, SerializationHookContext hookCtx, ISerializationContext context, DataDefinition<T>? definition) where T : notnull
     {
         if (ShouldReturnSource(typeof(T)))
             return source;
@@ -329,19 +338,32 @@ public sealed partial class SerializationManager
         var isRecord = definition?.IsRecord ?? false;
         var target = GetOrCreateInstantiator<T>(isRecord)();
 
-        if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, context, skipHook))
+        if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, hookCtx, context))
         {
             throw new CopyToFailedException<T>();
         }
         return target!;
     }
 
-    private void NotNullOverrideCheck(bool notNullableOverride)
+    private void NotNullOverrideCheck(bool notNullableOverride, Type? type = null)
     {
-        if (notNullableOverride) throw new NullNotAllowedException();
+        if (notNullableOverride || (type != null && !type.IsNullable())) throw new NullNotAllowedException();
     }
 
+    private void NotNullOverrideCheck<T>(bool notNullableOverride) =>
+        NotNullOverrideCheck(notNullableOverride, typeof(T));
+
     public void CopyTo(object? source, ref object? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
+    {
+        CopyTo(source, ref target, SerializationHookContext.ForSkipHooks(skipHook), context, notNullableOverride);
+    }
+
+    public void CopyTo(
+        object? source,
+        ref object? target,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        bool notNullableOverride = false)
     {
         if (source == null)
         {
@@ -352,7 +374,7 @@ public sealed partial class SerializationManager
 
         if (target == null)
         {
-            target = CreateCopy(source, context, skipHook);
+            target = CreateCopy(source, hookCtx, context);
             return;
         }
 
@@ -361,58 +383,108 @@ public sealed partial class SerializationManager
             throw new InvalidOperationException($"Could not find common type in Copy for types {source.GetType()} and {target.GetType()}!");
         }
 
-        GetOrCreateCopyToBoxingDelegate(commonType)(source, ref target, skipHook, context);
+        GetOrCreateCopyToBoxingDelegate(commonType)(source, ref target, hookCtx, context);
     }
 
-    public void CopyTo<T>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
+    public void CopyTo<T>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
+    {
+        CopyTo<T>(source, ref target, SerializationHookContext.ForSkipHooks(skipHook), context, notNullableOverride);
+    }
+
+    public void CopyTo<T>(
+        T source,
+        ref T target,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        bool notNullableOverride = false)
     {
         if (source == null)
         {
-            NotNullOverrideCheck(notNullableOverride);
-            target = default;
+            NotNullOverrideCheck<T>(notNullableOverride);
+            target = default!;
             return;
         }
 
         if (target == null)
         {
-            target = CreateCopy(source, context, skipHook)!;
+            target = CreateCopy(source, hookCtx, context)!;
             return;
         }
 
-        if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, context))
+        if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, hookCtx, context))
         {
-            target = CreateCopy(source, context);
+            target = CreateCopy(source, hookCtx, context);
         }
 
-        if(!skipHook && target is ISerializationHooks hookres)
-            hookres.AfterDeserialization();
+        RunAfterHook(target, hookCtx);
     }
 
-    public void CopyTo<T>(ITypeCopier<T> copier, T source, ref T? target, ISerializationContext? context = null,
+    public void CopyTo<T>(ITypeCopier<T> copier, T source, ref T target, ISerializationContext? context = null,
         bool skipHook = false, bool notNullableOverride = false)
+    {
+        CopyTo<T>(
+            copier,
+            source,
+            ref target,
+            SerializationHookContext.ForSkipHooks(skipHook),
+            context,
+            notNullableOverride);
+    }
+
+    public void CopyTo<T>(
+        ITypeCopier<T> copier,
+        T source,
+        ref T target,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        bool notNullableOverride = false)
     {
         if (source == null)
         {
-            NotNullOverrideCheck(notNullableOverride);
-            target = default;
+            NotNullOverrideCheck<T>(notNullableOverride);
+            target = default!;
             return;
         }
 
         target ??= GetOrCreateInstantiator<T>(false)();
 
-        copier.CopyTo(this, source, ref target, skipHook, context);
+        copier.CopyTo(this, source, ref target, hookCtx, context);
 
-        if(!skipHook && target is ISerializationHooks hookres)
-            hookres.AfterDeserialization();
+        RunAfterHook(target, hookCtx);
     }
 
-    public void CopyTo<T, TCopier>(T source, ref T? target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
+    public void CopyTo<T, TCopier>(T source, ref T target, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
         where TCopier : ITypeCopier<T>
     {
-        CopyTo(GetOrCreateCustomTypeSerializer<TCopier>(), source, ref target, context, skipHook, notNullableOverride);
+        CopyTo<T, TCopier>(
+            source,
+            ref target,
+            SerializationHookContext.ForSkipHooks(skipHook),
+            context,
+            notNullableOverride);
+    }
+
+    public void CopyTo<T, TCopier>(
+        T source,
+        ref T target,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        bool notNullableOverride = false)
+        where TCopier : ITypeCopier<T>
+    {
+        CopyTo(GetOrCreateCustomTypeSerializer<TCopier>(), source, ref target, hookCtx, context, notNullableOverride);
     }
 
     public object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
+    {
+        return CreateCopy(source, SerializationHookContext.ForSkipHooks(skipHook), context, notNullableOverride);
+    }
+
+    public object? CreateCopy(
+        object? source,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        bool notNullableOverride = false)
     {
         if (source == null)
         {
@@ -420,22 +492,28 @@ public sealed partial class SerializationManager
             return null;
         }
 
-        return GetOrCreateCreateCopyBoxingDelegate(source.GetType())(source, skipHook, context);
+        return GetOrCreateCreateCopyBoxingDelegate(source.GetType())(source, hookCtx, context);
     }
 
     public T CreateCopy<T>(T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
     {
+        return CreateCopy(source, SerializationHookContext.ForSkipHooks(skipHook), context, notNullableOverride);
+    }
+
+    public T CreateCopy<T>(
+        T source,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        bool notNullableOverride = false)
+    {
         if (source == null)
         {
-            NotNullOverrideCheck(notNullableOverride);
+            NotNullOverrideCheck<T>(notNullableOverride);
             return default!;
         }
 
-        var res = GetOrCreateCreateCopyGenericDelegate<T>()(source, skipHook, context);
-        if (!skipHook && res is ISerializationHooks hooks)
-        {
-            hooks.AfterDeserialization();
-        }
+        var res = GetOrCreateCreateCopyGenericDelegate<T>()(source, hookCtx, context);
+        RunAfterHook(res, hookCtx);
 
         return res;
     }
@@ -443,17 +521,29 @@ public sealed partial class SerializationManager
     public T CreateCopy<T>(ITypeCopyCreator<T> copyCreator, T source, ISerializationContext? context = null,
         bool skipHook = false, bool notNullableOverride = false)
     {
+        return CreateCopy<T>(
+            copyCreator,
+            source,
+            SerializationHookContext.ForSkipHooks(skipHook),
+            context,
+            notNullableOverride);
+    }
+
+    public T CreateCopy<T>(
+        ITypeCopyCreator<T> copyCreator,
+        T source,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        bool notNullableOverride = false)
+    {
         if (source == null)
         {
-            NotNullOverrideCheck(notNullableOverride);
+            NotNullOverrideCheck<T>(notNullableOverride);
             return default!;
         }
 
-        var res = copyCreator.CreateCopy(this, source, skipHook, context);
-        if (!skipHook && res is ISerializationHooks hooks)
-        {
-            hooks.AfterDeserialization();
-        }
+        var res = copyCreator.CreateCopy(this, source, hookCtx, context);
+        RunAfterHook(res, hookCtx);
 
         return res;
     }
@@ -461,6 +551,19 @@ public sealed partial class SerializationManager
     public T CreateCopy<T, TCopyCreator>(T source, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
         where TCopyCreator : ITypeCopyCreator<T>
     {
-        return CreateCopy(GetOrCreateCustomTypeSerializer<TCopyCreator>(), source, context, skipHook, notNullableOverride);
+        return CreateCopy<T, TCopyCreator>(
+            source,
+            SerializationHookContext.ForSkipHooks(skipHook),
+            context,
+            notNullableOverride);
+    }
+
+    public T CreateCopy<T, TCopyCreator>(
+        T source, SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        bool notNullableOverride = false)
+        where TCopyCreator : ITypeCopyCreator<T>
+    {
+        return CreateCopy(GetOrCreateCustomTypeSerializer<TCopyCreator>(), source, hookCtx, context, notNullableOverride);
     }
 }

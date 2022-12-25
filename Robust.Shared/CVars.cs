@@ -10,16 +10,10 @@ using Robust.Shared.Physics;
 
 namespace Robust.Shared
 {
+    /// <seealso cref="CVarDefaultOverrides"/>
     [CVarDefs]
     public abstract class CVars
     {
-#if FULL_RELEASE
-        private const bool ConstFullRelease = true;
-#else
-        private const bool ConstFullRelease = false;
-#endif
-
-
         protected CVars()
         {
             throw new InvalidOperationException("This class must not be instantiated");
@@ -121,7 +115,7 @@ namespace Robust.Shared
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
-            CVarDef.Create("net.buffer_size", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Enable verbose game state/networking logging.
@@ -998,6 +992,14 @@ namespace Robust.Shared
         public static readonly CVarDef<float> BroadphaseExpand =
             CVarDef.Create("physics.broadphase_expand", 2f, CVar.ARCHIVE | CVar.REPLICATED);
 
+        /// <summary>
+        /// The target minimum ticks per second on the server.
+        /// This is used for substepping and will help with clipping/physics issues and such.
+        /// Ideally 50-60 is the minimum.
+        /// </summary>
+        public static readonly CVarDef<int> TargetMinimumTickrate =
+            CVarDef.Create("physics.target_minimum_tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
         // Grid fixtures
         /// <summary>
         /// I'ma be real with you: the only reason this exists is to get tests working.
@@ -1196,6 +1198,15 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ResStreamSeekMode =
             CVarDef.Create("res.stream_seek_mode", (int)ContentPack.StreamSeekMode.None);
 
+        /// <summary>
+        /// Whether to watch prototype files for prototype reload on the client. Only applies to development builds.
+        /// </summary>
+        /// <remarks>
+        /// The client sends a reload signal to the server on refocus, if you're wondering why this is client-only.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResPrototypeReloadWatch =
+            CVarDef.Create("res.prototype_reload_watch", true, CVar.CLIENTONLY);
+
         /*
          * DEBUG
          */
@@ -1357,12 +1368,12 @@ namespace Robust.Shared
         /// <summary>
         /// Event log buffer size for the profiling system.
         /// </summary>
-        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", ConstFullRelease ? 8192 : 65536);
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", 8192);
 
         /// <summary>
         /// Index log buffer size for the profiling system.
         /// </summary>
-        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", 128);
 
         /*
          * CFG

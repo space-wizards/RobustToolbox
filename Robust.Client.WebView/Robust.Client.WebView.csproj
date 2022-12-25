@@ -3,7 +3,6 @@
   <Import Project="..\MSBuild\Robust.Engine.props" />
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>WinExe</OutputType>
   </PropertyGroup>

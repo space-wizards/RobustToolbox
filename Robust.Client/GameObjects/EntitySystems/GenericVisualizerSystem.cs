@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
@@ -19,16 +20,16 @@ public sealed class GenericVisualizerSystem : VisualizerSystem<GenericVisualizer
 
         foreach (var (appearanceKey, layerDict) in component.Visuals)
         {
-            if (!_appearanceSys.TryGetData(uid, appearanceKey, out var appearanceValue, args.Component))
+            if (!_appearanceSys.TryGetData(uid, appearanceKey, out object? obj, args.Component))
                 continue;
 
-            var valueString = appearanceValue.ToString();
-            if (string.IsNullOrEmpty(valueString))
+            var appearanceValue = obj.ToString();
+            if (string.IsNullOrEmpty(appearanceValue))
                 continue;
 
             foreach (var (layerKeyRaw, layerDataDict) in layerDict)
             {
-                if (!layerDataDict.TryGetValue(valueString, out var layerData))
+                if (!layerDataDict.TryGetValue(appearanceValue, out var layerData))
                     continue;
 
                 object layerKey = _refMan.TryParseEnumReference(layerKeyRaw, out var @enum)

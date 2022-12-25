@@ -300,29 +300,75 @@ namespace Robust.Shared.Physics.Systems
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, deltaTime);
-            RaiseLocalEvent(ref updateBeforeSolve);
-            var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+            var targetMinTickrate = (float) _configurationManager.GetCVar(CVars.TargetMinimumTickrate);
+            var serverTickrate = (float) _configurationManager.GetCVar(CVars.NetTickrate);
+            var substeps = (int)Math.Ceiling(targetMinTickrate / serverTickrate);
 
-            while (enumerator.MoveNext(out var comp))
+            var substepping = false;
+            var frameTime = deltaTime / substeps;
+
+            for (int i = 0; i < substeps; i++)
             {
-                Step(comp, deltaTime, prediction);
+                var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
+                RaiseLocalEvent(ref updateBeforeSolve);
+
+                if (substeps > 1)
+                    substepping = true;
+
+                var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+                while (enumerator.MoveNext(out var comp))
+                {
+                    comp.Step(frameTime, prediction, substepping);
+                }
+
+                var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
+                RaiseLocalEvent(ref updateAfterSolve);
+
+                // Go through and run all of the deferred events now
+                // Also compares the position pre physics and post physics to fix substep lerping issues
+                enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+                while (enumerator.MoveNext(out var comp))
+                {
+                    comp.ProcessQueue();
+                }
+
+                if (i == substeps - 1)
+                {
+                    enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+                    while (enumerator.MoveNext(out var comp))
+                    {
+                        FinalStep(comp);
+                    }
+                }
+
+                _traversal.ProcessMovement();
+                _physicsManager.ClearTransforms();
+            }
+        }
+
+        private void FinalStep(SharedPhysicsMapComponent component)
+        {
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            foreach (var (uid, (parentUid, position, rotation)) in component.LerpData)
+            {
+                if (!xformQuery.TryGetComponent(uid, out var xform) ||
+                    !parentUid.IsValid())
+                {
+                    continue;
+                }
+
+                xform.PrevPosition = position;
+                xform.PrevRotation = rotation;
+                xform.LerpParent = parentUid;
+                xform.NextPosition = xform.LocalPosition;
+                xform.NextRotation = xform.LocalRotation;
             }
 
-            var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, deltaTime);
-            RaiseLocalEvent(ref updateAfterSolve);
-
-            // Enumerator reset
-            enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
-
-            // Go through and run all of the deferred events now
-            while (enumerator.MoveNext(out var comp))
-            {
-                comp.ProcessQueue();
-            }
-
-            _traversal.ProcessMovement();
-            _physicsManager.ClearTransforms();
+            component.LerpData.Clear();
         }
     }
 

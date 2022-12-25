@@ -22,12 +22,12 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
     - name: Install dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore /p:WarningsAsErrors=nullable
     - name: Test Engine
       run: dotnet test --no-build Robust.UnitTesting/Robust.UnitTesting.csproj -- NUnit.ConsoleOut=0
- 
+
 

@@ -275,7 +275,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     continue;
                 }
 
-                var keyValidated = serialization.ValidateNode(typeof(string), key, context);
+                var keyValidated = serialization.ValidateNode<string>(key, context);
 
                 ValidationNode valNode;
                 if (IsNull(val))

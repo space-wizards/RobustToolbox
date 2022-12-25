@@ -40,7 +40,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
         // anyways, so we can skip this.
         if (_timing.ApplyingState
             && component.NetSyncEnabled) // TODO consider removing this and avoiding the component resolve altogether.
-            return; 
+            return;
 
         if (component.AppearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
             return;
@@ -52,7 +52,21 @@ public abstract class SharedAppearanceSystem : EntitySystem
         MarkDirty(component);
     }
 
-    public bool TryGetData(EntityUid uid, Enum key, [MaybeNullWhen(false)] out object value, AppearanceComponent? component = null)
+    public bool TryGetData<T>(EntityUid uid, Enum key, [NotNullWhen(true)] out T value, AppearanceComponent? component = null)
+    {
+        if (Resolve(uid, ref component) &&
+            component.AppearanceData.TryGetValue(key, out var objValue) &&
+            objValue is T)
+        {
+            value = (T)objValue;
+            return true;
+        }
+
+        value = default!;
+        return false;
+    }
+
+    public bool TryGetData(EntityUid uid, Enum key, [NotNullWhen(true)] out object? value, AppearanceComponent? component = null)
     {
         if (!Resolve(uid, ref component))
         {

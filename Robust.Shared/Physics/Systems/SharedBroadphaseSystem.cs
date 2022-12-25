@@ -253,6 +253,7 @@ namespace Robust.Shared.Physics.Systems
                 }
 
                 _bufferPool.Return(contactBuffer[i]);
+                pMoveBuffer[i] = default;
             }
 
             ArrayPool<List<FixtureProxy>>.Shared.Return(contactBuffer);

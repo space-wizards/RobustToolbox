@@ -23,19 +23,19 @@ public struct PreventCollideEvent
     /// <summary>
     /// The fixture on the first body to prevent the collision of if specified.
     /// </summary>
-    public Fixture? FixtureA;
+    public Fixture FixtureA;
 
     /// <summary>
     /// The fixture on the other body to prevent the collision of if specified.
     /// </summary>
-    public Fixture? FixtureB;
+    public Fixture FixtureB;
 
     /// <summary>
     /// Whether or not to prevent the collision between the physics bodies.
     /// </summary>
     public bool Cancelled = false;
 
-    public PreventCollideEvent(PhysicsComponent ourBody, PhysicsComponent otherBody, Fixture? ourFixture, Fixture? otherFixture)
+    public PreventCollideEvent(PhysicsComponent ourBody, PhysicsComponent otherBody, Fixture ourFixture, Fixture otherFixture)
     {
         BodyA = ourBody;
         BodyB = otherBody;

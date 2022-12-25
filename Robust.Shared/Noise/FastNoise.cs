@@ -42,7 +42,7 @@ using System.Runtime.CompilerServices;
 namespace Robust.Shared.Noise
 {
 #pragma warning disable RA0003
-    internal class FastNoise
+    public sealed class FastNoise
 #pragma warning restore RA0003
     {
         private const MethodImplOptions FN_INLINE = MethodImplOptions.AggressiveInlining;

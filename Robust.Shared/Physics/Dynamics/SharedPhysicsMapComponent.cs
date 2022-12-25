@@ -39,7 +39,6 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         internal SharedPhysicsSystem Physics = default!;
-        internal SharedBroadphaseSystem BroadphaseSystem = default!;
 
         internal ContactManager ContactManager = default!;
 

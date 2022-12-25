@@ -21,7 +21,7 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
         SequenceDataNode node,
         IDependencyCollection dependencies,
         SerializationHookContext hookCtx,
-        ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider = null)
+        ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider)
     {
         var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
 

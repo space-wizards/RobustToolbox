@@ -24,7 +24,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
             ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider)
         {
             var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
 
@@ -89,7 +89,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
             ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider)
         {
             if (instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");

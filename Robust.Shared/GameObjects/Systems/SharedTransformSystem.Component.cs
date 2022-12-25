@@ -834,14 +834,14 @@ public abstract partial class SharedTransformSystem
     #region Set Position+Rotation
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPositionRotation(EntityUid uid, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery)
+    public void SetWorldPositionRotation(EntityUid uid, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery, bool substepping)
     {
         var component = xformQuery.GetComponent(uid);
         SetWorldPositionRotation(component, worldPos, worldRot, xformQuery);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot)
+    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot, bool substepping)
     {
         SetWorldPositionRotation(component, worldPos, worldRot, GetEntityQuery<TransformComponent>());
     }

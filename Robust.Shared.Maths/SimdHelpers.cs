@@ -9,6 +9,34 @@ namespace Robust.Shared.Maths
     /// </summary>
     internal static class SimdHelpers
     {
+        /// <returns>A vector with the horizontal minimum and maximum values arranged as { min max min max} .</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> MinMaxHorizontalSse(Vector128<float> input)
+        {
+            var tmp = Sse.Shuffle(input, input, 0b00_01_10_11);
+            var min = Sse.Min(tmp, input);
+            var max = Sse.Max(tmp, input);
+            tmp = Sse.Shuffle(min, max, 0b01_00_00_01);
+            min = Sse.Min(tmp, min);
+            max = Sse.Max(tmp, max);
+            tmp = Sse.MoveScalar(max, min); // no generic Vector128 equivalent :(
+            return Sse.Shuffle(tmp, tmp, 0b11_00_11_00);
+        }
+
+        /// <returns>A vector with the horizontal minimum and maximum values arranged as { max min max min} .</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> MaxMinHorizontalSse(Vector128<float> input)
+        {
+            var tmp = Sse.Shuffle(input, input, 0b00_01_10_11);
+            var min = Sse.Min(tmp, input);
+            var max = Sse.Max(tmp, input);
+            tmp = Sse.Shuffle(min, max, 0b01_00_00_01);
+            min = Sse.Min(tmp, min);
+            max = Sse.Max(tmp, max);
+            tmp = Sse.MoveScalar(max, min); // no generic Vector128 equivalent :(
+            return Sse.Shuffle(tmp, tmp, 0b00_11_00_11);
+        }
+
         /// <returns>The min value is broadcast to the whole vector.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<float> MinHorizontal128(Vector128<float> v)

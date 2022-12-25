@@ -280,6 +280,16 @@ public class ArchetypeComponentAccessBenchmark
         );
     }
 
+    [Benchmark]
+    public void IterateTenComponentsArchetype()
+    {
+        var comps = _archetype.Iterate();
+        while (comps.MoveNext())
+        {
+            Consumer.Consume(comps.Current);
+        }
+    }
+
     // @formatter:off
     // ReSharper disable UnusedType.Local
     public struct Type1{}
@@ -295,7 +305,7 @@ public class ArchetypeComponentAccessBenchmark
     // ReSharper restore UnusedType.Local
     // @formatter:on
 
-    private class Archetype<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+    private sealed class Archetype<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
     {
         private int _nextId;
         private readonly Dictionary<int, int> _ids;
@@ -591,6 +601,76 @@ public class ArchetypeComponentAccessBenchmark
                     ref t10Span[i]
                 );
             }
+        }
+
+        public Enumerator Iterate()
+        {
+            return new Enumerator(
+                _t1Comps,
+                _t2Comps,
+                _t3Comps,
+                _t4Comps,
+                _t5Comps,
+                _t6Comps,
+                _t7Comps,
+                _t8Comps,
+                _t9Comps,
+                _t10Comps
+            );
+        }
+
+        public ref struct Enumerator
+        {
+            private readonly Span<T1> _t1Comps;
+            private readonly Span<T2> _t2Comps;
+            private readonly Span<T3> _t3Comps;
+            private readonly Span<T4> _t4Comps;
+            private readonly Span<T5> _t5Comps;
+            private readonly Span<T6> _t6Comps;
+            private readonly Span<T7> _t7Comps;
+            private readonly Span<T8> _t8Comps;
+            private readonly Span<T9> _t9Comps;
+            private readonly Span<T10> _t10Comps;
+            private int _index;
+
+            public Enumerator(Span<T1> t1Comps, Span<T2> t2Comps, Span<T3> t3Comps, Span<T4> t4Comps, Span<T5> t5Comps, Span<T6> t6Comps, Span<T7> t7Comps, Span<T8> t8Comps, Span<T9> t9Comps, Span<T10> t10Comps)
+            {
+                _t1Comps = t1Comps;
+                _t2Comps = t2Comps;
+                _t3Comps = t3Comps;
+                _t4Comps = t4Comps;
+                _t5Comps = t5Comps;
+                _t6Comps = t6Comps;
+                _t7Comps = t7Comps;
+                _t8Comps = t8Comps;
+                _t9Comps = t9Comps;
+                _t10Comps = t10Comps;
+            }
+
+            public bool MoveNext()
+            {
+                var index = _index + 1;
+                if (index < _t1Comps.Length)
+                {
+                    _index = index;
+                    return true;
+                }
+
+                return false;
+            }
+
+            public (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10) Current => (
+                _t1Comps[_index],
+                _t2Comps[_index],
+                _t3Comps[_index],
+                _t4Comps[_index],
+                _t5Comps[_index],
+                _t6Comps[_index],
+                _t7Comps[_index],
+                _t8Comps[_index],
+                _t9Comps[_index],
+                _t10Comps[_index]
+            );
         }
     }
 }

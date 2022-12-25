@@ -71,7 +71,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SequenceDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
-            ISerializationContext? context, ISerializationManager.InstantiationDelegate<List<T>>? instanceProvider = null)
+            ISerializationContext? context, ISerializationManager.InstantiationDelegate<List<T>>? instanceProvider)
         {
             var list = instanceProvider != null ? instanceProvider() : new List<T>();
 
@@ -125,7 +125,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<IReadOnlyList<T>>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<IReadOnlyList<T>>? instanceProvider)
         {
             if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlySet<T>)}. Ignoring...");
@@ -144,7 +144,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<IReadOnlyCollection<T>>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<IReadOnlyCollection<T>>? instanceProvider)
         {
             if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<T>)}. Ignoring...");
@@ -163,7 +163,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<ImmutableList<T>>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<ImmutableList<T>>? instanceProvider)
         {
             if(instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<T>)}. Ignoring...");

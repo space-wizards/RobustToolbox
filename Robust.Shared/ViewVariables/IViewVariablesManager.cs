@@ -53,6 +53,7 @@ public interface IViewVariablesManager
     /// <returns>An object representing the path, or null if the path couldn't be resolved.</returns>
     ViewVariablesPath? ResolvePath(string path);
     object? ReadPath(string path);
+    string? ReadPathSerialized(string path);
     void WritePath(string path, string value);
     object? InvokePath(string path, string arguments);
     IEnumerable<string> ListPath(string path, VVListPathOptions options);

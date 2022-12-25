@@ -49,7 +49,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public int Read(ISerializationManager serializationManager, ValueDataNode node, IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
         {
             return SerializerReturnInt;
         }
@@ -61,7 +61,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public DataDummyStruct Read(ISerializationManager serializationManager, ValueDataNode node, IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyStruct>? instanceProvider = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyStruct>? instanceProvider = null)
         {
             return SerializerReturnStruct;
         }
@@ -73,7 +73,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public DataDummyClass Read(ISerializationManager serializationManager, ValueDataNode node, IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyClass>? instanceProvider = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyClass>? instanceProvider = null)
         {
             return SerializerReturnClass;
         }
@@ -84,37 +84,37 @@ public sealed partial class DataDefinitionTests
             return SerializerValueDataNode;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, int source, ref int target, bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, int source, ref int target, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnInt;
         }
 
-        public int CreateCopy(ISerializationManager serializationManager, int source, bool skipHook,
+        public int CreateCopy(ISerializationManager serializationManager, int source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return SerializerReturnInt;
         }
 
         public void CopyTo(ISerializationManager serializationManager, DataDummyStruct source, ref DataDummyStruct target,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target = SerializerReturnStruct;
         }
 
-        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source, bool skipHook,
+        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return SerializerReturnStruct;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target, bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnClass;
         }
 
-        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source, bool skipHook,
+        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return SerializerReturnClass;
@@ -148,7 +148,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public int Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
         {
             return SerializerReturnInt;
         }
@@ -161,7 +161,7 @@ public sealed partial class DataDefinitionTests
 
 
         public DataDummyStruct Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyStruct>? instanceProvider = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyStruct>? instanceProvider = null)
         {
             return SerializerReturnStruct;
         }
@@ -173,7 +173,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public DataDummyClass Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyClass>? instanceProvider = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyClass>? instanceProvider = null)
         {
             return SerializerReturnClass;
         }
@@ -184,37 +184,37 @@ public sealed partial class DataDefinitionTests
             return SerializerSequenceDataNode;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, int source, ref int target, bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, int source, ref int target, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnInt;
         }
 
-        public int CreateCopy(ISerializationManager serializationManager, int source, bool skipHook,
+        public int CreateCopy(ISerializationManager serializationManager, int source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return SerializerReturnInt;
         }
 
         public void CopyTo(ISerializationManager serializationManager, DataDummyStruct source, ref DataDummyStruct target,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target = SerializerReturnStruct;
         }
 
-        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source, bool skipHook,
+        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return SerializerReturnStruct;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target, bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnClass;
         }
 
-        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source, bool skipHook,
+        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return SerializerReturnClass;
@@ -248,7 +248,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public int Read(ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<int>? instanceProvider = null)
         {
             return SerializerReturnInt;
         }
@@ -260,7 +260,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public DataDummyStruct Read(ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyStruct>? instanceProvider = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyStruct>? instanceProvider = null)
         {
             return SerializerReturnStruct;
         }
@@ -272,7 +272,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public DataDummyClass Read(ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyClass>? instanceProvider = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<DataDummyClass>? instanceProvider = null)
         {
             return SerializerReturnClass;
         }
@@ -283,37 +283,37 @@ public sealed partial class DataDefinitionTests
             return SerializerMappingDataNode;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, int source, ref int target, bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, int source, ref int target, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnInt;
         }
 
-        public int CreateCopy(ISerializationManager serializationManager, int source, bool skipHook,
+        public int CreateCopy(ISerializationManager serializationManager, int source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return SerializerReturnInt;
         }
 
         public void CopyTo(ISerializationManager serializationManager, DataDummyStruct source, ref DataDummyStruct target,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target = SerializerReturnStruct;
         }
 
-        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source, bool skipHook,
+        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return SerializerReturnStruct;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target, bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnClass;
         }
 
-        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source, bool skipHook,
+        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return SerializerReturnClass;

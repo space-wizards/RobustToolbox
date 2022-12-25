@@ -83,6 +83,12 @@ namespace Robust.Shared.IoC
                 : _services.Keys;
         }
 
+        public Type[] GetCachedInjectorTypes()
+        {
+            using var _ = _injectorCacheLock.ReadGuard();
+            return _injectorCache.Where(kv => kv.Value.Delegate != null).Select(kv => kv.Key).ToArray();
+        }
+
         /// <inheritdoc />
         public bool TryResolveType<T>([NotNullWhen(true)] out T? instance)
         {

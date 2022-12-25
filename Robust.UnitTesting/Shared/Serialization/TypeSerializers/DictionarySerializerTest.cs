@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             node.Add("2", new ValueDataNode("B"));
             node.Add("3", new ValueDataNode("C"));
 
-            var deserializedDictionary = Serialization.Read<Dictionary<int, string>>(node);
+            var deserializedDictionary = Serialization.Read<Dictionary<int, string>>(node, notNullableOverride: true);
 
             Assert.That(deserializedDictionary, Is.EqualTo(dictionary));
         }

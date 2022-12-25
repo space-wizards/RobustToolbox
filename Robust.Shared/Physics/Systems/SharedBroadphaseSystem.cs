@@ -254,11 +254,9 @@ namespace Robust.Shared.Physics.Systems
 
                     contactManager.AddPair(proxyA, other);
                 }
-            }
 
-            for (var i = 0; i < count; i++)
-            {
                 _bufferPool.Return(contactBuffer[i]);
+                pMoveBuffer[i] = default;
             }
 
             ArrayPool<List<FixtureProxy>>.Shared.Return(contactBuffer);

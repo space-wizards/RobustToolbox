@@ -22,8 +22,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             var targetParam = Expression.Parameter(typeof(T).MakeByRefType());
             var mappingDataParam = Expression.Parameter(typeof(MappingDataNode));
+            var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext));
             var contextParam = Expression.Parameter(typeof(ISerializationContext));
-            var skipHookParam = Expression.Parameter(typeof(bool));
 
             var expressions = new List<BlockExpression>();
 
@@ -57,8 +57,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                         "Read",
                                         new []{fieldType, typeof(ValueDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                                         Expression.Convert(nodeVariable, typeof(ValueDataNode)),
+                                        hookCtxParam,
                                         contextParam,
-                                        skipHookParam,
                                         Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
                                         Expression.Constant(!isNullable)), nullable))),
                             Expression.Constant(typeof(ValueDataNode))));
@@ -72,8 +72,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                     "Read",
                                     new []{fieldType, typeof(SequenceDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                                     Expression.Convert(nodeVariable, typeof(SequenceDataNode)),
+                                    hookCtxParam,
                                     contextParam,
-                                    skipHookParam,
                                     Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
                                     Expression.Constant(!isNullable)), nullable))),
                             Expression.Constant(typeof(SequenceDataNode))));
@@ -87,8 +87,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                     "Read",
                                     new []{fieldType, typeof(MappingDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                                     Expression.Convert(nodeVariable, typeof(MappingDataNode)),
+                                    hookCtxParam,
                                     contextParam,
-                                    skipHookParam,
                                     Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldType)),
                                     Expression.Constant(!isNullable)), nullable))),
                             Expression.Constant(typeof(MappingDataNode))));
@@ -114,8 +114,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         "Read",
                         new[] { fieldDefinition.FieldType },
                         nodeVariable,
+                        hookCtxParam,
                         contextParam,
-                        skipHookParam,
                         Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(fieldDefinition.FieldType)),
                         Expression.Constant(!isNullable)));
                 }
@@ -158,8 +158,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 Expression.Block(expressions),
                 targetParam,
                 mappingDataParam,
-                contextParam,
-                skipHookParam).Compile();
+                hookCtxParam,
+                contextParam).Compile();
         }
 
         private SerializeDelegateSignature EmitSerializeDelegate(SerializationManager manager)
@@ -315,7 +315,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             var sourceParam = Expression.Parameter(typeof(T));
             var targetParam = Expression.Parameter(typeof(T).MakeByRefType());
             var contextParam = Expression.Parameter(typeof(ISerializationContext));
-            var skipHookParam = Expression.Parameter(typeof(bool));
+            var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext));
 
             var expressions = new List<Expression>();
 
@@ -348,8 +348,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         new[]{fieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         sourceAccess,
                         targetValue,
+                        hookCtxParam,
                         contextParam,
-                        skipHookParam,
                         Expression.Constant(!isNullable)),
                         Expression.Assign(finalTargetValue, Expression.Convert(targetValue, fieldDefinition.FieldType)));
 
@@ -381,8 +381,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         "CreateCopy",
                         new []{fieldDefinition.FieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         AccessExpression(i, sourceParam),
+                        hookCtxParam,
                         contextParam,
-                        skipHookParam,
                         Expression.Constant(!isNullable));
                 }
                 else
@@ -392,8 +392,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         "CreateCopy",
                         new[] { fieldDefinition.FieldType },
                         AccessExpression(i, sourceParam),
+                        hookCtxParam,
                         contextParam,
-                        skipHookParam,
                         Expression.Constant(!isNullable));
                 }
 
@@ -404,8 +404,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 Expression.Block(expressions),
                 sourceParam,
                 targetParam,
-                contextParam,
-                skipHookParam).Compile();
+                hookCtxParam,
+                contextParam).Compile();
         }
 
         private ValidateFieldDelegate EmitFieldValidationDelegate(SerializationManager manager, int i)

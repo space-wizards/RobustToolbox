@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
-            manager.RegisterType(typeof(EntityPrototype));
+            manager.RegisterKind(typeof(EntityPrototype));
             manager.LoadString(DOCUMENT);
             manager.ResolveResults();
         }
@@ -126,7 +126,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
   parent: {parent}";
             }
 
-            manager.RegisterType(typeof(CircleTestPrototype));
+            manager.RegisterKind(typeof(CircleTestPrototype));
 
             var directCircle = $@"{GenerateCircleTestPrototype("1", "2")}
 {GenerateCircleTestPrototype("2", "1")}";

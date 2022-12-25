@@ -321,6 +321,8 @@ namespace Robust.Client
             _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
             _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
 
+            CVarDefaultOverrides.OverrideClient(_configurationManager);
+
             if (Options.LoadConfigAndUserData)
             {
                 var configFile = Path.Combine(userDataDir, Options.ConfigFileName);
@@ -347,9 +349,6 @@ namespace Robust.Client
 
             _parallelMgr.Initialize();
             _prof.Initialize();
-#if !FULL_RELEASE
-            _configurationManager.OverrideDefault(CVars.ProfEnabled, true);
-#endif
 
             _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 

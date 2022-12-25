@@ -257,6 +257,7 @@ internal partial class MapManager
 
             if (result != null)
             {
+                DebugTools.Assert(mapId != null);
                 _mapEntities.Add(actualId, result.Owner);
                 Logger.DebugS("map", $"Rebinding map {actualId} to entity {result.Owner}");
             }

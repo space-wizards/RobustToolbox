@@ -27,7 +27,7 @@ namespace Robust.Benchmarks.Serialization.Write
 
             var seedMapping = yamlStream.Documents[0].RootNode.ToDataNodeCast<SequenceDataNode>().Cast<MappingDataNode>(0);
 
-            Seed = SerializationManager.Read<SeedDataDefinition>(seedMapping);
+            Seed = SerializationManager.Read<SeedDataDefinition>(seedMapping, notNullableOverride: true);
         }
 
         private const string String = "ABC";
@@ -45,7 +45,7 @@ namespace Robust.Benchmarks.Serialization.Write
         [Benchmark]
         public DataNode WriteString()
         {
-            return SerializationManager.WriteValue(String);
+            return SerializationManager.WriteValue(String, notNullableOverride: true);
         }
 
         [Benchmark]
@@ -57,13 +57,13 @@ namespace Robust.Benchmarks.Serialization.Write
         [Benchmark]
         public DataNode WriteDataDefinitionWithString()
         {
-            return SerializationManager.WriteValue(DataDefinitionWithString);
+            return SerializationManager.WriteValue(DataDefinitionWithString, notNullableOverride: true);
         }
 
         [Benchmark]
         public DataNode WriteSeedDataDefinition()
         {
-            return SerializationManager.WriteValue(Seed);
+            return SerializationManager.WriteValue(Seed, notNullableOverride: true);
         }
 
         [Benchmark]

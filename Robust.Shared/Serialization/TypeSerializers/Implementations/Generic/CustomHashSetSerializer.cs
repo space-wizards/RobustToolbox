@@ -20,14 +20,14 @@ public sealed class CustomHashSetSerializer<T, TCustomSerializer>
     HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
         SequenceDataNode node,
         IDependencyCollection dependencies,
-        bool skipHook,
-        ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider = null)
+        SerializationHookContext hookCtx,
+        ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider)
     {
         var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
 
         foreach (var dataNode in node.Sequence)
         {
-            var value = serializationManager.Read<T, ValueDataNode, TCustomSerializer>((ValueDataNode)dataNode, context, skipHook);
+            var value = serializationManager.Read<T, ValueDataNode, TCustomSerializer>((ValueDataNode)dataNode, hookCtx, context);
             if (value == null)
                 throw new InvalidOperationException($"{nameof(TCustomSerializer)} returned a null value when reading using a custom hashset serializer.");
 

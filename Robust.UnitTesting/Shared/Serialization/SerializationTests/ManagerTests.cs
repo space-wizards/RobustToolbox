@@ -445,8 +445,8 @@ public sealed partial class ManagerTests : SerializationTest
     public void CopyTo_RT_NS_NT_Class<T>(DataNode _, Func<T> __, Func<T> ___, bool useContext, object[] ____)
         where T : class
     {
-        T? target = null;
-        Assert.That(() => { Serialization.CopyTo<T>(null!, ref target, context: Context(useContext), notNullableOverride: true); },
+        T target = null!;
+        Assert.That(() => { Serialization.CopyTo(null!, ref target, context: Context(useContext), notNullableOverride: true); },
             Throws.TypeOf<NullNotAllowedException>());
     }
 
@@ -464,8 +464,8 @@ public sealed partial class ManagerTests : SerializationTest
     public void CopyTo_RT_RS_NT_Class<T>(DataNode _, Func<T> value, Func<T> ___, bool useContext,
         object[] valueExtractors) where T : class
     {
-        T? target = null;
-        Serialization.CopyTo<T>(value(), ref target, context: Context(useContext));
+        T target = null!;
+        Serialization.CopyTo(value(), ref target, context: Context(useContext));
         Assert.NotNull(target);
         AssertEqual(target!, value(), valueExtractors);
     }
@@ -533,9 +533,9 @@ public sealed partial class ManagerTests : SerializationTest
     [Test]
     public void CopyTo_CopyByRef_Class()
     {
-        CopyByRefTestClass? target = null;
+        CopyByRefTestClass target = null!;
         var source = new CopyByRefTestClass();
-        Serialization.CopyTo(source, ref target);
+        Serialization.CopyTo(source, ref target, notNullableOverride: true);
         Assert.NotNull(target);
         Assert.That(target!, Is.SameAs(source));
     }
@@ -552,7 +552,7 @@ public sealed partial class ManagerTests : SerializationTest
     public void CreateCopy_CopyByRef_Class()
     {
         var source = new CopyByRefTestClass();
-        var copy = Serialization.CreateCopy(source);
+        var copy = Serialization.CreateCopy(source, notNullableOverride: true);
         Assert.That(copy, Is.SameAs(source));
     }
 

@@ -383,6 +383,31 @@ namespace Robust.Shared.Physics.Dynamics
         private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction, bool substepping)
         {
             var islands = _islandManager.GetActive;
+
+            // Update cached data for lerping if we're substepping before any writes happen
+            // TODO: Do it client only
+            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+
+            foreach (var island in islands)
+            {
+                for (var i = 0; i < island.BodyCount; i++)
+                {
+                    var body = island.Bodies[i];
+
+                    if (body.BodyType == BodyType.Static)
+                        continue;
+
+                    if (LerpData.TryGetValue(body.Owner, out var data) ||
+                        !xformQuery.TryGetComponent(body.Owner, out var xform) ||
+                        data.ParentUid == xform.ParentUid)
+                    {
+                        continue;
+                    }
+
+                    LerpData[xform.Owner] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
+                }
+            }
+
             // Islands are already pre-sorted
             var iBegin = 0;
 

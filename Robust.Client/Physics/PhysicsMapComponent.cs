@@ -41,19 +41,6 @@ namespace Robust.Client.Physics
 
         private void SetAngularSleepTolerance(float value) => _angSleepTolerance = value;
 
-        public override void ProcessQueue()
-        {
-            foreach (var xform in DeferredUpdates)
-            {
-                if (LerpData.TryGetValue(xform.Owner, out var data) && data.ParentUid == xform.ParentUid)
-                    continue;
-
-                LerpData[xform.Owner] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
-            }
-
-            base.ProcessQueue();
-        }
-
         protected override void Cleanup(float frameTime)
         {
             var toRemove = new List<PhysicsComponent>();

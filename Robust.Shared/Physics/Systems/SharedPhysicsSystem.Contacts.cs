@@ -15,7 +15,7 @@ public abstract partial class SharedPhysicsSystem
     /// <param name="fixture">One of the fixtures to prevent from colliding.</param>
     /// <param name="otherFixture">The other fixture to prevent from colliding.</param>
     /// <returns>Whether the bodies should collide or not.</returns>
-    internal bool ShouldCollide(PhysicsComponent body, PhysicsComponent otherBody, Fixture? fixture = null, Fixture? otherFixture = null)
+    internal bool ShouldCollide(PhysicsComponent body, PhysicsComponent otherBody, Fixture fixture, Fixture otherFixture)
     {
         if (((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
             (otherBody.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||

@@ -58,45 +58,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public readonly Dictionary<FixtureProxy, Box2> MoveBuffer = new();
 
-        /// <summary>
-        ///     Change the global gravity vector.
-        /// </summary>
-        public Vector2 Gravity
-        {
-            get => _gravity;
-            set
-            {
-                if (_gravity.EqualsApprox(value)) return;
-
-                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-                var bodyQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
-
-                // Force every body awake just in case.
-                WakeBodiesRecursive(Owner, xformQuery, bodyQuery);
-
-                _gravity = value;
-            }
-        }
-
-        private Vector2 _gravity;
-
-        private void WakeBodiesRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> bodyQuery)
-        {
-            if (bodyQuery.TryGetComponent(uid, out var body) &&
-                body.BodyType == BodyType.Dynamic)
-            {
-                Physics.WakeBody(uid, body);
-            }
-
-            var xform = xformQuery.GetComponent(uid);
-            var childEnumerator = xform.ChildEnumerator;
-
-            while (childEnumerator.MoveNext(out var child))
-            {
-                WakeBodiesRecursive(child.Value, xformQuery, bodyQuery);
-            }
-        }
-
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
         protected readonly HashSet<TransformComponent> DeferredUpdates = new();
@@ -415,7 +376,7 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 var island = islands[iBegin];
 
-                island.Solve(Gravity, frameTime, dtRatio, invDt, prediction);
+                island.Solve(frameTime, dtRatio, invDt, prediction);
                 iBegin++;
                 // TODO: Submit rest in parallel if applicable
             }

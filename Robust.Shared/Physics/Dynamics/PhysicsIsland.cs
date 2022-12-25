@@ -324,7 +324,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         /// <summary>
         ///     Go through all the bodies in this island and solve.
         /// </summary>
-        public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction)
+        public void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
         {
 #if DEBUG
             _debugBodies.Clear();
@@ -355,11 +355,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                 // if the body cannot move, nothing to do here
                 if (body.BodyType == BodyType.Dynamic)
                 {
-                    if (body.IgnoreGravity)
-                        linearVelocity += body.Force * frameTime * body.InvMass;
-                    else
-                        linearVelocity += (gravity + body.Force * body.InvMass) * frameTime;
-
+                    linearVelocity += body.Force * frameTime * body.InvMass;
                     angularVelocity += frameTime * body.InvI * body.Torque;
 
                     linearVelocity *= Math.Clamp(1.0f - frameTime * body.LinearDamping, 0.0f, 1.0f);

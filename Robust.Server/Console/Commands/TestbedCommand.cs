@@ -31,6 +31,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Physics.Systems;
@@ -117,7 +118,7 @@ namespace Robust.Server.Console.Commands
 
             _map.SetMapPaused(mapId, false);
             var mapUid = _map.GetMapEntityIdOrThrow(mapId);
-            _ent.GetComponent<SharedPhysicsMapComponent>(mapUid).Gravity = new Vector2(0, -9.8f);
+            _ent.System<Gravity2DController>().SetGravity(mapUid, new Vector2(0, -9.8f));
 
             shell.ExecuteCommand("aghost");
             shell.ExecuteCommand($"tp 0 0 {mapId}");

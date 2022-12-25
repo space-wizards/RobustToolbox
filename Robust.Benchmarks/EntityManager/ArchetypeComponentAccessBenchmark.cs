@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using JetBrains.Annotations;
 using Robust.Shared.Analyzers;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Benchmarks.EntityManager;
 
@@ -16,220 +20,298 @@ public class ArchetypeComponentAccessBenchmark
     private const int N = 10000;
     private const int Entity = 1584;
 
-    private Dictionary<Type, Dictionary<int, object>> _componentDictionary = default!;
-    private Archetype<Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10> _archetype = default!;
+    private Dictionary<Type, Dictionary<int, object>> _classDictionary = default!;
+    private Dictionary<Type, Dictionary<int, object>> _structDictionary = default!;
+    private Dictionary<int, object>[] _entTraitArray = default!;
+    private Archetype<Struct1, Struct2, Struct3, Struct4, Struct5, Struct6, Struct7, Struct8, Struct9, Struct10> _archetype = default!;
     private static readonly Consumer Consumer = new();
 
     [GlobalSetup]
     public void GlobalSetup()
     {
-        _componentDictionary = new Dictionary<Type, Dictionary<int, object>>(N)
+        _classDictionary = new Dictionary<Type, Dictionary<int, object>>(N)
         {
-            [typeof(Type1)] = new(),
-            [typeof(Type2)] = new(),
-            [typeof(Type3)] = new(),
-            [typeof(Type4)] = new(),
-            [typeof(Type5)] = new(),
-            [typeof(Type6)] = new(),
-            [typeof(Type7)] = new(),
-            [typeof(Type8)] = new(),
-            [typeof(Type9)] = new(),
-            [typeof(Type10)] = new(),
+            [typeof(Class1)] = new(),
+            [typeof(Class2)] = new(),
+            [typeof(Class3)] = new(),
+            [typeof(Class4)] = new(),
+            [typeof(Class5)] = new(),
+            [typeof(Class6)] = new(),
+            [typeof(Class7)] = new(),
+            [typeof(Class8)] = new(),
+            [typeof(Class9)] = new(),
+            [typeof(Class10)] = new(),
         };
-        _archetype = new Archetype<Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10>(N);
+        _structDictionary = new Dictionary<Type, Dictionary<int, object>>(N)
+        {
+            [typeof(Struct1)] = new(),
+            [typeof(Struct2)] = new(),
+            [typeof(Struct3)] = new(),
+            [typeof(Struct4)] = new(),
+            [typeof(Struct5)] = new(),
+            [typeof(Struct6)] = new(),
+            [typeof(Struct7)] = new(),
+            [typeof(Struct8)] = new(),
+            [typeof(Struct9)] = new(),
+            [typeof(Struct10)] = new(),
+        };
+
+        _entTraitArray = new Dictionary<int, object>[20];
+        for (var i = 0; i < 20; i++)
+        {
+            _entTraitArray[i] = new Dictionary<int, object>();
+        }
+
+        _archetype = new Archetype<Struct1, Struct2, Struct3, Struct4, Struct5, Struct6, Struct7, Struct8, Struct9, Struct10>(N);
 
         for (var i = 0; i < N; i++)
         {
-            _componentDictionary[typeof(Type1)][i] = new Type1();
-            _componentDictionary[typeof(Type2)][i] = new Type2();
-            _componentDictionary[typeof(Type3)][i] = new Type3();
-            _componentDictionary[typeof(Type4)][i] = new Type4();
-            _componentDictionary[typeof(Type5)][i] = new Type5();
-            _componentDictionary[typeof(Type6)][i] = new Type6();
-            _componentDictionary[typeof(Type7)][i] = new Type7();
-            _componentDictionary[typeof(Type8)][i] = new Type8();
-            _componentDictionary[typeof(Type9)][i] = new Type9();
-            _componentDictionary[typeof(Type10)][i] = new Type10();
+            var c1 = new Class1();
+            var c2 = new Class2();
+            var c3 = new Class3();
+            var c4 = new Class4();
+            var c5 = new Class5();
+            var c6 = new Class6();
+            var c7 = new Class7();
+            var c8 = new Class8();
+            var c9 = new Class9();
+            var c10 = new Class10();
+
+            _classDictionary[typeof(Class1)][i] = c1;
+            _classDictionary[typeof(Class2)][i] = c2;
+            _classDictionary[typeof(Class3)][i] = c3;
+            _classDictionary[typeof(Class4)][i] = c4;
+            _classDictionary[typeof(Class5)][i] = c5;
+            _classDictionary[typeof(Class6)][i] = c6;
+            _classDictionary[typeof(Class7)][i] = c7;
+            _classDictionary[typeof(Class8)][i] = c8;
+            _classDictionary[typeof(Class9)][i] = c9;
+            _classDictionary[typeof(Class10)][i] = c10;
+
+            _entTraitArray[CompIdx.ArrayIndex<Class1>()][i] = c1;
+            _entTraitArray[CompIdx.ArrayIndex<Class2>()][i] = c2;
+            _entTraitArray[CompIdx.ArrayIndex<Class3>()][i] = c3;
+            _entTraitArray[CompIdx.ArrayIndex<Class4>()][i] = c4;
+            _entTraitArray[CompIdx.ArrayIndex<Class5>()][i] = c5;
+            _entTraitArray[CompIdx.ArrayIndex<Class6>()][i] = c6;
+            _entTraitArray[CompIdx.ArrayIndex<Class7>()][i] = c7;
+            _entTraitArray[CompIdx.ArrayIndex<Class8>()][i] = c8;
+            _entTraitArray[CompIdx.ArrayIndex<Class9>()][i] = c9;
+            _entTraitArray[CompIdx.ArrayIndex<Class10>()][i] = c10;
+
+            var s1 = new Struct1();
+            var s2 = new Struct2();
+            var s3 = new Struct3();
+            var s4 = new Struct4();
+            var s5 = new Struct5();
+            var s6 = new Struct6();
+            var s7 = new Struct7();
+            var s8 = new Struct8();
+            var s9 = new Struct9();
+            var s10 = new Struct10();
+
+            _structDictionary[typeof(Struct1)][i] = s1;
+            _structDictionary[typeof(Struct2)][i] = s2;
+            _structDictionary[typeof(Struct3)][i] = s3;
+            _structDictionary[typeof(Struct4)][i] = s4;
+            _structDictionary[typeof(Struct5)][i] = s5;
+            _structDictionary[typeof(Struct6)][i] = s6;
+            _structDictionary[typeof(Struct7)][i] = s7;
+            _structDictionary[typeof(Struct8)][i] = s8;
+            _structDictionary[typeof(Struct9)][i] = s9;
+            _structDictionary[typeof(Struct10)][i] = s10;
+
+            _entTraitArray[CompIdx.ArrayIndex<Struct1>()][i] = s1;
+            _entTraitArray[CompIdx.ArrayIndex<Struct2>()][i] = s2;
+            _entTraitArray[CompIdx.ArrayIndex<Struct3>()][i] = s3;
+            _entTraitArray[CompIdx.ArrayIndex<Struct4>()][i] = s4;
+            _entTraitArray[CompIdx.ArrayIndex<Struct5>()][i] = s5;
+            _entTraitArray[CompIdx.ArrayIndex<Struct6>()][i] = s6;
+            _entTraitArray[CompIdx.ArrayIndex<Struct7>()][i] = s7;
+            _entTraitArray[CompIdx.ArrayIndex<Struct8>()][i] = s8;
+            _entTraitArray[CompIdx.ArrayIndex<Struct9>()][i] = s9;
+            _entTraitArray[CompIdx.ArrayIndex<Struct10>()][i] = s10;
 
             _archetype.AddEntity(i);
-            _archetype.AddComponent(i, new Type1());
-            _archetype.AddComponent(i, new Type2());
-            _archetype.AddComponent(i, new Type3());
-            _archetype.AddComponent(i, new Type4());
-            _archetype.AddComponent(i, new Type5());
-            _archetype.AddComponent(i, new Type6());
-            _archetype.AddComponent(i, new Type7());
-            _archetype.AddComponent(i, new Type8());
-            _archetype.AddComponent(i, new Type9());
-            _archetype.AddComponent(i, new Type10());
+            _archetype.AddComponent(i, new Struct1());
+            _archetype.AddComponent(i, new Struct2());
+            _archetype.AddComponent(i, new Struct3());
+            _archetype.AddComponent(i, new Struct4());
+            _archetype.AddComponent(i, new Struct5());
+            _archetype.AddComponent(i, new Struct6());
+            _archetype.AddComponent(i, new Struct7());
+            _archetype.AddComponent(i, new Struct8());
+            _archetype.AddComponent(i, new Struct9());
+            _archetype.AddComponent(i, new Struct10());
         }
     }
 
     [Benchmark]
-    public Type1 GetSingleComponentDictionary()
+    public Struct1 GetSingleComponentDictionary()
     {
-        return (Type1) _componentDictionary[typeof(Type1)][Entity];
+        return (Struct1) _structDictionary[typeof(Struct1)][Entity];
     }
 
     [Benchmark]
-    public Type1 GetSingleComponentArchetypeCast()
+    public Struct1 GetSingleComponentArchetypeCast()
     {
-        return _archetype.GetComponentCast<Type1>(Entity);
+        return _archetype.GetComponentCast<Struct1>(Entity);
     }
 
     [Benchmark]
-    public Type1 GetSingleComponentArchetypeCastHandle()
-    {
-        // Handle is the same as the id
-        return _archetype.GetComponentCastHandle<Type1>(Entity);
-    }
-
-    [Benchmark]
-    public Type1 GetSingleComponentArchetypeUnsafe()
-    {
-        return _archetype.GetComponentUnsafe<Type1>(Entity);
-    }
-
-    [Benchmark]
-    public Type1 GetSingleComponentArchetypeUnsafeHandle()
+    public Struct1 GetSingleComponentArchetypeCastHandle()
     {
         // Handle is the same as the id
-        return _archetype.GetComponentUnsafeHandle<Type1>(Entity);
+        return _archetype.GetComponentCastHandle<Struct1>(Entity);
     }
 
     [Benchmark]
-    public (Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10) GetTenComponentsDictionary()
+    public Struct1 GetSingleComponentArchetypeUnsafe()
+    {
+        return _archetype.GetComponentUnsafe<Struct1>(Entity);
+    }
+
+    [Benchmark]
+    public Struct1 GetSingleComponentArchetypeUnsafeHandle()
+    {
+        // Handle is the same as the id
+        return _archetype.GetComponentUnsafeHandle<Struct1>(Entity);
+    }
+
+    [Benchmark]
+    public (Struct1, Struct2, Struct3, Struct4, Struct5, Struct6, Struct7, Struct8, Struct9, Struct10) GetTenComponentsDictionary()
     {
         return (
-            (Type1) _componentDictionary[typeof(Type1)][Entity],
-            (Type2) _componentDictionary[typeof(Type2)][Entity],
-            (Type3) _componentDictionary[typeof(Type3)][Entity],
-            (Type4) _componentDictionary[typeof(Type4)][Entity],
-            (Type5) _componentDictionary[typeof(Type5)][Entity],
-            (Type6) _componentDictionary[typeof(Type6)][Entity],
-            (Type7) _componentDictionary[typeof(Type7)][Entity],
-            (Type8) _componentDictionary[typeof(Type8)][Entity],
-            (Type9) _componentDictionary[typeof(Type9)][Entity],
-            (Type10) _componentDictionary[typeof(Type10)][Entity]
+            (Struct1) _structDictionary[typeof(Struct1)][Entity],
+            (Struct2) _structDictionary[typeof(Struct2)][Entity],
+            (Struct3) _structDictionary[typeof(Struct3)][Entity],
+            (Struct4) _structDictionary[typeof(Struct4)][Entity],
+            (Struct5) _structDictionary[typeof(Struct5)][Entity],
+            (Struct6) _structDictionary[typeof(Struct6)][Entity],
+            (Struct7) _structDictionary[typeof(Struct7)][Entity],
+            (Struct8) _structDictionary[typeof(Struct8)][Entity],
+            (Struct9) _structDictionary[typeof(Struct9)][Entity],
+            (Struct10) _structDictionary[typeof(Struct10)][Entity]
         );
     }
 
     [Benchmark]
-    public (Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10) GetTenComponentsArchetypeCast()
+    public (Struct1, Struct2, Struct3, Struct4, Struct5, Struct6, Struct7, Struct8, Struct9, Struct10) GetTenComponentsArchetypeCast()
     {
         return (
-            _archetype.GetComponentCast<Type1>(Entity),
-            _archetype.GetComponentCast<Type2>(Entity),
-            _archetype.GetComponentCast<Type3>(Entity),
-            _archetype.GetComponentCast<Type4>(Entity),
-            _archetype.GetComponentCast<Type5>(Entity),
-            _archetype.GetComponentCast<Type6>(Entity),
-            _archetype.GetComponentCast<Type7>(Entity),
-            _archetype.GetComponentCast<Type8>(Entity),
-            _archetype.GetComponentCast<Type9>(Entity),
-            _archetype.GetComponentCast<Type10>(Entity)
+            _archetype.GetComponentCast<Struct1>(Entity),
+            _archetype.GetComponentCast<Struct2>(Entity),
+            _archetype.GetComponentCast<Struct3>(Entity),
+            _archetype.GetComponentCast<Struct4>(Entity),
+            _archetype.GetComponentCast<Struct5>(Entity),
+            _archetype.GetComponentCast<Struct6>(Entity),
+            _archetype.GetComponentCast<Struct7>(Entity),
+            _archetype.GetComponentCast<Struct8>(Entity),
+            _archetype.GetComponentCast<Struct9>(Entity),
+            _archetype.GetComponentCast<Struct10>(Entity)
         );
     }
 
     [Benchmark]
-    public (Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10) GetTenComponentsArchetypeCastHandle()
+    public (Struct1, Struct2, Struct3, Struct4, Struct5, Struct6, Struct7, Struct8, Struct9, Struct10) GetTenComponentsArchetypeCastHandle()
     {
         // Handle is the same as the id
         return (
-            _archetype.GetComponentCastHandle<Type1>(Entity),
-            _archetype.GetComponentCastHandle<Type2>(Entity),
-            _archetype.GetComponentCastHandle<Type3>(Entity),
-            _archetype.GetComponentCastHandle<Type4>(Entity),
-            _archetype.GetComponentCastHandle<Type5>(Entity),
-            _archetype.GetComponentCastHandle<Type6>(Entity),
-            _archetype.GetComponentCastHandle<Type7>(Entity),
-            _archetype.GetComponentCastHandle<Type8>(Entity),
-            _archetype.GetComponentCastHandle<Type9>(Entity),
-            _archetype.GetComponentCastHandle<Type10>(Entity)
+            _archetype.GetComponentCastHandle<Struct1>(Entity),
+            _archetype.GetComponentCastHandle<Struct2>(Entity),
+            _archetype.GetComponentCastHandle<Struct3>(Entity),
+            _archetype.GetComponentCastHandle<Struct4>(Entity),
+            _archetype.GetComponentCastHandle<Struct5>(Entity),
+            _archetype.GetComponentCastHandle<Struct6>(Entity),
+            _archetype.GetComponentCastHandle<Struct7>(Entity),
+            _archetype.GetComponentCastHandle<Struct8>(Entity),
+            _archetype.GetComponentCastHandle<Struct9>(Entity),
+            _archetype.GetComponentCastHandle<Struct10>(Entity)
         );
     }
 
     [Benchmark]
-    public (Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10) GetTenComponentsArchetypeUnsafe()
+    public (Struct1, Struct2, Struct3, Struct4, Struct5, Struct6, Struct7, Struct8, Struct9, Struct10) GetTenComponentsArchetypeUnsafe()
     {
         return (
-            _archetype.GetComponentUnsafe<Type1>(Entity),
-            _archetype.GetComponentUnsafe<Type2>(Entity),
-            _archetype.GetComponentUnsafe<Type3>(Entity),
-            _archetype.GetComponentUnsafe<Type4>(Entity),
-            _archetype.GetComponentUnsafe<Type5>(Entity),
-            _archetype.GetComponentUnsafe<Type6>(Entity),
-            _archetype.GetComponentUnsafe<Type7>(Entity),
-            _archetype.GetComponentUnsafe<Type8>(Entity),
-            _archetype.GetComponentUnsafe<Type9>(Entity),
-            _archetype.GetComponentUnsafe<Type10>(Entity)
+            _archetype.GetComponentUnsafe<Struct1>(Entity),
+            _archetype.GetComponentUnsafe<Struct2>(Entity),
+            _archetype.GetComponentUnsafe<Struct3>(Entity),
+            _archetype.GetComponentUnsafe<Struct4>(Entity),
+            _archetype.GetComponentUnsafe<Struct5>(Entity),
+            _archetype.GetComponentUnsafe<Struct6>(Entity),
+            _archetype.GetComponentUnsafe<Struct7>(Entity),
+            _archetype.GetComponentUnsafe<Struct8>(Entity),
+            _archetype.GetComponentUnsafe<Struct9>(Entity),
+            _archetype.GetComponentUnsafe<Struct10>(Entity)
         );
     }
 
     [Benchmark]
-    public (Type1, Type2, Type3, Type4, Type5, Type6, Type7, Type8, Type9, Type10) GetTenComponentsArchetypeUnsafeHandle()
+    public (Struct1, Struct2, Struct3, Struct4, Struct5, Struct6, Struct7, Struct8, Struct9, Struct10)
+        GetTenComponentsArchetypeUnsafeHandle()
     {
         // Handle is the same as the id
         return (
-            _archetype.GetComponentUnsafeHandle<Type1>(Entity),
-            _archetype.GetComponentUnsafeHandle<Type2>(Entity),
-            _archetype.GetComponentUnsafeHandle<Type3>(Entity),
-            _archetype.GetComponentUnsafeHandle<Type4>(Entity),
-            _archetype.GetComponentUnsafeHandle<Type5>(Entity),
-            _archetype.GetComponentUnsafeHandle<Type6>(Entity),
-            _archetype.GetComponentUnsafeHandle<Type7>(Entity),
-            _archetype.GetComponentUnsafeHandle<Type8>(Entity),
-            _archetype.GetComponentUnsafeHandle<Type9>(Entity),
-            _archetype.GetComponentUnsafeHandle<Type10>(Entity)
+            _archetype.GetComponentUnsafeHandle<Struct1>(Entity),
+            _archetype.GetComponentUnsafeHandle<Struct2>(Entity),
+            _archetype.GetComponentUnsafeHandle<Struct3>(Entity),
+            _archetype.GetComponentUnsafeHandle<Struct4>(Entity),
+            _archetype.GetComponentUnsafeHandle<Struct5>(Entity),
+            _archetype.GetComponentUnsafeHandle<Struct6>(Entity),
+            _archetype.GetComponentUnsafeHandle<Struct7>(Entity),
+            _archetype.GetComponentUnsafeHandle<Struct8>(Entity),
+            _archetype.GetComponentUnsafeHandle<Struct9>(Entity),
+            _archetype.GetComponentUnsafeHandle<Struct10>(Entity)
         );
     }
 
     [Benchmark]
     public bool HasSingleComponentDictionary()
     {
-        return _componentDictionary[typeof(Type1)].ContainsKey(Entity);
+        return _structDictionary[typeof(Struct1)].ContainsKey(Entity);
     }
 
     [Benchmark]
     public bool HasSingleComponentArchetype()
     {
-        return _archetype.HasComponent<Type1>();
+        return _archetype.HasComponent<Struct1>();
     }
 
     [Benchmark]
     public bool HasTenComponentsDictionary()
     {
-        return _componentDictionary[typeof(Type1)].ContainsKey(Entity) &&
-               _componentDictionary[typeof(Type2)].ContainsKey(Entity) &&
-               _componentDictionary[typeof(Type3)].ContainsKey(Entity) &&
-               _componentDictionary[typeof(Type4)].ContainsKey(Entity) &&
-               _componentDictionary[typeof(Type5)].ContainsKey(Entity) &&
-               _componentDictionary[typeof(Type6)].ContainsKey(Entity) &&
-               _componentDictionary[typeof(Type7)].ContainsKey(Entity) &&
-               _componentDictionary[typeof(Type8)].ContainsKey(Entity) &&
-               _componentDictionary[typeof(Type9)].ContainsKey(Entity) &&
-               _componentDictionary[typeof(Type10)].ContainsKey(Entity);
+        return _structDictionary[typeof(Struct1)].ContainsKey(Entity) &&
+               _structDictionary[typeof(Struct2)].ContainsKey(Entity) &&
+               _structDictionary[typeof(Struct3)].ContainsKey(Entity) &&
+               _structDictionary[typeof(Struct4)].ContainsKey(Entity) &&
+               _structDictionary[typeof(Struct5)].ContainsKey(Entity) &&
+               _structDictionary[typeof(Struct6)].ContainsKey(Entity) &&
+               _structDictionary[typeof(Struct7)].ContainsKey(Entity) &&
+               _structDictionary[typeof(Struct8)].ContainsKey(Entity) &&
+               _structDictionary[typeof(Struct9)].ContainsKey(Entity) &&
+               _structDictionary[typeof(Struct10)].ContainsKey(Entity);
     }
 
     [Benchmark]
     public bool HasTenComponentsArchetype()
     {
-        return _archetype.HasComponent<Type1>() &&
-               _archetype.HasComponent<Type2>() &&
-               _archetype.HasComponent<Type3>() &&
-               _archetype.HasComponent<Type4>() &&
-               _archetype.HasComponent<Type5>() &&
-               _archetype.HasComponent<Type6>() &&
-               _archetype.HasComponent<Type7>() &&
-               _archetype.HasComponent<Type8>() &&
-               _archetype.HasComponent<Type9>() &&
-               _archetype.HasComponent<Type10>();
+        return _archetype.HasComponent<Struct1>() &&
+               _archetype.HasComponent<Struct2>() &&
+               _archetype.HasComponent<Struct3>() &&
+               _archetype.HasComponent<Struct4>() &&
+               _archetype.HasComponent<Struct5>() &&
+               _archetype.HasComponent<Struct6>() &&
+               _archetype.HasComponent<Struct7>() &&
+               _archetype.HasComponent<Struct8>() &&
+               _archetype.HasComponent<Struct9>() &&
+               _archetype.HasComponent<Struct10>();
     }
 
     [Benchmark]
     public void IterateSingleComponentDictionary()
     {
-        foreach (Type1 value in _componentDictionary[typeof(Type1)].Values)
+        foreach (Struct1 value in _structDictionary[typeof(Struct1)].Values)
         {
             Consumer.Consume(value);
         }
@@ -238,7 +320,7 @@ public class ArchetypeComponentAccessBenchmark
     [Benchmark]
     public void IterateCastSingleComponentArchetype()
     {
-        foreach (var value in _archetype.IterateSingleCast<Type1>())
+        foreach (var value in _archetype.IterateSingleCast<Struct1>())
         {
             Consumer.Consume(value);
         }
@@ -247,41 +329,129 @@ public class ArchetypeComponentAccessBenchmark
     [Benchmark]
     public void IterateDelegateSingleComponentArchetype()
     {
-        _archetype.IterateSingleDelegate(static (ref Type1 t1) => Consumer.Consume(t1));
+        _archetype.IterateSingleDelegate(static (ref Struct1 t1) => Consumer.Consume(t1));
     }
 
     [Benchmark]
-    public void IterateTenComponentsDictionary()
+    public void IterateTenClassesDictionary()
     {
         for (var i = 0; i < N; i++)
         {
             Consumer.Consume((
-                (Type1) _componentDictionary[typeof(Type1)][i],
-                (Type2) _componentDictionary[typeof(Type2)][i],
-                (Type3) _componentDictionary[typeof(Type3)][i],
-                (Type4) _componentDictionary[typeof(Type4)][i],
-                (Type5) _componentDictionary[typeof(Type5)][i],
-                (Type6) _componentDictionary[typeof(Type6)][i],
-                (Type7) _componentDictionary[typeof(Type7)][i],
-                (Type8) _componentDictionary[typeof(Type8)][i],
-                (Type9) _componentDictionary[typeof(Type9)][i],
-                (Type10) _componentDictionary[typeof(Type10)][i]
+                (Class1) _classDictionary[typeof(Class1)][i],
+                (Class2) _classDictionary[typeof(Class2)][i],
+                (Class3) _classDictionary[typeof(Class3)][i],
+                (Class4) _classDictionary[typeof(Class4)][i],
+                (Class5) _classDictionary[typeof(Class5)][i],
+                (Class6) _classDictionary[typeof(Class6)][i],
+                (Class7) _classDictionary[typeof(Class7)][i],
+                (Class8) _classDictionary[typeof(Class8)][i],
+                (Class9) _classDictionary[typeof(Class9)][i],
+                (Class10) _classDictionary[typeof(Class10)][i]
             ));
         }
     }
 
     [Benchmark]
-    public void IterateDelegateTenComponentsArchetype()
+    public void IterateTenStructsDictionary()
+    {
+        for (var i = 0; i < N; i++)
+        {
+            Consumer.Consume((
+                (Struct1) _structDictionary[typeof(Struct1)][i],
+                (Struct2) _structDictionary[typeof(Struct2)][i],
+                (Struct3) _structDictionary[typeof(Struct3)][i],
+                (Struct4) _structDictionary[typeof(Struct4)][i],
+                (Struct5) _structDictionary[typeof(Struct5)][i],
+                (Struct6) _structDictionary[typeof(Struct6)][i],
+                (Struct7) _structDictionary[typeof(Struct7)][i],
+                (Struct8) _structDictionary[typeof(Struct8)][i],
+                (Struct9) _structDictionary[typeof(Struct9)][i],
+                (Struct10) _structDictionary[typeof(Struct10)][i]
+            ));
+        }
+    }
+
+    [Benchmark]
+    public void IterateTenClassesTraitDictionary()
+    {
+        var enumerator =
+            new DictionaryEnumerator<Class1, Class2, Class3, Class4, Class5, Class6, Class7, Class8, Class9, Class10>(
+                _entTraitArray[CompIdx.ArrayIndex<Class1>()],
+                _entTraitArray[CompIdx.ArrayIndex<Class2>()],
+                _entTraitArray[CompIdx.ArrayIndex<Class3>()],
+                _entTraitArray[CompIdx.ArrayIndex<Class4>()],
+                _entTraitArray[CompIdx.ArrayIndex<Class5>()],
+                _entTraitArray[CompIdx.ArrayIndex<Class6>()],
+                _entTraitArray[CompIdx.ArrayIndex<Class7>()],
+                _entTraitArray[CompIdx.ArrayIndex<Class8>()],
+                _entTraitArray[CompIdx.ArrayIndex<Class9>()],
+                _entTraitArray[CompIdx.ArrayIndex<Class10>()]
+            );
+
+        while (enumerator.MoveNext(
+                   out var t1,
+                   out var t2,
+                   out var t3,
+                   out var t4,
+                   out var t5,
+                   out var t6,
+                   out var t7,
+                   out var t8,
+                   out var t9,
+                   out var t10
+               ))
+        {
+            Consumer.Consume((t1, t2, t3, t4, t5, t6, t7, t8, t9, t10));
+        }
+    }
+
+    [Benchmark]
+    public void IterateTenStructsTraitDictionary()
+    {
+        var enumerator =
+            new DictionaryEnumerator<Struct1, Struct2, Struct3, Struct4, Struct5, Struct6, Struct7, Struct8, Struct9, Struct10>(
+                _entTraitArray[CompIdx.ArrayIndex<Struct1>()],
+                _entTraitArray[CompIdx.ArrayIndex<Struct2>()],
+                _entTraitArray[CompIdx.ArrayIndex<Struct3>()],
+                _entTraitArray[CompIdx.ArrayIndex<Struct4>()],
+                _entTraitArray[CompIdx.ArrayIndex<Struct5>()],
+                _entTraitArray[CompIdx.ArrayIndex<Struct6>()],
+                _entTraitArray[CompIdx.ArrayIndex<Struct7>()],
+                _entTraitArray[CompIdx.ArrayIndex<Struct8>()],
+                _entTraitArray[CompIdx.ArrayIndex<Struct9>()],
+                _entTraitArray[CompIdx.ArrayIndex<Struct10>()]
+            );
+
+        while (enumerator.MoveNext(
+                   out var t1,
+                   out var t2,
+                   out var t3,
+                   out var t4,
+                   out var t5,
+                   out var t6,
+                   out var t7,
+                   out var t8,
+                   out var t9,
+                   out var t10
+               ))
+        {
+            Consumer.Consume((t1, t2, t3, t4, t5, t6, t7, t8, t9, t10));
+        }
+    }
+
+    [Benchmark]
+    public void IterateDelegateTenStructsArchetype()
     {
         _archetype.IterateDelegate(
-            static (ref Type1 t1, ref Type2 t2, ref Type3 t3, ref Type4 t4, ref Type5 t5, ref Type6 t6, ref Type7 t7,
-                    ref Type8 t8, ref Type9 t9, ref Type10 t10) =>
+            static (ref Struct1 t1, ref Struct2 t2, ref Struct3 t3, ref Struct4 t4, ref Struct5 t5, ref Struct6 t6, ref Struct7 t7,
+                    ref Struct8 t8, ref Struct9 t9, ref Struct10 t10) =>
                 Consumer.Consume((t1, t2, t3, t4, t5, t6, t7, t8, t9, t10))
         );
     }
 
     [Benchmark]
-    public void IterateTenComponentsArchetype()
+    public void IterateTenStructsArchetype()
     {
         var comps = _archetype.Iterate();
         while (comps.MoveNext())
@@ -290,20 +460,27 @@ public class ArchetypeComponentAccessBenchmark
         }
     }
 
-    // @formatter:off
-    // ReSharper disable UnusedType.Local
-    public struct Type1{}
-    public struct Type2{}
-    public struct Type3{}
-    public struct Type4{}
-    public struct Type5{}
-    public struct Type6{}
-    public struct Type7{}
-    public struct Type8{}
-    public struct Type9{}
-    public struct Type10{}
-    // ReSharper restore UnusedType.Local
-    // @formatter:on
+    public class Class1{}
+    public class Class2{}
+    public class Class3{}
+    public class Class4{}
+    public class Class5{}
+    public class Class6{}
+    public class Class7{}
+    public class Class8{}
+    public class Class9{}
+    public class Class10{}
+
+    public struct Struct1{}
+    public struct Struct2{}
+    public struct Struct3{}
+    public struct Struct4{}
+    public struct Struct5{}
+    public struct Struct6{}
+    public struct Struct7{}
+    public struct Struct8{}
+    public struct Struct9{}
+    public struct Struct10{}
 
     private sealed class Archetype<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
     {
@@ -520,7 +697,8 @@ public class ArchetypeComponentAccessBenchmark
             };
         }
 
-        private void IterateSingleSpan<T, TComp>([RequireStaticDelegate] IteratorSingle<T> action, TComp[] array) where T : struct
+        private void IterateSingleSpan<T, TComp>([RequireStaticDelegate] IteratorSingle<T> action, TComp[] array)
+            where T : struct
         {
             foreach (ref var comp in array.AsSpan())
             {
@@ -633,7 +811,17 @@ public class ArchetypeComponentAccessBenchmark
             private readonly Span<T10> _t10Comps;
             private int _index;
 
-            public Enumerator(Span<T1> t1Comps, Span<T2> t2Comps, Span<T3> t3Comps, Span<T4> t4Comps, Span<T5> t5Comps, Span<T6> t6Comps, Span<T7> t7Comps, Span<T8> t8Comps, Span<T9> t9Comps, Span<T10> t10Comps)
+            public Enumerator(
+                Span<T1> t1Comps,
+                Span<T2> t2Comps,
+                Span<T3> t3Comps,
+                Span<T4> t4Comps,
+                Span<T5> t5Comps,
+                Span<T6> t6Comps,
+                Span<T7> t7Comps,
+                Span<T8> t8Comps,
+                Span<T9> t9Comps,
+                Span<T10> t10Comps)
             {
                 _t1Comps = t1Comps;
                 _t2Comps = t2Comps;
@@ -671,6 +859,223 @@ public class ArchetypeComponentAccessBenchmark
                 _t9Comps[_index],
                 _t10Comps[_index]
             );
+        }
+    }
+
+    public readonly struct CompIdx : IEquatable<CompIdx>
+    {
+        private static readonly ReaderWriterLockSlim SlowStoreLock = new();
+        private static readonly Dictionary<Type, CompIdx> SlowStore = new();
+
+        internal readonly int Value;
+
+        internal static CompIdx Index<T>() => Store<T>.Index;
+
+        internal static CompIdx Index(Type t)
+        {
+            using (SlowStoreLock.ReadGuard())
+            {
+                if (SlowStore.TryGetValue(t, out var idx))
+                    return idx;
+            }
+
+            // Doesn't exist in the store, get a write lock and add it.
+            using (SlowStoreLock.WriteGuard())
+            {
+                var idx = (CompIdx) typeof(Store<>)
+                    .MakeGenericType(t)
+                    .GetField(nameof(Store<int>.Index), BindingFlags.Static | BindingFlags.Public)!
+                    .GetValue(null)!;
+
+                SlowStore[t] = idx;
+                return idx;
+            }
+        }
+
+        internal static int ArrayIndex<T>() => Index<T>().Value;
+        internal static int ArrayIndex(Type type) => Index(type).Value;
+
+        internal static void AssignArray<T>(ref T[] array, CompIdx idx, T value)
+        {
+            RefArray(ref array, idx) = value;
+        }
+
+        internal static ref T RefArray<T>(ref T[] array, CompIdx idx)
+        {
+            var curLength = array.Length;
+            if (curLength <= idx.Value)
+            {
+                var newLength = MathHelper.NextPowerOfTwo(Math.Max(8, idx.Value));
+                Array.Resize(ref array, newLength);
+            }
+
+            return ref array[idx.Value];
+        }
+
+        internal static int _CompIdxMaster = -1;
+
+        private static class Store<T>
+        {
+            // ReSharper disable once StaticMemberInGenericType
+            public static readonly CompIdx Index = new(Interlocked.Increment(ref _CompIdxMaster));
+        }
+
+        internal CompIdx(int value)
+        {
+            Value = value;
+        }
+
+        public bool Equals(CompIdx other)
+        {
+            return Value == other.Value;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is CompIdx other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return Value;
+        }
+
+        public static bool operator ==(CompIdx left, CompIdx right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(CompIdx left, CompIdx right)
+        {
+            return !left.Equals(right);
+        }
+    }
+
+    public struct DictionaryEnumerator<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+    {
+        private Dictionary<int, object>.Enumerator _t1Comps;
+        private readonly Dictionary<int, object> _t2Comps;
+        private readonly Dictionary<int, object> _t3Comps;
+        private readonly Dictionary<int, object> _t4Comps;
+        private readonly Dictionary<int, object> _t5Comps;
+        private readonly Dictionary<int, object> _t6Comps;
+        private readonly Dictionary<int, object> _t7Comps;
+        private readonly Dictionary<int, object> _t8Comps;
+        private readonly Dictionary<int, object> _t9Comps;
+        private readonly Dictionary<int, object> _t10Comps;
+
+        public DictionaryEnumerator(
+            Dictionary<int, object> t1Comps,
+            Dictionary<int, object> t2Comps,
+            Dictionary<int, object> t3Comps,
+            Dictionary<int, object> t4Comps,
+            Dictionary<int, object> t5Comps,
+            Dictionary<int, object> t6Comps,
+            Dictionary<int, object> t7Comps,
+            Dictionary<int, object> t8Comps,
+            Dictionary<int, object> t9Comps,
+            Dictionary<int, object> t10Comps)
+        {
+            _t1Comps = t1Comps.GetEnumerator();
+            _t2Comps = t2Comps;
+            _t3Comps = t3Comps;
+            _t4Comps = t4Comps;
+            _t5Comps = t5Comps;
+            _t6Comps = t6Comps;
+            _t7Comps = t7Comps;
+            _t8Comps = t8Comps;
+            _t9Comps = t9Comps;
+            _t10Comps = t10Comps;
+        }
+
+        public bool MoveNext(
+            out T1 comp1,
+            out T2 comp2,
+            out T3 comp3,
+            out T4 comp4,
+            out T5 comp5,
+            out T6 comp6,
+            out T7 comp7,
+            out T8 comp8,
+            out T9 comp9,
+            out T10 comp10)
+        {
+            while (true)
+            {
+                if (!_t1Comps.MoveNext())
+                {
+                    comp1 = default!;
+                    comp2 = default!;
+                    comp3 = default!;
+                    comp4 = default!;
+                    comp5 = default!;
+                    comp6 = default!;
+                    comp7 = default!;
+                    comp8 = default!;
+                    comp9 = default!;
+                    comp10 = default!;
+                    return false;
+                }
+
+                var current = _t1Comps.Current;
+
+                if (!_t2Comps.TryGetValue(current.Key, out var comp2Obj))
+                {
+                    continue;
+                }
+
+                if (!_t3Comps.TryGetValue(current.Key, out var comp3Obj))
+                {
+                    continue;
+                }
+
+                if (!_t4Comps.TryGetValue(current.Key, out var comp4Obj))
+                {
+                    continue;
+                }
+
+                if (!_t5Comps.TryGetValue(current.Key, out var comp5Obj))
+                {
+                    continue;
+                }
+
+                if (!_t6Comps.TryGetValue(current.Key, out var comp6Obj))
+                {
+                    continue;
+                }
+
+                if (!_t7Comps.TryGetValue(current.Key, out var comp7Obj))
+                {
+                    continue;
+                }
+
+                if (!_t8Comps.TryGetValue(current.Key, out var comp8Obj))
+                {
+                    continue;
+                }
+
+                if (!_t9Comps.TryGetValue(current.Key, out var comp9Obj))
+                {
+                    continue;
+                }
+
+                if (!_t10Comps.TryGetValue(current.Key, out var comp10Obj))
+                {
+                    continue;
+                }
+
+                comp1 = (T1) current.Value;
+                comp2 = (T2) comp2Obj;
+                comp3 = (T3) comp3Obj;
+                comp4 = (T4) comp4Obj;
+                comp5 = (T5) comp5Obj;
+                comp6 = (T6) comp6Obj;
+                comp7 = (T7) comp7Obj;
+                comp8 = (T8) comp8Obj;
+                comp9 = (T9) comp9Obj;
+                comp10 = (T10) comp10Obj;
+                return true;
+            }
         }
     }
 }

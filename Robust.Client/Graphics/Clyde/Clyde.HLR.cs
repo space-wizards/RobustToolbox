@@ -11,6 +11,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
 {

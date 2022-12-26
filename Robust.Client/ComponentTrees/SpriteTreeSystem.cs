@@ -35,6 +35,6 @@ public sealed class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, 
     protected override int InitialCapacity => 1024;
 
     protected override Box2 ExtractAabb(in ComponentTreeEntry<SpriteComponent> entry, Vector2 pos, Angle rot)
-        => entry.Component.CalculateRotatedBoundingBox(pos, rot).CalcBoundingBox();
+        => entry.Component.CalculateRotatedBoundingBox(pos, rot, default).CalcBoundingBox();
     #endregion
 }

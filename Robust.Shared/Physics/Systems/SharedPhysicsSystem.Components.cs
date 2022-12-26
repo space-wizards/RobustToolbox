@@ -345,7 +345,9 @@ public partial class SharedPhysicsSystem
     {
         if (value)
         {
-            if (Resolve(body.Owner, ref awake, false))
+            // Don't make the body awake if it's terminating either.
+            if (Resolve(body.Owner, ref awake, false) ||
+                Terminating(body.Owner))
                 return;
         }
         else

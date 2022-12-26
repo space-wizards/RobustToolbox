@@ -263,6 +263,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapComponent>();
             compFactory.RegisterClass<MapLightComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
+            compFactory.RegisterClass<AwakePhysicsComponent>();
             compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
@@ -279,7 +280,6 @@ namespace Robust.UnitTesting.Server
 
             var entitySystemMan = container.Resolve<IEntitySystemManager>();
 
-            // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<SharedGridTraversalSystem>();
             entitySystemMan.LoadExtraSystemType<ContainerSystem>();

@@ -80,12 +80,23 @@ namespace Robust.Shared.Maths
             allX = modX + originX;
             allY = modY + originY;
 
-            var l = SimdHelpers.MinHorizontal128(allX);
-            var b = SimdHelpers.MinHorizontal128(allY);
-            var r = SimdHelpers.MaxHorizontal128(allX);
-            var t = SimdHelpers.MaxHorizontal128(allY);
+            // lrlr = vector containing [left right left right]
+            Vector128<float> lbrt;
 
-            var lbrt = SimdHelpers.MergeRows128(l, b, r, t);
+            if (Sse.IsSupported)
+            {
+                var lrlr = SimdHelpers.MinMaxHorizontalSse(allX);
+                var btbt = SimdHelpers.MinMaxHorizontalSse(allY);
+                lbrt = Sse.UnpackLow(lrlr, btbt);
+            }
+            else
+            {
+                var l = SimdHelpers.MinHorizontal128(allX);
+                var b = SimdHelpers.MinHorizontal128(allY);
+                var r = SimdHelpers.MaxHorizontal128(allX);
+                var t = SimdHelpers.MaxHorizontal128(allY);
+                lbrt = SimdHelpers.MergeRows128(l, b, r, t);
+            }
 
             return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
         }

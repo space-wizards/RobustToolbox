@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Client.Graphics;
 using Robust.Client.Physics;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -21,6 +22,7 @@ namespace Robust.Client.GameObjects
     public sealed class RenderingTreeSystem : EntitySystem
     {
         [Dependency] private readonly TransformSystem _xformSystem = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
 
         internal const string LoggerSawmill = "rendertree";
 
@@ -375,7 +377,7 @@ namespace Robust.Client.GameObjects
 
         private Box2 SpriteAabbFunc(SpriteComponent value, TransformComponent xform, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xforms)
         {
-            var bounds = value.CalculateRotatedBoundingBox(worldPos, worldRot);
+            var bounds = value.CalculateRotatedBoundingBox(worldPos, worldRot, _eyeManager.CurrentEye.Rotation);
             var tree = GetRenderTree(value.Owner, xform, xforms);
 
             return tree == null ? bounds.CalcBoundingBox() : _xformSystem.GetInvWorldMatrix(tree.Owner, xforms).TransformBox(bounds);

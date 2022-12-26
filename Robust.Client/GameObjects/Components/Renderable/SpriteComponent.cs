@@ -1474,7 +1474,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc/>
-        public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, IEye? eye = null)
+        public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, Angle eyeRot)
         {
             // fast check for empty sprites
             if (!Visible || Layers.Count == 0)
@@ -1491,21 +1491,23 @@ namespace Robust.Client.GameObjects
             if (worldRotation.Theta < 0)
                 worldRotation = new Angle(worldRotation.Theta + Math.Tau);
 
-            eye ??= eyeManager.CurrentEye;
-
             // Next, what we do is take the box2 and apply the sprite's transform, and then the entity's transform. We
             // could do this via Matrix3.TransformBox, but that only yields bounding boxes. So instead we manually
             // transform our box by the combination of these matrices:
 
+            Angle finalRotation = NoRotation
+                ? Rotation - eyeRot
+                : Rotation + worldRotation;
+
+            // slightly faster path if offset == 0 (true for 99.9% of sprites)
+            if (Offset == Vector2.Zero)
+                return new Box2Rotated(Bounds.Translated(worldPosition), finalRotation, worldPosition);
+
             var adjustedOffset = NoRotation
-                ? (-eye.Rotation).RotateVec(Offset)
+                ? (-eyeRot).RotateVec(Offset)
                 : worldRotation.RotateVec(Offset);
 
             Vector2 position = adjustedOffset + worldPosition;
-            Angle finalRotation = NoRotation
-                ? Rotation - eye.Rotation
-                : Rotation + worldRotation;
-
             return new Box2Rotated(Bounds.Translated(position), finalRotation, position);
         }
 

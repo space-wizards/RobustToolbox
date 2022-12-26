@@ -63,8 +63,6 @@ namespace Robust.Shared.Physics
 
         bool SleepingAllowed { get; set; }
 
-        float SleepTime { get; set; }
-
         float LinearDamping { get; set; }
 
         float AngularDamping { get; set; }

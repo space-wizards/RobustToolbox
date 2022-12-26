@@ -71,13 +71,5 @@ namespace Robust.Shared.Physics.Controllers
         /// <param name="prediction"></param>
         /// <param name="frameTime"></param>
         public virtual void UpdateAfterSolve(bool prediction, float frameTime) {}
-
-        /// <summary>
-        ///     Run before a particular map starts.
-        /// </summary>
-        /// <param name="prediction"></param>
-        /// <param name="mapComponent"></param>
-        /// <param name="frameTime"></param>
-        public virtual void UpdateBeforeMapSolve(bool prediction, SharedPhysicsMapComponent mapComponent, float frameTime) {}
     }
 }

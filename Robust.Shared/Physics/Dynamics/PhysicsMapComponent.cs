@@ -67,7 +67,8 @@ namespace Robust.Shared.Physics.Dynamics
 
         private Vector2 _gravity;
 
-        private void WakeBodiesRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> bodyQuery)
+        private void WakeBodiesRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<PhysicsComponent> bodyQuery)
         {
             if (bodyQuery.TryGetComponent(uid, out var body) &&
                 body.BodyType == BodyType.Dynamic)
@@ -89,5 +90,5 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         internal float _invDt0;
 
-
+    }
 }

@@ -23,10 +23,6 @@ namespace Robust.Client.GameObjects
             RegisterClass<ContainerManagerComponent>();
             RegisterClass<InputComponent>();
             RegisterClass<SpriteComponent>();
-            RegisterClass<OccluderComponent>();
-            RegisterClass<OccluderTreeComponent>();
-            RegisterClass<SpriteTreeComponent>();
-            RegisterClass<LightTreeComponent>();
             RegisterClass<EyeComponent>();
             RegisterClass<AnimationPlayerComponent>();
             RegisterClass<TimerComponent>();

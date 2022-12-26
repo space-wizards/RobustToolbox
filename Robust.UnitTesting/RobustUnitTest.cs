@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
 using Robust.Server.Containers;
 using Robust.Server.Debugging;
@@ -120,6 +121,7 @@ namespace Robust.UnitTesting
             var mapMan = deps.Resolve<IMapManager>();
 
             // Required components for the engine to work
+            // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?
             var compFactory = deps.Resolve<IComponentFactory>();
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MapComponent)))
@@ -155,6 +157,26 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(JointComponent)))
             {
                 compFactory.RegisterClass<JointComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(OccluderComponent)))
+            {
+                compFactory.RegisterClass<OccluderComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(OccluderTreeComponent)))
+            {
+                compFactory.RegisterClass<OccluderTreeComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(SpriteTreeComponent)))
+            {
+                compFactory.RegisterClass<SpriteTreeComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(LightTreeComponent)))
+            {
+                compFactory.RegisterClass<LightTreeComponent>();
             }
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.

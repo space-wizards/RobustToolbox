@@ -231,7 +231,7 @@ public sealed class Broadphase_Test
         var AssertMap = (EntityUid map, EntityUid otherMap) =>
         {
             var broadphase = entManager.GetComponent<BroadphaseComponent>(map);
-            var physMap = entManager.GetComponent<SharedPhysicsMapComponent>(map);
+            var physMap = entManager.GetComponent<PhysicsMapComponent>(map);
             Assert.That(parentXform.ParentUid == map);
             Assert.That(parentXform.MapUid == map);
             Assert.That(childXform.MapUid == map);
@@ -240,7 +240,7 @@ public sealed class Broadphase_Test
             Assert.That(parentXform.Broadphase == new BroadphaseData(map, default, false, false));
             Assert.That(childXform.Broadphase == new BroadphaseData(map, map, true, true));
             Assert.That(physMap.MoveBuffer.ContainsKey(childFixtures.Fixtures.First().Value.Proxies.First()));
-            var otherPhysMap = entManager.GetComponent<SharedPhysicsMapComponent>(otherMap);
+            var otherPhysMap = entManager.GetComponent<PhysicsMapComponent>(otherMap);
             Assert.That(otherPhysMap.MoveBuffer.Count == 0);
         };
         AssertMap(mapA, mapB);
@@ -263,7 +263,7 @@ public sealed class Broadphase_Test
         var AssertGrid = (EntityUid grid, EntityUid map, EntityUid otherMap) =>
         {
             var broadphase = entManager.GetComponent<BroadphaseComponent>(grid);
-            var physMap = entManager.GetComponent<SharedPhysicsMapComponent>(map);
+            var physMap = entManager.GetComponent<PhysicsMapComponent>(map);
             var gridXform = entManager.GetComponent<TransformComponent>(grid);
             Assert.That(gridXform.ParentUid == map);
             Assert.That(gridXform.MapUid == map);
@@ -275,7 +275,7 @@ public sealed class Broadphase_Test
             Assert.That(parentXform.Broadphase == new BroadphaseData(grid, default, false, false));
             Assert.That(childXform.Broadphase == new BroadphaseData(grid, map, true, true));
             Assert.That(physMap.MoveBuffer.ContainsKey(childFixtures.Fixtures.First().Value.Proxies.First()));
-            var otherPhysMap = entManager.GetComponent<SharedPhysicsMapComponent>(otherMap);
+            var otherPhysMap = entManager.GetComponent<PhysicsMapComponent>(otherMap);
             Assert.That(otherPhysMap.MoveBuffer.Count == 0);
         };
         AssertGrid(gridA, mapA, mapB);

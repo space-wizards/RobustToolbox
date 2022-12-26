@@ -21,8 +21,8 @@
 */
 
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -34,7 +34,8 @@ using PhysicsComponent = Robust.Shared.Physics.Components.PhysicsComponent;
 
 namespace Robust.Shared.Physics.Dynamics
 {
-    public abstract class SharedPhysicsMapComponent : Component
+    [RegisterComponent, NetworkedComponent]
+    public sealed class PhysicsMapComponent : Component
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
@@ -95,10 +96,6 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
-        // and one that includes the body
-        protected readonly HashSet<TransformComponent> DeferredUpdates = new();
-
         /// <summary>
         ///     All awake bodies on this map.
         /// </summary>
@@ -139,30 +136,16 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         #endregion
-
-        /// <summary>
-        ///     Go through all of the deferred MoveEvents and then run them
-        /// </summary>
-        public virtual void ProcessQueue()
-        {
-            // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
-            foreach (var xform in DeferredUpdates)
-            {
-                xform.RunDeferred();
-            }
-
-            DeferredUpdates.Clear();
-        }
     }
 
     [ByRefEvent]
     public readonly struct PhysicsUpdateBeforeMapSolveEvent
     {
         public readonly bool Prediction;
-        public readonly SharedPhysicsMapComponent MapComponent;
+        public readonly PhysicsMapComponent MapComponent;
         public readonly float DeltaTime;
 
-        public PhysicsUpdateBeforeMapSolveEvent(bool prediction, SharedPhysicsMapComponent mapComponent, float deltaTime)
+        public PhysicsUpdateBeforeMapSolveEvent(bool prediction, PhysicsMapComponent mapComponent, float deltaTime)
         {
             Prediction = prediction;
             MapComponent = mapComponent;
@@ -174,10 +157,10 @@ namespace Robust.Shared.Physics.Dynamics
     public readonly struct PhysicsUpdateAfterMapSolveEvent
     {
         public readonly bool Prediction;
-        public readonly SharedPhysicsMapComponent MapComponent;
+        public readonly PhysicsMapComponent MapComponent;
         public readonly float DeltaTime;
 
-        public PhysicsUpdateAfterMapSolveEvent(bool prediction, SharedPhysicsMapComponent mapComponent, float deltaTime)
+        public PhysicsUpdateAfterMapSolveEvent(bool prediction, PhysicsMapComponent mapComponent, float deltaTime)
         {
             Prediction = prediction;
             MapComponent = mapComponent;

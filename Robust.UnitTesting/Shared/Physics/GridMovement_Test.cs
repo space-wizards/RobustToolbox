@@ -62,7 +62,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
 
             // Alright just a quick validation then we start the actual damn test.
 
-            var physicsMap = entManager.GetComponent<SharedPhysicsMapComponent>(mapManager.GetMapEntityId(mapId));
+            var physicsMap = entManager.GetComponent<PhysicsMapComponent>(mapManager.GetMapEntityId(mapId));
             physSystem.Step(physicsMap, 0.001f, false);
 
             Assert.That(onGridBody.ContactCount, Is.EqualTo(0));

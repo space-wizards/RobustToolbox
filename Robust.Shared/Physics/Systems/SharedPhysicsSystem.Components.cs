@@ -164,12 +164,6 @@ public partial class SharedPhysicsSystem
 
     #region Setters
 
-    public void DestroyContacts(PhysicsComponent body, TransformComponent? xform = null)
-    {
-        if (body.Contacts.Count == 0) return;
-        DestroyContacts(body);
-    }
-
     public void DestroyContacts(PhysicsComponent body)
     {
         if (body.Contacts.Count == 0) return;

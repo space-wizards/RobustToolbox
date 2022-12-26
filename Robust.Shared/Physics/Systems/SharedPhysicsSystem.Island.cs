@@ -626,7 +626,6 @@ public abstract partial class SharedPhysicsSystem
         ref IslandData island,
         in SolverData data,
         ParallelOptions? options,
-        Vector2 gravity,
         bool prediction,
         Vector2[] solvedPositions,
         float[] solvedAngles,
@@ -660,11 +659,7 @@ public abstract partial class SharedPhysicsSystem
             // if the body cannot move, nothing to do here
             if (body.BodyType == BodyType.Dynamic)
             {
-                if (body.IgnoreGravity)
-                    linearVelocity += body.Force * data.FrameTime * body.InvMass;
-                else
-                    linearVelocity += (gravity + body.Force * body.InvMass) * data.FrameTime;
-
+                linearVelocity += body.Force * data.FrameTime * body.InvMass;
                 angularVelocity += data.FrameTime * body.InvI * body.Torque;
 
                 linearVelocity *= Math.Clamp(1.0f - data.FrameTime * body.LinearDamping, 0.0f, 1.0f);

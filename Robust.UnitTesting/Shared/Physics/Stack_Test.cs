@@ -34,6 +34,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 
@@ -65,7 +66,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 mapId = mapManager.CreateMap();
 
                 EntityUid tempQualifier2 = mapManager.GetMapEntityId(mapId);
-                entityManager.GetComponent<PhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
+                entitySystemManager.GetEntitySystem<Gravity2DController>().SetGravity(tempQualifier2, new Vector2(0f, -9.8f));
 
                 EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                 var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);
@@ -183,7 +184,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 mapId = mapManager.CreateMap();
                 EntityUid tempQualifier2 = mapManager.GetMapEntityId(mapId);
-                entityManager.GetComponent<PhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
+                entitySystemManager.GetEntitySystem<Gravity2DController>().SetGravity(tempQualifier2, new Vector2(0f, -9.8f));
 
                 EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                 var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);

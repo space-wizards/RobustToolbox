@@ -168,7 +168,6 @@ public abstract partial class SharedPhysicsSystem
     // Caching for island generation.
     private readonly HashSet<PhysicsComponent> _islandSet = new(64);
     private readonly Stack<PhysicsComponent> _bodyStack = new(64);
-    private readonly List<PhysicsComponent> _awakeBodyList = new(256);
 
     // Config
     private bool _warmStarting;
@@ -272,45 +271,38 @@ public abstract partial class SharedPhysicsSystem
 
     #endregion
 
-    /// <summary>
-    ///     Where the magic happens.
-    /// </summary>
-    public void Step(SharedPhysicsMapComponent component, float frameTime, bool prediction)
+    private void ClearForces()
     {
-        var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
-        var dtRatio = component._invDt0 * frameTime;
+        var awakeQuery = AllEntityQuery<AwakePhysicsComponent, PhysicsComponent>();
 
-        // Integrate velocities, solve velocity constraints, and do integration.
-        Solve(component, frameTime, dtRatio, invDt, prediction);
-
-        // TODO: SolveTOI
-
-        var updateAfterSolve = new PhysicsUpdateAfterMapSolveEvent(prediction, component, frameTime);
-        RaiseLocalEvent(ref updateAfterSolve);
-
-        // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it
-        if (!prediction && component.AutoClearForces)
-            ClearForces(component);
-
-        component._invDt0 = invDt;
-    }
-
-    private void ClearForces(SharedPhysicsMapComponent component)
-    {
-        foreach (var body in component.AwakeBodies)
+        while (awakeQuery.MoveNext(out _, out var body))
         {
-            // TODO: Netsync
-            body.Force = Vector2.Zero;
-            body.Torque = 0.0f;
+            var update = false;
+
+            if (body.Force != Vector2.Zero)
+            {
+                body.Force = Vector2.Zero;
+                update = true;
+            }
+
+            if (body.Torque != 0f)
+            {
+                body.Torque = 0f;
+                update = true;
+            }
+
+            if (update)
+                Dirty(body);
         }
     }
 
-    private void Solve(SharedPhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void Solve(float frameTime, float dtRatio, bool prediction)
     {
         // Build and simulated islands from awake bodies.
-        _bodyStack.EnsureCapacity(component.AwakeBodies.Count);
-        _islandSet.EnsureCapacity(component.AwakeBodies.Count);
-        _awakeBodyList.AddRange(component.AwakeBodies);
+        var awakeCount = EntityManager.Count<AwakePhysicsComponent>();
+
+        _bodyStack.EnsureCapacity(awakeCount);
+        _islandSet.EnsureCapacity(awakeCount);
 
         var bodyQuery = GetEntityQuery<PhysicsComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -327,7 +319,9 @@ public abstract partial class SharedPhysicsSystem
         var islands = new List<IslandData>();
 
         // Build the relevant islands / graphs for all bodies.
-        foreach (var seed in _awakeBodyList)
+        var awakeQuery = AllEntityQuery<AwakePhysicsComponent, PhysicsComponent>();
+
+        while (awakeQuery.MoveNext(out _, out var seed))
         {
             // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
             // when contact broke so if you want to try that then GOOD LUCK.
@@ -336,7 +330,6 @@ public abstract partial class SharedPhysicsSystem
             if (!metaQuery.TryGetComponent(seed.Owner, out var metadata))
             {
                 _sawmill.Error($"Found deleted entity {ToPrettyString(seed.Owner)} on map!");
-                component.RemoveSleepBody(seed);
                 continue;
             }
 
@@ -461,14 +454,14 @@ public abstract partial class SharedPhysicsSystem
             ReturnIsland(loneIsland);
         }
 
-        SolveIslands(component, islands, frameTime, dtRatio, invDt, prediction);
+        SolveIslands(islands, frameTime, dtRatio, prediction);
 
         foreach (var island in islands)
         {
             ReturnIsland(island);
         }
 
-        Cleanup(component, frameTime);
+        Cleanup(frameTime);
     }
 
     private void ReturnIsland(IslandData island)
@@ -490,7 +483,7 @@ public abstract partial class SharedPhysicsSystem
         island.BrokenJoints.Clear();
     }
 
-    protected virtual void Cleanup(SharedPhysicsMapComponent component, float frameTime)
+    protected virtual void Cleanup(float frameTime)
     {
         foreach (var body in _islandSet)
         {
@@ -506,18 +499,17 @@ public abstract partial class SharedPhysicsSystem
         }
 
         _islandSet.Clear();
-        _awakeBodyList.Clear();
     }
 
-    private void SolveIslands(SharedPhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void SolveIslands(List<IslandData> islands, float frameTime, float dtRatio, bool prediction)
     {
         var iBegin = 0;
-        var gravity = component.Gravity;
+        var gravity = Vector2.Zero;
 
         var data = new SolverData(
             frameTime,
             dtRatio,
-            invDt,
+            _invDT,
             _warmStarting,
             _maxLinearCorrection,
             _maxAngularCorrection,
@@ -546,7 +538,6 @@ public abstract partial class SharedPhysicsSystem
         {
             ref var island = ref actualIslands[i];
             island.Offset = totalBodies;
-            UpdateLerpData(component, island.Bodies, xformQuery);
 
 #if DEBUG
             RaiseLocalEvent(new IslandSolveMessage(island.Bodies));
@@ -612,7 +603,7 @@ public abstract partial class SharedPhysicsSystem
     /// If this is the first time a body has been updated this tick update its position for lerping.
     /// Due to substepping we have to check it every time.
     /// </summary>
-    protected virtual void UpdateLerpData(SharedPhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+    protected virtual void UpdateLerpData()
     {
 
     }

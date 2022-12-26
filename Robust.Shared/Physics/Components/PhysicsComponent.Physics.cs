@@ -84,12 +84,11 @@ namespace Robust.Shared.Physics.Components
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Awake
         {
-            get => _awake;
+            [Obsolete("Use SharedPhysicsSystem.IsAwake")]
+            get => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().IsAwake(Owner);
             [Obsolete("Use SharedPhysicsSystem.SetAwake")]
             set => SetAwake(value);
         }
-
-        internal bool _awake = false;
 
         [Obsolete("Use SharedPhysicsSystem.SetAwake")]
         public void SetAwake(bool value, bool updateSleepTime = true)

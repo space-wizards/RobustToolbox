@@ -33,7 +33,6 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Utility;
-using SharpZstd.Interop;
 
 namespace Robust.Shared.Physics.Systems;
 
@@ -334,15 +333,34 @@ public partial class SharedPhysicsSystem
             Dirty(body);
     }
 
-    public void SetAwake(PhysicsComponent body, bool value, bool updateSleepTime = true)
+    public bool IsAwake(EntityUid uid, AwakePhysicsComponent? body = null)
     {
-        if (body._awake == value)
-            return;
+        if (!Resolve(uid, ref body, false))
+            return false;
+
+        return true;
+    }
+
+    public void SetAwake(PhysicsComponent body, bool value, bool updateSleepTime = true, AwakePhysicsComponent? awake = null)
+    {
+        if (value)
+        {
+            if (Resolve(body.Owner, ref awake, false))
+                return;
+        }
+        else
+        {
+            if (!Resolve(body.Owner, ref awake, false))
+                return;
+        }
 
         if (value && (body.BodyType == BodyType.Static || !body.CanCollide))
             return;
 
-        body._awake = value;
+        if (value)
+            AddComp<AwakePhysicsComponent>(body.Owner);
+        else
+            RemComp<AwakePhysicsComponent>(body.Owner);
 
         if (value)
         {
@@ -539,8 +557,7 @@ public partial class SharedPhysicsSystem
         if (!Resolve(uid, ref body, ref manager))
             return false;
 
-        WakeBody(body, manager, force);
-        return body._awake;
+        return WakeBody(body, manager, force);
     }
 
     /// <summary>
@@ -554,7 +571,7 @@ public partial class SharedPhysicsSystem
             return false;
 
         SetAwake(body, true);
-        return body._awake;
+        return HasComp<AwakePhysicsComponent>(body.Owner);
     }
 
     #endregion

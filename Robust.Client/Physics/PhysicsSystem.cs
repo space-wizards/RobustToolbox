@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
@@ -15,12 +16,18 @@ namespace Robust.Client.Physics
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
+        /// <summary>
+        /// When substepping the client needs to know about the first position to use for lerping.
+        /// </summary>
+        private readonly Dictionary<EntityUid, (EntityUid ParentUid, Vector2 LocalPosition, Angle LocalRotation)>
+            _lerpData = new();
+
         public override void Update(float frameTime)
         {
             SimulateWorld(frameTime, _gameTiming.InPrediction);
         }
 
-        protected override void Cleanup(SharedPhysicsMapComponent component, float frameTime)
+        protected override void Cleanup(float frameTime)
         {
             var toRemove = new List<PhysicsComponent>();
 
@@ -28,7 +35,9 @@ namespace Robust.Client.Physics
             // (and serializing it over the network isn't necessary?)
             // This is a client-only problem.
             // Also need to suss out having the client build the island anyway and just... not solving it?
-            foreach (var body in component.AwakeBodies)
+            var awakeQuery = AllEntityQuery<AwakePhysicsComponent, PhysicsComponent>();
+
+            while (awakeQuery.MoveNext(out _, out var body))
             {
                 if (body.LinearVelocity.Length > LinearToleranceSqr / 2f || body.AngularVelocity * body.AngularVelocity > AngularToleranceSqr / 2f) continue;
                 body.SleepTime += frameTime;
@@ -40,37 +49,40 @@ namespace Robust.Client.Physics
 
             foreach (var body in toRemove)
             {
-                body.Awake = false;
+                SetAwake(body, false);
             }
 
-            base.Cleanup(component, frameTime);
+            base.Cleanup(frameTime);
         }
 
-        protected override void UpdateLerpData(SharedPhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+        protected override void UpdateLerpData()
         {
-            foreach (var body in bodies)
+            var awakeQuery = AllEntityQuery<AwakePhysicsComponent, PhysicsComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
+
+            while (awakeQuery.MoveNext(out _, out var body))
             {
                 if (body.BodyType == BodyType.Static ||
-                    component.LerpData.TryGetValue(body.Owner, out var lerpData) ||
+                    _lerpData.TryGetValue(body.Owner, out var lerpData) ||
                     !xformQuery.TryGetComponent(body.Owner, out var xform) ||
                     lerpData.ParentUid == xform.ParentUid)
                 {
                     continue;
                 }
 
-                component.LerpData[xform.Owner] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
+                _lerpData[xform.Owner] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
             }
         }
 
         /// <summary>
         /// Flush all of our lerping data.
         /// </summary>
-        protected override void FinalStep(SharedPhysicsMapComponent component)
+        protected override void FinalStep()
         {
-            base.FinalStep(component);
+            base.FinalStep();
             var xformQuery = GetEntityQuery<TransformComponent>();
 
-            foreach (var (uid, (parentUid, position, rotation)) in component.LerpData)
+            foreach (var (uid, (parentUid, position, rotation)) in _lerpData)
             {
                 if (!xformQuery.TryGetComponent(uid, out var xform) ||
                     !parentUid.IsValid())
@@ -85,7 +97,7 @@ namespace Robust.Client.Physics
                 xform.NextRotation = xform.LocalRotation;
             }
 
-            component.LerpData.Clear();
+            _lerpData.Clear();
         }
     }
 }

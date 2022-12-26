@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public Vector2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<Vector2>? instanceProvider = null)
         {
@@ -54,7 +54,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public Vector2 CreateCopy(ISerializationManager serializationManager, Vector2 source,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new(source.X, source.Y);

@@ -101,9 +101,7 @@ internal abstract partial class ViewVariablesManager
         if (value == null || type == typeof(void))
             return null;
 
-        var objType = type;
-
-        var node = _serMan.WriteValue(type, value);
+        var node = _serMan.WriteValue(type, value, true);
 
         // Don't replace an existing tag if it's null.
         if(!string.IsNullOrEmpty(nodeTag))

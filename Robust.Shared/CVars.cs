@@ -10,16 +10,10 @@ using Robust.Shared.Physics;
 
 namespace Robust.Shared
 {
+    /// <seealso cref="CVarDefaultOverrides"/>
     [CVarDefs]
     public abstract class CVars
     {
-#if FULL_RELEASE
-        private const bool ConstFullRelease = true;
-#else
-        private const bool ConstFullRelease = false;
-#endif
-
-
         protected CVars()
         {
             throw new InvalidOperationException("This class must not be instantiated");
@@ -121,7 +115,7 @@ namespace Robust.Shared
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
-            CVarDef.Create("net.buffer_size", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Enable verbose game state/networking logging.
@@ -998,6 +992,14 @@ namespace Robust.Shared
         public static readonly CVarDef<float> BroadphaseExpand =
             CVarDef.Create("physics.broadphase_expand", 2f, CVar.ARCHIVE | CVar.REPLICATED);
 
+        /// <summary>
+        /// The target minimum ticks per second on the server.
+        /// This is used for substepping and will help with clipping/physics issues and such.
+        /// Ideally 50-60 is the minimum.
+        /// </summary>
+        public static readonly CVarDef<int> TargetMinimumTickrate =
+            CVarDef.Create("physics.target_minimum_tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
         // Grid fixtures
         /// <summary>
         /// I'ma be real with you: the only reason this exists is to get tests working.
@@ -1017,13 +1019,6 @@ namespace Robust.Shared
         public static readonly CVarDef<float> GridFixtureEnlargement =
             CVarDef.Create("physics.grid_fixture_enlargement", -PhysicsConstants.PolygonRadius, CVar.ARCHIVE | CVar.REPLICATED);
 
-        // - Contacts
-        public static readonly CVarDef<int> ContactMultithreadThreshold =
-            CVarDef.Create("physics.contact_multithread_threshold", 32);
-
-        public static readonly CVarDef<int> ContactMinimumThreads =
-            CVarDef.Create("physics.contact_minimum_threads", 2);
-
         // - Sleep
         public static readonly CVarDef<float> AngularSleepTolerance =
             CVarDef.Create("physics.angsleeptol", 0.3f / 180.0f * MathF.PI);
@@ -1039,17 +1034,6 @@ namespace Robust.Shared
             CVarDef.Create("physics.timetosleep", 0.2f);
 
         // - Solver
-        public static readonly CVarDef<int> PositionConstraintsPerThread =
-            CVarDef.Create("physics.position_constraints_per_thread", 32);
-
-        public static readonly CVarDef<int> PositionConstraintsMinimumThread =
-            CVarDef.Create("physics.position_constraints_minimum_threads", 2);
-
-        public static readonly CVarDef<int> VelocityConstraintsPerThread =
-            CVarDef.Create("physics.velocity_constraints_per_thread", 32);
-
-        public static readonly CVarDef<int> VelocityConstraintMinimumThreads =
-            CVarDef.Create("physics.velocity_constraints_minimum_threads", 2);
 
         // These are the minimum recommended by Box2D with the standard being 8 velocity 3 position iterations.
         // Trade-off is obviously performance vs how long it takes to stabilise.
@@ -1384,12 +1368,12 @@ namespace Robust.Shared
         /// <summary>
         /// Event log buffer size for the profiling system.
         /// </summary>
-        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", ConstFullRelease ? 8192 : 65536);
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", 8192);
 
         /// <summary>
         /// Index log buffer size for the profiling system.
         /// </summary>
-        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", 128);
 
         /*
          * CFG

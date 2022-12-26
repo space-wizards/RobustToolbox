@@ -113,13 +113,12 @@ namespace Robust.Shared.Maths
             // No calculation necessery when theta is zero
             if (Theta == 0) return vec;
 
-            var (x, y) = vec;
-            var cos = Math.Cos(Theta);
-            var sin = Math.Sin(Theta);
-            var dx = cos * x - sin * y;
-            var dy = sin * x + cos * y;
+            var cos = MathF.Cos((float)Theta);
+            var sin = MathF.Sin((float)Theta);
+            var dx = cos * vec.X - sin * vec.Y;
+            var dy = sin * vec.X + cos * vec.Y;
 
-            return new Vector2((float)dx, (float)dy);
+            return new Vector2(dx, dy);
         }
 
         public bool EqualsApprox(Angle other, double tolerance)

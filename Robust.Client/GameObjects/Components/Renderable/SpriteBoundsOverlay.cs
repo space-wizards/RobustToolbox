@@ -76,7 +76,7 @@ namespace Robust.Client.GameObjects
             foreach (var (sprite, xform) in _renderTree.QueryAabb(currentMap, viewport))
             {
                 var (worldPos, worldRot) = xform.GetWorldPositionRotation();
-                var bounds = sprite.CalculateRotatedBoundingBox(worldPos, worldRot);
+                var bounds = sprite.CalculateRotatedBoundingBox(worldPos, worldRot, args.Viewport.Eye?.Rotation ?? default);
 
                 // Get scaled down bounds used to indicate the "south" of a sprite.
                 var localBound = bounds.Box;

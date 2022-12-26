@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -14,6 +13,7 @@ using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -45,19 +45,23 @@ namespace Robust.Shared.Physics.Systems
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
-        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedJointSystem _joints = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
-        [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
-        [Dependency] private readonly IManifoldManager _manifoldManager = default!;
+        [Dependency] private readonly   IConfigurationManager _configManager = default!;
+        [Dependency] private readonly   IManifoldManager _manifoldManager = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
-        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
-        [Dependency] private readonly IIslandManager _islandManager = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IDependencyCollection _deps = default!;
+        [Dependency] private readonly   IParallelManager _parallel = default!;
+        [Dependency] private readonly   IPhysicsManager _physicsManager = default!;
+        [Dependency] private readonly   IConfigurationManager _cfg = default!;
+        [Dependency] private readonly   IDependencyCollection _deps = default!;
+        [Dependency] private readonly   SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private readonly   EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly   SharedJointSystem _joints = default!;
+        [Dependency] private readonly   SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private readonly   SharedTransformSystem _transform = default!;
+        [Dependency] private readonly   SharedDebugPhysicsSystem _debugPhysics = default!;
 
         public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
+
+        private int _substeps;
 
         public bool MetricsEnabled { get; protected set; }
 
@@ -82,10 +86,11 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<PhysicsComponent, ComponentRemove>(OnPhysicsRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
+            InitializeIsland();
 
-            _islandManager.Initialize();
-
-            _cfg.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+            _configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+            _configManager.OnValueChanged(CVars.NetTickrate, UpdateSubsteps, true);
+            _configManager.OnValueChanged(CVars.TargetMinimumTickrate, UpdateSubsteps, true);
         }
 
         private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
@@ -110,9 +115,8 @@ namespace Robust.Shared.Physics.Systems
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
         {
             _deps.InjectDependencies(component);
-            component.BroadphaseSystem = _broadphase;
             component.Physics = this;
-            component.ContactManager = new(_debugPhysics, _manifoldManager, EntityManager, _physicsManager, _cfg);
+            component.ContactManager = new(_debugPhysics, _manifoldManager, EntityManager, _physicsManager);
             component.ContactManager.Initialize();
             component.ContactManager.MapId = component.MapId;
             component.AutoClearForces = _cfg.GetCVar(CVars.AutoClearForces);
@@ -128,6 +132,13 @@ namespace Robust.Shared.Physics.Systems
             {
                 comp.AutoClearForces = value;
             }
+        }
+
+        private void UpdateSubsteps(int obj)
+        {
+            var targetMinTickrate = (float) _configManager.GetCVar(CVars.TargetMinimumTickrate);
+            var serverTickrate = (float) _configManager.GetCVar(CVars.NetTickrate);
+            _substeps = (int)Math.Ceiling(targetMinTickrate / serverTickrate);
         }
 
         private void HandlePhysicsMapRemove(EntityUid uid, SharedPhysicsMapComponent component, ComponentRemove args)
@@ -253,7 +264,8 @@ namespace Robust.Shared.Physics.Systems
         {
             base.Shutdown();
 
-            _cfg.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+            ShutdownIsland();
+            _configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void OnWake(ref PhysicsWakeEvent @event)
@@ -297,39 +309,51 @@ namespace Robust.Shared.Physics.Systems
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, deltaTime);
-            RaiseLocalEvent(ref updateBeforeSolve);
-            var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+            var frameTime = deltaTime / _substeps;
 
-            while (enumerator.MoveNext(out var comp))
+            for (int i = 0; i < _substeps; i++)
             {
-                comp.Step(deltaTime, prediction);
+                var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
+                RaiseLocalEvent(ref updateBeforeSolve);
+
+                var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+                while (enumerator.MoveNext(out var comp))
+                {
+                    Step(comp, frameTime, prediction);
+                }
+
+                var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
+                RaiseLocalEvent(ref updateAfterSolve);
+
+                // Go through and run all of the deferred events now
+                // Also compares the position pre physics and post physics to fix substep lerping issues
+                enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+                while (enumerator.MoveNext(out var comp))
+                {
+                    comp.ProcessQueue();
+                }
+
+                // On last substep (or main step where no substeps occured) we'll update all of the lerp data.
+                if (i == _substeps - 1)
+                {
+                    enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+
+                    while (enumerator.MoveNext(out var comp))
+                    {
+                        FinalStep(comp);
+                    }
+                }
+
+                _traversal.ProcessMovement();
+                _physicsManager.ClearTransforms();
             }
-
-            var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, deltaTime);
-            RaiseLocalEvent(ref updateAfterSolve);
-
-            // Enumerator reset
-            enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
-
-            // Go through and run all of the deferred events now
-            while (enumerator.MoveNext(out var comp))
-            {
-                comp.ProcessQueue();
-            }
-
-            _traversal.ProcessMovement();
-            _physicsManager.ClearTransforms();
         }
 
-        internal static (int Batches, int BatchSize) GetBatch(int count, int minimumBatchSize)
+        protected virtual void FinalStep(SharedPhysicsMapComponent component)
         {
-            var batches = Math.Min(
-                (int) MathF.Ceiling((float) count / minimumBatchSize),
-                Math.Max(1, Environment.ProcessorCount));
-            var batchSize = (int) MathF.Ceiling((float) count / batches);
 
-            return (batches, batchSize);
         }
     }
 

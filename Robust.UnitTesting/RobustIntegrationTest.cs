@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using Robust.Client;
+using Robust.Client.GameStates;
+using Robust.Client.Timing;
 using Robust.Server;
 using Robust.Server.Console;
 using Robust.Server.ServerStatus;
@@ -757,6 +759,8 @@ namespace Robust.UnitTesting
                 ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
                 deps.Register<INetManager, IntegrationNetManager>(true);
                 deps.Register<IClientNetManager, IntegrationNetManager>(true);
+                deps.Register<IGameStateProcessor, GameStateProcessor>(true);
+                deps.Register<IClientGameTiming, ClientGameTiming>(true);
                 deps.Register<IntegrationNetManager, IntegrationNetManager>(true);
                 deps.Register<IModLoader, TestingModLoader>(true);
                 deps.Register<IModLoaderInternal, TestingModLoader>(true);

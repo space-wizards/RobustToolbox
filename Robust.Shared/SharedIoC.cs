@@ -48,7 +48,6 @@ namespace Robust.Shared
             deps.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             deps.Register<ISandboxHelper, SandboxHelper>();
             deps.Register<IManifoldManager, CollisionManager>();
-            deps.Register<IIslandManager, IslandManager>();
             deps.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
             deps.Register<IParallelManager, ParallelManager>();
             deps.Register<IParallelManagerInternal, ParallelManager>();

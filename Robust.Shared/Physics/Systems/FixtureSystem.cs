@@ -204,7 +204,7 @@ namespace Robust.Shared.Physics.Systems
                 {
                     foreach (var contact in fixture.Contacts.Values.ToArray())
                     {
-                        physicsMap.ContactManager.Destroy(contact);
+                        _physics.DestroyContact(contact);
                     }
                 }
                 _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);

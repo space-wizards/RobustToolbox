@@ -191,7 +191,7 @@ public partial class SharedPhysicsSystem
             var contact = node.Value;
             node = node.Next;
             // Destroy last so the linked-list doesn't get touched.
-            physMap.ContactManager.Destroy(contact);
+            DestroyContact(contact);
         }
 
         DebugTools.Assert(body.Contacts.Count == 0);

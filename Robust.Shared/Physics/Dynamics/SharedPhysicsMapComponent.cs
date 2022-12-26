@@ -40,8 +40,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         internal SharedPhysicsSystem Physics = default!;
 
-        internal ContactManager ContactManager = default!;
-
         public bool AutoClearForces;
 
         /// <summary>

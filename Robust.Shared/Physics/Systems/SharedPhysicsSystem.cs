@@ -76,7 +76,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
             SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
-            SubscribeLocalEvent<PhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentRemove>(OnPhysicsRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
@@ -106,12 +105,6 @@ namespace Robust.Shared.Physics.Systems
             {
                 DestroyContacts(ev.Body);
             }
-        }
-
-        private void HandlePhysicsMapInit(EntityUid uid, PhysicsMapComponent component, ComponentInit args)
-        {
-            _deps.InjectDependencies(component);
-            component.Physics = this;
         }
 
         private void OnAutoClearChange(bool value)

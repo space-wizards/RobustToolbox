@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -77,20 +79,35 @@ public sealed class Gravity2DController : VirtualController
     public override void UpdateBeforeSolve(bool prediction, float frameTime)
     {
         base.UpdateBeforeSolve(prediction, frameTime);
-        var query = EntityQueryEnumerator<Gravity2DComponent, SharedPhysicsMapComponent>();
+        var query = EntityQueryEnumerator<Gravity2DComponent>();
+        var gravityMaps = new ValueList<EntityUid>();
+        var gravitVectors = new ValueList<Vector2>();
 
-        while (query.MoveNext(out var gravity, out var mapComp))
+        while (query.MoveNext(out var gravity))
         {
             if (gravity.Gravity == Vector2.Zero)
                 continue;
 
-            foreach (var body in mapComp.AwakeBodies)
-            {
-                if (body.BodyType != BodyType.Dynamic || body.IgnoreGravity)
-                    continue;
+            gravityMaps.Add(gravity.Owner);
+            gravitVectors.Add(gravity.Gravity);
+        }
 
-                _physics.SetLinearVelocity(body, body.LinearVelocity + gravity.Gravity * frameTime);
-            }
+        if (gravityMaps.Count == 0)
+            return;
+
+        var awakeBodies = EntityQueryEnumerator<AwakePhysicsComponent, PhysicsComponent, TransformComponent>();
+
+        while (awakeBodies.MoveNext(out _, out var body, out var xform))
+        {
+            if (body.BodyType != BodyType.Dynamic || body.IgnoreGravity || xform.MapUid == null)
+                continue;
+
+            var index = gravityMaps.IndexOf(xform.MapUid.Value);
+
+            if (index == -1)
+                continue;
+
+            _physics.SetLinearVelocity(body, body.LinearVelocity + gravitVectors[index] * frameTime);
         }
     }
 

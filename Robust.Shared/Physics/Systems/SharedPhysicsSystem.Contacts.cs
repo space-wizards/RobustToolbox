@@ -359,7 +359,7 @@ public abstract partial class SharedPhysicsSystem
             var xformA = xformQuery.GetComponent(bodyA.Owner);
             var xformB = xformQuery.GetComponent(bodyB.Owner);
 
-            if (xformA.MapUid != xformB.MapUid)
+            if (xformA.MapUid == null || xformA.MapUid != xformB.MapUid)
             {
                 DestroyContact(contact);
                 continue;

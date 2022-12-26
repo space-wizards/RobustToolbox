@@ -36,8 +36,6 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
         {
-            var xform = Transform(uid);
-
             // TODO: Need a better solution to this because the only reason I don't throw is that allcomponents test
             // Yes it is actively making the game buggier but I would essentially double the size of this PR trying to fix it
             // my best solution rn is move the broadphase property onto FixturesComponent and then refactor
@@ -48,7 +46,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            _physics.DestroyContacts(body, xform);
+            _physics.DestroyContacts(body);
 
             // TODO im 99% sure  _broadphaseSystem.RemoveBody(body, component) gets triggered by this as well, so is this even needed?
             _physics.SetCanCollide(body, false);

@@ -137,7 +137,7 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<MetaDataComponent>();
             }
 
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(SharedPhysicsMapComponent)))
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(PhysicsMapComponent)))
             {
                 compFactory.RegisterClass<PhysicsMapComponent>();
             }

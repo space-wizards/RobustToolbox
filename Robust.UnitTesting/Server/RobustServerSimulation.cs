@@ -39,6 +39,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Server.Replays;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Replays;
 using Robust.Shared.Players;
 

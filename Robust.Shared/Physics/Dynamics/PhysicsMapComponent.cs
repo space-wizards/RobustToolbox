@@ -22,6 +22,7 @@
 
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -31,7 +32,8 @@ using PhysicsComponent = Robust.Shared.Physics.Components.PhysicsComponent;
 
 namespace Robust.Shared.Physics.Dynamics
 {
-    public abstract class SharedPhysicsMapComponent : Component
+    [RegisterComponent, NetworkedComponent]
+    public sealed class PhysicsMapComponent : Component
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
@@ -82,27 +84,10 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
-        // and one that includes the body
-        protected readonly HashSet<TransformComponent> DeferredUpdates = new();
-
         /// <summary>
         ///     Store last tick's invDT
         /// </summary>
         internal float _invDt0;
 
-        /// <summary>
-        ///     Go through all of the deferred MoveEvents and then run them
-        /// </summary>
-        public virtual void ProcessQueue()
-        {
-            // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
-            foreach (var xform in DeferredUpdates)
-            {
-                xform.RunDeferred();
-            }
 
-            DeferredUpdates.Clear();
-        }
-    }
 }

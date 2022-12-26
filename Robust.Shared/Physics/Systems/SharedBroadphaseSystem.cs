@@ -74,7 +74,7 @@ namespace Robust.Shared.Physics.Systems
         /// Check the AABB for each moved broadphase fixture and add any colliding entities to the movebuffer in case.
         /// </summary>
         private void FindGridContacts(
-            SharedPhysicsMapComponent component,
+            PhysicsMapComponent component,
             MapId mapId,
             HashSet<MapGridComponent> movedGrids,
             Dictionary<FixtureProxy, Box2> gridMoveBuffer,
@@ -135,7 +135,7 @@ namespace Robust.Shared.Physics.Systems
         [Obsolete("Use the overload with SharedPhysicsMapComponent")]
         internal void FindNewContacts(MapId mapId)
         {
-            if (!TryComp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
+            if (!TryComp<PhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
                 return;
 
             FindNewContacts(physicsMap, mapId);
@@ -144,7 +144,7 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Go through every single created, moved, or touched proxy on the map and try to find any new contacts that should be created.
         /// </summary>
-        internal void FindNewContacts(SharedPhysicsMapComponent component, MapId mapId)
+        internal void FindNewContacts(PhysicsMapComponent component, MapId mapId)
         {
             var moveBuffer = component.MoveBuffer;
             var movedGrids = _mapManager.GetMovedGrids(mapId);
@@ -436,7 +436,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void AddToMoveBuffer(MapId mapId, FixtureProxy proxy, Box2 aabb)
         {
-            if (!TryComp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
+            if (!TryComp<PhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
                 return;
 
             DebugTools.Assert(proxy.Fixture.Body.CanCollide);

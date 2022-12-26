@@ -196,7 +196,7 @@ namespace Robust.Shared.Physics.Systems
             if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
             {
                 var map = Transform(broadphase.Owner).MapUid;
-                if (TryComp<SharedPhysicsMapComponent>(map, out var physicsMap))
+                if (TryComp<PhysicsMapComponent>(map, out var physicsMap))
                 {
                     foreach (var contact in fixture.Contacts.Values.ToArray())
                     {

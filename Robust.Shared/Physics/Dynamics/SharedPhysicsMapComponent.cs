@@ -91,8 +91,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         internal float _invDt0;
 
-        public MapId MapId => _entityManager.GetComponent<TransformComponent>(Owner).MapID;
-
         /// <summary>
         ///     Go through all of the deferred MoveEvents and then run them
         /// </summary>
@@ -105,36 +103,6 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             DeferredUpdates.Clear();
-        }
-    }
-
-    [ByRefEvent]
-    public readonly struct PhysicsUpdateBeforeMapSolveEvent
-    {
-        public readonly bool Prediction;
-        public readonly SharedPhysicsMapComponent MapComponent;
-        public readonly float DeltaTime;
-
-        public PhysicsUpdateBeforeMapSolveEvent(bool prediction, SharedPhysicsMapComponent mapComponent, float deltaTime)
-        {
-            Prediction = prediction;
-            MapComponent = mapComponent;
-            DeltaTime = deltaTime;
-        }
-    }
-
-    [ByRefEvent]
-    public readonly struct PhysicsUpdateAfterMapSolveEvent
-    {
-        public readonly bool Prediction;
-        public readonly SharedPhysicsMapComponent MapComponent;
-        public readonly float DeltaTime;
-
-        public PhysicsUpdateAfterMapSolveEvent(bool prediction, SharedPhysicsMapComponent mapComponent, float deltaTime)
-        {
-            Prediction = prediction;
-            MapComponent = mapComponent;
-            DeltaTime = deltaTime;
         }
     }
 }

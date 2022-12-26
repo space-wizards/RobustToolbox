@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Shared.GameObjects;
@@ -34,8 +32,6 @@ namespace Robust.Shared.Physics.Controllers
 
             SubscribeLocalEvent<PhysicsUpdateBeforeSolveEvent>(OnBeforeSolve, updatesBefore, updatesAfter);
             SubscribeLocalEvent<PhysicsUpdateAfterSolveEvent>(OnAfterSolve, updatesBefore, updatesAfter);
-
-            SubscribeLocalEvent<PhysicsUpdateBeforeMapSolveEvent>(OnBeforeMapSolve, updatesBefore, updatesAfter);
         }
 
         private void OnBeforeSolve(ref PhysicsUpdateBeforeSolveEvent ev)
@@ -58,11 +54,6 @@ namespace Robust.Shared.Physics.Controllers
 
             if(PhysicsSystem.MetricsEnabled)
                 AfterMonitor.Observe(Stopwatch.Elapsed.TotalSeconds);
-        }
-
-        private void OnBeforeMapSolve(ref PhysicsUpdateBeforeMapSolveEvent ev)
-        {
-            UpdateBeforeMapSolve(ev.Prediction, ev.MapComponent, ev.DeltaTime);
         }
 
         #endregion

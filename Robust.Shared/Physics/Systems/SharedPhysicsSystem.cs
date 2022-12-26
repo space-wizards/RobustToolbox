@@ -124,7 +124,7 @@ namespace Robust.Shared.Physics.Systems
             var targetMinTickrate = (float) _configManager.GetCVar(CVars.TargetMinimumTickrate);
             var serverTickrate = (float) _configManager.GetCVar(CVars.NetTickrate);
             _substeps = (int) Math.Max(1, Math.Ceiling(targetMinTickrate / serverTickrate));
-            _invDT = targetMinTickrate / _substeps;
+            _invDT = targetMinTickrate;
         }
 
         private void OnParentChange(ref EntParentChangedMessage args)
@@ -252,9 +252,6 @@ namespace Robust.Shared.Physics.Systems
                     // Box2D does this at the end of a step and also here when there's a fixture update.
                     // Given external stuff can move bodies we'll just do this here.
                     _broadphase.FindNewContacts(comp, xform.MapID);
-
-                    var updateMapBeforeSolve = new PhysicsUpdateBeforeMapSolveEvent(prediction, comp, frameTime);
-                    RaiseLocalEvent(ref updateMapBeforeSolve);
                 }
 
                 CollideContacts();

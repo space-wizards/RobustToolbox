@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
@@ -168,6 +169,7 @@ public abstract partial class SharedPhysicsSystem
     // Caching for island generation.
     private readonly HashSet<PhysicsComponent> _islandSet = new(64);
     private readonly Stack<PhysicsComponent> _bodyStack = new(64);
+    private readonly List<PhysicsComponent> _awakeBodies = new(128);
 
     // Config
     private bool _warmStarting;
@@ -303,6 +305,15 @@ public abstract partial class SharedPhysicsSystem
 
         _bodyStack.EnsureCapacity(awakeCount);
         _islandSet.EnsureCapacity(awakeCount);
+        _awakeBodies.Clear();
+        _awakeBodies.EnsureCapacity(awakeCount);
+
+        // Build the relevant islands / graphs for all bodies.
+        var awakeQuery = AllEntityQuery<AwakePhysicsComponent, PhysicsComponent>();
+        while (awakeQuery.MoveNext(out _, out var body))
+        {
+            _awakeBodies.Add(body);
+        }
 
         var bodyQuery = GetEntityQuery<PhysicsComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -318,10 +329,7 @@ public abstract partial class SharedPhysicsSystem
 
         var islands = new List<IslandData>();
 
-        // Build the relevant islands / graphs for all bodies.
-        var awakeQuery = AllEntityQuery<AwakePhysicsComponent, PhysicsComponent>();
-
-        while (awakeQuery.MoveNext(out _, out var seed))
+        foreach (var seed in _awakeBodies)
         {
             // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
             // when contact broke so if you want to try that then GOOD LUCK.

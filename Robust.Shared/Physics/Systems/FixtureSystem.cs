@@ -37,8 +37,6 @@ namespace Robust.Shared.Physics.Systems
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
         {
             var xform = Transform(uid);
-            if (xform.MapID == Map.MapId.Nullspace)
-                return;
 
             // TODO: Need a better solution to this because the only reason I don't throw is that allcomponents test
             // Yes it is actively making the game buggier but I would essentially double the size of this PR trying to fix it
@@ -50,7 +48,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            _physics.DestroyContacts(body, xform.MapID, xform);
+            _physics.DestroyContacts(body, xform);
 
             // TODO im 99% sure  _broadphaseSystem.RemoveBody(body, component) gets triggered by this as well, so is this even needed?
             _physics.SetCanCollide(body, false);

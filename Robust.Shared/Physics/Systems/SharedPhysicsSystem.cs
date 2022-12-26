@@ -326,15 +326,6 @@ namespace Robust.Shared.Physics.Systems
                 var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
                 RaiseLocalEvent(ref updateAfterSolve);
 
-                // Go through and run all of the deferred events now
-                // Also compares the position pre physics and post physics to fix substep lerping issues
-                enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
-
-                while (enumerator.MoveNext(out var comp))
-                {
-                    comp.ProcessQueue();
-                }
-
                 // On last substep (or main step where no substeps occured) we'll update all of the lerp data.
                 if (i == _substeps - 1)
                 {

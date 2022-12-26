@@ -293,9 +293,6 @@ public abstract partial class SharedTransformSystem
         var parentEv = new EntParentChangedMessage(uid, null, MapId.Nullspace, xform);
         RaiseLocalEvent(uid, ref parentEv, true);
 
-        // there should be no deferred events before startup has finished.
-        DebugTools.Assert(xform._oldCoords == null && xform._oldLocalRotation == null);
-
         var ev = new TransformStartupEvent(xform);
         RaiseLocalEvent(uid, ref ev, true);
     }
@@ -470,8 +467,6 @@ public abstract partial class SharedTransformSystem
                 RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
             }
         }
-
-        DebugTools.Assert(!xform.DeferUpdates); // breaks anchoring lookup logic if deferred. If this changes, also need to relocate the `xform.MatricesDirty = true`
 
         if (!xform.Initialized)
             return;
@@ -923,21 +918,13 @@ public abstract partial class SharedTransformSystem
             xform._localRotation = rot;
 
         Dirty(xform);
+        xform.MatricesDirty = true;
 
-        if (!xform.DeferUpdates)
-        {
-            xform.MatricesDirty = true;
-            if (!xform.Initialized)
-                return;
+        if (!xform.Initialized)
+            return;
 
-            var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
-            RaiseLocalEvent(xform.Owner, ref moveEvent, true);
-        }
-        else
-        {
-            xform._oldCoords ??= oldPosition;
-            xform._oldLocalRotation ??= oldRotation;
-        }
+        var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
+        RaiseLocalEvent(xform.Owner, ref moveEvent, true);
     }
 
     #endregion

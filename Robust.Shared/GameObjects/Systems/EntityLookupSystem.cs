@@ -436,7 +436,7 @@ namespace Robust.Shared.GameObjects
             var newMap = args.NewPosition.EntityId;
             var oldMap = args.OldPosition.EntityId;
 
-            if (Terminating(oldMap))
+            if (!oldMap.IsValid() || Terminating(oldMap))
                 return;
 
             // We need to recursively update the cached data and remove children from the move buffer

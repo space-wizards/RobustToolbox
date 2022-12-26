@@ -446,8 +446,6 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             pvsCollection.AddGrid(gridId);
         }
-
-        _entityPvsCollection.UpdateIndex(gridId);
     }
 
     private void OnMapDestroyed(MapChangedEvent e)
@@ -464,10 +462,6 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             pvsCollection.AddMap(e.Map);
         }
-
-        if(e.Map == MapId.Nullspace) return;
-        var uid = _mapManager.GetMapEntityId(e.Map);
-        _entityPvsCollection.UpdateIndex(uid);
     }
 
     #endregion
@@ -475,8 +469,8 @@ internal sealed partial class PVSSystem : EntitySystem
     public (List<(uint, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
     {
         var playerChunks = new HashSet<int>[sessions.Length];
-        var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
-        var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var eyeQuery = GetEntityQuery<EyeComponent>();
+        var transformQuery = GetEntityQuery<TransformComponent>();
         var viewerEntities = new EntityUid[sessions.Length][];
 
         _chunkList.Clear();
@@ -490,8 +484,6 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _mapIndices.Clear();
         _gridIndices.Clear();
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        var physicsQuery = GetEntityQuery<PhysicsComponent>();
 
         for (int i = 0; i < sessions.Length; i++)
         {
@@ -560,14 +552,14 @@ internal sealed partial class PVSSystem : EntitySystem
                             List<(uint, IChunkIndexLocation)> _chunkList) tuple) =>
                     {
                         {
-                            var localPos = tuple.transformQuery.GetComponent(((Component) mapGrid).Owner).InvWorldMatrix.Transform(tuple.viewPos);
+                            var localPos = tuple.transformQuery.GetComponent(mapGrid.Owner).InvWorldMatrix.Transform(tuple.viewPos);
 
                             var gridChunkEnumerator =
                                 new ChunkIndicesEnumerator(localPos, tuple.range, ChunkSize);
 
                             while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                             {
-                                var chunkLocation = new GridChunkLocation(((Component) mapGrid).Owner, gridChunkIndices.Value);
+                                var chunkLocation = new GridChunkLocation(mapGrid.Owner, gridChunkIndices.Value);
                                 var entry = (tuple.visMask, chunkLocation);
 
                                 if (tuple.gridDict.TryGetValue(chunkLocation, out var indexOf))
@@ -772,10 +764,31 @@ internal sealed partial class PVSSystem : EntitySystem
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
         }
         localEnumerator.Dispose();
+        var mapIds = new ValueList<EntityUid>();
 
         foreach (var viewerEntity in viewerEntities)
         {
             RecursivelyAddOverride(in viewerEntity, lastAcked, lastSent, visibleEnts, lastSeen, in mQuery, in tQuery, in fromTick,
+                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+
+            if (!tQuery.TryGetComponent(viewerEntity, out var xform) || xform.MapUid == null || mapIds.Contains(xform.MapUid.Value))
+                continue;
+
+            mapIds.Add(xform.MapUid.Value);
+        }
+
+        // For each viewer add all grids for maps we are viewing
+        // This might change eventually but this is the minimum assumption being made in content up to this point.
+        // TODO: Should only query relevant maps.
+        var gridEnumerator = AllEntityQuery<MapGridComponent, TransformComponent>();
+
+        while (gridEnumerator.MoveNext(out _, out var xform))
+        {
+            if (xform.MapUid == null || !mapIds.Contains(xform.MapUid.Value))
+                continue;
+
+            var uid = xform.Owner;
+            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, in mQuery, in tQuery, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
         }
 

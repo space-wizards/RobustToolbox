@@ -443,7 +443,7 @@ namespace Robust.Shared.GameObjects
             {
                 newMapEntity = mapGrid.Owner;
             }
-            else if (_mapManager.GetMapEntityId(mapPos.MapId) is EntityUid { Valid: true } mapEnt
+            else if (_mapManager.GetMapEntityId(mapPos.MapId) is { Valid: true } mapEnt
                      && !TerminatingOrDeleted(mapEnt))
             {
                 newMapEntity = mapEnt;
@@ -463,7 +463,8 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, new(newMapEntity, mapPos.Position));
+            var newMapEntityXform = _entMan.GetComponent<TransformComponent>(newMapEntity);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, new(newMapEntity, newMapEntityXform.InvWorldMatrix.Transform(mapPos.Position)));
             _entMan.Dirty(this);
         }
 

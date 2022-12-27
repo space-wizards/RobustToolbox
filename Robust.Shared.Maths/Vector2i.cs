@@ -59,7 +59,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="obj">Other object to check.</param>
         /// <returns>True if Object and vector are equal.</returns>
-        public override readonly bool Equals(object? obj)
+        public readonly override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Vector2i vector && Equals(vector);
@@ -75,6 +75,11 @@ namespace Robust.Shared.Maths
             {
                 return (X * 397) ^ Y;
             }
+        }
+
+        public Vector2i Rotate(Angle angle)
+        {
+            return (Vector2i) angle.RotateVec(this);
         }
 
         public static Vector2i operator -(Vector2i a, Vector2i b)

@@ -226,7 +226,7 @@ namespace Robust.Shared.Map.Components
         /// <inheritdoc />
         public GridTileEnumerator GetAllTilesEnumerator(bool ignoreEmpty = true)
         {
-            return new GridTileEnumerator(base.Owner, Chunks.GetEnumerator(), ChunkSize, ignoreEmpty);
+            return new GridTileEnumerator(Owner, Chunks.GetEnumerator(), ChunkSize, ignoreEmpty);
         }
 
         /// <inheritdoc />

@@ -23,7 +23,7 @@ namespace Robust.Server.Physics
     /// <summary>
     /// Handles generating fixtures for MapGrids.
     /// </summary>
-    internal sealed class GridFixtureSystem : SharedGridFixtureSystem
+    internal sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
@@ -311,7 +311,7 @@ namespace Robust.Server.Physics
                             var tilePos = offset + tile;
                             var bounds = _lookup.GetLocalBounds(tilePos, mapGrid.TileSize);
 
-                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.Owner, tilePos, LookupFlags.Dynamic | LookupFlags.Sundries))
+                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.Owner, tilePos))
                             {
                                 // Consider centre of entity position maybe?
                                 var entXform = xformQuery.GetComponent(ent);

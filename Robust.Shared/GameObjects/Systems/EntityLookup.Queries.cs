@@ -366,15 +366,6 @@ public sealed partial class EntityLookupSystem
         foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
         {
             AddEntitiesIntersecting(grid.Owner, intersecting, worldAABB, flags, lookupQuery, xformQuery);
-
-            if ((flags & LookupFlags.Static) != 0x0)
-            {
-                foreach (var uid in grid.GetAnchoredEntities(worldAABB))
-                {
-                    if (Deleted(uid)) continue;
-                    intersecting.Add(uid);
-                }
-            }
         }
 
         // Get map entities

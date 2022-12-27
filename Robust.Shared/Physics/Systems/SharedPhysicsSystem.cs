@@ -80,8 +80,8 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
             SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
-            SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
-            SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
+            SubscribeLocalEvent<PhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
+            SubscribeLocalEvent<PhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentRemove>(OnPhysicsRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
@@ -112,7 +112,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
+        private void HandlePhysicsMapInit(EntityUid uid, PhysicsMapComponent component, ComponentInit args)
         {
             _deps.InjectDependencies(component);
             component.Physics = this;
@@ -126,7 +126,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnAutoClearChange(bool value)
         {
-            var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+            var enumerator = AllEntityQuery<PhysicsMapComponent>();
 
             while (enumerator.MoveNext(out var comp))
             {
@@ -141,7 +141,7 @@ namespace Robust.Shared.Physics.Systems
             _substeps = (int)Math.Ceiling(targetMinTickrate / serverTickrate);
         }
 
-        private void HandlePhysicsMapRemove(EntityUid uid, SharedPhysicsMapComponent component, ComponentRemove args)
+        private void HandlePhysicsMapRemove(EntityUid uid, PhysicsMapComponent component, ComponentRemove args)
         {
             // THis entity might be getting deleted before ever having been initialized.
             if (component.ContactManager == null)
@@ -194,8 +194,8 @@ namespace Robust.Shared.Physics.Systems
             var xformQuery = GetEntityQuery<TransformComponent>();
             var jointQuery = GetEntityQuery<JointComponent>();
 
-            TryComp(MapManager.GetMapEntityId(oldMapId), out SharedPhysicsMapComponent? oldMap);
-            TryComp(MapManager.GetMapEntityId(newMapId), out SharedPhysicsMapComponent? newMap);
+            TryComp(MapManager.GetMapEntityId(oldMapId), out PhysicsMapComponent? oldMap);
+            TryComp(MapManager.GetMapEntityId(newMapId), out PhysicsMapComponent? newMap);
 
             RecursiveMapUpdate(xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
         }
@@ -206,8 +206,8 @@ namespace Robust.Shared.Physics.Systems
         private void RecursiveMapUpdate(
             TransformComponent xform,
             PhysicsComponent? body,
-            SharedPhysicsMapComponent? newMap,
-            SharedPhysicsMapComponent? oldMap,
+            PhysicsMapComponent? newMap,
+            PhysicsMapComponent? oldMap,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<JointComponent> jointQuery)
@@ -276,7 +276,7 @@ namespace Robust.Shared.Physics.Systems
                 return;
 
             EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddAwakeBody(@event.Body);
+            EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).AddAwakeBody(@event.Body);
         }
 
         private void OnSleep(ref PhysicsSleepEvent @event)
@@ -287,7 +287,7 @@ namespace Robust.Shared.Physics.Systems
                 return;
 
             EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
+            EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
         }
 
         private void HandleContainerRemoved(EntityUid uid, PhysicsComponent physics, EntGotRemovedFromContainerMessage message)
@@ -316,7 +316,7 @@ namespace Robust.Shared.Physics.Systems
                 var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
                 RaiseLocalEvent(ref updateBeforeSolve);
 
-                var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+                var enumerator = AllEntityQuery<PhysicsMapComponent>();
 
                 while (enumerator.MoveNext(out var comp))
                 {
@@ -326,19 +326,10 @@ namespace Robust.Shared.Physics.Systems
                 var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);
                 RaiseLocalEvent(ref updateAfterSolve);
 
-                // Go through and run all of the deferred events now
-                // Also compares the position pre physics and post physics to fix substep lerping issues
-                enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
-
-                while (enumerator.MoveNext(out var comp))
-                {
-                    comp.ProcessQueue();
-                }
-
                 // On last substep (or main step where no substeps occured) we'll update all of the lerp data.
                 if (i == _substeps - 1)
                 {
-                    enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+                    enumerator = AllEntityQuery<PhysicsMapComponent>();
 
                     while (enumerator.MoveNext(out var comp))
                     {
@@ -351,7 +342,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        protected virtual void FinalStep(SharedPhysicsMapComponent component)
+        protected virtual void FinalStep(PhysicsMapComponent component)
         {
 
         }

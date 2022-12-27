@@ -39,6 +39,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Server.Replays;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Replays;
 using Robust.Shared.Players;
 
@@ -256,6 +257,7 @@ namespace Robust.UnitTesting.Server
 
             var compFactory = container.Resolve<IComponentFactory>();
 
+            // if only we had some sort of attribute for autmatically registering components.
             compFactory.RegisterClass<MetaDataComponent>();
             compFactory.RegisterClass<TransformComponent>();
             compFactory.RegisterClass<MapGridComponent>();
@@ -268,6 +270,8 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<PhysicsMapComponent>();
             compFactory.RegisterClass<FixturesComponent>();
             compFactory.RegisterClass<CollisionWakeComponent>();
+            compFactory.RegisterClass<OccluderComponent>();
+            compFactory.RegisterClass<OccluderTreeComponent>();
 
             _regDelegate?.Invoke(compFactory);
 

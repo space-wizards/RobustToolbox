@@ -58,7 +58,7 @@ public abstract partial class SharedTransformSystem
         DebugTools.Assert(xform._anchored);
 
         Dirty(xform);
-        var ev = new ReAnchorEvent(xform.Owner, ((Component) oldGrid).Owner, ((Component) newGrid).Owner, tilePos);
+        var ev = new ReAnchorEvent(xform.Owner, ((Component) oldGrid).Owner, ((Component) newGrid).Owner, tilePos, xform);
         RaiseLocalEvent(xform.Owner, ref ev);
     }
 
@@ -293,9 +293,6 @@ public abstract partial class SharedTransformSystem
         var parentEv = new EntParentChangedMessage(uid, null, MapId.Nullspace, xform);
         RaiseLocalEvent(uid, ref parentEv, true);
 
-        // there should be no deferred events before startup has finished.
-        DebugTools.Assert(xform._oldCoords == null && xform._oldLocalRotation == null);
-
         var ev = new TransformStartupEvent(xform);
         RaiseLocalEvent(uid, ref ev, true);
     }
@@ -470,8 +467,6 @@ public abstract partial class SharedTransformSystem
                 RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
             }
         }
-
-        DebugTools.Assert(!xform.DeferUpdates); // breaks anchoring lookup logic if deferred. If this changes, also need to relocate the `xform.MatricesDirty = true`
 
         if (!xform.Initialized)
             return;
@@ -736,7 +731,7 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal (Vector2 Position, Angle Rotation) GetParentRelativePositionRotation(
+    public (Vector2 Position, Angle Rotation) GetRelativePositionRotation(
         TransformComponent component,
         EntityUid relative,
         EntityQuery<TransformComponent> query)
@@ -754,7 +749,7 @@ public abstract partial class SharedTransformSystem
             }
 
             // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
-            Logger.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetParentRelativePositionRotation)}.");
+            Logger.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
             var relXform = query.GetComponent(relative);
             pos = relXform.InvWorldMatrix.Transform(pos);
             rot = rot - relXform.WorldRotation;
@@ -762,6 +757,36 @@ public abstract partial class SharedTransformSystem
         }
 
         return (pos, rot);
+    }
+
+    /// <summary>
+    ///     Returns the position and rotation relative to some entity higher up in the component's transform hierarchy.
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 GetRelativePosition(
+        TransformComponent component,
+        EntityUid relative,
+        EntityQuery<TransformComponent> query)
+    {
+        var pos = component._localPosition;
+        var xform = component;
+        while (xform.ParentUid != relative)
+        {
+            if (xform.ParentUid.IsValid() && query.TryGetComponent(xform.ParentUid, out xform))
+            {
+                pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
+                continue;
+            }
+
+            // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
+            Logger.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
+            var relXform = query.GetComponent(relative);
+            pos = relXform.InvWorldMatrix.Transform(pos);
+            break;
+        }
+
+        return pos;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -923,21 +948,13 @@ public abstract partial class SharedTransformSystem
             xform._localRotation = rot;
 
         Dirty(xform);
+        xform.MatricesDirty = true;
 
-        if (!xform.DeferUpdates)
-        {
-            xform.MatricesDirty = true;
-            if (!xform.Initialized)
-                return;
+        if (!xform.Initialized)
+            return;
 
-            var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
-            RaiseLocalEvent(xform.Owner, ref moveEvent, true);
-        }
-        else
-        {
-            xform._oldCoords ??= oldPosition;
-            xform._oldLocalRotation ??= oldRotation;
-        }
+        var moveEvent = new MoveEvent(xform.Owner, oldPosition, xform.Coordinates, oldRotation, rot, xform, _gameTiming.ApplyingState);
+        RaiseLocalEvent(xform.Owner, ref moveEvent, true);
     }
 
     #endregion

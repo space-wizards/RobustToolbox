@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Server.Physics;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Events;
+using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Server.GameObjects
 {

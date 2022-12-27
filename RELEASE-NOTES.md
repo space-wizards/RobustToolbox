@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Scroll containers now have public methods to get & set their scroll positions.
 
 ### Bugfixes
 
-*None yet*
+* Fixed entity spawn menu sometimes not properly updating when filtering entities.
 
 ### Other
 

@@ -76,7 +76,7 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
             SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
-            SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
+            SubscribeLocalEvent<PhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentRemove>(OnPhysicsRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
@@ -292,8 +292,7 @@ namespace Robust.Shared.Physics.Systems
                 var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, frameTime);
                 RaiseLocalEvent(ref updateBeforeSolve);
 
-                // TODO: World contacts instead of per-map
-                var contactEnumerator = AllEntityQuery<SharedPhysicsMapComponent, TransformComponent>();
+                var contactEnumerator = AllEntityQuery<PhysicsMapComponent, TransformComponent>();
 
                 // Find new contacts and (TODO: temporary) update any per-map virtual controllers
                 while (contactEnumerator.MoveNext(out var comp, out var xform))
@@ -307,7 +306,7 @@ namespace Robust.Shared.Physics.Systems
                 }
 
                 CollideContacts();
-                var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+                var enumerator = AllEntityQuery<PhysicsMapComponent>();
 
                 while (enumerator.MoveNext(out var comp))
                 {

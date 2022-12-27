@@ -153,8 +153,8 @@ namespace Robust.Shared.GameObjects
                 var oldRotation = _localRotation;
                 _localRotation = value;
                 _entMan.Dirty(this);
-
                 MatricesDirty = true;
+
                 if (!Initialized)
                     return;
 
@@ -334,8 +334,8 @@ namespace Robust.Shared.GameObjects
                 var oldGridPos = Coordinates;
                 _localPosition = value;
                 _entMan.Dirty(this);
-
                 MatricesDirty = true;
+
                 if (!Initialized)
                     return;
 
@@ -443,11 +443,10 @@ namespace Robust.Shared.GameObjects
             {
                 newMapEntity = mapGrid.Owner;
             }
-            else if (_mapManager.HasMapEntity(mapPos.MapId)
-                     && _mapManager.GetMapEntityIdOrThrow(mapPos.MapId) is var mapEnt
+            else if (_mapManager.GetMapEntityId(mapPos.MapId) is EntityUid { Valid: true } mapEnt
                      && !TerminatingOrDeleted(mapEnt))
             {
-                newMapEntity = _mapManager.GetMapEntityIdOrThrow(mapPos.MapId);
+                newMapEntity = mapEnt;
             }
             else
             {
@@ -464,10 +463,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(this, newMapEntity);
-
-            // Technically we're not moving, just changing parent.
-            WorldPosition = mapPos.Position;
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, new(newMapEntity, mapPos.Position));
             _entMan.Dirty(this);
         }
 

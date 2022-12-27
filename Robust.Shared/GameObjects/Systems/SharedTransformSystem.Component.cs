@@ -918,8 +918,8 @@ public abstract partial class SharedTransformSystem
             xform._localRotation = rot;
 
         Dirty(xform);
-
         xform.MatricesDirty = true;
+
         if (!xform.Initialized)
             return;
 

@@ -37,7 +37,7 @@ namespace Robust.Shared.Physics.Components
 {
     [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
-    [NetworkedComponent(), ComponentProtoName("Physics")]
+    [RegisterComponent, NetworkedComponent]
     public sealed class PhysicsComponent : Component, IPhysBody, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;

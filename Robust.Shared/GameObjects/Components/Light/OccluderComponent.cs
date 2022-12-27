@@ -1,91 +1,54 @@
-using System;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Players;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
+using System;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.GameObjects;
+
+[RegisterComponent]
+[NetworkedComponent()]
+[Access(typeof(OccluderSystem))]
+public sealed class OccluderComponent : Component, IComponentTreeEntry<OccluderComponent>
 {
-    [NetworkedComponent()]
-    [Virtual]
-    public class OccluderComponent : Component
+    [DataField("enabled")]
+    public bool Enabled = true;
+
+    [DataField("boundingBox")]
+    public Box2 BoundingBox = new(-0.5f, -0.5f, 0.5f, 0.5f);
+
+    public EntityUid? TreeUid { get; set; }
+    public DynamicTree<ComponentTreeEntry<OccluderComponent>>? Tree { get; set; }
+
+    public bool AddToTree => Enabled;
+    public bool TreeUpdateQueued { get; set; } = false;
+
+    [ViewVariables] public (EntityUid Grid, Vector2i Tile)? LastPosition;
+    [ViewVariables] public OccluderDir Occluding;
+
+    [Flags]
+    public enum OccluderDir : byte
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
+        None = 0,
+        North = 1,
+        East = 1 << 1,
+        South = 1 << 2,
+        West = 1 << 3,
+    }
 
-        [DataField("enabled")]
-        private bool _enabled = true;
-        [DataField("boundingBox")]
-        private Box2 _boundingBox = new(-0.5f, -0.5f, 0.5f, 0.5f);
+    [NetSerializable, Serializable]
+    public sealed class OccluderComponentState : ComponentState
+    {
+        public bool Enabled { get; }
+        public Box2 BoundingBox { get; }
 
-        internal OccluderTreeComponent? Tree = null;
-
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Box2 BoundingBox
+        public OccluderComponentState(bool enabled, Box2 boundingBox)
         {
-            get => _boundingBox;
-            set
-            {
-                _boundingBox = value;
-                Dirty();
-                _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderUpdateEvent(this), true);
-            }
-        }
-
-        [ViewVariables(VVAccess.ReadWrite)]
-        public virtual bool Enabled
-        {
-            get => _enabled;
-            set
-            {
-                if (_enabled == value)
-                    return;
-
-                _enabled = value;
-                if (_enabled)
-                {
-                    _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderAddEvent(this), true);
-                }
-                else
-                {
-                    _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderRemoveEvent(this), true);
-                }
-
-                Dirty();
-            }
-        }
-
-        public override ComponentState GetComponentState()
-        {
-            return new OccluderComponentState(Enabled, BoundingBox);
-        }
-
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            if (curState == null)
-            {
-                return;
-            }
-
-            var cast = (OccluderComponentState) curState;
-
-            Enabled = cast.Enabled;
-            BoundingBox = cast.BoundingBox;
-        }
-
-        [NetSerializable, Serializable]
-        private sealed class OccluderComponentState : ComponentState
-        {
-            public bool Enabled { get; }
-            public Box2 BoundingBox { get; }
-
-            public OccluderComponentState(bool enabled, Box2 boundingBox)
-            {
-                Enabled = enabled;
-                BoundingBox = boundingBox;
-            }
+            Enabled = enabled;
+            BoundingBox = boundingBox;
         }
     }
 }

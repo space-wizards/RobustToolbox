@@ -108,7 +108,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
+        private void HandlePhysicsMapInit(EntityUid uid, PhysicsMapComponent component, ComponentInit args)
         {
             _deps.InjectDependencies(component);
             component.Physics = this;
@@ -117,7 +117,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnAutoClearChange(bool value)
         {
-            var enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+            var enumerator = AllEntityQuery<PhysicsMapComponent>();
 
             while (enumerator.MoveNext(out var comp))
             {
@@ -175,8 +175,8 @@ namespace Robust.Shared.Physics.Systems
             var xformQuery = GetEntityQuery<TransformComponent>();
             var jointQuery = GetEntityQuery<JointComponent>();
 
-            TryComp(MapManager.GetMapEntityId(oldMapId), out SharedPhysicsMapComponent? oldMap);
-            TryComp(MapManager.GetMapEntityId(newMapId), out SharedPhysicsMapComponent? newMap);
+            TryComp(MapManager.GetMapEntityId(oldMapId), out PhysicsMapComponent? oldMap);
+            TryComp(MapManager.GetMapEntityId(newMapId), out PhysicsMapComponent? newMap);
 
             RecursiveMapUpdate(xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
         }
@@ -187,8 +187,8 @@ namespace Robust.Shared.Physics.Systems
         private void RecursiveMapUpdate(
             TransformComponent xform,
             PhysicsComponent? body,
-            SharedPhysicsMapComponent? newMap,
-            SharedPhysicsMapComponent? oldMap,
+            PhysicsMapComponent? newMap,
+            PhysicsMapComponent? oldMap,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<JointComponent> jointQuery)
@@ -252,7 +252,7 @@ namespace Robust.Shared.Physics.Systems
                 return;
 
             EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddAwakeBody(@event.Body);
+            EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).AddAwakeBody(@event.Body);
         }
 
         private void OnSleep(ref PhysicsSleepEvent @event)
@@ -263,7 +263,7 @@ namespace Robust.Shared.Physics.Systems
                 return;
 
             EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
+            EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
         }
 
         private void HandleContainerRemoved(EntityUid uid, PhysicsComponent physics, EntGotRemovedFromContainerMessage message)
@@ -320,7 +320,7 @@ namespace Robust.Shared.Physics.Systems
                 // On last substep (or main step where no substeps occured) we'll update all of the lerp data.
                 if (i == _substeps - 1)
                 {
-                    enumerator = AllEntityQuery<SharedPhysicsMapComponent>();
+                    enumerator = AllEntityQuery<PhysicsMapComponent>();
 
                     while (enumerator.MoveNext(out var comp))
                     {
@@ -333,7 +333,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        protected virtual void FinalStep(SharedPhysicsMapComponent component)
+        protected virtual void FinalStep(PhysicsMapComponent component)
         {
 
         }

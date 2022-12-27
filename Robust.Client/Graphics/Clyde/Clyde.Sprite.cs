@@ -1,3 +1,4 @@
+using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -38,7 +39,6 @@ internal partial class Clyde
         Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
     }
 
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, RefList<SpriteData> list)
     {
@@ -59,7 +59,7 @@ internal partial class Clyde
         var index = 0;
         var added = 0;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
-        foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
+        foreach (var comp in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTrees(map, worldBounds))
         {
             var treeOwner = comp.Owner;
             var treeXform = query.GetComponent(comp.Owner);
@@ -75,7 +75,7 @@ internal partial class Clyde
                 Cos = MathF.Cos((float)treeXform.LocalRotation),
             };
 
-            comp.SpriteTree.QueryAabb(ref list,
+            comp.Tree.QueryAabb(ref list,
                 static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
                     ref var entry = ref state.AllocAdd();
@@ -125,7 +125,7 @@ internal partial class Clyde
             // var spriteWorldBB = data.Sprite.CalculateRotatedBoundingBox(data.WorldPos, data.WorldRot, batch.ViewRotation);
             // data.SpriteScreenBB = Viewport.GetWorldToLocalMatrix().TransformBox(spriteWorldBB);
 
-            var (pos, rot) = batch.Sys.GetParentRelativePositionRotation(data.Xform, batch.TreeOwner, batch.Query);
+            var (pos, rot) = batch.Sys.GetRelativePositionRotation(data.Xform, batch.TreeOwner, batch.Query);
             pos = new Vector2(
                 batch.TreePos.X + batch.Cos * pos.X - batch.Sin * pos.Y,
                 batch.TreePos.Y + batch.Sin * pos.X + batch.Cos * pos.Y);

@@ -275,7 +275,7 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Where the magic happens.
     /// </summary>
-    public void Step(SharedPhysicsMapComponent component, float frameTime, bool prediction)
+    public void Step(PhysicsMapComponent component, float frameTime, bool prediction)
     {
         var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
         var dtRatio = component._invDt0 * frameTime;
@@ -295,7 +295,7 @@ public abstract partial class SharedPhysicsSystem
         component._invDt0 = invDt;
     }
 
-    private void ClearForces(SharedPhysicsMapComponent component)
+    private void ClearForces(PhysicsMapComponent component)
     {
         foreach (var body in component.AwakeBodies)
         {
@@ -305,7 +305,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void Solve(SharedPhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void Solve(PhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
     {
         // Build and simulated islands from awake bodies.
         _bodyStack.EnsureCapacity(component.AwakeBodies.Count);
@@ -490,7 +490,7 @@ public abstract partial class SharedPhysicsSystem
         island.BrokenJoints.Clear();
     }
 
-    protected virtual void Cleanup(SharedPhysicsMapComponent component, float frameTime)
+    protected virtual void Cleanup(PhysicsMapComponent component, float frameTime)
     {
         foreach (var body in _islandSet)
         {
@@ -509,7 +509,7 @@ public abstract partial class SharedPhysicsSystem
         _awakeBodyList.Clear();
     }
 
-    private void SolveIslands(SharedPhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void SolveIslands(PhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
     {
         var iBegin = 0;
         var gravity = component.Gravity;
@@ -612,7 +612,7 @@ public abstract partial class SharedPhysicsSystem
     /// If this is the first time a body has been updated this tick update its position for lerping.
     /// Due to substepping we have to check it every time.
     /// </summary>
-    protected virtual void UpdateLerpData(SharedPhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+    protected virtual void UpdateLerpData(PhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
     {
 
     }

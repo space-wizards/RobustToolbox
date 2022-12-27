@@ -54,6 +54,19 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.77.0.0
+
+### Breaking changes
+
+* ClientOccluderComponent has been removed & OccluderComponent component functions have been moved to the occluder system.
+* The OccluderDirectionsEvent namespace and properties have changed.
+* The rendering and occluder trees have been refactored to use generic render tree systems.
+* Several pointlight and occluder component properties now need to be set via system methods.
+* SharedPhysicsMap and PhysicsMap have been combined.
+* RunDeferred has been removed from transformcomponent and updates are no longer deferred.
+
+
+
 ## 0.76.0.0
 
 ### Breaking changes

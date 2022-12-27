@@ -171,7 +171,7 @@ public partial class SharedPhysicsSystem
         xform ??= Transform(body.Owner);
         mapId ??= xform.MapID;
 
-        if (!TryComp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId.Value), out var map))
+        if (!TryComp<PhysicsMapComponent>(MapManager.GetMapEntityId(mapId.Value), out var map))
         {
             DebugTools.Assert("Attempted to destroy contacts, but entity has no physics map!");
             return;
@@ -180,7 +180,7 @@ public partial class SharedPhysicsSystem
         DestroyContacts(body, map);
     }
 
-    public void DestroyContacts(PhysicsComponent body, SharedPhysicsMapComponent physMap)
+    public void DestroyContacts(PhysicsComponent body, PhysicsMapComponent physMap)
     {
         if (body.Contacts.Count == 0) return;
 

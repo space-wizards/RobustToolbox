@@ -20,7 +20,7 @@ namespace Robust.Client.Physics
             SimulateWorld(frameTime, _gameTiming.InPrediction);
         }
 
-        protected override void Cleanup(SharedPhysicsMapComponent component, float frameTime)
+        protected override void Cleanup(PhysicsMapComponent component, float frameTime)
         {
             var toRemove = new List<PhysicsComponent>();
 
@@ -46,7 +46,7 @@ namespace Robust.Client.Physics
             base.Cleanup(component, frameTime);
         }
 
-        protected override void UpdateLerpData(SharedPhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+        protected override void UpdateLerpData(PhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
         {
             foreach (var body in bodies)
             {
@@ -65,7 +65,7 @@ namespace Robust.Client.Physics
         /// <summary>
         /// Flush all of our lerping data.
         /// </summary>
-        protected override void FinalStep(SharedPhysicsMapComponent component)
+        protected override void FinalStep(PhysicsMapComponent component)
         {
             base.FinalStep(component);
             var xformQuery = GetEntityQuery<TransformComponent>();

@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* Scroll containers now have public methods to get & set their scroll positions.
+*None yet*
 
 ### Bugfixes
 
-* Fixed entity spawn menu sometimes not properly updating when filtering entities.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,22 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.77.0.2
+
+### New features
+
+* Scroll containers now have public methods to get & set their scroll positions.
+
+### Bugfixes
+
+* Fixed entity spawn menu sometimes not properly updating when filtering entities.
+
+### Other
+
+* Physics contacts are now stored per-world rather than per-map. This allows the multi-threading to be applicable to every contact rather than per-map.
+* Contacts will no longer implicitly be destroyed upon bodies changing maps.
 
 
 ## 0.77.0.1

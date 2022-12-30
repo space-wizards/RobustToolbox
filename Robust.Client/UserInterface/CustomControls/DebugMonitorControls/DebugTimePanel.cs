@@ -55,7 +55,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             _contents.TextMemory = FormatHelpers.FormatIntoMem(_textBuffer,
                 $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick}, LastProcessed: {_gameTiming.LastProcessedTick}, LastRealTick: {_gameTiming.LastRealTick}, Pred: {_gameTiming.CurTick.Value - _gameTiming.LastRealTick.Value - 1}
 CurTime: {_gameTiming.CurTime:hh\:mm\:ss\.ff}, RealTime: {_gameTiming.RealTime:hh\:mm\:ss\.ff}, CurFrame: {_gameTiming.CurFrame}
-ServerTime: {_gameTiming.ServerTime}, TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}");
+ServerTime: {_gameTiming.ServerTime:hh\:mm\:ss\.ff}, TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}, TickRate: {_gameTiming.TickRate}");
         }
     }
 }

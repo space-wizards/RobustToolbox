@@ -231,12 +231,12 @@ namespace Robust.Server.GameStates
             Parallel.For(
                 _replay.Recording ? -1 : 0, players.Length,
                 new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
-                () => _threadResourcesPool.Get(),
+                _threadResourcesPool.Get,
                 (i, _, resource) =>
                 {
                     if (i == -1)
                     {
-                        _replay.SaveReplayData(mainThread, parentDeps, resource);
+                        _replay.SaveReplayData(resource);
                         return resource;
                     }
 
@@ -250,7 +250,7 @@ namespace Robust.Server.GameStates
                     }
                     return resource;
                 },
-                resource => _threadResourcesPool.Return(resource)
+                _threadResourcesPool.Return
             );
 
             void SendStateUpdate(int sessionIndex, PvsThreadResources resources)

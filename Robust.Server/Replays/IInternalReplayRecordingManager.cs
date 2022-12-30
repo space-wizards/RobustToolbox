@@ -18,5 +18,5 @@ internal interface IInternalReplayRecordingManager : IServerReplayRecordingManag
     /// <remarks>
     ///     This is intended to be called by PVS in parallel with other game-state networking.
     /// </remarks>
-    void SaveReplayData(Thread mainThread, IDependencyCollection parentDeps, PvsThreadResources resource);
+    void SaveReplayData(PvsThreadResources resource);
 }

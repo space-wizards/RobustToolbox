@@ -7,7 +7,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -20,7 +19,6 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using static Robust.Server.GameStates.ServerGameStateManager;
@@ -32,7 +30,6 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IRobustSerializer _seri = default!;
     [Dependency] private readonly IPlayerManager _playerMan = default!;
-    [Dependency] private readonly INetworkedMapManager _mapMan = default!;
     [Dependency] private readonly IEntitySystemManager _sysMan = default!;
     [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly INetConfigurationManager _netConf = default!;
@@ -140,25 +137,19 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     }
 
     /// <inheritdoc/>
-    public void SaveReplayData(Thread mainThread, IDependencyCollection parentDeps, PvsThreadResources resource)
+    public void SaveReplayData(PvsThreadResources resource)
     {
         if (_curStream == null)
             return;
 
         try
         {
-            if (mainThread != Thread.CurrentThread)
-                IoCManager.InitThread(new DependencyCollection(parentDeps), true);
-
             var lastAck = _firstTick ? GameTick.Zero : _timing.CurTick - 1;
             _firstTick = false;
 
             var (entStates, deletions, _, __) = _pvs.GetAllEntityStates(null, lastAck, _timing.CurTick);
             var playerStates = _playerMan.GetPlayerStates(lastAck);
-            var mapData = _mapMan.GetStateData(lastAck);
-
-            var state = new GameState(lastAck, _timing.CurTick, 0,
-                entStates, playerStates, deletions, mapData);
+            var state = new GameState(lastAck, _timing.CurTick, 0, entStates, playerStates, deletions);
 
             _seri.SerializeDirect(_curStream, state);
             _seri.SerializeDirect(_curStream, new ReplayMessage() { Messages = _queuedMessages });

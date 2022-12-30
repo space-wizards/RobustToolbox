@@ -3,6 +3,7 @@ using System.IO;
 using NUnit.Framework;
 using Robust.Server.Configuration;
 using Robust.Server.Reflection;
+using Robust.Server.Serialization;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -34,7 +35,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IReflectionManager, ServerReflectionManager>();
-            container.Register<IRobustSerializer, RobustSerializer>();
+            container.Register<IRobustSerializer, ServerRobustSerializer>();
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<IGameTiming, GameTiming>();

@@ -30,6 +30,7 @@ public abstract class AppearanceComponent : Component
         _sysMan.GetEntitySystem<SharedAppearanceSystem>().SetData(Owner, key, value, this);
     }
 
+    [Obsolete("Use SharedAppearanceSystem instead")]
     public bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data)
     {
         if (AppearanceData.TryGetValue(key, out var dat) && dat is T)

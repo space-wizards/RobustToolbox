@@ -129,6 +129,17 @@ internal partial class Clyde
             return (void*) SDL_GL_GetProcAddress(procName);
         }
 
+        public string GetDescription()
+        {
+            SDL_GetVersion(out var version);
+            _sawmill.Debug(
+                "SDL2 initialized, version: {major}.{minor}.{patch}", version.major, version.minor, version.patch);
+
+            var videoDriver = SDL_GetCurrentVideoDriver();
+
+            return $"SDL2 {version.major}.{version.minor}.{version.patch} ({videoDriver})";
+        }
+
         [UnmanagedCallersOnly(CallConvs = new []{typeof(CallConvCdecl)})]
         private static unsafe void LogOutputFunction(
             void* userdata,

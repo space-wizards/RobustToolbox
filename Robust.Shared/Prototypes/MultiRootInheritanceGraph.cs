@@ -25,6 +25,7 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
     }
 
     public T[]? GetParents(T id) => _parents.GetValueOrDefault(id);
+    public int GetParentsCount(T id) => _parents.GetValueOrDefault(id)?.Length ?? 0;
 
     public bool TryGetParents(T id, [NotNullWhen(true)] out T[]? parents)
     {

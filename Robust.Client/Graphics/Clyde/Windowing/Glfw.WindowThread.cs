@@ -157,7 +157,9 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     FullMode = BoundedChannelFullMode.Wait,
                     SingleReader = true,
-                    SingleWriter = true
+                    SingleWriter = true,
+                    // For unblocking continuations.
+                    AllowSynchronousContinuations = true
                 });
 
                 _eventReader = eventChannel.Reader;

@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var list = new List<string> {"A", "E"};
             var node = new SequenceDataNode("A", "E");
-            var deserializedList = Serialization.Read<List<string>>(node);
+            var deserializedList = Serialization.Read<List<string>>(node, notNullableOverride: true);
 
             Assert.That(deserializedList, Is.EqualTo(list));
         }
@@ -38,7 +38,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var node = new SequenceDataNode("A", "E");
 
-            var result = Serialization.Read<List<string>, SequenceDataNode, ListSerializers<string>>(node);
+            var result = Serialization.Read<List<string>, SequenceDataNode, ListSerializers<string>>(node, notNullableOverride: true);
             var list = (List<string>?) result;
 
             Assert.NotNull(list);
@@ -53,7 +53,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var list = new List<string> {"A", "E"};
 
-            var node = (SequenceDataNode) Serialization.WriteValue<List<string>, ListSerializers<string>>(list);
+            var node = (SequenceDataNode) Serialization.WriteValue<List<string>, ListSerializers<string>>(list, notNullableOverride: true);
 
             Assert.That(node.Sequence.Count, Is.EqualTo(2));
             Assert.That(node.Cast<ValueDataNode>(0).Value, Is.EqualTo("A"));
@@ -69,7 +69,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             Assert.IsNotEmpty(source);
             Assert.IsEmpty(target);
 
-            Serialization.CopyTo<List<string>, ListSerializers<string>>(source, ref target);
+            Serialization.CopyTo<List<string>, ListSerializers<string>>(source, ref target, notNullableOverride: true);
 
             Assert.NotNull(source);
 

@@ -8,6 +8,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using static Robust.Client.UserInterface.Controls.BaseButton;
@@ -133,11 +134,11 @@ public sealed class TileSpawningUIController : UIController
         if (!string.IsNullOrEmpty(searchStr))
         {
             tileDefs = tileDefs.Where(s =>
-                s.Name.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase) ||
+                Loc.GetString(s.Name).Contains(searchStr, StringComparison.CurrentCultureIgnoreCase) ||
                 s.ID.Contains(searchStr, StringComparison.OrdinalIgnoreCase));
         }
 
-        tileDefs = tileDefs.OrderBy(d => d.Name);
+        tileDefs = tileDefs.OrderBy(d => Loc.GetString(d.Name));
 
         _shownTiles.Clear();
         _shownTiles.AddRange(tileDefs);
@@ -151,7 +152,7 @@ public sealed class TileSpawningUIController : UIController
             {
                 texture = _resources.GetResource<TextureResource>(path);
             }
-            _window.TileList.AddItem(entry.Name, texture);
+            _window.TileList.AddItem(Loc.GetString(entry.Name), texture);
         }
     }
 }

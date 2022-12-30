@@ -43,6 +43,8 @@ namespace Robust.Shared.Map
         /// <param name="oldTile">The old tile that got replaced.</param>
         void RaiseOnTileChanged(TileRef tileRef, Tile oldTile);
 
+        MapId CreateMap(MapId? mapId, EntityUid euid);
+
         void TrueDeleteMap(MapId mapId);
         void OnGridBoundsChange(EntityUid uid, MapGridComponent grid);
     }

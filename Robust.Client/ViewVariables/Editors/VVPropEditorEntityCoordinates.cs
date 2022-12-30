@@ -72,7 +72,7 @@ namespace Robust.Client.ViewVariables.Editors
                     return;
                 }
 
-                ValueChanged(new EntityCoordinates(grid.GridEntityId, (xVal, yVal)));
+                ValueChanged(new EntityCoordinates(grid.Owner, (xVal, yVal)));
             }
 
             if (!ReadOnly)

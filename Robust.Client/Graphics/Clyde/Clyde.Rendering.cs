@@ -1008,45 +1008,6 @@ namespace Robust.Client.Graphics.Clyde
             PointList,
         }
 
-        private sealed class SpriteDrawingOrderComparer : IComparer<int>
-        {
-            private readonly RefList<(SpriteComponent, Vector2, Angle, Box2)> _drawList;
-
-            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Vector2, Angle, Box2)> drawList)
-            {
-                _drawList = drawList;
-            }
-
-            public int Compare(int x, int y)
-            {
-                var a = _drawList[x].Item1;
-                var b = _drawList[y].Item1;
-
-                var cmp = a.DrawDepth.CompareTo(b.DrawDepth);
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                cmp = a.RenderOrder.CompareTo(b.RenderOrder);
-
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                // compare the top of the sprite's BB for y-sorting. Because screen coordinates are flipped, the "top" of the BB is actually the "bottom".
-                cmp = _drawList[x].Item4.Top.CompareTo(_drawList[y].Item4.Top);
-
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                return a.Owner.CompareTo(b.Owner);
-            }
-        }
-
         private readonly struct FullStoredRendererState
         {
             public readonly Matrix3 ProjMatrix;

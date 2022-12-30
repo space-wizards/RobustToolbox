@@ -80,5 +80,17 @@ namespace Robust.Shared.Random
 
             return random.NextDouble() <= chance;
         }
+
+        internal static void Shuffle<T>(Span<T> array, System.Random random)
+        {
+            var n = array.Length;
+            while (n > 1)
+            {
+                n--;
+                var k = random.Next(n + 1);
+                (array[k], array[n]) =
+                    (array[n], array[k]);
+            }
+        }
     }
 }

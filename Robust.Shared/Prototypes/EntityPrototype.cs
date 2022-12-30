@@ -92,7 +92,8 @@ namespace Robust.Shared.Prototypes
         [DataField("noSpawn")]
         public bool NoSpawn { get; private set; }
 
-        [DataField("placement")] private EntityPlacementProperties PlacementProperties = new();
+        [DataField("placement")]
+        private EntityPlacementProperties PlacementProperties = new();
 
         /// <summary>
         /// The different mounting points on walls. (If any).
@@ -243,7 +244,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            serManager.CopyTo(data, ref component, context);
+            serManager.CopyTo(data, ref component, context, notNullableOverride: true);
         }
 
         public override string ToString()

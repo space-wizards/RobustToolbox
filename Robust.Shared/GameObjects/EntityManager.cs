@@ -10,6 +10,7 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Robust.Shared.GameObjects
 {
@@ -196,27 +197,22 @@ namespace Robust.Shared.GameObjects
             var newEntity = CreateEntity(prototypeName);
             var transform = GetComponent<TransformComponent>(newEntity);
 
-            var mapEnt = _mapManager.GetMapEntityId(coordinates.MapId);
-            TryGetComponent(mapEnt, out TransformComponent? mapXform);
-
-            // If the entity is being spawned in null-space, we will parent the entity to the null-map, IF it exists.
-            // For whatever reason, tests create and expect null-space to have a map entity, and it does on the client, but it
-            // intentionally doesn't on the server??
-            if (coordinates.MapId == MapId.Nullspace &&
-                mapXform == null)
+            if (coordinates.MapId == MapId.Nullspace)
             {
+                DebugTools.Assert(_mapManager.GetMapEntityId(coordinates.MapId) == EntityUid.Invalid);
                 transform._parent = EntityUid.Invalid;
                 transform.Anchored = false;
                 return newEntity;
             }
 
-            if (mapXform == null)
+            var mapEnt = _mapManager.GetMapEntityId(coordinates.MapId);
+            if (!TryGetComponent(mapEnt, out TransformComponent? mapXform))
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
             EntityCoordinates coords;
             if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var grid))
             {
-                coords = new(grid.GridEntityId, grid.WorldToLocal(coordinates.Position));
+                coords = new(grid.Owner, grid.WorldToLocal(coordinates.Position));
                 _xforms.SetCoordinates(transform, coords, unanchor: false);
             }
             else
@@ -480,15 +476,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Disposes all entities and clears all lists.
         /// </summary>
-        public void FlushEntities()
+        public virtual void FlushEntities()
         {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
-            foreach (var e in GetEntities())
+            foreach (var e in GetEntities().ToArray())
             {
                 DeleteEntity(e);
             }
-            DebugTools.Assert(Entities.Count == 0);
+
+            if (Entities.Count != 0)
+                Logger.Error("Entities were spawned while flushing entities.");
         }
 
         /// <summary>

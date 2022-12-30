@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
@@ -17,12 +16,11 @@ namespace Robust.Shared.Serialization
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] protected readonly IRobustMappedStringSerializer MappedStringSerializer = default!;
-
-        private readonly Lazy<ISawmill> _lazyLogSzr = new(() => Logger.GetSawmill("szr"));
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private readonly Dictionary<Type, Dictionary<string, Type?>> _cachedSerialized = new();
 
-        private ISawmill LogSzr => _lazyLogSzr.Value;
+        private ISawmill LogSzr = default!;
 
 
         private Serializer _serializer = default!;
@@ -75,6 +73,7 @@ namespace Robust.Shared.Serialization
             }
 #endif
 
+            LogSzr = _logManager.GetSawmill("szr");
             types.AddRange(AlwaysNetSerializable);
 
             MappedStringSerializer.Initialize();

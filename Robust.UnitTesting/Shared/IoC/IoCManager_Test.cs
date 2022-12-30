@@ -135,6 +135,8 @@ namespace Robust.UnitTesting.Shared.IoC
 
             IoCManager.RegisterInstance<IIoCTestPriorities>(obj);
 
+            IoCManager.BuildGraph();
+
             Assert.That(IoCManager.Resolve<IIoCTestPriorities>(), Is.EqualTo(obj));
         }
 
@@ -151,10 +153,10 @@ namespace Robust.UnitTesting.Shared.IoC
         public void IoCRegInstancesBeforeBuildGraph()
         {
             var instanceA = new DependencyA();
-            IoCManager.RegisterInstance<DependencyA>(instanceA, deferInject: true);
+            IoCManager.RegisterInstance<DependencyA>(instanceA);
 
             var instanceB = new DependencyB();
-            IoCManager.RegisterInstance<DependencyB>(instanceB, deferInject: true);
+            IoCManager.RegisterInstance<DependencyB>(instanceB);
 
             IoCManager.BuildGraph();
 
@@ -173,7 +175,7 @@ namespace Robust.UnitTesting.Shared.IoC
             IoCManager.Register<DependencyA, DependencyA>();
 
             var instanceB = new DependencyB();
-            IoCManager.RegisterInstance<DependencyB>(instanceB, deferInject: true);
+            IoCManager.RegisterInstance<DependencyB>(instanceB);
 
             IoCManager.BuildGraph();
 
@@ -189,7 +191,7 @@ namespace Robust.UnitTesting.Shared.IoC
         public void IoCRegInstanceDepBeforeBuildGraph()
         {
             var instanceB = new DependencyB();
-            IoCManager.RegisterInstance<DependencyB>(instanceB, deferInject: true);
+            IoCManager.RegisterInstance<DependencyB>(instanceB);
 
             IoCManager.Register<DependencyA, DependencyA>();
 

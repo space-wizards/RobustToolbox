@@ -566,6 +566,7 @@ namespace Robust.Client.Graphics.Clyde
             public string Vendor => "Space Wizards Federation";
             public string VersionString { get; } = $"3.3.0 WIZARDS {typeof(DummyDebugInfo).Assembly.GetName().Version}";
             public bool Overriding => false;
+            public string WindowingApi => "The vast abyss";
         }
 
         private sealed class Viewport : IClydeViewport

@@ -7,7 +7,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.UserInterface.CustomControls
+namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
     internal sealed class DebugInputPanel : PanelContainer
     {

@@ -93,7 +93,7 @@ namespace Robust.Shared.Physics.Controllers
         /// <param name="prediction"></param>
         /// <param name="mapComponent"></param>
         /// <param name="frameTime"></param>
-        public virtual void UpdateBeforeMapSolve(bool prediction, SharedPhysicsMapComponent mapComponent, float frameTime) {}
+        public virtual void UpdateBeforeMapSolve(bool prediction, PhysicsMapComponent mapComponent, float frameTime) {}
 
         /// <summary>
         ///     Run after a particular map finishes.
@@ -101,6 +101,6 @@ namespace Robust.Shared.Physics.Controllers
         /// <param name="prediction"></param>
         /// <param name="mapComponent"></param>
         /// <param name="frameTime"></param>
-        public virtual void UpdateAfterMapSolve(bool prediction, SharedPhysicsMapComponent mapComponent, float frameTime) {}
+        public virtual void UpdateAfterMapSolve(bool prediction, PhysicsMapComponent mapComponent, float frameTime) {}
     }
 }

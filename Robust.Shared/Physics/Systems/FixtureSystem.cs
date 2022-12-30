@@ -36,10 +36,6 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
         {
-            var xform = Transform(uid);
-            if (xform.MapID == Map.MapId.Nullspace)
-                return;
-
             // TODO: Need a better solution to this because the only reason I don't throw is that allcomponents test
             // Yes it is actively making the game buggier but I would essentially double the size of this PR trying to fix it
             // my best solution rn is move the broadphase property onto FixturesComponent and then refactor
@@ -50,7 +46,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            _physics.DestroyContacts(body, xform.MapID, xform);
+            _physics.DestroyContacts(body);
 
             // TODO im 99% sure  _broadphaseSystem.RemoveBody(body, component) gets triggered by this as well, so is this even needed?
             _physics.SetCanCollide(body, false);
@@ -197,19 +193,18 @@ namespace Robust.Shared.Physics.Systems
             }
 
             var xform = Transform(body.Owner);
-            var map = xform.MapUid;
-
-            if (TryComp<SharedPhysicsMapComponent>(map, out var physicsMap))
+            if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
             {
-                foreach (var (_, contact) in fixture.Contacts.ToArray())
+                var map = Transform(broadphase.Owner).MapUid;
+                if (TryComp<PhysicsMapComponent>(map, out var physicsMap))
                 {
-                    physicsMap.ContactManager.Destroy(contact);
+                    foreach (var contact in fixture.Contacts.Values.ToArray())
+                    {
+                        _physics.DestroyContact(contact);
+                    }
                 }
+                _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
 
-                if (body.CanCollide && xform.GridUid != xform.Owner)
-                {
-                    _lookup.DestroyProxies(fixture, xform, physicsMap);
-                }
             }
 
             if (updates)
@@ -318,6 +313,8 @@ namespace Robust.Shared.Physics.Systems
                 }
             }
 
+            // TODO add a DestroyFixture() override that takes in a list.
+            // reduced broadphase lookups
             foreach (var fixture in toRemoveFixtures)
             {
                 computeProperties = true;

@@ -459,7 +459,7 @@ namespace Robust.Server.Player
             // This is done before the packet is built, so that the client
             // can see themselves Connected.
             var session = GetSessionByChannel(channel);
-            session.Status = SessionStatus.Connected;
+            session.OnConnect();
 
             var list = new List<PlayerState>();
             foreach (var client in players)

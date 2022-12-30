@@ -18,7 +18,7 @@ namespace Robust.Client.Serialization
     {
         public AppearanceVisualizer Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<AppearanceVisualizer>? instanceProvider = null)
         {
             Type? type = null;
@@ -38,7 +38,7 @@ namespace Robust.Client.Serialization
 
             var newNode = node.Copy();
             newNode.Remove("type");
-            return (AppearanceVisualizer) serializationManager.Read(type, newNode, context, skipHook)!;
+            return (AppearanceVisualizer) serializationManager.Read(type, newNode, hookCtx, context)!;
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,

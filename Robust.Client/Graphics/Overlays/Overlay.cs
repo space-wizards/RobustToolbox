@@ -55,10 +55,6 @@ namespace Robust.Client.Graphics
 
         protected internal virtual void FrameUpdate(FrameEventArgs args) { }
 
-        ~Overlay() {
-            Dispose();
-        }
-
         public void Dispose() {
             if (Disposed)
                 return;
@@ -68,13 +64,12 @@ namespace Robust.Client.Graphics
 
         protected virtual void DisposeBehavior(){
             Disposed = true;
-            GC.SuppressFinalize(this);
         }
 
         /// <summary>
         /// This function gets called prior to the overlay being drawn. If this function returns false, the overlay will
         /// not get drawn to this view-port. Useful for avoiding unnecessary screen-texture fetching or frame buffer
-        /// clearing. 
+        /// clearing.
         /// </summary>
         protected internal virtual bool BeforeDraw(in OverlayDrawArgs args)
         {

@@ -164,23 +164,7 @@ public partial class SharedPhysicsSystem
 
     #region Setters
 
-    public void DestroyContacts(PhysicsComponent body, MapId? mapId = null, TransformComponent? xform = null)
-    {
-        if (body.Contacts.Count == 0) return;
-
-        xform ??= Transform(body.Owner);
-        mapId ??= xform.MapID;
-
-        if (!TryComp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId.Value), out var map))
-        {
-            DebugTools.Assert("Attempted to destroy contacts, but entity has no physics map!");
-            return;
-        }
-
-        DestroyContacts(body, map);
-    }
-
-    public void DestroyContacts(PhysicsComponent body, SharedPhysicsMapComponent physMap)
+    public void DestroyContacts(PhysicsComponent body)
     {
         if (body.Contacts.Count == 0) return;
 
@@ -191,7 +175,7 @@ public partial class SharedPhysicsSystem
             var contact = node.Value;
             node = node.Next;
             // Destroy last so the linked-list doesn't get touched.
-            physMap.ContactManager.Destroy(contact);
+            DestroyContact(contact);
         }
 
         DebugTools.Assert(body.Contacts.Count == 0);
@@ -417,6 +401,16 @@ public partial class SharedPhysicsSystem
         }
     }
 
+    public void SetBodyStatus(PhysicsComponent body, BodyStatus status, bool dirty = true)
+    {
+        if (body.BodyStatus == status)
+            return;
+
+        body._bodyStatus = status;
+
+        if (dirty)
+            Dirty(body);
+    }
 
     /// <summary>
     /// Sets the <see cref="PhysicsComponent.CanCollide"/> property; this handles whether the body is enabled.
@@ -436,7 +430,7 @@ public partial class SharedPhysicsSystem
                 if (_containerSystem.IsEntityOrParentInContainer(body.Owner))
                     return false;
 
-                if (Resolve(body.Owner, ref fixtures) && fixtures.FixtureCount == 0 && !_mapMan.IsGrid(body.Owner))
+                if ((!Resolve(body.Owner, ref fixtures) || fixtures.FixtureCount == 0) && !_mapMan.IsGrid(body.Owner))
                     return false;
             }
             else
@@ -621,5 +615,27 @@ public partial class SharedPhysicsSystem
         }
 
         return bounds;
+    }
+
+    public (int Layer, int Mask) GetHardCollision(EntityUid uid, FixturesComponent? manager = null)
+    {
+        if (!Resolve(uid, ref manager))
+        {
+            return (0, 0);
+        }
+
+        var layer = 0;
+        var mask = 0;
+
+        foreach (var fixture in manager.Fixtures.Values)
+        {
+            if (!fixture.Hard)
+                continue;
+
+            layer |= fixture._collisionLayer;
+            mask |= fixture._collisionMask;
+        }
+
+        return (layer, mask);
     }
 }

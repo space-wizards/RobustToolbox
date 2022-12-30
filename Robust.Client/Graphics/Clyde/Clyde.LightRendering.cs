@@ -11,10 +11,11 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using static Robust.Client.GameObjects.ClientOccluderComponent;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 using Robust.Shared.Physics;
+using Robust.Client.ComponentTrees;
+using static Robust.Shared.GameObjects.OccluderComponent;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -538,19 +539,18 @@ namespace Robust.Client.Graphics.Clyde
             expandedBounds)
             GetLightsToRender(MapId map, in Box2Rotated worldBounds, in Box2 worldAABB)
         {
-            var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+            var lightTreeSys = _entitySystemManager.GetEntitySystem<LightTreeSystem>();
             var xformSystem = _entitySystemManager.GetEntitySystem<TransformSystem>();
-            var enlargedBounds = worldAABB.Enlarged(renderingTreeSystem.MaxLightRadius);
 
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
             var state = (this, count: 0, shadowCastingCount: 0, xformSystem, xforms, worldAABB);
 
-            foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
+            foreach (var comp in lightTreeSys.GetIntersectingTrees(map, worldAABB))
             {
                 var bounds = xformSystem.GetInvWorldMatrix(comp.Owner, xforms).TransformBox(worldBounds);
 
-                comp.LightTree.QueryAabb(ref state, static (ref (
+                comp.Tree.QueryAabb(ref state, static (ref (
                     Clyde clyde,
                     int count,
                     int shadowCastingCount,
@@ -933,7 +933,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var xforms = _entityManager.GetEntityQuery<TransformComponent>();
 
-                foreach (var comp in occluderSystem.GetOccluderTrees(map, expandedBounds))
+                foreach (var comp in occluderSystem.GetIntersectingTrees(map, expandedBounds))
                 {
                     var treeBounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(expandedBounds);
 
@@ -945,7 +945,7 @@ namespace Robust.Client.Graphics.Clyde
                             return true;
                         }
 
-                        var occluder = (ClientOccluderComponent)sOccluder;
+                        var occluder = (OccluderComponent)sOccluder;
 
                         var worldTransform = xformSystem.GetWorldMatrix(transform, xforms);
                         var box = sOccluder.BoundingBox;

@@ -5,7 +5,13 @@ using Robust.Shared.Utility;
 namespace Robust.Client.Graphics
 {
     /// <summary>
-    ///     Style box based on a 9-patch texture.
+    ///     Style box based on a 9-patch texture. An image is
+    ///     divided into up to nine regions by splitting the
+    ///     image along each `PatchMargin.` The corner pieces
+    ///     will be drawn once, at their original size, while
+    ///     the `Mode` controls the (up to five) central pieces
+    ///     which can be either stretched or tiled to fill up
+    ///     the space the box is being drawn in.
     /// </summary>
     public sealed class StyleBoxTexture : StyleBox
     {
@@ -45,6 +51,7 @@ namespace Robust.Client.Graphics
 
         private float _patchMarginLeft;
 
+        // Distance of the left patch margin from the image. In texture space.
         public float PatchMarginLeft
         {
             get => _patchMarginLeft;
@@ -61,6 +68,7 @@ namespace Robust.Client.Graphics
 
         private float _patchMarginRight;
 
+        // Distance of the right patch margin from the image. In texture space.
         public float PatchMarginRight
         {
             get => _patchMarginRight;
@@ -77,6 +85,7 @@ namespace Robust.Client.Graphics
 
         private float _patchMarginTop;
 
+        // Distance of the top patch margin from the image. In texture space.
         public float PatchMarginTop
         {
             get => _patchMarginTop;
@@ -93,6 +102,7 @@ namespace Robust.Client.Graphics
 
         private float _patchMarginBottom;
 
+        // Distance of the bottom patch margin from the image. In texture space.
         public float PatchMarginBottom
         {
             get => _patchMarginBottom;

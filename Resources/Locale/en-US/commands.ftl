@@ -529,3 +529,7 @@ cmd-vv-desc = Usage: vv <path|entity ID|guihover>
 
 cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
 cmd-vvinvoke-desc = Usage: vvinvoke <path> [arguments...]
+
+cmd-dump_dependency_injectors-desc = Dump IoCManager's dependency injector cache.
+cmd-dump_dependency_injectors-help = Usage: dump_dependency_injectors
+cmd-dump_dependency_injectors-total-count = Total count: { $total }

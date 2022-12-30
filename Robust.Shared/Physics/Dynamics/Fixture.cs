@@ -147,13 +147,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         [DataField("hard")] private bool _hard = true;
 
-        // MassData
-        // The reason these aren't a struct is because Serv3 + doing MassData in yaml everywhere would suck.
-        // Plus now it's WAYYY easier to share shapes even among different prototypes.
-        public float Inertia => _inertia;
-
-        private float _inertia;
-
         /// <summary>
         /// In kg / m ^ 2
         /// </summary>

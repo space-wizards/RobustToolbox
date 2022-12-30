@@ -65,7 +65,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 mapId = mapManager.CreateMap();
 
                 EntityUid tempQualifier2 = mapManager.GetMapEntityId(mapId);
-                entityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
+                entityManager.GetComponent<PhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
 
                 EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                 var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);
@@ -183,7 +183,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 mapId = mapManager.CreateMap();
                 EntityUid tempQualifier2 = mapManager.GetMapEntityId(mapId);
-                entityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
+                entityManager.GetComponent<PhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
 
                 EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                 var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);

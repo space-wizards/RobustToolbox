@@ -4,14 +4,16 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
 using Robust.Server;
+using Robust.Server.Configuration;
 using Robust.Server.Console;
-using Robust.Server.Debugging;
 using Robust.Server.Containers;
+using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Server.Player;
 using Robust.Server.Reflection;
+using Robust.Server.Replays;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
@@ -29,19 +31,18 @@ using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Players;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
-using Robust.Server.Configuration;
-using Robust.Shared.Replays;
-using Robust.Shared.Players;
-using Robust.Server.Replays;
 
 namespace Robust.UnitTesting.Server
 {
@@ -222,7 +223,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
-            container.Register<IIslandManager, IslandManager>();
             container.Register<IManifoldManager, CollisionManager>();
             container.Register<IMapManagerInternal, MapManager>();
             container.Register<IPhysicsManager, PhysicsManager>();
@@ -260,6 +260,7 @@ namespace Robust.UnitTesting.Server
 
             var compFactory = container.Resolve<IComponentFactory>();
 
+            // if only we had some sort of attribute for automatically registering components.
             compFactory.RegisterClass<MetaDataComponent>();
             compFactory.RegisterClass<TransformComponent>();
             compFactory.RegisterClass<MapGridComponent>();
@@ -272,6 +273,8 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<PhysicsMapComponent>();
             compFactory.RegisterClass<FixturesComponent>();
             compFactory.RegisterClass<CollisionWakeComponent>();
+            compFactory.RegisterClass<OccluderComponent>();
+            compFactory.RegisterClass<OccluderTreeComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -311,7 +314,7 @@ namespace Robust.UnitTesting.Server
             container.Resolve<ISerializationManager>().Initialize();
 
             var protoMan = container.Resolve<IPrototypeManager>();
-            protoMan.RegisterType(typeof(EntityPrototype));
+            protoMan.RegisterKind(typeof(EntityPrototype));
             _protoDelegate?.Invoke(protoMan);
             protoMan.ResolveResults();
 

@@ -151,8 +151,8 @@ namespace Robust.Client.Input
                 .ToArray();
 
             mapping.Add("version", new ValueDataNode("1"));
-            mapping.Add("binds", _serialization.WriteValue(modifiedBindings));
-            mapping.Add("leaveEmpty", _serialization.WriteValue(leaveEmpty));
+            mapping.Add("binds", _serialization.WriteValue(modifiedBindings, notNullableOverride: true));
+            mapping.Add("leaveEmpty", _serialization.WriteValue(leaveEmpty, notNullableOverride: true));
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = _resourceMan.UserData.OpenWriteText(path);
@@ -493,7 +493,7 @@ namespace Robust.Client.Input
 
             if (mapping.TryGet("binds", out var BaseKeyRegsNode))
             {
-                var baseKeyRegs = _serialization.Read<KeyBindingRegistration[]>(BaseKeyRegsNode);
+                var baseKeyRegs = _serialization.Read<KeyBindingRegistration[]>(BaseKeyRegsNode, notNullableOverride: true);
 
                 foreach (var reg in baseKeyRegs)
                 {
@@ -522,7 +522,7 @@ namespace Robust.Client.Input
 
             if (userData && mapping.TryGet("leaveEmpty", out var node))
             {
-                var leaveEmpty = _serialization.Read<BoundKeyFunction[]>(node);
+                var leaveEmpty = _serialization.Read<BoundKeyFunction[]>(node, notNullableOverride: true);
 
                 if (leaveEmpty.Length > 0)
                 {

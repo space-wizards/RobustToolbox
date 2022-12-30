@@ -9,7 +9,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
         TType Read(ISerializationManager serializationManager,
             TNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<TType>? instanceProvider = null);
     }

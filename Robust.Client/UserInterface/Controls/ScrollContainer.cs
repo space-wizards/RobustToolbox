@@ -150,7 +150,7 @@ namespace Robust.Client.UserInterface.Controls
                     sWidth -= vBarSize;
                 }
 
-                if (sWidth < cWidth && _hScrollEnabled)
+                if (sWidth < cWidth && _hScrollEnabled && !MathHelper.CloseTo(sWidth, cWidth, 1e-3))
                 {
                     _hScrollBar.Visible = _hScrollVisible = true;
                     _hScrollBar.Page = sWidth;
@@ -161,7 +161,7 @@ namespace Robust.Client.UserInterface.Controls
                     _hScrollBar.Visible = _hScrollVisible = false;
                 }
 
-                if (sHeight < cHeight && _vScrollEnabled)
+                if (sHeight < cHeight && _vScrollEnabled && !MathHelper.CloseTo(sHeight, cHeight, 1e-3))
                 {
                     _vScrollBar.Visible = _vScrollVisible = true;
                     _vScrollBar.Page = sHeight;
@@ -199,7 +199,7 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var position = -_getScrollValue();
+                var position = -GetScrollValue();
                 var rect = UIBox2.FromDimensions(position, realFinalSize);
                 child.Arrange(rect);
             }
@@ -249,8 +249,11 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [Pure]
-        private Vector2 _getScrollValue()
+        public Vector2 GetScrollValue(bool ignoreVisible = false)
         {
+            if (ignoreVisible)
+                return (_hScrollBar.Value, _vScrollBar.Value);
+
             var h = _hScrollBar.Value;
             var v = _vScrollBar.Value;
             if (!_hScrollVisible)
@@ -264,6 +267,16 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return new Vector2(h, v);
+        }
+
+        public void SetScrollValue(Vector2 value)
+        {
+            _suppressScrollValueChanged = true;
+            _hScrollBar.Value = value.X;
+            _vScrollBar.Value = value.Y;
+            _suppressScrollValueChanged = false;
+            InvalidateArrange();
+            _queueScrolled = true;
         }
 
         private void _scrollValueChanged(Range obj)

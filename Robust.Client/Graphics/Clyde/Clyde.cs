@@ -199,7 +199,13 @@ namespace Robust.Client.Graphics.Clyde
 
             var glVersion = new OpenGLVersion((byte) major, (byte) minor, _isGLES, _isCore);
 
-            DebugInfo = new ClydeDebugInfo(glVersion, renderer, vendor, version, overrideVersion != null);
+            DebugInfo = new ClydeDebugInfo(
+                glVersion,
+                renderer,
+                vendor,
+                version,
+                overrideVersion != null,
+                _windowing!.GetDescription());
 
             GL.Enable(EnableCap.Blend);
             if (_hasGLSrgb && !_isGLES)

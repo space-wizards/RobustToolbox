@@ -22,7 +22,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         }
 
         public uint Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<uint>? instanceProvider = null)
         {
             return Parse.UInt32(node.Value);

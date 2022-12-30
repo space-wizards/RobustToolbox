@@ -25,7 +25,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         {
             ITestType type = new TestTypeOne();
             var serMan = IoCManager.Resolve<ISerializationManager>();
-            var mapping = serMan.WriteValue(type);
+            var mapping = serMan.WriteValue(type, notNullableOverride: true);
 
             Assert.IsInstanceOf<MappingDataNode>(mapping);
 
@@ -56,7 +56,7 @@ test:
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
             var serMan = IoCManager.Resolve<ISerializationManager>();
-            var type = serMan.Read<ITestType>(new MappingDataNode(mapping)["test"]);
+            var type = serMan.Read<ITestType>(new MappingDataNode(mapping)["test"], notNullableOverride: true);
 
             Assert.NotNull(type);
             Assert.IsInstanceOf<TestTypeOne>(type);

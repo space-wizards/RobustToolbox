@@ -35,5 +35,6 @@ public enum DebugMonitor
     Clyde,
     Input,
     Bandwidth,
-    Prof
+    Prof,
+    System
 }

@@ -157,7 +157,7 @@ namespace Robust.Shared.Containers
             container.Manager = this;
 
             Containers[id] = container;
-            Dirty();
+            _entMan.Dirty(this);
             return container;
         }
 

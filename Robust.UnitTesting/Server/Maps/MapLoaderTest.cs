@@ -1,13 +1,12 @@
 using System.Linq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
-using Robust.Server.Maps;
-using Robust.Server.Physics;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -77,7 +76,7 @@ entities:
             resourceManager.MountString("/EnginePrototypes/TestMapEntity.yml", Prototype);
 
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
-            protoMan.RegisterType(typeof(EntityPrototype));
+            protoMan.RegisterKind(typeof(EntityPrototype));
 
             protoMan.LoadDirectory(new ResourcePath("/EnginePrototypes"));
             protoMan.LoadDirectory(new ResourcePath("/Prototypes"));

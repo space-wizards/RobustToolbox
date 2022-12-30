@@ -128,12 +128,12 @@ public sealed class MapLoaderSystem : EntitySystem
         MapLoadOptions? options = null)
     {
         options ??= DefaultLoadOptions;
-        rootUids = new List<EntityUid>();
 
         var resPath = new ResourcePath(path).ToRootedPath();
 
         if (!TryGetReader(resPath, out var reader))
         {
+            rootUids = new List<EntityUid>();
             return false;
         }
 
@@ -149,8 +149,27 @@ public sealed class MapLoaderSystem : EntitySystem
             var sw = new Stopwatch();
             sw.Start();
             result = Deserialize(data);
-            rootUids = data.Entities;
             _logLoader.Debug($"Loaded map in {sw.Elapsed}");
+
+            var mapEnt = _mapManager.GetMapEntityId(mapId);
+            var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
+            var rootEnts = new List<EntityUid>();
+            // aeoeoeieioe content
+
+            if (HasComp<MapGridComponent>(mapEnt))
+            {
+                rootEnts.Add(mapEnt);
+            }
+            else
+            {
+                foreach (var ent in data.Entities)
+                {
+                    if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
+                        rootEnts.Add(ent);
+                }
+            }
+
+            rootUids = rootEnts;
         }
 
         _context.Clear();
@@ -347,7 +366,9 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         _stopwatch.Restart();
         var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
-        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>());
+        var mapUid = _mapManager.GetMapEntityId(data.TargetMap);
+        var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
+        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), pauseTime);
         data.Entities.EnsureCapacity(entities.Count);
         data.UidEntityMap.EnsureCapacity(entities.Count);
         data.EntitiesToDeserialize.EnsureCapacity(entities.Count);
@@ -487,10 +508,11 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         _stopwatch.Restart();
 
-        // There's 3 scenarios
-        // 1. We're loading a map file onto an existing map. In this case dump the map file map and use the existing map
-        // 2. We're loading a map file onto a new map. Use CreateMap (for now) and swap out the uid to the correct one
-        // 3. We're loading a non-map file; in this case it depends whether the map exists or not, then proceed with the above.
+        // There's 4 scenarios
+        // 1. We're loading a map file onto an existing map. Dump the map file's map and use the existing one
+        // 2. We're loading a map file onto an existing map. Use the map file's map and swap entities to it.
+        // 3. We're loading a map file onto a new map. Use CreateMap (for now) and swap out the uid to the correct one
+        // 4. We're loading a non-map file; in this case it depends whether the map exists or not, then proceed with the above.
 
         var rootNode = data.Entities[0];
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -501,30 +523,42 @@ public sealed class MapLoaderSystem : EntitySystem
             // If map exists swap out
             if (_mapManager.MapExists(data.TargetMap))
             {
+                // Map exists but we also have a map file with stuff on it soooo swap out the old map.
                 if (data.Options.LoadMap)
                 {
-                    _logLoader.Warning($"Loading map file with a root node onto an existing map!");
-                }
+                    _logLoader.Info($"Loading map file with a root node onto an existing map!");
 
-                var oldRootUid = data.Entities[0];
-                var newRootUid = _mapManager.GetMapEntityId(data.TargetMap);
-                data.Entities[0] = newRootUid;
-
-                foreach (var ent in data.Entities)
-                {
-                    if (ent == newRootUid)
-                        continue;
-
-                    var xform = xformQuery.GetComponent(ent);
-
-                    if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
+                    // Smelly
+                    if (HasComp<MapGridComponent>(rootNode))
                     {
-                        _transform.SetParent(xform, newRootUid);
+                        data.Options.Offset = Vector2.Zero;
+                        data.Options.Rotation = Angle.Zero;
                     }
-                }
 
-                Del(oldRootUid);
-                data.MapIsPostInit = _mapManager.IsMapInitialized(data.TargetMap);
+                    _mapManager.SetMapEntity(data.TargetMap, rootNode);
+                }
+                // Otherwise just ignore the map in the file.
+                else
+                {
+                    var oldRootUid = data.Entities[0];
+                    var newRootUid = _mapManager.GetMapEntityId(data.TargetMap);
+                    data.Entities[0] = newRootUid;
+
+                    foreach (var ent in data.Entities)
+                    {
+                        if (ent == newRootUid)
+                            continue;
+
+                        var xform = xformQuery.GetComponent(ent);
+
+                        if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
+                        {
+                            _transform.SetParent(xform, newRootUid);
+                        }
+                    }
+
+                    Del(oldRootUid);
+                }
             }
             else
             {
@@ -630,7 +664,7 @@ public sealed class MapLoaderSystem : EntitySystem
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY));
+                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY), notNullableOverride: true);
             }
         }
     }
@@ -785,7 +819,8 @@ public sealed class MapLoaderSystem : EntitySystem
         _stopwatch.Restart();
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
-        _context.Set(uidEntityMap, entityUidMap);
+        var pauseTime = _meta.GetPauseTime(uid);
+        _context.Set(uidEntityMap, entityUidMap, pauseTime);
 
         _stopwatch.Restart();
         WriteEntitySection(data, uidEntityMap, entityUidMap);

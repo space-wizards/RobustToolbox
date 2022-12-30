@@ -1,12 +1,13 @@
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.Physics;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.GameObjects;
+
+/// <summary>
+/// Stores the relevant occluder children of this entity.
+/// </summary>
+[RegisterComponent]
+public sealed class OccluderTreeComponent : Component, IComponentTreeComponent<OccluderComponent>
 {
-    /// <summary>
-    /// Stores the relevant occluder children of this entity.
-    /// </summary>
-    public sealed class OccluderTreeComponent : Component
-    {
-        internal DynamicTree<ComponentTreeEntry<OccluderComponent>> Tree { get; set; } = default!;
-    }
+    public DynamicTree<ComponentTreeEntry<OccluderComponent>> Tree { get; set; } = default!;
 }

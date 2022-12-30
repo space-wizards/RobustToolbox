@@ -272,7 +272,15 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="invDt">The inverse delta time.</param>
         public abstract float GetReactionTorque(float invDt);
 
-        internal abstract void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB);
+        internal abstract void InitVelocityConstraints(
+            in SolverData data,
+            in SharedPhysicsSystem.IslandData island,
+            PhysicsComponent bodyA,
+            PhysicsComponent bodyB,
+            Vector2[] positions,
+            float[] angles,
+            Vector2[] linearVelocities,
+            float[] angularVelocities);
 
         internal float Validate(float invDt)
         {
@@ -289,13 +297,20 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return jointErrorSquared;
         }
 
-        internal abstract void SolveVelocityConstraints(SolverData data);
+        internal abstract void SolveVelocityConstraints(
+            in SolverData data,
+            in SharedPhysicsSystem.IslandData island,
+            Vector2[] linearVelocities,
+            float[] angularVelocities);
 
         /// <summary>
         /// Solves the position constraints.
         /// </summary>
         /// <returns>returns true if the position errors are within tolerance.</returns>
-        internal abstract bool SolvePositionConstraints(SolverData data);
+        internal abstract bool SolvePositionConstraints(
+            in SolverData data,
+            Vector2[] positions,
+            float[] angles);
 
         public bool Equals(Joint? other)
         {
@@ -319,17 +334,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             hashcode = hashcode * 397 ^ JointType.GetHashCode();
             return hashcode;
         }
-
-        public sealed class JointBreakMessage : EntityEventArgs
-        {
-            public Joint Joint { get; }
-            public float JointError { get; }
-
-            public JointBreakMessage(Joint joint, float jointError)
-            {
-                Joint = joint;
-                JointError = jointError;
-            }
-        }
     }
+
+    [ByRefEvent]
+    public readonly record struct JointBreakEvent(Joint Joint, float JointError) {}
 }

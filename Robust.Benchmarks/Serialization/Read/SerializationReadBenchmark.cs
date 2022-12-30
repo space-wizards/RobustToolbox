@@ -43,7 +43,7 @@ namespace Robust.Benchmarks.Serialization.Read
         [Benchmark]
         public string ReadString()
         {
-            return SerializationManager.Read<string>(StringNode);
+            return SerializationManager.Read<string>(StringNode, notNullableOverride: true);
         }
 
         [Benchmark]
@@ -55,13 +55,13 @@ namespace Robust.Benchmarks.Serialization.Read
         [Benchmark]
         public DataDefinitionWithString ReadDataDefinitionWithString()
         {
-            return SerializationManager.Read<DataDefinitionWithString>(StringDataDefNode);
+            return SerializationManager.Read<DataDefinitionWithString>(StringDataDefNode, notNullableOverride: true);
         }
 
         [Benchmark]
         public SeedDataDefinition ReadSeedDataDefinition()
         {
-            return SerializationManager.Read<SeedDataDefinition>(SeedNode);
+            return SerializationManager.Read<SeedDataDefinition>(SeedNode, notNullableOverride: true);
         }
 
         [Benchmark]

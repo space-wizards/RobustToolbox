@@ -543,3 +543,7 @@ cmd-replaystop-error = Not currently recording a replay.
 cmd-replaystats-desc = Displays information about the current replay recording.
 cmd-replaystats-help = Usage: replaystats
 cmd-replaystats-result = Duration: {$time} min, Ticks: {$ticks}, Size: {$size} mb, rate: {$rate} mb/min.
+
+cmd-dump_dependency_injectors-desc = Dump IoCManager's dependency injector cache.
+cmd-dump_dependency_injectors-help = Usage: dump_dependency_injectors
+cmd-dump_dependency_injectors-total-count = Total count: { $total }

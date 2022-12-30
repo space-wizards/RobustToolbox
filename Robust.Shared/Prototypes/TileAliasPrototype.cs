@@ -7,7 +7,7 @@ namespace Robust.Shared.Prototypes;
 /// Prototype that represents an alias from one tile ID to another.
 /// Tile alias prototypes, unlike tile prototypes, are implemented here, as they're really just fed to TileDefinitionManager.
 /// </summary>
-[Prototype("tileAlias", -1)]
+[Prototype("tileAlias")]
 public sealed class TileAliasPrototype : IPrototype
 {
     /// <summary>

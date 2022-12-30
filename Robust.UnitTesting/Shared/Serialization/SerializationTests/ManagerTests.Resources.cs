@@ -49,7 +49,7 @@ public sealed partial class ManagerTests : ISerializationContext
         }
 
         public SerializerStruct Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<SerializerStruct>? instanceProvider = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<SerializerStruct>? instanceProvider = null)
         {
             Assert.That(node, Is.EqualTo(SerializerRanDataNode));
             return SerializerStruct.SerializerReturn();
@@ -62,13 +62,13 @@ public sealed partial class ManagerTests : ISerializationContext
         }
 
         public void CopyTo(ISerializationManager serializationManager, SerializerStruct source, ref SerializerStruct target,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target.OneValue = source.OneValue;
             target.TwoValue = source.TwoValue;
         }
 
-        public SerializerStruct CreateCopy(ISerializationManager serializationManager, SerializerStruct source, bool skipHook,
+        public SerializerStruct CreateCopy(ISerializationManager serializationManager, SerializerStruct source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new SerializerStruct(source.OneValue, source.TwoValue);
@@ -84,7 +84,7 @@ public sealed partial class ManagerTests : ISerializationContext
         }
 
         public SerializerStruct Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<SerializerStruct>? instanceProvider = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<SerializerStruct>? instanceProvider = null)
         {
             Assert.That(node, Is.EqualTo(SerializerRanCustomDataNode));
             return SerializerStruct.SerializerCustomReturn();
@@ -97,13 +97,13 @@ public sealed partial class ManagerTests : ISerializationContext
         }
 
         public void CopyTo(ISerializationManager serializationManager, SerializerStruct source, ref SerializerStruct target,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target.OneValue = source.OneValue;
             target.TwoValue = source.TwoValue;
         }
 
-        public SerializerStruct CreateCopy(ISerializationManager serializationManager, SerializerStruct source, bool skipHook,
+        public SerializerStruct CreateCopy(ISerializationManager serializationManager, SerializerStruct source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new SerializerStruct(source.OneValue, source.TwoValue);
@@ -132,7 +132,7 @@ public sealed partial class ManagerTests : ISerializationContext
         }
 
         public SerializerClass Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<SerializerClass>? instanceProvider = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<SerializerClass>? instanceProvider = null)
         {
             Assert.That(node, Is.EqualTo(SerializerRanDataNode));
             return SerializerClass.SerializerReturn();
@@ -144,7 +144,7 @@ public sealed partial class ManagerTests : ISerializationContext
             return SerializerRanDataNode;
         }
 
-        public SerializerClass CreateCopy(ISerializationManager serializationManager, SerializerClass source, bool skipHook,
+        public SerializerClass CreateCopy(ISerializationManager serializationManager, SerializerClass source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new SerializerClass(source.OneValue, source.TwoValue);
@@ -160,7 +160,7 @@ public sealed partial class ManagerTests : ISerializationContext
         }
 
         public SerializerClass Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<SerializerClass>? instanceProvider = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<SerializerClass>? instanceProvider = null)
         {
             Assert.That(node, Is.EqualTo(SerializerRanCustomDataNode));
             return SerializerClass.SerializerCustomReturn();
@@ -172,7 +172,7 @@ public sealed partial class ManagerTests : ISerializationContext
             return SerializerRanCustomDataNode;
         }
 
-        public SerializerClass CreateCopy(ISerializationManager serializationManager, SerializerClass source, bool skipHook,
+        public SerializerClass CreateCopy(ISerializationManager serializationManager, SerializerClass source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return new SerializerClass(source.OneValue, source.TwoValue);

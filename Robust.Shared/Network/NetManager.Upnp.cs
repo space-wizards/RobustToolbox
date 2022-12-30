@@ -28,10 +28,9 @@ public partial class NetManager
             {
                 foreach (var peer in peers)
                 {
-                    // The way the NetUPnP code is written, we're doing guesswork anyway
-                    // It seems to be that the assumption in regards to IPv6 is "what?" w/ UPnP????
-                    // ATTENTION FUTURE 20KDC (or anyone else who comes by):
-                    // IF YOU GET IPv6 FOR REALSIES, WORK OUT HOW TO DEAL W/ THIS!
+                    // There was previously a comment here from 20kdc wondering how IPv6 works with UPnP.
+                    // The answer is that the relevant UPnP service for IPv6 is "WANIPv6FirewallControl".
+                    // My router doesn't support it, so I can't test or implement it.
                     var upnp = peer.UPnP;
                     while (upnp.Status == UPnPStatus.Discovering)
                     {
@@ -44,15 +43,21 @@ public partial class NetManager
                     upnp.DeleteForwardingRule(port, "TCP");
                     var udpRes = upnp.ForwardPort(port, "RobustToolbox UDP", 0, "UDP");
                     var tcpRes = upnp.ForwardPort(port, "RobustToolbox TCP", 0, "TCP");
-                    // Message needs to show in warning if something went wrong
-                    var message = $"UPnP setup for port {port} on peer {peer.Configuration.LocalAddress} results: TCP {tcpRes}, UDP {udpRes}";
+                    if (!udpRes)
+                        sawmill.Error($"Peer {peer.Configuration.LocalAddress}: Failed to UPnP port forward {port}/udp");
+
+                    if (!tcpRes)
+                        sawmill.Error($"Peer {peer.Configuration.LocalAddress}: Failed to UPnP port forward {port}/tcp");
+
                     if (tcpRes && udpRes)
                     {
-                        sawmill.Info(message);
+                        sawmill.Info($"Peer {peer.Configuration.LocalAddress}: Successfully UPnP port forwarded {port}/udp and {port}/tcp");
                     }
                     else
                     {
-                        sawmill.Warning(message);
+                        sawmill.Warning($"Peer {peer.Configuration.LocalAddress}: Failed UPnP port forwarding, " +
+                                        "your server may not be accessible. " +
+                                        "Check with your router's settings to enable UPnP or port forward manually");
                     }
                 }
             }

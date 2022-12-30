@@ -7,6 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Physics
@@ -43,7 +44,7 @@ namespace Robust.Client.Physics
          * This will draw above every body involved in a particular island solve.
          */
 
-        public readonly Queue<(TimeSpan Time, List<IPhysBody> Bodies)> IslandSolve = new();
+        public readonly Queue<(TimeSpan Time, List<PhysicsComponent> Bodies)> IslandSolve = new();
         public const float SolveDuration = 0.1f;
 
         public override void Initialize()

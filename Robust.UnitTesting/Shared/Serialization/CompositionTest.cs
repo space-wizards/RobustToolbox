@@ -40,7 +40,7 @@ public sealed class CompositionTest : SerializationTest
         };
 
         var finalMapping = Serialization.PushComposition<CompositionTestClass, MappingDataNode>(new[] { parent1, parent2 }, child);
-        var val = Serialization.Read<CompositionTestClass>(finalMapping);
+        var val = Serialization.Read<CompositionTestClass>(finalMapping, notNullableOverride: true);
 
         Assert.That(val.ChildValue, Is.EqualTo(1));
         Assert.That(val.Parent1Value, Is.EqualTo(1));

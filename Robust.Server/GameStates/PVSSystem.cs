@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
+using Robust.Server.Configuration;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -28,7 +29,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
     [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Shared.IoC.Dependency] private readonly INetConfigurationManager _netConfigManager = default!;
+    [Shared.IoC.Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
 
     public const float ChunkSize = 8;
@@ -406,14 +407,14 @@ internal sealed partial class PVSSystem : EntitySystem
         if (e.NewStatus != SessionStatus.Disconnected)
             return;
 
+        if (!_playerVisibleSets.Remove(e.Session, out var data))
+            return;
+
         foreach (var pvsCollection in _pvsCollections)
         {
             if (!pvsCollection.RemovePlayer(e.Session))
                 _sawmill.Error($"Attempted to remove player from pvsCollection, but they were already removed? Session:{e.Session}");
         }
-
-        if (!_playerVisibleSets.Remove(e.Session, out var data))
-            return;
 
         if (data.Overflow != null)
             _visSetPool.Return(data.Overflow.Value.SentEnts);
@@ -560,14 +561,14 @@ internal sealed partial class PVSSystem : EntitySystem
                             List<(uint, IChunkIndexLocation)> _chunkList) tuple) =>
                     {
                         {
-                            var localPos = tuple.transformQuery.GetComponent(mapGrid.Owner).InvWorldMatrix.Transform(tuple.viewPos);
+                            var localPos = tuple.transformQuery.GetComponent(((Component) mapGrid).Owner).InvWorldMatrix.Transform(tuple.viewPos);
 
                             var gridChunkEnumerator =
                                 new ChunkIndicesEnumerator(localPos, tuple.range, ChunkSize);
 
                             while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                             {
-                                var chunkLocation = new GridChunkLocation(mapGrid.Owner, gridChunkIndices.Value);
+                                var chunkLocation = new GridChunkLocation(((Component) mapGrid).Owner, gridChunkIndices.Value);
                                 var entry = (tuple.visMask, chunkLocation);
 
                                 if (tuple.gridDict.TryGetValue(chunkLocation, out var indexOf))
@@ -1158,7 +1159,8 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && player != null && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            var state = EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null);
+            var state = EntityManager.GetComponentState(bus, component, player, fromTick);
+            DebugTools.Assert(fromTick > component.CreationTick || state is not IComponentDeltaState delta || delta.FullState);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
 
             if (sendCompList)
@@ -1192,7 +1194,9 @@ internal sealed partial class PVSSystem : EntitySystem
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
-            changed.Add(new ComponentChange(netId, EntityManager.GetComponentState(bus, component, component.SessionSpecific ? player : null), component.LastModifiedTick));
+            var state = EntityManager.GetComponentState(bus, component, player, GameTick.Zero);
+            DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+            changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
             netComps.Add(netId);
         }
 

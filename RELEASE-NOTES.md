@@ -39,10 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `game.desc` CVar for a server description to show in the launcher.
-* New system for exposing links to e.g. a Discord in the launcher.
-  * The engine does not have a built-in method for configuring these, but it does now have a `StatusHostHelpers.AddLink` method to correctly format these from content. The idea is that content wires the types of links (with icon names) up itself via `IStatusHost.OnInfoRequest`.
-  * See also [the HTTP API documentation](https://docs.spacestation14.io/en/engine/http-api) for reference.
+*None yet*
 
 ### Bugfixes
 
@@ -56,6 +53,267 @@ END TEMPLATE-->
 
 *None yet*
 
+
+## 0.77.0.2
+
+### New features
+
+* Scroll containers now have public methods to get & set their scroll positions.
+
+### Bugfixes
+
+* Fixed entity spawn menu sometimes not properly updating when filtering entities.
+
+### Other
+
+* Physics contacts are now stored per-world rather than per-map. This allows the multi-threading to be applicable to every contact rather than per-map.
+* Contacts will no longer implicitly be destroyed upon bodies changing maps.
+
+
+## 0.77.0.1
+
+### Bugfixes
+
+* Fix AttachToGridOrMap not retaining an entity's map position.
+
+
+## 0.77.0.0
+
+### Breaking changes
+
+* ClientOccluderComponent has been removed & OccluderComponent component functions have been moved to the occluder system.
+* The OccluderDirectionsEvent namespace and properties have changed.
+* The rendering and occluder trees have been refactored to use generic render tree systems.
+* Several pointlight and occluder component properties now need to be set via system methods.
+* SharedPhysicsMap and PhysicsMap have been combined.
+* RunDeferred has been removed from transformcomponent and updates are no longer deferred.
+
+## 0.76.0.0
+
+### Breaking changes
+
+* Physics contact multi-threading cvars have been removed as the parallelism is now handled by IParallelManager.
+
+### New features
+
+* Physics now supports substepping, this is under physics.target_minimum_tickrate. This means physics steps will run at a constant rate and not be affected by the server's tickrate which can reduce the prevalence of tunneling.
+* FastNoise API is now public.
+
+### Other
+
+* UPnP port forwarding now has better logging.
+* Physics solver has been refactored to take more advantage of parallelism and ECS some internal code.
+* Sprite processing & bounding box calculations should be slightly faster now.
+* Nullspace maps no longer have entities attached.
+
+
+## 0.75.1.0
+
+### New features
+
+* Serv4's notNullableOverride parameter is now enforced by analyzer. For more info, see [the docs](https://docs.spacestation14.io/en/engine/serialization).
+* Added command to dump injector cache list.
+
+### Bugfixes
+
+* Fix generic visualisers not working because of recent appearance system changes in v0.75.0.0
+* Fix physics not working properly on moving grids (transform matrix deferral).
+
+### Other
+
+* Transform matrix dirtying is deferred again (undo change in v0.75.0.0
+* Added two new serv3 analysers (NotNullableFlagAnalyzer and PreferGenericVariantAnalyzer)
+
+
+## 0.75.0.0
+
+### Breaking changes
+
+* Changed default for `net.buffer_size` to `2`.
+* Changed default for `auth.mode` to `Required`. On development builds, the default is overriden to remain at `Optional`, so this only affects published servers.
+* The default value for the `outsidePrediction` argument of the `InputCmdHandler.FromDelegate()`  has changed from false to true.
+
+### New features
+
+* Appearance system now has generic `TryGetData<T>()` functions.
+
+### Bugfixes
+
+* Mapped string serializer once again is initialized with prototype strongs, reducing bandwidth usage.
+* Fixed various keybindings not working while prediction was disabled.
+* Fixed a bug causing rendering trees to not properly recursively update when entities move.
+
+### Other
+
+* Transform matrix dirtying is no longer deferred.
+* Cleaned up some `FULL_RELEASE` CVar default value overrides into `CVarDefaultOverrides.cs`.
+* VVRead now attempts to serialize data to yaml
+
+
+## 0.74.0.0
+
+### Breaking changes
+
+* `ITypeReader<,>.Read(...)` and `ITypeCopier<>.Copy(...)` have had their `bool skipHook` parameter replaced with a `SerializationHookContext` to facilitate multithreaded prototype loading.
+* Prototypes are now loaded in parallel across multiple threads. Type serializers, property setters, etc... must be thread safe and not rely on an active IoC instance.
+
+### Bugfixes
+
+* Mapped string serializer once again is initialized with prototype strongs, reducing bandwidth usage.
+
+### Other
+
+* Drastically improved startup time by running prototype loading in parallel.
+  * `AfterDeserialization` hooks are still ran on the main thread during load to avoid issues.
+* Various systems in the serialization system such as `SerializationManager` or `ReflectionManager` have had various methods made thread safe.
+* `TileAliasPrototype` no longer has a load priority set.
+* Straightened out terminology in prototypes: to refer to the type of a prototype (e.g. `EntityPrototype` itself), use "kind".
+  * This was previously mixed between "type" and "variant".
+
+### Internal
+
+* `SpanSplitExtensions` has been taken behind the shed for being horrifically wrong unsafe code that should never have been entered into a keyboard ever. A simpler helper method replaces its use in `Box2Serializer`.
+* `PrototypeManager.cs` has been split apart into multiple files.
+
+## 0.73.0.0
+
+### Breaking changes
+
+* The entity lookup flag `LookupFlags.Anchored` has been replaced with `LookupFlags.Static`.
+* We are now using **.NET 7**.
+* `IDependencyCollection`/`IoCManager` `RegisterInstance` does not automatically add the instance to object graph, so `BuildGraph()` must now be called to see the new instances.
+  * `deferInject` parameteres have been removed.
+
+### New features
+
+* The server will now check for any unknown CVars at startup, to possibly locate typos in your config file.
+* `IDependencyCollection` is now thread safe.
+
+### Bugfixes
+
+* Fixed config files not being truncated before write, resulting in corruption.
+
+### Other
+
+* Removed some cruft from the `server_config.toml` default config file that ships with Robust.
+* Most usages of x86 SIMD intrinsics have been replaced with cross-platform versions using the new .NET cross-platform intrinsics.
+  * This reduces code to maintain and improves performance on ARM.
+* Tiny optimization to rendering code.
+* `RobustSerializer` no longer needs to be called from threads with an active IoC context.
+  * This makes it possible to use from thread pool threads without `IoCManager.InitThread`.
+* Removed finalizer dispose from `Overlay`.
+* Stopped integration tests watching for prototype reload file changes, speeding stuff up.
+
+### Internal
+
+* Moved `SerializationManager`'s data definition storage over to a `ConcurrentDictionary` to improve GC behavior in integration tests.
+
+## 0.72.0.0
+
+### Breaking changes
+
+* EntityPausedEvent has been split into EntityPausedEvent and EntityUnpausedEvent. The unpaused version now has information about how long an entity has been paused.
+
+## 0.71.1.4
+
+### Bugfixes
+
+* Fixed CVars not being saved correctly to config file.
+
+### Other
+
+* Mark `validate_rsis.py` as `+x` in Git.
+* Made config system more robust against accidental corruption when saving.
+
+
+## 0.71.1.3
+
+
+## 0.71.1.2
+
+### Bugfixes
+
+* Fixed UI ScrollContainer infinite loop freezing client.
+
+
+## 0.71.1.1
+
+### Bugfixes
+
+* Fixed client memory leaks and improved performance in integration testing.
+
+
+## 0.71.1.0
+
+### New features
+
+* Better RSI validator script.
+* When a new map file is loaded onto an existing map the entities will be transferred over.
+* Add an API to get the hard layer / mask for a particular physics body.
+
+### Bugfixes
+
+* Fixed non-filled circle drawing via world handle.
+* Fix max_connections in the default server config.
+* Fix removal of PVS states for players without ingame status.
+* Fix max rotation from the physics solver.
+
+### Internal
+
+* Wrap window rendering in a try-catch.
+
+
+## 0.71.0.0
+
+### Breaking changes
+
+* `DebugTimePanel`, `DebugNetPanel` and `DebugNetBandwidthPanel` have been made internal.
+* RSIs with trailing commas in the JSON metadata are no longer allowed.
+
+### Bugfixes
+
+* `csi` doesn't throw a `NullReferenceException` anymore.
+
+### Other
+
+* The `game.maxplayers` CVar has been deprecated in favor of the new `net.max_connections` CVar. Functionality is the same, just renamed to avoid confusion. The old CVar still exists, so if `game.maxplayers` is set it will be preferred over the new one.
+* The new default for `net.max_connections` is 256.
+* Debug monitors (F3) now have margin between them.
+* F3 (clyde monitor) now lists the windowing API and version in use.
+* Added system monitor to F3 with various info like OS version, .NET runtime version, etc...
+* The engine now warns when loading `.png` textures inside a `.rsi`. This will be blocked in the future.
+
+
+## 0.70.0.0
+
+### New features
+
+* `game.desc` CVar for a server description to show in the launcher.
+* New system for exposing links to e.g. a Discord in the launcher.
+  * The engine does not have a built-in method for configuring these, but it does now have a `StatusHostHelpers.AddLink` method to correctly format these from content. The idea is that content wires the types of links (with icon names) up itself via `IStatusHost.OnInfoRequest`.
+  * See also [the HTTP API documentation](https://docs.spacestation14.io/en/engine/http-api) for reference.
+* `GameShared` now has a `Dependencies` property to allow access to the game's `IDependencyCollection`. This makes it possible to avoid using static `IoCManager` in `EntryPoint`-type content code.
+* A new define constant `DEVELOPMENT` has been defined, equivalent to `!FULL_RELEASE`. See [the docs](https://docs.spacestation14.io/en/technical-docs/preprocessor-defines) for details.
+* `IConfigurationManager` has new functions for reading and writing CVar directly from a TOML file `Stream`.
+* New `IConfigurationManager.LoadDefaultsFromTomlStream` to load a TOML file as CVar default overrides.
+* Added new serializers to support Queue<T> data-fields.
+* Added a `FromParent()` function to `IDependencyCollection`, enabling dependencies to be passed to parallel threads.
+* `IClientStateManager` now has a `PartialStateReset()` function to make it easier for content to rewind to previous game states.
+* Added `IClientNetManager.DispatchLocalNetMessage()`, which allows a client to raise a local message that triggers networked event subscriptions.
+
+### Bugfixes
+
+* `IPlayerSession.OnConnect()` now actually gets called when players connect.
+* `MapLoaderSystem.TryLoad(.., out rootUids)` now properly only returns entities parented to the map.
+
+### Other
+
+* Invalid placement types for the entity spawn menu now log warnings.
+* Slightly improved sprite y-sorting performance.
+
+### Internal
+
+* The current physics map that an entity is on is now cached in the transform component alongside other cached broadphase data. This helps to fix some broadphase/lookup bugs.
 
 ## 0.69.0.0
 

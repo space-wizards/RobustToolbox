@@ -6,6 +6,8 @@ using JetBrains.Annotations;
 using NetSerializer;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization
@@ -78,6 +80,8 @@ namespace Robust.Shared.Serialization
         /// <param name="yaml">The YAML to collect strings from.</param>
         void AddStrings(YamlStream yaml);
 
+        void AddStrings(DataNode dataNode);
+
         /// <summary>
         /// Add strings from the given enumeration to the mapping.
         /// </summary>
@@ -96,5 +100,8 @@ namespace Robust.Shared.Serialization
         void LockStrings();
 
         void Initialize();
+
+        (byte[] mapHash, byte[] package) GeneratePackage();
+        void SetPackage(byte[] hash, byte[] package);
     }
 }

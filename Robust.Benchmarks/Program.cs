@@ -1,8 +1,9 @@
-﻿using BenchmarkDotNet.Configs;
-using BenchmarkDotNet.Running;
+﻿#if DEBUG
+using BenchmarkDotNet.Configs;
+#endif
 using System;
+using BenchmarkDotNet.Running;
 using Robust.Benchmarks.Configs;
-using Robust.Benchmarks.Exporters;
 
 namespace Robust.Benchmarks
 {

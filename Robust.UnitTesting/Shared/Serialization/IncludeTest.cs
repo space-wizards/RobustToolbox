@@ -36,7 +36,7 @@ public sealed class IncludeTest : RobustUnitTest
         mapping.Add("f1", "1");
         mapping.Add("f2", "true");
 
-        var val = serv3Mgr.Read<ReadWriteTestDataDefinition>(mapping);
+        var val = serv3Mgr.Read<ReadWriteTestDataDefinition>(mapping, notNullableOverride: true);
 
         Assert.That(val.F1, Is.EqualTo(1));
         Assert.That(val.Nested.F1, Is.EqualTo(1));

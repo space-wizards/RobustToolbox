@@ -21,7 +21,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         }
 
         public byte Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<byte>? instanceProvider = null)
         {
             return byte.Parse(node.Value, CultureInfo.InvariantCulture);

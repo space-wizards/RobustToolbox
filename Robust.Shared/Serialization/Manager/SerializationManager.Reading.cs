@@ -12,19 +12,22 @@ using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
+// Avoid accidentally mixing up overloads.
+// ReSharper disable RedundantTypeArgumentsOfMethod
+
 namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
         private delegate object? ReadBoxingDelegate(
             DataNode node,
-            ISerializationContext? context = null,
-            bool skipHook = false);
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null);
 
         private delegate T ReadGenericDelegate<T>(
             DataNode node,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
-            bool skipHook = false,
             ISerializationManager.InstantiationDelegate<T>? instanceProvider = null);
 
         private readonly ConcurrentDictionary<(Type type, bool notNullableOverride), ReadBoxingDelegate> _readBoxingDelegates = new();
@@ -32,6 +35,21 @@ namespace Robust.Shared.Serialization.Manager
         private readonly ConcurrentDictionary<(Type value, Type node, bool notNullableOverride), object> _readGenericDelegates = new();
 
         public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false)
+        {
+            return Read<T>(
+                node,
+                SerializationHookContext.ForSkipHooks(skipHook),
+                context,
+                instanceProvider,
+                notNullableOverride);
+        }
+
+        public T Read<T>(
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<T>? instanceProvider = null,
+            bool notNullableOverride = false)
         {
             if (node.Tag?.StartsWith("!type:") ?? false)
             {
@@ -58,19 +76,40 @@ namespace Robust.Shared.Serialization.Manager
                 return ((ReadGenericDelegate<T>)_readGenericBaseDelegates.GetOrAdd(
                     (typeof(T), type, node.GetType()!, notNullableOverride),
                     static (tuple, manager) => ReadDelegateValueFactory(tuple.baseType, tuple.actualType, tuple.node, tuple.notNullableOverride, manager),
-                    this))(node, context, skipHook, instanceProvider);
+                    this))(node, hookCtx, context, instanceProvider);
             }
 
             return ((ReadGenericDelegate<T>)_readGenericDelegates.GetOrAdd((typeof(T), node.GetType()!, notNullableOverride),
-                static (tuple, manager) => ReadDelegateValueFactory(tuple.value, tuple.value, tuple.node, tuple.notNullableOverride, manager), this))(node, context, skipHook, instanceProvider);
+                static (tuple, manager) => ReadDelegateValueFactory(tuple.value, tuple.value, tuple.node, tuple.notNullableOverride, manager), this))(node, hookCtx, context, instanceProvider);
+
         }
 
         public T Read<T, TNode>(ITypeReader<T, TNode> reader, TNode node, ISerializationContext? context = null,
             bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false)
             where TNode : DataNode
         {
-            var val = reader.Read(this, node, DependencyCollection, skipHook, context, instanceProvider);
-            if(notNullableOverride) Debug.Assert(val != null, "Reader call returned null value! Forbidden!");
+            return Read<T, TNode>(
+                reader,
+                node,
+                SerializationHookContext.ForSkipHooks(skipHook),
+                context,
+                instanceProvider,
+                notNullableOverride);
+        }
+
+        public T Read<T, TNode>(
+            ITypeReader<T, TNode> reader,
+            TNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<T>? instanceProvider = null,
+            bool notNullableOverride = false)
+            where TNode : DataNode
+        {
+            var val = reader.Read(this, node, DependencyCollection, hookCtx, context, instanceProvider);
+            if (notNullableOverride)
+                Debug.Assert(val != null, "Reader call returned null value! Forbidden!");
+
             return val;
         }
 
@@ -78,13 +117,45 @@ namespace Robust.Shared.Serialization.Manager
             bool skipHook = false, ISerializationManager.InstantiationDelegate<T>? instanceProvider = null, bool notNullableOverride = false) where TNode : DataNode
             where TReader : ITypeReader<T, TNode>
         {
-            return Read(GetOrCreateCustomTypeSerializer<TReader>(), node, context, skipHook,
-                instanceProvider, notNullableOverride);
+            return Read<T, TNode, TReader>(
+                node,
+                SerializationHookContext.ForSkipHooks(skipHook),
+                context,
+                instanceProvider,
+                notNullableOverride);
+        }
+
+        public T Read<T, TNode, TReader>(
+            TNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            ISerializationManager.InstantiationDelegate<T>? instanceProvider = null,
+            bool notNullableOverride = false)
+            where TNode : DataNode
+            where TReader : ITypeReader<T, TNode>
+        {
+            return Read(
+                GetOrCreateCustomTypeSerializer<TReader>(),
+                node,
+                hookCtx,
+                context,
+                instanceProvider,
+                notNullableOverride);
         }
 
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, bool notNullableOverride = false)
         {
-            return GetOrCreateBoxingReadDelegate(type, notNullableOverride)(node, context, skipHook);
+            return Read(type, node, SerializationHookContext.ForSkipHooks(skipHook), context, notNullableOverride);
+        }
+
+        public object? Read(
+            Type type,
+            DataNode node,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null,
+            bool notNullableOverride = false)
+        {
+            return GetOrCreateBoxingReadDelegate(type, notNullableOverride)(node, hookCtx, context);
         }
 
         private ReadBoxingDelegate GetOrCreateBoxingReadDelegate(Type type, bool notNullableOverride = false)
@@ -96,23 +167,23 @@ namespace Robust.Shared.Serialization.Manager
 
                 var nodeParam = Expression.Variable(typeof(DataNode));
                 var contextParam = Expression.Variable(typeof(ISerializationContext));
-                var skipHookParam = Expression.Variable(typeof(bool));
+                var hookCtxParam = Expression.Variable(typeof(SerializationHookContext));
 
                 var call = Expression.Convert(Expression.Call(
                     managerConst,
                     nameof(Read),
                     new[] { type },
                     nodeParam,
+                    hookCtxParam,
                     contextParam,
-                    skipHookParam,
                     Expression.Constant(null, typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(type)),
                     Expression.Constant(tuple.notNullableOverride)), typeof(object));
 
                 return Expression.Lambda<ReadBoxingDelegate>(
                     call,
                     nodeParam,
-                    contextParam,
-                    skipHookParam).Compile();
+                    hookCtxParam,
+                    contextParam).Compile();
             }, this);
         }
 
@@ -124,7 +195,7 @@ namespace Robust.Shared.Serialization.Manager
 
             var nodeParam = Expression.Parameter(typeof(DataNode), "node");
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
-            var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+            var hookCtxParam = Expression.Parameter(typeof(SerializationHookContext), "hookCtx");
             var instantiatorParam = Expression.Parameter(typeof(ISerializationManager.InstantiationDelegate<>).MakeGenericType(baseType), "instanceProvider");
 
             actualType = actualType.EnsureNotNullableType();
@@ -171,8 +242,8 @@ namespace Robust.Shared.Serialization.Manager
                     new[] { actualType, nodeType },
                     readerConst,
                     Expression.Convert(nodeParam, nodeType),
+                    hookCtxParam,
                     contextParam,
-                    skipHookParam,
                     BaseInstantiatorToActual(),
                     Expression.Constant(notNullableOverride));
             }
@@ -182,13 +253,23 @@ namespace Robust.Shared.Serialization.Manager
 
                 if (nodeType == typeof(ValueDataNode))
                 {
-                    call = Expression.Call(managerConst, nameof(ReadArrayValue), new[] { elementType },
-                        Expression.Convert(nodeParam, typeof(ValueDataNode)), contextParam, skipHookParam);
+                    call = Expression.Call(
+                        managerConst,
+                        nameof(ReadArrayValue),
+                        new[] { elementType },
+                        Expression.Convert(nodeParam, typeof(ValueDataNode)),
+                        hookCtxParam,
+                        contextParam);
                 }
                 else if (nodeType == typeof(SequenceDataNode))
                 {
-                    call = Expression.Call(managerConst, nameof(ReadArraySequence), new[] { elementType },
-                        Expression.Convert(nodeParam, typeof(SequenceDataNode)), contextParam, skipHookParam);
+                    call = Expression.Call(
+                        managerConst,
+                        nameof(ReadArraySequence),
+                        new[] { elementType },
+                        Expression.Convert(nodeParam, typeof(SequenceDataNode)),
+                        hookCtxParam,
+                        contextParam);
                 }
                 else
                 {
@@ -231,12 +312,14 @@ namespace Robust.Shared.Serialization.Manager
             }
             else
             {
-                var hooksConst = Expression.Constant(actualType.IsAssignableTo(typeof(ISerializationHooks)));
-
                 if (nodeType == typeof(ValueDataNode))
                 {
-                    call = Expression.Call(managerConst, nameof(ReadGenericValue), new[] { actualType },
-                        Expression.Convert(nodeParam, typeof(ValueDataNode)), hooksConst, skipHookParam,
+                    call = Expression.Call(
+                        managerConst,
+                        nameof(ReadGenericValue),
+                        new[] { actualType },
+                        Expression.Convert(nodeParam, typeof(ValueDataNode)),
+                        hookCtxParam,
                         instantiatorVariable);
                 }
                 else if (nodeType == typeof(MappingDataNode))
@@ -244,9 +327,14 @@ namespace Robust.Shared.Serialization.Manager
                     var definition = manager.GetDefinition(actualType);
                     var definitionConst = Expression.Constant(definition, typeof(DataDefinition<>).MakeGenericType(actualType));
 
-                    call = Expression.Call(managerConst, nameof(ReadGenericMapping), new[] { actualType },
-                        Expression.Convert(nodeParam, typeof(MappingDataNode)), definitionConst, hooksConst,
-                        contextParam, skipHookParam,
+                    call = Expression.Call(
+                        managerConst,
+                        nameof(ReadGenericMapping),
+                        new[] { actualType },
+                        Expression.Convert(nodeParam, typeof(MappingDataNode)),
+                        definitionConst,
+                        hookCtxParam,
+                        contextParam,
                         instantiatorVariable);
                 }
                 else
@@ -276,8 +364,8 @@ namespace Robust.Shared.Serialization.Manager
                             new []{actualType, nodeType},
                             serializerVar,
                             Expression.Convert(nodeParam, nodeType),
+                            hookCtxParam,
                             contextParam,
-                            skipHookParam,
                             BaseInstantiatorToActual(),
                             Expression.Constant(notNullableOverride)),
                     call));
@@ -311,8 +399,14 @@ namespace Robust.Shared.Serialization.Manager
                     finalValue);
             }
 
-            return Expression.Lambda(typeof(ReadGenericDelegate<>).MakeGenericType(baseType), call, nodeParam,
-                contextParam, skipHookParam, instantiatorParam).Compile();
+            return Expression.Lambda(
+                typeof(ReadGenericDelegate<>).MakeGenericType(baseType),
+                call,
+                nodeParam,
+                hookCtxParam,
+                contextParam,
+                instantiatorParam)
+                .Compile();
         }
 
         private ISerializationManager.InstantiationDelegate<T>? UnwrapInstantiationDelegate<T>(
@@ -344,24 +438,24 @@ namespace Robust.Shared.Serialization.Manager
 
         private T[] ReadArrayValue<T>(
             ValueDataNode value,
-            ISerializationContext? context = null,
-            bool skipHook = false)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
             var array = new T[1];
-            array[0] = Read<T>(value, context, skipHook);
+            array[0] = Read<T>(value, hookCtx, context);
             return array;
         }
 
         private T[] ReadArraySequence<T>(
             SequenceDataNode node,
-            ISerializationContext? context = null,
-            bool skipHook = false)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
         {
             var array = new T[node.Sequence.Count];
 
             for (var i = 0; i < node.Sequence.Count; i++)
             {
-                array[i] = Read<T>(node.Sequence[i], context, skipHook);
+                array[i] = Read<T>(node.Sequence[i], hookCtx, context);
             }
 
             return array;
@@ -387,8 +481,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private TValue ReadGenericValue<TValue>(
             ValueDataNode node,
-            bool hooks,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationManager.InstantiationDelegate<TValue> instanceProvider)
             where TValue : notnull
         {
@@ -400,10 +493,7 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
             }
 
-            if (!skipHook && hooks)
-            {
-                ((ISerializationHooks) instance).AfterDeserialization();
-            }
+            RunAfterHook(instance, hookCtx);
 
             return instance;
         }
@@ -411,9 +501,8 @@ namespace Robust.Shared.Serialization.Manager
         private TValue ReadGenericMapping<TValue>(
             MappingDataNode node,
             DataDefinition<TValue>? definition,
-            bool hooks,
+            SerializationHookContext hookCtx,
             ISerializationContext? context,
-            bool skipHook,
             ISerializationManager.InstantiationDelegate<TValue> instanceProvider)
             where TValue : notnull
         {
@@ -424,12 +513,9 @@ namespace Robust.Shared.Serialization.Manager
 
             var instance = instanceProvider();
 
-            definition.Populate(ref instance, node, context, skipHook);
+            definition.Populate(ref instance, node, hookCtx, context);
 
-            if (!skipHook && hooks)
-            {
-                ((ISerializationHooks) instance).AfterDeserialization();
-            }
+            RunAfterHook(instance, hookCtx);
 
             return instance;
         }

@@ -240,7 +240,7 @@ namespace Robust.Client.Placement
                 return EntityCoordinates.FromMap(pManager.MapManager, mapCoords);
             }
 
-            return EntityCoordinates.FromMap(pManager.EntityManager, grid.GridEntityId, mapCoords);
+            return EntityCoordinates.FromMap(pManager.EntityManager, grid.Owner, mapCoords);
         }
     }
 }

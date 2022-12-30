@@ -10,7 +10,8 @@ namespace Robust.Client.GameObjects;
 public abstract class VisualizerSystem<T> : EntitySystem
     where T: Component
 {
-    [Dependency] protected readonly AppearanceSystem AppearanceSystem = default!; 
+    [Dependency] protected readonly AppearanceSystem AppearanceSystem = default!;
+    [Dependency] protected readonly AnimationPlayerSystem AnimationSystem = default!;
 
     public override void Initialize()
     {

@@ -80,15 +80,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public Angle PrevRotation { get; internal set; }
 
-        // Cache changes so we can distribute them after physics is done (better cache)
-        internal EntityCoordinates? _oldCoords;
-        internal Angle? _oldLocalRotation;
-
-        /// <summary>
-        ///     While updating did we actually defer anything?
-        /// </summary>
-        public bool UpdatesDeferred => _oldCoords != null || _oldLocalRotation != null;
-
         [ViewVariables(VVAccess.ReadWrite)]
         internal bool ActivelyLerping { get; set; }
 
@@ -118,11 +109,6 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Defer updates to the EntityTree and MoveEvent calls if toggled.
-        /// </summary>
-        public bool DeferUpdates { get; set; }
-
-        /// <summary>
         ///     The EntityUid of the grid which this object is on, if any.
         /// </summary>
         [ViewVariables]
@@ -144,7 +130,7 @@ namespace Robust.Shared.GameObjects
                     LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
-                Dirty(_entMan);
+                _entMan.Dirty(this);
             }
         }
 
@@ -166,21 +152,14 @@ namespace Robust.Shared.GameObjects
 
                 var oldRotation = _localRotation;
                 _localRotation = value;
-                Dirty(_entMan);
+                _entMan.Dirty(this);
+                MatricesDirty = true;
 
-                if (!DeferUpdates)
-                {
-                    MatricesDirty = true;
-                    if (!Initialized)
-                        return;
+                if (!Initialized)
+                    return;
 
-                    var moveEvent = new MoveEvent(Owner, Coordinates, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
-                    _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
-                }
-                else
-                {
-                    _oldLocalRotation ??= oldRotation;
-                }
+                var moveEvent = new MoveEvent(Owner, Coordinates, Coordinates, oldRotation, _localRotation, this, _gameTiming.ApplyingState);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
             }
         }
 
@@ -291,7 +270,7 @@ namespace Robust.Shared.GameObjects
                 if (_parent.IsValid())
                 {
                     // parent coords to world coords
-                    return Parent!.WorldMatrix.Transform(_localPosition);
+                    return _entMan.GetComponent<TransformComponent>(ParentUid).WorldMatrix.Transform(_localPosition);
                 }
                 else
                 {
@@ -307,7 +286,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 // world coords to parent coords
-                var newPos = Parent!.InvWorldMatrix.Transform(value);
+                var newPos = _entMan.GetComponent<TransformComponent>(ParentUid).InvWorldMatrix.Transform(value);
 
                 LocalPosition = newPos;
             }
@@ -325,10 +304,7 @@ namespace Robust.Shared.GameObjects
                 return new EntityCoordinates(valid ? _parent : Owner, valid ? LocalPosition : Vector2.Zero);
             }
             [Obsolete("Use the system's setter method instead.")]
-            set
-            {
-                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, value);
-            }
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, value);
         }
 
         /// <summary>
@@ -357,21 +333,14 @@ namespace Robust.Shared.GameObjects
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;
-                Dirty(_entMan);
+                _entMan.Dirty(this);
+                MatricesDirty = true;
 
-                if (!DeferUpdates)
-                {
-                    MatricesDirty = true;
-                    if (!Initialized)
-                        return;
+                if (!Initialized)
+                    return;
 
-                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
-                    _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
-                }
-                else
-                {
-                    _oldCoords ??= oldGridPos;
-                }
+                var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, _localRotation, _localRotation, this, _gameTiming.ApplyingState);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
             }
         }
 
@@ -449,27 +418,7 @@ namespace Robust.Shared.GameObjects
                     return parentXform.FindGridEntityId(xformQuery);
             }
 
-            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.GridEntityId : null;
-        }
-
-        /// <summary>
-        ///     Raise deferred MoveEvents and rebuild matrices.
-        /// </summary>
-        public void RunDeferred()
-        {
-            // if we resolved to (close enough) to the OG position then no update.
-            if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
-                (_oldLocalRotation == null || _oldLocalRotation.Equals(_localRotation)))
-            {
-                return;
-            }
-
-            MatricesDirty = true;
-
-            var moveEvent = new MoveEvent(Owner, _oldCoords ?? Coordinates, Coordinates, _oldLocalRotation ?? _localRotation, _localRotation, this, _gameTiming.ApplyingState);
-            _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent, true);
-            _oldCoords = null;
-            _oldLocalRotation = null;
+            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Owner : null;
         }
 
         /// <summary>
@@ -490,15 +439,14 @@ namespace Robust.Shared.GameObjects
             var mapPos = MapPosition;
 
             EntityUid newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.GridEntityId))
+            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.Owner))
             {
-                newMapEntity = mapGrid.GridEntityId;
+                newMapEntity = mapGrid.Owner;
             }
-            else if (_mapManager.HasMapEntity(mapPos.MapId)
-                     && _mapManager.GetMapEntityIdOrThrow(mapPos.MapId) is var mapEnt
+            else if (_mapManager.GetMapEntityId(mapPos.MapId) is { Valid: true } mapEnt
                      && !TerminatingOrDeleted(mapEnt))
             {
-                newMapEntity = _mapManager.GetMapEntityIdOrThrow(mapPos.MapId);
+                newMapEntity = mapEnt;
             }
             else
             {
@@ -515,14 +463,9 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            AttachParent(newMapEntity);
-
-            // Technically we're not moving, just changing parent.
-            DeferUpdates = true;
-            WorldPosition = mapPos.Position;
-            DeferUpdates = false;
-
-            Dirty(_entMan);
+            var newMapEntityXform = _entMan.GetComponent<TransformComponent>(newMapEntity);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, new(newMapEntity, newMapEntityXform.InvWorldMatrix.Transform(mapPos.Position)));
+            _entMan.Dirty(this);
         }
 
         /// <summary>
@@ -693,7 +636,7 @@ namespace Robust.Shared.GameObjects
             return (worldPosition, worldRot, worldMatrix, invMatrix);
         }
 
-        private void RebuildMatrices()
+        public void RebuildMatrices()
         {
             MatricesDirty = false;
 
@@ -807,18 +750,20 @@ namespace Robust.Shared.GameObjects
         public readonly EntityUid Entity;
         public readonly EntityUid OldGrid;
         public readonly EntityUid Grid;
+        public readonly TransformComponent Xform;
 
         /// <summary>
         /// Tile on both the old and new grid being re-anchored.
         /// </summary>
         public readonly Vector2i TilePos;
 
-        public ReAnchorEvent(EntityUid uid, EntityUid oldGrid, EntityUid grid, Vector2i tilePos)
+        public ReAnchorEvent(EntityUid uid, EntityUid oldGrid, EntityUid grid, Vector2i tilePos, TransformComponent xform)
         {
             Entity = uid;
             OldGrid = oldGrid;
             Grid = grid;
             TilePos = tilePos;
+            Xform = xform;
         }
     }
 
@@ -830,7 +775,7 @@ namespace Robust.Shared.GameObjects
     ///     An invalid entity UID indicates that this entity has intentionally been removed from broadphases and should
     ///     not automatically be re-added by movement events..
     /// </remarks>
-    internal record struct BroadphaseData(EntityUid Uid, bool CanCollide, bool Static)
+    internal record struct BroadphaseData(EntityUid Uid, EntityUid MapUid, bool CanCollide, bool Static)
     {
         public bool IsValid() => Uid.IsValid();
         public bool Valid => IsValid();

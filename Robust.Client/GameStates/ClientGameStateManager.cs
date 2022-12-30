@@ -192,7 +192,7 @@ namespace Robust.Client.GameStates
                 AckGameState(message.State.ToSequence);
         }
 
-        public void UpdateFullRep(GameState state) => _processor.UpdateFullRep(state);
+        public void UpdateFullRep(GameState state, bool cloneDelta = false) => _processor.UpdateFullRep(state, cloneDelta);
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
         {
@@ -265,6 +265,8 @@ namespace Robust.Client.GameStates
                 {
                     _processor.LastFullStateRequested = null;
                     _timing.LastProcessedTick = curState.ToSequence;
+                    DebugTools.Assert(curState.FromSequence == GameTick.Zero);
+                    PartialStateReset(curState, true, true);
                 }
                 else
                     _timing.LastProcessedTick += 1;
@@ -576,8 +578,12 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, component) in _entityManager.GetNetComponents(createdEntity))
                 {
-                    if (component.NetSyncEnabled)
-                        compData.Add(netId, _entityManager.GetComponentState(bus, component, _players.LocalPlayer?.Session));
+                    if (!component.NetSyncEnabled)
+                        continue;
+
+                    var state = _entityManager.GetComponentState(bus, component, _players.LocalPlayer?.Session, GameTick.Zero);
+                    DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+                    compData.Add(netId, state);
                 }
             }
 
@@ -596,11 +602,6 @@ namespace Robust.Client.GameStates
             using (_prof.Group("Config"))
             {
                 _config.TickProcessMessages();
-            }
-
-            using (_prof.Group("Map Pre"))
-            {
-                _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates.Span);
             }
 
             (IEnumerable<EntityUid> Created, List<EntityUid> Detached) output;
@@ -631,9 +632,6 @@ namespace Robust.Client.GameStates
             var toApply = new Dictionary<EntityUid, (bool EnteringPvs, GameTick LastApplied, EntityState? curState, EntityState? nextState)>();
             var toCreate = new Dictionary<EntityUid, EntityState>();
             var enteringPvs = 0;
-
-            if (curState.FromSequence == GameTick.Zero)
-                FullReset(curState, metas, xforms, xformSys);
 
             var curSpan = curState.EntityStates.Span;
             foreach (var es in curSpan)
@@ -776,39 +774,71 @@ namespace Robust.Client.GameStates
             return (toCreate.Keys, detached);
         }
 
-        private void FullReset(GameState curState, EntityQuery<MetaDataComponent> metas, EntityQuery<TransformComponent> xforms, SharedTransformSystem xformSys)
+        /// <inheritdoc />
+        public void PartialStateReset(GameState state, bool resetAllEnts, bool deleteClientSideEnts)
         {
-            // This is somewhat of a hack to do a proper reset for exception tolerance. I need to do this properly at
-            // some point. This is basically a hotfix to hide the side effects of #3413. Basically, this gets run if the
-            // client encounters an error while applying game states and requests a full server state.
+            using var _ = _timing.StartStateApplicationArea();
 
-            _sawmill.Info("Performing full entity reset.");
+            if (state.FromSequence != GameTick.Zero)
+            {
+                _sawmill.Error("Attempted to reset to a state with incomplete data");
+                return;
+            }
 
-            // TODO properly reset maps
-            // TODO properly reset player-states (e.g., attached enttiy and current eye).
+            _sawmill.Info($"Resetting all entity states to tick {state.ToSequence}.");
 
-            // Linq bad, but this should be rare (when first connecting, and when encountering PVS errors, which ideally would just never happen).
-            var ents = curState.EntityStates.Value?.Select(x => x.Uid)?.ToHashSet() ?? new HashSet<EntityUid>();
-            foreach (var ent in _entities.GetEntities().ToArray())
+            // Construct hashset for set.Contains() checks.
+            var entityStates = state.EntityStates.Span;
+            var stateEnts = new HashSet<EntityUid>(entityStates.Length);
+            foreach (var entState in entityStates)
+            {
+                stateEnts.Add(entState.Uid);
+            }
+
+            var metas = _entities.GetEntityQuery<MetaDataComponent>();
+            var xforms = _entities.GetEntityQuery<TransformComponent>();
+            var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
+
+            var currentEnts = _entities.GetEntities();
+            var toDelete = new List<EntityUid>(Math.Max(64, currentEnts.Count() - stateEnts.Count()));
+            foreach (var ent in currentEnts)
             {
                 if (ent.IsClientSide())
-                    continue;
-
-                if (ents.Contains(ent) && metas.TryGetComponent(ent, out var meta))
                 {
-                    meta.LastStateApplied = GameTick.Zero;
+                    if (deleteClientSideEnts)
+                        toDelete.Add(ent);
+                    continue;
+                }
+
+                if (stateEnts.Contains(ent) && metas.TryGetComponent(ent, out var meta))
+                {
+                    if (resetAllEnts || meta.LastStateApplied > state.ToSequence)
+                        meta.LastStateApplied = GameTick.Zero; // TODO track last-state-applied for individual components? Is it even worth it?
                     continue;
                 }
 
                 if (!xforms.TryGetComponent(ent, out var xform))
                     continue;
 
+                // this entity is going to get deleted, but maybe some if its children won't be, so lets detach them to null.
                 xformSys.DetachParentToNull(xform, xforms, metas);
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
                     xformSys.DetachParentToNull(xforms.GetComponent(child.Value), xforms, metas, xform);
+
+                    if (!deleteClientSideEnts && child.Value.IsClientSide())
+                    {
+                        // Even though we aren't meant to be deleting client-side entities here, this client-side entity is getting detached to null space, so we will delete it anyways).
+                        _sawmill.Warning($"Deleting client-side entity ({_entities.ToPrettyString(child.Value)}) as it was parented to a server side entity that is getting deleted ({_entities.ToPrettyString(ent)})");
+                        toDelete.Add(child.Value);
+                    }
                 }
+                toDelete.Add(ent);
+            }
+
+            foreach (var ent in toDelete)
+            {
                 _entities.DeleteEntity(ent);
             }
         }
@@ -820,7 +850,7 @@ namespace Robust.Client.GameStates
             SharedTransformSystem xformSys)
         {
             // Processing deletions is non-trivial, because by default deletions will also delete all child entities.
-            // 
+            //
             // Naively: easy, just apply server states to process any transform states before deleting, right? But now
             // that PVS detach messages are sent separately & processed over time, the entity may have left our view,
             // but not yet been moved to null-space. In that case, the server would not send us transform states, and
@@ -1191,7 +1221,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <summary>
-        ///     Resets all entities to the most recently received server state. This only impacts entities that have not been detached to null-space. 
+        ///     Resets all entities to the most recently received server state. This only impacts entities that have not been detached to null-space.
         /// </summary>
         private void ResetAllEnts(IConsoleShell shell, string argStr, string[] args)
         {

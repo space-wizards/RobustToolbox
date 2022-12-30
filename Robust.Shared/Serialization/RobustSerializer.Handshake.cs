@@ -5,7 +5,7 @@ using Robust.Shared.Network;
 namespace Robust.Shared.Serialization
 {
 
-    public partial class RobustSerializer
+    internal abstract partial class RobustSerializer
     {
         /// <summary>
         /// Initiates any sequence of handshake extensions that
@@ -15,7 +15,7 @@ namespace Robust.Shared.Serialization
         /// <param name="channel"></param>
         /// <returns></returns>
         public Task Handshake(INetChannel channel)
-            => _mappedStringSerializer.Handshake(channel);
+            => MappedStringSerializer.Handshake(channel);
 
         /// <summary>
         /// An event that occurs once all handshake extensions have
@@ -25,8 +25,8 @@ namespace Robust.Shared.Serialization
         /// </summary>
         public event Action ClientHandshakeComplete
         {
-            add => _mappedStringSerializer.ClientHandshakeComplete += value;
-            remove => _mappedStringSerializer.ClientHandshakeComplete -= value;
+            add => MappedStringSerializer.ClientHandshakeComplete += value;
+            remove => MappedStringSerializer.ClientHandshakeComplete -= value;
         }
 
     }

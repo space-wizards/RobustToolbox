@@ -19,6 +19,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.Log;
 
 namespace Robust.Client.Placement
 {
@@ -265,7 +266,7 @@ namespace Robust.Client.Placement
                         _gridFrameBuffer = false;
                         _placenextframe = false;
                         return true;
-                    }))
+                    }, true))
                 .Bind(EngineKeyFunctions.EditorRotateObject, InputCmdHandler.FromDelegate(
                     session =>
                     {
@@ -279,7 +280,7 @@ namespace Robust.Client.Placement
                         if (DeactivateSpecialPlacement())
                             return;
                         Clear();
-                    }))
+                    }, outsidePrediction: true))
                 .Register<PlacementManager>();
 
             var localPlayer = PlayerManager.LocalPlayer;
@@ -470,14 +471,14 @@ namespace Robust.Client.Placement
 
             CurrentPermission = info;
 
-            if (!_modeDictionary.Any(pair => pair.Key.Equals(CurrentPermission.PlacementOption)))
+            if (!_modeDictionary.TryFirstOrNull(pair => pair.Key.Equals(CurrentPermission.PlacementOption), out KeyValuePair<string, Type>? placeMode))
             {
+                Logger.LogS(LogLevel.Warning, nameof(PlacementManager), $"Invalid placement mode `{CurrentPermission.PlacementOption}`");
                 Clear();
                 return;
             }
 
-            var modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
-            CurrentMode = (PlacementMode) Activator.CreateInstance(modeType, this)!;
+            CurrentMode = (PlacementMode) Activator.CreateInstance(placeMode.Value.Value, this)!;
 
             if (hijack != null)
             {

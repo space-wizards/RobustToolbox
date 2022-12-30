@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -7,11 +7,12 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Markdown;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting
 {
-    public sealed class IntegrationMappedStringSerializer : IRobustMappedStringSerializer
+    internal sealed class IntegrationMappedStringSerializer : IRobustMappedStringSerializer
     {
         [Dependency] private readonly INetManager _net = default!;
 
@@ -48,6 +49,11 @@ namespace Robust.UnitTesting
             // Nada.
         }
 
+        public void AddStrings(DataNode dataNode)
+        {
+            // Nada.
+        }
+
         public void AddStrings(IEnumerable<string> strings)
         {
             // Nada.
@@ -68,6 +74,16 @@ namespace Robust.UnitTesting
         private void HandleServerHandshake(MsgMapStrServerHandshake message)
         {
             ClientHandshakeComplete?.Invoke();
+        }
+
+        public (byte[] mapHash, byte[] package) GeneratePackage()
+        {
+            throw new NotSupportedException();
+        }
+
+        public void SetPackage(byte[] hash, byte[] package)
+        {
+            throw new NotSupportedException();
         }
 
         private sealed class TypeSerializerImpl : IStaticTypeSerializer

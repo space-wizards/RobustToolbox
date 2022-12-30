@@ -42,16 +42,16 @@ namespace Robust.UnitTesting.Shared.Physics
                 var grid = mapManager.CreateGrid(mapId);
                 var grid2 = mapManager.CreateGrid(mapId);
 
-                Assert.That(entityManager.TryGetComponent<PhysicsComponent>(grid.GridEntityId, out var gridPhysics));
+                Assert.That(entityManager.TryGetComponent<PhysicsComponent>(grid.Owner, out var gridPhysics));
                 physicsSys.SetBodyType(gridPhysics!, BodyType.Dynamic);
 
                 Vector2 offset = new(3, 4);
                 Vector2 expectedFinalVelocity = new Vector2(-4, 3) * 2 + Vector2.One;
 
-                var dummy = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.GridEntityId, offset));
+                var dummy = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.Owner, offset));
                 Assert.That(entityManager.TryGetComponent(dummy, out PhysicsComponent? body));
                 Assert.That(entityManager.TryGetComponent(dummy, out TransformComponent? xform));
-                xform!.AttachParent(grid.GridEntityId);
+                xform!.AttachParent(grid.Owner);
 
                 // Test Linear Velocities
                 physicsSys.SetLinearVelocity(gridPhysics!, Vector2.One);
@@ -80,7 +80,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(velocities.Item2, Is.Approximately(angularVelocity, 1e-6));
 
                 // Check that velocity does not change when changing parent
-                xform.AttachParent(grid2.GridEntityId);
+                xform.AttachParent(grid2.Owner);
                 linearVelocity = physicsSys.GetMapLinearVelocity(dummy, body);
                 angularVelocity = physicsSys.GetMapAngularVelocity(dummy, body);
                 velocities = physicsSys.GetMapVelocities(dummy, body);
@@ -107,14 +107,14 @@ namespace Robust.UnitTesting.Shared.Physics
                 var mapId = mapManager.CreateMap();
                 var grid = mapManager.CreateGrid(mapId);
 
-                Assert.That(entityManager.TryGetComponent<PhysicsComponent>(grid.GridEntityId, out var gridPhysics));
+                Assert.That(entityManager.TryGetComponent<PhysicsComponent>(grid.Owner, out var gridPhysics));
                 physicsSys.SetBodyType(gridPhysics!, BodyType.Dynamic);
 
                 Vector2 offset1 = new(2, 0);
-                var dummy1 = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.GridEntityId, offset1));
+                var dummy1 = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.Owner, offset1));
                 Assert.That(entityManager.TryGetComponent(dummy1, out PhysicsComponent? body1));
                 Assert.That(entityManager.TryGetComponent(dummy1, out TransformComponent? xform1));
-                xform1!.AttachParent(grid.GridEntityId);
+                xform1!.AttachParent(grid.Owner);
 
                 // create another entity attached to the dummy1
                 Vector2 offset2 = new(-1, 0);

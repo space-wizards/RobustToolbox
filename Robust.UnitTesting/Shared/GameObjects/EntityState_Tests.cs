@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using Robust.Server.Configuration;
 using Robust.Server.Reflection;
+using Robust.Server.Serialization;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -29,11 +31,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             var container = new DependencyCollection();
             container.Register<ILogManager, LogManager>();
-            container.Register<IConfigurationManager, ConfigurationManager>();
-            container.Register<IConfigurationManagerInternal, ConfigurationManager>();
+            container.Register<IConfigurationManager, ServerNetConfigurationManager>();
+            container.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IReflectionManager, ServerReflectionManager>();
-            container.Register<IRobustSerializer, RobustSerializer>();
+            container.Register<IRobustSerializer, ServerRobustSerializer>();
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<IGameTiming, GameTiming>();
@@ -63,7 +65,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     new EntityUid(512),
                     new []
                     {
-                        new ComponentChange(0, new MapGridComponentState(16), default)
+                        new ComponentChange(0, new MapGridComponentState(16, null), default)
                     }, default);
 
                 serializer.Serialize(stream, payload);

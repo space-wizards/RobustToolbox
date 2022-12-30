@@ -10,16 +10,10 @@ using Robust.Shared.Physics;
 
 namespace Robust.Shared
 {
+    /// <seealso cref="CVarDefaultOverrides"/>
     [CVarDefs]
     public abstract class CVars
     {
-#if FULL_RELEASE
-        private const bool ConstFullRelease = true;
-#else
-        private const bool ConstFullRelease = false;
-#endif
-
-
         protected CVars()
         {
             throw new InvalidOperationException("This class must not be instantiated");
@@ -28,6 +22,15 @@ namespace Robust.Shared
         /*
          * NET
          */
+
+        /// <summary>
+        /// Hard max-cap of concurrent connections for the main game networking.
+        /// </summary>
+        /// <remarks>
+        /// This cannot be bypassed in any way, since it is used by Lidgren internally.
+        /// </remarks>
+        public static readonly CVarDef<int> NetMaxConnections =
+            CVarDef.Create("net.max_connections", 256, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// UDP port to bind to for main game networking.
@@ -112,7 +115,7 @@ namespace Robust.Shared
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
-            CVarDef.Create("net.buffer_size", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Enable verbose game state/networking logging.
@@ -307,6 +310,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> SysGameThreadPriority =
             CVarDef.Create("sys.game_thread_priority", (int) ThreadPriority.AboveNormal);
+
+        /// <summary>
+        /// Whether to run a <see cref="GC.Collect()"/> operation after the engine is finished initializing.
+        /// </summary>
+        public static readonly CVarDef<bool> SysGCCollectStart =
+            CVarDef.Create("sys.gc_collect_start", true);
 
         /*
          * METRICS
@@ -545,8 +554,9 @@ namespace Robust.Shared
         /// <remarks>
         /// This cannot be bypassed in any way, since it is used by Lidgren internally.
         /// </remarks>
+        [Obsolete("Use net.max_connections instead")]
         public static readonly CVarDef<int> GameMaxPlayers =
-            CVarDef.Create("game.maxplayers", 32, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("game.maxplayers", 0, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Name of the game server. This shows up in the launcher and potentially parts of the UI.
@@ -982,6 +992,14 @@ namespace Robust.Shared
         public static readonly CVarDef<float> BroadphaseExpand =
             CVarDef.Create("physics.broadphase_expand", 2f, CVar.ARCHIVE | CVar.REPLICATED);
 
+        /// <summary>
+        /// The target minimum ticks per second on the server.
+        /// This is used for substepping and will help with clipping/physics issues and such.
+        /// Ideally 50-60 is the minimum.
+        /// </summary>
+        public static readonly CVarDef<int> TargetMinimumTickrate =
+            CVarDef.Create("physics.target_minimum_tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
         // Grid fixtures
         /// <summary>
         /// I'ma be real with you: the only reason this exists is to get tests working.
@@ -1001,13 +1019,6 @@ namespace Robust.Shared
         public static readonly CVarDef<float> GridFixtureEnlargement =
             CVarDef.Create("physics.grid_fixture_enlargement", -PhysicsConstants.PolygonRadius, CVar.ARCHIVE | CVar.REPLICATED);
 
-        // - Contacts
-        public static readonly CVarDef<int> ContactMultithreadThreshold =
-            CVarDef.Create("physics.contact_multithread_threshold", 32);
-
-        public static readonly CVarDef<int> ContactMinimumThreads =
-            CVarDef.Create("physics.contact_minimum_threads", 2);
-
         // - Sleep
         public static readonly CVarDef<float> AngularSleepTolerance =
             CVarDef.Create("physics.angsleeptol", 0.3f / 180.0f * MathF.PI);
@@ -1023,17 +1034,6 @@ namespace Robust.Shared
             CVarDef.Create("physics.timetosleep", 0.2f);
 
         // - Solver
-        public static readonly CVarDef<int> PositionConstraintsPerThread =
-            CVarDef.Create("physics.position_constraints_per_thread", 32);
-
-        public static readonly CVarDef<int> PositionConstraintsMinimumThread =
-            CVarDef.Create("physics.position_constraints_minimum_threads", 2);
-
-        public static readonly CVarDef<int> VelocityConstraintsPerThread =
-            CVarDef.Create("physics.velocity_constraints_per_thread", 32);
-
-        public static readonly CVarDef<int> VelocityConstraintMinimumThreads =
-            CVarDef.Create("physics.velocity_constraints_minimum_threads", 2);
 
         // These are the minimum recommended by Box2D with the standard being 8 velocity 3 position iterations.
         // Trade-off is obviously performance vs how long it takes to stabilise.
@@ -1198,6 +1198,15 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ResStreamSeekMode =
             CVarDef.Create("res.stream_seek_mode", (int)ContentPack.StreamSeekMode.None);
 
+        /// <summary>
+        /// Whether to watch prototype files for prototype reload on the client. Only applies to development builds.
+        /// </summary>
+        /// <remarks>
+        /// The client sends a reload signal to the server on refocus, if you're wondering why this is client-only.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResPrototypeReloadWatch =
+            CVarDef.Create("res.prototype_reload_watch", true, CVar.CLIENTONLY);
+
         /*
          * DEBUG
          */
@@ -1359,12 +1368,12 @@ namespace Robust.Shared
         /// <summary>
         /// Event log buffer size for the profiling system.
         /// </summary>
-        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", ConstFullRelease ? 8192 : 65536);
+        public static readonly CVarDef<int> ProfBufferSize = CVarDef.Create("prof.buffer_size", 8192);
 
         /// <summary>
         /// Index log buffer size for the profiling system.
         /// </summary>
-        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", ConstFullRelease ? 128 : 1024);
+        public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", 128);
 
         /*
          * Replays
@@ -1397,5 +1406,20 @@ namespace Robust.Shared
         /// Whether or not recording replays is enabled.
         /// </summary>
         public static readonly CVarDef<bool> ReplayEnabled = CVarDef.Create("replay.enabled", true, CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /*
+         * CFG
+         */
+
+        /// <summary>
+        /// If set, check for any unknown CVars once the game is initialized to try the spot any unknown ones.
+        /// </summary>
+        /// <remarks>
+        /// CVars can be dynamically registered instead of just being statically known ahead of time,
+        /// so the engine is not capable of immediately telling if a CVar is a typo or such.
+        /// This check after game initialization assumes all CVars have been registered,
+        /// and will complain if anything unknown is found (probably indicating a typo of some kind).
+        /// </remarks>
+        public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
     }
 }

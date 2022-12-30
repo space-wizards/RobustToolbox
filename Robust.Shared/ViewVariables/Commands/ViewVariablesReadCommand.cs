@@ -28,8 +28,7 @@ public sealed class ViewVariablesReadCommand : ViewVariablesBaseCommand
             path = path[2..];
         }
 
-        // TODO: Maybe serialize this with serv3 before printing?
-        var obj = _vvm.ReadPath(path);
-        shell.WriteLine(obj?.ToString() ?? "null");
+        var obj = _vvm.ReadPathSerialized(path);
+        shell.WriteLine(obj ?? "null");
     }
 }

@@ -22,14 +22,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
-            ISerializationContext? context, ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider = null)
+            SerializationHookContext hookCtx,
+            ISerializationContext? context,
+            ISerializationManager.InstantiationDelegate<HashSet<T>>? instanceProvider)
         {
             var set = instanceProvider != null ? instanceProvider() : new HashSet<T>();
 
             foreach (var dataNode in node.Sequence)
             {
-                set.Add(serializationManager.Read<T>(dataNode, context, skipHook));
+                set.Add(serializationManager.Read<T>(dataNode, hookCtx, context));
             }
 
             return set;
@@ -48,12 +49,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
+        ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
+            ISerializationContext? context)
         {
             var list = new List<ValidationNode>();
             foreach (var elem in node.Sequence)
             {
-                list.Add(serializationManager.ValidateNode(typeof(T), elem, context));
+                list.Add(serializationManager.ValidateNode<T>(elem, context));
             }
 
             return new ValidatedSequenceNode(list);
@@ -75,7 +77,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var elem in value)
             {
-                sequence.Add(serializationManager.WriteValue(typeof(T), elem, alwaysWrite, context));
+                sequence.Add(serializationManager.WriteValue(elem, alwaysWrite, context));
             }
 
             return sequence;
@@ -85,23 +87,24 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<ImmutableHashSet<T>>? instanceProvider)
         {
-            if(instanceProvider != null)
+            if (instanceProvider != null)
                 Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableHashSet<T>)}. Ignoring...");
             var set = ImmutableHashSet.CreateBuilder<T>();
 
             foreach (var dataNode in node.Sequence)
             {
-                set.Add(serializationManager.Read<T>(dataNode, context, skipHook));
+                set.Add(serializationManager.Read<T>(dataNode, hookCtx, context));
             }
 
             return set.ToImmutable();
         }
 
-        public void CopyTo(ISerializationManager serializationManager, HashSet<T> source, ref HashSet<T> target, bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, HashSet<T> source, ref HashSet<T> target,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.Clear();
@@ -109,11 +112,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var val in source)
             {
-                target.Add(serializationManager.CreateCopy(val, context, skipHook));
+                target.Add(serializationManager.CreateCopy(val, hookCtx, context));
             }
         }
 
-        public ImmutableHashSet<T> CreateCopy(ISerializationManager serializationManager, ImmutableHashSet<T> source, bool skipHook,
+        public ImmutableHashSet<T> CreateCopy(ISerializationManager serializationManager, ImmutableHashSet<T> source,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             var target = new HashSet<T>();
@@ -121,7 +125,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var val in source)
             {
-                target.Add(serializationManager.CreateCopy(val, context, skipHook));
+                target.Add(serializationManager.CreateCopy(val, hookCtx, context));
             }
 
             return target.ToImmutableHashSet();

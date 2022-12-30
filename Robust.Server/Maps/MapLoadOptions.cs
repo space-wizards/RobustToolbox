@@ -47,8 +47,10 @@ namespace Robust.Server.Maps
 
         /// <summary>
         /// If there is a map entity serialized should we also load it.
-        /// This should be set to false if you want to load a map file onto an existing map.
         /// </summary>
+        /// <remarks>
+        /// This should be set to false if you want to load a map file onto an existing map and do not wish to overwrite the existing entity.
+        /// </remarks>
         public bool LoadMap { get; set; } = true;
     }
 }

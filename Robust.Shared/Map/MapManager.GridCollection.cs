@@ -127,7 +127,7 @@ internal partial class MapManager
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
         return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(c.Owner).MapID == mapId)
+            .Where(c => xformQuery.GetComponent(((Component) c).Owner).MapID == mapId)
             .Select(c => c);
     }
 
@@ -158,13 +158,6 @@ internal partial class MapManager
 
     /// <inheritdoc />
     public event EventHandler<TileChangedEventArgs>? TileChanged;
-
-    /// <summary>
-    ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
-    ///     so that you don't spam an event for each of the million station tiles.
-    /// </summary>
-    /// <inheritdoc />
-    public event EventHandler<GridChangedEventArgs>? GridChanged;
 
     /// <inheritdoc />
     public bool SuppressOnTileChanged { get; set; }
@@ -207,11 +200,5 @@ internal partial class MapManager
         EntityManager.InitializeComponents(gridEnt);
         EntityManager.StartComponents(gridEnt);
         return grid;
-    }
-
-    protected internal static void InvokeGridChanged(MapManager mapManager, MapGridComponent mapGrid, IReadOnlyCollection<(Vector2i position, Tile tile)> changedTiles)
-    {
-        mapManager.GridChanged?.Invoke(mapManager, new GridChangedEventArgs(mapGrid, changedTiles));
-        mapManager.EntityManager.EventBus.RaiseLocalEvent(mapGrid.GridEntityId, new GridModifiedEvent(mapGrid, changedTiles), true);
     }
 }

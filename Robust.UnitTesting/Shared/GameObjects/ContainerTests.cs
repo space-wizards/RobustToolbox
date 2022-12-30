@@ -2,6 +2,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
+using Robust.Client.GameStates;
+using Robust.Client.Timing;
 using Robust.Server.GameObjects;
 using Robust.Server.Maps;
 using Robust.Server.Player;
@@ -10,6 +12,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Timing;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -210,9 +213,13 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = (100000, 0);
              });
 
-             // Needs minimum 4 to sync to client because buffer size is 3
-             await server.WaitRunTicks(1);
-             await client.WaitRunTicks(4);
+            await server.WaitRunTicks(1);
+            var serverTime = server.ResolveDependency<IGameTiming>();
+            var clientTime = client.ResolveDependency<IClientGameTiming>();
+            while (clientTime.LastRealTick < serverTime.CurTick - 1)
+            {
+                await client.WaitRunTicks(1);
+            }
 
              await client.WaitAssertion(() =>
              {

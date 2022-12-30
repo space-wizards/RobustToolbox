@@ -119,28 +119,34 @@ namespace Robust.Client.Graphics.Clyde
 
         // Writes a quad into the index buffer. Note that the 'middle line' is from tIdx0 to tIdx2.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void QuadBatchIndexWrite(Span<ushort> indexData, ref int nIdx, ushort tIdx0, ushort tIdx1, ushort tIdx2,
+        private void QuadBatchIndexWrite(
+            Span<ushort> indexData,
+            ref int nIdx,
+            ushort tIdx0,
+            ushort tIdx1,
+            ushort tIdx2,
             ushort tIdx3)
         {
+            var nIdxl = nIdx;
             if (_hasGLPrimitiveRestart)
             {
                 // PJB's fancy triangle fan isolated to a quad with primitive restart
-                indexData[nIdx + 0] = tIdx0;
-                indexData[nIdx + 1] = tIdx1;
-                indexData[nIdx + 2] = tIdx2;
-                indexData[nIdx + 3] = tIdx3;
-                indexData[nIdx + 4] = PrimitiveRestartIndex;
+                indexData[nIdxl + 4] = PrimitiveRestartIndex;
+                indexData[nIdxl + 3] = tIdx3;
+                indexData[nIdxl + 2] = tIdx2;
+                indexData[nIdxl + 1] = tIdx1;
+                indexData[nIdxl + 0] = tIdx0;
                 nIdx += 5;
             }
             else
             {
                 // 20kdc's boring two separate triangles
-                indexData[nIdx + 0] = tIdx0;
-                indexData[nIdx + 1] = tIdx1;
-                indexData[nIdx + 2] = tIdx2;
-                indexData[nIdx + 3] = tIdx0;
-                indexData[nIdx + 4] = tIdx2;
-                indexData[nIdx + 5] = tIdx3;
+                indexData[nIdxl + 5] = tIdx3;
+                indexData[nIdxl + 4] = tIdx2;
+                indexData[nIdxl + 3] = tIdx0;
+                indexData[nIdxl + 2] = tIdx2;
+                indexData[nIdxl + 1] = tIdx1;
+                indexData[nIdxl + 0] = tIdx0;
                 nIdx += 6;
             }
         }

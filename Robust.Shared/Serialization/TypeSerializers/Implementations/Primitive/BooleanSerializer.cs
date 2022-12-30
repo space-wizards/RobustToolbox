@@ -21,7 +21,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         }
 
         public bool Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<bool>? instanceProvider = null)
         {
             return bool.Parse(node.Value);

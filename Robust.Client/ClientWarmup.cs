@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Robust.Shared;
 using Robust.Shared.Resources;
-using SixLabors.ImageSharp;
 
 namespace Robust.Client;
 
@@ -18,7 +17,7 @@ internal static class ClientWarmup
     private static void WarmupCore()
     {
         // Get ImageSharp loaded.
-        _ = Configuration.Default;
+        _ = SixLabors.ImageSharp.Configuration.Default;
 
         SharedWarmup.WarmupCore();
 

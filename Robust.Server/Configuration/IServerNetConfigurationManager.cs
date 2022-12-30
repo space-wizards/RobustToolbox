@@ -10,16 +10,6 @@ namespace Robust.Server.Configuration;
 public interface IServerNetConfigurationManager : INetConfigurationManager
 {
     /// <summary>
-    /// Get a replicated client CVar for a specific client.
-    /// </summary>
-    /// <typeparam name="T">CVar type.</typeparam>
-    /// <param name="channel">channel of the connected client.</param>
-    /// <param name="definition">The CVar.</param>
-    /// <returns>Replicated CVar of the client.</returns>
-    public T GetClientCVar<T>(INetChannel channel, CVarDef<T> definition) where T : notnull =>
-        GetClientCVar<T>(channel, definition.Name);
-
-    /// <summary>
     /// Synchronize the CVars marked with <see cref="CVar.REPLICATED"/> with the client.
     /// This needs to be called once during the client connection.
     /// </summary>

@@ -111,6 +111,9 @@ namespace Robust.Client.Graphics
 
         public Texture? Texture { get; set; }
 
+        // Applies an additional x/y scale to the teture
+        public Vector2 TextureScale { get; set; } = Vector2.One;
+
         public void SetPatchMargin(Margin margin, float value)
         {
             if ((margin & Margin.Top) != 0)
@@ -170,12 +173,15 @@ namespace Robust.Client.Graphics
                 box.Right + ExpandMarginRight,
                 box.Bottom + ExpandMarginBottom);
 
+            var scaledMargin = new UIBox2(PatchMarginLeft * TextureScale.X, PatchMarginTop * TextureScale.Y,
+                    PatchMarginRight * TextureScale.X, PatchMarginBottom * TextureScale.Y);
+
             if (PatchMarginLeft > 0)
             {
                 if (PatchMarginTop > 0)
                 {
                     // Draw top left
-                    var topLeftBox = new UIBox2(0, 0, PatchMarginLeft, PatchMarginTop)
+                    var topLeftBox = new UIBox2(0, 0, scaledMargin.Left, scaledMargin.Top)
                         .Translated(box.TopLeft);
                     handle.DrawTextureRectRegion(Texture, topLeftBox,
                         new UIBox2(0, 0, PatchMarginLeft, PatchMarginTop), Modulate);
@@ -184,7 +190,7 @@ namespace Robust.Client.Graphics
                 {
                     // Draw left
                     var leftBox =
-                        new UIBox2(0, PatchMarginTop, PatchMarginLeft, box.Height - PatchMarginBottom)
+                        new UIBox2(0, scaledMargin.Top, scaledMargin.Left, box.Height - scaledMargin.Bottom)
                             .Translated(box.TopLeft);
                     DrawStretchingArea(handle, leftBox,
                         new UIBox2(0, PatchMarginTop, PatchMarginLeft, Texture.Height - PatchMarginBottom));
@@ -194,7 +200,7 @@ namespace Robust.Client.Graphics
                 {
                     // Draw bottom left
                     var bottomLeftBox =
-                        new UIBox2(0, box.Height - PatchMarginBottom, PatchMarginLeft, box.Height)
+                        new UIBox2(0, box.Height - scaledMargin.Bottom, scaledMargin.Left, box.Height)
                             .Translated(box.TopLeft);
                     handle.DrawTextureRectRegion(Texture, bottomLeftBox,
                         new UIBox2(0, Texture.Height - PatchMarginBottom, PatchMarginLeft, Texture.Height), Modulate);
@@ -206,7 +212,7 @@ namespace Robust.Client.Graphics
                 if (PatchMarginTop > 0)
                 {
                     // Draw top right
-                    var topRightBox = new UIBox2(box.Width - PatchMarginRight, 0, box.Width, PatchMarginTop)
+                    var topRightBox = new UIBox2(box.Width - scaledMargin.Right, 0, box.Width, scaledMargin.Top)
                         .Translated(box.TopLeft);
                     handle.DrawTextureRectRegion(Texture, topRightBox,
                         new UIBox2(Texture.Width - PatchMarginRight, 0, Texture.Width, PatchMarginTop), Modulate);
@@ -215,8 +221,8 @@ namespace Robust.Client.Graphics
                 {
                     // Draw right
                     var rightBox =
-                        new UIBox2(box.Width - PatchMarginRight, PatchMarginTop, box.Width,
-                                box.Height - PatchMarginBottom)
+                        new UIBox2(box.Width - scaledMargin.Right, scaledMargin.Top, box.Width,
+                                box.Height - scaledMargin.Bottom)
                             .Translated(box.TopLeft);
 
                     DrawStretchingArea(handle, rightBox,
@@ -229,7 +235,7 @@ namespace Robust.Client.Graphics
                 {
                     // Draw bottom right
                     var bottomRightBox =
-                        new UIBox2(box.Width - PatchMarginRight, box.Height - PatchMarginBottom, box.Width, box.Height)
+                        new UIBox2(box.Width - scaledMargin.Right, box.Height - scaledMargin.Bottom, box.Width, box.Height)
                             .Translated(box.TopLeft);
                     handle.DrawTextureRectRegion(Texture, bottomRightBox,
                         new UIBox2(Texture.Width - PatchMarginRight, Texture.Height - PatchMarginBottom, Texture.Width,
@@ -241,7 +247,7 @@ namespace Robust.Client.Graphics
             {
                 // Draw top
                 var topBox =
-                    new UIBox2(PatchMarginLeft, 0, box.Width - PatchMarginRight, PatchMarginTop)
+                    new UIBox2(scaledMargin.Left, 0, box.Width - scaledMargin.Right, scaledMargin.Top)
                         .Translated(box.TopLeft);
                 DrawStretchingArea(handle, topBox,
                     new UIBox2(PatchMarginLeft, 0, Texture.Width - PatchMarginRight, PatchMarginTop));
@@ -251,7 +257,7 @@ namespace Robust.Client.Graphics
             {
                 // Draw bottom
                 var bottomBox =
-                    new UIBox2(PatchMarginLeft, box.Height - PatchMarginBottom, box.Width - PatchMarginRight,
+                    new UIBox2(scaledMargin.Left, box.Height - scaledMargin.Bottom, box.Width - scaledMargin.Right,
                             box.Height)
                         .Translated(box.TopLeft);
 
@@ -263,8 +269,8 @@ namespace Robust.Client.Graphics
 
             // Draw center
             {
-                var centerBox = new UIBox2(PatchMarginLeft, PatchMarginTop, box.Width - PatchMarginRight,
-                    box.Height - PatchMarginBottom).Translated(box.TopLeft);
+                var centerBox = new UIBox2(scaledMargin.Left, scaledMargin.Top, box.Width - scaledMargin.Right,
+                    box.Height - scaledMargin.Bottom).Translated(box.TopLeft);
 
                 DrawStretchingArea(handle, centerBox, new UIBox2(PatchMarginLeft, PatchMarginTop, Texture.Width - PatchMarginRight,
                     Texture.Height - PatchMarginBottom));
@@ -284,20 +290,23 @@ namespace Robust.Client.Graphics
             // TODO: this is an insanely expensive way to do tiling, seriously.
             // This should 100% be implemented in a shader instead.
 
-            var texWidth = texCoords.Width;
-            var texHeight = texCoords.Height;
+            var sectionWidth = texCoords.Width * TextureScale.X;
+            var sectionHeight = texCoords.Height * TextureScale.Y;
+            var invScale = Vector2.One / TextureScale;
 
-            for (var x = area.Left; area.Right - x > 0; x += texWidth)
+            for (var x = area.Left; area.Right - x > 0; x += sectionWidth)
             {
-                for (var y = area.Top; area.Bottom - y > 0; y += texHeight)
+                for (var y = area.Top; area.Bottom - y > 0; y += sectionHeight)
                 {
-                    var w = Math.Min(area.Right - x, texWidth);
-                    var h = Math.Min(area.Bottom - y, texHeight);
+                    var destWidth = Math.Min(area.Right - x, sectionWidth);
+                    var destHeight = Math.Min(area.Bottom - y, sectionHeight);
+                    var texWidth = Math.Min((area.Right - x) * invScale.X, texCoords.Width);
+                    var texHeight = Math.Min((area.Bottom - y) * invScale.Y, texCoords.Height);
 
                     handle.DrawTextureRectRegion(
                         Texture!,
-                        UIBox2.FromDimensions(x, y, w, h),
-                        UIBox2.FromDimensions(texCoords.Left, texCoords.Top, w, h),
+                        UIBox2.FromDimensions(x, y, destWidth, destHeight),
+                        UIBox2.FromDimensions(texCoords.Left, texCoords.Top, texWidth, texHeight),
                         Modulate);
                 }
             }

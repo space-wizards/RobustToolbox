@@ -1,4 +1,5 @@
 using Robust.Server.Bql;
+using Robust.Server.Configuration;
 using Robust.Server.Console;
 using Robust.Server.DataMetrics;
 using Robust.Server.GameObjects;
@@ -14,6 +15,7 @@ using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -81,6 +83,11 @@ namespace Robust.Server
             deps.Register<IBqlQueryManager, BqlQueryManager>();
             deps.Register<HubManager, HubManager>();
             deps.Register<IRobustSerializer, ServerRobustSerializer>();
+            deps.Register<IConfigurationManager, ServerNetConfigurationManager>();
+            deps.Register<INetConfigurationManager, ServerNetConfigurationManager>();
+            deps.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
+            deps.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
+            deps.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
         }
     }
 }

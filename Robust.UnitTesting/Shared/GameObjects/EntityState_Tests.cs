@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using Robust.Server.Configuration;
 using Robust.Server.Reflection;
 using Robust.Server.Serialization;
 using Robust.Shared.Configuration;
@@ -30,8 +31,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             var container = new DependencyCollection();
             container.Register<ILogManager, LogManager>();
-            container.Register<IConfigurationManager, ConfigurationManager>();
-            container.Register<IConfigurationManagerInternal, ConfigurationManager>();
+            container.Register<IConfigurationManager, ServerNetConfigurationManager>();
+            container.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IReflectionManager, ServerReflectionManager>();
             container.Register<IRobustSerializer, ServerRobustSerializer>();

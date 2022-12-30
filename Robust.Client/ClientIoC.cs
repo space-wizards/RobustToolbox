@@ -1,5 +1,6 @@
 using System;
 using Robust.Client.Audio.Midi;
+using Robust.Client.Configuration;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
@@ -23,6 +24,7 @@ using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -123,6 +125,11 @@ namespace Robust.Client
             deps.Register<IClientViewVariablesManagerInternal, ClientViewVariablesManager>();
             deps.Register<IClientConGroupController, ClientConGroupController>();
             deps.Register<IScriptClient, ScriptClient>();
+            deps.Register<IConfigurationManager, ClientNetConfigurationManager>();
+            deps.Register<INetConfigurationManager, ClientNetConfigurationManager>();
+            deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
+            deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
+            deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
         }
     }
 }

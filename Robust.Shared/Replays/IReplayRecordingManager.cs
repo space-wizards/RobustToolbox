@@ -29,10 +29,10 @@ public interface IReplayRecordingManager
     ///     data to the recording, as well as to effectively "raise" networked events that would get sent to a newly
     ///     connecting "client".
     /// </summary>
-    event Action<(MappingDataNode, List<object>)>? StartingRecording;
+    event Action<(MappingDataNode, List<object>)>? OnRecordingStarted;
 
     /// <summary>
-    ///     This gets invoked whenever a replay recording ends.  Subscribers can use this to add extra yaml metadata data to the recording.
+    ///     This gets invoked whenever a replay recording ends. Subscribers can use this to add extra yaml metadata data to the recording.
     /// </summary>
-    event Action<MappingDataNode>? StoppingRecording;
+    event Action<MappingDataNode>? OnRecordingStopped;
 }

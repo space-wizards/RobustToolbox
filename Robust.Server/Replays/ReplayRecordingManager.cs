@@ -226,22 +226,23 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         {
             _yamlMetadata = new MappingDataNode();
 
-            // TODO REPLAYS are these the right properties needed to uniquely identify content+engine builds?
-            // could this just point to a github hash?
+            // version info
             _yamlMetadata["engineVersion"] = new ValueDataNode(_netConf.GetCVar(CVars.BuildEngineVersion));
             _yamlMetadata["buildForkId"] = new ValueDataNode(_netConf.GetCVar(CVars.BuildForkId));
             _yamlMetadata["buildVersion"] = new ValueDataNode(_netConf.GetCVar(CVars.BuildVersion));
-            _yamlMetadata["buildHash"] = new ValueDataNode(_netConf.GetCVar(CVars.BuildHash));
 
-            var timeBase = _timing.TimeBase;
+            // Hash data
             _yamlMetadata["typeHash"] = new ValueDataNode(Convert.ToHexString(_seri.GetSerializableTypesHash()));
             _yamlMetadata["stringHash"] = new ValueDataNode(Convert.ToHexString(stringHash));
+
+            // Time data
+            var timeBase = _timing.TimeBase;
             _yamlMetadata["startTick"] = new ValueDataNode(_timing.CurTick.Value.ToString());
             _yamlMetadata["timeBaseTick"] = new ValueDataNode(timeBase.Item2.Value.ToString());
             _yamlMetadata["timeBaseTimespan"] = new ValueDataNode(timeBase.Item1.Ticks.ToString());
             _yamlMetadata["recordingStartTime"] = new ValueDataNode(_recordingStart.ToString());
 
-            StartingRecording?.Invoke((_yamlMetadata, extraData));
+            OnRecordingStarted?.Invoke((_yamlMetadata, extraData));
 
             var document = new YamlDocument(_yamlMetadata.ToYaml());
             using var ymlFile = _resourceManager.UserData.OpenWriteText(dir / "replay.yml");
@@ -270,7 +271,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         if (_yamlMetadata == null)
             return;
 
-        StoppingRecording?.Invoke(_yamlMetadata);
+        OnRecordingStopped?.Invoke(_yamlMetadata);
         var time = _timing.CurTime - _recordingStart.Time;
         _yamlMetadata["endTick"] = new ValueDataNode(_timing.CurTick.Value.ToString());
         _yamlMetadata["duration"] = new ValueDataNode(time.ToString());
@@ -301,8 +302,8 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     }
 
     /// <inheritdoc/>
-    public event Action<(MappingDataNode, List<object>)>? StartingRecording;
+    public event Action<(MappingDataNode, List<object>)>? OnRecordingStarted;
 
     /// <inheritdoc/>
-    public event Action<MappingDataNode>? StoppingRecording;
+    public event Action<MappingDataNode>? OnRecordingStopped;
 }

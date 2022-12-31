@@ -16,8 +16,8 @@ public sealed class ReplayRecordingManager : IReplayRecordingManager
     public bool Recording => false;
 
     /// <inheritdoc/>
-    public event Action<(MappingDataNode, List<object>)>? StartingRecording;
+    public event Action<(MappingDataNode, List<object>)>? OnRecordingStarted;
 
     /// <inheritdoc/>
-    public event Action<MappingDataNode>? StoppingRecording;
+    public event Action<MappingDataNode>? OnRecordingStopped;
 }

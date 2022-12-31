@@ -76,6 +76,7 @@ namespace Robust.Client
             deps.Register<IClientEntityManager, ClientEntityManager>();
             deps.Register<IClientEntityManagerInternal, ClientEntityManager>();
             deps.Register<IEntityNetworkManager, ClientEntityManager>();
+            deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IClientGameStateManager, ClientGameStateManager>();
             deps.Register<IBaseClient, BaseClient>();
             deps.Register<IPlayerManager, PlayerManager>();
@@ -128,7 +129,6 @@ namespace Robust.Client
             deps.Register<IScriptClient, ScriptClient>();
             deps.Register<IRobustSerializer, ClientRobustSerializer>();
             deps.Register<IClientRobustSerializer, ClientRobustSerializer>();
-            deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();

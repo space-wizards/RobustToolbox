@@ -1122,7 +1122,7 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     /// Generates a network entity state for the given entity.
     /// </summary>
-    /// <param name="player">The player to generate this state for (null if this state is for replays)</param>
+    /// <param name="player">The player to generate this state for. This may be null if the state is for replay recordings.</param>
     /// <param name="entityUid">Uid of the entity to generate the state from.</param>
     /// <param name="fromTick">Only provide delta changes from this tick.</param>
     /// <param name="meta">The entity's metadata component</param>

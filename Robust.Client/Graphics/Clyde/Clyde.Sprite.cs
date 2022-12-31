@@ -158,16 +158,13 @@ internal partial class Clyde
     }
 
     /// <summary>
-    /// This is effectively a specialized variant of <see cref="Box2Rotated.CalcBoundingBox()"/>. It assumes that
-    /// the initial box is centered at the origin, and automatically applies an offset and scale while computing the
-    /// bounds.
+    /// This is effectively a specialized combination of a <see cref="Matrix3.TransformBox(in Box2Rotated)"/> and <see cref="Box2Rotated.CalcBoundingBox()"/>.
     /// </summary> 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe Box2 TransformCenteredBox(in Box2 box, float angle, in Vector2 offset, in Vector2 scale)
     {
         // This function is for sprites, which flip the y axis, so here we flip the definition of t and b relative to the normal function.
         DebugTools.Assert(scale.Y < 0);
-        DebugTools.Assert(box.Center.EqualsApprox(Vector2.Zero));
 
         var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in box));
 

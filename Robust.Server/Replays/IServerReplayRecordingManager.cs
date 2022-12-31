@@ -6,7 +6,7 @@ namespace Robust.Server.Replays;
 public interface IServerReplayRecordingManager : IReplayRecordingManager
 {
     void ToggleRecording();
-    void StartRecording(TimeSpan? duration = null);
+    bool TryStartRecording(string? directory = null, bool overwrite = false, TimeSpan? duration = null);
     void StopRecording();
 
     /// <summary>

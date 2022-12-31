@@ -15,25 +15,37 @@ internal sealed class ReplayStartCommand : LocalizedCommands
     {
         if (_replay.Recording)
         {
-            shell.WriteLine(Loc.GetString("cmd-replaystart-error"));
+            shell.WriteLine(Loc.GetString("cmd-replaystart-already-recording"));
             return;
         }
 
-        if (args.Length == 0)
+        TimeSpan? duration = null;
+        if (args.Length > 0)
         {
-            _replay.StartRecording();
+            if (!float.TryParse(args[0], out var minutes))
+            {
+                shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[0])));
+                return;
+            }
+            duration = TimeSpan.FromMinutes(minutes);
+        }
+
+        string? dir = args.Length < 2 ? null : args[1];
+
+        var overwrite = false;
+        if (args.Length > 2)
+        {
+            if (!bool.TryParse(args[2], out overwrite))
+            {
+                shell.WriteError(Loc.GetString("cmd-parse-failure-bool", ("arg", args[2])));
+                return;
+            }
+        }
+
+        if (_replay.TryStartRecording(dir, overwrite, duration))
             shell.WriteLine(Loc.GetString("cmd-replaystart-success"));
-            return;
-        }
-
-        if (!float.TryParse(args[0], out var minutes))
-        {
-            shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[0])));
-            return;
-        }
-
-        _replay.StartRecording(TimeSpan.FromMinutes(minutes));
-        shell.WriteLine(Loc.GetString("cmd-replaystart-success"));
+        else
+            shell.WriteLine(Loc.GetString("cmd-replaystart-error"));
     }
 }
 
@@ -51,7 +63,7 @@ internal sealed class ReplayStopCommand : LocalizedCommands
             shell.WriteLine(Loc.GetString("cmd-replaystop-success"));
         }
         else
-            shell.WriteLine(Loc.GetString("cmd-replaystop-error"));
+            shell.WriteLine(Loc.GetString("cmd-replaystop-not-recording"));
     }
 }
 

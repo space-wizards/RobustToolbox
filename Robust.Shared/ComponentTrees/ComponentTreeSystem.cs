@@ -195,7 +195,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
             (pos, rot) = XformSystem.GetRelativePositionRotation(
                 entry.Transform,
-                newTree.Value,
+                newTree!.Value,
                 xforms);
 
             newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));

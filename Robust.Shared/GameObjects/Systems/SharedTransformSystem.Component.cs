@@ -295,6 +295,8 @@ public abstract partial class SharedTransformSystem
 
         var ev = new TransformStartupEvent(xform);
         RaiseLocalEvent(uid, ref ev, true);
+
+        DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
     }
 
     #endregion

@@ -933,7 +933,7 @@ namespace Robust.Shared.Map.Components
         /// <summary>
         ///     Constructs a new full component state.
         /// </summary>
-        public MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, Tile[]>? fullGridData)
+        public MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, Tile[]> fullGridData)
         {
             ChunkSize = chunkSize;
             FullGridData = fullGridData;

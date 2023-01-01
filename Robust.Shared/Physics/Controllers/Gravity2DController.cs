@@ -77,7 +77,7 @@ public sealed class Gravity2DController : VirtualController
     public override void UpdateBeforeSolve(bool prediction, float frameTime)
     {
         base.UpdateBeforeSolve(prediction, frameTime);
-        var query = EntityQueryEnumerator<Gravity2DComponent, SharedPhysicsMapComponent>();
+        var query = EntityQueryEnumerator<Gravity2DComponent, PhysicsMapComponent>();
 
         while (query.MoveNext(out var gravity, out var mapComp))
         {

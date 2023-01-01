@@ -103,8 +103,6 @@ internal sealed partial class MidiManager : IMidiManager
 
     private const string ContentCustomSoundfontDirectory = "/Audio/MidiCustom/";
 
-    private const float MaxDistanceForOcclusion = 1000;
-
     private static ResourcePath CustomSoundfontDirectory = new ResourcePath("/soundfonts/");
 
     private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks;
@@ -114,6 +112,7 @@ internal sealed partial class MidiManager : IMidiManager
 
     private NFluidsynth.Logger.LoggerDelegate _loggerDelegate = default!;
     private ISawmill _sawmill = default!;
+    private float _maxCastLength;
 
     [ViewVariables(VVAccess.ReadWrite)]
     public int OcclusionCollisionMask { get; set; }
@@ -187,7 +186,14 @@ internal sealed partial class MidiManager : IMidiManager
         _midiThread.Start();
 
         _broadPhaseSystem = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
+        _cfgMan.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
+
         FluidsynthInitialized = true;
+    }
+
+    private void OnRaycastLengthChanged(float value)
+    {
+        _maxCastLength = value;
     }
 
     private void LoggerDelegate(NFluidsynth.Logger.LogLevel level, string message, IntPtr data)
@@ -310,6 +316,8 @@ internal sealed partial class MidiManager : IMidiManager
         }
 
         // Update positions of streams every frame.
+        // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
+
         lock (_renderers)
         {
             foreach (var renderer in _renderers)
@@ -342,17 +350,17 @@ internal sealed partial class MidiManager : IMidiManager
                 {
                     var pos = mapPos.Value;
 
-                    var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                    var sourceRelative = pos.Position - _eyeManager.CurrentEye.Position.Position;
                     var occlusion = 0f;
                     if (sourceRelative.Length > 0)
                     {
                         occlusion = _broadPhaseSystem.IntersectRayPenetration(
                             pos.MapId,
                             new CollisionRay(
-                                pos.Position,
+                                _eyeManager.CurrentEye.Position.Position,
                                 sourceRelative.Normalized,
                                 OcclusionCollisionMask),
-                            MathF.Min(sourceRelative.Length, MaxDistanceForOcclusion),
+                            MathF.Min(sourceRelative.Length, _maxCastLength),
                             renderer.TrackingEntity);
                     }
 
@@ -365,7 +373,8 @@ internal sealed partial class MidiManager : IMidiManager
 
                     if (trackingEntity)
                     {
-                        renderer.Source.SetVelocity(renderer.TrackingEntity!.Value.GlobalLinearVelocity());
+                        var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value);
+                        renderer.Source.SetVelocity(vel);
                     }
                 }
                 else

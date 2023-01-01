@@ -4,6 +4,7 @@ using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
@@ -970,6 +971,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> AudioMasterVolume =
             CVarDef.Create("audio.mastervolume", 1.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum raycast distance for audio occlusion.
+        /// </summary>
+        public static readonly CVarDef<float> AudioRaycastLength =
+            CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
          * PLAYER

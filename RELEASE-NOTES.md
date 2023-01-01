@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Removed the obsoleted `GlobalLinearVelocity()` EntityUid helper method.
 
 ### New features
 
-*None yet*
+* Added a new cvar to limit audio occlusion raycast lengths ("audio.raycast_length").
 
 ### Bugfixes
 

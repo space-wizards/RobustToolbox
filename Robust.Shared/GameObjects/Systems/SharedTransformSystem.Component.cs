@@ -295,6 +295,8 @@ public abstract partial class SharedTransformSystem
 
         var ev = new TransformStartupEvent(xform);
         RaiseLocalEvent(uid, ref ev, true);
+
+        DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
     }
 
     #endregion
@@ -406,8 +408,10 @@ public abstract partial class SharedTransformSystem
         xform.MatricesDirty = true;
         xform._localPosition = value.Position;
 
-        if (rotation != null)
+        if (rotation != null && !xform.NoLocalRotation)
             xform._localRotation = rotation.Value;
+
+        DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
         // Perform parent change logic
         if (value.EntityId != xform._parent)
@@ -460,8 +464,10 @@ public abstract partial class SharedTransformSystem
             if (xform.Initialized)
             {
                 // preserve world rotation
-                if (rotation == null && oldParent != null && newParent != null)
+                if (rotation == null && oldParent != null && newParent != null && !xform.NoLocalRotation)
                     xform._localRotation += GetWorldRotation(oldParent, xformQuery) - GetWorldRotation(newParent, xformQuery);
+
+                DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
                 var entParentChangedMessage = new EntParentChangedMessage(xform.Owner, oldParent?.Owner, oldMapId, xform);
                 RaiseLocalEvent(xform.Owner, ref entParentChangedMessage, true);
@@ -946,6 +952,8 @@ public abstract partial class SharedTransformSystem
 
         if (!xform.NoLocalRotation)
             xform._localRotation = rot;
+
+        DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
         Dirty(xform);
         xform.MatricesDirty = true;

@@ -723,7 +723,10 @@ public sealed class MapLoaderSystem : EntitySystem
             {
                 // Don't want to trigger events
                 xform._localPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
-                xform._localRotation += data.Options.Rotation;
+                if (!xform.NoLocalRotation)
+                    xform._localRotation += data.Options.Rotation;
+
+                DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
             }
 
             StartupEntity(entity, metaQuery.GetComponent(entity), data);

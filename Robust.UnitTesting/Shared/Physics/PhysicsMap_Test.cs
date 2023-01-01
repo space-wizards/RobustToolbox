@@ -12,7 +12,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Physics;
 
-[TestFixture, TestOf(typeof(SharedPhysicsMapComponent))]
+[TestFixture, TestOf(typeof(PhysicsMapComponent))]
 public sealed class PhysicsMap_Test
 {
     /// <summary>
@@ -32,8 +32,8 @@ public sealed class PhysicsMap_Test
         var mapUid = mapManager.GetMapEntityId(mapId);
         var mapUid2 = mapManager.GetMapEntityId(mapId2);
 
-        var physicsMap = entManager.GetComponent<SharedPhysicsMapComponent>(mapUid);
-        var physicsMap2 = entManager.GetComponent<SharedPhysicsMapComponent>(mapUid2);
+        var physicsMap = entManager.GetComponent<PhysicsMapComponent>(mapUid);
+        var physicsMap2 = entManager.GetComponent<PhysicsMapComponent>(mapUid2);
 
         var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var parentXform = entManager.GetComponent<TransformComponent>(parent);

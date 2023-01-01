@@ -20,6 +20,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
+        [Dependency] private readonly PointLightSystem _lightSys = default!;
 
         private readonly HashSet<EntityUid> _updateQueue = new();
 
@@ -289,9 +290,7 @@ namespace Robust.Client.GameObjects
             }
 
             if (pointQuery.TryGetComponent(entity, out var light))
-            {
-                light.ContainerOccluded = lightOccluded;
-            }
+                _lightSys.SetContainerOccluded(entity, lightOccluded, light);
 
             var childEnumerator = xform.ChildEnumerator;
 

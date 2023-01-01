@@ -47,11 +47,64 @@ END TEMPLATE-->
 
 ### Other
 
-* UPnP port forwarding now has better logging.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 0.77.0.2
+
+### New features
+
+* Scroll containers now have public methods to get & set their scroll positions.
+
+### Bugfixes
+
+* Fixed entity spawn menu sometimes not properly updating when filtering entities.
+
+### Other
+
+* Physics contacts are now stored per-world rather than per-map. This allows the multi-threading to be applicable to every contact rather than per-map.
+* Contacts will no longer implicitly be destroyed upon bodies changing maps.
+
+
+## 0.77.0.1
+
+### Bugfixes
+
+* Fix AttachToGridOrMap not retaining an entity's map position.
+
+
+## 0.77.0.0
+
+### Breaking changes
+
+* ClientOccluderComponent has been removed & OccluderComponent component functions have been moved to the occluder system.
+* The OccluderDirectionsEvent namespace and properties have changed.
+* The rendering and occluder trees have been refactored to use generic render tree systems.
+* Several pointlight and occluder component properties now need to be set via system methods.
+* SharedPhysicsMap and PhysicsMap have been combined.
+* RunDeferred has been removed from transformcomponent and updates are no longer deferred.
+
+## 0.76.0.0
+
+### Breaking changes
+
+* Physics contact multi-threading cvars have been removed as the parallelism is now handled by IParallelManager.
+
+### New features
+
+* Physics now supports substepping, this is under physics.target_minimum_tickrate. This means physics steps will run at a constant rate and not be affected by the server's tickrate which can reduce the prevalence of tunneling.
+* FastNoise API is now public.
+
+### Other
+
+* UPnP port forwarding now has better logging.
+* Physics solver has been refactored to take more advantage of parallelism and ECS some internal code.
+* Sprite processing & bounding box calculations should be slightly faster now.
+* Nullspace maps no longer have entities attached.
 
 
 ## 0.75.1.0

@@ -76,6 +76,12 @@ namespace Robust.Shared.Serialization
                 return (hash, package);
             }
 
+            public int LoadFromPackage(byte[] package, out byte[] hash)
+            {
+                var stream = new MemoryStream(package, false);
+                return LoadFromPackage(stream, out hash);
+            }
+
             public int LoadFromPackage(Stream stream, out byte[] hash)
             {
                 _mappedStrings = ReadStringPackage(stream, out hash);

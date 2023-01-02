@@ -28,10 +28,20 @@ namespace Robust.Shared.Physics.Collision.Shapes
         [DataField("position"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public Vector2 Position;
 
+        public PhysShapeCircle()
+        {
+        }
+
         public PhysShapeCircle(float radius)
         {
             Radius = radius;
             Position = Vector2.Zero;
+        }
+
+        public PhysShapeCircle(float radius, Vector2 position)
+        {
+            Radius = radius;
+            Position = position;
         }
 
         public float CalculateArea()

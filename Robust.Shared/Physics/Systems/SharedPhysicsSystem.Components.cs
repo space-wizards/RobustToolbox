@@ -580,7 +580,7 @@ public partial class SharedPhysicsSystem
     /// <returns>true if the body is collidable and awake</returns>
     public bool WakeBody(EntityUid uid, bool force = false, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!SetCanCollide(uid, true, manager: manager, body: body, force: force) || !Resolve(uid, ref manager, ref body))
+        if (!SetCanCollide(uid, true, manager: manager, body: body, force: force) || !Resolve(uid, ref body))
             return false;
 
         SetAwake(uid, body, true);
@@ -600,15 +600,21 @@ public partial class SharedPhysicsSystem
         return new Transform(worldPos, worldRot);
     }
 
-    public Box2 GetWorldAABB(EntityUid uid, PhysicsComponent body, TransformComponent xform, EntityQuery<TransformComponent> xforms, EntityQuery<FixturesComponent> fixtures)
+    /// <summary>
+    /// Gets the physics World AABB, only considering fixtures.
+    /// </summary>
+    public Box2 GetWorldAABB(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
     {
-        var (worldPos, worldRot) = xform.GetWorldPositionRotation(xforms);
+        if (!Resolve(uid, ref manager, ref body, ref xform))
+            return new Box2();
+
+        var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
         var transform = new Transform(worldPos, (float) worldRot.Theta);
 
         var bounds = new Box2(transform.Position, transform.Position);
 
-        foreach (var fixture in fixtures.GetComponent(uid).Fixtures.Values)
+        foreach (var fixture in manager.Fixtures.Values)
         {
             for (var i = 0; i < fixture.Shape.ChildCount; i++)
             {

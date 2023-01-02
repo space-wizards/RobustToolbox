@@ -46,33 +46,51 @@ namespace Robust.Shared.Physics.Systems
             }
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            _physics.DestroyContacts(body);
+            _physics.DestroyContacts(uid, body);
 
             // TODO im 99% sure  _broadphaseSystem.RemoveBody(body, component) gets triggered by this as well, so is this even needed?
-            _physics.SetCanCollide(body, false);
+            _physics.SetCanCollide(uid, false, false, body: body);
         }
+
         #region Public
 
-        /// <summary>
-        ///     Attempts to add a new fixture. Will do nothing if a fixture with the requested ID already exists.
-        /// </summary>
-        public bool TryCreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null, TransformComponent? xform = null)
+        public bool TryCreateFixture(
+            EntityUid uid,
+            IPhysShape shape,
+            string id,
+            float density = PhysicsConstants.DefaultDensity,
+            bool hard = true,
+            int collisionLayer = 0,
+            int collisionMask = 0,
+            float friction = PhysicsConstants.DefaultContactFriction,
+            float restitution = PhysicsConstants.DefaultRestitution,
+            bool updates = true,
+            FixturesComponent? manager = null,
+            PhysicsComponent? body = null,
+            TransformComponent? xform = null)
         {
-            if (!Resolve(body.Owner, ref manager, ref xform, false))
+            if (!Resolve(uid, ref body, ref manager))
                 return false;
 
-            if (!string.IsNullOrEmpty(fixture.ID) && manager.Fixtures.ContainsKey(fixture.ID))
+            if (manager.Fixtures.ContainsKey(id))
                 return false;
 
-            CreateFixture(body, fixture, updates, manager, xform);
+            var fixture = new Fixture(shape, collisionLayer, collisionMask, hard, density, friction, restitution);
+            CreateFixture(uid, fixture, updates, manager, body, xform);
             return true;
         }
 
-        public void CreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null, TransformComponent? xform = null)
+        internal void CreateFixture(
+            EntityUid uid,
+            Fixture fixture,
+            bool updates = true,
+            FixturesComponent? manager = null,
+            PhysicsComponent? body = null,
+            TransformComponent? xform = null)
         {
-            DebugTools.Assert(MetaData(body.Owner).EntityLifeStage < EntityLifeStage.Terminating);
+            DebugTools.Assert(MetaData(uid).EntityLifeStage < EntityLifeStage.Terminating);
 
-            if (!Resolve(body.Owner, ref manager, ref xform))
+            if (!Resolve(uid, ref manager, ref body, ref xform))
             {
                 DebugTools.Assert(false);
                 return;
@@ -90,55 +108,20 @@ namespace Robust.Shared.Physics.Systems
             // Supposed to be wrapped in density but eh
             if (updates)
             {
-                FixtureUpdate(manager, body);
-                _physics.ResetMassData(manager, body);
+                // Don't need to dirty here as we'll just manually call it after (we 100% need to call it).
+                FixtureUpdate(uid, false, manager: manager, body: body);
+                _physics.ResetMassData(uid, manager, body);
                 Dirty(manager);
             }
             // TODO: Set newcontacts to true.
         }
 
         /// <summary>
-        /// Creates a <see cref="Fixture"/> from this shape and adds it to the specified <see cref="PhysicsComponent"/>
-        /// </summary>
-        public Fixture CreateFixture(PhysicsComponent body, IPhysShape shape)
-        {
-            var fixture = new Fixture(body, shape);
-            CreateFixture(body, fixture);
-            return fixture;
-        }
-
-        /// <summary>
-        /// Creates a <see cref="Fixture"/> from this shape and adds it to the specified <see cref="PhysicsComponent"/> with mass.
-        /// </summary>
-        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float density)
-        {
-            // TODO: Make it take in density instead?
-            var fixture = new Fixture(body, shape) {Density = density};
-            CreateFixture(body, fixture);
-        }
-
-        /// <summary>
-        /// Creates a <see cref="Fixture"/> from this shape and adds it to the specified <see cref="PhysicsComponent"/> with mass.
-        /// </summary>
-        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float density, int collisionLayer, int collisionMask)
-        {
-            var fixture = new Fixture(body, shape)
-            {
-                Density = density
-            };
-            FixturesComponent? manager = null;
-
-            _physics.SetCollisionLayer(fixture, collisionLayer, manager);
-            _physics.SetCollisionMask(fixture, collisionMask, manager);
-            CreateFixture(body, fixture);
-        }
-
-        /// <summary>
         /// Attempts to get the <see cref="Fixture"/> with the specified ID for this body.
         /// </summary>
-        public Fixture? GetFixtureOrNull(PhysicsComponent body, string id, FixturesComponent? manager = null)
+        public Fixture? GetFixtureOrNull(EntityUid uid, string id, FixturesComponent? manager = null)
         {
-            if (!Resolve(body.Owner, ref manager, false))
+            if (!Resolve(uid, ref manager, false))
             {
                 return null;
             }
@@ -152,32 +135,34 @@ namespace Robust.Shared.Physics.Systems
         /// <param name="body">The specified body</param>
         /// <param name="id">The fixture ID</param>
         /// <param name="updates">Whether to update mass etc. Set false if you're doing a bulk operation</param>
-        public void DestroyFixture(PhysicsComponent body, string id, bool updates = true)
+        public void DestroyFixture(
+            EntityUid uid,
+            string id,
+            bool updates = true,
+            PhysicsComponent? body = null,
+            FixturesComponent? manager = null,
+            TransformComponent? xform = null)
         {
-            var fixture = GetFixtureOrNull(body, id);
+            var fixture = GetFixtureOrNull(uid, id, manager);
 
             if (fixture == null) return;
 
-            DestroyFixture(body, fixture, updates);
-        }
-
-        /// <summary>
-        /// Destroys the specified <see cref="Fixture"/>
-        /// </summary>
-        /// <param name="fixture">The specified fixture</param>
-        /// <param name="updates">Whether to update mass etc. Set false if you're doing a bulk operation</param>
-        public void DestroyFixture(Fixture fixture, bool updates = true, FixturesComponent? manager = null)
-        {
-            DestroyFixture(fixture.Body, fixture, updates, manager);
+            DestroyFixture(uid, fixture, updates, body, manager, xform);
         }
 
         /// <summary>
         /// Destroys the specified <see cref="Fixture"/>
         /// </summary>
         /// <param name="updates">Whether to update mass etc. Set false if you're doing a bulk operation</param>
-        public void DestroyFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null)
+        public void DestroyFixture(
+            EntityUid uid,
+            Fixture fixture,
+            bool updates = true,
+            PhysicsComponent? body = null,
+            FixturesComponent? manager = null,
+            TransformComponent? xform = null)
         {
-            if (!Resolve(body.Owner, ref manager))
+            if (!Resolve(uid, ref body, ref manager, ref xform))
             {
                 return;
             }
@@ -192,7 +177,6 @@ namespace Robust.Shared.Physics.Systems
                 return;
             }
 
-            var xform = Transform(body.Owner);
             if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
             {
                 var map = Transform(broadphase.Owner).MapUid;
@@ -208,7 +192,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             if (updates)
-                FixtureUpdate(manager, body);
+                FixtureUpdate(uid, manager: manager, body: body);
         }
 
         #endregion
@@ -219,7 +203,7 @@ namespace Robust.Shared.Physics.Systems
             EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
-        internal void OnPhysicsInit(EntityUid uid, FixturesComponent component)
+        internal void OnPhysicsInit(EntityUid uid, FixturesComponent component, PhysicsComponent? body = null)
         {
             // Convert the serialized list to the dictionary format as it may not necessarily have an ID in YAML
             // (probably change this someday for perf reasons?)
@@ -237,7 +221,7 @@ namespace Robust.Shared.Physics.Systems
 
             // Can't ACTUALLY add it to the broadphase here because transform is still in a transient dimension on the 5th plane
             // hence we'll just make sure its body is set and SharedBroadphaseSystem will deal with it later.
-            if (EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
+            if (Resolve(uid, ref body, false))
             {
                 foreach (var fixture in component.Fixtures.Values)
                 {
@@ -245,7 +229,7 @@ namespace Robust.Shared.Physics.Systems
                 }
 
                 // Make sure all the right stuff is set on the body
-                FixtureUpdate(component, body, false);
+                FixtureUpdate(uid, false, component, body);
             }
         }
 
@@ -318,7 +302,7 @@ namespace Robust.Shared.Physics.Systems
             foreach (var fixture in toRemoveFixtures)
             {
                 computeProperties = true;
-                DestroyFixture(physics, fixture, false);
+                DestroyFixture(uid, fixture, false, physics, component);
             }
 
             // TODO: We also still need event listeners for shapes (Probably need C# events)
@@ -327,12 +311,12 @@ namespace Robust.Shared.Physics.Systems
             foreach (var fixture in toAddFixtures)
             {
                 computeProperties = true;
-                CreateFixture(physics, fixture, false);
+                CreateFixture(uid, fixture, false, component, physics, xform);
             }
 
             if (computeProperties)
             {
-                FixtureUpdate(component, physics);
+                FixtureUpdate(uid, manager: component, body: physics);
             }
         }
 
@@ -359,77 +343,58 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        #region Mass
-
-        [Obsolete("Use Density")]
-        public void SetMass(Fixture fixture, float value, FixturesComponent? manager = null)
-        {
-            var area = fixture.Area;
-            var density = area / value;
-            _physics.SetDensity(fixture, density, manager);
-        }
-
-        #endregion
-
         #region Restitution
 
-        public void SetRestitution(Fixture fixture, float value, FixturesComponent? manager = null, bool update = true)
+        public void SetRestitution(EntityUid uid, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
         {
-            fixture._restitution = value;
-            if (update && Resolve(fixture.Body.Owner, ref manager))
-                FixtureUpdate(manager);
+            fixture.Restitution = value;
+            if (update && Resolve(uid, ref manager))
+                FixtureUpdate(uid, manager: manager);
         }
 
         #endregion
-
-        public void FixtureUpdate(Fixture fixture, FixturesComponent? fixturesComponent = null)
-        {
-            if (!Resolve(fixture.Body.Owner, ref fixturesComponent))
-                return;
-
-            FixtureUpdate(fixturesComponent, fixture.Body);
-        }
 
         /// <summary>
         /// Updates all of the cached physics information on the body derived from fixtures.
         /// </summary>
-        public void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null, bool dirty = true)
+        public void FixtureUpdate(EntityUid uid, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
         {
-            if (!Resolve(component.Owner, ref body))
+            if (!Resolve(uid, ref body, ref manager))
                 return;
 
             var mask = 0;
             var layer = 0;
             var hard = false;
 
-            foreach (var (_, fixture) in component.Fixtures)
+            foreach (var fixture in manager.Fixtures.Values)
             {
                 mask |= fixture.CollisionMask;
                 layer |= fixture.CollisionLayer;
                 hard |= fixture.Hard;
             }
 
-            _physics.ResetMassData(component, body);
+            _physics.ResetMassData(uid, manager, body);
 
             // Normally this method is called when fixtures need to be dirtied anyway so no point in returning early I think
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
             body.Hard = hard;
-            if (component.FixtureCount == 0)
-                _physics.SetCanCollide(body, false);
+
+            if (manager.FixtureCount == 0)
+                _physics.SetCanCollide(uid, false, manager: manager, body: body);
 
             if (dirty)
-                Dirty(component);
+                Dirty(manager);
         }
 
-        public int GetFixtureCount(EntityUid uid, FixturesComponent? component = null)
+        public int GetFixtureCount(EntityUid uid, FixturesComponent? manager = null)
         {
-            if (!Resolve(uid, ref component))
+            if (!Resolve(uid, ref manager, false))
             {
                 return 0;
             }
 
-            return component.FixtureCount;
+            return manager.FixtureCount;
         }
 
         [Serializable, NetSerializable]

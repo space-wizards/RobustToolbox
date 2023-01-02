@@ -135,24 +135,10 @@ namespace Robust.Server.Console.Commands
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-            var horizontalFixture = new Fixture(ground, horizontal)
-            {
-                CollisionLayer = 2,
-                CollisionMask = 2,
-                Hard = true
-            };
-
-            fixtures.CreateFixture(ground, horizontalFixture);
+            fixtures.CreateFixture(groundUid, new Fixture(horizontal, 2, 2, true), body: ground);
 
             var vertical = new EdgeShape(new Vector2(20, 0), new Vector2(20, 20));
-            var verticalFixture = new Fixture(ground, vertical)
-            {
-                CollisionLayer = 2,
-                CollisionMask = 2,
-                Hard = true
-            };
-
-            fixtures.CreateFixture(ground, verticalFixture);
+            fixtures.CreateFixture(groundUid, new Fixture(vertical, 2, 2, true), body: ground);
 
             var xs = new[]
             {
@@ -173,27 +159,18 @@ namespace Robust.Server.Console.Commands
                         new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 1.1f * i), mapId));
                     var box = _ent.AddComponent<PhysicsComponent>(boxUid);
 
-                    box.BodyType = BodyType.Dynamic;
+                    physics.SetBodyType(boxUid, BodyType.Dynamic, body: box);
+
                     shape = new PolygonShape();
                     shape.SetAsBox(0.5f, 0.5f);
-                    box.FixedRotation = false;
-                    // TODO: Need to detect shape and work out if we need to use fixedrotation
+                    physics.SetFixedRotation(boxUid, false, body: box);
+                    fixtures.CreateFixture(boxUid, new Fixture(shape, 2, 2, true), body: box);
 
-                    var fixture = new Fixture(box, shape)
-                    {
-                        CollisionMask = 2,
-                        CollisionLayer = 2,
-                        Hard = true,
-                        Density = 1.0f,
-                        Friction = 0.3f,
-                    };
-
-                    fixtures.CreateFixture(box, fixture);
-                    physics.WakeBody(box);
+                    physics.WakeBody(boxUid, body: box);
                 }
             }
 
-            physics.WakeBody(ground);
+            physics.WakeBody(groundUid, body: ground);
         }
 
         private void CreateCircleStack(MapId mapId)
@@ -205,24 +182,10 @@ namespace Robust.Server.Console.Commands
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-            var horizontalFixture = new Fixture(ground, horizontal)
-            {
-                CollisionLayer = 2,
-                CollisionMask = 2,
-                Hard = true
-            };
+            fixtures.CreateFixture(groundUid, new Fixture(horizontal, 2, 2, true), body: ground);
 
-            fixtures.CreateFixture(ground, horizontalFixture);
-
-            var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
-            var verticalFixture = new Fixture(ground, vertical)
-            {
-                CollisionLayer = 2,
-                CollisionMask = 2,
-                Hard = true
-            };
-
-            fixtures.CreateFixture(ground, verticalFixture);
+            var vertical = new EdgeShape(new Vector2(20, 0), new Vector2(20, 20));
+            fixtures.CreateFixture(groundUid, new Fixture(vertical, 2, 2, true), body: ground);
 
             var xs = new[]
             {
@@ -243,25 +206,17 @@ namespace Robust.Server.Console.Commands
                         new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
                     var box = _ent.AddComponent<PhysicsComponent>(boxUid);
 
-                    box.BodyType = BodyType.Dynamic;
-                    shape = new PhysShapeCircle {Radius = 0.5f};
-                    box.FixedRotation = false;
+                    physics.SetBodyType(boxUid, BodyType.Dynamic, body: box);
+                    shape = new PhysShapeCircle(0.5f);
+                    physics.SetFixedRotation(boxUid, false, body: box);
                     // TODO: Need to detect shape and work out if we need to use fixedrotation
 
-                    var fixture = new Fixture(box, shape)
-                    {
-                        CollisionMask = 2,
-                        CollisionLayer = 2,
-                        Hard = true,
-                        Density = 5.0f,
-                    };
-
-                    fixtures.CreateFixture(box, fixture);
-                    physics.WakeBody(box);
+                    fixtures.CreateFixture(boxUid, new Fixture(shape, 2, 2, true, 5f));
+                    physics.WakeBody(boxUid, body: box);
                 }
             }
 
-            physics.WakeBody(ground);
+            physics.WakeBody(groundUid, body: ground);
         }
 
         private void CreatePyramid(MapId mapId)
@@ -275,15 +230,8 @@ namespace Robust.Server.Console.Commands
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(40, 0), new Vector2(-40, 0));
-            var horizontalFixture = new Fixture(ground, horizontal)
-            {
-                CollisionLayer = 2,
-                CollisionMask = 2,
-                Hard = true
-            };
-
-            fixtures.CreateFixture(ground, horizontalFixture);
-            physics.WakeBody(ground);
+            fixtures.CreateFixture(groundUid, new Fixture(horizontal, 2, 2, true), body: ground);
+            physics.WakeBody(groundUid, body: ground);
 
             // Setup boxes
             float a = 0.5f;
@@ -301,20 +249,14 @@ namespace Robust.Server.Console.Commands
 
                 for (var j = i; j < count; ++j)
                 {
-                    var boxUid = _ent.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+                    var boxUid = _ent.SpawnEntity(null, new MapCoordinates(y, mapId));
                     var box = _ent.AddComponent<PhysicsComponent>(boxUid);
-                    box.BodyType = BodyType.Dynamic;
-                    _ent.GetComponent<TransformComponent>(box.Owner).WorldPosition = y;
-                    fixtures.CreateFixture(box,
-                        new Fixture(box, shape) {
-                        CollisionLayer = 2,
-                        CollisionMask = 2,
-                        Hard = true,
-                        Density = 5.0f,
-                    });
+                    physics.SetBodyType(boxUid, BodyType.Dynamic, body: box);
+
+                    fixtures.CreateFixture(boxUid, new Fixture(shape, 2, 2, true, 5f), body: box);
                     y += deltaY;
 
-                    physics.WakeBody(box);
+                    physics.WakeBody(boxUid, body: box);
                 }
 
                 x += deltaX;
@@ -325,12 +267,13 @@ namespace Robust.Server.Console.Commands
         {
             var physics = _ent.System<SharedPhysicsSystem>();
             var fixtures = _ent.System<FixtureSystem>();
+            var joints = _ent.System<SharedJointSystem>();
 
             var groundUid = _ent.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
             // Due to lookup changes fixtureless bodies are invalid, so
-            var cShape = new PhysShapeCircle();
-            fixtures.CreateFixture(ground, cShape);
+            var cShape = new PhysShapeCircle(1f);
+            fixtures.CreateFixture(groundUid, new Fixture(cShape, 0, 0, false));
 
             var bodyUid = _ent.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
             var body = _ent.AddComponent<PhysicsComponent>(bodyUid);
@@ -358,7 +301,7 @@ namespace Robust.Server.Console.Commands
 
             physics.WakeBody(ground);
             physics.WakeBody(body);
-            var revolute = EntitySystem.Get<SharedJointSystem>().CreateRevoluteJoint(groundUid, bodyUid);
+            var revolute = joints.CreateRevoluteJoint(groundUid, bodyUid);
             revolute.LocalAnchorA = new Vector2(0f, 10f);
             revolute.LocalAnchorB = new Vector2(0f, 0f);
             revolute.ReferenceAngle = 0f;

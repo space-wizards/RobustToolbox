@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Utility;
@@ -127,7 +128,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private (float, float) GetInvMass(IPhysBody bodyA, IPhysBody bodyB)
+    private (float, float) GetInvMass(PhysicsComponent bodyA, PhysicsComponent bodyB)
     {
         // God this is shitcodey but uhhhh we need to snowflake KinematicController for nice collisions.
         // TODO: Might need more finagling with the kinematic bodytype

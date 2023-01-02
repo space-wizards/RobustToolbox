@@ -233,10 +233,12 @@ namespace Robust.Shared.Physics.Systems
                 var proxyA = pMoveBuffer[i].Proxy;
                 var proxies = contactBuffer[i];
                 var proxyABody = proxyA.Fixture.Body;
+                FixturesComponent? manager = null;
 
                 foreach (var other in proxies)
                 {
                     var otherBody = other.Fixture.Body;
+
                     // Because we may be colliding with something asleep (due to the way grid movement works) need
                     // to make sure the contact doesn't fail.
                     // This is because we generate a contact across 2 different broadphases where both bodies aren't
@@ -244,8 +246,8 @@ namespace Robust.Shared.Physics.Systems
                     if (proxyA.Fixture.Hard && other.Fixture.Hard &&
                         (gridMoveBuffer.ContainsKey(proxyA) || gridMoveBuffer.ContainsKey(other)))
                     {
-                        _physicsSystem.WakeBody(proxyABody, force: true);
-                        _physicsSystem.WakeBody(otherBody, force: true);
+                        _physicsSystem.WakeBody(proxyABody.Owner, force: true, manager: manager, body: proxyABody);
+                        _physicsSystem.WakeBody(otherBody.Owner, force: true, body: otherBody);
                     }
 
                     _physicsSystem.AddPair(proxyA, other);
@@ -409,7 +411,7 @@ namespace Robust.Shared.Physics.Systems
             }, aabb, true);
         }
 
-        public void RegenerateContacts(PhysicsComponent body, TransformComponent? xform = null, FixturesComponent? fixtures = null)
+        public void RegenerateContacts(PhysicsComponent body, FixturesComponent? fixtures = null, TransformComponent? xform = null)
         {
             _physicsSystem.DestroyContacts(body);
             if (!Resolve(body.Owner, ref xform, ref fixtures))

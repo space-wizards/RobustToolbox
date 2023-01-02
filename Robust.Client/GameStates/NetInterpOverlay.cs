@@ -33,7 +33,7 @@ namespace Robust.Client.GameStates
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = args.WorldAABB;
             var timing = IoCManager.Resolve<IGameTiming>();
-            foreach (var boundingBox in _entityManager.EntityQuery<IPhysBody>(true))
+            foreach (var boundingBox in _entityManager.EntityQuery<PhysicsComponent>(true))
             {
                 // all entities have a TransformComponent
                 var transform = _entityManager.GetComponent<TransformComponent>(boundingBox.Owner);

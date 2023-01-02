@@ -43,31 +43,34 @@ public sealed class ScaleCommand : LocalizedCommands
 
         // Event for content to use
         // We'll just set engine stuff here
+        var physics = _entityManager.System<SharedPhysicsSystem>();
+        var appearance = _entityManager.System<AppearanceSystem>();
+
         _entityManager.EnsureComponent<ScaleVisualsComponent>(uid);
         var @event = new ScaleEntityEvent();
         _entityManager.EventBus.RaiseLocalEvent(uid, ref @event);
 
         var appearanceComponent = _entityManager.EnsureComponent<ServerAppearanceComponent>(uid);
-        if (!appearanceComponent.TryGetData<Vector2>(ScaleVisuals.Scale, out var oldScale))
+        if (!appearance.TryGetData<Vector2>(uid, ScaleVisuals.Scale, out var oldScale, appearanceComponent))
             oldScale = Vector2.One;
 
-        appearanceComponent.SetData(ScaleVisuals.Scale, oldScale * scale);
+        appearance.SetData(uid, ScaleVisuals.Scale, oldScale * scale, appearanceComponent);
 
         if (_entityManager.TryGetComponent(uid, out FixturesComponent? manager))
         {
-            foreach (var (_, fixture) in manager.Fixtures)
+            foreach (var fixture in manager.Fixtures.Values)
             {
                 switch (fixture.Shape)
                 {
                     case EdgeShape edge:
-                        edge.Vertex0 *= scale;
-                        edge.Vertex1 *= scale;
-                        edge.Vertex2 *= scale;
-                        edge.Vertex3 *= scale;
+                        physics.SetVertices(uid, fixture, edge,
+                            edge.Vertex0 *= scale,
+                            edge.Vertex1 *= scale,
+                            edge.Vertex2 *= scale,
+                            edge.Vertex3 *= scale, manager);
                         break;
                     case PhysShapeCircle circle:
-                        circle.Position *= scale;
-                        circle.Radius *= scale;
+                        physics.SetPositionRadius(uid, fixture, circle, circle.Position *= scale, circle.Radius *= scale, manager);
                         break;
                     case PolygonShape poly:
                         var verts = poly.Vertices;

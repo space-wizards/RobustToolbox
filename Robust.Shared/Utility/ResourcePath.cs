@@ -80,6 +80,7 @@ namespace Robust.Shared.Utility
 
             var splitSegments = path.Split(separator);
             var segments = new List<string>(splitSegments.Length);
+
             var i = 0;
             if (splitSegments[0] == "")
             {

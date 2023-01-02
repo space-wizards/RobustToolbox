@@ -89,130 +89,49 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         /// Contact friction between 2 bodies. Not tile-friction for top-down.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public float Friction
-        {
-            get => _friction;
-            [Obsolete("Use SharedPhysicsSystem.SetFriction")]
-            set
-            {
-                var entManager = IoCManager.Resolve<IEntityManager>();
-                entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetFriction(this, value);
-            }
-        }
-
-        [DataField("friction")]
-        internal float _friction = 0.4f;
+        [DataField("friction"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        public float Friction = PhysicsConstants.DefaultContactFriction;
 
         /// <summary>
         /// AKA how much bounce there is on a collision.
         /// 0.0 for inelastic collision and 1.0 for elastic.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public float Restitution
-        {
-            get => _restitution;
-            [Obsolete("Use SharedPhysicsSystem.SetRestitution")]
-            set
-            {
-                var entManager = IoCManager.Resolve<IEntityManager>();
-                entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetRestitution(this, value);
-            }
-        }
-
-        [DataField("restitution")]
-        internal float _restitution = 0f;
+        [DataField("restitution"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        public float Restitution = PhysicsConstants.DefaultRestitution;
 
         /// <summary>
-        ///     Non-hard <see cref="IPhysBody"/>s will not cause action collision (e.g. blocking of movement)
+        ///     Non-hard <see cref="PhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events.
         /// </summary>
         /// <remarks>
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool Hard
-        {
-            get => _hard;
-            set
-            {
-                if (_hard == value)
-                    return;
-
-                _hard = value;
-                var entManager = IoCManager.Resolve<IEntityManager>();
-                entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().SetHard(this, value);
-            }
-        }
-
-        [DataField("hard")] private bool _hard = true;
+        [DataField("hard"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        public bool Hard = true;
 
         /// <summary>
         /// In kg / m ^ 2
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite),
-         DataField("density")]
-        public float Density { get; internal set; } = 1f;
+        [DataField("density"),
+         Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+             Other = AccessPermissions.Read)]
+        public float Density { get; set; } = PhysicsConstants.DefaultDensity;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get => _collisionLayer;
-            [Obsolete("Use SharedPhysicsSystem.SetCollisionLayer")]
-            set
-            {
-                if (_collisionLayer == value)
-                    return;
-
-                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>().SetCollisionLayer(this, value);
-            }
-        }
-
-        [DataField("layer", customTypeSerializer: typeof(FlagSerializer<CollisionLayer>))]
-        internal int _collisionLayer;
+        [DataField("layer", customTypeSerializer: typeof(FlagSerializer<CollisionLayer>)),
+         Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+             Other = AccessPermissions.Read)]
+        public int CollisionLayer;
 
         /// <summary>
         ///  Bitmask of the layers this component collides with.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get => _collisionMask;
-            [Obsolete("Use SharedPhysicsSystem.SetCollisionMask")]
-            set
-            {
-                if (_collisionMask == value)
-                    return;
-
-                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>().SetCollisionMask(this, value);
-            }
-        }
-
-        [DataField("mask", customTypeSerializer: typeof(FlagSerializer<CollisionMask>))]
-        internal int _collisionMask;
-
-        public float Area
-        {
-            get
-            {
-                switch (Shape)
-                {
-                    case PhysShapeAabb aabb:
-                        return aabb.LocalBounds.Width * aabb.LocalBounds.Height;
-                    case PhysShapeCircle circle:
-                        return MathF.PI * circle.Radius * circle.Radius;
-                    case PolygonShape poly:
-                        ComputePoly(poly, out var area);
-                        return area;
-                    default:
-                        return 0.0f;
-                }
-            }
-
-        }
+        [DataField("mask", customTypeSerializer: typeof(FlagSerializer<CollisionMask>)),
+         Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+             Other = AccessPermissions.Read)]
+        public int CollisionMask;
 
         void ISerializationHooks.AfterDeserialization()
         {
@@ -233,21 +152,25 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        public Fixture(PhysicsComponent body, IPhysShape shape)
+        internal Fixture(
+            IPhysShape shape,
+            int collisionLayer,
+            int collisionMask,
+            bool hard,
+            float density = PhysicsConstants.DefaultDensity,
+            float friction = PhysicsConstants.DefaultContactFriction,
+            float restitution = PhysicsConstants.DefaultRestitution)
         {
-            Body = body;
             Shape = shape;
+            CollisionLayer = collisionLayer;
+            CollisionMask = collisionMask;
+            Hard = hard;
+            Density = density;
+            Friction = friction;
+            Restitution = restitution;
         }
 
-        public Fixture(IPhysShape shape, int collisionLayer, int collisionMask, bool hard)
-        {
-            Shape = shape;
-            _collisionLayer = collisionLayer;
-            _collisionMask = collisionMask;
-            _hard = hard;
-        }
-
-        public Fixture() {}
+        internal Fixture() {}
 
         /// <summary>
         ///     As a bunch of things aren't serialized we need to instantiate Fixture from an empty ctor and then copy values across.
@@ -257,101 +180,22 @@ namespace Robust.Shared.Physics.Dynamics
         {
             fixture.ID = ID;
             fixture.Shape = Shape;
-            fixture._friction = _friction;
-            fixture._restitution = _restitution;
-            fixture._hard = _hard;
-            fixture._collisionLayer = _collisionLayer;
-            fixture._collisionMask = _collisionMask;
+            fixture.Friction = Friction;
+            fixture.Restitution = Restitution;
+            fixture.Hard = Hard;
+            fixture.CollisionLayer = CollisionLayer;
+            fixture.CollisionMask = CollisionMask;
             fixture.Density = Density;
         }
-
-        #region ComputeProperties
-
-        private void ComputePoly(PolygonShape poly, out float area)
-        {
-            // Polygon mass, centroid, and inertia.
-            // Let rho be the polygon density in mass per unit area.
-            // Then:
-            // mass = rho * int(dA)
-            // centroid.X = (1/mass) * rho * int(x * dA)
-            // centroid.Y = (1/mass) * rho * int(y * dA)
-            // I = rho * int((x*x + y*y) * dA)
-            //
-            // We can compute these integrals by summing all the integrals
-            // for each triangle of the polygon. To evaluate the integral
-            // for a single triangle, we make a change of variables to
-            // the (u,v) coordinates of the triangle:
-            // x = x0 + e1x * u + e2x * v
-            // y = y0 + e1y * u + e2y * v
-            // where 0 <= u && 0 <= v && u + v <= 1.
-            //
-            // We integrate u from [0,1-v] and then v from [0,1].
-            // We also need to use the Jacobian of the transformation:
-            // D = cross(e1, e2)
-            //
-            // Simplification: triangle centroid = (1/3) * (p1 + p2 + p3)
-            //
-            // The rest of the derivation is handled by computer algebra.
-
-            var vertexCount = poly.Vertices.Length;
-
-            DebugTools.Assert(vertexCount >= 3);
-
-            //FPE optimization: Consolidated the calculate centroid and mass code to a single method.
-            Vector2 center = Vector2.Zero;
-            area = 0.0f;
-            float I = 0.0f;
-
-            // pRef is the reference point for forming triangles.
-            // Its location doesn't change the result (except for rounding error).
-            Vector2 s = Vector2.Zero;
-
-            // This code would put the reference point inside the polygon.
-            for (int i = 0; i < vertexCount; ++i)
-            {
-                s += poly.Vertices[i];
-            }
-            s *= 1.0f / vertexCount;
-
-            const float k_inv3 = 1.0f / 3.0f;
-
-            for (var i = 0; i < vertexCount; ++i)
-            {
-                // Triangle vertices.
-                Vector2 e1 = poly.Vertices[i] - s;
-                Vector2 e2 = i + 1 < vertexCount ? poly.Vertices[i + 1] - s : poly.Vertices[0] - s;
-
-                float D = Vector2.Cross(e1, e2);
-
-                float triangleArea = 0.5f * D;
-                area += triangleArea;
-
-                // Area weighted centroid
-                center += (e1 + e2) * k_inv3 * triangleArea;
-
-                float ex1 = e1.X, ey1 = e1.Y;
-                float ex2 = e2.X, ey2 = e2.Y;
-
-                float intx2 = ex1 * ex1 + ex2 * ex1 + ex2 * ex2;
-                float inty2 = ey1 * ey1 + ey2 * ey1 + ey2 * ey2;
-
-                I += (0.25f * k_inv3 * D) * (intx2 + inty2);
-            }
-
-            //The area is too small for the engine to handle.
-            DebugTools.Assert(area > float.Epsilon);
-        }
-
-        #endregion
 
         /// <summary>
         /// Returns true if equal apart from body reference.
         /// </summary>
         public bool Equivalent(Fixture other)
         {
-            return _hard == other.Hard &&
-                   _collisionLayer == other.CollisionLayer &&
-                   _collisionMask == other.CollisionMask &&
+            return Hard == other.Hard &&
+                   CollisionLayer == other.CollisionLayer &&
+                   CollisionMask == other.CollisionMask &&
                    Shape.Equals(other.Shape) &&
                    ID.Equals(other.ID) &&
                    MathHelper.CloseTo(Density, other.Density);

@@ -82,7 +82,7 @@ namespace Robust.Shared.Physics.Dynamics
             if (bodyQuery.TryGetComponent(uid, out var body) &&
                 body.BodyType == BodyType.Dynamic)
             {
-                Physics.WakeBody(uid, body);
+                Physics.WakeBody(uid, body: body);
             }
 
             var xform = xformQuery.GetComponent(uid);

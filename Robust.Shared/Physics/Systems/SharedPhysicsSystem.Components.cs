@@ -213,10 +213,6 @@ public partial class SharedPhysicsSystem
 
         if (updated)
             Dirty(body);
-        else
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public void ResetMassData(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -455,7 +451,7 @@ public partial class SharedPhysicsSystem
         FixturesComponent? manager = null,
         PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref manager, ref body))
+        if (!Resolve(uid, ref body))
             return false;
 
         if (body.CanCollide == value)
@@ -469,7 +465,7 @@ public partial class SharedPhysicsSystem
                 if (_containerSystem.IsEntityOrParentInContainer(uid))
                     return false;
 
-                if (manager.FixtureCount == 0 && !_mapMan.IsGrid(uid))
+                if (!Resolve(uid, ref manager) || manager.FixtureCount == 0 && !_mapMan.IsGrid(uid))
                     return false;
             }
             else

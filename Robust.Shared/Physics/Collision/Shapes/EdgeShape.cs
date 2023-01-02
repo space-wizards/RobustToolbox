@@ -67,6 +67,11 @@ namespace Robust.Shared.Physics.Collision.Shapes
              Other = AccessPermissions.Read)]
         public float Radius { get; set; } = PhysicsConstants.PolygonRadius;
 
+        public EdgeShape()
+        {
+
+        }
+
         /// <summary>
         ///     Create a 1-sided edge.
         /// </summary>

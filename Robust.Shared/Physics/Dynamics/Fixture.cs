@@ -22,8 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -115,7 +113,7 @@ namespace Robust.Shared.Physics.Dynamics
         [DataField("density"),
          Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
              Other = AccessPermissions.Read)]
-        public float Density { get; set; } = PhysicsConstants.DefaultDensity;
+        public float Density = PhysicsConstants.DefaultDensity;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.
@@ -170,7 +168,7 @@ namespace Robust.Shared.Physics.Dynamics
             Restitution = restitution;
         }
 
-        internal Fixture() {}
+        public Fixture() {}
 
         /// <summary>
         ///     As a bunch of things aren't serialized we need to instantiate Fixture from an empty ctor and then copy values across.

@@ -61,7 +61,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <summary>
         /// Used for Serv3 reasons
         /// </summary>
-        internal WeldJoint() {}
+        public WeldJoint() {}
 
         internal WeldJoint(EntityUid bodyA, EntityUid bodyB, Vector2 anchorA, Vector2 anchorB, float referenceAngle) : base(bodyA, bodyB)
         {

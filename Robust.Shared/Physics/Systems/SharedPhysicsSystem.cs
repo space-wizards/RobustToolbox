@@ -106,7 +106,7 @@ namespace Robust.Shared.Physics.Systems
 
             if (!ev.CanCollide)
             {
-                DestroyContacts(uid, ev.Body);
+                DestroyContacts(ev.Body);
             }
         }
 

@@ -64,13 +64,13 @@ public sealed class ScaleCommand : LocalizedCommands
                 {
                     case EdgeShape edge:
                         physics.SetVertices(uid, fixture, edge,
-                            edge.Vertex0 *= scale,
-                            edge.Vertex1 *= scale,
-                            edge.Vertex2 *= scale,
-                            edge.Vertex3 *= scale, manager);
+                            edge.Vertex0 * scale,
+                            edge.Vertex1 * scale,
+                            edge.Vertex2 * scale,
+                            edge.Vertex3 * scale, manager);
                         break;
                     case PhysShapeCircle circle:
-                        physics.SetPositionRadius(uid, fixture, circle, circle.Position *= scale, circle.Radius *= scale, manager);
+                        physics.SetPositionRadius(uid, fixture, circle, circle.Position * scale, circle.Radius * scale, manager);
                         break;
                     case PolygonShape poly:
                         var verts = poly.Vertices;
@@ -80,24 +80,15 @@ public sealed class ScaleCommand : LocalizedCommands
                             verts[i] *= scale;
                         }
 
-                        poly.SetVertices(verts);
+                        physics.SetVertices(uid, fixture, poly, verts, manager);
                         break;
                     default:
                         throw new NotImplementedException();
                 }
             }
-
-            _entityManager.EntitySysManager.GetEntitySystem<FixtureSystem>().FixtureUpdate(manager);
         }
     }
 
-    public readonly struct ScaleEntityEvent
-    {
-        public readonly EntityUid Uid;
-
-        public ScaleEntityEvent(EntityUid uid)
-        {
-            Uid = uid;
-        }
-    }
+    [ByRefEvent]
+    public readonly record struct ScaleEntityEvent(EntityUid Uid) {}
 }

@@ -57,7 +57,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         [DataField("radius"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public float Radius { get; set; } = PhysicsConstants.PolygonRadius;
 
-        [Obsolete("Use SharedPhysicsSystem.SetVertices")]
         public void SetVertices(List<Vector2> vertices)
         {
             Span<Vector2> verts = stackalloc Vector2[vertices.Count];
@@ -70,7 +69,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
             SetVertices(verts);
         }
 
-        [Obsolete("Use SharedPhysicsSystem.SetVertices")]
         public void SetVertices(Span<Vector2> vertices)
         {
             var configManager = IoCManager.Resolve<IConfigurationManager>();
@@ -78,7 +76,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
             SetVertices(vertices, configManager.GetCVar(CVars.ConvexHullPolygons));
         }
 
-        [Obsolete("Use SharedPhysicsSystem.SetVertices")]
         public void SetVertices(Span<Vector2> vertices, bool convexHulls)
         {
             var vertexCount = vertices.Length;

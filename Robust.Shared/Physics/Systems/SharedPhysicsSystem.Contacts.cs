@@ -277,10 +277,10 @@ public abstract partial class SharedPhysicsSystem
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
         {
             if (bodyA.CanCollide)
-                SetAwake(aUid, true, body: contact.FixtureA.Body);
+                SetAwake(aUid, bodyA, true);
 
             if (bodyB.CanCollide)
-                SetAwake(bUid, true, body: contact.FixtureB.Body);
+                SetAwake(bUid, bodyB, true);
         }
 
         // Remove from the world
@@ -528,8 +528,8 @@ public abstract partial class SharedPhysicsSystem
             var aUid = bodyA.Owner;
             var bUid = bodyB.Owner;
 
-            SetAwake(aUid, true, body: bodyA);
-            SetAwake(bUid, true, body: bodyB);
+            SetAwake(aUid, bodyA, true);
+            SetAwake(bUid, bodyB, true);
         }
 
         ArrayPool<bool>.Shared.Return(wake);

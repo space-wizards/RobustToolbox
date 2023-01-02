@@ -234,13 +234,13 @@ public sealed class PhysicsComponent : Component
     ///     entity's parents are all stationary, this is the rate of change of this entity's world position (not
     ///     local position).
     /// </remarks>
-    [DataField("linearVelocity"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    [DataField("linearVelocity"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadExecute)]
     public Vector2 LinearVelocity { get; set; }
 
     /// <summary>
     ///     Current angular velocity of the entity in radians per sec.
     /// </summary>
-    [DataField("angularVelocity"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    [DataField("angularVelocity"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadExecute)]
     public float AngularVelocity { get; set; }
 
     /// <summary>

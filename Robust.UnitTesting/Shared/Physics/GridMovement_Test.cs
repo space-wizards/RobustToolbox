@@ -40,7 +40,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
 
             var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, 0.5f, 0.5f ));
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
-            physSystem.SetBodyType(onGridBody, BodyType.Dynamic);
+            physSystem.SetBodyType(onGrid, BodyType.Dynamic, body: onGridBody);
             var shapeA = new PolygonShape();
             shapeA.SetAsBox(0.5f, 0.5f);
             var fixtureA = fixtureSystem.CreateFixture(onGridBody, shapeA);

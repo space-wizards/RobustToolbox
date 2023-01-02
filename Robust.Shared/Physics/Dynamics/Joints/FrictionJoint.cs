@@ -100,41 +100,11 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public FrictionJoint() {}
 
-        /// <summary>
-        /// Constructor for FrictionJoint.
-        /// </summary>
-        /// <param name="bodyA"></param>
-        /// <param name="bodyB"></param>
-        /// <param name="anchor"></param>
-        /// <param name="useWorldCoordinates">Set to true if you are using world coordinates as anchors.</param>
-        public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor, bool useWorldCoordinates = false)
+        public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB)
             : base(bodyA.Owner, bodyB.Owner)
         {
-            if (useWorldCoordinates)
-            {
-                LocalAnchorA = bodyA.GetLocalPoint(anchor);
-                LocalAnchorB = bodyB.GetLocalPoint(anchor);
-            }
-            else
-            {
-                LocalAnchorA = anchor;
-                LocalAnchorB = anchor;
-            }
-        }
-
-        public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, bool useWorldCoordinates = false)
-            : base(bodyA.Owner, bodyB.Owner)
-        {
-            if (useWorldCoordinates)
-            {
-                LocalAnchorA = bodyA.GetLocalPoint(Vector2.Zero);
-                LocalAnchorB = bodyB.GetLocalPoint(Vector2.Zero);
-            }
-            else
-            {
-                LocalAnchorA = Vector2.Zero;
-                LocalAnchorB = Vector2.Zero;
-            }
+            LocalAnchorA = anchorA;
+            LocalAnchorB = anchorB;
         }
 
         internal FrictionJoint(FrictionJointState state) : base(state)

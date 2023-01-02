@@ -201,12 +201,26 @@ public abstract class SharedJointSystem : EntitySystem
     /// <summary>
     /// Create a DistanceJoint between 2 bodies. This should be called content-side whenever you need one.
     /// </summary>
-    public DistanceJoint CreateDistanceJoint(EntityUid bodyA, EntityUid bodyB, Vector2? anchorA = null, Vector2? anchorB = null, string? id = null)
+    public DistanceJoint CreateDistanceJoint(
+        EntityUid bodyA,
+        EntityUid bodyB,
+        Vector2? anchorA = null,
+        Vector2? anchorB = null,
+        string? id = null,
+        TransformComponent? xformA = null,
+        TransformComponent? xformB = null)
     {
+        if (!Resolve(bodyA, ref xformA) || !Resolve(bodyB, ref xformB))
+        {
+            throw new InvalidOperationException();
+        }
+
         anchorA ??= Vector2.Zero;
         anchorB ??= Vector2.Zero;
 
-        var joint = new DistanceJoint(Comp<PhysicsComponent>(bodyA), Comp<PhysicsComponent>(bodyB), anchorA.Value, anchorB.Value);
+        var length = xformA.WorldMatrix.Transform(anchorA.Value) - xformB.WorldMatrix.Transform(anchorB.Value);
+
+        var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, length.Length);
         id ??= GetJointId(joint);
         joint.ID = id;
         AddJoint(joint);
@@ -240,9 +254,17 @@ public abstract class SharedJointSystem : EntitySystem
         return joint;
     }
 
-    public PrismaticJoint CreatePrismaticJoint(EntityUid bodyA, EntityUid bodyB, Vector2 worldAnchor, Vector2 worldAxis, string? id = null)
+    public PrismaticJoint CreatePrismaticJoint(
+        EntityUid bodyA,
+        EntityUid bodyB,
+        Vector2 anchorA,
+        Vector2 anchorB,
+        Vector2 worldAxis,
+        float referenceAngle,
+        string? id = null)
     {
-        var joint = new PrismaticJoint(bodyA, bodyB, worldAnchor, worldAxis, EntityManager);
+        var axis = GetLocalVector2(bodyA, worldAxis);
+        var joint = new PrismaticJoint(bodyA, bodyB, anchorA, anchorB, axis, referenceAngle);
         id ??= GetJointId(joint);
         joint.ID = id;
         AddJoint(joint);
@@ -285,6 +307,14 @@ public abstract class SharedJointSystem : EntitySystem
         AddJoint(joint);
 
         return joint;
+    }
+
+    private Vector2 GetLocalVector2(EntityUid uid, Vector2 worldVector, TransformComponent? xform = null)
+    {
+        if (!Resolve(uid, ref xform))
+            return Vector2.Zero;
+
+        return Physics.Transform.MulT(new Quaternion2D((float) xform.WorldRotation.Theta), worldVector);
     }
 
     #endregion

@@ -3,6 +3,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.Console.Commands;
 
@@ -40,11 +41,12 @@ public sealed class SpinCommand : LocalizedCommands
         else
         {
             if (!_entities.TryGetComponent(shell.Player?.AttachedEntity, out TransformComponent? xform)
-                || xform.ParentUid is not EntityUid { Valid: true } parent)
+                || xform.ParentUid is not { Valid: true } parent)
             {
                 shell.WriteError($"Cannot find default entity (attached player's parent).");
                 return;
             }
+
             target = parent;
         }
 
@@ -61,7 +63,8 @@ public sealed class SpinCommand : LocalizedCommands
             return;
         }
 
-        physics.AngularDamping = drag;
-        physics.AngularVelocity = speed;
+        var physicsSystem = _entities.System<SharedPhysicsSystem>();
+        physicsSystem.SetAngularDamping(physics, drag);
+        physicsSystem.SetAngularVelocity(target, speed, body: physics);
     }
 }

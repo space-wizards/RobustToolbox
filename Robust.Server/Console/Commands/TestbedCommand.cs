@@ -278,29 +278,30 @@ namespace Robust.Server.Console.Commands
             var bodyUid = _ent.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
             var body = _ent.AddComponent<PhysicsComponent>(bodyUid);
 
-            body.BodyType = BodyType.Dynamic;
-            body.SleepingAllowed = false;
-            body.FixedRotation = false;
+            physics.SetBodyType(bodyUid, BodyType.Dynamic, body: body);
+            physics.SetSleepingAllowed(bodyUid, body, false);
+            physics.SetFixedRotation(bodyUid, false, body: body);
 
-            // TODO: Box2D just derefs, bleh shape structs someday
+
+            // TODO: Box2D just deref, bleh shape structs someday
             var shape1 = new PolygonShape();
             shape1.SetAsBox(0.5f, 10.0f, new Vector2(10.0f, 0.0f), 0.0f);
-            fixtures.CreateFixture(body, shape1, 20.0f, 2, 0);
+            fixtures.CreateFixture(bodyUid, new Fixture(shape1, 2, 0, true, 20f));
 
             var shape2 = new PolygonShape();
             shape2.SetAsBox(0.5f, 10.0f, new Vector2(-10.0f, 0.0f), 0f);
-            fixtures.CreateFixture(body, shape2, 20.0f, 2, 0);
+            fixtures.CreateFixture(bodyUid, new Fixture(shape2, 2, 0, true, 20f));
 
             var shape3 = new PolygonShape();
             shape3.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, 10.0f), 0f);
-            fixtures.CreateFixture(body, shape3, 20.0f, 2, 0);
+            fixtures.CreateFixture(bodyUid, new Fixture(shape3, 2, 0, true, 20f));
 
             var shape4 = new PolygonShape();
             shape4.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, -10.0f), 0f);
-            fixtures.CreateFixture(body, shape4, 20.0f, 2, 0);
+            fixtures.CreateFixture(bodyUid, new Fixture(shape4, 2, 0, true, 20f));
 
-            physics.WakeBody(ground);
-            physics.WakeBody(body);
+            physics.WakeBody(groundUid, body: ground);
+            physics.WakeBody(bodyUid, body: body);
             var revolute = joints.CreateRevoluteJoint(groundUid, bodyUid);
             revolute.LocalAnchorA = new Vector2(0f, 10f);
             revolute.LocalAnchorB = new Vector2(0f, 0f);
@@ -321,12 +322,12 @@ namespace Robust.Server.Console.Commands
                     if (!_map.MapExists(mapId)) return;
                     var boxUid = _ent.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
                     var box = _ent.AddComponent<PhysicsComponent>(boxUid);
-                    box.BodyType = BodyType.Dynamic;
-                    box.FixedRotation = false;
+                    physics.SetBodyType(boxUid, BodyType.Dynamic, body: box);
+                    physics.SetFixedRotation(boxUid, false, body: box);
                     var shape = new PolygonShape();
                     shape.SetAsBox(0.125f, 0.125f);
-                    fixtures.CreateFixture(box, shape, 0.0625f, 2, 2);
-                    physics.WakeBody(box);
+                    fixtures.CreateFixture(boxUid, new Fixture(shape, 2, 2, true, 0.0625f), body: box);
+                    physics.WakeBody(boxUid, body: box);
                 });
             }
         }

@@ -95,7 +95,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            var item = _tryFindItemAtPosition(args.RelativePosition);
+            var item = _tryFindItemAtPosition(args.RelativePixelPosition);
 
             if (item != null && item.Selectable)
             {
@@ -209,7 +209,7 @@ namespace Robust.Client.UserInterface.Controls
             DrawingHandleScreen handle, ref float vOffset, float hOffset, Item item,
             Font font, StyleBox itemSelected)
         {
-            var itemHeight = font.GetHeight(UIScale) + itemSelected.MinimumSize.Y;
+            var itemHeight = font.GetHeight(UIScale);
             var selected = item.Index == _selectedIndex;
             if (selected)
             {

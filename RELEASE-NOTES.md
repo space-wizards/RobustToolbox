@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed broken click bound checks in the `Tree` UI Control.
 
 ### Other
 

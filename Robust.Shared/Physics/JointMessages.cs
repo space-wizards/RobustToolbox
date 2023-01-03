@@ -1,17 +1,18 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics.Joints;
 
 namespace Robust.Shared.Physics
 {
     public sealed class JointAddedEvent : EntityEventArgs
     {
-        public IPhysBody OurBody { get; }
+        public PhysicsComponent OurBody { get; }
 
-        public IPhysBody OtherBody { get; }
+        public PhysicsComponent OtherBody { get; }
 
         public Joint Joint { get; }
 
-        public JointAddedEvent(Joint joint, IPhysBody ourBody, IPhysBody otherBody)
+        public JointAddedEvent(Joint joint, PhysicsComponent ourBody, PhysicsComponent otherBody)
         {
             Joint = joint;
             OurBody = ourBody;
@@ -21,13 +22,13 @@ namespace Robust.Shared.Physics
 
     public sealed class JointRemovedEvent : EntityEventArgs
     {
-        public IPhysBody OurBody { get; }
+        public PhysicsComponent OurBody { get; }
 
-        public IPhysBody OtherBody { get; }
+        public PhysicsComponent OtherBody { get; }
 
         public Joint Joint { get; }
 
-        public JointRemovedEvent(Joint joint, IPhysBody ourBody, IPhysBody otherBody)
+        public JointRemovedEvent(Joint joint, PhysicsComponent ourBody, PhysicsComponent otherBody)
         {
             Joint = joint;
             OurBody = ourBody;

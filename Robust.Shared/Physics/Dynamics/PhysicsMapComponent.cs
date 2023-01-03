@@ -52,6 +52,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
         /// </summary>
+        [ViewVariables]
         public readonly Dictionary<FixtureProxy, Box2> MoveBuffer = new();
 
         /// <summary>
@@ -82,7 +83,7 @@ namespace Robust.Shared.Physics.Dynamics
             if (bodyQuery.TryGetComponent(uid, out var body) &&
                 body.BodyType == BodyType.Dynamic)
             {
-                Physics.WakeBody(uid, body);
+                Physics.WakeBody(uid, body: body);
             }
 
             var xform = xformQuery.GetComponent(uid);
@@ -97,14 +98,13 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     All awake bodies on this map.
         /// </summary>
+        [ViewVariables]
         public readonly HashSet<PhysicsComponent> AwakeBodies = new();
 
         /// <summary>
         ///     Store last tick's invDT
         /// </summary>
         internal float _invDt0;
-
-        public MapId MapId => _entityManager.GetComponent<TransformComponent>(Owner).MapID;
 
         #region AddRemove
 

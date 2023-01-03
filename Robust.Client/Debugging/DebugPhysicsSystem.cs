@@ -229,7 +229,7 @@ namespace Robust.Client.Debugging
                 {
                     if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
 
-                    var xform = physBody.GetTransform();
+                    var xform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
 
                     const float AlphaModifier = 0.2f;
 
@@ -271,7 +271,7 @@ namespace Robust.Client.Debugging
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
                     var color = Color.Purple.WithAlpha(Alpha);
-                    var transform = physBody.GetTransform();
+                    var transform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
                     worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 0.2f, color);
                 }
 
@@ -279,7 +279,7 @@ namespace Robust.Client.Debugging
                 {
                     var physBody = _entityManager.GetComponent<PhysicsComponent>(grid.Owner);
                     var color = Color.Orange.WithAlpha(Alpha);
-                    var transform = physBody.GetTransform();
+                    var transform = _physicsSystem.GetPhysicsTransform(grid.Owner);
                     worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 1f, color);
                 }
             }
@@ -290,7 +290,7 @@ namespace Robust.Client.Debugging
                 {
                     if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
 
-                    var xform = physBody.GetTransform();
+                    var xform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
 
                     const float AlphaModifier = 0.2f;
                     Box2? aabb = null;

@@ -263,22 +263,24 @@ public abstract partial class SharedPhysicsSystem
         Fixture fixtureB = contact.FixtureB!;
         PhysicsComponent bodyA = fixtureA.Body;
         PhysicsComponent bodyB = fixtureB.Body;
+        var aUid = bodyA.Owner;
+        var bUid = bodyB.Owner;
 
         if (contact.IsTouching)
         {
             var ev1 = new EndCollideEvent(fixtureA, fixtureB);
             var ev2 = new EndCollideEvent(fixtureB, fixtureA);
-            RaiseLocalEvent(bodyA.Owner, ref ev1);
-            RaiseLocalEvent(bodyB.Owner, ref ev2);
+            RaiseLocalEvent(aUid, ref ev1);
+            RaiseLocalEvent(bUid, ref ev2);
         }
 
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
         {
             if (bodyA.CanCollide)
-                SetAwake(contact.FixtureA.Body, true);
+                SetAwake(aUid, bodyA, true);
 
             if (bodyB.CanCollide)
-                SetAwake(contact.FixtureB.Body, true);
+                SetAwake(bUid, bodyB, true);
         }
 
         // Remove from the world
@@ -523,9 +525,11 @@ public abstract partial class SharedPhysicsSystem
             var contact = contacts[i];
             var bodyA = contact.FixtureA!.Body;
             var bodyB = contact.FixtureB!.Body;
+            var aUid = bodyA.Owner;
+            var bUid = bodyB.Owner;
 
-            SetAwake(bodyA, true);
-            SetAwake(bodyB, true);
+            SetAwake(aUid, bodyA, true);
+            SetAwake(bUid, bodyB, true);
         }
 
         ArrayPool<bool>.Shared.Return(wake);

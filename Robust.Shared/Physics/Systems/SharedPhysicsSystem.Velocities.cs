@@ -169,7 +169,7 @@ public abstract partial class SharedPhysicsSystem
         if (physics.LifeStage != ComponentLifeStage.Running)
             return;
 
-        if (physics.BodyType == BodyType.Static || xform.MapID == MapId.Nullspace || !physics._canCollide)
+        if (physics.BodyType == BodyType.Static || xform.MapID == MapId.Nullspace || !physics.CanCollide)
             return;
 
         // When transferring bodies, we will preserve map angular and linear velocities. For this purpose, we simply
@@ -179,8 +179,9 @@ public abstract partial class SharedPhysicsSystem
         // I guess the question becomes, what do you do with conservation of momentum in that case. I guess its the job
         // of the teleporter to select a velocity at the after the parent has changed.
 
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-        var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var physicsQuery = GetEntityQuery<PhysicsComponent>();
+        FixturesComponent? manager = null;
 
         // for the new velocities (that need to be updated), we can just use the existing function:
         var (newLinear, newAngular) = GetMapVelocities(uid, physics, xform, xformQuery, physicsQuery);
@@ -190,8 +191,8 @@ public abstract partial class SharedPhysicsSystem
         {
             // no previous parent --> simple
             // Old velocity + (old velocity - new velocity)
-            SetLinearVelocity(physics, physics._linearVelocity * 2 - newLinear);
-            SetAngularVelocity(physics, physics._angularVelocity * 2 - newAngular);
+            SetLinearVelocity(uid, physics.LinearVelocity * 2 - newLinear, manager: manager, body: physics);
+            SetAngularVelocity(uid, physics.AngularVelocity * 2 - newAngular, manager: manager, body: physics);
             return;
         }
 
@@ -226,7 +227,7 @@ public abstract partial class SharedPhysicsSystem
 
         // Finally we can update the Velocities. linear velocity is already in terms of map-coordinates, so no
         // world-rotation is required
-        SetLinearVelocity(physics, physics._linearVelocity + oldLinear - newLinear);
-        SetAngularVelocity(physics, physics._angularVelocity + oldAngular - newAngular);
+        SetLinearVelocity(uid, physics.LinearVelocity + oldLinear - newLinear, manager: manager, body: physics);
+        SetAngularVelocity(uid, physics.AngularVelocity + oldAngular - newAngular, manager: manager, body: physics);
     }
 }

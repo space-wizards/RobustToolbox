@@ -64,29 +64,20 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 mapId = mapManager.CreateMap();
 
-                EntityUid tempQualifier2 = mapManager.GetMapEntityId(mapId);
-                entityManager.GetComponent<PhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
+                var mapUid = mapManager.GetMapEntityId(mapId);
+                entityManager.GetComponent<PhysicsMapComponent>(mapUid).Gravity = new Vector2(0, -9.8f);
 
-                EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-                var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);
+                var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+                var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
+                var groundManager = entityManager.EnsureComponent<FixturesComponent>(groundUid);
 
                 var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-                var horizontalFixture = new Fixture(ground, horizontal);
-                physSystem.SetCollisionLayer(horizontalFixture, 1);
-                physSystem.SetCollisionMask(horizontalFixture, 1);
-                physSystem.SetHard(horizontalFixture, true);
-
-                fixtureSystem.CreateFixture(ground, horizontalFixture);
+                fixtureSystem.CreateFixture(groundUid, new Fixture(horizontal, 1, 1, true), manager: groundManager, body: ground);
 
                 var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
+                fixtureSystem.CreateFixture(groundUid, new Fixture(vertical, 1, 1, true), manager: groundManager, body: ground);
 
-                var verticalFixture = new Fixture(ground, vertical);
-                physSystem.SetCollisionLayer(verticalFixture, 1);
-                physSystem.SetCollisionMask(verticalFixture, 1);
-                physSystem.SetHard(verticalFixture, true);
-
-                fixtureSystem.CreateFixture(ground, verticalFixture);
-                physSystem.WakeBody(ground);
+                physSystem.WakeBody(groundUid);
 
                 var xs = new[]
                 {
@@ -99,34 +90,26 @@ namespace Robust.UnitTesting.Shared.Physics
                     {
                         var x = 0.0f;
 
-                        EntityUid tempQualifier1 = entityManager.SpawnEntity(null,
+                        var boxUid = entityManager.SpawnEntity(null,
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
-                        var box = entityManager.AddComponent<PhysicsComponent>(tempQualifier1);
+                        var box = entityManager.AddComponent<PhysicsComponent>(boxUid);
+                        var manager = entityManager.EnsureComponent<FixturesComponent>(boxUid);
 
-                        physSystem.SetBodyType(box, BodyType.Dynamic);
+                        physSystem.SetBodyType(boxUid, BodyType.Dynamic, manager: manager, body: box);
                         var poly = new PolygonShape(0.001f);
-                        poly.SetVertices(new List<Vector2>()
-                        {
-                            new(0.5f, -0.5f),
-                            new(0.5f, 0.5f),
-                            new(-0.5f, 0.5f),
-                            new(-0.5f, -0.5f),
-                        });
 
-                        var fixture = new Fixture(box, poly);
-                        physSystem.SetCollisionLayer(fixture, 1);
-                        physSystem.SetCollisionMask(fixture, 1);
-                        physSystem.SetHard(fixture, true);
+                        poly.SetAsBox(0.5f, 0.5f);
+                        physSystem.SetFixedRotation(boxUid, false, body: box);
 
-                        fixtureSystem.CreateFixture(box, fixture);
-                        physSystem.WakeBody(box);
+                        fixtureSystem.CreateFixture(boxUid, new Fixture(poly, 1, 1, true), manager: manager, body: box);
+                        physSystem.WakeBody(boxUid, manager: manager, body: box);
 
                         bodies[j * rowCount + i] = box;
                     }
                 }
 
-                EntityUid tempQualifier3 = bodies[0].Owner;
-                firstPos = entityManager.GetComponent<TransformComponent>(tempQualifier3).WorldPosition;
+                var bodyOne = bodies[0].Owner;
+                firstPos = entityManager.GetComponent<TransformComponent>(bodyOne).WorldPosition;
             });
 
             await server.WaitRunTicks(1);
@@ -134,7 +117,7 @@ namespace Robust.UnitTesting.Shared.Physics
             // Check that gravity workin
             await server.WaitAssertion(() =>
             {
-                EntityUid tempQualifier = bodies[0].Owner;
+                var tempQualifier = bodies[0].Owner;
                 Assert.That(firstPos, Is.Not.EqualTo(entityManager.GetComponent<TransformComponent>(tempQualifier).WorldPosition));
             });
 
@@ -182,28 +165,20 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
-                EntityUid tempQualifier2 = mapManager.GetMapEntityId(mapId);
-                entityManager.GetComponent<PhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
+                var mapUid = mapManager.GetMapEntityId(mapId);
+                entityManager.GetComponent<PhysicsMapComponent>(mapUid).Gravity = new Vector2(0, -9.8f);
 
-                EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-                var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);
+                var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+                var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
+                var groundManager = entityManager.EnsureComponent<FixturesComponent>(groundUid);
 
                 var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-                var horizontalFixture = new Fixture(ground, horizontal);
-                physSystem.SetCollisionLayer(horizontalFixture, 1);
-                physSystem.SetCollisionMask(horizontalFixture, 1);
-                physSystem.SetHard(horizontalFixture, true);
-
-                fixtureSystem.CreateFixture(ground, horizontalFixture);
+                fixtureSystem.CreateFixture(groundUid, new Fixture(horizontal, 1, 1, true), manager: groundManager, body: ground);
 
                 var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
-                var verticalFixture = new Fixture(ground, vertical);
-                physSystem.SetCollisionLayer(verticalFixture, 1);
-                physSystem.SetCollisionMask(verticalFixture, 1);
-                physSystem.SetHard(verticalFixture, true);
+                fixtureSystem.CreateFixture(groundUid, new Fixture(vertical, 1, 1, true), manager: groundManager, body: ground);
 
-                fixtureSystem.CreateFixture(ground, verticalFixture);
-                physSystem.WakeBody(ground);
+                physSystem.WakeBody(groundUid, manager: groundManager, body: ground);
 
                 var xs = new[]
                 {
@@ -218,21 +193,16 @@ namespace Robust.UnitTesting.Shared.Physics
                     {
                         var x = 0.0f;
 
-                        EntityUid tempQualifier1 = entityManager.SpawnEntity(null,
+                        var circleUid = entityManager.SpawnEntity(null,
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 1.1f * i), mapId));
-                        var circle = entityManager.AddComponent<PhysicsComponent>(tempQualifier1);
+                        var circle = entityManager.AddComponent<PhysicsComponent>(circleUid);
+                        var manager = entityManager.EnsureComponent<FixturesComponent>(circleUid);
 
                         physSystem.SetLinearDamping(circle, 0.05f);
-                        physSystem.SetBodyType(circle, BodyType.Dynamic);
-                        shape = new PhysShapeCircle {Radius = 0.5f};
-
-                        var fixture = new Fixture(circle, shape);
-                        physSystem.SetCollisionLayer(fixture, 1);
-                        physSystem.SetCollisionMask(fixture, 1);
-                        physSystem.SetHard(fixture, true);
-
-                        fixtureSystem.CreateFixture(circle, fixture);
-                        physSystem.WakeBody(circle);
+                        physSystem.SetBodyType(circleUid, BodyType.Dynamic, manager: manager, body: circle);
+                        shape = new PhysShapeCircle(0.5f);
+                        fixtureSystem.CreateFixture(circleUid, new Fixture(shape, 1, 1, true), manager: manager, body: circle);
+                        physSystem.WakeBody(circleUid, manager: manager, body: circle);
 
                         bodies[j * rowCount + i] = circle;
                     }
@@ -253,7 +223,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             // Assert
 
-            await server.WaitRunTicks(300);
+            await server.WaitRunTicks(250);
 
             // Assert settled, none below 0, etc.
             await server.WaitAssertion(() =>

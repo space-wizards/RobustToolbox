@@ -77,7 +77,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
                 fixtureSystem.CreateFixture(groundUid, new Fixture(vertical, 1, 1, true), manager: groundManager, body: ground);
 
-                physSystem.WakeBody(groundUid);
+                physSystem.WakeBody(groundUid, manager: groundManager, body: ground);
 
                 var xs = new[]
                 {

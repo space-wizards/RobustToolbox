@@ -412,32 +412,6 @@ namespace Robust.Shared.Physics.Components
 
         private bool _predict;
 
-        /// <summary>
-        /// Gets a local point relative to the body's origin given a world point.
-        /// Note that the vector only takes the rotation into account, not the position.
-        /// </summary>
-        /// <param name="worldPoint">A point in world coordinates.</param>
-        /// <returns>The corresponding local point relative to the body's origin.</returns>
-        public Vector2 GetLocalPoint(in Vector2 worldPoint)
-        {
-            return Transform.MulT(GetTransform(), worldPoint);
-        }
-
-        /// <summary>
-        /// Get the world coordinates of a point given the local coordinates.
-        /// </summary>
-        /// <param name="localPoint">A point on the body measured relative the the body's origin.</param>
-        /// <returns>The same point expressed in world coordinates.</returns>
-        public Vector2 GetWorldPoint(in Vector2 localPoint)
-        {
-            return Transform.Mul(GetTransform(), localPoint);
-        }
-
-        public Vector2 GetLocalVector2(Vector2 worldVector)
-        {
-            return Transform.MulT(new Quaternion2D((float) _entMan.GetComponent<TransformComponent>(Owner).WorldRotation.Theta), worldVector);
-        }
-
         public Transform GetTransform()
         {
             return GetTransform(_entMan.GetComponent<TransformComponent>(Owner));

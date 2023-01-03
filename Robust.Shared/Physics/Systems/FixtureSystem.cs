@@ -76,6 +76,7 @@ namespace Robust.Shared.Physics.Systems
                 return false;
 
             var fixture = new Fixture(shape, collisionLayer, collisionMask, hard, density, friction, restitution);
+            fixture.ID = id;
             CreateFixture(uid, fixture, updates, manager, body, xform);
             return true;
         }

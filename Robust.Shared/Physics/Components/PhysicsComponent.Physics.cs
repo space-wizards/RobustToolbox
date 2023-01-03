@@ -228,6 +228,7 @@ public sealed class PhysicsComponent : Component
          Other = AccessPermissions.Read)]
     public float AngularDamping { get; set; } = 0.2f;
 
+    // TODO: Datafield
     /// <summary>
     ///     Current linear velocity of the entity in meters per second.
     /// </summary>
@@ -236,13 +237,13 @@ public sealed class PhysicsComponent : Component
     ///     entity's parents are all stationary, this is the rate of change of this entity's world position (not
     ///     local position).
     /// </remarks>
-    [DataField("linearVelocity"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadExecute)]
+    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadExecute)]
     public Vector2 LinearVelocity { get; set; }
 
     /// <summary>
     ///     Current angular velocity of the entity in radians per sec.
     /// </summary>
-    [DataField("angularVelocity"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadExecute)]
+    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadExecute)]
     public float AngularVelocity { get; set; }
 
     /// <summary>
@@ -254,7 +255,7 @@ public sealed class PhysicsComponent : Component
     /// <summary>
     ///     The current status of the object
     /// </summary>
-    [DataField("status"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public BodyStatus BodyStatus { get; set; }
 
     [ViewVariables(VVAccess.ReadWrite)]

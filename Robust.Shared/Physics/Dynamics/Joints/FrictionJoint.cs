@@ -100,8 +100,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public FrictionJoint() {}
 
-        public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB)
-            : base(bodyA.Owner, bodyB.Owner)
+        public FrictionJoint(EntityUid uidA, EntityUid uidB, Vector2 anchorA, Vector2 anchorB)
+            : base(uidA, uidB)
         {
             LocalAnchorA = anchorA;
             LocalAnchorB = anchorB;

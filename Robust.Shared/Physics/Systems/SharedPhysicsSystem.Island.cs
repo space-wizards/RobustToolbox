@@ -399,7 +399,7 @@ public abstract partial class SharedPhysicsSystem
 
                 if (!jointQuery.TryGetComponent(body.Owner, out var jointComponent)) continue;
 
-                foreach (var (_, joint) in jointComponent.Joints)
+                foreach (var joint in jointComponent.Joints.Values)
                 {
                     if (joint.IslandFlag) continue;
 

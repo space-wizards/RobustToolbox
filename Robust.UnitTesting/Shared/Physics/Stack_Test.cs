@@ -74,10 +74,10 @@ namespace Robust.UnitTesting.Shared.Physics
                 var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
                 fixtureSystem.CreateFixture(groundUid, new Fixture(horizontal, 1, 1, true), manager: groundManager, body: ground);
 
-                var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
+                var vertical = new EdgeShape(new Vector2(20, 0), new Vector2(20, 20));
                 fixtureSystem.CreateFixture(groundUid, new Fixture(vertical, 1, 1, true), manager: groundManager, body: ground);
 
-                physSystem.WakeBody(groundUid, manager: groundManager, body: ground);
+                physSystem.WakeBody(groundUid);
 
                 var xs = new[]
                 {
@@ -91,20 +91,15 @@ namespace Robust.UnitTesting.Shared.Physics
                         var x = 0.0f;
 
                         var boxUid = entityManager.SpawnEntity(null,
-                            new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
+                            new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 1.1f * i), mapId));
                         var box = entityManager.AddComponent<PhysicsComponent>(boxUid);
-                        var manager = entityManager.EnsureComponent<FixturesComponent>(groundUid);
+                        var manager = entityManager.EnsureComponent<FixturesComponent>(boxUid);
 
                         physSystem.SetBodyType(boxUid, BodyType.Dynamic, manager: manager, body: box);
-                        var poly = new PolygonShape(0.001f);
+                        var poly = new PolygonShape();
 
-                        poly.SetVertices(new List<Vector2>()
-                        {
-                            new(0.5f, -0.5f),
-                            new(0.5f, 0.5f),
-                            new(-0.5f, 0.5f),
-                            new(-0.5f, -0.5f),
-                        });
+                        poly.SetAsBox(0.5f, 0.5f);
+                        physSystem.SetFixedRotation(boxUid, false, body: box);
 
                         fixtureSystem.CreateFixture(boxUid, new Fixture(poly, 1, 1, true), manager: manager, body: box);
                         physSystem.WakeBody(boxUid, manager: manager, body: box);

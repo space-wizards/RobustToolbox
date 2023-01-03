@@ -55,17 +55,18 @@ public sealed class PhysicsComponent : Component
     internal readonly LinkedList<Contact> Contacts = new();
 
     [DataField("ignorePaused"), ViewVariables(VVAccess.ReadWrite)]
-    public bool IgnorePaused { get; set; }
+    public bool IgnorePaused;
 
     /// <inheritdoc />
     [DataField("bodyType"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
-    public BodyType BodyType { get; set; } = BodyType.Static;
+    public BodyType BodyType = BodyType.Static;
 
     // We'll also block Static bodies from ever being awake given they don't need to move.
 
     /// <inheritdoc />
-    [ViewVariables(VVAccess.ReadWrite), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
-    public bool Awake { get; set; }
+    [ViewVariables(VVAccess.ReadWrite),
+     Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    public bool Awake;
 
     /// <summary>
     /// You can disable sleeping on this body. If you disable sleeping, the
@@ -75,12 +76,12 @@ public sealed class PhysicsComponent : Component
     [DataField("sleepingAllowed"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
-    public bool SleepingAllowed { get; set; } = true;
+    public bool SleepingAllowed = true;
 
     [DataField("sleepTime"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
-    public float SleepTime { get; set; } = 0f;
+    public float SleepTime = 0f;
 
     /// <summary>
     ///     Enables or disabled collision processing of this component.

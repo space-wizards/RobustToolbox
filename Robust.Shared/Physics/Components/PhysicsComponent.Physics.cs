@@ -129,16 +129,6 @@ namespace Robust.Shared.Physics.Components
             _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().WakeBody(this);
         }
 
-        /// <summary>
-        /// Resets the dynamics of this body.
-        /// Sets torque, force and linear/angular velocity to 0
-        /// </summary>
-        [Obsolete("Use SharedPhysicsSystem.ResetDynamics")]
-        public void ResetDynamics()
-        {
-            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ResetDynamics(this);
-        }
-
         public Box2 GetAABB(Transform transform)
         {
             var bounds = new Box2(transform.Position, transform.Position);
@@ -451,23 +441,5 @@ namespace Robust.Shared.Physics.Components
         {
             _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ApplyAngularImpulse(this, impulse);
         }
-
-        [Obsolete("Use SharedPhysicsSystem.ApplyForce")]
-        public void ApplyForce(in Vector2 force)
-        {
-            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ApplyForce(this, force);
-        }
-
-        [Obsolete("Use SharedPhysicsSystem.ResetMassData")]
-        public void ResetMassData(FixturesComponent? fixtures = null)
-        {
-            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ResetMassData(this, fixtures);
-        }
-
-        // View variables conveniences properties.
-        [ViewVariables]
-        private Vector2 _mapLinearVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapLinearVelocity(Owner, this);
-        [ViewVariables]
-        private float _mapAngularVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapAngularVelocity(Owner, this);
     }
 }

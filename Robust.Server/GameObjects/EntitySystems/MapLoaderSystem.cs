@@ -975,7 +975,13 @@ public sealed class MapLoaderSystem : EntitySystem
 
             var components = new SequenceDataNode();
 
-            // See engine#636 for why the Distinct() call.
+            var xform = Transform(entityUid);
+            if (xform.NoLocalRotation && xform.LocalRotation != 0)
+            {
+                Logger.Error($"Encountered a no-rotation entity with non-zero local rotation: {ToPrettyString(entityUid)}");
+                xform._localRotation = 0;
+            }
+
             foreach (var component in EntityManager.GetComponents(entityUid))
             {
                 if (component is MapSaveIdComponent)

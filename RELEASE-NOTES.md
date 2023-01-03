@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.78.0.0
+
+### Breaking changes
+
 * Removed the obsoleted `GlobalLinearVelocity()` EntityUid helper method.
 * INetConfigurationManager now has client & server side variants. Clients can now properly set server authoritative cvars when in singleplayer mode
 * IPhysBody has been removed. Just use the physics component.
@@ -54,10 +77,6 @@ END TEMPLATE-->
 ### Other
 
 * Tickrate is now shown in the f3 debug monitors
-
-### Internal
-
-*None yet*
 
 
 ## 0.77.0.2

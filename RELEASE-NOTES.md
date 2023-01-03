@@ -36,18 +36,24 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Removed the obsoleted `GlobalLinearVelocity()` EntityUid helper method.
+* INetConfigurationManager now has client & server side variants. Clients can now properly set server authoritative cvars when in singleplayer mode
+* IPhysBody has been removed. Just use the physics component.
+* Physics joints haven been slightly refactored and some method signatures have changed.
 
 ### New features
 
 * Added a new cvar to limit audio occlusion raycast lengths ("audio.raycast_length").
+* IRobustSerializer has new public methods for getting hashes and setting string serializer data.
 
 ### Bugfixes
 
 * Fixed broken click bound checks in the `Tree` UI Control.
+* Removed erroneous debug assert in render code that was causing issued in debug mode.
+* Fixed some instances where rotation-less entities were gaining non-zero local rotation.
 
 ### Other
 
-*None yet*
+* Tickrate is now shown in the f3 debug monitors
 
 ### Internal
 

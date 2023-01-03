@@ -167,8 +167,9 @@ public sealed class PhysicsComponent : Component
     /// <summary>
     ///     Is the body allowed to have angular velocity.
     /// </summary>
-    [DataField("fixedRotation"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
-    public bool FixedRotation { get; set; }
+    [DataField("fixedRotation"),
+     Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    public bool FixedRotation = true;
 
     /// <summary>
     ///     Get this body's center of mass offset to world position.

@@ -123,7 +123,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             var lower = Vector2.ComponentMin(v1, v2);
             var upper = Vector2.ComponentMax(v1, v2);
 
-            var radius = new Vector2(PhysicsConstants.PolygonRadius, PhysicsConstants.PolygonRadius);
+            var radius = new Vector2(Radius, Radius);
             return new Box2(lower - radius, upper + radius);
         }
 

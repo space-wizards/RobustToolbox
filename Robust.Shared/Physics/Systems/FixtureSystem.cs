@@ -110,7 +110,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 // Don't need to dirty here as we'll just manually call it after (we 100% need to call it).
                 FixtureUpdate(uid, false, manager: manager, body: body);
-                _physics.ResetMassData(uid, manager, body);
+                // Don't need to ResetMassData as FixtureUpdate already does it.
                 Dirty(manager);
             }
             // TODO: Set newcontacts to true.

@@ -224,11 +224,6 @@ public partial class SharedPhysicsSystem
         body._invMass = 0.0f;
         body._inertia = 0.0f;
         body.InvI = 0.0f;
-        body._localCenter = Vector2.Zero;
-
-        if (!Resolve(uid, ref manager, false))
-            return;
-
         var localCenter = Vector2.Zero;
 
         foreach (var fixture in manager.Fixtures.Values)
@@ -246,6 +241,7 @@ public partial class SharedPhysicsSystem
         // Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
         if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
         {
+            body._localCenter = Vector2.Zero;
             Dirty(body);
             return;
         }

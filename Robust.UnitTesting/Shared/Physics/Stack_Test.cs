@@ -138,7 +138,7 @@ namespace Robust.UnitTesting.Shared.Physics
                         // TODO: Multi-column support but I cbf right now
                         // Can't be more exact as some level of sinking is allowed.
                         Assert.That(worldPos.EqualsApprox(new Vector2(0.0f, i + 0.5f), 0.2f), $"Expected y-value of {i + 0.5f} but found {worldPos.Y}");
-                        Assert.That(!body.Awake);
+                        Assert.That(!body.Awake, $"Body {i} wasn't asleep");
                     }
                 }
             });

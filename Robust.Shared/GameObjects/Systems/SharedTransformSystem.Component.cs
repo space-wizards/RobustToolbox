@@ -296,7 +296,7 @@ public abstract partial class SharedTransformSystem
         var ev = new TransformStartupEvent(xform);
         RaiseLocalEvent(uid, ref ev, true);
 
-        DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
+        DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0, $"NoRot entity has a non-zero local rotation. entity: {ToPrettyString(uid)}");
     }
 
     #endregion

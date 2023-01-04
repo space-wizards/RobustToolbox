@@ -36,7 +36,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Physics.Components
 {
     [ComponentReference(typeof(ILookupWorldBox2Component))]
-    [NetworkedComponent]
+    [RegisterComponent, NetworkedComponent]
     public sealed class PhysicsComponent : Component, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;

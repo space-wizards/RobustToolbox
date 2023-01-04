@@ -44,6 +44,28 @@ public abstract partial class SharedMapSystem
     /// Returns the tile offset to a chunk origin based on the provided size.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i GetChunkRelative(Vector2 tile, int chunkSize)
+    {
+        var x = MathHelper.Mod((int) Math.Floor(tile.X), chunkSize);
+        var y = MathHelper.Mod((int) Math.Floor(tile.Y), chunkSize);
+        return new Vector2i(x, y);
+    }
+
+    /// <summary>
+    /// Returns the tile offset to a chunk origin based on the provided size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i GetChunkRelative(Vector2 tile, byte chunkSize)
+    {
+        var x = MathHelper.Mod((int) Math.Floor(tile.X), chunkSize);
+        var y = MathHelper.Mod((int) Math.Floor(tile.Y), chunkSize);
+        return new Vector2i(x, y);
+    }
+
+    /// <summary>
+    /// Returns the tile offset to a chunk origin based on the provided size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2i GetChunkRelative(Vector2i tile, int chunkSize)
     {
         var x = MathHelper.Mod(tile.X, chunkSize);

@@ -54,6 +54,47 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.78.0.0
+
+### Breaking changes
+
+* Removed the obsoleted `GlobalLinearVelocity()` EntityUid helper method.
+* INetConfigurationManager now has client & server side variants. Clients can now properly set server authoritative cvars when in singleplayer mode
+* IPhysBody has been removed. Just use the physics component.
+* Physics joints haven been slightly refactored and some method signatures have changed.
+
+### New features
+
+* Added a new cvar to limit audio occlusion raycast lengths ("audio.raycast_length").
+* IRobustSerializer has new public methods for getting hashes and setting string serializer data.
+
+### Bugfixes
+
+* Fixed broken click bound checks in the `Tree` UI Control.
+* Removed erroneous debug assert in render code that was causing issued in debug mode.
+* Fixed some instances where rotation-less entities were gaining non-zero local rotation.
+
+### Other
+
+* Tickrate is now shown in the f3 debug monitors
+
+
+## 0.77.0.2
+
+### New features
+
+* Scroll containers now have public methods to get & set their scroll positions.
+
+### Bugfixes
+
+* Fixed entity spawn menu sometimes not properly updating when filtering entities.
+
+### Other
+
+* Physics contacts are now stored per-world rather than per-map. This allows the multi-threading to be applicable to every contact rather than per-map.
+* Contacts will no longer implicitly be destroyed upon bodies changing maps.
+
+
 ## 0.77.0.1
 
 ### Bugfixes

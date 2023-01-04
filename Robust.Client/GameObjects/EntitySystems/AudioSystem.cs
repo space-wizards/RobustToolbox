@@ -6,16 +6,19 @@ using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
 using Robust.Shared.Random;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -30,9 +33,13 @@ public sealed class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
+    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     private readonly List<PlayingStream> _playingClydeStreams = new();
+
+    private float _maxRayLength;
 
     /// <inheritdoc />
     public override void Initialize()
@@ -42,10 +49,13 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
         SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
+
+        CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
     }
 
     public override void Shutdown()
     {
+        CfgManager.UnsubValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged);
         foreach (var stream in _playingClydeStreams)
         {
             stream.Source.Dispose();
@@ -53,6 +63,11 @@ public sealed class AudioSystem : SharedAudioSystem
         _playingClydeStreams.Clear();
 
         base.Shutdown();
+    }
+
+    private void OnRaycastLengthChanged(float value)
+    {
+        _maxRayLength = value;
     }
 
     #region Event Handlers
@@ -101,201 +116,163 @@ public sealed class AudioSystem : SharedAudioSystem
 
     public override void FrameUpdate(float frameTime)
     {
-        // Update positions of streams every frame.
-        // Start with an initial pass to cull streams that need to be removed, and sort stuff out.
-        Span<int> validIndices = stackalloc int[_playingClydeStreams.Count];
-        var validCount = 0;
+        var xforms = GetEntityQuery<TransformComponent>();
+        var physics = GetEntityQuery<PhysicsComponent>();
+        var ourPos = _eyeManager.CurrentEye.Position;
+        var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 
-        // Initial clearing pass
         try
         {
-            var metaQuery = GetEntityQuery<MetaDataComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            int streamIndexOut = 0;
-            foreach (var stream in _playingClydeStreams)
-            {
-                // Note: continue; in here is expected to have one of two outcomes:
-                // + StreamDone
-                // + streamIndexOut++
-
-                // Occlusion recalculation parallel needs a way to know which targets to actually recalculate for.
-                // That in mind start by setting this to false (it's set to true later when relevant)
-                stream.OcclusionValidTemporary = false;
-
-                if (!stream.Source.IsPlaying)
-                {
-                    StreamDone(stream);
-                    continue;
-                }
-
-                MapCoordinates? mapPos = null;
-
-                if (stream.TrackingCoordinates != null)
-                {
-                    var coords = stream.TrackingCoordinates.Value;
-                    mapPos = coords.ToMap(EntityManager);
-
-                    if (!_mapManager.MapExists(mapPos.Value.MapId))
-                    {
-                        // Map no longer exists, delete stream.
-                        StreamDone(stream);
-                        continue;
-                    }
-                }
-                else if (stream.TrackingEntity.IsValid())
-                {
-                    if (!metaQuery.TryGetComponent(stream.TrackingEntity, out var meta) ||
-                        Deleted(stream.TrackingEntity, meta) ||
-                        !xformQuery.TryGetComponent(stream.TrackingEntity, out var xform))
-                    {
-                        StreamDone(stream);
-                        continue;
-                    }
-
-                    mapPos = xform.MapPosition;
-                }
-
-                if (mapPos == null || mapPos.Value.MapId == MapId.Nullspace)
-                {
-                    // Positionless audio
-                    if (stream.TrackingFallbackCoordinates == null)
-                    {
-                        validIndices[validCount] = streamIndexOut;
-                        validCount++;
-                    }
-                    else
-                    {
-                        mapPos = stream.TrackingFallbackCoordinates?.ToMap(EntityManager);
-                    }
-                }
-
-                if (mapPos != null && mapPos.Value.MapId != MapId.Nullspace)
-                {
-                    stream.MapCoordinatesTemporary = mapPos.Value;
-                    // this has a map position so it's good to go to the other processes
-                    validIndices[validCount] = streamIndexOut;
-                    // check for occlusion recalc
-                    stream.OcclusionValidTemporary = mapPos.Value.MapId == _eyeManager.CurrentMap;
-                    validCount++;
-                }
-
-                // This stream gets to live!
-                streamIndexOut++;
-            }
+            Parallel.ForEach(_playingClydeStreams, opts, (stream) => ProcessStream(stream, ourPos, xforms, physics));
         }
         finally
         {
-            // if this doesn't get ran (exception...) then the list can fill up with disposed garbage.
-            // that will then throw on IsPlaying.
-            // meaning it'll break the entire audio system.
             _playingClydeStreams.RemoveAll(p => p.Done);
         }
+    }
 
-        var ourPos = _eyeManager.CurrentEye.Position.Position;
-
-        // Occlusion calculation pass
-
-        Parallel.For(0, _playingClydeStreams.Count, i =>
+    private void ProcessStream(PlayingStream stream,
+        MapCoordinates listener,
+        EntityQuery<TransformComponent> xforms,
+        EntityQuery<PhysicsComponent> physics)
+    {
+        if (!stream.Source.IsPlaying)
         {
-            var stream = _playingClydeStreams[i];
-            // As set earlier.
-            if (stream.OcclusionValidTemporary)
-            {
-                var pos = stream.MapCoordinatesTemporary;
-                var sourceRelative = ourPos - pos.Position;
-                var occlusion = 0f;
-                if (sourceRelative.Length > 0)
-                {
-                    occlusion = _broadPhaseSystem.IntersectRayPenetration(pos.MapId,
-                        new CollisionRay(pos.Position, sourceRelative.Normalized, OcclusionCollisionMask),
-                        sourceRelative.Length, stream.TrackingEntity);
-                }
-
-                stream.OcclusionTemporary = occlusion;
-            }
-        });
-
-        // Occlusion apply / Attenuation / position / velocity pass
-        // Note that for streams for which MapCoordinatesTemporary isn't updated, they don't get here
-        for (var i = 0; i < validCount; i++)
-        {
-            var stream = _playingClydeStreams[validIndices[i]];
-            var pos = stream.MapCoordinatesTemporary;
-
-            if (stream.OcclusionValidTemporary)
-                stream.Source.SetOcclusion(stream.OcclusionTemporary);
-
-            if (stream.Source.IsGlobal)
-            {
-                stream.Source.SetVolume(stream.Volume);
-            }
-            else if (pos.MapId != _eyeManager.CurrentMap)
-                stream.Source.SetVolumeDirect(0f);
-            else
-            {
-                var sourceRelative = ourPos - pos.Position;
-                // OpenAL uses MaxDistance to limit how much attenuation can *reduce* the gain,
-                // and doesn't do any culling. We however cull based on MaxDistance, because
-                // this is what all current code that uses MaxDistance expects and because
-                // we don't need the OpenAL behaviour.
-                if (sourceRelative.Length > stream.MaxDistance)
-                    stream.Source.SetVolumeDirect(0f);
-                else
-                {
-                    // OpenAL also limits the distance to <= AL_MAX_DISTANCE, but since we cull
-                    // sources that are further away than stream.MaxDistance, we don't do that.
-                    var distance = MathF.Max(stream.ReferenceDistance, sourceRelative.Length);
-                    float gain;
-
-                    // Technically these are formulas for gain not decibels but EHHHHHHHH.
-                    switch (stream.Attenuation)
-                    {
-                        case Attenuation.Default:
-                            gain = 1f;
-                            break;
-                        // You thought I'd implement clamping per source? Hell no that's just for the overall OpenAL setting
-                        // I didn't even wanna implement this much for linear but figured it'd be cleaner.
-                        case Attenuation.InverseDistanceClamped:
-                        case Attenuation.InverseDistance:
-                            gain = stream.ReferenceDistance
-                                   / (stream.ReferenceDistance
-                                      + stream.RolloffFactor * (distance - stream.ReferenceDistance));
-
-                            break;
-                        case Attenuation.LinearDistanceClamped:
-                        case Attenuation.LinearDistance:
-                            gain = 1f
-                                   - stream.RolloffFactor
-                                   * (distance - stream.ReferenceDistance)
-                                   / (stream.MaxDistance - stream.ReferenceDistance);
-
-                            break;
-                        case Attenuation.ExponentDistanceClamped:
-                        case Attenuation.ExponentDistance:
-                            gain = MathF.Pow(distance / stream.ReferenceDistance, -stream.RolloffFactor);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException(
-                                $"No implemented attenuation for {stream.Attenuation.ToString()}");
-                    }
-
-                    var volume = MathF.Pow(10, stream.Volume / 10);
-                    var actualGain = MathF.Max(0f, volume * gain);
-
-                    stream.Source.SetVolumeDirect(actualGain);
-                    var audioPos = stream.Attenuation != Attenuation.NoAttenuation ? pos.Position : ourPos;
-
-                    if (!stream.Source.SetPosition(audioPos))
-                    {
-                        Logger.Warning("Interrupting positional audio, can't set position.");
-                        stream.Source.StopPlaying();
-                    }
-
-                    if (stream.TrackingEntity != default)
-                        stream.Source.SetVelocity(stream.TrackingEntity.GlobalLinearVelocity());
-                }
-            }
+            StreamDone(stream);
+            return;
         }
+
+        if (stream.Source.IsGlobal)
+        {
+            DebugTools.Assert(stream.TrackingCoordinates == null
+                && stream.TrackingEntity == null
+                && stream.TrackingFallbackCoordinates == null);
+
+            // Does this really have to be set every frame???
+            stream.Source.SetVolume(stream.Volume);
+            return;
+        }
+
+        DebugTools.Assert(stream.TrackingCoordinates != null
+            || stream.TrackingEntity != null
+            || stream.TrackingFallbackCoordinates != null);
+
+        // Get audio Position
+        if (!TryGetStreamPosition(stream, xforms, out var mapPos)
+            || mapPos == MapCoordinates.Nullspace
+            || mapPos.Value.MapId != listener.MapId)
+        {
+            StreamDone(stream);
+            return;
+        }
+
+        // Max distance check
+        var delta = mapPos.Value.Position - listener.Position;
+        var distance = delta.Length;
+        if (distance > stream.MaxDistance)
+        {
+            stream.Source.SetVolumeDirect(0);
+            return;
+        }
+
+        // Update audio occlusion
+        float occlusion = 0;
+        if (distance > 0.1)
+        {
+            var rayLength = MathF.Min(distance, _maxRayLength);
+            var ray = new CollisionRay(listener.Position, delta/distance, OcclusionCollisionMask);
+            occlusion = _broadPhaseSystem.IntersectRayPenetration(listener.MapId, ray, rayLength, stream.TrackingEntity);
+        }
+        stream.Source.SetOcclusion(occlusion);
+
+        // Update attenuation dependent volume.
+        UpdatePositionalVolume(stream, distance);
+
+        // Update audio positions.
+        var audioPos = stream.Attenuation != Attenuation.NoAttenuation ? mapPos.Value : listener;
+        if (!stream.Source.SetPosition(audioPos.Position))
+        {
+            Logger.Warning("Interrupting positional audio, can't set position.");
+            stream.Source.StopPlaying();
+            return;
+        }
+
+        // Make race cars go NYYEEOOOOOMMMMM
+        if (stream.TrackingEntity != null && physics.TryGetComponent(stream.TrackingEntity, out var physicsComp))
+        {
+            // This actually gets the tracked entity's xform & iterates up though the parents for the second time. Bit
+            // inefficient.
+            var velocity = _physics.GetMapLinearVelocity(stream.TrackingEntity.Value, physicsComp, null, xforms, physics);
+            stream.Source.SetVelocity(velocity);
+        }
+    }
+
+    private void UpdatePositionalVolume(PlayingStream stream, float distance)
+    {
+        // OpenAL also limits the distance to <= AL_MAX_DISTANCE, but since we cull
+        // sources that are further away than stream.MaxDistance, we don't do that.
+        distance = MathF.Max(stream.ReferenceDistance, distance);
+        float gain;
+
+        // Technically these are formulas for gain not decibels but EHHHHHHHH.
+        switch (stream.Attenuation)
+        {
+            case Attenuation.Default:
+                gain = 1f;
+                break;
+            // You thought I'd implement clamping per source? Hell no that's just for the overall OpenAL setting
+            // I didn't even wanna implement this much for linear but figured it'd be cleaner.
+            case Attenuation.InverseDistanceClamped:
+            case Attenuation.InverseDistance:
+                gain = stream.ReferenceDistance
+                        / (stream.ReferenceDistance
+                            + stream.RolloffFactor * (distance - stream.ReferenceDistance));
+
+                break;
+            case Attenuation.LinearDistanceClamped:
+            case Attenuation.LinearDistance:
+                gain = 1f
+                        - stream.RolloffFactor
+                        * (distance - stream.ReferenceDistance)
+                        / (stream.MaxDistance - stream.ReferenceDistance);
+
+                break;
+            case Attenuation.ExponentDistanceClamped:
+            case Attenuation.ExponentDistance:
+                gain = MathF.Pow(distance / stream.ReferenceDistance, -stream.RolloffFactor);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    $"No implemented attenuation for {stream.Attenuation}");
+        }
+
+        var volume = MathF.Pow(10, stream.Volume / 10);
+        var actualGain = MathF.Max(0f, volume * gain);
+        stream.Source.SetVolumeDirect(actualGain);
+    }
+
+    private bool TryGetStreamPosition(PlayingStream stream, EntityQuery<TransformComponent> xformQuery, [NotNullWhen(true)] out MapCoordinates? mapPos)
+    {
+        if (stream.TrackingCoordinates != null)
+        {
+            mapPos = stream.TrackingCoordinates.Value.ToMap(EntityManager);
+            return mapPos != MapCoordinates.Nullspace;
+        }
+
+        if (xformQuery.TryGetComponent(stream.TrackingEntity, out var xform))
+        {
+            mapPos = new MapCoordinates(_xformSys.GetWorldPosition(xform, xformQuery), xform.MapID);
+            return true;
+        }
+
+        if (stream.TrackingFallbackCoordinates != null)
+        {
+            mapPos = stream.TrackingFallbackCoordinates.Value.ToMap(EntityManager);
+            return mapPos != MapCoordinates.Nullspace;
+        }
+
+        mapPos = MapCoordinates.Nullspace;
+        return false;
     }
 
     private static void StreamDone(PlayingStream stream)
@@ -477,30 +454,11 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         public uint? NetIdentifier;
         public IClydeAudioSource Source = default!;
-        public EntityUid TrackingEntity = default!;
+        public EntityUid? TrackingEntity;
         public EntityCoordinates? TrackingCoordinates;
         public EntityCoordinates? TrackingFallbackCoordinates;
         public bool Done;
         public float Volume;
-
-        /// <summary>
-        /// Temporary holding value to determine if calculating occlusion for this stream is a good idea.
-        /// Because some of this stuff is parallelized for performance, these can't be stackalloc'd arrays.
-        /// </summary>
-        public bool OcclusionValidTemporary;
-        /// <summary>
-        /// Temporary holding value containing the occlusion value of the stream.
-        /// Because some of this stuff is parallelized for performance, these can't be stackalloc'd arrays.
-        /// </summary>
-        public float OcclusionTemporary;
-        /// <summary>
-        /// Temporary holding value containing the map coordinates of the stream.
-        /// Because some of this stuff is parallelized for performance, these can't be stackalloc'd arrays.
-        /// Note that if the map coordinates aren't available, this isn't updated.
-        /// Only streams for which map coordinates are available go into the "valid" stackalloc'd array.
-        /// (Occlusion uses the OcclusionValidTemporary field as it can't access stackalloc'd arrays.)
-        /// </summary>
-        public MapCoordinates MapCoordinatesTemporary;
 
         public float MaxDistance;
         public float ReferenceDistance;

@@ -49,5 +49,9 @@ namespace Robust.Shared.Serialization
         Task Handshake(INetChannel sender);
 
         event Action ClientHandshakeComplete;
+
+        byte[] GetSerializableTypesHash();
+
+        (byte[] Hash, byte[] Package) GetStringSerializerPackage();
     }
 }

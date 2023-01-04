@@ -186,6 +186,9 @@ namespace Robust.Shared.GameObjects
             }
             set
             {
+                if (NoLocalRotation)
+                    return;
+
                 var current = WorldRotation;
                 var diff = value - current;
                 LocalRotation += diff;

@@ -63,14 +63,14 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// </summary>
         public WeldJoint() {}
 
-        public WeldJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner, bodyB.Owner)
+        internal WeldJoint(EntityUid bodyA, EntityUid bodyB, Vector2 anchorA, Vector2 anchorB, float referenceAngle) : base(bodyA, bodyB)
         {
-            LocalAnchorA = bodyA.GetLocalPoint(anchor);
-            LocalAnchorB = bodyB.GetLocalPoint(anchor);
-            ReferenceAngle = (float) (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(bodyB.Owner).WorldRotation - IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(bodyA.Owner).WorldRotation).Theta;
+            LocalAnchorA = anchorA;
+            LocalAnchorB = anchorB;
+            ReferenceAngle = referenceAngle;
         }
 
-        public WeldJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}
+        internal WeldJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}
 
         internal WeldJoint(WeldJointState state) : base(state)
         {

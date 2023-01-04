@@ -61,15 +61,13 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             physSystem.WakeBody(offGridBody);
 
             // Alright just a quick validation then we start the actual damn test.
-
-            var physicsMap = entManager.GetComponent<PhysicsMapComponent>(mapManager.GetMapEntityId(mapId));
-            physSystem.Step(physicsMap, 0.001f, false);
+            physSystem.Update(0.001f);
 
             Assert.That(onGridBody.ContactCount, Is.EqualTo(0));
 
             // Alright now move the grid on top of the off grid body, run physics for a frame and see if they contact
             entManager.GetComponent<TransformComponent>(grid.Owner).LocalPosition = new Vector2(10f, 10f);
-            physSystem.Step(physicsMap, 0.001f, false);
+            physSystem.Update(0.001f);
 
             Assert.That(onGridBody.ContactCount, Is.EqualTo(1));
         });

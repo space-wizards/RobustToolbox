@@ -277,21 +277,8 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     public void Step(PhysicsMapComponent component, float frameTime, bool prediction)
     {
-        // Box2D does this at the end of a step and also here when there's a fixture update.
-        // Given external stuff can move bodies we'll just do this here.
-        // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-        _broadphase.FindNewContacts(component, component.MapId);
-
         var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
         var dtRatio = component._invDt0 * frameTime;
-
-        var updateBeforeSolve = new PhysicsUpdateBeforeMapSolveEvent(prediction, component, frameTime);
-        RaiseLocalEvent(ref updateBeforeSolve);
-
-        component.ContactManager.Collide();
-        // Don't run collision behaviors during FrameUpdate?
-        if (!prediction)
-            component.ContactManager.PreSolve(frameTime);
 
         // Integrate velocities, solve velocity constraints, and do integration.
         Solve(component, frameTime, dtRatio, invDt, prediction);
@@ -320,15 +307,6 @@ public abstract partial class SharedPhysicsSystem
 
     private void Solve(PhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
     {
-        var contactNode = component.ContactManager._activeContacts.First;
-
-        while (contactNode != null)
-        {
-            var contact = contactNode.Value;
-            contactNode = contactNode.Next;
-            contact.Flags &= ~ContactFlags.Island;
-        }
-
         // Build and simulated islands from awake bodies.
         _bodyStack.EnsureCapacity(component.AwakeBodies.Count);
         _islandSet.EnsureCapacity(component.AwakeBodies.Count);

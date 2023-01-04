@@ -47,7 +47,6 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly   IManifoldManager _manifoldManager = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly   IParallelManager _parallel = default!;
-        [Dependency] private readonly   IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly   IConfigurationManager _cfg = default!;
         [Dependency] private readonly   IDependencyCollection _deps = default!;
         [Dependency] private readonly   SharedBroadphaseSystem _broadphase = default!;
@@ -328,7 +327,6 @@ namespace Robust.Shared.Physics.Systems
                 }
 
                 _traversal.ProcessMovement();
-                _physicsManager.ClearTransforms();
             }
         }
 

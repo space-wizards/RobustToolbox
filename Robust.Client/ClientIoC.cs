@@ -89,7 +89,7 @@ namespace Robust.Client
             deps.Register<IMidiManager, MidiManager>();
             deps.Register<IAuthManager, AuthManager>();
             deps.Register<ProfViewManager>();
-            deps.Register<IPhysicsManager, PhysicsManager>();
+
             switch (mode)
             {
                 case GameController.DisplayMode.Headless:

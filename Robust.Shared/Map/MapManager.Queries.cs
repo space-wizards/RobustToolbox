@@ -159,7 +159,7 @@ internal partial class MapManager
         [NotNullWhen(true)] out MapGridComponent? grid)
     {
         // Need to enlarge the AABB by at least the grid shrinkage size.
-        var aabb = new Box2(worldPos - 0.5f, worldPos + 0.5f);
+        var aabb = new Box2(worldPos - 0.2f, worldPos + 0.2f);
 
         grid = null;
         var state = (grid, worldPos, xformQuery);
@@ -183,7 +183,6 @@ internal partial class MapManager
 
             var chunk = iGrid.GetOrAddChunk(chunkIndices);
             var chunkRelative = SharedMapSystem.GetChunkRelative(localPos, iGrid.ChunkSize);
-
             var chunkTile = chunk.GetTile(chunkRelative);
 
             if (chunkTile.IsEmpty) return true;

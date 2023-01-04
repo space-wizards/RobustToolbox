@@ -116,6 +116,11 @@ namespace Robust.Shared.Map
             return _tiles[xIndex, yIndex];
         }
 
+        public Tile GetTile(Vector2i indices)
+        {
+            return _tiles[indices.X, indices.Y];
+        }
+
         /// <summary>
         ///     Replaces a single tile inside of the chunk.
         /// </summary>

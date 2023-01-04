@@ -88,7 +88,7 @@ namespace Robust.Shared.GameObjects
             _gridBuffer.Clear();
 
             // Change parent if necessary
-            if (_mapManager.TryFindGridAt(xform.MapID, mapPos, _gridBuffer, xforms, bodies, out var grid))
+            if (_mapManager.TryFindGridAt(xform.MapID, mapPos, out var grid))
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
                 if (grid.Owner != xform.GridUid)

@@ -802,7 +802,7 @@ namespace Robust.Shared.Map.Components
         /// <inheritdoc />
         public EntityCoordinates GridTileToLocal(Vector2i gridTile)
         {
-            return new(base.Owner,
+            return new(Owner,
                 (gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f)));
         }
 

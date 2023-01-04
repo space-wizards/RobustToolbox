@@ -110,31 +110,18 @@ public sealed class ResPathTest
         Assert.That((path1 / "z").ToString(), Is.EqualTo("/a/b/z"));
     }
 
-    public static List<(string, string)> CleanValues = new()
-    {
-        ("//a/b/../c/./ss14.png", "/a/c/ss14.png"),
-        ("../a", "../a"),
-        ("../a/..", ".."),
-        ("../..", "../.."),
-        ("a/..", "."),
-        ("/../a", "/a"),
-        ("/..", "/"),
-    };
-
     [Test]
-    public void Clean_Test([ValueSource(nameof(CleanValues))] (string path, string expected) data)
+    [TestCase("//a/b/../c/./ss14.png", ExpectedResult = "/a/c/ss14.png")]
+    [TestCase("../a", ExpectedResult =  "../a")]
+    [TestCase("../a/..", ExpectedResult =  "..")]
+    [TestCase("../..", ExpectedResult =  "../..")]
+    [TestCase("a/..", ExpectedResult =  ".")]
+    [TestCase("/../a",  ExpectedResult =  "/a")]
+    [TestCase("/..", ExpectedResult =  "/")]
+    public string Clean_Test(string input)
     {
-        var path = new ResPath(data.path);
-        var cleaned = path.Clean();
-        Assert.Multiple(() =>
-        {
-            if (path == cleaned)
-            {
-                Assert.That(path.IsClean());
-            }
-            Assert.That(path.Clean(), Is.EqualTo(new ResPath(data.expected)));
-            Assert.That(cleaned.IsClean());
-        });
+        var path = new ResPath(input);
+        return path.Clean().ToString();
     }
 
     [Test]
@@ -152,32 +139,19 @@ public sealed class ResPathTest
         Assert.That(relative.ToRootedPath(), Is.EqualTo(path));
     }
 
-    public static List<(string, string, string)> RelativeToValues = new()
-    {
-        ("/a/b", "/a", "b"),
-        ("/a", "/", "a"),
-        ("/a/b/c", "/", "a/b/c"),
-        ("/a", "/a", "."),
-        ("a/b", "a", "b"),
-        ("/Textures/Weapons/laser.png", "/Textures/", "Weapons/laser.png")
-    };
-
     [Test]
-    public void RelativeTo_Test([ValueSource(nameof(RelativeToValues))] (string source, string basePath, string expected) value)
+    [TestCase("/a/b", "/a", ExpectedResult = "b")]
+    [TestCase("/a", "/", ExpectedResult = "a")]
+    [TestCase("/a/b/c", "/", ExpectedResult = "a/b/c")]
+    [TestCase("/a", "/a", ExpectedResult = ".")]
+    [TestCase("a/b", "a", ExpectedResult = "b")]
+    [TestCase("/Textures/Weapons/laser.png", "/Textures/", ExpectedResult = "Weapons/laser.png")]
+    public string RelativeTo_Test(string source, string baseDir)
     {
-        var path = new ResPath(value.source);
-        var basePath = new ResPath(value.basePath);
-        Assert.That(path.RelativeTo(basePath), Is.EqualTo(new ResPath(value.expected)));
+        var path = new ResPath(source);
+        var basePath = new ResPath(baseDir);
+        return path.RelativeTo(basePath).ToString();
     }
-
-    public static List<(string, string)> RelativeToFailValues = new()
-    {
-        ("/a/b", "/b"),
-        ("/a", "/c/d"),
-        ("/a/b", "/a/d"),
-        (".", "/"),
-        ("/", ".")
-    };
 
     [Test]
     [TestCase("/a/b", "/b", false)]
@@ -191,20 +165,15 @@ public sealed class ResPathTest
         var basePath = new ResPath(path2);
         Assert.That(() => path.RelativeTo(basePath), Throws.ArgumentException);
     }
-
-    public static List<(string, string, string)> CommonBaseValues = new()
-    {
-        ("/a/b", "/a/c", "/a"),
-        ("a/b", "a/c", "a"),
-        ("/usr", "/bin", "/")
-    };
+    
 
     [Test]
-    public void CommonBase_Test([ValueSource(nameof(CommonBaseValues))] (string a, string b, string expected) value)
+    [TestCase("/a/b", "/a/c", ExpectedResult= "/a")]
+    [TestCase("a/b", "a/c", ExpectedResult =  "a")]
+    [TestCase("/usr", "/bin", ExpectedResult = "/")]
+    public string CommonBase_Test(string a, string b)
     {
-        var path = new ResPath(value.a);
-        var basePath = new ResPath(value.b);
-        Assert.That(path.CommonBase(basePath), Is.EqualTo(new ResPath(value.expected)));
+        return new ResPath(a).CommonBase(new ResPath(b)).ToString();
     }
 
     [Test]

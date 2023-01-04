@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using BenchmarkDotNet.Exporters.Csv;
 using Microsoft.Diagnostics.Tracing.Parsers.FrameworkEventSource;
 using NUnit.Framework;
 using Robust.Shared.Utility;
@@ -12,120 +13,94 @@ namespace Robust.UnitTesting.Shared.Utility;
 [TestOf(typeof(ResPath))]
 public sealed class ResPathTest
 {
-    [Test]
-    [TestCase("/Textures", new[]{"Textures"}, new[]{"Textures"})]
-    [TestCase("/Textures/", new[]{"Textures"}, new[]{"Textures"})]
-    public void IteratorTest(string input, string[] expectedSegments, string[] expectedRevSegments)
-    {
-        var res = new ResPath(input);
-        var segment = res.Segments().ToArray();
-        var reverseSegment = res.ReverseSegments().ToArray();
-        Assert.That(segment, Is.EqualTo(expectedSegments));
-        Assert.That(reverseSegment, Is.EqualTo(expectedRevSegments));
-    }
-    
-    
-    
-    public static List<(string, string)> InputCleanValues = new()
-    {
-        ("/Textures", "/Textures"),
-        ("Textures", "Textures"),
-        ("Textures/", "Textures"),
-        ("Textures/Laser.png", "Textures/Laser.png"),
-        ("Textures//Laser.png", "Textures/Laser.png"),
-        ("Textures/..//Radio.png/", "Textures/../Radio.png"),
-        ("", "."),
-        (".", "."),
-        ("./foo", "foo"),
-        ("foo/.", "foo"),
-        ("foo/./bar", "foo/bar"),
-        ("./", "."),
-        ("/.", "/"),
-        ("/", "/"),
-        (" ", " "), // Note the spaces here.
-        (" / ", " / "),
-        (". ", ". ")
-    };
-
     // Tests whether input and output remains unchanged.
     [Test]
-    public void InputClean_Test([ValueSource(nameof(InputCleanValues))] (string input, string expected) path)
+    [TestCase("/Textures", "/Textures")]
+    [TestCase("Textures", "Textures")]
+    [TestCase("Textures/", "Textures")]
+    [TestCase("Textures/Laser.png", "Textures/Laser.png")]
+    [TestCase("Textures//Laser.png", "Textures/Laser.png")]
+    [TestCase("Textures/..//Radio.png/", "Textures/../Radio.png")]
+    [TestCase("", ".")]
+    [TestCase(".", ".")]
+    [TestCase("./foo", "foo")]
+    [TestCase("foo/.", "foo")]
+    [TestCase("foo/./bar", "foo/bar")]
+    [TestCase("./", ".")]
+    [TestCase("/.", "/")]
+    [TestCase("/", "/")]
+    [TestCase(" ", " ")] // Note the spaces here]
+    [TestCase(" / ", " / ")]
+    [TestCase(". ", ". ")]
+    public void InputClean_Test(string input, string expected)
     {
-        var resPath = new ResPath(path.input);
-        Assert.That(resPath.ToString(), Is.EqualTo(path.expected));
+        var resPath = new ResPath(input);
+        Assert.That(resPath.ChangeSeparator("/"), Is.EqualTo(expected));
     }
-
-    public static List<(string, string)> ExtensionValues = new()
+    
+    [Test]
+    [TestCase(@"foo", ExpectedResult = @"")]
+    [TestCase(@"foo.png", ExpectedResult = @"png")]
+    [TestCase(@"test/foo.png", ExpectedResult = @"png")]
+    [TestCase(@"..png", ExpectedResult = @"png")]
+    [TestCase(@".bashrc", ExpectedResult = @"")]
+    [TestCase(@"x.y.z", ExpectedResult = @"z")]
+    public string ExtensionTest(string input)
     {
-        ("foo", ""),
-        ("foo.png", "png"),
-        ("test/foo.png", "png"),
-        (".bashrc", ""),
-        ("..png", "png"),
-        ("x.y.z", "z")
-    };
+        return new ResPath(input).Extension;
+    }
 
     [Test]
-    public void Extension_Test([ValueSource(nameof(ExtensionValues))] (string path, string expected) data)
+    [TestCase(@"", ExpectedResult = @".")]
+    [TestCase(@".", ExpectedResult = @".")]
+    [TestCase(@"foo", ExpectedResult = @"foo")]
+    [TestCase(@"foo.png", ExpectedResult = @"foo.png")]
+    [TestCase(@"test/foo.png", ExpectedResult = @"foo.png")]
+    [TestCase(@"derp/.bashrc", ExpectedResult = @".bashrc")]
+    [TestCase(@"..png", ExpectedResult = @"..png")]
+    [TestCase(@"x/y/z", ExpectedResult = @"z")]
+    [TestCase(@"/bar", ExpectedResult = @"bar")]
+    [TestCase(@"bar/", ExpectedResult = @"bar")] // Trailing / gets trimmed.
+    public string FilenameTest(string input)
     {
-        var respath = new ResPath(data.path);
-        Assert.That(respath.Extension, Is.EqualTo(data.expected));
+        return new ResPath(input).Filename;
     }
-
-    public static List<(string, string)> FilenameValues = new()
-    {
-        ("foo", "foo"),
-        ("foo.png", "foo.png"),
-        ("x/y/z", "z"),
-        ("/bar", "bar"),
-        ("foo/", "foo") // Trailing / gets trimmed.
-    };
+    
 
     [Test]
-    public void Filename_Test([ValueSource(nameof(FilenameValues))] (string path, string expected) data)
+    [TestCase(@"", ExpectedResult = @".")]
+    [TestCase(@".", ExpectedResult = @".")]
+    [TestCase(@"foo", ExpectedResult = @"foo")]
+    [TestCase(@"foo.png", ExpectedResult = @"foo")]
+    [TestCase(@"test/foo.png", ExpectedResult = @"foo")]
+    [TestCase(@"derp/.bashrc", ExpectedResult = @".bashrc")]
+    [TestCase(@"..png", ExpectedResult = @".")]
+    [TestCase(@"x.y.z", ExpectedResult = @"x.y")]
+    public string FilenameWithoutExtension(string input)
     {
-        var respath = new ResPath(data.path);
-        Assert.That(respath.Filename, Is.EqualTo(data.expected));
-    }
+         return new ResPath(input).FilenameWithoutExtension();
 
-    public static List<(string, string)> FilenameWithoutExtensionValues = new()
-    {
-        ("foo", "foo"),
-        ("foo.png", "foo"),
-        ("test/foo.png", "foo"),
-        ("derp/.bashrc", ".bashrc"),
-        ("..png", "."),
-        ("x.y.z", "x.y")
-    };
+    }
 
     [Test]
-    public void FilenameWithoutExtension_Test([ValueSource(nameof(FilenameWithoutExtensionValues))] (string path, string expected) data)
-    {
-        var respath = new ResPath(data.path);
-        Assert.That(respath.FilenameWithoutExtension, Is.EqualTo(data.expected));
-    }
-
     [TestCase(@"", ExpectedResult = @".")]
     [TestCase(@".", ExpectedResult = @".")]
     [TestCase(@"/foo/bar", ExpectedResult = @"/foo")]
+    [TestCase(@"/foo/bar/", ExpectedResult = @"/foo/bar")] //breaking change!!
+    [TestCase(@"/foo/bar/x", ExpectedResult = @"/foo/bar")] 
     [TestCase(@"/foo/bar.txt", ExpectedResult = @"/foo")]
     public string DirectoryTest(string path)
     {
-        return new ResPath(path).Directory;
+        return new ResPath(path).Directory("/");
     }
 
     [Test]
-    public void ChangeSeparator_Test()
+    [TestCase(@"a/b/c", "👏", ExpectedResult = "a👏b👏c")]
+    [TestCase(@"/a/b/c", "👏", ExpectedResult = "👏a👏b👏c")]
+    [TestCase(@"/a/b/c", "\\",  ExpectedResult= @"\a\b\c")]
+    public string ChangeSeparatorTest(string input, string separator)
     {
-        var respath = new ResPath("a/b/c").ChangeSeparator("👏");
-        Assert.That(respath, Is.EqualTo("a👏b👏c"));
-    }
-
-    [Test]
-    public void ChangeSeparatorRooted_Test()
-    {
-        var respath = new ResPath("/a/b/c").ChangeSeparator("👏");
-        Assert.That(respath, Is.EqualTo("👏a👏b👏c"));
+        return new ResPath(input).ChangeSeparator(separator);
     }
 
     [Test]
@@ -207,10 +182,15 @@ public sealed class ResPathTest
     };
 
     [Test]
-    public void RelativeToFail_Test([ValueSource(nameof(RelativeToFailValues))] (string source, string basePath) value)
+    [TestCase("/a/b", "/b", false)]
+    [TestCase("/a", "/c/d", false)]
+    [TestCase("/a/b", "/a/d", false)]
+    [TestCase(".", "/", false)]
+    [TestCase("/", ".", false)]
+    public void RelativeToFail_Test(string path1, string path2, bool isRelative)
     {
-        var path = new ResPath(value.source);
-        var basePath = new ResPath(value.basePath);
+        var path = new ResPath(path1);
+        var basePath = new ResPath(path2);
         Assert.That(() => path.RelativeTo(basePath), Throws.ArgumentException);
     }
 

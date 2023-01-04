@@ -58,6 +58,8 @@ namespace Robust.UnitTesting.Shared.Utility
         public static List<(string, string)> Filename_Values = new()
         {
             ("foo", "foo"),
+            ("", ""),
+            (".", "."),
             ("foo.png", "foo.png"),
             ("x/y/z", "z"),
             ("/bar", "bar"),
@@ -73,6 +75,8 @@ namespace Robust.UnitTesting.Shared.Utility
 
         public static List<(string, string)> FilenameWithoutExtension_Values = new()
         {
+            ("", "."),
+            (".", "."),
             ("foo", "foo"),
             ("foo.png", "foo"),
             ("test/foo.png", "foo"),
@@ -91,6 +95,8 @@ namespace Robust.UnitTesting.Shared.Utility
         [TestCase(@"", ExpectedResult = @".")]
         [TestCase(@".", ExpectedResult = @".")]
         [TestCase(@"/foo/bar", ExpectedResult = @"/foo")]
+        [TestCase(@"/foo/bar/", ExpectedResult = @"/foo")]
+        [TestCase(@"/foo/bar/x", ExpectedResult = @"/foo/bar")]
         [TestCase(@"/foo/bar.txt", ExpectedResult = @"/foo")]
         public string DirectoryTest(string path)
         {

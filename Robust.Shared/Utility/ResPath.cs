@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Shared.Serialization;
@@ -10,6 +12,16 @@ namespace Robust.Shared.Utility;
 [PublicAPI, Serializable, NetSerializable]
 public struct ResPath : IEquatable<ResPath>
 {
+    /// <summary>
+    ///     The separator for the file system of the system we are compiling to.
+    ///     Backslash on Windows, forward slash on sane systems.
+    /// </summary>
+#if WINDOWS
+    public const string SystemSeparator = "\\";
+#else
+        public const string SystemSeparator = "/";
+#endif
+
     /// <summary>
     ///     "." as a static. Separator used is <c>/</c>.
     /// </summary>
@@ -32,45 +44,53 @@ public struct ResPath : IEquatable<ResPath>
     /// <exception cref="ArgumentNullException">Thrown if either argument is null.</exception>
     public ResPath(string path = ".", char separator = '/')
     {
-        if (separator == '.')
+        if (separator == '.' )
         {
             throw new ArgumentException("Separator may not be .  Prefer \\ or /");
         }
 
-        if (separator != '/')
+        if (path == "" || path == Self)
         {
-            // Stupid but should work in all cases (UTF-8/UTF-16 string)
-            // maybe replace with some unsafe in future for speed
-            var stringBuilder = new StringBuilder(path);
-            for (var pos = 0; pos < path.Length; pos++)
+            CanonicalResource = Self;
+            return;
+        }
+
+        var sb = new StringBuilder(path.Length);
+        var segments = path.Segments(separator).ToArray();
+        if (path[0] == separator)
+        {
+            sb.Append('/');
+        }
+
+        var needsSeparator = false;
+        foreach (var segment in segments)
+        {
+            if ((segment == "." && segments.Length != 0 ) || segment == "")
             {
-                if (path[pos] == separator)
-                {
-                    stringBuilder[pos] = '/';
-                }
+                continue;
             }
 
-            CanonicalResource = stringBuilder.ToString();
+            if (needsSeparator)
+            {
+                sb.Append('/');
+            }
+
+            sb.Append(segment);
+            needsSeparator = true;
         }
-        else
-        {
-            CanonicalResource = path;
-        }
+        
+        CanonicalResource = sb.Length == 0 ? Self : sb.ToString();
+
     }
 
-    public string Directory
+    public string Directory(string separator = SystemSeparator)
     {
-        get
-        {
-            if (IsSelf) return Self;
+        if (IsSelf) return Self;
 
-            foreach (var VARIABLE in this.Segments())
-            {
-                return VARIABLE;
-            }
-
-            return "";
-        }
+        int ind = CanonicalResource.LastIndexOf('/');
+        return ind != -1
+            ? CanonicalResource[..ind]
+            : ".";
     }
 
     public bool IsSelf => CanonicalResource == Self;
@@ -79,30 +99,50 @@ public struct ResPath : IEquatable<ResPath>
     {
         get
         {
-            if (IsSelf) return Self;
+            var filename = Filename;
+            if (filename == "") return "";
 
-            foreach (var VARIABLE in this.Segments())
-            {
-                return VARIABLE;
-            }
-
-            return "";
+            var ind = filename.LastIndexOf('.') + 1;
+            return ind <= 1
+                ? ""
+                : filename[ind..];
         }
+    }
+
+    public string FilenameWithoutExtension()
+    {
+        var filename = Filename;
+
+        if (filename == "") return "";
+        var ind = filename.LastIndexOf('.');
+        return ind <= 0
+            ? filename
+            : filename[..ind];
     }
 
     public string Filename
     {
         get
         {
-            if (IsSelf) return Self;
+            if (CanonicalResource == Self || CanonicalResource == "")
+                return Self;
 
-            foreach (var VARIABLE in this.Segments())
-            {
-                return VARIABLE;
-            }
-
-            return "";
+            // CanonicalResource[..^1] avoids last char if its a folder, it won't matter if 
+            // it's a filename
+            // Uses +1 to skip `/` found in or starts from beginning of string
+            // if we found nothing (ind == -1)
+            var ind = CanonicalResource[..^1].LastIndexOf('/') + 1;
+            return IsDirectory()
+                ? CanonicalResource[ind .. ^1] // Omit last `/`  
+                : CanonicalResource[ind..];
         }
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsDirectory()
+    {
+        return CanonicalResource[^1] == '/';
     }
 
     public bool Equals(ResPath other)
@@ -160,9 +200,10 @@ public struct ResPath : IEquatable<ResPath>
         throw new NotImplementedException();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsRooted()
     {
-        throw new NotImplementedException();
+        return CanonicalResource[0] == '/';
     }
 
     public ResPath ToRootedPath()
@@ -185,15 +226,18 @@ public struct ResPath : IEquatable<ResPath>
         throw new NotImplementedException();
     }
 
-    public string ChangeSeparator(string s)
+    public string ChangeSeparator(string newSeparator)
     {
-        throw new NotImplementedException();
+        if (newSeparator is "." or "\0")
+        {
+            throw new ArgumentException("New separator can't be `.` or `NULL`");
+        }
+
+        return newSeparator == "/"
+            ? CanonicalResource
+            : CanonicalResource.Replace("/", newSeparator);
     }
 
-    public string FilenameWithoutExtension()
-    {
-        throw new NotImplementedException();
-    }
 
     public ResPath CommonBase(ResPath basePath)
     {
@@ -203,46 +247,42 @@ public struct ResPath : IEquatable<ResPath>
 
 public struct SegmentEnumerator : IEnumerator<string>
 {
-    private readonly ResPath _owner;
-    private int _positionStart;
+    private readonly string _owner;
+    private int _pos;
     private int _len;
+    private readonly char _separator;
 
-    public SegmentEnumerator(ResPath resPath)
+    public SegmentEnumerator(string resPath, char separator = '/')
     {
         _owner = resPath;
-        _positionStart = 0;
+        _separator = separator;
+        _pos = _owner.Length > 1 && _owner[0] == _separator ? 0 : -1;
         _len = 0;
     }
 
     public bool MoveNext()
     {
-        if (_positionStart + _len >= _owner.CanonicalResource.Length)
-        {
+        _pos += _len;
+        if (++_pos > _owner.Length)
             return false;
-        }
 
-        _positionStart += _len;
-        if (_owner.CanonicalResource[_positionStart] == '/')
-        {
-            _positionStart++;
-        }
+        var ind = _owner.IndexOf(_separator, _pos);
+        _len = ind == -1
+            ? _owner.Length - _pos
+            : ind - _pos;
 
-        var ind = _owner.CanonicalResource[_positionStart ..].IndexOf('/');
-        _len = ind == -1 ? _owner.CanonicalResource.Length - _positionStart : ind;
-
-        // skip last `/`
-        return _len + _positionStart < _owner.CanonicalResource.Length || _len > 0;
+        return _pos < _owner.Length && _pos + _len <= _owner.Length;
     }
 
     public void Reset()
     {
-        _positionStart = 0;
+        _pos = _owner.Length > 1 && _owner[0] == _separator ? 0 : -1;
         _len = 0;
     }
 
     object IEnumerator.Current => Current;
 
-    public string Current => _owner.CanonicalResource.AsSpan(_positionStart, _len).ToString();
+    public string Current => _owner.AsSpan(_pos, _len).ToString();
 
 
     public void Dispose()
@@ -279,7 +319,7 @@ public struct ReverseSegmentEnumerator : IEnumerator<string>
         var ind = _owner.CanonicalResource[.._positionEnd].LastIndexOf('/');
         if (ind == -1)
         {
-            _len = _positionEnd ++;
+            _len = _positionEnd++;
             _positionEnd = 0;
         }
         else
@@ -287,7 +327,7 @@ public struct ReverseSegmentEnumerator : IEnumerator<string>
             _len = _positionEnd - ind;
             _positionEnd = ind + 1;
         }
-        
+
 
         // skip last `/`
         return _positionEnd >= 0 || _len > 0;
@@ -310,18 +350,9 @@ public struct ReverseSegmentEnumerator : IEnumerator<string>
 
 public static class ResPathExtension
 {
-    public static IEnumerable<string> Segments(this ResPath resPath)
+    public static IEnumerable<string> Segments(this string resPath, char separator)
     {
-        var iter = new SegmentEnumerator(resPath);
-        while (iter.MoveNext())
-        {
-            yield return iter.Current;
-        }
-    }
-
-    public static IEnumerable<string> ReverseSegments(this ResPath resPath)
-    {
-        var iter = new ReverseSegmentEnumerator(resPath);
+        var iter = new SegmentEnumerator(resPath, separator);
         while (iter.MoveNext())
         {
             yield return iter.Current;

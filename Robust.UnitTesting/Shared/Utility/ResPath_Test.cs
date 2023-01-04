@@ -1,7 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using BenchmarkDotNet.Exporters.Csv;
-using Microsoft.Diagnostics.Tracing.Parsers.FrameworkEventSource;
 using NUnit.Framework;
 using Robust.Shared.Utility;
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -24,6 +21,7 @@ public sealed class ResPathTest
     [TestCase("", ".")]
     [TestCase(".", ".")]
     [TestCase("./foo", "foo")]
+    [TestCase("./foo/bar", "foo/bar")]
     [TestCase("foo/.", "foo")]
     [TestCase("foo/./bar", "foo/bar")]
     [TestCase("./", ".")]
@@ -32,10 +30,10 @@ public sealed class ResPathTest
     [TestCase(" ", " ")] // Note the spaces here]
     [TestCase(" / ", " / ")]
     [TestCase(". ", ". ")]
-    public void InputClean_Test(string input, string expected)
+    public void InputCleanTest(string input, string expected)
     {
         var resPath = new ResPath(input);
-        Assert.That(resPath.ChangeSeparator("/"), Is.EqualTo(expected));
+        Assert.That(resPath.ToString(), Is.EqualTo(expected));
     }
     
     [Test]
@@ -86,12 +84,12 @@ public sealed class ResPathTest
     [TestCase(@"", ExpectedResult = @".")]
     [TestCase(@".", ExpectedResult = @".")]
     [TestCase(@"/foo/bar", ExpectedResult = @"/foo")]
-    [TestCase(@"/foo/bar/", ExpectedResult = @"/foo/bar")] //breaking change!!
+    [TestCase(@"/foo/bar/", ExpectedResult = @"/foo")] 
     [TestCase(@"/foo/bar/x", ExpectedResult = @"/foo/bar")] 
     [TestCase(@"/foo/bar.txt", ExpectedResult = @"/foo")]
     public string DirectoryTest(string path)
     {
-        return new ResPath(path).Directory("/");
+        return new ResPath(path).Directory.ToString();
     }
 
     [Test]

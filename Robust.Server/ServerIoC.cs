@@ -79,7 +79,6 @@ namespace Robust.Server
             deps.Register<IScriptHost, ScriptHost>();
             deps.Register<IMetricsManager, MetricsManager>();
             deps.Register<IAuthManager, AuthManager>();
-            deps.Register<IPhysicsManager, PhysicsManager>();
             deps.Register<IBqlQueryManager, BqlQueryManager>();
             deps.Register<HubManager, HubManager>();
             deps.Register<IRobustSerializer, ServerRobustSerializer>();

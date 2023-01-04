@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* IPhysManager has been removed for a slight physics contacts optimisation.
 
 
 ## 0.78.0.0

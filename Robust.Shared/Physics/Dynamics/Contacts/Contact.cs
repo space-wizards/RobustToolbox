@@ -131,16 +131,12 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         /// Gets the world manifold.
         /// </summary>
-        public void GetWorldManifold(IPhysicsManager physicsManager, out Vector2 normal, Span<Vector2> points)
+        public void GetWorldManifold(Transform transformA, Transform transformB, out Vector2 normal, Span<Vector2> points)
         {
-            PhysicsComponent bodyA = FixtureA?.Body!;
-            PhysicsComponent bodyB = FixtureB?.Body!;
-            IPhysShape shapeA = FixtureA?.Shape!;
-            IPhysShape shapeB = FixtureB?.Shape!;
-            var bodyATransform = physicsManager.EnsureTransform(bodyA);
-            var bodyBTransform = physicsManager.EnsureTransform(bodyB);
+            var shapeA = FixtureA?.Shape!;
+            var shapeB = FixtureB?.Shape!;
 
-            SharedPhysicsSystem.InitializeManifold(ref Manifold, bodyATransform, bodyBTransform, shapeA.Radius, shapeB.Radius, out normal, points);
+            SharedPhysicsSystem.InitializeManifold(ref Manifold, transformA, transformB, shapeA.Radius, shapeB.Radius, out normal, points);
         }
 
         /// <summary>
@@ -149,11 +145,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         /// <param name="wake">Whether we should wake the bodies due to touching changing.</param>
         /// <returns>What current status of the contact is (e.g. start touching, end touching, etc.)</returns>
-        internal ContactStatus Update(IPhysicsManager physicsManager, out bool wake)
+        internal ContactStatus Update(Transform bodyATransform, Transform bodyBTransform, out bool wake)
         {
-            PhysicsComponent bodyA = FixtureA!.Body;
-            PhysicsComponent bodyB = FixtureB!.Body;
-
             var oldManifold = Manifold;
 
             // Re-enable this contact.
@@ -163,16 +156,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             var wasTouching = IsTouching;
 
             wake = false;
-            var sensor = !(FixtureA.Hard && FixtureB.Hard);
-
-            var bodyATransform = physicsManager.GetTransform(bodyA);
-            var bodyBTransform = physicsManager.GetTransform(bodyB);
+            var sensor = !(FixtureA!.Hard && FixtureB!.Hard);
 
             // Is this contact a sensor?
             if (sensor)
             {
-                var shapeA = FixtureA.Shape;
-                var shapeB = FixtureB.Shape;
+                var shapeA = FixtureA!.Shape;
+                var shapeB = FixtureB!.Shape;
                 touching = _manifoldManager.TestOverlap(shapeA,  ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
 
                 // Sensors don't generate manifolds.

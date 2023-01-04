@@ -30,9 +30,11 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -420,22 +422,10 @@ public abstract partial class SharedPhysicsSystem
         }
 
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
-
-        // To avoid race conditions with the dictionary we'll cache all of the transforms up front.
-        // Caching should provide better perf than multi-threading the GetTransform() as we can also re-use
-        // these in PhysicsIsland as well.
-        for (var i = 0; i < index; i++)
-        {
-            var contact = contacts[i];
-            var bodyA = contact.FixtureA!.Body;
-            var bodyB = contact.FixtureB!.Body;
-
-            _physicsManager.EnsureTransform(bodyA.Owner);
-            _physicsManager.EnsureTransform(bodyB.Owner);
-        }
+        var worldPoints = ArrayPool<Vector2>.Shared.Rent(index);
 
         // Update contacts all at once.
-        BuildManifolds(contacts, index, status);
+        BuildManifolds(contacts, index, status, worldPoints);
 
         // Single-threaded so content doesn't need to worry about race conditions.
         for (var i = 0; i < index; i++)
@@ -452,7 +442,7 @@ public abstract partial class SharedPhysicsSystem
                     var fixtureB = contact.FixtureB!;
                     var bodyA = fixtureA.Body;
                     var bodyB = fixtureB.Body;
-                    var worldPoint = Physics.Transform.Mul(_physicsManager.EnsureTransform(bodyA), contact.Manifold.LocalPoint);
+                    var worldPoint = worldPoints[i];
 
                     var ev1 = new StartCollideEvent(fixtureA, fixtureB, worldPoint);
                     var ev2 = new StartCollideEvent(fixtureB, fixtureA, worldPoint);
@@ -491,9 +481,10 @@ public abstract partial class SharedPhysicsSystem
 
         ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
+        ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
 
-    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status)
+    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
         var wake = ArrayPool<bool>.Shared.Rent(count);
 
@@ -505,13 +496,13 @@ public abstract partial class SharedPhysicsSystem
             {
                 var start = i * ContactsPerThread;
                 var end = Math.Min(start + ContactsPerThread, count);
-                UpdateContacts(contacts, start, end, status, wake);
+                UpdateContacts(contacts, start, end, status, wake, worldPoints);
             });
 
         }
         else
         {
-            UpdateContacts(contacts, 0, count, status, wake);
+            UpdateContacts(contacts, 0, count, status, wake, worldPoints);
         }
 
         // Can't do this during UpdateContacts due to IoC threading issues.
@@ -531,11 +522,25 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<bool>.Shared.Return(wake);
     }
 
-    private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake)
+    private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
     {
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
         for (var i = start; i < end; i++)
         {
-            status[i] = contacts[i].Update(_physicsManager, out wake[i]);
+            var contact = contacts[i];
+            var uidA = contact.FixtureA!.Body.Owner;
+            var uidB = contact.FixtureB!.Body.Owner;
+            var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA), xformQuery);
+            var bodyBTransform = GetPhysicsTransform(uidB, xformQuery.GetComponent(uidB), xformQuery);
+
+            var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[i]);
+            status[i] = contactStatus;
+
+            if (contactStatus == ContactStatus.StartTouching)
+            {
+                worldPoints[i] = Physics.Transform.Mul(bodyATransform, contacts[i].Manifold.LocalPoint);
+            }
         }
     }
 

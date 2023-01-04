@@ -52,6 +52,7 @@ END TEMPLATE-->
 ### Internal
 
 * IPhysManager has been removed for a slight physics contacts optimisation.
+* Optimise TryFindGridAt, particularly for grid traversals.
 
 
 ## 0.78.0.0

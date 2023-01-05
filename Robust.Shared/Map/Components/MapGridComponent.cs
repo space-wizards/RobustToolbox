@@ -600,35 +600,10 @@ namespace Robust.Shared.Map.Components
             return (chunk, chunkTile);
         }
 
-        private static Vector2i SnapGridPosAt(Vector2i position, Direction dir, int dist = 1)
-        {
-            switch (dir)
-            {
-                case Direction.East:
-                    return position + new Vector2i(dist, 0);
-                case Direction.SouthEast:
-                    return position + new Vector2i(dist, -dist);
-                case Direction.South:
-                    return position + new Vector2i(0, -dist);
-                case Direction.SouthWest:
-                    return position + new Vector2i(-dist, -dist);
-                case Direction.West:
-                    return position + new Vector2i(-dist, 0);
-                case Direction.NorthWest:
-                    return position + new Vector2i(-dist, dist);
-                case Direction.North:
-                    return position + new Vector2i(0, dist);
-                case Direction.NorthEast:
-                    return position + new Vector2i(dist, dist);
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetInDir(EntityCoordinates position, Direction dir)
         {
-            var pos = SnapGridPosAt(TileIndicesFor(position), dir);
+            var pos = SharedMapSystem.GetDirection(TileIndicesFor(position), dir);
             return GetAnchoredEntities(pos);
         }
 
@@ -648,7 +623,7 @@ namespace Robust.Shared.Map.Components
         /// <inheritdoc />
         public EntityCoordinates DirectionToGrid(EntityCoordinates coords, Direction direction)
         {
-            return GridTileToLocal(SnapGridPosAt(TileIndicesFor(coords), direction));
+            return GridTileToLocal(SharedMapSystem.GetDirection(TileIndicesFor(coords), direction));
         }
 
         /// <inheritdoc />

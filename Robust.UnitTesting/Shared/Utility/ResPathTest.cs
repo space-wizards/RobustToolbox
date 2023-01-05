@@ -34,6 +34,7 @@ public sealed class ResPathTest
     {
         var resPath = new ResPath(input);
         Assert.That(resPath.ToString(), Is.EqualTo(expected));
+        
     }
     
     [Test]

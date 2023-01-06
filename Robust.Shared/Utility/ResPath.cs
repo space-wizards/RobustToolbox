@@ -56,22 +56,27 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <summary>
     ///     Create a new path from a string, splitting it by the separator provided.
     /// </summary>
-    /// <param name="path">The string path to turn into a resource path.</param>
-    /// <param name="separator">The separator for the resource path.</param>
+    /// <param name="canonPath">The string path to turn into a resource path.</param>
+    /// <param name="strSeparator">The separator for the resource path. If null or empty it will default to <c>/</c></param>
     /// <exception cref="ArgumentException">Thrown if you try to use "." as separator.</exception>
-    public ResPath(string path, char separator = Separator)
+    public ResPath(string canonPath, string strSeparator = "/")
     {
-        if (separator == '.') throw new ArgumentException("Separator may not be .  Prefer \\ or /");
+        if (strSeparator is "." or "")
+        {
+            throw new ArgumentException("Separator may not be . or empty Prefer \\ or /");
+        }
+        
+        var separator = strSeparator[0];
 
-        if (path == "" || path == ".")
+        if (canonPath == "" || canonPath == ".")
         {
             CanonPath = ".";
             return;
         }
 
-        var sb = new StringBuilder(path.Length);
-        var segments = path.Segments(separator).ToArray();
-        if (path[0] == separator) sb.Append('/');
+        var sb = new StringBuilder(canonPath.Length);
+        var segments = canonPath.Segments(separator).ToArray();
+        if (canonPath[0] == separator) sb.Append('/');
 
         var needsSeparator = false;
         foreach (var segment in segments)
@@ -87,15 +92,32 @@ public readonly struct ResPath : IEquatable<ResPath>
         CanonPath = sb.Length == 0 ? "." : sb.ToString();
     }
 
-
-    /// <summary>
-    /// Private constructor used to quickly concatenate Resources
-    /// It assumes Canonical Resource has been cleared via other constructor
-    /// </summary>
-    /// <param name="canonPath"></param>
     private ResPath(string canonPath)
     {
         CanonPath = canonPath;
+    }
+
+    /// <summary>
+    /// Needed for serv3
+    /// </summary>
+    public ResPath() : this("") {}
+
+    /// <summary>
+    /// Fast factory method will assume you did all necessary cleaning.
+    /// WARNING: Breaking this assumption may lead to bugs
+    /// </summary>
+    /// <param name="assumedCanon"></param>
+    /// <returns></returns>
+    public static ResPath CreateUnsafePath(string assumedCanon)
+    {
+        // TODO is the switch necessary? might help with allocation at expense of branching
+        return assumedCanon switch
+        {
+            "" => Empty,
+            "." => Self,
+            "/" => Root,
+            _ => new ResPath(assumedCanon),
+        };
     }
 
     /// <summary>
@@ -154,7 +176,7 @@ public readonly struct ResPath : IEquatable<ResPath>
 
             var ind = filename.LastIndexOf('.') + 1;
             return ind <= 1
-                ? ""
+                ? string.Empty
                 : filename[ind..];
         }
     }
@@ -352,7 +374,7 @@ public readonly struct ResPath : IEquatable<ResPath>
             throw new ArgumentException("New file name cannot be '.'");
         }
 
-        return new ResPath(Directory + "/" + name, '/');
+        return new ResPath(Directory + "/" + name);
     }
 
     #endregion
@@ -508,7 +530,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     public static ResPath FromRelativeSystemPath(string path, string newSeparator = "/")
     {
         // ReSharper disable once RedundantArgumentDefaultValue
-        return new ResPath(path, SystemSeparator);
+        return new ResPath(path, SystemSeparator.ToString());
     }
 
     #endregion
@@ -527,7 +549,7 @@ public readonly struct ResPath : IEquatable<ResPath>
             segments.Add("/");
         }
 
-        foreach (var segment in  CanonPath.Segments('/'))
+        foreach (var segment in  EnumerateSegments())
         {
             // Skip pointless segments
             if (segment == "." || segment == "")

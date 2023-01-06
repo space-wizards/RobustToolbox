@@ -26,7 +26,12 @@ public readonly struct ResPath : IEquatable<ResPath>
 #else
         public const char SystemSeparator = '/';
 #endif
-
+    /// <summary>
+    /// Normalized separator. Chosen because <c>/</c> is illegal path
+    /// character on Linux and Windows.
+    /// </summary>
+    public const char Separator = '/';
+    
     /// <summary>
     ///     "." as a static. Separator used is <c>/</c>.
     /// </summary>
@@ -36,6 +41,11 @@ public readonly struct ResPath : IEquatable<ResPath>
     ///     "/" (root) as a static. Separator used is <c>/</c>.
     /// </summary>
     public static readonly ResPath Root = new("/");
+    
+    /// <summary>
+    ///     "/" (root) as a static. Separator used is <c>/</c>.
+    /// </summary>
+    public static readonly ResPath Empty = new("");
 
     /// <summary>
     ///     Internal system independent path. It uses `/` internally as
@@ -49,7 +59,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <param name="path">The string path to turn into a resource path.</param>
     /// <param name="separator">The separator for the resource path.</param>
     /// <exception cref="ArgumentException">Thrown if you try to use "." as separator.</exception>
-    public ResPath(string path = ".", char separator = '/')
+    public ResPath(string path, char separator = Separator)
     {
         if (separator == '.') throw new ArgumentException("Separator may not be .  Prefer \\ or /");
 
@@ -269,7 +279,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     //   whereas path / (string / string) doesn't compile.
     public static ResPath operator /(ResPath left, ResPath right)
     {
-        if (right.IsRooted()) return right;
+        if (right.IsRooted) return right;
 
         if (right.IsSelf) return left;
 
@@ -354,20 +364,14 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
     /// <seealso cref="IsRelative" />
     /// <seealso cref="ToRootedPath"/>
-    public bool IsRooted()
-    {
-        return CanonPath[0] == '/';
-    }
+    public bool IsRooted => CanonPath[0] == '/';
 
     /// <summary>
     ///     Returns true if the path is not rooted.
     /// </summary>
     /// <seealso cref="IsRooted" />
     /// <seealso cref="ToRelativePath"/>
-    public bool IsRelative()
-    {
-        return !IsRooted();
-    }
+    public bool IsRelative => !IsRooted;
 
     /// <summary>
     ///     Gets the common base of two paths.
@@ -389,7 +393,7 @@ public readonly struct ResPath : IEquatable<ResPath>
         }
 
         var minLen = Math.Min(CanonPath.Length, other.CanonPath.Length);
-        var lastSeparatorPos = IsRooted() && other.IsRooted() ? 1 : 0;
+        var lastSeparatorPos = IsRooted && other.IsRooted ? 1 : 0;
         for (int len = lastSeparatorPos; len < minLen; len++)
         {
             if (CanonPath[len] != other.CanonPath[len])
@@ -469,7 +473,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <seealso cref="ToRelativePath" />
     public ResPath ToRootedPath()
     {
-        return IsRooted()
+        return IsRooted
             ? this
             : new ResPath("/" + CanonPath);
     }
@@ -482,7 +486,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <seealso cref="ToRootedPath" />
     public ResPath ToRelativePath()
     {
-        if (IsRelative()) return this;
+        if (IsRelative) return this;
 
         return this == Root
             ? Self
@@ -518,7 +522,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     public ResPath Clean()
     {
         var segments = new List<string>();
-        if (IsRooted())
+        if (IsRooted)
         {
             segments.Add("/");
         }
@@ -552,7 +556,7 @@ public readonly struct ResPath : IEquatable<ResPath>
         
         // Build Canon path from segments with StringBuilder
         var sb = new StringBuilder(CanonPath.Length);
-        var start = IsRooted() && segments.Count > 1 ? 1 : 0;
+        var start = IsRooted && segments.Count > 1 ? 1 : 0;
         for (var i = 0; i < segments.Count; i++)
         {
             if (i > start)
@@ -571,10 +575,26 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <summary>
     ///     Check whether a path is clean, i.e. <see cref="Clean"/> would not modify it.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>if true if path wouldn't be modifed </returns>
     public bool IsClean()
     {
-        return !CanonPath.Contains("..");
+        var segments = CanonPath.Segments(Separator).ToArray();
+        for (var i = 0; i < segments.Length; i++)
+        {
+            if (segments[i] != "..") continue;
+            
+            if (IsRooted)
+            {
+                return false;
+            }
+        
+            if (i > 0 && segments[i - 1] != "..")
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -691,7 +711,7 @@ public struct SegmentEnumerator : IEnumerator<string>
 /// <summary>
 /// Helper Method for dividing string into segments.
 /// </summary>
-public static class ResPathExtension
+internal static class ResPathExtension
 {
     public static IEnumerable<string> Segments(this string path, char separator)
     {

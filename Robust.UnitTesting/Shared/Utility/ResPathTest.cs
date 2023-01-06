@@ -121,6 +121,8 @@ public sealed class ResPathTest
     public string CleanTest(string input)
     {
         var path = new ResPath(input);
+        var cleaned = path.Clean();
+        Assert.AreEqual(path == cleaned, path.IsClean());
         return path.Clean().ToString();
     }
 

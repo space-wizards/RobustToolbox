@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Client will no longer predict physics sleeping on bodies that are unable to sleep.
 
 ### Other
 

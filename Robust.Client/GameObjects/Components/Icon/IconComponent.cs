@@ -26,7 +26,7 @@ namespace Robust.Client.GameObjects
         {
             if (rsi != null && stateID != null)
             {
-                Icon = new SpriteSpecifier.Rsi(rsi.Value, stateID).Frame0();
+                Icon = new SpriteSpecifier.Rsi(rsi, stateID).Frame0();
             }
         }
 

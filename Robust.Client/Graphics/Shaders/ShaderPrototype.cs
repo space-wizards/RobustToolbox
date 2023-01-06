@@ -114,7 +114,7 @@ namespace Robust.Client.Graphics
                 case "source":
                     Kind = ShaderKind.Source;
                     if (path == null) throw new InvalidOperationException();
-                    Source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>(path.Value);
+                    Source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>(path);
 
                     if (paramMapping != null)
                     {

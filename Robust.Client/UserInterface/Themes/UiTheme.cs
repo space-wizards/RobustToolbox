@@ -27,7 +27,7 @@ public sealed class UITheme : IPrototype
 
     [DataField("colors", readOnly: true)]
     public Dictionary<string, Color>? Colors { get; }
-    public ResourcePath Path => _path ?? new ResourcePath(DefaultPath+"/"+ID);
+    public ResourcePath Path => _path == null ? new ResourcePath(DefaultPath+"/"+ID) : _path;
 
     private void ValidateFilePath(IResourceCache resourceCache)
     {

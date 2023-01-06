@@ -103,7 +103,7 @@ namespace Robust.Client.Map
                 // Already know it's not null above
                 var path = def.Sprite!;
 
-                using (var stream = _resourceCache.ContentFileRead(path.Value))
+                using (var stream = _resourceCache.ContentFileRead(path))
                 {
                     image = Image.Load<Rgba32>(stream);
                 }

@@ -172,7 +172,6 @@ public readonly struct ResPath : IEquatable<ResPath>
         get
         {
             var filename = Filename;
-            if (filename == "") return "";
 
             var ind = filename.LastIndexOf('.') + 1;
             return ind <= 1
@@ -204,8 +203,7 @@ public readonly struct ResPath : IEquatable<ResPath>
         get
         {
             var filename = Filename;
-
-            if (filename == "") return "";
+            
             var ind = filename.LastIndexOf('.');
             return ind <= 0
                 ? filename
@@ -525,7 +523,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     }
 
     /// <summary>
-    ///     Converts a relative disk path back into a resource path.
+    ///     Converts a system path into a resource path.
     /// </summary>
     public static ResPath FromRelativeSystemPath(string path, string newSeparator = "/")
     {
@@ -544,6 +542,10 @@ public readonly struct ResPath : IEquatable<ResPath>
     public ResPath Clean()
     {
         var segments = new List<string>();
+        if (CanonPath == "")
+        {
+            return Empty;
+        }
         if (IsRooted)
         {
             segments.Add("/");

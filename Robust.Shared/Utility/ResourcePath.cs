@@ -28,7 +28,7 @@ public readonly struct ResourcePath : IEquatable<ResourcePath>
 #endif
 
     public readonly string Separator = "/";
-    
+
     /// <summary>
     ///     "." as a static. Separator used is <c>/</c>.
     /// </summary>
@@ -45,13 +45,19 @@ public readonly struct ResourcePath : IEquatable<ResourcePath>
     /// </summary>
     internal readonly string CanonPath;
 
+
+    /// <summary>
+    /// This exists for serv3.
+    /// </summary>
+    public ResourcePath() : this("") {}
+    
     /// <summary>
     ///     Create a new path from a string, splitting it by the separator provided.
     /// </summary>
     /// <param name="path">The string path to turn into a resource path.</param>
     /// <param name="separator">The separator for the resource path.</param>
     /// <exception cref="ArgumentException">Thrown if you try to use "." as separator.</exception>
-    public ResourcePath(string path = ".", string separator = "/")
+    public ResourcePath(string path, string separator = "/")
     {
         var charSeparator = separator[0];
         if (separator == ".") throw new ArgumentException("Separator may not be .  Prefer \\ or /");
@@ -228,7 +234,7 @@ public readonly struct ResourcePath : IEquatable<ResourcePath>
     {
         return CanonPath;
     }
-    
+
     /// <inheritdoc/>
     public bool Equals(ResourcePath other)
     {
@@ -398,10 +404,10 @@ public readonly struct ResourcePath : IEquatable<ResourcePath>
             {
                 continue;
             }
-            
+
             lastSeparatorPos = len;
         }
-        
+
         if (lastSeparatorPos == 0)
         {
             throw new ArgumentException($"{this} and {other} have no common base.");
@@ -520,14 +526,14 @@ public readonly struct ResourcePath : IEquatable<ResourcePath>
             segments.Add("/");
         }
 
-        foreach (var segment in  CanonPath.Segments('/'))
+        foreach (var segment in CanonPath.Segments('/'))
         {
             // Skip pointless segments
             if (segment == "." || segment == "")
             {
                 continue;
             }
-            
+
             // If you have ".." cleaning that up doesn't remove that.
             if (segment == ".." && segments.Count > 0)
             {
@@ -543,10 +549,10 @@ public readonly struct ResourcePath : IEquatable<ResourcePath>
                     continue;
                 }
             }
-            
+
             segments.Add(segment);
         }
-        
+
         // Build Canon path from segments with StringBuilder
         var sb = new StringBuilder(CanonPath.Length);
         var start = IsRooted && segments.Count > 1 ? 1 : 0;
@@ -559,8 +565,8 @@ public readonly struct ResourcePath : IEquatable<ResourcePath>
 
             sb.Append(segments[i]);
         }
-        
-        return sb.Length == 0 
+
+        return sb.Length == 0
             ? Self
             : new ResourcePath(sb.ToString());
     }
@@ -702,6 +708,7 @@ public struct SegmentEnumerator : IEnumerator<string>
     {
     }
 }
+
 /// <summary>
 /// Helper Method for dividing string into segments.
 /// </summary>

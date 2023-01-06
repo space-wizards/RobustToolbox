@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix tooltip panels being incorrectly sized for their first frame.
 
 ### Other
 

@@ -149,9 +149,8 @@ public sealed class ResPathTest
     }
 
     [Test]
-    [TestCase(".")]
-    [TestCase("")]
-    public void ResPathCtorFail(string separator)
+    [TestCase('.')]
+    public void ResPathCtorFail(char separator)
     {
         Assert.Catch(typeof(ArgumentException), () =>
         {
@@ -319,7 +318,7 @@ public sealed class ResPathTest
     [TestCase(@".", ".")]
     public void TestRelativeSystemPaths(string systemIn, string canonStr)
     {
-        var systemPath = ResPath.FromRelativeSystemPath(systemIn, "\\");
+        var systemPath = ResPath.FromRelativeSystemPath(systemIn, '\\');
         var canonPath = ResPath.CreateUnsafePath(canonStr);
         Assert.That(systemPath, Is.EqualTo(canonPath));
         Assert.That(systemPath.ToRelativeSystemPath(), Is.EqualTo(canonPath.ToRelativeSystemPath()));

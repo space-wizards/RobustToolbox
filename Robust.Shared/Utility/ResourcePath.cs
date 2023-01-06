@@ -1,720 +1,718 @@
-﻿// Because System.IO.Path sucks.
-
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Shared.Serialization;
+using ArgumentException = System.ArgumentException;
 
-namespace Robust.Shared.Utility
+namespace Robust.Shared.Utility;
+
+/// <summary>
+///     Provides object-oriented path manipulation for resource paths.
+///     ResourcePaths are immutable.
+/// </summary>
+[PublicAPI, Serializable, NetSerializable]
+public readonly struct ResourcePath : IEquatable<ResourcePath>
 {
     /// <summary>
-    ///     Provides object-oriented path manipulation for resource paths.
-    ///     ResourcePaths are immutable.
+    ///     The separator for the file system of the system we are compiling to.
+    ///     Backslash on Windows, forward slash on sane systems.
     /// </summary>
-    [PublicAPI, Serializable, NetSerializable]
-    public sealed class ResourcePath : IEquatable<ResourcePath>
-    {
-        /// <summary>
-        ///     The separator for the file system of the system we are compiling to.
-        ///     Backslash on Windows, forward slash on sane systems.
-        /// </summary>
 #if WINDOWS
-        public const string SYSTEM_SEPARATOR = "\\";
+    public const string SystemSeparator = "\\";
 #else
-        public const string SYSTEM_SEPARATOR = "/";
+        public const string SystemSeparator = "/";
 #endif
 
-        /// <summary>
-        ///     "." as a static. Separator used is <c>/</c>.
-        /// </summary>
-        public static readonly ResourcePath Self = new(".");
+    public readonly string Separator = "/";
+    
+    /// <summary>
+    ///     "." as a static. Separator used is <c>/</c>.
+    /// </summary>
+    public static readonly ResourcePath Self = new(".");
 
-        /// <summary>
-        ///     "/" (root) as a static. Separator used is <c>/</c>.
-        /// </summary>
-        public static readonly ResourcePath Root = new("/");
+    /// <summary>
+    ///     "/" (root) as a static. Separator used is <c>/</c>.
+    /// </summary>
+    public static readonly ResourcePath Root = new("/");
 
-        /// <summary>
-        ///     List of the segments of the path.
-        ///     This is pretty much a split of the input string path by separator,
-        ///     except for the root, which is represented as the separator in position #0.
-        /// </summary>
-        private readonly string[] Segments;
+    /// <summary>
+    ///     Internal system independent path. It uses `/` internally as
+    ///     separator and will translate to it on creation.
+    /// </summary>
+    internal readonly string CanonPath;
 
-        /// <summary>
-        ///     The separator between "segments"/"directories" for this path.
-        /// </summary>
-        public string Separator { get; }
+    /// <summary>
+    ///     Create a new path from a string, splitting it by the separator provided.
+    /// </summary>
+    /// <param name="path">The string path to turn into a resource path.</param>
+    /// <param name="separator">The separator for the resource path.</param>
+    /// <exception cref="ArgumentException">Thrown if you try to use "." as separator.</exception>
+    public ResourcePath(string path = ".", string separator = "/")
+    {
+        var charSeparator = separator[0];
+        if (separator == ".") throw new ArgumentException("Separator may not be .  Prefer \\ or /");
 
-        /// <summary>
-        /// This exists for serv3.
-        /// </summary>
-        private ResourcePath() : this("") {}
-
-        /// <summary>
-        ///     Create a new path from a string, splitting it by the separator provided.
-        /// </summary>
-        /// <param name="path">The string path to turn into a resource path.</param>
-        /// <param name="separator">The separator for the resource path.</param>
-        /// <exception cref="ArgumentException">Thrown if you try to use "." as separator.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if either argument is null.</exception>
-        public ResourcePath(string path, string separator = "/")
+        if (path == "")
         {
-            ValidateSeparate(separator);
+            CanonPath = ".";
+            return;
+        }
 
-            Separator = separator;
+        var sb = new StringBuilder(path.Length);
+        var segments = path.Segments(charSeparator).ToArray();
+        if (path[0] == charSeparator) sb.Append('/');
 
-            if (path == null)
+        var needsSeparator = false;
+        foreach (var segment in segments)
+        {
+            if ((segment == "." && segments.Length != 0) || segment == "") continue;
+
+            if (needsSeparator) sb.Append('/');
+
+            sb.Append(segment);
+            needsSeparator = true;
+        }
+
+        CanonPath = sb.Length == 0 ? "." : sb.ToString();
+    }
+
+
+    /// <summary>
+    /// Private constructor used to quickly concatenate Resources
+    /// It assumes Canonical Resource has been cleared via other constructor
+    /// </summary>
+    /// <param name="canonPath"></param>
+    private ResourcePath(string canonPath)
+    {
+        CanonPath = canonPath;
+    }
+
+    /// <summary>
+    ///     Returns true if the path is equal to "."
+    /// </summary>
+    public bool IsSelf => CanonPath == Self.CanonPath;
+
+    /// <summary>
+    ///     Returns the parent directory that this file resides in
+    ///     as a <see cref="ResourcePath"/>.
+    ///     If path points to folder, it will return parent directory
+    /// </summary>
+    /// <example>
+    /// <code>
+    ///     // Directory property of a directory resourcePath.
+    ///     Assert.AreEqual("/foo", new ResPath("/foo/bar").Directory.ToString());
+    ///     // Directory of a file resourcePath.
+    ///     Assert.AreEqual("/foo", new ResPath("/foo/x.txt").Directory.ToString());
+    /// </code>
+    /// </example>
+    public ResourcePath Directory
+    {
+        get
+        {
+            if (IsSelf) return Self;
+
+            var ind = CanonPath.LastIndexOf('/');
+            return ind != -1
+                ? new ResourcePath(CanonPath[..ind])
+                : Self;
+        }
+    }
+
+    /// <summary>
+    ///     Returns the file extension of <see cref="ResourcePath"/>, if any as string.
+    ///     Returns "" if there is no file extension. (Hidden) Files starting
+    ///     with period (".") are counted as files with no extension.
+    ///     The extension returned does NOT include a period.
+    /// </summary>
+    /// <example>
+    /// <code>
+    ///     // file with normal extension
+    ///     var picPath = new ResPath("/a/b/c.png");
+    ///     Assert.AreEqual("png", picPath.Extension);
+    ///     // hidden file starting with `.`
+    ///     var gitignore = new ResPath("/a/b/.gitignore");
+    ///     Assert.AreEqual("", gitignore.Extension);
+    /// </code>
+    /// </example>
+    public string Extension
+    {
+        get
+        {
+            var filename = Filename;
+            if (filename == "") return "";
+
+            var ind = filename.LastIndexOf('.') + 1;
+            return ind <= 1
+                ? ""
+                : filename[ind..];
+        }
+    }
+
+    /// <summary>
+    ///     Returns the file name part of a <see cref="ResourcePath"/>, as string.
+    ///     In essence reverse of <see cref="Extension"/>.
+    ///     If last segment divided of a path (e.g. <c>/foo/bar/baz.png</c>) divided by separator (e.g <c>/</c>)
+    ///     is considered a filename (e.g. <c>baz.png</c>). In that segment part before period is
+    ///     considered filename (e.g. <c>baz</c>, unless file start with period, then whole segment
+    ///     is filename without extension.
+    /// </summary>
+    /// <example>
+    /// <code>
+    ///     // file with normal extension
+    ///     var picPath = new ResPath("/a/b/foo.png");
+    ///     Assert.AreEqual("foo", picPath.FilenameWithoutExtension());
+    ///     // hidden file starting with `.`
+    ///     var gitignore = new ResPath("/a/b/.gitignore");
+    ///     Assert.AreEqual(".gitignore", gitignore.FilenameWithoutExtension());
+    /// </code>
+    /// </example>
+    public string FilenameWithoutExtension
+    {
+        get
+        {
+            var filename = Filename;
+
+            if (filename == "") return "";
+            var ind = filename.LastIndexOf('.');
+            return ind <= 0
+                ? filename
+                : filename[..ind];
+        }
+    }
+
+    /// <summary>
+    ///     Returns the file name (folders are files) for given path,
+    ///     or "." if path is empty.
+    ///     If last segment divided of a path (e.g. <c>/foo/bar/baz.png</c>) divided by separator (e.g <c>/</c>)
+    ///     is considered a filename (e.g. <c>baz.png</c>).
+    /// </summary>
+    /// <example>
+    /// <code>
+    ///     // file
+    ///     Assert.AreEqual("c.png", new ResPath("/a/b/c.png").Filename);
+    ///     // folder
+    ///     Assert.AreEqual("foo", new ResPath("/foo").Filename);
+    ///     // empty
+    ///     Assert.AreEqual(".", new ResPath("").Filename);
+    /// </code>
+    /// </example>
+    public string Filename
+    {
+        get
+        {
+            if (CanonPath is "" or ".")
+                return CanonPath;
+
+            // CanonicalResource[..^1] avoids last char if its a folder, it won't matter if 
+            // it's a filename
+            // Uses +1 to skip `/` found in or starts from beginning of string
+            // if we found nothing (ind == -1)
+            var ind = CanonPath[..^1].LastIndexOf('/') + 1;
+            return CanonPath[^1] == '/'
+                ? CanonPath[ind .. ^1] // Omit last `/`  
+                : CanonPath[ind..];
+        }
+    }
+
+    #region Operators & Equality
+
+    /// <summary>
+    ///     Converts this element to String
+    /// </summary>
+    /// <returns> System independent representation of path</returns>
+    public override string ToString()
+    {
+        return CanonPath;
+    }
+    
+    /// <inheritdoc/>
+    public bool Equals(ResourcePath other)
+    {
+        return CanonPath == other.CanonPath;
+    }
+
+    /// <inheritdoc/>
+    public override bool Equals(object? obj)
+    {
+        return obj is ResourcePath other && Equals(other);
+    }
+
+    /// <inheritdoc/>
+    public override int GetHashCode()
+    {
+        return CanonPath.GetHashCode();
+    }
+
+
+    public static bool operator ==(ResourcePath left, ResourcePath right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(ResourcePath left, ResourcePath right)
+    {
+        return !left.Equals(right);
+    }
+
+    /// <summary>
+    ///     Joins two resource paths together, with separator in between.
+    ///     If the second path is absolute (i.e. rooted), the first path is completely ignored.
+    ///     <seealso cref="IsRooted"/>
+    /// </summary>
+    /// <exception cref="ArgumentException">Thrown if the separators of the two paths do not match.</exception>
+    // Copied comment
+    // "Why use / instead of +" you may think:
+    // * It's clever, although I got the idea from Python's `pathlib`.
+    // * It avoids confusing operator precedence causing you to join two strings,
+    //   because path + string + string != path + (string + string),
+    //   whereas path / (string / string) doesn't compile.
+    public static ResourcePath operator /(ResourcePath left, ResourcePath right)
+    {
+        if (right.IsRooted) return right;
+
+        if (right.IsSelf) return left;
+
+        return new ResourcePath(left.CanonPath + "/" + right.CanonPath);
+    }
+
+    /// <summary>
+    ///     Joins resource and string path together, by converting string to <see cref="ResourcePath"/>
+    ///     If the second path is absolute (i.e. rooted), the first path is completely ignored.
+    ///     <seealso cref="IsRooted"/>
+    /// </summary>
+    public static ResourcePath operator /(ResourcePath left, string right)
+    {
+        return left / new ResourcePath(right);
+    }
+
+    #endregion
+
+    #region WithMethods
+
+    /// <summary>
+    ///     Return a copy of this resource path with the file extension changed.
+    /// </summary>
+    /// <param name="newExtension">
+    ///     The new file extension.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     Thrown if <paramref name="newExtension"/> is null, empty,
+    ///     contains <c>/</c> or is equal to <c>.</c>
+    /// </exception>
+    public ResourcePath WithExtension(string newExtension)
+    {
+        if (string.IsNullOrEmpty(newExtension))
+        {
+            throw new ArgumentException("New file name cannot be null or empty.");
+        }
+
+        if (newExtension.Contains('/'))
+        {
+            throw new ArgumentException("New file name cannot contain the separator.");
+        }
+
+        return WithName($"{FilenameWithoutExtension}.{newExtension}");
+    }
+
+    /// <summary>
+    ///     Return a copy of this resource path with the file name changed.
+    /// </summary>
+    /// <param name="name">
+    ///     The new file name.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     Thrown if <paramref name="name"/> is null, empty,
+    ///     contains <c>/</c> or is equal to <c>.</c>
+    /// </exception>
+    public ResourcePath WithName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            throw new ArgumentException("New file name cannot be null or empty.");
+        }
+
+        if (name.Contains('/'))
+        {
+            throw new ArgumentException("New file name cannot contain the separator.");
+        }
+
+        if (name == ".")
+        {
+            throw new ArgumentException("New file name cannot be '.'");
+        }
+
+        return new ResourcePath(Directory + "/" + name, "/");
+    }
+
+    #endregion
+
+    #region Roots & Relatives
+
+    /// <summary>
+    ///     Returns true if the path is rooted/absolute (starts with the separator).
+    /// </summary>
+    /// <seealso cref="IsRelative" />
+    /// <seealso cref="ToRootedPath"/>
+    public bool IsRooted => CanonPath[0] == '/';
+
+    /// <summary>
+    ///     Returns true if the path is not rooted.
+    /// </summary>
+    /// <seealso cref="IsRooted" />
+    /// <seealso cref="ToRelativePath"/>
+    public bool IsRelative => !IsRooted;
+
+    /// <summary>
+    ///     Gets the common base of two paths.
+    /// </summary>
+    /// <example>
+    ///     <code>
+    ///     var path1 = new ResourcePath("/a/b/c");
+    ///     var path2 = new ResourcePath("/a/e/d");
+    ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "/a".
+    ///     </code>
+    /// </example>
+    /// <param name="other">The other path.</param>
+    /// <exception cref="ArgumentException">Thrown if there is no common base between the two paths.</exception>
+    public ResourcePath CommonBase(ResourcePath other)
+    {
+        if (CanonPath.Equals(other.CanonPath))
+        {
+            return this;
+        }
+
+        var minLen = Math.Min(CanonPath.Length, other.CanonPath.Length);
+        var lastSeparatorPos = IsRooted && other.IsRooted ? 1 : 0;
+        for (int len = lastSeparatorPos; len < minLen; len++)
+        {
+            if (CanonPath[len] != other.CanonPath[len])
             {
-                throw new ArgumentNullException(nameof(path));
+                break;
             }
 
-            if (path == "")
+            if (CanonPath[len] != '/')
             {
-                Segments = new string[] {"."};
-                return;
+                continue;
             }
+            
+            lastSeparatorPos = len;
+        }
+        
+        if (lastSeparatorPos == 0)
+        {
+            throw new ArgumentException($"{this} and {other} have no common base.");
+        }
 
-            var splitSegments = path.Split(separator);
-            var segments = new List<string>(splitSegments.Length);
-            var i = 0;
-            if (splitSegments[0] == "")
+        return new ResourcePath(CanonPath[..lastSeparatorPos]);
+    }
+
+
+    /// <summary>
+    ///     Returns the path of how this instance is "relative" to <paramref name="basePath" />,
+    ///     such that <c>basePath/result == this</c>.
+    /// </summary>
+    /// <example>
+    ///     <code>
+    ///     var path1 = new ResourcePath("/a/b/c");
+    ///     var path2 = new ResourcePath("/a");
+    ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "b/c".
+    ///     </code>
+    /// </example>
+    /// <exception cref="ArgumentException">Thrown if we are not relative to the base path.</exception>
+    public ResourcePath RelativeTo(ResourcePath basePath)
+    {
+        if (TryRelativeTo(basePath, out var relative)) return relative.Value;
+
+        throw new ArgumentException($"{CanonPath} does not start with {basePath}.");
+    }
+
+    /// <summary>
+    ///     Try pattern version of <see cref="RelativeTo(ResourcePath)" />.
+    /// </summary>
+    /// <param name="basePath">The base path which we can be made relative to.</param>
+    /// <param name="relative">The path of how we are relative to <paramref name="basePath" />, if at all.</param>
+    /// <returns>True if we are relative to <paramref name="basePath" />, false otherwise.</returns>
+    /// <exception cref="ArgumentException">Thrown if the separators are not the same.</exception>
+    public bool TryRelativeTo(ResourcePath basePath, [NotNullWhen(true)] out ResourcePath? relative)
+    {
+        if (this == basePath)
+        {
+            relative = Self;
+            return true;
+        }
+
+        if (CanonPath.StartsWith(basePath.CanonPath))
+        {
+            var x = CanonPath[basePath.CanonPath.Length..]
+                .TrimStart('/');
+            relative = new ResourcePath(x);
+            return true;
+        }
+
+        relative = null;
+        return false;
+    }
+
+
+    /// <summary>
+    ///     Turns the path into a rooted path by prepending it with the separator.
+    ///     Does nothing if the path is already rooted.
+    /// </summary>
+    /// <seealso cref="IsRooted" />
+    /// <seealso cref="ToRelativePath" />
+    public ResourcePath ToRootedPath()
+    {
+        return IsRooted
+            ? this
+            : new ResourcePath("/" + CanonPath);
+    }
+
+    /// <summary>
+    ///     Turns the path into a relative path by removing the root separator, if any.
+    ///     Does nothing if the path is already relative.
+    /// </summary>
+    /// <seealso cref="IsRelative" />
+    /// <seealso cref="ToRootedPath" />
+    public ResourcePath ToRelativePath()
+    {
+        if (IsRelative) return this;
+
+        return this == Root
+            ? Self
+            : new ResourcePath(CanonPath[1..]);
+    }
+
+    /// <summary>
+    ///     Turns the path into a relative path with system-specific separator.
+    ///     For usage in disk I/O.
+    /// </summary>
+    public string ToRelativeSystemPath()
+    {
+        return ToRelativePath().ChangeSeparator(SystemSeparator);
+    }
+
+    /// <summary>
+    ///     Converts a relative disk path back into a resource path.
+    /// </summary>
+    public static ResourcePath FromRelativeSystemPath(string path, string newSeparator = "/")
+    {
+        // ReSharper disable once RedundantArgumentDefaultValue
+        return new ResourcePath(path, SystemSeparator);
+    }
+
+    #endregion
+
+    /// <summary>
+    ///     Returns cleaned version of the resource path, removing <c>..</c>.
+    /// </summary>
+    /// <remarks>
+    ///     If <c>..</c> appears at the base of a path, it is left alone. If it appears at root level (like <c>/..</c>) it is removed entirely.
+    /// </remarks>
+    public ResourcePath Clean()
+    {
+        var segments = new List<string>();
+        if (IsRooted)
+        {
+            segments.Add("/");
+        }
+
+        foreach (var segment in  CanonPath.Segments('/'))
+        {
+            // Skip pointless segments
+            if (segment == "." || segment == "")
             {
-                i = 1;
-                segments.Add(separator);
+                continue;
             }
-
-            for (; i < splitSegments.Length; i++)
+            
+            // If you have ".." cleaning that up doesn't remove that.
+            if (segment == ".." && segments.Count > 0)
             {
-                var segment = splitSegments[i];
-                if (segment == "" || (segment == "." && segments.Count != 0))
+                if (segments is ["/"])
                 {
                     continue;
                 }
 
-                if (i == 1 && segments[0] == ".")
+                var pos = segments.Count - 1;
+                if (segments[pos] != "..")
                 {
-                    segments[0] = segment;
-                }
-                else
-                {
-                    segments.Add(segment);
+                    segments.RemoveAt(pos);
+                    continue;
                 }
             }
-
-            Segments = ListToArray(segments);
+            
+            segments.Add(segment);
         }
-
-        private ResourcePath(string[] segments, string separator)
+        
+        // Build Canon path from segments with StringBuilder
+        var sb = new StringBuilder(CanonPath.Length);
+        var start = IsRooted && segments.Count > 1 ? 1 : 0;
+        for (var i = 0; i < segments.Count; i++)
         {
-            Segments = segments;
-            Separator = separator;
-        }
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            var builder = new StringBuilder();
-            var i = 0;
-            if (IsRooted)
+            if (i > start)
             {
-                i = 1;
-                builder.Append(Separator);
+                sb.Append('/');
             }
 
-            for (; i < Segments.Length; i++)
+            sb.Append(segments[i]);
+        }
+        
+        return sb.Length == 0 
+            ? Self
+            : new ResourcePath(sb.ToString());
+    }
+
+    /// <summary>
+    ///     Check whether a path is clean, i.e. <see cref="Clean"/> would not modify it.
+    /// </summary>
+    /// <returns></returns>
+    public bool IsClean()
+    {
+        var segments = CanonPath.Segments('/').ToArray();
+        for (var i = 0; i < segments.Length; i++)
+        {
+            if (segments[i] == "..")
             {
-                builder.Append(Segments[i]);
-                if (i + 1 < Segments.Length)
+                if (IsRooted)
                 {
-                    builder.Append(Separator);
-                }
-            }
-
-            return builder.ToString();
-        }
-
-        /// <summary>
-        ///     Returns true if the path is rooted (starts with the separator).
-        /// </summary>
-        /// <seealso cref="IsRelative" />
-        /// <seealso cref="ToRootedPath"/>
-        public bool IsRooted => Segments[0] == Separator;
-
-        /// <summary>
-        ///     Returns true if the path is not rooted.
-        /// </summary>
-        /// <seealso cref="IsRooted" />
-        /// <seealso cref="ToRelativePath"/>
-        public bool IsRelative => !IsRooted;
-
-        /// <summary>
-        ///     Returns true if the path is equal to "."
-        /// </summary>
-        public bool IsSelf => Segments.Length == 1 && Segments[0] == ".";
-
-        /// <summary>
-        ///     Returns the file extension of file path, if any.
-        ///     Returns "" if there is no file extension.
-        ///     The extension returned does NOT include a period.
-        /// </summary>
-        public string Extension
-        {
-            get
-            {
-                var filename = Filename;
-                if (string.IsNullOrWhiteSpace(filename))
-                {
-                    return "";
-                }
-
-                var index = filename.LastIndexOf('.');
-                if (index == 0 || index == -1 || index == filename.Length - 1)
-                {
-                    // The path is a dotfile (like .bashrc),
-                    // or there's no period at all,
-                    // or the period is at the very end.
-                    // Non of these cases are truly an extension.
-                    return "";
-                }
-
-                return filename.Substring(index + 1);
-            }
-        }
-
-        /// <summary>
-        ///     Returns the file name.
-        /// </summary>
-        public string Filename
-        {
-            get
-            {
-                if (Segments.Length == 1 && IsRooted)
-                {
-                    return "";
-                }
-
-                return Segments[Segments.Length - 1];
-            }
-        }
-
-        /// <summary>
-        ///     Returns the file name, without extension.
-        /// </summary>
-        public string FilenameWithoutExtension
-        {
-            get
-            {
-                var filename = Filename;
-                if (string.IsNullOrWhiteSpace(filename))
-                {
-                    return filename;
-                }
-
-                var index = filename.LastIndexOf('.');
-                if (index == 0 || index == -1 || index == filename.Length - 1)
-                {
-                    return filename;
-                }
-
-                return filename.Substring(0, index);
-            }
-        }
-
-        /// <summary>
-        ///     Returns the directory that this file resides in.
-        /// </summary>
-        public ResourcePath Directory
-        {
-            get
-            {
-                if (IsSelf) return this;
-
-                var fileName = Filename;
-                if (!string.IsNullOrWhiteSpace(fileName))
-                {
-                    var path = ToString();
-                    var dir = path.Remove(path.Length - fileName.Length);
-                    return new ResourcePath(dir);
-                }
-
-                return this;
-            }
-        }
-
-        /// <summary>
-        ///     Returns a new instance with a different separator set.
-        /// </summary>
-        /// <param name="newSeparator">The new separator to use.</param>
-        /// <exception cref="ArgumentException">Thrown if the new separator is invalid.</exception>
-        public ResourcePath ChangeSeparator(string newSeparator)
-        {
-            ValidateSeparate(newSeparator);
-
-            // Convert the segments into a string path, then re-parse it.
-            // Solves the edge case of the segments containing the new separator.
-            ResourcePath path;
-            if (IsRooted)
-            {
-                var clone = (string[]) Segments.Clone();
-                clone[0] = newSeparator;
-                path = new ResourcePath(clone, newSeparator);
-            }
-            else
-            {
-                path = new ResourcePath(Segments, newSeparator);
-            }
-            return new ResourcePath(path.ToString(), newSeparator);
-        }
-
-        /// <summary>
-        ///     Joins two resource paths together, with separator in between.
-        ///     If the second path is absolute, the first path is completely ignored.
-        /// </summary>
-        /// <exception cref="ArgumentException">Thrown if the separators of the two paths do not match.</exception>
-        // "Why use / instead of +" you may think:
-        // * It's clever, although I got the idea from Python's pathlib.
-        // * It avoids confusing operator precedence causing you to join two strings,
-        //   because path + string + string != path + (string + string),
-        //   whereas path / (string / string) doesn't compile.
-        public static ResourcePath operator /(ResourcePath a, ResourcePath b)
-        {
-            if (a.Separator != b.Separator)
-            {
-                throw new ArgumentException("Both separators must be the same.");
-            }
-
-            if (b.IsRooted)
-            {
-                return b;
-            }
-
-            if (b.IsSelf)
-            {
-                return a;
-            }
-
-            string[] segments = new string[a.Segments.Length + b.Segments.Length];
-            a.Segments.CopyTo(segments, 0);
-            b.Segments.CopyTo(segments, a.Segments.Length);
-            return new ResourcePath(segments, a.Separator);
-        }
-
-        /// <summary>
-        ///     Adds a new segment to the path as string.
-        /// </summary>
-        public static ResourcePath operator /(ResourcePath path, string b)
-        {
-            return path / new ResourcePath(b, path.Separator);
-        }
-
-        /// <summary>
-        ///     "Cleans" the resource path, removing <c>..</c>.
-        /// </summary>
-        /// <remarks>
-        ///     If .. appears at the base of a path, it is left alone. If it appears at root level (like /..) it is removed entirely.
-        /// </remarks>
-        public ResourcePath Clean()
-        {
-            var segments = new List<string>();
-
-            foreach (var segment in Segments)
-            {
-                // If you have ".." cleaning that up doesn't remove that.
-                if (segment == ".." && segments.Count != 0)
-                {
-                    // Trying to do /.. results in /
-                    if (segments.Count == 1 && segments[0] == Separator)
-                    {
-                        continue;
-                    }
-
-                    var pos = segments.Count - 1;
-                    if (segments[pos] != "..")
-                    {
-                        segments.RemoveAt(pos);
-                        continue;
-                    }
-                }
-
-                segments.Add(segment);
-            }
-
-            if (segments.Count == 0)
-            {
-                return new ResourcePath(".", Separator);
-            }
-
-            return new ResourcePath(ListToArray(segments), Separator);
-        }
-
-        /// <summary>
-        ///     Check whether a path is clean, i.e. <see cref="Clean"/> would not modify it.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsClean()
-        {
-            for (var i = 0; i < Segments.Length; i++)
-            {
-                if (Segments[i] == "..")
-                {
-                    if (IsRooted)
-                    {
-                        return false;
-                    }
-
-                    if (i > 0 && Segments[i - 1] != "..")
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        ///     Turns the path into a rooted path by prepending it with the separator.
-        ///     Does nothing if the path is already rooted.
-        /// </summary>
-        /// <seealso cref="IsRooted" />
-        /// <seealso cref="ToRelativePath" />
-        public ResourcePath ToRootedPath()
-        {
-            if (IsRooted)
-            {
-                return this;
-            }
-
-            var segments = new string[Segments.Length + 1];
-            Segments.CopyTo(segments, 1);
-            segments[0] = Separator;
-            return new ResourcePath(segments, Separator);
-        }
-
-        /// <summary>
-        ///     Turns the path into a relative path by removing the root separator, if any.
-        ///     Does nothing if the path is already relative.
-        /// </summary>
-        /// <seealso cref="IsRelative"/>
-        /// <seealso cref="ToRootedPath" />
-        public ResourcePath ToRelativePath()
-        {
-            if (IsRelative)
-            {
-                return this;
-            }
-
-            if (Segments.Length == 1)
-            {
-                // This path is literally just "/"
-                return new ResourcePath(".", Separator);
-            }
-
-            var segments = new string[Segments.Length - 1];
-            Array.Copy(Segments, 1, segments, 0, Segments.Length - 1);
-            return new ResourcePath(segments, Separator);
-        }
-
-        /// <summary>
-        ///     Turns the path into a relative path with system-specific separator.
-        ///     For usage in disk I/O.
-        /// </summary>
-        public string ToRelativeSystemPath()
-        {
-            return ChangeSeparator(SYSTEM_SEPARATOR).ToRelativePath().ToString();
-        }
-
-        /// <summary>
-        ///     Converts a relative disk path back into a resource path.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">Thrown if either argument is null.</exception>
-        public static ResourcePath FromRelativeSystemPath(string path, string newSeparator = "/")
-        {
-            // ReSharper disable once RedundantArgumentDefaultValue
-            return new ResourcePath(path, SYSTEM_SEPARATOR).ChangeSeparator(newSeparator);
-        }
-
-        /// <summary>
-        ///     Returns the path of how this instance is "relative" to <paramref name="basePath"/>,
-        ///     such that <c>basePath/result == this</c>.
-        /// </summary>
-        /// <example>
-        ///     <code>
-        ///     var path1 = new ResourcePath("/a/b/c");
-        ///     var path2 = new ResourcePath("/a");
-        ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "b/c".
-        ///     </code>
-        /// </example>
-        /// <exception cref="ArgumentException">Thrown if we are not relative to the base path or the separators are not the same.</exception>
-        public ResourcePath RelativeTo(ResourcePath basePath)
-        {
-            if (TryRelativeTo(basePath, out var relative))
-            {
-                return relative;
-            }
-
-            throw new ArgumentException($"{this} does not start with {basePath}.");
-        }
-
-        /// <summary>
-        ///     Try pattern version of <see cref="RelativeTo(ResourcePath)"/>.
-        /// </summary>
-        /// <param name="basePath">The base path which we can be made relative to.</param>
-        /// <param name="relative">The path of how we are relative to <paramref name="basePath"/>, if at all.</param>
-        /// <returns>True if we are relative to <paramref name="basePath"/>, false otherwise.</returns>
-        /// <exception cref="ArgumentException">Thrown if the separators are not the same.</exception>
-        public bool TryRelativeTo(ResourcePath basePath, [NotNullWhen(true)] out ResourcePath? relative)
-        {
-            if (basePath.Separator != Separator)
-            {
-                throw new ArgumentException("Separators must be the same.", nameof(basePath));
-            }
-
-            if (Segments.Length < basePath.Segments.Length)
-            {
-                relative = null;
-                return false;
-            }
-
-            if (Segments.Length == basePath.Segments.Length)
-            {
-                if (this == basePath)
-                {
-                    relative = new ResourcePath(".", Separator);
-                    return true;
-                }
-                else
-                {
-                    relative = null;
                     return false;
                 }
-            }
 
-            for (var i = 0; i < basePath.Segments.Length; i++)
-            {
-                if (Segments[i] != basePath.Segments[i])
-                {
-                    relative = null;
-                    return false;
-                }
-            }
-
-            var segments = new string[Segments.Length - basePath.Segments.Length];
-            Array.Copy(Segments, basePath.Segments.Length, segments, 0, segments.Length);
-            relative = new ResourcePath(segments, Separator);
-            return true;
-        }
-
-        /// <summary>
-        ///     Gets the common base of two paths.
-        /// </summary>
-        /// <example>
-        ///     <code>
-        ///     var path1 = new ResourcePath("/a/b/c");
-        ///     var path2 = new ResourcePath("/a/e/d");
-        ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "/a".
-        ///     </code>
-        /// </example>
-        /// <param name="other">The other path.</param>
-        /// <exception cref="ArgumentException">Thrown if there is no common base between the two paths.</exception>
-        public ResourcePath CommonBase(ResourcePath other)
-        {
-            if (other.Separator != Separator)
-            {
-                throw new ArgumentException("Separators must match.");
-            }
-
-            var i = 0;
-            for (; i < Segments.Length && i < other.Segments.Length; i++)
-            {
-                if (Segments[i] != other.Segments[i])
-                {
-                    break;
-                }
-            }
-
-            if (i == 0)
-            {
-                throw new ArgumentException($"{this} and {other} have no common base.");
-            }
-
-            var segments = new string[i];
-            Array.Copy(Segments, segments, i);
-            return new ResourcePath(segments, Separator);
-        }
-
-        /// <summary>
-        ///     Return a copy of this resource path with the file name changed.
-        /// </summary>
-        /// <param name="name">
-        ///     The new file name.
-        /// </param>
-        /// <exception cref="ArgumentException">
-        ///     Thrown if <paramref name="name"/> is null, empty,
-        ///     contains <see cref="Separator"/> or is equal to <c>.</c>
-        /// </exception>
-        public ResourcePath WithName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new ArgumentException("New file name cannot be null or empty.");
-            }
-
-            if (name.Contains(Separator))
-            {
-                throw new ArgumentException("New file name cannot contain the separator.");
-            }
-
-            if (name == ".")
-            {
-                throw new ArgumentException("New file name cannot be '.'");
-            }
-
-            var newSegments = (string[]) Segments.Clone();
-            newSegments[newSegments.Length - 1] = name;
-
-            return new ResourcePath(newSegments, Separator);
-        }
-
-        /// <summary>
-        ///     Return a copy of this resource path with the file extension changed.
-        /// </summary>
-        /// <param name="newExtension">
-        ///     The new file extension.
-        /// </param>
-        /// <exception cref="ArgumentException">
-        ///     Thrown if <paramref name="newExtension"/> is null, empty,
-        ///     contains <see cref="Separator"/> or is equal to <c>.</c>
-        /// </exception>
-        public ResourcePath WithExtension(string newExtension)
-        {
-            if (string.IsNullOrEmpty(newExtension))
-            {
-                throw new ArgumentException("New file name cannot be null or empty.");
-            }
-
-            if (newExtension.Contains(Separator))
-            {
-                throw new ArgumentException("New file name cannot contain the separator.");
-            }
-
-            return WithName($"{FilenameWithoutExtension}.{newExtension}");
-        }
-
-        /// <summary>
-        ///     Enumerates the segments of this path.
-        /// </summary>
-        /// <remarks>
-        ///     Segments are returned from highest to deepest.
-        ///     For example <c>/a/b</c> will yield <c>a</c> then <c>b</c>.
-        ///     No special indication is given for rooted paths,
-        ///     so <c>/a/b</c> yields the same as <c>a/b</c>.
-        /// </remarks>
-        public IEnumerable<string> EnumerateSegments()
-        {
-            if (IsRooted)
-            {
-                // Skip '/' root.
-                return Segments.Skip(1);
-            }
-
-            return Segments;
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            var code = Separator.GetHashCode();
-            foreach (var segment in Segments)
-            {
-                unchecked
-                {
-                    code = code * 31 + segment.GetHashCode();
-                }
-            }
-
-            return code;
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return obj is ResourcePath path && Equals(path);
-        }
-
-        /// <summary>
-        ///     Checks that we are equal with <paramref name="path"/>.
-        ///     This method does NOT clean the paths beforehand, so paths that point to the same location may fail if they are not cleaned beforehand.
-        ///     Paths are never equal if they do not have the same separator.
-        /// </summary>
-        /// <param name="other">The path to check equality with.</param>
-        /// <returns>True if the paths are equal, false otherwise.</returns>
-        public bool Equals(ResourcePath? other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
-
-            if (other.Separator != Separator || Segments.Length != other.Segments.Length)
-            {
-                return false;
-            }
-
-            for (var i = 0; i < Segments.Length; i++)
-            {
-                if (Segments[i] != other.Segments[i])
+                if (i > 0 && segments[i - 1] != "..")
                 {
                     return false;
                 }
             }
-
-            return true;
         }
 
-        public static bool operator ==(ResourcePath? a, ResourcePath? b)
-        {
-            if ((object?) a == null)
-            {
-                return (object?) b == null;
-            }
+        return true;
+    }
 
-            return a.Equals(b);
+    /// <summary>
+    ///     Turns the path into a relative path with system-specific separator.
+    ///     For usage in disk I/O.
+    /// </summary>
+    public string ChangeSeparator(string newSeparator)
+    {
+        if (newSeparator is "." or "\0") throw new ArgumentException("New separator can't be `.` or `NULL`");
+
+        return newSeparator == "/"
+            ? CanonPath
+            : CanonPath.Replace("/", newSeparator);
+    }
+
+
+    /// <summary>
+    ///     Enumerates the segments of this path.
+    /// </summary>
+    /// <remarks>
+    ///     Segments are returned from highest to deepest.
+    ///     For example <c>/a/b</c> will yield <c>a</c> then <c>b</c>.
+    ///     No special indication is given for rooted paths,
+    ///     so <c>/a/b</c> yields the same as <c>a/b</c>.
+    /// </remarks>
+    public IEnumerable<string> EnumerateSegments()
+    {
+        return CanonPath.Segments('/');
+    }
+}
+
+/// <summary>
+/// Iterator over segments in <see cref="ResourcePath"/> from the root directory to children.
+/// For example give path <c>/foo/bar/baz</c> will yield <c>foo</c> then <c>bar</c>, then
+/// <c>baz</c>.
+/// </summary>
+public struct SegmentEnumerator : IEnumerator<string>
+{
+    /// <summary>
+    /// Original path with custom separator
+    /// </summary>
+    private readonly string _path;
+
+    /// <summary>
+    /// Position of head used to extract segment via <see cref="ReadOnlySpan{T}"/>
+    /// </summary>
+    private int _pos;
+
+    /// <summary>
+    /// Length of segment <see cref="_pos"/> is pointing
+    /// </summary>
+    private int _len;
+
+    /// <summary>
+    /// Separator used. Defaults to <c>/</c>.
+    /// </summary>
+    private readonly char _separator;
+
+    /// <summary>
+    /// Construct <see cref="SegmentEnumerator"/>
+    /// </summary>
+    /// <param name="path">string input representing path</param>
+    /// <param name="separator">character used to separate paths. Defaults to <c>/</c></param>
+    public SegmentEnumerator(string path, char separator = '/')
+    {
+        _path = path;
+        _separator = separator;
+        // Small trick because _pos needs to always point at '/' so on first iteration
+        // if path is relative we treat like the separator is before start of string
+        _pos = _path.Length > 1 && _path[0] == _separator ? 0 : -1;
+        _len = 0;
+    }
+
+    /// <inheritdoc />
+    public bool MoveNext()
+    {
+        // Move Span start _pos by length of last string read
+        _pos += _len;
+        // Head points now to '/'.
+        // Increment to enable string search to work, and abort if position out of range
+        if (++_pos > _path.Length)
+        {
+            return false;
         }
 
-        public static bool operator !=(ResourcePath? a, ResourcePath? b)
+        // Find next segment
+        var ind = _path.IndexOf(_separator, _pos);
+        // If segment not found, _len must account for the rest of string
+        _len = (ind == -1 ? _path.Length : ind) - _pos;
+
+        return _pos < _path.Length && _pos + _len <= _path.Length;
+    }
+
+    /// <inheritdoc />
+    public void Reset()
+    {
+        _pos = _path.Length > 1 && _path[0] == _separator ? 0 : -1;
+        _len = 0;
+    }
+
+    /// <inheritdoc />
+
+    object IEnumerator.Current => Current;
+
+    /// <inheritdoc />
+
+    public string Current => _path.AsSpan(_pos, _len).ToString();
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+    }
+}
+/// <summary>
+/// Helper Method for dividing string into segments.
+/// </summary>
+public static class ResPathExtension
+{
+    public static IEnumerable<string> Segments(this string path, char separator)
+    {
+        var iter = new SegmentEnumerator(path, separator);
+        while (iter.MoveNext())
         {
-            return !(a == b);
-        }
-
-        // While profiling I found that List<T>.ToArray() is just incredibly slow. No idea why honestly.
-        private static string[] ListToArray(List<string> list)
-        {
-            var array = new string[list.Count];
-
-            for (var i = 0; i < list.Count; i++)
-            {
-                array[i] = list[i];
-            }
-
-            return array;
-        }
-
-        private static void ValidateSeparate(string separator)
-        {
-            if (string.IsNullOrWhiteSpace(separator))
-            {
-                throw new ArgumentException("Separator may not be null or whitespace.");
-            }
-
-            if (separator == "." || separator == "..")
-            {
-                throw new ArgumentException("Separator may not be . or ..");
-            }
+            yield return iter.Current;
         }
     }
 }

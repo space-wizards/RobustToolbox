@@ -86,7 +86,7 @@ namespace Robust.Shared.ContentPack
             //create new PackLoader
 
             var loader = new PackLoader(packInfo);
-            AddRoot(prefix, loader);
+            AddRoot(prefix.Value, loader);
         }
 
         public void MountContentPack(Stream zipStream, ResourcePath? prefix = null)
@@ -94,7 +94,7 @@ namespace Robust.Shared.ContentPack
             prefix = SanitizePrefix(prefix);
 
             var loader = new PackLoader(zipStream);
-            AddRoot(prefix, loader);
+            AddRoot(prefix.Value, loader);
         }
 
         public void AddRoot(ResourcePath prefix, IContentRoot loader)
@@ -117,12 +117,12 @@ namespace Robust.Shared.ContentPack
             {
                 prefix = ResourcePath.Root;
             }
-            else if (!prefix.IsRooted)
+            else if (!prefix.Value.IsRooted)
             {
                 throw new ArgumentException("Prefix must be rooted.", nameof(prefix));
             }
 
-            return prefix;
+            return prefix.Value;
         }
 
         /// <inheritdoc />
@@ -140,7 +140,7 @@ namespace Robust.Shared.ContentPack
             }
 
             var loader = new DirLoader(pathInfo, Logger.GetSawmill("res"), _config.GetCVar(CVars.ResCheckPathCasing));
-            AddRoot(prefix, loader);
+            AddRoot(prefix.Value, loader);
         }
 
         /// <inheritdoc />
@@ -195,7 +195,7 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    if (root.TryGetFile(relative, out var stream))
+                    if (root.TryGetFile(relative.Value, out var stream))
                     {
                         fileStream = WrapStream(stream);
                         return true;
@@ -283,7 +283,7 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    entries.UnionWith(root.GetEntries(relative));
+                    entries.UnionWith(root.GetEntries(relative.Value));
                 }
             }
             finally
@@ -319,7 +319,7 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    foreach (var filename in root.FindFiles(relative))
+                    foreach (var filename in root.FindFiles(relative.Value))
                     {
                         var newPath = prefix / filename;
                         if (!alreadyReturnedFiles.Contains(newPath))
@@ -349,7 +349,7 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    diskPath = dirLoader.GetPath(tempPath);
+                    diskPath = dirLoader.GetPath(tempPath.Value);
                     if (File.Exists(diskPath))
                         return true;
                 }

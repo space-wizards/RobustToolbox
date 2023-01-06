@@ -120,7 +120,7 @@ namespace Robust.Client.Prototypes
                                 continue;
                             }
 
-                            _reloadQueue.Add(relative);
+                            _reloadQueue.Add(relative.Value);
                         }
                     });
                 };

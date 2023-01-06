@@ -14,7 +14,7 @@ namespace Robust.Client.ResourceManagement
     public sealed class TextureResource : BaseResource
     {
         private OwnedTexture _texture = default!;
-        public override ResourcePath Fallback => new("/Textures/noSprite.png");
+        public override ResourcePath? Fallback => new("/Textures/noSprite.png");
 
         public Texture Texture => _texture;
 

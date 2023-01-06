@@ -43,7 +43,7 @@ namespace Robust.Client.ResourceManagement
                 {
                     Logger.Error(
                         $"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}\n{e}");
-                    return GetResource<T>(_resource.Fallback, false);
+                    return GetResource<T>(_resource.Fallback.Value, false);
                 }
                 else
                 {
@@ -141,7 +141,7 @@ namespace Robust.Client.ResourceManagement
                 throw new InvalidOperationException($"Resource of type '{typeof(T)}' has no fallback.");
             }
 
-            fallback = GetResource<T>(res.Fallback, useFallback: false);
+            fallback = GetResource<T>(res.Fallback.Value, useFallback: false);
             _fallbacks.Add(typeof(T), fallback);
             return (T) fallback;
         }
@@ -215,7 +215,7 @@ namespace Robust.Client.ResourceManagement
         {
             prefix ??= ResourcePath.Root;
             var root = new LoaderApiLoader(api, apiPrefix);
-            AddRoot(prefix, root);
+            AddRoot(prefix.Value, root);
         }
     }
 }

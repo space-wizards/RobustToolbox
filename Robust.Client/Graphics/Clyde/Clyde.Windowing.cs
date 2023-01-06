@@ -266,7 +266,7 @@ namespace Robust.Client.Graphics.Clyde
                 yield break;
             }
 
-            foreach (var file in _resourceCache.ContentFindFiles(_windowIconPath))
+            foreach (var file in _resourceCache.ContentFindFiles(_windowIconPath.Value))
             {
                 if (file.Extension != "png")
                 {

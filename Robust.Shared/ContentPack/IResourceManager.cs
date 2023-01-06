@@ -107,7 +107,7 @@ namespace Robust.Shared.ContentPack
                     throw new InvalidOperationException("This is unreachable");
                 }
 
-                yield return rel;
+                yield return rel.Value;
             }
         }
 

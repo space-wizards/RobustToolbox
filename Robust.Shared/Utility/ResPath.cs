@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Shared.Serialization;
+using ArgumentException = System.ArgumentException;
 
 namespace Robust.Shared.Utility;
 
@@ -13,9 +14,7 @@ namespace Robust.Shared.Utility;
 ///     Provides object-oriented path manipulation for resource paths.
 ///     ResourcePaths are immutable.
 /// </summary>
-[PublicAPI]
-[Serializable]
-[NetSerializable]
+[PublicAPI, Serializable, NetSerializable]
 public readonly struct ResPath : IEquatable<ResPath>
 {
     /// <summary>
@@ -42,16 +41,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     ///     Internal system independent path. It uses `/` internally as
     ///     separator and will translate to it on creation.
     /// </summary>
-    internal readonly string CanonicalResource;
-
-    /// <summary>
-    ///     Converts this element to String
-    /// </summary>
-    /// <returns> System independent representation of path</returns>
-    public override string ToString()
-    {
-        return CanonicalResource;
-    }
+    internal readonly string CanonPath;
 
     /// <summary>
     ///     Create a new path from a string, splitting it by the separator provided.
@@ -65,7 +55,7 @@ public readonly struct ResPath : IEquatable<ResPath>
 
         if (path == "" || path == ".")
         {
-            CanonicalResource = ".";
+            CanonPath = ".";
             return;
         }
 
@@ -84,7 +74,7 @@ public readonly struct ResPath : IEquatable<ResPath>
             needsSeparator = true;
         }
 
-        CanonicalResource = sb.Length == 0 ? "." : sb.ToString();
+        CanonPath = sb.Length == 0 ? "." : sb.ToString();
     }
 
 
@@ -92,16 +82,16 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// Private constructor used to quickly concatenate Resources
     /// It assumes Canonical Resource has been cleared via other constructor
     /// </summary>
-    /// <param name="canonicalResource"></param>
-    private ResPath(string canonicalResource)
+    /// <param name="canonPath"></param>
+    private ResPath(string canonPath)
     {
-        CanonicalResource = canonicalResource;
+        CanonPath = canonPath;
     }
 
     /// <summary>
     ///     Returns true if the path is equal to "."
     /// </summary>
-    public bool IsSelf => CanonicalResource == Self.CanonicalResource;
+    public bool IsSelf => CanonPath == Self.CanonPath;
 
     /// <summary>
     ///     Returns the parent directory that this file resides in
@@ -122,9 +112,9 @@ public readonly struct ResPath : IEquatable<ResPath>
         {
             if (IsSelf) return Self;
 
-            var ind = CanonicalResource.LastIndexOf('/');
+            var ind = CanonPath.LastIndexOf('/');
             return ind != -1
-                ? new ResPath(CanonicalResource[..ind])
+                ? new ResPath(CanonPath[..ind])
                 : Self;
         }
     }
@@ -177,15 +167,18 @@ public readonly struct ResPath : IEquatable<ResPath>
     ///     Assert.AreEqual(".gitignore", gitignore.FilenameWithoutExtension());
     /// </code>
     /// </example>
-    public string FilenameWithoutExtension()
+    public string FilenameWithoutExtension
     {
-        var filename = Filename;
+        get
+        {
+            var filename = Filename;
 
-        if (filename == "") return "";
-        var ind = filename.LastIndexOf('.');
-        return ind <= 0
-            ? filename
-            : filename[..ind];
+            if (filename == "") return "";
+            var ind = filename.LastIndexOf('.');
+            return ind <= 0
+                ? filename
+                : filename[..ind];
+        }
     }
 
     /// <summary>
@@ -208,26 +201,35 @@ public readonly struct ResPath : IEquatable<ResPath>
     {
         get
         {
-            if (CanonicalResource is "." or "")
+            if (CanonPath is "." or "")
                 return ".";
 
             // CanonicalResource[..^1] avoids last char if its a folder, it won't matter if 
             // it's a filename
             // Uses +1 to skip `/` found in or starts from beginning of string
             // if we found nothing (ind == -1)
-            var ind = CanonicalResource[..^1].LastIndexOf('/') + 1;
-            return CanonicalResource[^1] == '/'
-                ? CanonicalResource[ind .. ^1] // Omit last `/`  
-                : CanonicalResource[ind..];
+            var ind = CanonPath[..^1].LastIndexOf('/') + 1;
+            return CanonPath[^1] == '/'
+                ? CanonPath[ind .. ^1] // Omit last `/`  
+                : CanonPath[ind..];
         }
     }
 
     #region Operators & Equality
 
+    /// <summary>
+    ///     Converts this element to String
+    /// </summary>
+    /// <returns> System independent representation of path</returns>
+    public override string ToString()
+    {
+        return CanonPath;
+    }
+    
     /// <inheritdoc/>
     public bool Equals(ResPath other)
     {
-        return CanonicalResource == other.CanonicalResource;
+        return CanonPath == other.CanonPath;
     }
 
     /// <inheritdoc/>
@@ -239,7 +241,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <inheritdoc/>
     public override int GetHashCode()
     {
-        return CanonicalResource.GetHashCode();
+        return CanonPath.GetHashCode();
     }
 
 
@@ -261,7 +263,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <exception cref="ArgumentException">Thrown if the separators of the two paths do not match.</exception>
     // Copied comment
     // "Why use / instead of +" you may think:
-    // * It's clever, although I got the idea from Python's pathlib.
+    // * It's clever, although I got the idea from Python's `pathlib`.
     // * It avoids confusing operator precedence causing you to join two strings,
     //   because path + string + string != path + (string + string),
     //   whereas path / (string / string) doesn't compile.
@@ -271,7 +273,7 @@ public readonly struct ResPath : IEquatable<ResPath>
 
         if (right.IsSelf) return left;
 
-        return new ResPath(left.CanonicalResource + "/" + right.CanonicalResource);
+        return new ResPath(left.CanonPath + "/" + right.CanonPath);
     }
 
     /// <summary>
@@ -288,14 +290,59 @@ public readonly struct ResPath : IEquatable<ResPath>
 
     #region WithMethods
 
-    public object WithExtension(string newExt)
+    /// <summary>
+    ///     Return a copy of this resource path with the file extension changed.
+    /// </summary>
+    /// <param name="newExtension">
+    ///     The new file extension.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     Thrown if <paramref name="newExtension"/> is null, empty,
+    ///     contains <c>/</c> or is equal to <c>.</c>
+    /// </exception>
+    public ResPath WithExtension(string newExtension)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrEmpty(newExtension))
+        {
+            throw new ArgumentException("New file name cannot be null or empty.");
+        }
+
+        if (newExtension.Contains('/'))
+        {
+            throw new ArgumentException("New file name cannot contain the separator.");
+        }
+
+        return WithName($"{FilenameWithoutExtension}.{newExtension}");
     }
 
+    /// <summary>
+    ///     Return a copy of this resource path with the file name changed.
+    /// </summary>
+    /// <param name="name">
+    ///     The new file name.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     Thrown if <paramref name="name"/> is null, empty,
+    ///     contains <c>/</c> or is equal to <c>.</c>
+    /// </exception>
     public ResPath WithName(string name)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrEmpty(name))
+        {
+            throw new ArgumentException("New file name cannot be null or empty.");
+        }
+
+        if (name.Contains('/'))
+        {
+            throw new ArgumentException("New file name cannot contain the separator.");
+        }
+
+        if (name == ".")
+        {
+            throw new ArgumentException("New file name cannot be '.'");
+        }
+
+        return new ResPath(Directory + "/" + name, '/');
     }
 
     #endregion
@@ -309,7 +356,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <seealso cref="ToRootedPath"/>
     public bool IsRooted()
     {
-        return CanonicalResource[0] == '/';
+        return CanonPath[0] == '/';
     }
 
     /// <summary>
@@ -322,9 +369,48 @@ public readonly struct ResPath : IEquatable<ResPath>
         return !IsRooted();
     }
 
-    public ResPath CommonBase(ResPath basePath)
+    /// <summary>
+    ///     Gets the common base of two paths.
+    /// </summary>
+    /// <example>
+    ///     <code>
+    ///     var path1 = new ResourcePath("/a/b/c");
+    ///     var path2 = new ResourcePath("/a/e/d");
+    ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "/a".
+    ///     </code>
+    /// </example>
+    /// <param name="other">The other path.</param>
+    /// <exception cref="ArgumentException">Thrown if there is no common base between the two paths.</exception>
+    public ResPath CommonBase(ResPath other)
     {
-        throw new NotImplementedException();
+        if (CanonPath.Equals(other.CanonPath))
+        {
+            return this;
+        }
+
+        var minLen = Math.Min(CanonPath.Length, other.CanonPath.Length);
+        var lastSeparatorPos = IsRooted() && other.IsRooted() ? 1 : 0;
+        for (int len = lastSeparatorPos; len < minLen; len++)
+        {
+            if (CanonPath[len] != other.CanonPath[len])
+            {
+                break;
+            }
+
+            if (CanonPath[len] != '/')
+            {
+                continue;
+            }
+            
+            lastSeparatorPos = len;
+        }
+        
+        if (lastSeparatorPos == 0)
+        {
+            throw new ArgumentException($"{this} and {other} have no common base.");
+        }
+
+        return new ResPath(CanonPath[..lastSeparatorPos]);
     }
 
 
@@ -344,7 +430,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     {
         if (TryRelativeTo(basePath, out var relative)) return relative.Value;
 
-        throw new ArgumentException($"{CanonicalResource} does not start with {basePath}.");
+        throw new ArgumentException($"{CanonPath} does not start with {basePath}.");
     }
 
     /// <summary>
@@ -362,9 +448,9 @@ public readonly struct ResPath : IEquatable<ResPath>
             return true;
         }
 
-        if (CanonicalResource.StartsWith(basePath.CanonicalResource))
+        if (CanonPath.StartsWith(basePath.CanonPath))
         {
-            var x = CanonicalResource[basePath.CanonicalResource.Length..]
+            var x = CanonPath[basePath.CanonPath.Length..]
                 .TrimStart('/');
             relative = new ResPath(x);
             return true;
@@ -385,7 +471,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     {
         return IsRooted()
             ? this
-            : new ResPath("/" + CanonicalResource);
+            : new ResPath("/" + CanonPath);
     }
 
     /// <summary>
@@ -400,7 +486,7 @@ public readonly struct ResPath : IEquatable<ResPath>
 
         return this == Root
             ? Self
-            : new ResPath(CanonicalResource[1..]);
+            : new ResPath(CanonPath[1..]);
     }
 
     /// <summary>
@@ -424,14 +510,62 @@ public readonly struct ResPath : IEquatable<ResPath>
     #endregion
 
     /// <summary>
-    ///     "Cleans" the resource path, removing <c>..</c>.
+    ///     Returns cleaned version of the resource path, removing <c>..</c>.
     /// </summary>
     /// <remarks>
     ///     If <c>..</c> appears at the base of a path, it is left alone. If it appears at root level (like <c>/..</c>) it is removed entirely.
     /// </remarks>
     public ResPath Clean()
     {
-        throw new NotImplementedException();
+        var segments = new List<string>();
+        if (IsRooted())
+        {
+            segments.Add("/");
+        }
+
+        foreach (var segment in  CanonPath.Segments('/'))
+        {
+            // Skip pointless segments
+            if (segment == "." || segment == "")
+            {
+                continue;
+            }
+            
+            // If you have ".." cleaning that up doesn't remove that.
+            if (segment == ".." && segments.Count > 0)
+            {
+                if (segments is ["/"])
+                {
+                    continue;
+                }
+
+                var pos = segments.Count - 1;
+                if (segments[pos] != "..")
+                {
+                    segments.RemoveAt(pos);
+                    continue;
+                }
+            }
+            
+            segments.Add(segment);
+        }
+        
+        // Build Canon path from segments with StringBuilder
+        var sb = new StringBuilder(CanonPath.Length);
+        var start = IsRooted() && segments.Count > 1 ? 1 : 0;
+        for (var i = 0; i < segments.Count; i++)
+        {
+            if (i > start)
+            {
+                sb.Append('/');
+            }
+
+            sb.Append(segments[i]);
+        }
+        
+        return sb.Length == 0 
+            ? Self
+            : new ResPath(sb.ToString());
     }
 
     /// <summary>
@@ -440,16 +574,20 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <returns></returns>
     public bool IsClean()
     {
-        throw new NotImplementedException();
+        return !CanonPath.Contains("..");
     }
 
+    /// <summary>
+    ///     Turns the path into a relative path with system-specific separator.
+    ///     For usage in disk I/O.
+    /// </summary>
     public string ChangeSeparator(string newSeparator)
     {
         if (newSeparator is "." or "\0") throw new ArgumentException("New separator can't be `.` or `NULL`");
 
         return newSeparator == "/"
-            ? CanonicalResource
-            : CanonicalResource.Replace("/", newSeparator);
+            ? CanonPath
+            : CanonPath.Replace("/", newSeparator);
     }
 
 
@@ -464,7 +602,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </remarks>
     public IEnumerable<string> EnumerateSegments()
     {
-        return CanonicalResource.Segments('/');
+        return CanonPath.Segments('/');
     }
 }
 
@@ -550,7 +688,9 @@ public struct SegmentEnumerator : IEnumerator<string>
     {
     }
 }
-
+/// <summary>
+/// Helper Method for dividing string into segments.
+/// </summary>
 public static class ResPathExtension
 {
     public static IEnumerable<string> Segments(this string path, char separator)

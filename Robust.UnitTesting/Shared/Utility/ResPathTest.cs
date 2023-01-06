@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Robust.Shared.Utility;
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -77,7 +76,7 @@ public sealed class ResPathTest
     [TestCase(@"x.y.z", ExpectedResult = @"x.y")]
     public string FilenameWithoutExtension(string input)
     {
-         return new ResPath(input).FilenameWithoutExtension();
+         return new ResPath(input).FilenameWithoutExtension;
 
     }
 
@@ -103,7 +102,7 @@ public sealed class ResPathTest
     }
 
     [Test]
-    public void Combine_Test()
+    public void CombineTest()
     {
         var path1 = new ResPath("/a/b");
         var path2 = new ResPath("c/d.png");
@@ -119,14 +118,14 @@ public sealed class ResPathTest
     [TestCase("a/..", ExpectedResult =  ".")]
     [TestCase("/../a",  ExpectedResult =  "/a")]
     [TestCase("/..", ExpectedResult =  "/")]
-    public string Clean_Test(string input)
+    public string CleanTest(string input)
     {
         var path = new ResPath(input);
         return path.Clean().ToString();
     }
 
     [Test]
-    public void RootedConversions_Test()
+    public void RootedConversionsTest()
     {
         var path = new ResPath("/a/b");
         Assert.That(path.IsRooted);
@@ -147,7 +146,7 @@ public sealed class ResPathTest
     [TestCase("/a", "/a", ExpectedResult = ".")]
     [TestCase("a/b", "a", ExpectedResult = "b")]
     [TestCase("/Textures/Weapons/laser.png", "/Textures/", ExpectedResult = "Weapons/laser.png")]
-    public string RelativeTo_Test(string source, string baseDir)
+    public string RelativeToTest(string source, string baseDir)
     {
         var path = new ResPath(source);
         var basePath = new ResPath(baseDir);
@@ -160,7 +159,7 @@ public sealed class ResPathTest
     [TestCase("/a/b", "/a/d", false)]
     [TestCase(".", "/", false)]
     [TestCase("/", ".", false)]
-    public void RelativeToFail_Test(string path1, string path2, bool isRelative)
+    public void RelativeToFailTest(string path1, string path2, bool isRelative)
     {
         var path = new ResPath(path1);
         var basePath = new ResPath(path2);
@@ -172,13 +171,13 @@ public sealed class ResPathTest
     [TestCase("/a/b", "/a/c", ExpectedResult= "/a")]
     [TestCase("a/b", "a/c", ExpectedResult =  "a")]
     [TestCase("/usr", "/bin", ExpectedResult = "/")]
-    public string CommonBase_Test(string a, string b)
+    public string CommonBaseTest(string a, string b)
     {
         return new ResPath(a).CommonBase(new ResPath(b)).ToString();
     }
 
     [Test]
-    public void CommonBaseFail_Test()
+    public void CommonBaseFailTest()
     {
         var path = new ResPath("a/b");
         var basePath = new ResPath("b/a");

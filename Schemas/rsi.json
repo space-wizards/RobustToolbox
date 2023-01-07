@@ -55,10 +55,12 @@
     ],
     "required": [
         "version",
-        "license",
-        "copyright",
         "size",
         "states"
+    ],
+    "optional": [
+        "license",
+        "copyright"
     ],
     "title": "RSI Schema",
     "type": "object",

@@ -15,6 +15,8 @@ ALLOWED_RSI_DIR_GARBAGE = {
     ".directory"
 }
 
+RGA_NAME = "attributions.yml"
+
 errors: List["RsiError"] = []
 
 def main() -> int:
@@ -63,8 +65,13 @@ def check_rsi(rsi: str, schema: Draft7Validator):
     state_names = {state["name"] for state in meta_json["states"]}
 
     # Go over contents of RSI directory and ensure there is no extra garbage.
+    rga_present = False
     for name in os.listdir(rsi):
         if name in ALLOWED_RSI_DIR_GARBAGE:
+            continue
+
+        if name in RGA_NAME:
+            rga_present = True
             continue
 
         if not name.endswith(".png"):
@@ -76,6 +83,12 @@ def check_rsi(rsi: str, schema: Draft7Validator):
         if png_state_name not in state_names:
             add_error(rsi, f"PNG not defined in metadata: {name}")
 
+    # Error if there is no RGA, license or copyright in the meta.json
+    # This can be removed once we move all the copyright and licenses to RGA
+    license_present = "license" in meta_json
+    copyright_present = "copyright" in meta_json
+    if not rga_present and not license_present and not copyright_present:
+         add_error(rsi, f"You need to use a RGA, or specify copyright or license in the meta.json")
 
     # Validate state delays.
     for state in meta_json["states"]:

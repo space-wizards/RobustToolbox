@@ -693,6 +693,8 @@ Types:
   System.Threading.Tasks:
     Task: { All: True }
     Task`1: { All: True }
+    TaskCompletionSource: { All: True }
+    TaskCompletionSource`1: { All: True }
     TaskCanceledException: { All: True }
     ValueTask: { All: True }
     ValueTask`1: { All: True }

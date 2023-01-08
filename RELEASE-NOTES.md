@@ -43,6 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* Fix tooltip panels being incorrectly sized for their first frame.
 * Client will no longer predict physics sleeping on bodies that are unable to sleep.
 
 ### Other

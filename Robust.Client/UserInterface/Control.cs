@@ -184,7 +184,7 @@ namespace Robust.Client.UserInterface
 
                 _propagateVisibilityChanged(value);
                 // TODO: unhardcode this.
-                // Many containers ignore children if they're invisible, so that's why we're replicating that ehre.
+                // Many containers ignore children if they're invisible, so that's why we're replicating that here.
                 Parent?.InvalidateMeasure();
                 InvalidateMeasure();
             }

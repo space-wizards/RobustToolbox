@@ -85,8 +85,7 @@ public abstract partial class SharedMapSystem
     }
 
     #endregion
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
     public static Vector2i GetDirection(Vector2i position, Direction dir, int dist = 1)
     {
         switch (dir)

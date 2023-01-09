@@ -1,14 +1,16 @@
-using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.GameObjects
 {
@@ -18,13 +20,15 @@ namespace Robust.Client.GameObjects
     [UsedImplicitly]
     public sealed partial class SpriteSystem : EntitySystem
     {
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly IPrototypeManager _proto = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly SpriteTreeSystem _treeSystem = default!;
-        [Dependency] private readonly TransformSystem _transform = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
-        private HashSet<ISpriteComponent> _manualUpdate = new();
+        private readonly HashSet<ISpriteComponent> _manualUpdate = new();
 
         public override void Initialize()
         {
@@ -34,7 +38,43 @@ namespace Robust.Client.GameObjects
 
             _proto.PrototypesReloaded += OnPrototypesReloaded;
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
+            SubscribeLocalEvent<SyncSpriteComponent, ComponentStartup>(OnSyncSpriteStartup);
+            SubscribeLocalEvent<SyncSpriteComponent, EntParentChangedMessage>(OnSyncSpriteParent);
+            SubscribeLocalEvent<SyncSpriteComponent, EntityUnpausedEvent>(OnSyncSpriteUnpaused);
             _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
+        }
+
+        private void OnSyncSpriteUnpaused(EntityUid uid, SyncSpriteComponent component, ref EntityUnpausedEvent args)
+        {
+            if (!TryComp<SpriteComponent>(uid, out var sprite))
+            {
+                return;
+            }
+
+            SetAutoAnimateSync(sprite);
+        }
+
+        private void OnSyncSpriteStartup(EntityUid uid, SyncSpriteComponent component, ComponentStartup args)
+        {
+            if (!TryComp<SpriteComponent>(uid, out var sprite))
+            {
+                return;
+            }
+
+            SetAutoAnimateSync(sprite);
+        }
+
+        private void OnSyncSpriteParent(EntityUid uid, SyncSpriteComponent component, ref EntParentChangedMessage args)
+        {
+            // Only update if it came out of pvs.
+            if (args.OldMapId == args.Transform.MapID ||
+                args.OldMapId != MapId.Nullspace ||
+                !TryComp<SpriteComponent>(uid, out var sprite))
+            {
+                return;
+            }
+
+            SetAutoAnimateSync(sprite);
         }
 
         public override void Shutdown()
@@ -80,7 +120,6 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
             var spriteState = (frameTime, _manualUpdate);
 
             _treeSystem.QueryAabb( ref spriteState, static (ref (float frameTime,

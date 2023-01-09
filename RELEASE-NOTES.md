@@ -54,8 +54,215 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.79.0.0
+
+### Breaking changes
+
+* EntityInitializedMessage has been removed; the C# event invoked on EntityManager (EntityInitialized) should be used in its place.
+* TileChangedEventArgs has been removed.
+
+### Bugfixes
+
+* Fix tooltip panels being incorrectly sized for their first frame.
+* Client will no longer predict physics sleeping on bodies that are unable to sleep.
+* Style box texture scaling has been fixed.
+
+### Other
+
+* Added TaskCompletionSource to the sandbox.
+
+### Internal
+
+* IPhysManager has been removed for a slight physics contacts optimisation.
+* Optimise TryFindGridAt, particularly for grid traversals.
+* MapGridComponent now uses delta component states.
+* Removed some TryGetComponent from IsMapPaused, speeding up entity initialization in some instances.
+
+
+## 0.78.0.0
+
+### Breaking changes
+
+* Removed the obsoleted `GlobalLinearVelocity()` EntityUid helper method.
+* INetConfigurationManager now has client & server side variants. Clients can now properly set server authoritative cvars when in singleplayer mode
+* IPhysBody has been removed. Just use the physics component.
+* Physics joints haven been slightly refactored and some method signatures have changed.
+
+### New features
+
+* Added a new cvar to limit audio occlusion raycast lengths ("audio.raycast_length").
+* IRobustSerializer has new public methods for getting hashes and setting string serializer data.
+
+### Bugfixes
+
+* Fixed broken click bound checks in the `Tree` UI Control.
+* Removed erroneous debug assert in render code that was causing issued in debug mode.
+* Fixed some instances where rotation-less entities were gaining non-zero local rotation.
+
+### Other
+
+* Tickrate is now shown in the f3 debug monitors
+
+
+## 0.77.0.2
+
+### New features
+
+* Scroll containers now have public methods to get & set their scroll positions.
+
+### Bugfixes
+
+* Fixed entity spawn menu sometimes not properly updating when filtering entities.
+
+### Other
+
+* Physics contacts are now stored per-world rather than per-map. This allows the multi-threading to be applicable to every contact rather than per-map.
+* Contacts will no longer implicitly be destroyed upon bodies changing maps.
+
+
+## 0.77.0.1
+
+### Bugfixes
+
+* Fix AttachToGridOrMap not retaining an entity's map position.
+
+
+## 0.77.0.0
+
+### Breaking changes
+
+* ClientOccluderComponent has been removed & OccluderComponent component functions have been moved to the occluder system.
+* The OccluderDirectionsEvent namespace and properties have changed.
+* The rendering and occluder trees have been refactored to use generic render tree systems.
+* Several pointlight and occluder component properties now need to be set via system methods.
+* SharedPhysicsMap and PhysicsMap have been combined.
+* RunDeferred has been removed from transformcomponent and updates are no longer deferred.
+
+## 0.76.0.0
+
+### Breaking changes
+
+* Physics contact multi-threading cvars have been removed as the parallelism is now handled by IParallelManager.
+
+### New features
+
+* Physics now supports substepping, this is under physics.target_minimum_tickrate. This means physics steps will run at a constant rate and not be affected by the server's tickrate which can reduce the prevalence of tunneling.
+* FastNoise API is now public.
+
+### Other
+
+* UPnP port forwarding now has better logging.
+* Physics solver has been refactored to take more advantage of parallelism and ECS some internal code.
+* Sprite processing & bounding box calculations should be slightly faster now.
+* Nullspace maps no longer have entities attached.
+
+
+## 0.75.1.0
+
+### New features
+
+* Serv4's notNullableOverride parameter is now enforced by analyzer. For more info, see [the docs](https://docs.spacestation14.io/en/engine/serialization).
+* Added command to dump injector cache list.
+
+### Bugfixes
+
+* Fix generic visualisers not working because of recent appearance system changes in v0.75.0.0
+* Fix physics not working properly on moving grids (transform matrix deferral).
+
+### Other
+
+* Transform matrix dirtying is deferred again (undo change in v0.75.0.0
+* Added two new serv3 analysers (NotNullableFlagAnalyzer and PreferGenericVariantAnalyzer)
+
+
+## 0.75.0.0
+
+### Breaking changes
+
+* Changed default for `net.buffer_size` to `2`.
+* Changed default for `auth.mode` to `Required`. On development builds, the default is overriden to remain at `Optional`, so this only affects published servers.
+* The default value for the `outsidePrediction` argument of the `InputCmdHandler.FromDelegate()`  has changed from false to true.
+
+### New features
+
+* Appearance system now has generic `TryGetData<T>()` functions.
+
+### Bugfixes
+
+* Mapped string serializer once again is initialized with prototype strongs, reducing bandwidth usage.
+* Fixed various keybindings not working while prediction was disabled.
+* Fixed a bug causing rendering trees to not properly recursively update when entities move.
+
+### Other
+
+* Transform matrix dirtying is no longer deferred.
+* Cleaned up some `FULL_RELEASE` CVar default value overrides into `CVarDefaultOverrides.cs`.
+* VVRead now attempts to serialize data to yaml
+
+
+## 0.74.0.0
+
+### Breaking changes
+
+* `ITypeReader<,>.Read(...)` and `ITypeCopier<>.Copy(...)` have had their `bool skipHook` parameter replaced with a `SerializationHookContext` to facilitate multithreaded prototype loading.
+* Prototypes are now loaded in parallel across multiple threads. Type serializers, property setters, etc... must be thread safe and not rely on an active IoC instance.
+
+### Bugfixes
+
+* Mapped string serializer once again is initialized with prototype strongs, reducing bandwidth usage.
+
+### Other
+
+* Drastically improved startup time by running prototype loading in parallel.
+  * `AfterDeserialization` hooks are still ran on the main thread during load to avoid issues.
+* Various systems in the serialization system such as `SerializationManager` or `ReflectionManager` have had various methods made thread safe.
+* `TileAliasPrototype` no longer has a load priority set.
+* Straightened out terminology in prototypes: to refer to the type of a prototype (e.g. `EntityPrototype` itself), use "kind".
+  * This was previously mixed between "type" and "variant".
+
+### Internal
+
+* `SpanSplitExtensions` has been taken behind the shed for being horrifically wrong unsafe code that should never have been entered into a keyboard ever. A simpler helper method replaces its use in `Box2Serializer`.
+* `PrototypeManager.cs` has been split apart into multiple files.
+
+## 0.73.0.0
+
+### Breaking changes
+
+* The entity lookup flag `LookupFlags.Anchored` has been replaced with `LookupFlags.Static`.
+* We are now using **.NET 7**.
+* `IDependencyCollection`/`IoCManager` `RegisterInstance` does not automatically add the instance to object graph, so `BuildGraph()` must now be called to see the new instances.
+  * `deferInject` parameteres have been removed.
+
+### New features
+
+* The server will now check for any unknown CVars at startup, to possibly locate typos in your config file.
+* `IDependencyCollection` is now thread safe.
+
+### Bugfixes
+
+* Fixed config files not being truncated before write, resulting in corruption.
+
+### Other
+
+* Removed some cruft from the `server_config.toml` default config file that ships with Robust.
+* Most usages of x86 SIMD intrinsics have been replaced with cross-platform versions using the new .NET cross-platform intrinsics.
+  * This reduces code to maintain and improves performance on ARM.
+* Tiny optimization to rendering code.
+* `RobustSerializer` no longer needs to be called from threads with an active IoC context.
+  * This makes it possible to use from thread pool threads without `IoCManager.InitThread`.
+* Removed finalizer dispose from `Overlay`.
+* Stopped integration tests watching for prototype reload file changes, speeding stuff up.
+
+### Internal
+
+* Moved `SerializationManager`'s data definition storage over to a `ConcurrentDictionary` to improve GC behavior in integration tests.
+
 ## 0.72.0.0
 
+### Breaking changes
+
+* EntityPausedEvent has been split into EntityPausedEvent and EntityUnpausedEvent. The unpaused version now has information about how long an entity has been paused.
 
 ## 0.71.1.4
 

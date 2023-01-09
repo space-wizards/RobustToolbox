@@ -10,6 +10,9 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using NetSerializer;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -71,6 +74,12 @@ namespace Robust.Shared.Serialization
                 var package = memoryStream.ToArray();
 
                 return (hash, package);
+            }
+
+            public int LoadFromPackage(byte[] package, out byte[] hash)
+            {
+                var stream = new MemoryStream(package, false);
+                return LoadFromPackage(stream, out hash);
             }
 
             public int LoadFromPackage(Stream stream, out byte[] hash)
@@ -343,6 +352,30 @@ namespace Robust.Shared.Serialization
 
                         AddString(v);
                     }
+                }
+            }
+
+            public void AddStrings(DataNode dataNode)
+            {
+                if (Locked)
+                {
+                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
+                }
+
+                foreach (var node in DataNodeHelpers.GetAllNodes(dataNode))
+                {
+                    var t = node.Tag;
+                    if (!string.IsNullOrEmpty(t))
+                        AddString(t);
+
+                    if (node is not ValueDataNode value)
+                        continue;
+
+                    var v = value.Value;
+                    if (string.IsNullOrEmpty(v))
+                        continue;
+
+                    AddString(v);
                 }
             }
 

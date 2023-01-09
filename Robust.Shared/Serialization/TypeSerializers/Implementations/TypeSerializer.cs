@@ -31,7 +31,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public Type Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<Type>? instanceProvider = null)
         {
             if (Shortcuts.TryGetValue(node.Value, out var shortcutType))
@@ -51,7 +51,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return new ValueDataNode(value.FullName ?? value.Name);
         }
 
-        public Type CreateCopy(ISerializationManager serializationManager, Type source, bool skipHook,
+        public Type CreateCopy(ISerializationManager serializationManager, Type source, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             return source;

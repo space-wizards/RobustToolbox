@@ -249,10 +249,6 @@ namespace Robust.Server.GameStates
             {
                 var session = players[sessionIndex];
 
-                // KILL IT WITH FIRE
-                if (mainThread != Thread.CurrentThread)
-                    IoCManager.InitThread(new DependencyCollection(parentDeps), true);
-
                 var channel = session.ConnectedClient;
 
                 if (!_ackedStates.TryGetValue(channel.ConnectionId, out var lastAck))

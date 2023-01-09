@@ -199,7 +199,7 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var position = -_getScrollValue();
+                var position = -GetScrollValue();
                 var rect = UIBox2.FromDimensions(position, realFinalSize);
                 child.Arrange(rect);
             }
@@ -249,8 +249,11 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [Pure]
-        private Vector2 _getScrollValue()
+        public Vector2 GetScrollValue(bool ignoreVisible = false)
         {
+            if (ignoreVisible)
+                return (_hScrollBar.Value, _vScrollBar.Value);
+
             var h = _hScrollBar.Value;
             var v = _vScrollBar.Value;
             if (!_hScrollVisible)
@@ -264,6 +267,16 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             return new Vector2(h, v);
+        }
+
+        public void SetScrollValue(Vector2 value)
+        {
+            _suppressScrollValueChanged = true;
+            _hScrollBar.Value = value.X;
+            _vScrollBar.Value = value.Y;
+            _suppressScrollValueChanged = false;
+            InvalidateArrange();
+            _queueScrolled = true;
         }
 
         private void _scrollValueChanged(Range obj)

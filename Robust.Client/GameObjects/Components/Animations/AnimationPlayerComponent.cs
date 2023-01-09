@@ -28,6 +28,7 @@ namespace Robust.Client.GameObjects
         /// <param name="key">
         ///     The key for this animation play. This key can be used to stop playback short later.
         /// </param>
+        [Obsolete("Use AnimationPlayerSystem.Play() instead")]
         public void Play(Animation animation, string key)
         {
             IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AnimationPlayerSystem>().AddComponent(this);
@@ -36,24 +37,22 @@ namespace Robust.Client.GameObjects
             PlayingAnimations.Add(key, playback);
         }
 
+        [Obsolete("Use AnimationPlayerSystem.HasRunningAnimation() instead")]
         public bool HasRunningAnimation(string key)
         {
             return PlayingAnimations.ContainsKey(key);
         }
 
+        [Obsolete("Use AnimationPlayerSystem.Stop() instead")]
         public void Stop(string key)
         {
             PlayingAnimations.Remove(key);
         }
 
-        /// <summary>
-        /// Temporary method until the event is replaced with eventbus.
-        /// </summary>
+        [Obsolete("Temporary method until the event is replaced with eventbus")]
         internal void AnimationComplete(string key)
         {
-#pragma warning disable 618
             AnimationCompleted?.Invoke(key);
-#pragma warning restore 618
         }
 
         [Obsolete("Use AnimationCompletedEvent instead")]

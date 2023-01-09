@@ -6,6 +6,7 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.ViewVariables;
 
@@ -253,21 +254,31 @@ internal abstract partial class ViewVariablesManager
     /// <summary>
     ///     Test class to test local VV easily without connecting to the server.
     /// </summary>
+    [DataDefinition] // For VV path reading purposes.
     [SuppressMessage("ReSharper", "UnusedMember.Local")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     private sealed class VvTest : IEnumerable<object>
     {
-        [ViewVariables(VVAccess.ReadWrite)] private int x = 10;
+        [DataField("x")]
+        [ViewVariables(VVAccess.ReadWrite)]
+        private int X = 10;
 
-        [ViewVariables] public Dictionary<object, object> Dict => new() {{"a", "b"}, {"c", "d"}};
+        // Note: DataField implies VV read-only already.
+        [ViewVariables] public Dictionary<object, object> Dict = new() {{"a", "b"}, {"c", "d"}};
 
-        [ViewVariables] public List<object> List => new() {1, 2, 3, 4, 5, 6, 7, 8, 9, x, 11, 12, 13, 14, 15, this};
-
-
-        [ViewVariables] public int[,] MultiDimensionalArray = new int[5, 2] {{1, 2}, {3, 4}, {5, 6}, {7, 8}, {9, 0}};
+        [ViewVariables] public List<object> List => new() {1, 2, 3, 4, 5, 6, 7, 8, 9, X, 11, 12, 13, 14, 15, this};
 
 
-        [ViewVariables] private Vector2 Vector = (50, 50);
+        [DataField("multiDimensionalArray")] public int[,] MultiDimensionalArray = new int[5, 2] {{1, 2}, {3, 4}, {5, 6}, {7, 8}, {9, 0}};
+
+
+        [DataField("vector")]
+        [ViewVariables(VVAccess.ReadWrite)]
+        private Vector2 Vector = (50, 50);
+
+        [DataField("data")]
+        [ViewVariables(VVAccess.ReadWrite)]
+        private ComplexDataStructure Data = new();
 
         public IEnumerator<object> GetEnumerator()
         {
@@ -277,6 +288,25 @@ internal abstract partial class ViewVariablesManager
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        [DataDefinition]
+        private struct ComplexDataStructure
+        {
+            // VV3 uses our serialization system internally, so this allows these values to be changed.
+            [DataField("X")]
+            [ViewVariables(VVAccess.ReadWrite)]
+            public int X;
+
+            [DataField("Y")]
+            [ViewVariables(VVAccess.ReadWrite)]
+            public int Y;
+
+            public ComplexDataStructure()
+            {
+                X = 5;
+                Y = 15;
+            }
         }
     }
 

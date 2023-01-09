@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -19,7 +20,7 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly RenderingTreeSystem _treeSystem = default!;
+        [Dependency] private readonly SpriteTreeSystem _treeSystem = default!;
         [Dependency] private readonly TransformSystem _transform = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
@@ -29,8 +30,10 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
+            UpdatesAfter.Add(typeof(SpriteTreeSystem));
+
             _proto.PrototypesReloaded += OnPrototypesReloaded;
-            SubscribeLocalEvent<SpriteUpdateInertEvent>(QueueUpdateInert);
+            SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
             _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
         }
 
@@ -46,9 +49,13 @@ namespace Robust.Client.GameObjects
             SpriteComponent.DirectionBias = value;
         }
 
-        private void QueueUpdateInert(SpriteUpdateInertEvent ev)
+        private void QueueUpdateInert(EntityUid uid, SpriteComponent sprite, ref SpriteUpdateInertEvent ev)
         {
-            _inertUpdateQueue.Enqueue(ev.Sprite);
+            if (sprite._inertUpdateQueued)
+                return;
+
+            sprite._inertUpdateQueued = true;
+            _inertUpdateQueue.Enqueue(sprite);
         }
 
         /// <inheritdoc />
@@ -76,13 +83,7 @@ namespace Robust.Client.GameObjects
             var xforms = EntityManager.GetEntityQuery<TransformComponent>();
             var spriteState = (frameTime, _manualUpdate);
 
-            foreach (var comp in _treeSystem.GetRenderTrees(currentMap, pvsBounds))
-            {
-                var invMatrix = _transform.GetInvWorldMatrix(comp.Owner, xforms);
-                var bounds = invMatrix.TransformBox(pvsBounds);
-
-                comp.SpriteTree.QueryAabb(ref spriteState, static (ref (
-                    float frameTime,
+            _treeSystem.QueryAabb( ref spriteState, static (ref (float frameTime,
                     HashSet<ISpriteComponent> _manualUpdate) tuple, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
                     if (value.Component.IsInert)
@@ -92,8 +93,7 @@ namespace Robust.Client.GameObjects
                         value.Component.FrameUpdate(tuple.frameTime);
 
                     return true;
-                }, bounds, true);
-            }
+                }, currentMap, pvsBounds, true);
 
             _manualUpdate.Clear();
         }

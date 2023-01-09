@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -108,7 +109,7 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     EntityUid ITypeReader<EntityUid, ValueDataNode>.Read(ISerializationManager serializationManager,
         ValueDataNode node,
         IDependencyCollection dependencies,
-        bool skipHook,
+        SerializationHookContext hookCtx,
         ISerializationContext? context, ISerializationManager.InstantiationDelegate<EntityUid>? _)
     {
         if (node.Value == "invalid")

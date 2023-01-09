@@ -165,17 +165,12 @@ namespace Robust.Shared.IoC
         ///     If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
         ///     replace the current implementation instead.
         /// </param>
-        /// <param name="deferInject">
-        ///     Defer field injection until <see cref="IDependencyCollection.BuildGraph"/> is called.
-        ///     If this is false, dependencies will be immediately injected. If the registered type requires dependencies
-        ///     that don't exist yet because you have not called BuildGraph, set this to true.
-        /// </param>
-        public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
+        public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
             where TInterface : class
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            _container.Value!.RegisterInstance<TInterface>(implementation, overwrite, deferInject);
+            _container.Value!.RegisterInstance<TInterface>(implementation, overwrite);
         }
 
         /// <summary>

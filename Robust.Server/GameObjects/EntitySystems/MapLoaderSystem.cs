@@ -154,11 +154,21 @@ public sealed class MapLoaderSystem : EntitySystem
             var mapEnt = _mapManager.GetMapEntityId(mapId);
             var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
             var rootEnts = new List<EntityUid>();
-            foreach (var ent in data.Entities)
+            // aeoeoeieioe content
+
+            if (HasComp<MapGridComponent>(mapEnt))
             {
-               if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
-                    rootEnts.Add(ent);
+                rootEnts.Add(mapEnt);
             }
+            else
+            {
+                foreach (var ent in data.Entities)
+                {
+                    if (xformQuery.GetComponent(ent).ParentUid == mapEnt)
+                        rootEnts.Add(ent);
+                }
+            }
+
             rootUids = rootEnts;
         }
 
@@ -517,6 +527,14 @@ public sealed class MapLoaderSystem : EntitySystem
                 if (data.Options.LoadMap)
                 {
                     _logLoader.Info($"Loading map file with a root node onto an existing map!");
+
+                    // Smelly
+                    if (HasComp<MapGridComponent>(rootNode))
+                    {
+                        data.Options.Offset = Vector2.Zero;
+                        data.Options.Rotation = Angle.Zero;
+                    }
+
                     _mapManager.SetMapEntity(data.TargetMap, rootNode);
                 }
                 // Otherwise just ignore the map in the file.
@@ -646,7 +664,7 @@ public sealed class MapLoaderSystem : EntitySystem
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY));
+                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY), notNullableOverride: true);
             }
         }
     }
@@ -705,7 +723,10 @@ public sealed class MapLoaderSystem : EntitySystem
             {
                 // Don't want to trigger events
                 xform._localPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
-                xform._localRotation += data.Options.Rotation;
+                if (!xform.NoLocalRotation)
+                    xform._localRotation += data.Options.Rotation;
+
+                DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
             }
 
             StartupEntity(entity, metaQuery.GetComponent(entity), data);
@@ -954,7 +975,13 @@ public sealed class MapLoaderSystem : EntitySystem
 
             var components = new SequenceDataNode();
 
-            // See engine#636 for why the Distinct() call.
+            var xform = Transform(entityUid);
+            if (xform.NoLocalRotation && xform.LocalRotation != 0)
+            {
+                Logger.Error($"Encountered a no-rotation entity with non-zero local rotation: {ToPrettyString(entityUid)}");
+                xform._localRotation = 0;
+            }
+
             foreach (var component in EntityManager.GetComponents(entityUid))
             {
                 if (component is MapSaveIdComponent)

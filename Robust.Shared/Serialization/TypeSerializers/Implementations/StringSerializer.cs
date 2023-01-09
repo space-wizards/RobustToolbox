@@ -13,7 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     {
         public string Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<string>? instanceProvider = null)
         {

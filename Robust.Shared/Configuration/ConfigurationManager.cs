@@ -17,10 +17,10 @@ namespace Robust.Shared.Configuration
     /// <summary>
     ///     Stores and manages global configuration variables.
     /// </summary>
-    [Virtual]
-    internal class ConfigurationManager : IConfigurationManagerInternal
+    internal abstract class ConfigurationManager : IConfigurationManagerInternal
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private const char TABLE_DELIMITER = '.';
         protected readonly Dictionary<string, ConfigVar> _configVars = new();
@@ -28,6 +28,8 @@ namespace Robust.Shared.Configuration
         protected bool _isServer;
 
         protected readonly ReaderWriterLockSlim Lock = new();
+
+        private ISawmill _sawmill = default!;
 
         /// <summary>
         ///     Constructs a new ConfigurationManager.
@@ -39,6 +41,8 @@ namespace Robust.Shared.Configuration
         public void Initialize(bool isServer)
         {
             _isServer = isServer;
+
+            _sawmill = _logManager.GetSawmill("cfg");
         }
 
         public virtual void Shutdown()
@@ -140,6 +144,23 @@ namespace Robust.Shared.Configuration
             _configFile = configFile;
         }
 
+        public void CheckUnusedCVars()
+        {
+            if (!GetCVar(CVars.CfgCheckUnused))
+                return;
+
+            using (Lock.ReadGuard())
+            {
+                foreach (var cVar in _configVars.Values)
+                {
+                    if (cVar.Registered)
+                        continue;
+
+                    _sawmill.Warning("Unknown CVar found (typo in config?): {CVar}", cVar.Name);
+                }
+            }
+        }
+
         /// <inheritdoc />
         public void SaveToTomlStream(Stream stream, IEnumerable<string> cvars)
         {
@@ -238,7 +259,7 @@ namespace Robust.Shared.Configuration
                 var memoryStream = new MemoryStream();
                 SaveToTomlStream(memoryStream, cvars);
                 memoryStream.Position = 0;
-                using var file = File.OpenWrite(_configFile);
+                using var file = File.Create(_configFile);
                 memoryStream.CopyTo(file);
                 Logger.InfoS("cfg", $"config saved to '{_configFile}'.");
             }
@@ -426,7 +447,7 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public virtual void SetCVar(string name, object value)
+        public virtual void SetCVar(string name, object value, bool force = false)
         {
             SetCVarInternal(name, value, _gameTiming.CurTick);
         }
@@ -458,9 +479,9 @@ namespace Robust.Shared.Configuration
                 InvokeValueChanged(invoke.Value);
         }
 
-        public void SetCVar<T>(CVarDef<T> def, T value) where T : notnull
+        public void SetCVar<T>(CVarDef<T> def, T value, bool force = false) where T : notnull
         {
-            SetCVar(def.Name, value);
+            SetCVar(def.Name, value, force);
         }
 
         public void OverrideDefault(string name, object value)

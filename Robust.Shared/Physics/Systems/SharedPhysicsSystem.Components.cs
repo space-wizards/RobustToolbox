@@ -164,23 +164,7 @@ public partial class SharedPhysicsSystem
 
     #region Setters
 
-    public void DestroyContacts(PhysicsComponent body, MapId? mapId = null, TransformComponent? xform = null)
-    {
-        if (body.Contacts.Count == 0) return;
-
-        xform ??= Transform(body.Owner);
-        mapId ??= xform.MapID;
-
-        if (!TryComp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId.Value), out var map))
-        {
-            DebugTools.Assert("Attempted to destroy contacts, but entity has no physics map!");
-            return;
-        }
-
-        DestroyContacts(body, map);
-    }
-
-    public void DestroyContacts(PhysicsComponent body, SharedPhysicsMapComponent physMap)
+    public void DestroyContacts(PhysicsComponent body)
     {
         if (body.Contacts.Count == 0) return;
 
@@ -191,7 +175,7 @@ public partial class SharedPhysicsSystem
             var contact = node.Value;
             node = node.Next;
             // Destroy last so the linked-list doesn't get touched.
-            physMap.ContactManager.Destroy(contact);
+            DestroyContact(contact);
         }
 
         DebugTools.Assert(body.Contacts.Count == 0);

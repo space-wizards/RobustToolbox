@@ -36,8 +36,7 @@ internal partial class UserInterfaceManager
 
     // set to null when not counting down
     private float? _tooltipDelay;
-    private Tooltip _tooltip = default!;
-    private bool showingTooltip;
+    private bool _showingTooltip;
     private Control? _suppliedTooltip;
     private const float TooltipDelay = 1;
 
@@ -290,8 +289,8 @@ internal partial class UserInterfaceManager
 
     private void _clearTooltip()
     {
-        if (!showingTooltip) return;
-        _tooltip.Visible = false;
+        if (!_showingTooltip) return;
+
         if (_suppliedTooltip != null)
         {
             PopupRoot.RemoveChild(_suppliedTooltip);
@@ -300,7 +299,7 @@ internal partial class UserInterfaceManager
 
         CurrentlyHovered?.PerformHideTooltip();
         _resetTooltipTimer();
-        showingTooltip = false;
+        _showingTooltip = false;
     }
 
     public void CursorChanged(Control control)
@@ -497,8 +496,8 @@ internal partial class UserInterfaceManager
 
     private void _showTooltip()
     {
-        if (showingTooltip) return;
-        showingTooltip = true;
+        if (_showingTooltip) return;
+        _showingTooltip = true;
         var hovered = CurrentlyHovered;
         if (hovered == null)
         {
@@ -509,20 +508,24 @@ internal partial class UserInterfaceManager
         if (hovered.TooltipSupplier != null)
         {
             _suppliedTooltip = hovered.TooltipSupplier.Invoke(hovered);
-            if (_suppliedTooltip != null)
-            {
-                PopupRoot.AddChild(_suppliedTooltip);
-                Tooltips.PositionTooltip(_suppliedTooltip);
-            }
         }
         else if (!String.IsNullOrWhiteSpace(hovered.ToolTip))
         {
             // show simple tooltip if there is one
-            _tooltip.Visible = true;
-            _tooltip.Text = hovered.ToolTip;
-            Tooltips.PositionTooltip(_tooltip);
+            var tooltip = new Tooltip()
+            {
+                Text = hovered.ToolTip
+            };
+
+            _suppliedTooltip = tooltip;
+        }
+        else
+        {
+            return;
         }
 
+        PopupRoot.AddChild(_suppliedTooltip!);
+        Tooltips.PositionTooltip(_suppliedTooltip!);
         hovered.PerformShowTooltip();
     }
 

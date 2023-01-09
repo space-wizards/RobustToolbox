@@ -113,7 +113,8 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Arguments for when a single tile on a grid is changed locally or remotely.
     /// </summary>
-    public sealed class TileChangedEvent : EntityEventArgs
+    [ByRefEvent]
+    public readonly record struct TileChangedEvent
     {
         /// <summary>
         ///     Creates a new instance of this class.
@@ -128,17 +129,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     EntityUid of the grid with the tile-change. TileRef stores the GridId.
         /// </summary>
-        public EntityUid Entity { get; }
+        public readonly EntityUid Entity;
 
         /// <summary>
         ///     New tile that replaced the old one.
         /// </summary>
-        public TileRef NewTile { get; }
+        public readonly TileRef NewTile;
 
         /// <summary>
         ///     Old tile that was replaced.
         /// </summary>
-        public Tile OldTile { get; }
+        public readonly Tile OldTile;
     }
 
     /// <summary>

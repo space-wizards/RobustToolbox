@@ -389,8 +389,8 @@ public abstract partial class SharedPhysicsSystem
 
             var proxyA = fixtureA.Proxies[indexA];
             var proxyB = fixtureB.Proxies[indexB];
-            var broadphaseA = xformA.GridUid ?? xformA.MapUid;
-            var broadphaseB = xformB.GridUid ?? xformB.MapUid;
+            var broadphaseA = xformA.Broadphase?.Uid;
+            var broadphaseB = xformB.Broadphase?.Uid;
             var overlap = false;
 
             // We can have cross-broadphase proxies hence need to change them to worldspace

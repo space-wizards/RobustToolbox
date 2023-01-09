@@ -26,6 +26,8 @@ namespace Robust.Client.UserInterface.Controls
             SetMessage(msg);
         }
 
+        public string? GetMessage() => _message?.ToMarkup();
+
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (_message == null)

@@ -160,7 +160,6 @@ namespace Robust.Shared.GameObjects
 #endif
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
             metadata.EntityLifeStage = EntityLifeStage.Initialized;
-            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(uid));
         }
 
         public void StartComponents(EntityUid uid)

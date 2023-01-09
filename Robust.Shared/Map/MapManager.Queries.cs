@@ -191,6 +191,12 @@ internal partial class MapManager
             return false;
         });
 
+        if (state.grid == null && EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var mapGrid))
+        {
+            grid = mapGrid;
+            return true;
+        }
+
         grid = state.grid;
         return grid != null;
     }

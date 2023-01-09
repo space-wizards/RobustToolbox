@@ -146,12 +146,6 @@ namespace Robust.Shared.Map
 
         void DeleteGrid(EntityUid euid);
 
-        /// <summary>
-        ///     A tile is being modified.
-        /// </summary>
-        [Obsolete("Subscribe to TileChangedEvent on the event bus.")]
-        event EventHandler<TileChangedEventArgs> TileChanged;
-
         bool HasMapEntity(MapId mapId);
 
         bool IsGrid(EntityUid uid);

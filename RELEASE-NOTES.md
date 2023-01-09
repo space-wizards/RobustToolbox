@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* The fast TryFindGridAt overload will now also return the queried map's MapGridComponent if it exists.
 
 ### Other
 
@@ -51,8 +51,32 @@ END TEMPLATE-->
 
 ### Internal
 
+* Remove 2 TryGetComponents per physics contact per tick.
+
+
+## 0.79.0.0
+
+### Breaking changes
+
+* EntityInitializedMessage has been removed; the C# event invoked on EntityManager (EntityInitialized) should be used in its place.
+* TileChangedEventArgs has been removed.
+
+### Bugfixes
+
+* Fix tooltip panels being incorrectly sized for their first frame.
+* Client will no longer predict physics sleeping on bodies that are unable to sleep.
+* Style box texture scaling has been fixed.
+
+### Other
+
+* Added TaskCompletionSource to the sandbox.
+
+### Internal
+
 * IPhysManager has been removed for a slight physics contacts optimisation.
 * Optimise TryFindGridAt, particularly for grid traversals.
+* MapGridComponent now uses delta component states.
+* Removed some TryGetComponent from IsMapPaused, speeding up entity initialization in some instances.
 
 
 ## 0.78.0.0

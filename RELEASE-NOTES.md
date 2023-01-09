@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* The fast TryFindGridAt overload will now also return the queried map's MapGridComponent if it exists.
 
 ### Other
 

@@ -85,7 +85,7 @@ public abstract partial class SharedMapSystem
     }
 
     #endregion
-    
+
     public static Vector2i GetDirection(Vector2i position, Direction dir, int dist = 1)
     {
         switch (dir)
@@ -283,7 +283,7 @@ public abstract partial class SharedMapSystem
             }
             chunkData.Add(index, tileBuffer);
         }
-        
+
         args.State = new MapGridComponentState(component.ChunkSize, chunkData);
     }
 

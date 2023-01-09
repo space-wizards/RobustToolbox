@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add helper GetDirection to SharedMapSystem that offsets a Vector2i in the specified direction by the specified distance.
 
 ### Bugfixes
 

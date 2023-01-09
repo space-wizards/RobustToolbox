@@ -389,8 +389,8 @@ public abstract partial class SharedPhysicsSystem
 
             var proxyA = fixtureA.Proxies[indexA];
             var proxyB = fixtureB.Proxies[indexB];
-            var broadphaseA = _lookup.GetCurrentBroadphase(xformA);
-            var broadphaseB = _lookup.GetCurrentBroadphase(xformB);
+            var broadphaseA = xformA.Broadphase?.Uid;
+            var broadphaseB = xformB.Broadphase?.Uid;
             var overlap = false;
 
             // We can have cross-broadphase proxies hence need to change them to worldspace
@@ -402,8 +402,8 @@ public abstract partial class SharedPhysicsSystem
                 }
                 else
                 {
-                    var proxyAWorldAABB = _transform.GetWorldMatrix(broadphaseA.Owner, xformQuery).TransformBox(proxyA.AABB);
-                    var proxyBWorldAABB = _transform.GetWorldMatrix(broadphaseB.Owner, xformQuery).TransformBox(proxyB.AABB);
+                    var proxyAWorldAABB = _transform.GetWorldMatrix(xformQuery.GetComponent(broadphaseA.Value), xformQuery).TransformBox(proxyA.AABB);
+                    var proxyBWorldAABB = _transform.GetWorldMatrix(xformQuery.GetComponent(broadphaseB.Value), xformQuery).TransformBox(proxyB.AABB);
                     overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                 }
             }

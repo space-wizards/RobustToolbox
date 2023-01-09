@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Remove 2 TryGetComponents per physics contact per tick.
 
 
 ## 0.79.0.0

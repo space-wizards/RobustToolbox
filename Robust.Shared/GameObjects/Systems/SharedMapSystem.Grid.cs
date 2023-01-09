@@ -44,6 +44,28 @@ public abstract partial class SharedMapSystem
     /// Returns the tile offset to a chunk origin based on the provided size.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i GetChunkRelative(Vector2 tile, int chunkSize)
+    {
+        var x = MathHelper.Mod((int) Math.Floor(tile.X), chunkSize);
+        var y = MathHelper.Mod((int) Math.Floor(tile.Y), chunkSize);
+        return new Vector2i(x, y);
+    }
+
+    /// <summary>
+    /// Returns the tile offset to a chunk origin based on the provided size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i GetChunkRelative(Vector2 tile, byte chunkSize)
+    {
+        var x = MathHelper.Mod((int) Math.Floor(tile.X), chunkSize);
+        var y = MathHelper.Mod((int) Math.Floor(tile.Y), chunkSize);
+        return new Vector2i(x, y);
+    }
+
+    /// <summary>
+    /// Returns the tile offset to a chunk origin based on the provided size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2i GetChunkRelative(Vector2i tile, int chunkSize)
     {
         var x = MathHelper.Mod(tile.X, chunkSize);
@@ -81,10 +103,15 @@ public abstract partial class SharedMapSystem
 
         component.ChunkSize = state.ChunkSize;
 
+        if (state.ChunkData == null && state.FullGridData == null)
+            return;
+
+        var modified = new List<(Vector2i position, Tile tile)>();
+        MapManager.SuppressOnTileChanged = true;
+
+        // delta state
         if (state.ChunkData != null)
         {
-            var modified = new List<(Vector2i position, Tile tile)>();
-            MapManager.SuppressOnTileChanged = true;
             foreach (var chunkData in state.ChunkData)
             {
                 if (chunkData.IsDeleted())
@@ -121,19 +148,55 @@ public abstract partial class SharedMapSystem
                 chunk.SuppressCollisionRegeneration = false;
                 component.RegenerateCollision(chunk);
             }
+        }
 
-            MapManager.SuppressOnTileChanged = false;
-
-            if (modified.Count != 0)
+        // full state
+        if (state.FullGridData != null)
+        {
+            foreach (var index in component.Chunks.Keys)
             {
-                RaiseLocalEvent(uid, new GridModifiedEvent(component, modified), true);
+                if (!state.FullGridData.ContainsKey(index))
+                    component.RemoveChunk(index);
+            }
+
+            foreach (var (index, tiles) in state.FullGridData)
+            {
+                var chunk = component.GetOrAddChunk(index);
+                chunk.SuppressCollisionRegeneration = true;
+                DebugTools.Assert(tiles.Length == component.ChunkSize * component.ChunkSize);
+
+                var counter = 0;
+                for (ushort x = 0; x < component.ChunkSize; x++)
+                {
+                    for (ushort y = 0; y < component.ChunkSize; y++)
+                    {
+                        var tile = tiles[counter++];
+                        if (chunk.GetTile(x, y) == tile)
+                            continue;
+
+                        chunk.SetTile(x, y, tile);
+                        modified.Add((new Vector2i(chunk.X * component.ChunkSize + x, chunk.Y * component.ChunkSize + y), tile));
+                    }
+                }
+
+                chunk.SuppressCollisionRegeneration = false;
+                component.RegenerateCollision(chunk);
             }
         }
+
+        MapManager.SuppressOnTileChanged = false;
+        if (modified.Count != 0)
+            RaiseLocalEvent(uid, new GridModifiedEvent(component, modified), true);
     }
 
     private void OnGridGetState(EntityUid uid, MapGridComponent component, ref ComponentGetState args)
     {
-        // TODO: Actual deltas.
+        if (args.FromTick <= component.CreationTick)
+        {
+            GetFullState(component, ref args);
+            return;
+        }
+
         List<ChunkDatum>? chunkData;
         var fromTick = args.FromTick;
 
@@ -148,7 +211,7 @@ public abstract partial class SharedMapSystem
 
             foreach (var (tick, indices) in chunks)
             {
-                if (tick < fromTick)
+                if (tick < fromTick && fromTick != GameTick.Zero)
                     continue;
 
                 chunkData.Add(ChunkDatum.CreateDeleted(indices));
@@ -175,7 +238,27 @@ public abstract partial class SharedMapSystem
             }
         }
 
-        // TODO: Mark it as delta proper
+        args.State = new MapGridComponentState(component.ChunkSize, chunkData);
+    }
+
+    private void GetFullState(MapGridComponent component, ref ComponentGetState args)
+    {
+        var chunkData = new Dictionary<Vector2i, Tile[]>();
+
+        foreach (var (index, chunk) in component.GetMapChunks())
+        {
+            var tileBuffer = new Tile[component.ChunkSize * (uint)component.ChunkSize];
+
+            for (var x = 0; x < component.ChunkSize; x++)
+            {
+                for (var y = 0; y < component.ChunkSize; y++)
+                {
+                    tileBuffer[x * component.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
+                }
+            }
+            chunkData.Add(index, tileBuffer);
+        }
+        
         args.State = new MapGridComponentState(component.ChunkSize, chunkData);
     }
 

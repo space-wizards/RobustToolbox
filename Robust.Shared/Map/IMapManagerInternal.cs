@@ -15,17 +15,6 @@ namespace Robust.Shared.Map
         IEntityManager EntityManager { get; }
 
         /// <summary>
-        /// Specific version of TryFindGridAt that allows re-usable data structures to be passed in for optimisation reasons.
-        /// </summary>
-        bool TryFindGridAt(
-            MapId mapId,
-            Vector2 worldPos,
-            List<MapGridComponent> grids,
-            EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<PhysicsComponent> bodyQuery,
-            [NotNullWhen(true)] out MapGridComponent? grid);
-
-        /// <summary>
         /// Specific version of FindGridsIntersecting that allows re-usable data structures to be passed in for optimisation reasons.
         /// </summary>
         IEnumerable<MapGridComponent> FindGridsIntersecting(

@@ -24,6 +24,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public int ItemCount => _buttonDataList.Count;
 
+        public Func<string, T, Button>? GenerateItem;
+        
         /// <summary>
         /// Called whenever you select a button.
         ///
@@ -55,12 +57,17 @@ namespace Robust.Client.UserInterface.Controls
 
         public int AddItem(string label, T value, Action<RadioOptionItemSelectedEventArgs<T>>? itemSelectedAction = null)
         {
-            var button = new Button
+            if (GenerateItem == null)
             {
-                Text = label,
-                Group = _buttonGroup
-            };
+                GenerateItem += (itemLabel, itemValue) => new Button
+                {
+                    Text = itemLabel,
+                };
+            }
 
+            var button = GenerateItem.Invoke(label, value);
+
+            button.Group = _buttonGroup;
             button.OnPressed += ButtonOnPressed;
 
             var data = new RadioOptionButtonData<T>(label, value, button)

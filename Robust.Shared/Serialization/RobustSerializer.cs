@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
@@ -13,17 +12,15 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization
 {
-
-    public sealed partial class RobustSerializer : IRobustSerializer
+    internal abstract partial class RobustSerializer : IRobustSerializer
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IRobustMappedStringSerializer _mappedStringSerializer = default!;
-
-        private readonly Lazy<ISawmill> _lazyLogSzr = new(() => Logger.GetSawmill("szr"));
+        [Dependency] protected readonly IRobustMappedStringSerializer MappedStringSerializer = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private readonly Dictionary<Type, Dictionary<string, Type?>> _cachedSerialized = new();
 
-        private ISawmill LogSzr => _lazyLogSzr.Value;
+        private ISawmill LogSzr = default!;
 
 
         private Serializer _serializer = default!;
@@ -76,13 +73,14 @@ namespace Robust.Shared.Serialization
             }
 #endif
 
+            LogSzr = _logManager.GetSawmill("szr");
             types.AddRange(AlwaysNetSerializable);
 
-            _mappedStringSerializer.Initialize();
+            MappedStringSerializer.Initialize();
 
             var settings = new Settings
             {
-                CustomTypeSerializers = new[] {_mappedStringSerializer.TypeSerializer}
+                CustomTypeSerializers = new[] {MappedStringSerializer.TypeSerializer}
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
@@ -94,6 +92,10 @@ namespace Robust.Shared.Serialization
             }
             */
         }
+
+        public byte[] GetSerializableTypesHash() => Convert.FromHexString(_serializer.GetSHA256());
+
+        public (byte[] Hash, byte[] Package) GetStringSerializerPackage() => MappedStringSerializer.GeneratePackage();
 
         public void Serialize(Stream stream, object toSerialize)
         {

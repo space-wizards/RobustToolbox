@@ -6,6 +6,8 @@ using System.Linq;
 using System.Threading;
 using Robust.Client.Graphics;
 using Robust.Client.Timing;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -22,6 +24,7 @@ namespace Robust.Client.Prototypes
         [Dependency] private readonly IClyde _clyde = default!;
         [Dependency] private readonly INetManager _netManager = default!;
         [Dependency] private readonly IClientGameTiming _timing = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
 
         private readonly List<FileSystemWatcher> _watchers = new();
         private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
@@ -77,6 +80,9 @@ namespace Robust.Client.Prototypes
 
         private void WatchResources()
         {
+            if (!_cfg.GetCVar(CVars.ResPrototypeReloadWatch))
+                return;
+
 #if !FULL_RELEASE
             foreach (var path in Resources.GetContentRoots().Select(r => r.ToString())
                 .Where(r => Directory.Exists(r + "/Prototypes")).Select(p => p + "/Prototypes"))

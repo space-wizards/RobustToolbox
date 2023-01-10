@@ -26,17 +26,17 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 {
     internal struct ContactVelocityConstraint
     {
-        public int ContactIndex { get; set; }
+        public int ContactIndex;
 
         /// <summary>
         ///     Index of BodyA in the island.
         /// </summary>
-        public int IndexA { get; set; }
+        public int IndexA;
 
         /// <summary>
         ///     Index of BodyB in the island.
         /// </summary>
-        public int IndexB { get; set; }
+        public int IndexB;
 
         // Use 2 as its the max number of manifold points.
         public VelocityConstraintPoint[] Points;
@@ -48,11 +48,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public System.Numerics.Vector4 K;
 
         public float InvMassA;
-
         public float InvMassB;
 
         public float InvIA;
-
         public float InvIB;
 
         public float Friction;

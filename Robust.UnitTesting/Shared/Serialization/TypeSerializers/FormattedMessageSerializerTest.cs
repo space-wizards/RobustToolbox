@@ -28,7 +28,7 @@ public sealed class FormattedMessageSerializerTest : SerializationTest
     public void DeserializationTest(string text)
     {
         var node = new ValueDataNode(text);
-        var deserializedMessage = Serialization.Read<FormattedMessage>(node);
+        var deserializedMessage = Serialization.Read<FormattedMessage>(node, notNullableOverride: true);
         Assert.That(deserializedMessage.ToMarkup(), Is.EqualTo(text));
     }
 }

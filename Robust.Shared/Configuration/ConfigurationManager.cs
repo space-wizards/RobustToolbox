@@ -17,8 +17,7 @@ namespace Robust.Shared.Configuration
     /// <summary>
     ///     Stores and manages global configuration variables.
     /// </summary>
-    [Virtual]
-    internal class ConfigurationManager : IConfigurationManagerInternal
+    internal abstract class ConfigurationManager : IConfigurationManagerInternal
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
@@ -260,7 +259,7 @@ namespace Robust.Shared.Configuration
                 var memoryStream = new MemoryStream();
                 SaveToTomlStream(memoryStream, cvars);
                 memoryStream.Position = 0;
-                using var file = File.OpenWrite(_configFile);
+                using var file = File.Create(_configFile);
                 memoryStream.CopyTo(file);
                 Logger.InfoS("cfg", $"config saved to '{_configFile}'.");
             }
@@ -448,7 +447,7 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public virtual void SetCVar(string name, object value)
+        public virtual void SetCVar(string name, object value, bool force = false)
         {
             SetCVarInternal(name, value, _gameTiming.CurTick);
         }
@@ -480,9 +479,9 @@ namespace Robust.Shared.Configuration
                 InvokeValueChanged(invoke.Value);
         }
 
-        public void SetCVar<T>(CVarDef<T> def, T value) where T : notnull
+        public void SetCVar<T>(CVarDef<T> def, T value, bool force = false) where T : notnull
         {
-            SetCVar(def.Name, value);
+            SetCVar(def.Name, value, force);
         }
 
         public void OverrideDefault(string name, object value)

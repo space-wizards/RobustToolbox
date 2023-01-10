@@ -42,7 +42,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public PrototypeFlags<T> Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<PrototypeFlags<T>>? instanceProvider = null)
         {
             if(instanceProvider != null)
@@ -75,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public PrototypeFlags<T> Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null,
             ISerializationManager.InstantiationDelegate<PrototypeFlags<T>>? instanceProvider = null)
         {
             if(instanceProvider != null)
@@ -85,12 +85,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public PrototypeFlags<T> CreateCopy(ISerializationManager serializationManager, PrototypeFlags<T> source,
-            bool skipHook, ISerializationContext? context = null)
+            SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new PrototypeFlags<T>(source);
         }
 
-        public void CopyTo(ISerializationManager serializationManager, PrototypeFlags<T> source, ref PrototypeFlags<T> target, bool skipHook,
+        public void CopyTo(ISerializationManager serializationManager, PrototypeFlags<T> source, ref PrototypeFlags<T> target, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.Clear();

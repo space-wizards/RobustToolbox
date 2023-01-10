@@ -37,7 +37,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public ClydeHeadless()
         {
-            Configuration.Default.PreferContiguousImageBuffers = true;
+            SixLabors.ImageSharp.Configuration.Default.PreferContiguousImageBuffers = true;
 
             var mainRt = new DummyRenderWindow(this);
             var window = new DummyWindow(mainRt) {Id = new WindowId(1)};

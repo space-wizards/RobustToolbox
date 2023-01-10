@@ -19,7 +19,9 @@ namespace Robust.Shared.Asynchronous
             var channel = Channel.CreateUnbounded<Mail>(new UnboundedChannelOptions
             {
                 SingleReader = true,
-                SingleWriter = false
+                SingleWriter = false,
+                // For unblocking continuations.
+                AllowSynchronousContinuations = true
             });
 
             _channelReader = channel.Reader;

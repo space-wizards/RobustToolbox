@@ -160,7 +160,6 @@ namespace Robust.Shared.GameObjects
 #endif
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
             metadata.EntityLifeStage = EntityLifeStage.Initialized;
-            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(uid));
         }
 
         public void StartComponents(EntityUid uid)
@@ -438,7 +437,7 @@ namespace Robust.Shared.GameObjects
                 {
                     MetaDataComponent _ => 0,
                     TransformComponent _ => 1,
-                    IPhysBody _ => 2,
+                    PhysicsComponent _ => 2,
                     _ => int.MaxValue
                 };
 

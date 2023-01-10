@@ -152,17 +152,14 @@ internal partial class MapManager
         return grids;
     }
 
-    /// <inheritdoc />
     public bool TryFindGridAt(
         MapId mapId,
         Vector2 worldPos,
-        List<MapGridComponent> grids,
         EntityQuery<TransformComponent> xformQuery,
-        EntityQuery<PhysicsComponent> bodyQuery,
         [NotNullWhen(true)] out MapGridComponent? grid)
     {
         // Need to enlarge the AABB by at least the grid shrinkage size.
-        var aabb = new Box2(worldPos - 0.5f, worldPos + 0.5f);
+        var aabb = new Box2(worldPos - 0.2f, worldPos + 0.2f);
 
         grid = null;
         var state = (grid, worldPos, xformQuery);
@@ -174,26 +171,31 @@ internal partial class MapManager
             // (though now we need some extra calcs up front).
 
             // Doesn't use WorldBounds because it's just an AABB.
-            var matrix = tuple.xformQuery.GetComponent(((Component) iGrid).Owner).InvWorldMatrix;
+            var matrix = tuple.xformQuery.GetComponent(iGrid.Owner).InvWorldMatrix;
             var localPos = matrix.Transform(tuple.worldPos);
 
             // NOTE:
             // If you change this to use fixtures instead (i.e. if you want half-tiles) then you need to make sure
             // you account for the fact that fixtures are shrunk slightly!
-            var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
-            var chunkIndices = iGrid.GridTileToChunkIndices(tile);
+            var chunkIndices = SharedMapSystem.GetChunkIndices(localPos, iGrid.ChunkSize);
 
             if (!iGrid.HasChunk(chunkIndices)) return true;
 
             var chunk = iGrid.GetOrAddChunk(chunkIndices);
-            Vector2i indices = chunk.GridTileToChunkTile(tile);
-            var chunkTile = chunk.GetTile((ushort)indices.X, (ushort)indices.Y);
+            var chunkRelative = SharedMapSystem.GetChunkRelative(localPos, iGrid.ChunkSize);
+            var chunkTile = chunk.GetTile(chunkRelative);
 
             if (chunkTile.IsEmpty) return true;
 
             tuple.grid = iGrid;
             return false;
         });
+
+        if (state.grid == null && EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var mapGrid))
+        {
+            grid = mapGrid;
+            return true;
+        }
 
         grid = state.grid;
         return grid != null;
@@ -205,10 +207,7 @@ internal partial class MapManager
     public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out MapGridComponent? grid)
     {
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-        var bodyQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
-        var grids = new List<MapGridComponent>();
-
-        return TryFindGridAt(mapId, worldPos, grids, xformQuery, bodyQuery, out grid);
+        return TryFindGridAt(mapId, worldPos, xformQuery, out grid);
     }
 
     /// <summary>

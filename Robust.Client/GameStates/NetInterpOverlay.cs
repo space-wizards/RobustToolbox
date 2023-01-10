@@ -7,6 +7,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Containers;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
@@ -33,7 +34,7 @@ namespace Robust.Client.GameStates
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = args.WorldAABB;
             var timing = IoCManager.Resolve<IGameTiming>();
-            foreach (var boundingBox in _entityManager.EntityQuery<IPhysBody>(true))
+            foreach (var boundingBox in _entityManager.EntityQuery<PhysicsComponent>(true))
             {
                 // all entities have a TransformComponent
                 var transform = _entityManager.GetComponent<TransformComponent>(boundingBox.Owner);

@@ -34,11 +34,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             {
                 if (key is not ValueDataNode value)
                 {
-                    mapping.Add(new ErrorNode(key, $"Cannot cast node {key} to ValueDataNode."), serializationManager.ValidateNode(typeof(TValue), val, context));
+                    mapping.Add(new ErrorNode(key, $"Cannot cast node {key} to ValueDataNode."), serializationManager.ValidateNode<TValue>(val, context));
                     continue;
                 }
 
-                mapping.Add(PrototypeSerializer.Validate(serializationManager, value, dependencies, context), serializationManager.ValidateNode(typeof(TValue), val, context));
+                mapping.Add(PrototypeSerializer.Validate(serializationManager, value, dependencies, context), serializationManager.ValidateNode<TValue>(val, context));
             }
 
             return new ValidatedMappingNode(mapping);

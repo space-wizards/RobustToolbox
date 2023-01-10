@@ -124,7 +124,7 @@ namespace Robust.Shared.Physics.Dynamics
         internal float _restitution = 0f;
 
         /// <summary>
-        ///     Non-hard <see cref="IPhysBody"/>s will not cause action collision (e.g. blocking of movement)
+        ///     Non-hard <see cref="PhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events.
         /// </summary>
         /// <remarks>
@@ -146,13 +146,6 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         [DataField("hard")] private bool _hard = true;
-
-        // MassData
-        // The reason these aren't a struct is because Serv3 + doing MassData in yaml everywhere would suck.
-        // Plus now it's WAYYY easier to share shapes even among different prototypes.
-        public float Inertia => _inertia;
-
-        private float _inertia;
 
         /// <summary>
         /// In kg / m ^ 2

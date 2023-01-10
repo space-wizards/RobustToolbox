@@ -218,7 +218,7 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
 
         // Does a joint override collision? Is at least one body dynamic?
-        if (!ShouldCollide(bodyB, bodyA))
+        if (!ShouldCollide(bodyB, bodyA, fixtureA, fixtureB))
             return;
 
         // Call the factory.
@@ -339,7 +339,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 // Check default filtering
                 if (!ShouldCollide(fixtureA, fixtureB) ||
-                    !ShouldCollide(bodyB, bodyA))
+                    !ShouldCollide(bodyB, bodyA, fixtureA, fixtureB))
                 {
                     DestroyContact(contact);
                     continue;
@@ -547,7 +547,7 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Used to prevent bodies from colliding; may lie depending on joints.
     /// </summary>
-    private bool ShouldCollide(PhysicsComponent body, PhysicsComponent other)
+    private bool ShouldCollide(PhysicsComponent body, PhysicsComponent other, Fixture fixture, Fixture otherFixture)
     {
         if (((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
             (other.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||
@@ -578,12 +578,12 @@ public abstract partial class SharedPhysicsSystem
             }
         }
 
-        var preventCollideMessage = new PreventCollideEvent(body, other);
+        var preventCollideMessage = new PreventCollideEvent(body, other, fixture, otherFixture);
         RaiseLocalEvent(body.Owner, ref preventCollideMessage);
 
         if (preventCollideMessage.Cancelled) return false;
 
-        preventCollideMessage = new PreventCollideEvent(other, body);
+        preventCollideMessage = new PreventCollideEvent(other, body, fixture, otherFixture);
         RaiseLocalEvent(other.Owner, ref preventCollideMessage);
 
         if (preventCollideMessage.Cancelled) return false;

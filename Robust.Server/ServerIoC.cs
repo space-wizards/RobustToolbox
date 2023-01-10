@@ -49,7 +49,7 @@ namespace Robust.Server
             deps.Register<IReflectionManager, ServerReflectionManager>();
             deps.Register<IConsoleHost, ServerConsoleHost>();
             deps.Register<IServerConsoleHost, ServerConsoleHost>();
-            deps.Register<IComponentFactory, ComponentFactory>();
+            deps.Register<IComponentFactory, ServerComponentFactory>();
             deps.Register<IConGroupController, ConGroupController>();
             deps.Register<IMapManager, NetworkedMapManager>();
             deps.Register<IMapManagerInternal, NetworkedMapManager>();

@@ -39,15 +39,30 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.79.0.1
+
+### New features
+
 * Add helper GetDirection to SharedMapSystem that offsets a Vector2i in the specified direction by the specified distance.
 
 ### Bugfixes
 
 * The fast TryFindGridAt overload will now also return the queried map's MapGridComponent if it exists.
-
-### Other
-
-*None yet*
 
 ### Internal
 

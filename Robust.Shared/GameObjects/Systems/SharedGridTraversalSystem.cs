@@ -23,6 +23,11 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         SubscribeLocalEvent<MoveEvent>(OnMove);
     }
 
+    internal void CheckTraverse(EntityUid uid, TransformComponent xform)
+    {
+        QueuedEvents.Push(new MoveEvent(uid, xform.Coordinates, xform.Coordinates, xform.LocalRotation, xform.LocalRotation, xform, false));
+    }
+
     private void OnMove(ref MoveEvent ev)
     {
         // If move event arose from state handling, don't bother to run grid traversal logic.

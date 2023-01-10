@@ -54,6 +54,27 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.80.0.0
+
+### Breaking changes
+
+* Moved ConvexHullPolygosn and MaxPolygonVertices cvars to constants.
+* Moved the PhysicsMap Gravity property to its own controller.
+* Made some layout changes to Split Container.
+
+### New features
+
+* Added the colliding fixtures to PreventCollideEvent.
+
+### Bugfixes
+
+* Grids overlapping entities will now flag the entity for grid traversal.
+
+### Internal
+
+* Removed manual component registrations.
+
+
 ## 0.79.0.1
 
 ### New features

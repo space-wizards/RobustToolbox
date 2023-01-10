@@ -14,7 +14,15 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public Tooltip()
         {
-            AddChild(_label = new Label());
+            var vbox = new BoxContainer()
+            {
+                Orientation = BoxContainer.LayoutOrientation.Vertical,
+                RectClipContent = true,
+            };
+
+            AddChild(vbox);
+
+            vbox.AddChild(_label = new Label());
         }
     }
 }

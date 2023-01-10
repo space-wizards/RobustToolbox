@@ -36,9 +36,8 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Physics.Components
 {
     [ComponentReference(typeof(ILookupWorldBox2Component))]
-    [ComponentReference(typeof(IPhysBody))]
     [NetworkedComponent(), ComponentProtoName("Physics")]
-    public sealed class PhysicsComponent : Component, IPhysBody, ILookupWorldBox2Component
+    public sealed class PhysicsComponent : Component, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 
@@ -127,16 +126,6 @@ namespace Robust.Shared.Physics.Components
         public void WakeBody()
         {
             _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().WakeBody(this);
-        }
-
-        /// <summary>
-        /// Resets the dynamics of this body.
-        /// Sets torque, force and linear/angular velocity to 0
-        /// </summary>
-        [Obsolete("Use SharedPhysicsSystem.ResetDynamics")]
-        public void ResetDynamics()
-        {
-            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ResetDynamics(this);
         }
 
         public Box2 GetAABB(Transform transform)
@@ -412,32 +401,6 @@ namespace Robust.Shared.Physics.Components
 
         private bool _predict;
 
-        /// <summary>
-        /// Gets a local point relative to the body's origin given a world point.
-        /// Note that the vector only takes the rotation into account, not the position.
-        /// </summary>
-        /// <param name="worldPoint">A point in world coordinates.</param>
-        /// <returns>The corresponding local point relative to the body's origin.</returns>
-        public Vector2 GetLocalPoint(in Vector2 worldPoint)
-        {
-            return Transform.MulT(GetTransform(), worldPoint);
-        }
-
-        /// <summary>
-        /// Get the world coordinates of a point given the local coordinates.
-        /// </summary>
-        /// <param name="localPoint">A point on the body measured relative the the body's origin.</param>
-        /// <returns>The same point expressed in world coordinates.</returns>
-        public Vector2 GetWorldPoint(in Vector2 localPoint)
-        {
-            return Transform.Mul(GetTransform(), localPoint);
-        }
-
-        public Vector2 GetLocalVector2(Vector2 worldVector)
-        {
-            return Transform.MulT(new Quaternion2D((float) _entMan.GetComponent<TransformComponent>(Owner).WorldRotation.Theta), worldVector);
-        }
-
         public Transform GetTransform()
         {
             return GetTransform(_entMan.GetComponent<TransformComponent>(Owner));
@@ -477,23 +440,5 @@ namespace Robust.Shared.Physics.Components
         {
             _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ApplyAngularImpulse(this, impulse);
         }
-
-        [Obsolete("Use SharedPhysicsSystem.ApplyForce")]
-        public void ApplyForce(in Vector2 force)
-        {
-            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ApplyForce(this, force);
-        }
-
-        [Obsolete("Use SharedPhysicsSystem.ResetMassData")]
-        public void ResetMassData(FixturesComponent? fixtures = null)
-        {
-            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().ResetMassData(this, fixtures);
-        }
-
-        // View variables conveniences properties.
-        [ViewVariables]
-        private Vector2 _mapLinearVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapLinearVelocity(Owner, this);
-        [ViewVariables]
-        private float _mapAngularVelocity => _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().GetMapAngularVelocity(Owner, this);
     }
 }

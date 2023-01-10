@@ -1,3 +1,4 @@
+using Robust.Client.ComponentTrees;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -22,8 +23,6 @@ namespace Robust.Client.GameObjects
             RegisterClass<ContainerManagerComponent>();
             RegisterClass<InputComponent>();
             RegisterClass<SpriteComponent>();
-            RegisterClass<ClientOccluderComponent>();
-            RegisterClass<OccluderTreeComponent>();
             RegisterClass<EyeComponent>();
             RegisterClass<AnimationPlayerComponent>();
             RegisterClass<TimerComponent>();

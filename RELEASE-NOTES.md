@@ -47,11 +47,129 @@ END TEMPLATE-->
 
 ### Other
 
-* UPnP port forwarding now has better logging.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 0.79.0.1
+
+### New features
+
+* Add helper GetDirection to SharedMapSystem that offsets a Vector2i in the specified direction by the specified distance.
+
+### Bugfixes
+
+* The fast TryFindGridAt overload will now also return the queried map's MapGridComponent if it exists.
+
+### Internal
+
+* Remove 2 TryGetComponents per physics contact per tick.
+
+
+## 0.79.0.0
+
+### Breaking changes
+
+* EntityInitializedMessage has been removed; the C# event invoked on EntityManager (EntityInitialized) should be used in its place.
+* TileChangedEventArgs has been removed.
+
+### Bugfixes
+
+* Fix tooltip panels being incorrectly sized for their first frame.
+* Client will no longer predict physics sleeping on bodies that are unable to sleep.
+* Style box texture scaling has been fixed.
+
+### Other
+
+* Added TaskCompletionSource to the sandbox.
+
+### Internal
+
+* IPhysManager has been removed for a slight physics contacts optimisation.
+* Optimise TryFindGridAt, particularly for grid traversals.
+* MapGridComponent now uses delta component states.
+* Removed some TryGetComponent from IsMapPaused, speeding up entity initialization in some instances.
+
+
+## 0.78.0.0
+
+### Breaking changes
+
+* Removed the obsoleted `GlobalLinearVelocity()` EntityUid helper method.
+* INetConfigurationManager now has client & server side variants. Clients can now properly set server authoritative cvars when in singleplayer mode
+* IPhysBody has been removed. Just use the physics component.
+* Physics joints haven been slightly refactored and some method signatures have changed.
+
+### New features
+
+* Added a new cvar to limit audio occlusion raycast lengths ("audio.raycast_length").
+* IRobustSerializer has new public methods for getting hashes and setting string serializer data.
+
+### Bugfixes
+
+* Fixed broken click bound checks in the `Tree` UI Control.
+* Removed erroneous debug assert in render code that was causing issued in debug mode.
+* Fixed some instances where rotation-less entities were gaining non-zero local rotation.
+
+### Other
+
+* Tickrate is now shown in the f3 debug monitors
+
+
+## 0.77.0.2
+
+### New features
+
+* Scroll containers now have public methods to get & set their scroll positions.
+
+### Bugfixes
+
+* Fixed entity spawn menu sometimes not properly updating when filtering entities.
+
+### Other
+
+* Physics contacts are now stored per-world rather than per-map. This allows the multi-threading to be applicable to every contact rather than per-map.
+* Contacts will no longer implicitly be destroyed upon bodies changing maps.
+
+
+## 0.77.0.1
+
+### Bugfixes
+
+* Fix AttachToGridOrMap not retaining an entity's map position.
+
+
+## 0.77.0.0
+
+### Breaking changes
+
+* ClientOccluderComponent has been removed & OccluderComponent component functions have been moved to the occluder system.
+* The OccluderDirectionsEvent namespace and properties have changed.
+* The rendering and occluder trees have been refactored to use generic render tree systems.
+* Several pointlight and occluder component properties now need to be set via system methods.
+* SharedPhysicsMap and PhysicsMap have been combined.
+* RunDeferred has been removed from transformcomponent and updates are no longer deferred.
+
+## 0.76.0.0
+
+### Breaking changes
+
+* Physics contact multi-threading cvars have been removed as the parallelism is now handled by IParallelManager.
+
+### New features
+
+* Physics now supports substepping, this is under physics.target_minimum_tickrate. This means physics steps will run at a constant rate and not be affected by the server's tickrate which can reduce the prevalence of tunneling.
+* FastNoise API is now public.
+
+### Other
+
+* UPnP port forwarding now has better logging.
+* Physics solver has been refactored to take more advantage of parallelism and ECS some internal code.
+* Sprite processing & bounding box calculations should be slightly faster now.
+* Nullspace maps no longer have entities attached.
 
 
 ## 0.75.1.0

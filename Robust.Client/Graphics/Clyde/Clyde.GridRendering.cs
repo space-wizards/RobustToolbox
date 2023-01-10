@@ -187,7 +187,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _updateTileMapOnUpdate(TileChangedEvent args)
+        private void _updateTileMapOnUpdate(ref TileChangedEvent args)
         {
             var grid = _mapManager.GetGrid(args.NewTile.GridUid);
             var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));

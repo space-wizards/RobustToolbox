@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Prometheus;
+using Robust.Server.Configuration;
 using Robust.Server.GameObjects;
-using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -37,7 +37,7 @@ namespace Robust.Server.Player
         [Dependency] private readonly IServerNetManager _network = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly INetConfigurationManager _cfg = default!;
+        [Dependency] private readonly IServerNetConfigurationManager _cfg = default!;
 
         public BoundKeyMap KeyMap { get; private set; } = default!;
 

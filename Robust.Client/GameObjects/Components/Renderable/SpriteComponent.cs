@@ -9,11 +9,13 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Animations;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
@@ -21,7 +23,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using TerraFX.Interop.Windows;
+using static Robust.Client.ComponentTrees.SpriteTreeSystem;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using RSIDirection = Robust.Client.Graphics.RSI.State.Direction;
 
@@ -30,7 +32,7 @@ namespace Robust.Client.GameObjects
     [ComponentReference(typeof(SharedSpriteComponent))]
     [ComponentReference(typeof(ISpriteComponent))]
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
-        IComponentDebug, ISerializationHooks
+        IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
@@ -149,7 +151,13 @@ namespace Robust.Client.GameObjects
         }
 
         [ViewVariables]
-        internal RenderingTreeComponent? RenderTree { get; set; } = null;
+        public DynamicTree<ComponentTreeEntry<SpriteComponent>>? Tree { get; set; }
+
+        public EntityUid? TreeUid { get; set; }
+
+        public bool AddToTree => Visible && !ContainerOccluded && Layers.Count > 0;
+
+        public bool TreeUpdateQueued { get; set; }
 
         [DataField("layerDatums")]
         private List<PrototypeLayerData> LayerDatums
@@ -253,10 +261,7 @@ namespace Robust.Client.GameObjects
 
         public Box2 Bounds => _bounds;
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool TreeUpdateQueued { get; set; }
-
-        [ViewVariables(VVAccess.ReadWrite)] private bool _inertUpdateQueued;
+        [ViewVariables(VVAccess.ReadWrite)] internal bool _inertUpdateQueued;
 
         /// <summary>
         ///     Shader instance to use when drawing the final sprite to the world.
@@ -1395,22 +1400,22 @@ namespace Robust.Client.GameObjects
 
         private void QueueUpdateRenderTree()
         {
-            if (TreeUpdateQueued || Owner == default || entities?.EventBus == null)
+            if (TreeUpdateQueued || entities?.EventBus == null)
                 return;
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
-            TreeUpdateQueued = true;
-            entities.EventBus.RaiseLocalEvent(Owner, new UpdateSpriteTreeEvent());
+            var ev = new QueueSpriteTreeUpdateEvent(entities.GetComponent<TransformComponent>(Owner));
+            entities.EventBus.RaiseComponentEvent(this, ref ev);
         }
 
         private void QueueUpdateIsInert()
         {
-            if (_inertUpdateQueued || Owner == default || entities?.EventBus == null)
+            if (_inertUpdateQueued || entities?.EventBus == null)
                 return;
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
-            _inertUpdateQueued = true;
-            entities.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+            var ev = new SpriteUpdateInertEvent();
+            entities.EventBus.RaiseComponentEvent(this, ref ev);
         }
 
         internal void DoUpdateIsInert()
@@ -1474,7 +1479,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc/>
-        public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, IEye? eye = null)
+        public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, Angle eyeRot)
         {
             // fast check for empty sprites
             if (!Visible || Layers.Count == 0)
@@ -1491,21 +1496,23 @@ namespace Robust.Client.GameObjects
             if (worldRotation.Theta < 0)
                 worldRotation = new Angle(worldRotation.Theta + Math.Tau);
 
-            eye ??= eyeManager.CurrentEye;
-
             // Next, what we do is take the box2 and apply the sprite's transform, and then the entity's transform. We
             // could do this via Matrix3.TransformBox, but that only yields bounding boxes. So instead we manually
             // transform our box by the combination of these matrices:
 
+            Angle finalRotation = NoRotation
+                ? Rotation - eyeRot
+                : Rotation + worldRotation;
+
+            // slightly faster path if offset == 0 (true for 99.9% of sprites)
+            if (Offset == Vector2.Zero)
+                return new Box2Rotated(Bounds.Translated(worldPosition), finalRotation, worldPosition);
+
             var adjustedOffset = NoRotation
-                ? (-eye.Rotation).RotateVec(Offset)
+                ? (-eyeRot).RotateVec(Offset)
                 : worldRotation.RotateVec(Offset);
 
             Vector2 position = adjustedOffset + worldPosition;
-            Angle finalRotation = NoRotation
-                ? Rotation - eye.Rotation
-                : Rotation + worldRotation;
-
             return new Box2Rotated(Bounds.Translated(position), finalRotation, position);
         }
 
@@ -2212,14 +2219,9 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
-    internal sealed class UpdateSpriteTreeEvent : EntityEventArgs
-    {
 
-    }
-
+    [ByRefEvent]
     internal struct SpriteUpdateInertEvent
     {
-        public SpriteComponent Sprite;
     }
 }

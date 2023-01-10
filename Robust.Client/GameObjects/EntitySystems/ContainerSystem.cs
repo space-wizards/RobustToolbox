@@ -20,6 +20,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
+        [Dependency] private readonly PointLightSystem _lightSys = default!;
 
         private readonly HashSet<EntityUid> _updateQueue = new();
 
@@ -29,10 +30,16 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
+            EntityManager.EntityInitialized += HandleEntityInitialized;
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
+        }
+
+        public override void Shutdown()
+        {
+            EntityManager.EntityInitialized -= HandleEntityInitialized;
+            base.Shutdown();
         }
 
         protected override void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing)
@@ -40,15 +47,15 @@ namespace Robust.Client.GameObjects
             DebugTools.Assert(ExpectedEntities.TryGetValue(missing, out var expectedContainer) && expectedContainer == cont && cont.ExpectedEntities.Contains(missing));
         }
 
-        private void HandleEntityInitialized(EntityInitializedMessage ev)
+        private void HandleEntityInitialized(EntityUid uid)
         {
-            if (!RemoveExpectedEntity(ev.Entity, out var container))
+            if (!RemoveExpectedEntity(uid, out var container))
                 return;
 
             if (container.Deleted)
                 return;
 
-            container.Insert(ev.Entity);
+            container.Insert(uid);
         }
 
         private void HandleComponentState(EntityUid uid, ContainerManagerComponent component, ref ComponentHandleState args)
@@ -289,9 +296,7 @@ namespace Robust.Client.GameObjects
             }
 
             if (pointQuery.TryGetComponent(entity, out var light))
-            {
-                light.ContainerOccluded = lightOccluded;
-            }
+                _lightSys.SetContainerOccluded(entity, lightOccluded, light);
 
             var childEnumerator = xform.ChildEnumerator;
 

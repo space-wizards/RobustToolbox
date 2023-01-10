@@ -30,6 +30,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -111,14 +112,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// slightly. This helps when saving and loading a game.
         /// Warning Do not use a zero or short length.
         /// </summary>
-        /// <param name="bodyA">The first body</param>
-        /// <param name="bodyB">The second body</param>
-        /// <param name="anchorA">The first body anchor</param>
-        /// <param name="anchorB">The second body anchor</param>
-        public DistanceJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB)
-            : base(bodyA.Owner, bodyB.Owner)
+        public DistanceJoint(EntityUid uidA, EntityUid uidB, Vector2 anchorA, Vector2 anchorB, float length)
+            : base(uidA, uidB)
         {
-            Length = MathF.Max(PhysicsConstants.LinearSlop, (bodyB.GetWorldPoint(anchorB) - bodyA.GetWorldPoint(anchorA)).Length);
+            Length = MathF.Max(PhysicsConstants.LinearSlop, length);
             _minLength = _length;
             _maxLength = _length;
             LocalAnchorA = anchorA;
@@ -284,10 +281,19 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return 0.0f;
         }
 
-        internal override void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB)
+        internal override void InitVelocityConstraints(
+            in SolverData data,
+            in SharedPhysicsSystem.IslandData island,
+            PhysicsComponent bodyA,
+            PhysicsComponent bodyB,
+            Vector2[] positions,
+            float[] angles,
+            Vector2[] linearVelocities,
+            float[] angularVelocities)
         {
-            _indexA = bodyA.IslandIndex[data.IslandIndex];
-            _indexB = bodyB.IslandIndex[data.IslandIndex];
+            var offset = island.Offset;
+            _indexA = bodyA.IslandIndex[island.Index];
+            _indexB = bodyB.IslandIndex[island.Index];
             _localCenterA = bodyA.LocalCenter;
             _localCenterB = bodyB.LocalCenter;
             _invMassA = bodyA.InvMass;
@@ -295,15 +301,15 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             _invIA = bodyA.InvI;
             _invIB = bodyB.InvI;
 
-            var cA = data.Positions[_indexA];
-	        float aA = data.Angles[_indexA];
-	        var vA = data.LinearVelocities[_indexA];
-	        float wA = data.AngularVelocities[_indexA];
+            var cA = positions[_indexA];
+	        float aA = angles[_indexA];
+	        var vA = linearVelocities[offset + _indexA];
+	        float wA = angularVelocities[offset + _indexA];
 
-	        var cB = data.Positions[_indexB];
-	        float aB = data.Angles[_indexB];
-	        var vB = data.LinearVelocities[_indexB];
-	        float wB = data.AngularVelocities[_indexB];
+	        var cB = positions[_indexB];
+	        float aB = angles[_indexB];
+	        var vB = linearVelocities[offset + _indexB];
+	        float wB = angularVelocities[offset + _indexB];
 
 	        Quaternion2D qA = new(aA), qB = new(aB);
 
@@ -313,7 +319,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
             // Handle singularity.
 	        _currentLength = _u.Length;
-	        if (_currentLength > data.LinearSlop)
+	        if (_currentLength > PhysicsConstants.LinearSlop)
 	        {
 		        _u *= 1.0f / _currentLength;
 	        }
@@ -377,18 +383,23 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        _impulse = 0.0f;
 	        }
 
-	        data.LinearVelocities[_indexA] = vA;
-	        data.AngularVelocities[_indexA] = wA;
-	        data.LinearVelocities[_indexB] = vB;
-	        data.AngularVelocities[_indexB] = wB;
+	        linearVelocities[offset + _indexA] = vA;
+	        angularVelocities[offset + _indexA] = wA;
+	        linearVelocities[offset + _indexB] = vB;
+	        angularVelocities[offset + _indexB] = wB;
         }
 
-        internal override void SolveVelocityConstraints(SolverData data)
+        internal override void SolveVelocityConstraints(
+            in SolverData data,
+            in SharedPhysicsSystem.IslandData island,
+            Vector2[] linearVelocities,
+            float[] angularVelocities)
         {
-            var vA = data.LinearVelocities[_indexA];
-	        float wA = data.AngularVelocities[_indexA];
-	        var vB = data.LinearVelocities[_indexB];
-	        float wB = data.AngularVelocities[_indexB];
+            var offset = island.Offset;
+            var vA = linearVelocities[offset + _indexA];
+	        float wA = angularVelocities[offset + _indexA];
+	        var vB = linearVelocities[offset + _indexB];
+	        float wB = angularVelocities[offset + _indexB];
 
 	        if (_minLength < _maxLength)
 	        {
@@ -471,19 +482,22 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        wB += _invIB * Vector2.Cross(_rB, P);
 	        }
 
-	        data.LinearVelocities[_indexA] = vA;
-	        data.AngularVelocities[_indexA] = wA;
-	        data.LinearVelocities[_indexB] = vB;
-	        data.AngularVelocities[_indexB] = wB;
+	        linearVelocities[offset + _indexA] = vA;
+	        angularVelocities[offset + _indexA] = wA;
+	        linearVelocities[offset + _indexB] = vB;
+	        angularVelocities[offset + _indexB] = wB;
 
         }
 
-        internal override bool SolvePositionConstraints(SolverData data)
+        internal override bool SolvePositionConstraints(
+            in SolverData data,
+            Vector2[] positions,
+            float[] angles)
         {
-            var cA = data.Positions[_indexA];
-            float aA = data.Angles[_indexA];
-            var cB = data.Positions[_indexB];
-            float aB = data.Angles[_indexB];
+            var cA = positions[_indexA];
+            float aA = angles[_indexA];
+            var cB = positions[_indexB];
+            float aB = angles[_indexB];
 
             Quaternion2D qA = new(aA), qB = new(aB);
 
@@ -519,12 +533,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             cB += P * _invMassB;
             aB += _invIB * Vector2.Cross(rB, P);
 
-            data.Positions[_indexA] = cA;
-            data.Angles[_indexA] = aA;
-            data.Positions[_indexB] = cB;
-            data.Angles[_indexB] = aB;
+            positions[_indexA] = cA;
+            angles[_indexA] = aA;
+            positions[_indexB] = cB;
+            angles[_indexB] = aB;
 
-            return MathF.Abs(C) < data.LinearSlop;
+            return MathF.Abs(C) < PhysicsConstants.LinearSlop;
         }
 
         public bool Equals(DistanceJoint? other)

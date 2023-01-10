@@ -1,4 +1,5 @@
 using Robust.Shared.GameStates;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects
 {
@@ -19,13 +20,33 @@ namespace Robust.Shared.GameObjects
         private void HandleCompState(EntityUid uid, SharedPointLightComponent component, ref ComponentHandleState args)
         {
             if (args.Current is not PointLightComponentState newState) return;
-            component.Enabled = newState.Enabled;
-            component.Radius = newState.Radius;
+
+            SetEnabled(uid, newState.Enabled, component);
+            SetRadius(uid, newState.Radius, component);
             component.Offset = newState.Offset;
             component.Color = newState.Color;
             component.Energy = newState.Energy;
             component.Softness = newState.Softness;
             component.CastShadows = newState.CastShadows;
+        }
+
+        public virtual void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null)
+        {
+            if (!Resolve(uid, ref comp) || enabled == comp.Enabled)
+                return;
+
+            comp._enabled = enabled;
+            RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
+            Dirty(comp);
+        }
+
+        public virtual void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null)
+        {
+            if (!Resolve(uid, ref comp) || MathHelper.CloseToPercent(comp.Radius, radius))
+                return;
+
+            comp._radius = radius;
+            Dirty(comp);
         }
     }
 }

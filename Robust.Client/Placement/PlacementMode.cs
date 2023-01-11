@@ -129,21 +129,29 @@ namespace Robust.Client.Placement
 
         public IEnumerable<EntityCoordinates> LineCoordinates()
         {
-            var (_, (x, y)) = MouseCoords.WithEntityId(pManager.StartPoint.EntityId) - pManager.StartPoint;
+            var mouseScreen = pManager.InputManager.MouseScreenPosition;
+            var mousePos = pManager.EyeManager.ScreenToMap(mouseScreen);
+
+            if (mousePos.MapId == MapId.Nullspace)
+                yield break;
+
+            var (_, (x, y)) = EntityCoordinates.FromMap(pManager.StartPoint.EntityId, mousePos, pManager.EntityManager) - pManager.StartPoint;
             float iterations;
             Vector2 distance;
             if (Math.Abs(x) > Math.Abs(y))
             {
-                iterations = Math.Abs(x / GridDistancing);
-                distance = new Vector2(x > 0 ? 1 : -1, 0) * GridDistancing;
+                var xSign = Math.Sign(x);
+                iterations = MathF.Ceiling(Math.Abs((x + GridDistancing / 2f * xSign) / GridDistancing));
+                distance = new Vector2(x > 0 ? 1 : -1, 0);
             }
             else
             {
-                iterations = Math.Abs(y / GridDistancing);
-                distance = new Vector2(0, y > 0 ? 1 : -1) * GridDistancing;
+                var ySign = Math.Sign(y);
+                iterations = MathF.Ceiling(Math.Abs((y + GridDistancing / 2f * ySign) / GridDistancing));
+                distance = new Vector2(0, y > 0 ? 1 : -1);
             }
 
-            for (var i = 0; i <= iterations; i++)
+            for (var i = 0; i < iterations; i++)
             {
                 yield return new EntityCoordinates(pManager.StartPoint.EntityId, pManager.StartPoint.Position + distance * i);
             }

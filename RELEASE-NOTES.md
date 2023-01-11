@@ -70,6 +70,10 @@ END TEMPLATE-->
 
 * Grids overlapping entities will now flag the entity for grid traversal.
 
+### Other
+
+* The split container `Measure()` override now more accurately reflects the space available to children. Additionally, the split position is now publicly settable.
+
 ### Internal
 
 * Removed manual component registrations.
@@ -80,10 +84,15 @@ END TEMPLATE-->
 ### New features
 
 * Add helper GetDirection to SharedMapSystem that offsets a Vector2i in the specified direction by the specified distance.
+* UIController now implements IEntityEventSubscriber
 
 ### Bugfixes
 
 * The fast TryFindGridAt overload will now also return the queried map's MapGridComponent if it exists.
+
+### Other
+
+* Updated window dragging movement constraints. By default windows can now be partially dragged off-screen to the left. This is configurable per window. This also fixes a bug where windows could become unreachable.
 
 ### Internal
 

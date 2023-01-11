@@ -86,6 +86,31 @@ public abstract partial class SharedMapSystem
 
     #endregion
 
+    public static Vector2i GetDirection(Vector2i position, Direction dir, int dist = 1)
+    {
+        switch (dir)
+        {
+            case Direction.East:
+                return position + new Vector2i(dist, 0);
+            case Direction.SouthEast:
+                return position + new Vector2i(dist, -dist);
+            case Direction.South:
+                return position + new Vector2i(0, -dist);
+            case Direction.SouthWest:
+                return position + new Vector2i(-dist, -dist);
+            case Direction.West:
+                return position + new Vector2i(-dist, 0);
+            case Direction.NorthWest:
+                return position + new Vector2i(-dist, dist);
+            case Direction.North:
+                return position + new Vector2i(0, dist);
+            case Direction.NorthEast:
+                return position + new Vector2i(dist, dist);
+            default:
+                throw new NotImplementedException();
+        }
+    }
+
     private void InitializeGrid()
     {
         SubscribeLocalEvent<MapGridComponent, ComponentGetState>(OnGridGetState);
@@ -258,7 +283,7 @@ public abstract partial class SharedMapSystem
             }
             chunkData.Add(index, tileBuffer);
         }
-        
+
         args.State = new MapGridComponentState(component.ChunkSize, chunkData);
     }
 

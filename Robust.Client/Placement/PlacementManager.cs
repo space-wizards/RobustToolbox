@@ -333,7 +333,7 @@ namespace Robust.Client.Placement
             }
         }
 
-        private void HandleTileChanged(TileChangedEvent args)
+        private void HandleTileChanged(ref TileChangedEvent args)
         {
             var coords = MapManager.GetGrid(args.NewTile.GridUid).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);

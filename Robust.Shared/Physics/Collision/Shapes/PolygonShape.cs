@@ -85,9 +85,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public void SetVertices(Span<Vector2> vertices)
         {
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            DebugTools.Assert(vertices.Length >= 3 && vertices.Length <= configManager.GetCVar(CVars.MaxPolygonVertices));
-            SetVertices(vertices, configManager.GetCVar(CVars.ConvexHullPolygons));
+            DebugTools.Assert(vertices.Length >= 3 && vertices.Length <= PhysicsConstants.MaxPolygonVertices);
+            SetVertices(vertices, PhysicsConstants.ConvexHulls);
         }
 
         public void SetVertices(Span<Vector2> vertices, bool convexHulls)

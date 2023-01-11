@@ -25,25 +25,25 @@ namespace Robust.Client.Placement
 {
     public sealed partial class PlacementManager : IPlacementManager, IDisposable, IEntityEventSubscriber
     {
-        [Dependency] private readonly IClientNetManager NetworkManager = default!;
-        [Dependency] public readonly IPlayerManager PlayerManager = default!;
-        [Dependency] public readonly IResourceCache ResourceCache = default!;
-        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
-        [Dependency] public readonly IMapManager MapManager = default!;
+        [Dependency] private readonly IClientNetManager _networkManager = default!;
+        [Dependency] internal readonly IPlayerManager PlayerManager = default!;
+        [Dependency] internal readonly IResourceCache ResourceCache = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] internal readonly IMapManager MapManager = default!;
         [Dependency] private readonly IGameTiming _time = default!;
-        [Dependency] public readonly IEyeManager eyeManager = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] internal readonly IEyeManager EyeManager = default!;
+        [Dependency] internal readonly IInputManager InputManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] public readonly IEntityManager EntityManager = default!;
+        [Dependency] internal readonly IEntityManager EntityManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IBaseClient _baseClient = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] public readonly IClyde _clyde = default!;
+        [Dependency] internal readonly IClyde Clyde = default!;
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
         /// </summary>
-        private static readonly TimeSpan _pendingTileTimeout = TimeSpan.FromSeconds(2.0);
+        private static readonly TimeSpan PendingTileTimeout = TimeSpan.FromSeconds(2.0);
 
         /// <summary>
         /// Dictionary of all placement mode types
@@ -181,10 +181,10 @@ namespace Robust.Client.Placement
         {
             _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
 
-            NetworkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);
+            _networkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);
 
             _modeDictionary.Clear();
-            foreach (var type in ReflectionManager.GetAllChildren<PlacementMode>())
+            foreach (var type in _reflectionManager.GetAllChildren<PlacementMode>())
             {
                 _modeDictionary.Add(type.Name, type);
             }
@@ -307,7 +307,7 @@ namespace Robust.Client.Placement
         {
             if (enabled)
             {
-                _inputManager.Contexts.SetActiveContext("editor");
+                InputManager.Contexts.SetActiveContext("editor");
             }
             else
             {
@@ -427,7 +427,7 @@ namespace Robust.Client.Placement
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
             msg.EntityUid = entity;
-            NetworkManager.ClientSendMessage(msg);
+            _networkManager.ClientSendMessage(msg);
         }
 
         public void HandleRectDeletion(EntityCoordinates start, Box2 rect)
@@ -436,7 +436,7 @@ namespace Robust.Client.Placement
             msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
             msg.EntityCoordinates = new EntityCoordinates(StartPoint.EntityId, rect.BottomLeft);
             msg.RectSize = rect.Size;
-            NetworkManager.ClientSendMessage(msg);
+            _networkManager.ClientSendMessage(msg);
         }
 
         public void ToggleEraser()
@@ -509,7 +509,7 @@ namespace Robust.Client.Placement
                 return false;
             }
 
-            coordinates = _inputManager.MouseScreenPosition;
+            coordinates = InputManager.MouseScreenPosition;
             return true;
         }
 
@@ -530,7 +530,7 @@ namespace Robust.Client.Placement
                     return false;
                 }
                 coordinates = EntityCoordinates.FromMap(MapManager,
-                                                        eyeManager.ScreenToMap(_inputManager.MouseScreenPosition));
+                                                        EyeManager.ScreenToMap(InputManager.MouseScreenPosition));
                 return true;
             }
         }
@@ -759,7 +759,7 @@ namespace Robust.Client.Placement
                         return;
                 }
 
-                var tuple = new Tuple<EntityCoordinates, TimeSpan>(coordinates, _time.RealTime + _pendingTileTimeout);
+                var tuple = new Tuple<EntityCoordinates, TimeSpan>(coordinates, _time.RealTime + PendingTileTimeout);
                 _pendingTileChanges.Add(tuple);
             }
 
@@ -779,7 +779,7 @@ namespace Robust.Client.Placement
 
             message.DirRcv = Direction;
 
-            NetworkManager.ClientSendMessage(message);
+            _networkManager.ClientSendMessage(message);
         }
 
         public enum PlacementTypes : byte

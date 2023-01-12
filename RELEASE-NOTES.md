@@ -54,6 +54,25 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.80.1.0
+
+### New features
+
+* Added location of compile errors to XAML UI.
+* Add CC-BY to RSI.json
+* Allow customising radio buttons for RadioOptions.
+* Added CVar to override CEF useragent.
+
+### Bugfixes
+
+* Fix incorrect size of second window in split container.
+* Fix PreventCollideEvent fixture ordering.
+
+### Other
+
+*Obsoleted .Owner for future work in removing components storing a reference to their entityuid.
+
+
 ## 0.80.0.0
 
 ### Breaking changes

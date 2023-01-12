@@ -36,6 +36,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Update your API to allow accessing Owner through other means")]
         public EntityUid Owner { get; set; } = EntityUid.Invalid;
 
         /// <inheritdoc />

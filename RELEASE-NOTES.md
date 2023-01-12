@@ -70,14 +70,14 @@ END TEMPLATE-->
 
 ### Other
 
-*Obsoleted .Owner for future work in removing components storing a reference to their entityuid.
+* Obsoleted .Owner for future work in removing components storing a reference to their entityuid.
 
 
 ## 0.80.0.0
 
 ### Breaking changes
 
-* Moved ConvexHullPolygosn and MaxPolygonVertices cvars to constants.
+* Moved ConvexHullPolygons and MaxPolygonVertices cvars to constants.
 * Moved the PhysicsMap Gravity property to its own controller.
 * Made some layout changes to Split Container.
 

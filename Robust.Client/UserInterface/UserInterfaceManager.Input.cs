@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.Input;

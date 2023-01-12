@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* EntityInitializedMessage has been removed; the C# event invoked on EntityManager (EntityInitialized) should be used in its place.
+*None yet*
 
 ### New features
 
@@ -51,8 +51,96 @@ END TEMPLATE-->
 
 ### Internal
 
+*None yet*
+
+
+## 0.80.1.0
+
+### New features
+
+* Added location of compile errors to XAML UI.
+* Add CC-BY to RSI.json
+* Allow customising radio buttons for RadioOptions.
+* Added CVar to override CEF useragent.
+
+### Bugfixes
+
+* Fix incorrect size of second window in split container.
+* Fix PreventCollideEvent fixture ordering.
+
+### Other
+
+* Obsoleted .Owner for future work in removing components storing a reference to their entityuid.
+
+
+## 0.80.0.0
+
+### Breaking changes
+
+* Moved ConvexHullPolygons and MaxPolygonVertices cvars to constants.
+* Moved the PhysicsMap Gravity property to its own controller.
+* Made some layout changes to Split Container.
+
+### New features
+
+* Added the colliding fixtures to PreventCollideEvent.
+
+### Bugfixes
+
+* Grids overlapping entities will now flag the entity for grid traversal.
+
+### Other
+
+* The split container `Measure()` override now more accurately reflects the space available to children. Additionally, the split position is now publicly settable.
+
+### Internal
+
+* Removed manual component registrations.
+
+
+## 0.79.0.1
+
+### New features
+
+* Add helper GetDirection to SharedMapSystem that offsets a Vector2i in the specified direction by the specified distance.
+* UIController now implements IEntityEventSubscriber
+
+### Bugfixes
+
+* The fast TryFindGridAt overload will now also return the queried map's MapGridComponent if it exists.
+
+### Other
+
+* Updated window dragging movement constraints. By default windows can now be partially dragged off-screen to the left. This is configurable per window. This also fixes a bug where windows could become unreachable.
+
+### Internal
+
+* Remove 2 TryGetComponents per physics contact per tick.
+
+
+## 0.79.0.0
+
+### Breaking changes
+
+* EntityInitializedMessage has been removed; the C# event invoked on EntityManager (EntityInitialized) should be used in its place.
+* TileChangedEventArgs has been removed.
+
+### Bugfixes
+
+* Fix tooltip panels being incorrectly sized for their first frame.
+* Client will no longer predict physics sleeping on bodies that are unable to sleep.
+* Style box texture scaling has been fixed.
+
+### Other
+
+* Added TaskCompletionSource to the sandbox.
+
+### Internal
+
 * IPhysManager has been removed for a slight physics contacts optimisation.
 * Optimise TryFindGridAt, particularly for grid traversals.
+* MapGridComponent now uses delta component states.
+* Removed some TryGetComponent from IsMapPaused, speeding up entity initialization in some instances.
 
 
 ## 0.78.0.0

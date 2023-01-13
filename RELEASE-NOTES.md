@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* The Popup control now has an OnPopupOpen event.
 
 ### Bugfixes
 

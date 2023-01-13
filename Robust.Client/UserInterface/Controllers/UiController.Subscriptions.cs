@@ -11,7 +11,15 @@ public abstract partial class UIController : IEntityEventSubscriber
         Type[]? before = null, Type[]? after = null)
         where T : notnull
     {
-        EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler,GetType(), before, after);
+        EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler, GetType(), before, after);
+    }
+
+    protected void SubscribeLocalEvent<T>(
+        EntityEventRefHandler<T> handler,
+        Type[]? before = null, Type[]? after = null)
+        where T : notnull
+    {
+        EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler, GetType(), before, after);
     }
 
     protected void UnSubscribeLocalEvent<T>()

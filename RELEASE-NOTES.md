@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Tooltips now provide the option to track the mouse cursor.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.80.2.0
+
+### New features
+
+* Tooltips now provide the option to track the mouse cursor.
 
 
 ## 0.80.1.0

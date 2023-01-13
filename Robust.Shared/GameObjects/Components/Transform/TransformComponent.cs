@@ -99,14 +99,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The EntityUid of the map which this object is on, if any.
         /// </summary>
-        public EntityUid? MapUid
-        {
-            get
-            {
-                var id = _mapManager.GetMapEntityId(MapID);
-                return id.IsValid() ? id : null;
-            }
-        }
+        public EntityUid? MapUid { get; internal set; }
 
         /// <summary>
         ///     The EntityUid of the grid which this object is on, if any.
@@ -486,6 +479,8 @@ namespace Robust.Shared.GameObjects
             if (newMapId == MapID)
                 return;
 
+            var newUid = _mapManager.GetMapEntityId(newMapId);
+
             //Set Paused state
             var mapPaused = _mapManager.IsMapPaused(newMapId);
             var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
@@ -493,12 +488,14 @@ namespace Robust.Shared.GameObjects
             var metaSystem = _entMan.EntitySysManager.GetEntitySystem<MetaDataSystem>();
             metaSystem.SetEntityPaused(Owner, mapPaused, metaData);
 
+            MapUid = newUid;
             MapID = newMapId;
-            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts, metaSystem);
+            UpdateChildMapIdsRecursive(MapID, newUid, mapPaused, xformQuery, metaEnts, metaSystem);
         }
 
         internal void UpdateChildMapIdsRecursive(
             MapId newMapId,
+            EntityUid newUid,
             bool mapPaused,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<MetaDataComponent> metaQuery,
@@ -514,11 +511,12 @@ namespace Robust.Shared.GameObjects
 
                 var concrete = xformQuery.GetComponent(child.Value);
 
+                concrete.MapUid = newUid;
                 concrete.MapID = newMapId;
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery, system);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, newUid, mapPaused, xformQuery, metaQuery, system);
                 }
             }
         }

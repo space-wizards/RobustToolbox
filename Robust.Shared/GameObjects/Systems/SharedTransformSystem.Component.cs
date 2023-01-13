@@ -182,7 +182,7 @@ public abstract partial class SharedTransformSystem
         // Children MAY be initialized here before their parents are.
         // We do this whole dance to handle this recursively,
         // setting _mapIdInitialized along the way to avoid going to the MapComponent every iteration.
-        static MapId FindMapIdAndSet(TransformComponent xform, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery)
+        static MapId FindMapIdAndSet(TransformComponent xform, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery, IMapManager mapManager)
         {
             if (xform._mapIdInitialized)
                 return xform.MapID;
@@ -191,7 +191,7 @@ public abstract partial class SharedTransformSystem
 
             if (xform.ParentUid.IsValid())
             {
-                value = FindMapIdAndSet(xformQuery.GetComponent(xform.ParentUid), entMan, xformQuery);
+                value = FindMapIdAndSet(xformQuery.GetComponent(xform.ParentUid), entMan, xformQuery, mapManager);
             }
             else
             {
@@ -207,6 +207,7 @@ public abstract partial class SharedTransformSystem
                 }
             }
 
+            xform.MapUid = mapManager.GetMapEntityId(value);
             xform.MapID = value;
             xform._mapIdInitialized = true;
             return value;
@@ -216,7 +217,7 @@ public abstract partial class SharedTransformSystem
 
         if (!component._mapIdInitialized)
         {
-            FindMapIdAndSet(component, EntityManager, xformQuery);
+            FindMapIdAndSet(component, EntityManager, xformQuery, _mapManager);
             component._mapIdInitialized = true;
         }
 
@@ -1000,23 +1001,6 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region State Handling
-    private void ChangeMapId(TransformComponent xform, MapId newMapId, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
-    {
-        if (newMapId == xform.MapID)
-            return;
-
-        //Set Paused state
-        var mapPaused = _mapManager.IsMapPaused(newMapId);
-        var meta = metaQuery.GetComponent(xform.Owner);
-        _metaSys.SetEntityPaused(xform.Owner, mapPaused, meta);
-
-        // Map entities retain their map Uids
-        if (xform.Owner != xform.MapUid)
-            xform.MapID = newMapId;
-
-        xform.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery, _metaSys);
-    }
-
     public void DetachParentToNull(TransformComponent xform)
     {
         if (xform._parent.IsValid())

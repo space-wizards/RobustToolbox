@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -514,7 +514,8 @@ internal partial class UserInterfaceManager
             // show simple tooltip if there is one
             var tooltip = new Tooltip()
             {
-                Text = hovered.ToolTip
+                Text = hovered.ToolTip,
+                Tracking = hovered.TrackingTooltip,
             };
 
             _suppliedTooltip = tooltip;

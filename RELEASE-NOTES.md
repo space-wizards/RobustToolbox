@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Tooltips now provide the option to track the mouse cursor.
 
 ### Bugfixes
 

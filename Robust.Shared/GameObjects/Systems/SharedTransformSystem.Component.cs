@@ -667,7 +667,8 @@ public abstract partial class SharedTransformSystem
     [Pure]
     public Matrix3 GetWorldMatrix(EntityUid uid)
     {
-        return Transform(uid).WorldMatrix;
+        var query = GetEntityQuery<TransformComponent>();
+        return GetWorldMatrix(query.GetComponent(uid), query);
     }
 
     // Temporary until it's moved here
@@ -675,22 +676,22 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix3 GetWorldMatrix(TransformComponent component)
     {
-        return component.WorldMatrix;
+        return GetWorldMatrix(component, GetEntityQuery<TransformComponent>());
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix3 GetWorldMatrix(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
     {
-        return GetWorldMatrix(xformQuery.GetComponent(uid));
+        return GetWorldMatrix(xformQuery.GetComponent(uid), xformQuery);
     }
-
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix3 GetWorldMatrix(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
-        return component.WorldMatrix;
+        var (pos, rot) = GetWorldPositionRotation(component, xformQuery);
+        return Matrix3.CreateTransform(pos, rot);
     }
 
     #endregion
@@ -698,9 +699,11 @@ public abstract partial class SharedTransformSystem
     #region World Position
 
     [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 GetWorldPosition(EntityUid uid)
     {
-        return Transform(uid).WorldPosition;
+        var query = GetEntityQuery<TransformComponent>();
+        return GetWorldPosition(query.GetComponent(uid), query);
     }
 
     // Temporary until it's moved here
@@ -708,28 +711,44 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 GetWorldPosition(TransformComponent component)
     {
-        return component.WorldPosition;
+        return GetWorldPosition(component, GetEntityQuery<TransformComponent>());
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 GetWorldPosition(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
     {
-        return GetWorldPosition(xformQuery.GetComponent(uid));
+        return GetWorldPosition(xformQuery.GetComponent(uid), xformQuery);
     }
 
     [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 GetWorldPosition(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
-        return component.WorldPosition;
+        Vector2 pos = component._localPosition;
+
+        while (component.ParentUid != component.MapUid && component.ParentUid.IsValid())
+        {
+            component = xformQuery.GetComponent(component.ParentUid);
+            pos = component._localRotation.RotateVec(pos) + component._localPosition;
+        }
+
+        return pos;
     }
 
     [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
-        return component.GetWorldPositionRotation(xformQuery);
+        Vector2 pos = component._localPosition;
+        Angle angle = component._localRotation;
+
+        while (component.ParentUid != component.MapUid && component.ParentUid.IsValid())
+        {
+            component = xformQuery.GetComponent(component.ParentUid);
+            pos = component._localRotation.RotateVec(pos) + component._localPosition;
+            angle += component._localRotation;
+        }
+
+        return (pos, angle);
     }
 
     /// <summary>
@@ -758,7 +777,7 @@ public abstract partial class SharedTransformSystem
             Logger.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
             var relXform = query.GetComponent(relative);
             pos = relXform.InvWorldMatrix.Transform(pos);
-            rot = rot - relXform.WorldRotation;
+            rot = rot - GetWorldRotation(relXform, query);
             break;
         }
 
@@ -824,11 +843,10 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        // TODO look at SetWorldPositionRotation and how it sets world position. I ASSUME that is faster than matrix products + transform, but not actually sure.
-
-        // world coords to parent coords
-        var newPos = GetInvWorldMatrix(component._parent, xformQuery).Transform(worldPos);
-        SetLocalPosition(component, newPos);
+        var (curWorldPos, curWorldRot) = GetWorldPositionRotation(component, xformQuery);
+        var negativeParentWorldRot = component._localRotation - curWorldRot;
+        var newLocalPos = component._localPosition + negativeParentWorldRot.RotateVec(worldPos - curWorldPos);
+        SetLocalPosition(component, newLocalPos);
     }
 
     #endregion
@@ -839,7 +857,8 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Angle GetWorldRotation(EntityUid uid)
     {
-        return Transform(uid).WorldRotation;
+        var query = GetEntityQuery<TransformComponent>();
+        return GetWorldRotation(query.GetComponent(uid), query);
     }
 
     // Temporary until it's moved here
@@ -847,21 +866,29 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Angle GetWorldRotation(TransformComponent component)
     {
-        return component.WorldRotation;
+        return GetWorldRotation(component, GetEntityQuery<TransformComponent>());
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Angle GetWorldRotation(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
     {
-        return GetWorldRotation(xformQuery.GetComponent(uid));
+        return GetWorldRotation(xformQuery.GetComponent(uid), xformQuery);
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Angle GetWorldRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
-        return component.WorldRotation;
+        Angle rotation = component._localRotation;
+
+        while (component.ParentUid != component.MapUid && component.ParentUid.IsValid())
+        {
+            component = xformQuery.GetComponent(component.ParentUid);
+            rotation += component._localRotation;
+        }
+
+        return rotation;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -898,14 +925,14 @@ public abstract partial class SharedTransformSystem
     #region Set Position+Rotation
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPositionRotation(EntityUid uid, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery, bool substepping)
+    public void SetWorldPositionRotation(EntityUid uid, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xformQuery)
     {
         var component = xformQuery.GetComponent(uid);
         SetWorldPositionRotation(component, worldPos, worldRot, xformQuery);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot, bool substepping)
+    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot)
     {
         SetWorldPositionRotation(component, worldPos, worldRot, GetEntityQuery<TransformComponent>());
     }
@@ -972,29 +999,126 @@ public abstract partial class SharedTransformSystem
     [Pure]
     public Matrix3 GetInvWorldMatrix(EntityUid uid)
     {
-        return Comp<TransformComponent>(uid).InvWorldMatrix;
+        var query = GetEntityQuery<TransformComponent>();
+        return GetInvWorldMatrix(query.GetComponent(uid), query);
     }
 
-    // Temporary until it's moved here
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix3 GetInvWorldMatrix(TransformComponent component)
     {
-        return component.InvWorldMatrix;
+        return GetInvWorldMatrix(component, GetEntityQuery<TransformComponent>());
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix3 GetInvWorldMatrix(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
     {
-        return GetInvWorldMatrix(xformQuery.GetComponent(uid));
+        return GetInvWorldMatrix(xformQuery.GetComponent(uid), xformQuery);
     }
 
     [Pure]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix3 GetInvWorldMatrix(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
     {
-        return component.InvWorldMatrix;
+        var (pos, rot) = GetWorldPositionRotation(component, xformQuery);
+        return Matrix3.CreateInverseTransform(pos, rot);
+    }
+
+    #endregion
+
+    #region GetWorldPositionRotationMatrix
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix)
+        GetWorldPositionRotationMatrix(EntityUid uid)
+    {
+        var query = GetEntityQuery<TransformComponent>();
+        return GetWorldPositionRotationMatrix(query.GetComponent(uid), query);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix)
+        GetWorldPositionRotationMatrix(TransformComponent xform)
+    {
+        return GetWorldPositionRotationMatrix(xform, GetEntityQuery<TransformComponent>());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix)
+        GetWorldPositionRotationMatrix(EntityUid uid, EntityQuery<TransformComponent> xforms)
+    {
+        return GetWorldPositionRotationMatrix(xforms.GetComponent(uid), xforms);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix)
+        GetWorldPositionRotationMatrix(TransformComponent component, EntityQuery<TransformComponent> xforms)
+    {
+        var (pos, rot) = GetWorldPositionRotation(component, xforms);
+        return (pos, rot, Matrix3.CreateTransform(pos, rot));
+    }
+    #endregion
+
+    #region GetWorldPositionRotationInvMatrix
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityUid uid)
+    {
+        var query = GetEntityQuery<TransformComponent>();
+        return GetWorldPositionRotationInvMatrix(query.GetComponent(uid), query);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(TransformComponent xform)
+    {
+        return GetWorldPositionRotationInvMatrix(xform, GetEntityQuery<TransformComponent>());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityUid uid, EntityQuery<TransformComponent> xforms)
+    {
+        return GetWorldPositionRotationInvMatrix(xforms.GetComponent(uid), xforms);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(TransformComponent component, EntityQuery<TransformComponent> xforms)
+    {
+        var (pos, rot) = GetWorldPositionRotation(component, xforms);
+        return (pos, rot, Matrix3.CreateInverseTransform(pos, rot));
+    }
+
+    #endregion
+
+    #region GetWorldPositionRotationMatrixWithInv
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix)
+        GetWorldPositionRotationMatrixWithInv(EntityUid uid)
+    {
+        var query = GetEntityQuery<TransformComponent>();
+        return GetWorldPositionRotationMatrixWithInv(query.GetComponent(uid), query);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix)
+        GetWorldPositionRotationMatrixWithInv(TransformComponent xform)
+    {
+        return GetWorldPositionRotationMatrixWithInv(xform, GetEntityQuery<TransformComponent>());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix)
+        GetWorldPositionRotationMatrixWithInv(EntityUid uid, EntityQuery<TransformComponent> xforms)
+    {
+        return GetWorldPositionRotationMatrixWithInv(xforms.GetComponent(uid), xforms);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix)
+        GetWorldPositionRotationMatrixWithInv(TransformComponent component, EntityQuery<TransformComponent> xforms)
+    {
+        var (pos, rot) = GetWorldPositionRotation(component, xforms);
+        return (pos, rot, Matrix3.CreateTransform(pos, rot), Matrix3.CreateInverseTransform(pos, rot));
     }
 
     #endregion

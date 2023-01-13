@@ -51,4 +51,5 @@
     </Compile>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
+  <Import Project="..\MSBuild\Robust.CompNetworkGenerator.targets" />
 </Project>

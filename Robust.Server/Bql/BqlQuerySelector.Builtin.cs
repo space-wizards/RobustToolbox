@@ -82,14 +82,12 @@ namespace Robust.Server.Bql
             {
                 if (!entityManager.TryGetComponent<TransformComponent>(e, out var transform))
                     return isInverted;
-                var cur = transform;
-                while (cur.ParentUid != EntityUid.Invalid)
+                while (transform.ParentUid != EntityUid.Invalid)
                 {
-                    if ((cur.ParentUid == uid) ^ isInverted)
+                    if ((transform.ParentUid == uid) ^ isInverted)
                         return true;
-                    if (cur.Parent is null)
+                    if (!entityManager.TryGetComponent(transform.ParentUid, out transform))
                         return false;
-                    cur = cur.Parent;
                 }
 
                 return false;

@@ -195,15 +195,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <summary>
-        ///     Reference to the transform of the container of this object if it exists, can be nested several times.
-        /// </summary>
+        // lazy VV convenience variable.
         [ViewVariables]
-        [Obsolete("Use ParentUid and query the parent TransformComponent")]
-        public TransformComponent? Parent
-        {
-            get => !_parent.IsValid() ? null : _entMan.GetComponent<TransformComponent>(_parent);
-        }
+        private TransformComponent? _parentXform => !_parent.IsValid() ? null : _entMan.GetComponent<TransformComponent>(_parent);
 
         /// <summary>
         /// The UID of the parent entity that this entity is attached to.

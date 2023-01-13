@@ -13,11 +13,7 @@ namespace Robust.Shared.CompNetworkGenerator
         {
             if (syntaxNode is ClassDeclarationSyntax classDeclarationSyntax &&
                 classDeclarationSyntax.AttributeLists.Count > 0)
-            {
-                var attrs = classDeclarationSyntax.AttributeLists.Select(a => a.Attributes);
-
                 CandidateClasses.Add(classDeclarationSyntax);
-            }
         }
     }
 }

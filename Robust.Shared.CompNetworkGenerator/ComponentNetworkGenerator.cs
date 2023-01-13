@@ -83,7 +83,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
             if (fields.Count == 0)
             {
-                var msg = "Component is marked with [AutoGenerateComponentState], but has no members marked with [AutoNetworkField].";
+                var msg = "Component is marked with [AutoGenerateComponentState], but has no valid members marked with [AutoNetworkField].";
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         new DiagnosticDescriptor(
@@ -184,6 +184,11 @@ public partial class {componentName}
                 try
                 {
                     var source = GenerateSource(context, type, comp);
+                    // can be null if no members marked with network field, which already has a diagnostic, so
+                    // just continue
+                    if (source == null)
+                        continue;
+
                     context.AddSource($"{type.Name}_CompNetwork.g.cs", SourceText.From(source, Encoding.UTF8));
                 }
                 catch (Exception e)

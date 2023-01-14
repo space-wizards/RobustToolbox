@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* TransformComponent,Parent has been removed. Use the ParentUid & get the component manually.
+*None yet*
 
 ### New features
 
-* The Popup control now has an OnPopupOpen event.
+*None yet*
 
 ### Bugfixes
 
@@ -47,12 +47,27 @@ END TEMPLATE-->
 
 ### Other
 
-* Various transform methods are now obsolete. Use the methods provided by the transform system instead.
-* TransformComponent.MapUid is now cached (previously required a dictionary lookup)
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 0.81.0.0
+
+### Breaking changes
+
+* TransformComponent,Parent has been removed. Use the ParentUid & get the component manually.
+
+### New features
+
+* The Popup control now has an OnPopupOpen event.
+
+### Other
+
+* Various transform methods are now obsolete. Use the methods provided by the transform system instead.
+* TransformComponent.MapUid is now cached (previously required a dictionary lookup)
 
 
 ## 0.80.2.0

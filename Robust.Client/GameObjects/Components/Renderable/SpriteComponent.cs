@@ -305,6 +305,11 @@ namespace Robust.Client.GameObjects
 
         void ISerializationHooks.AfterDeserialization()
         {
+            // Please somebody burn this to the ground
+            // Fix prototype reload trying to update tree on deserialization dummy instances.
+            if (!Owner.IsValid())
+                return;
+
             IoCManager.InjectDependencies(this);
 
             {

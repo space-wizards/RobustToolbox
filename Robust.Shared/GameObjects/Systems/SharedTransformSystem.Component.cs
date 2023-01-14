@@ -207,7 +207,7 @@ public abstract partial class SharedTransformSystem
                 }
             }
 
-            xform.MapUid = mapManager.GetMapEntityId(value);
+            xform.MapUid = value == MapId.Nullspace ? null : mapManager.GetMapEntityId(value);
             xform.MapID = value;
             xform._mapIdInitialized = true;
             return value;

@@ -479,7 +479,7 @@ namespace Robust.Shared.GameObjects
             if (newMapId == MapID)
                 return;
 
-            var newUid = _mapManager.GetMapEntityId(newMapId);
+            EntityUid? newUid = newMapId == MapId.Nullspace ? null : _mapManager.GetMapEntityId(newMapId);
 
             //Set Paused state
             var mapPaused = _mapManager.IsMapPaused(newMapId);
@@ -495,7 +495,7 @@ namespace Robust.Shared.GameObjects
 
         internal void UpdateChildMapIdsRecursive(
             MapId newMapId,
-            EntityUid newUid,
+            EntityUid? newUid,
             bool mapPaused,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<MetaDataComponent> metaQuery,

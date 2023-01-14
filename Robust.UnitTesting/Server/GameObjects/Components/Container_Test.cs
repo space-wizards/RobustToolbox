@@ -86,7 +86,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             var container = containerSys.MakeContainer<Container>(owner, "dummy");
             Assert.That(container.Insert(inserted), Is.True);
-            Assert.That(transform.Parent!.Owner, Is.EqualTo(owner));
+            Assert.That(transform.ParentUid, Is.EqualTo(owner));
 
             var container2 = containerSys.MakeContainer<Container>(inserted, "dummy");
             Assert.That(container2.Insert(owner), Is.False);
@@ -116,15 +116,15 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             var container = containerSys.MakeContainer<Container>(owner, "dummy");
             Assert.That(container.Insert(inserted), Is.True);
-            Assert.That(transform.Parent!.Owner, Is.EqualTo(owner));
+            Assert.That(transform.ParentUid, Is.EqualTo(owner));
 
             var container2 = containerSys.MakeContainer<Container>(inserted, "dummy");
             Assert.That(container2.Insert(entity), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent!.Owner, Is.EqualTo(inserted));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(inserted));
 
             Assert.That(container2.Remove(entity), Is.True);
             Assert.That(container.Contains(entity), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent!.Owner, Is.EqualTo(owner));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(owner));
 
             IoCManager.Resolve<IEntityManager>().DeleteEntity(owner);
             Assert.That(transform.Deleted, Is.True);
@@ -149,17 +149,17 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entMan = IoCManager.Resolve<IEntityManager>();
 
             Assert.That(container.Insert(entityTwo), Is.True);
-            Assert.That(entMan.GetComponent<TransformComponent>(entityTwo).Parent!.Owner, Is.EqualTo(entityOne));
+            Assert.That(entMan.GetComponent<TransformComponent>(entityTwo).ParentUid, Is.EqualTo(entityOne));
 
             Assert.That(container2.Insert(entityThree), Is.True);
-            Assert.That(entMan.GetComponent<TransformComponent>(entityThree).Parent!.Owner, Is.EqualTo(entityTwo));
+            Assert.That(entMan.GetComponent<TransformComponent>(entityThree).ParentUid, Is.EqualTo(entityTwo));
 
             Assert.That(container3.Insert(entityItem), Is.True);
-            Assert.That(entMan.GetComponent<TransformComponent>(entityItem).Parent!.Owner, Is.EqualTo(entityThree));
+            Assert.That(entMan.GetComponent<TransformComponent>(entityItem).ParentUid, Is.EqualTo(entityThree));
 
             Assert.That(container3.Remove(entityItem), Is.True);
             Assert.That(container.Contains(entityItem), Is.True);
-            Assert.That(entMan.GetComponent<TransformComponent>(entityItem).Parent!.Owner, Is.EqualTo(entityOne));
+            Assert.That(entMan.GetComponent<TransformComponent>(entityItem).ParentUid, Is.EqualTo(entityOne));
 
             entMan.DeleteEntity(entityOne);
             Assert.That(entMan.Deleted(entityOne), Is.True);

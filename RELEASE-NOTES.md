@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* TransformComponent,Parent has been removed. Use the ParentUid & get the component manually.
 
 ### New features
 
@@ -47,7 +47,8 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Various transform methods are now obsolete. Use the methods provided by the transform system instead.
+* TransformComponent.MapUid is now cached (previously required a dictionary lookup)
 
 ### Internal
 

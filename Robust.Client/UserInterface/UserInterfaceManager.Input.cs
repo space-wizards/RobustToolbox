@@ -520,13 +520,12 @@ internal partial class UserInterfaceManager
 
             _suppliedTooltip = tooltip;
         }
-        else
-        {
-            return;
-        }
 
-        PopupRoot.AddChild(_suppliedTooltip!);
-        Tooltips.PositionTooltip(_suppliedTooltip!);
+        if (_suppliedTooltip == null)
+            return;
+
+        PopupRoot.AddChild(_suppliedTooltip);
+        Tooltips.PositionTooltip(_suppliedTooltip);
         hovered.PerformShowTooltip();
     }
 

@@ -24,7 +24,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly TransformSystem _transform = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
-        private HashSet<ISpriteComponent> _manualUpdate = new();
+        private HashSet<SpriteComponent> _manualUpdate = new();
 
         public override void Initialize()
         {
@@ -84,7 +84,7 @@ namespace Robust.Client.GameObjects
             var spriteState = (frameTime, _manualUpdate);
 
             _treeSystem.QueryAabb( ref spriteState, static (ref (float frameTime,
-                    HashSet<ISpriteComponent> _manualUpdate) tuple, in ComponentTreeEntry<SpriteComponent> value) =>
+                    HashSet<SpriteComponent> _manualUpdate) tuple, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
                     if (value.Component.IsInert)
                         return true;
@@ -101,7 +101,7 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Force update of the sprite component next frame
         /// </summary>
-        public void ForceUpdate(ISpriteComponent sprite)
+        public void ForceUpdate(SpriteComponent sprite)
         {
             _manualUpdate.Add(sprite);
         }

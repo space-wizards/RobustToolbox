@@ -686,7 +686,13 @@ namespace Robust.Shared.GameObjects
         public T EnsureComponent<T>(EntityUid uid) where T : Component, new()
         {
             if (TryGetComponent<T>(uid, out var component))
-                return component;
+            {
+                // Check for deferred component removal.
+                if (component.LifeStage <= ComponentLifeStage.Running)
+                    return component;
+                else
+                    RemoveComponent(uid, component);
+            }
 
             return AddComponent<T>(uid);
         }
@@ -697,8 +703,14 @@ namespace Robust.Shared.GameObjects
         {
             if (TryGetComponent<T>(entity, out var comp))
             {
-                component = comp;
-                return true;
+                // Check for deferred component removal.
+                if (comp.LifeStage <= ComponentLifeStage.Running)
+                {
+                    component = comp;
+                    return true;
+                }
+                else
+                    RemoveComponent(entity, comp);
             }
 
             component = AddComponent<T>(entity);

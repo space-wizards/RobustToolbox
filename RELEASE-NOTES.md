@@ -35,7 +35,8 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `Box2Rotated.Centre` has been renamed to `.Center`
+* `ISpriteComponent` has been removed. Just use `SpriteComponent` instead.
 
 ### New features
 
@@ -43,11 +44,13 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed prototype reloading/uploading.
+* Fixed UI tooltips sometimes causing a null reference exception.
 
 ### Other
 
-*None yet*
+* Map/world velocity calculations should be slightly faster.
+* `EnsureComp` will now re-add a component if it has been queued for removal.
 
 ### Internal
 

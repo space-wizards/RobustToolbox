@@ -39,13 +39,15 @@ public sealed class PhysicsComponent : Component
     /// <summary>
     ///     Has this body been added to an island previously in this tick.
     /// </summary>
-    public bool Island { get; set; }
+    [Access(typeof(SharedPhysicsSystem))]
+    public bool Island;
 
     /// <summary>
     ///     Store the body's index within the island so we can lookup its data.
     ///     Key is Island's ID and value is our index.
     /// </summary>
-    public Dictionary<int, int> IslandIndex { get; set; } = new();
+    [Access(typeof(SharedPhysicsSystem))]
+    public Dictionary<int, int> IslandIndex = new();
 
     [ViewVariables] public int ContactCount => Contacts.Count;
 
@@ -57,13 +59,11 @@ public sealed class PhysicsComponent : Component
     [DataField("ignorePaused"), ViewVariables(VVAccess.ReadWrite)]
     public bool IgnorePaused;
 
-    /// <inheritdoc />
     [DataField("bodyType"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public BodyType BodyType = BodyType.Static;
 
     // We'll also block Static bodies from ever being awake given they don't need to move.
-
-    /// <inheritdoc />
+    
     [ViewVariables(VVAccess.ReadWrite),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public bool Awake;

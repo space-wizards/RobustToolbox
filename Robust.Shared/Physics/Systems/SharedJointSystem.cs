@@ -403,6 +403,8 @@ public abstract class SharedJointSystem : EntitySystem
 
         // Need to defer this for prediction reasons, yay!
         AddedJoints.Add(joint);
+
+        _sawmill.Info($"Added {joint.JointType} Joint with ID {joint.ID} from {bodyA.BodyType} to {bodyB.BodyType} ");
     }
 
     public void ClearJoints(EntityUid uid, JointComponent? component = null)
@@ -418,6 +420,8 @@ public abstract class SharedJointSystem : EntitySystem
         {
             RemoveJoint(a);
         }
+
+        _sawmill.Info($"Removed all joints from {ToPrettyString(uid)} ");
     }
 
     [Obsolete("Use the other ClearJoints overload")]
@@ -452,8 +456,6 @@ public abstract class SharedJointSystem : EntitySystem
         {
             return;
         }
-
-        _sawmill.Debug($"Removed joint {joint.ID}");
 
         // Wake up connected bodies.
         if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
@@ -491,11 +493,11 @@ public abstract class SharedJointSystem : EntitySystem
 
         if (bodyA == null)
         {
-            _sawmill.Debug($"Removing joint from entioty {ToPrettyString(bodyAUid)} without a physics component?");
+            _sawmill.Debug($"Tried to remove joint from entity {ToPrettyString(bodyAUid)} without a physics component");
         }
         else if (bodyB == null)
         {
-            _sawmill.Debug($"Removing joint from entioty {ToPrettyString(bodyBUid)} without a physics component?");
+            _sawmill.Debug($"Tried to remove joint from entity {ToPrettyString(bodyBUid)} without a physics component");
         }
         else
         {
@@ -504,6 +506,8 @@ public abstract class SharedJointSystem : EntitySystem
             var smug = new JointRemovedEvent(joint, bodyB, bodyA);
             EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+
+            _sawmill.Info($"Removed {joint.JointType} joint with ID {joint.ID} from entity {ToPrettyString(bodyAUid)} to entity {ToPrettyString(bodyBUid)}" );
         }
 
         // We can't just check up front due to how prediction works.

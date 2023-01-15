@@ -89,7 +89,8 @@ public sealed class Gravity2DController : VirtualController
                 if (body.BodyType != BodyType.Dynamic || body.IgnoreGravity)
                     continue;
 
-                _physics.SetLinearVelocity(body, body.LinearVelocity + gravity.Gravity * frameTime);
+                var uid = body.Owner;
+                _physics.SetLinearVelocity(uid, body.LinearVelocity + gravity.Gravity * frameTime, body: body);
             }
         }
     }
@@ -99,7 +100,7 @@ public sealed class Gravity2DController : VirtualController
         if (bodyQuery.TryGetComponent(uid, out var body) &&
             body.BodyType == BodyType.Dynamic)
         {
-            _physics.WakeBody(uid, body);
+            _physics.WakeBody(uid, body: body);
         }
 
         var xform = xformQuery.GetComponent(uid);

@@ -82,7 +82,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
             InitializeIsland();
             InitializeContacts();
-            InitializeShapes();
 
             _configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
             _configManager.OnValueChanged(CVars.NetTickrate, UpdateSubsteps, true);
@@ -157,7 +156,7 @@ namespace Robust.Shared.Physics.Systems
             if (args.OldMapId != xform.MapID)
             {
                 // This will also handle broadphase updating & joint clearing.
-                HandleMapChange(xform, body, args.OldMapId, xform.MapID);
+                HandleMapChange(uid, xform, body, args.OldMapId, xform.MapID);
             }
 
             if (args.OldMapId != xform.MapID)
@@ -170,22 +169,23 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         ///     Recursively add/remove from awake bodies, clear joints, remove from move buffer, and update broadphase.
         /// </summary>
-        private void HandleMapChange(TransformComponent xform, PhysicsComponent? body, MapId oldMapId, MapId newMapId)
+        private void HandleMapChange(EntityUid uid, TransformComponent xform, PhysicsComponent? body, MapId oldMapId, MapId newMapId)
         {
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
             var jointQuery = GetEntityQuery<JointComponent>();
 
-            TryComp(_mapManager.GetMapEntityId(oldMapId), out PhysicsMapComponent? oldMap);
-            TryComp(_mapManager.GetMapEntityId(newMapId), out PhysicsMapComponent? newMap);
+            TryComp(MapManager.GetMapEntityId(oldMapId), out PhysicsMapComponent? oldMap);
+            TryComp(MapManager.GetMapEntityId(newMapId), out PhysicsMapComponent? newMap);
 
-            RecursiveMapUpdate(xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
+            RecursiveMapUpdate(uid, xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
         }
 
         /// <summary>
         ///     Recursively add/remove from awake bodies, clear joints, remove from move buffer, and update broadphase.
         /// </summary>
         private void RecursiveMapUpdate(
+            EntityUid uid,
             TransformComponent xform,
             PhysicsComponent? body,
             PhysicsMapComponent? newMap,
@@ -194,7 +194,6 @@ namespace Robust.Shared.Physics.Systems
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<JointComponent> jointQuery)
         {
-            var uid = xform.Owner;
             DebugTools.Assert(!Deleted(uid));
 
             // This entity may not have a body, but some of its children might:
@@ -219,7 +218,7 @@ namespace Robust.Shared.Physics.Systems
                 if (xformQuery.TryGetComponent(child, out var childXform))
                 {
                     bodyQuery.TryGetComponent(child, out var childBody);
-                    RecursiveMapUpdate(childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
+                    RecursiveMapUpdate(child.Value, childXform, childBody, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
                 }
             }
         }
@@ -244,7 +243,6 @@ namespace Robust.Shared.Physics.Systems
             base.Shutdown();
 
             ShutdownIsland();
-            ShutdownShapes();
             _configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
@@ -255,7 +253,7 @@ namespace Robust.Shared.Physics.Systems
             if (mapId == MapId.Nullspace)
                 return;
 
-            EntityUid tempQualifier = _mapManager.GetMapEntityId(mapId);
+            EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
             EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).AddAwakeBody(@event.Body);
         }
 
@@ -266,7 +264,7 @@ namespace Robust.Shared.Physics.Systems
             if (mapId == MapId.Nullspace)
                 return;
 
-            EntityUid tempQualifier = _mapManager.GetMapEntityId(mapId);
+            EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
             EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
         }
 

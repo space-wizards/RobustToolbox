@@ -365,12 +365,12 @@ public partial class SharedPhysicsSystem
 
         if (value)
         {
-            var ev = new PhysicsWakeEvent(body);
+            var ev = new PhysicsWakeEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
         }
         else
         {
-            var ev = new PhysicsSleepEvent(body);
+            var ev = new PhysicsSleepEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
             ResetDynamics(body);
         }

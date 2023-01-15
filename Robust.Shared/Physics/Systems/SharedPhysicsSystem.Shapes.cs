@@ -12,21 +12,6 @@ public abstract partial class SharedPhysicsSystem
 {
     private bool _convexHulls;
 
-    private void InitializeShapes()
-    {
-        _configManager.OnValueChanged(CVars.ConvexHullPolygons, SetConvexHulls, true);
-    }
-
-    private void ShutdownShapes()
-    {
-        _configManager.UnsubValueChanged(CVars.ConvexHullPolygons, SetConvexHulls);
-    }
-
-    private void SetConvexHulls(bool obj)
-    {
-        _convexHulls = obj;
-    }
-
     public void SetRadius(
         EntityUid uid,
         Fixture fixture,
@@ -155,7 +140,7 @@ public abstract partial class SharedPhysicsSystem
         PhysicsComponent? body = null,
         TransformComponent? xform = null)
     {
-        if (vertices.Length > PhysicsConstants.MaxVertices)
+        if (vertices.Length > PhysicsConstants.MaxPolygonVertices)
         {
             throw new InvalidOperationException(
                 $"Tried to set too many vertices of {vertices.Length} for {ToPrettyString(uid)}!");

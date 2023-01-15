@@ -14,6 +14,7 @@ namespace Robust.Shared.Physics.Controllers
     public abstract class VirtualController : EntitySystem
     {
         [Dependency] protected readonly SharedPhysicsSystem PhysicsSystem = default!;
+        [Dependency] protected readonly SharedTransformSystem TransformSystem = default!;
 
         private static readonly Stopwatch Stopwatch = new();
 

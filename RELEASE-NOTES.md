@@ -54,6 +54,29 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.81.0.0
+
+### Breaking changes
+
+* TransformComponent,Parent has been removed. Use the ParentUid & get the component manually.
+
+### New features
+
+* The Popup control now has an OnPopupOpen event.
+
+### Other
+
+* Various transform methods are now obsolete. Use the methods provided by the transform system instead.
+* TransformComponent.MapUid is now cached (previously required a dictionary lookup)
+
+
+## 0.80.2.0
+
+### New features
+
+* Tooltips now provide the option to track the mouse cursor.
+
+
 ## 0.80.1.0
 
 ### New features

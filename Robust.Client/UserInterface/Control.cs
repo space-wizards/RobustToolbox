@@ -285,6 +285,11 @@ namespace Robust.Client.UserInterface
         public float? TooltipDelay { get; set; }
 
         /// <summary>
+        /// Should the tooltip track the mouse cursor.
+        /// </summary>
+        public bool TrackingTooltip { get; set; }
+
+        /// <summary>
         /// When a tooltip should be shown for this control, this will be invoked to
         /// produce a control which will serve as the tooltip (doing nothing if null is returned).
         /// This is the generally recommended way to implement custom tooltips for controls, as it takes

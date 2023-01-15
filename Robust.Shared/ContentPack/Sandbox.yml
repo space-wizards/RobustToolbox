@@ -708,6 +708,7 @@ Types:
       Methods:
         - "System.Collections.Specialized.NameValueCollection ParseQueryString(string, System.Text.Encoding)"
         - "System.Collections.Specialized.NameValueCollection ParseQueryString(string)"
+        - "string JavaScriptStringEncode(string)"
         - "string UrlDecode(string, System.Text.Encoding)"
         - "string UrlDecode(string)"
         - "string UrlEncode(string, System.Text.Encoding)"

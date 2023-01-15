@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.83.0.0
+
+### Breaking changes
+
+* Physics has been ECSd with large API changes:
+- Shapes can be updated via the system rather than requiring the caller to handle it.
+- Access attributes have been added.
+- Implemented IEquatable for Fixture Shapes
+- Removed obsolete PhysicsComponent APIs.
+- Removed usage of Component.Owner internally.
+
+
 ## 0.82.0.0
 
 ### Breaking changes

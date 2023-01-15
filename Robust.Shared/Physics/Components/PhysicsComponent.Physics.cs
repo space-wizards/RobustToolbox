@@ -63,7 +63,7 @@ public sealed class PhysicsComponent : Component
     public BodyType BodyType = BodyType.Static;
 
     // We'll also block Static bodies from ever being awake given they don't need to move.
-    
+
     [ViewVariables(VVAccess.ReadWrite),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public bool Awake;
@@ -92,7 +92,7 @@ public sealed class PhysicsComponent : Component
     [DataField("canCollide"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
-    public bool CanCollide { get; set; } = true;
+    public bool CanCollide = true;
 
     /// <summary>
     ///     Non-hard physics bodies will not cause action collision (e.g. blocking of movement)
@@ -155,14 +155,14 @@ public sealed class PhysicsComponent : Component
     /// <summary>
     ///     Indicates whether this body ignores gravity
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)]
-    public bool IgnoreGravity { get; set; }
+    [ViewVariables(VVAccess.ReadWrite)] public bool IgnoreGravity;
 
     /// <summary>
     /// Inverse moment of inertia (1 / I).
     /// </summary>
-    [ViewVariables, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
-    public float InvI { get; set; }
+    [ViewVariables,
+     Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    public float InvI;
 
     /// <summary>
     ///     Is the body allowed to have angular velocity.
@@ -188,8 +188,9 @@ public sealed class PhysicsComponent : Component
     /// The force is applied to the center of mass.
     /// https://en.wikipedia.org/wiki/Force
     /// </remarks>
-    [DataField("force"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
-    public Vector2 Force { get; set; }
+    [DataField("force"),
+     Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    public Vector2 Force;
 
     /// <summary>
     /// Current torque being applied to this entity in N*m.
@@ -198,8 +199,9 @@ public sealed class PhysicsComponent : Component
     /// The torque rotates around the Z axis on the object.
     /// https://en.wikipedia.org/wiki/Torque
     /// </remarks>
-    [DataField("torque"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
-    public float Torque { get; set; }
+    [DataField("torque"),
+     Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    public float Torque;
 
     /// <summary>
     ///     Contact friction between 2 bodies.
@@ -216,7 +218,7 @@ public sealed class PhysicsComponent : Component
     [DataField("linearDamping"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
-    public float LinearDamping { get; set; } = 0.2f;
+    public float LinearDamping = 0.2f;
 
     /// <summary>
     ///     This is a set amount that the body's angular velocity is reduced every tick.
@@ -226,7 +228,7 @@ public sealed class PhysicsComponent : Component
     [DataField("angularDamping"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
-    public float AngularDamping { get; set; } = 0.2f;
+    public float AngularDamping = 0.2f;
 
     // TODO: Datafield
     /// <summary>
@@ -237,14 +239,16 @@ public sealed class PhysicsComponent : Component
     ///     entity's parents are all stationary, this is the rate of change of this entity's world position (not
     ///     local position).
     /// </remarks>
-    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadExecute)]
-    public Vector2 LinearVelocity { get; set; }
+    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+        Other = AccessPermissions.ReadExecute)]
+    public Vector2 LinearVelocity;
 
     /// <summary>
     ///     Current angular velocity of the entity in radians per sec.
     /// </summary>
-    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.ReadExecute)]
-    public float AngularVelocity { get; set; }
+    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+        Other = AccessPermissions.ReadExecute)]
+    public float AngularVelocity;
 
     /// <summary>
     ///     Current momentum of the entity in kilogram meters per second

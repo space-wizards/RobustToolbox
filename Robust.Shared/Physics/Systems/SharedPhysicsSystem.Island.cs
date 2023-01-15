@@ -667,7 +667,7 @@ public abstract partial class SharedPhysicsSystem
             var angularVelocity = body.AngularVelocity;
 
             // if the body cannot move, nothing to do here
-            if (body.BodyType == BodyType.Dynamic)
+            if (((int)body.BodyType & (int)(BodyType.Dynamic | BodyType.KinematicController)) != 0)
             {
                 if (body.IgnoreGravity)
                     linearVelocity += body.Force * data.FrameTime * body.InvMass;

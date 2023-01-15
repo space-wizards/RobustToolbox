@@ -35,6 +35,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 
@@ -54,6 +55,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
         var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
         var physSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
+        var gravSystem = entitySystemManager.GetEntitySystem<Gravity2DController>();
         MapId mapId;
 
         const int columnCount = 1;
@@ -66,7 +68,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
             mapId = mapManager.CreateMap();
 
             var mapUid = mapManager.GetMapEntityId(mapId);
-            entityManager.GetComponent<PhysicsMapComponent>(mapUid).Gravity = new Vector2(0, -9.8f);
+            gravSystem.SetGravity(mapUid, new Vector2(0f, -9.8f));
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
@@ -161,6 +163,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
         var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
         var physSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
+        var gravSystem = entitySystemManager.GetEntitySystem<Gravity2DController>();
         MapId mapId;
 
         var columnCount = 1;
@@ -172,7 +175,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         {
             mapId = mapManager.CreateMap();
             var mapUid = mapManager.GetMapEntityId(mapId);
-            entityManager.GetComponent<PhysicsMapComponent>(mapUid).Gravity = new Vector2(0, -9.8f);
+            gravSystem.SetGravity(mapUid, new Vector2(0f, -9.8f));
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);

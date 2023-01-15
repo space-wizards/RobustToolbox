@@ -42,6 +42,14 @@ public sealed class Gravity2DController : VirtualController
         component.Gravity = state.Gravity;
     }
 
+    public Vector2 GetGravity(EntityUid uid, Gravity2DComponent? component = null)
+    {
+        if (!Resolve(uid, ref component, false))
+            return Vector2.Zero;
+
+        return component.Gravity;
+    }
+
     public void SetGravity(EntityUid uid, Vector2 value)
     {
         if (!HasComp<MapComponent>(uid))
@@ -72,27 +80,6 @@ public sealed class Gravity2DController : VirtualController
         gravity.Gravity = value;
         WakeBodiesRecursive(mapUid, GetEntityQuery<TransformComponent>(), GetEntityQuery<PhysicsComponent>());
         Dirty(gravity);
-    }
-
-    public override void UpdateBeforeSolve(bool prediction, float frameTime)
-    {
-        base.UpdateBeforeSolve(prediction, frameTime);
-        var query = EntityQueryEnumerator<Gravity2DComponent, PhysicsMapComponent>();
-
-        while (query.MoveNext(out var gravity, out var mapComp))
-        {
-            if (gravity.Gravity == Vector2.Zero)
-                continue;
-
-            foreach (var body in mapComp.AwakeBodies)
-            {
-                if (body.BodyType != BodyType.Dynamic || body.IgnoreGravity)
-                    continue;
-
-                var uid = body.Owner;
-                _physics.SetLinearVelocity(uid, body.LinearVelocity + gravity.Gravity * frameTime, body: body);
-            }
-        }
     }
 
     private void WakeBodiesRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> bodyQuery)

@@ -512,7 +512,7 @@ public abstract partial class SharedPhysicsSystem
     private void SolveIslands(PhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
     {
         var iBegin = 0;
-        var gravity = component.Gravity;
+        var gravity = _gravity.GetGravity(component.Owner);
 
         var data = new SolverData(
             frameTime,

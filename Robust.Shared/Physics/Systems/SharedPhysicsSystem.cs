@@ -10,6 +10,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Threading;
@@ -43,18 +44,19 @@ namespace Robust.Shared.Physics.Systems
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
-        [Dependency] private readonly   IConfigurationManager _configManager = default!;
-        [Dependency] private readonly   IManifoldManager _manifoldManager = default!;
-        [Dependency] protected readonly IMapManager MapManager = default!;
-        [Dependency] private readonly   IParallelManager _parallel = default!;
-        [Dependency] private readonly   IConfigurationManager _cfg = default!;
-        [Dependency] private readonly   IDependencyCollection _deps = default!;
-        [Dependency] private readonly   SharedBroadphaseSystem _broadphase = default!;
-        [Dependency] private readonly   EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly   SharedJointSystem _joints = default!;
-        [Dependency] private readonly   SharedGridTraversalSystem _traversal = default!;
-        [Dependency] private readonly   SharedTransformSystem _transform = default!;
-        [Dependency] private readonly   SharedDebugPhysicsSystem _debugPhysics = default!;
+        [Dependency] private readonly IConfigurationManager _configManager = default!;
+        [Dependency] private readonly IManifoldManager _manifoldManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IParallelManager _parallel = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IDependencyCollection _deps = default!;
+        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedJointSystem _joints = default!;
+        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
+        [Dependency] private readonly Gravity2DController _gravity = default!;
 
         private int _substeps;
 
@@ -111,7 +113,6 @@ namespace Robust.Shared.Physics.Systems
         private void HandlePhysicsMapInit(EntityUid uid, PhysicsMapComponent component, ComponentInit args)
         {
             _deps.InjectDependencies(component);
-            component.Physics = this;
             component.AutoClearForces = _cfg.GetCVar(CVars.AutoClearForces);
         }
 
@@ -175,8 +176,8 @@ namespace Robust.Shared.Physics.Systems
             var xformQuery = GetEntityQuery<TransformComponent>();
             var jointQuery = GetEntityQuery<JointComponent>();
 
-            TryComp(MapManager.GetMapEntityId(oldMapId), out PhysicsMapComponent? oldMap);
-            TryComp(MapManager.GetMapEntityId(newMapId), out PhysicsMapComponent? newMap);
+            TryComp(_mapManager.GetMapEntityId(oldMapId), out PhysicsMapComponent? oldMap);
+            TryComp(_mapManager.GetMapEntityId(newMapId), out PhysicsMapComponent? newMap);
 
             RecursiveMapUpdate(uid, xform, body, newMap, oldMap, bodyQuery, xformQuery, jointQuery);
         }
@@ -253,7 +254,7 @@ namespace Robust.Shared.Physics.Systems
             if (mapId == MapId.Nullspace)
                 return;
 
-            EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
+            EntityUid tempQualifier = _mapManager.GetMapEntityId(mapId);
             EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).AddAwakeBody(@event.Body);
         }
 
@@ -264,7 +265,7 @@ namespace Robust.Shared.Physics.Systems
             if (mapId == MapId.Nullspace)
                 return;
 
-            EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
+            EntityUid tempQualifier = _mapManager.GetMapEntityId(mapId);
             EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
         }
 

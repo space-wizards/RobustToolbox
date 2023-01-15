@@ -309,14 +309,14 @@ public partial class SharedPhysicsSystem
     /// <summary>
     /// Attempts to set the body to collidable, wake it, then move it.
     /// </summary>
-    public void SetLinearVelocity(EntityUid uid, Vector2 velocity, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public void SetLinearVelocity(EntityUid uid, Vector2 velocity, bool dirty = true, bool wakeBody = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if (!Resolve(uid, ref body))
             return;
 
         if (body.BodyType == BodyType.Static) return;
 
-        if (Vector2.Dot(velocity, velocity) > 0.0f)
+        if (wakeBody && Vector2.Dot(velocity, velocity) > 0.0f)
         {
             if (!WakeBody(uid, manager: manager, body: body))
                 return;

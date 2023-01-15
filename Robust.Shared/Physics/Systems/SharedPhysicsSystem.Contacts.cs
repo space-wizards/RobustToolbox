@@ -30,9 +30,11 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.JavaScript;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -216,7 +218,7 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
 
         // Does a joint override collision? Is at least one body dynamic?
-        if (!ShouldCollide(bodyB, bodyA))
+        if (!ShouldCollide(bodyB, bodyA, fixtureA, fixtureB))
             return;
 
         // Call the factory.
@@ -339,7 +341,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 // Check default filtering
                 if (!ShouldCollide(fixtureA, fixtureB) ||
-                    !ShouldCollide(bodyB, bodyA))
+                    !ShouldCollide(bodyB, bodyA, fixtureA, fixtureB))
                 {
                     DestroyContact(contact);
                     continue;
@@ -389,8 +391,8 @@ public abstract partial class SharedPhysicsSystem
 
             var proxyA = fixtureA.Proxies[indexA];
             var proxyB = fixtureB.Proxies[indexB];
-            var broadphaseA = _lookup.GetCurrentBroadphase(xformA);
-            var broadphaseB = _lookup.GetCurrentBroadphase(xformB);
+            var broadphaseA = xformA.Broadphase?.Uid;
+            var broadphaseB = xformB.Broadphase?.Uid;
             var overlap = false;
 
             // We can have cross-broadphase proxies hence need to change them to worldspace
@@ -402,8 +404,8 @@ public abstract partial class SharedPhysicsSystem
                 }
                 else
                 {
-                    var proxyAWorldAABB = _transform.GetWorldMatrix(broadphaseA.Owner, xformQuery).TransformBox(proxyA.AABB);
-                    var proxyBWorldAABB = _transform.GetWorldMatrix(broadphaseB.Owner, xformQuery).TransformBox(proxyB.AABB);
+                    var proxyAWorldAABB = _transform.GetWorldMatrix(xformQuery.GetComponent(broadphaseA.Value), xformQuery).TransformBox(proxyA.AABB);
+                    var proxyBWorldAABB = _transform.GetWorldMatrix(xformQuery.GetComponent(broadphaseB.Value), xformQuery).TransformBox(proxyB.AABB);
                     overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                 }
             }
@@ -422,22 +424,10 @@ public abstract partial class SharedPhysicsSystem
         }
 
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
-
-        // To avoid race conditions with the dictionary we'll cache all of the transforms up front.
-        // Caching should provide better perf than multi-threading the GetTransform() as we can also re-use
-        // these in PhysicsIsland as well.
-        for (var i = 0; i < index; i++)
-        {
-            var contact = contacts[i];
-            var bodyA = contact.FixtureA!.Body;
-            var bodyB = contact.FixtureB!.Body;
-
-            _physicsManager.EnsureTransform(bodyA.Owner);
-            _physicsManager.EnsureTransform(bodyB.Owner);
-        }
+        var worldPoints = ArrayPool<Vector2>.Shared.Rent(index);
 
         // Update contacts all at once.
-        BuildManifolds(contacts, index, status);
+        BuildManifolds(contacts, index, status, worldPoints);
 
         // Single-threaded so content doesn't need to worry about race conditions.
         for (var i = 0; i < index; i++)
@@ -454,7 +444,7 @@ public abstract partial class SharedPhysicsSystem
                     var fixtureB = contact.FixtureB!;
                     var bodyA = fixtureA.Body;
                     var bodyB = fixtureB.Body;
-                    var worldPoint = Physics.Transform.Mul(_physicsManager.EnsureTransform(bodyA), contact.Manifold.LocalPoint);
+                    var worldPoint = worldPoints[i];
 
                     var ev1 = new StartCollideEvent(fixtureA, fixtureB, worldPoint);
                     var ev2 = new StartCollideEvent(fixtureB, fixtureA, worldPoint);
@@ -493,9 +483,10 @@ public abstract partial class SharedPhysicsSystem
 
         ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
+        ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
 
-    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status)
+    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
         var wake = ArrayPool<bool>.Shared.Rent(count);
 
@@ -507,13 +498,13 @@ public abstract partial class SharedPhysicsSystem
             {
                 var start = i * ContactsPerThread;
                 var end = Math.Min(start + ContactsPerThread, count);
-                UpdateContacts(contacts, start, end, status, wake);
+                UpdateContacts(contacts, start, end, status, wake, worldPoints);
             });
 
         }
         else
         {
-            UpdateContacts(contacts, 0, count, status, wake);
+            UpdateContacts(contacts, 0, count, status, wake, worldPoints);
         }
 
         // Can't do this during UpdateContacts due to IoC threading issues.
@@ -535,18 +526,32 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<bool>.Shared.Return(wake);
     }
 
-    private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake)
+    private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
     {
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
         for (var i = start; i < end; i++)
         {
-            status[i] = contacts[i].Update(_physicsManager, out wake[i]);
+            var contact = contacts[i];
+            var uidA = contact.FixtureA!.Body.Owner;
+            var uidB = contact.FixtureB!.Body.Owner;
+            var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA), xformQuery);
+            var bodyBTransform = GetPhysicsTransform(uidB, xformQuery.GetComponent(uidB), xformQuery);
+
+            var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[i]);
+            status[i] = contactStatus;
+
+            if (contactStatus == ContactStatus.StartTouching)
+            {
+                worldPoints[i] = Physics.Transform.Mul(bodyATransform, contacts[i].Manifold.LocalPoint);
+            }
         }
     }
 
     /// <summary>
     ///     Used to prevent bodies from colliding; may lie depending on joints.
     /// </summary>
-    private bool ShouldCollide(PhysicsComponent body, PhysicsComponent other)
+    private bool ShouldCollide(PhysicsComponent body, PhysicsComponent other, Fixture fixture, Fixture otherFixture)
     {
         if (((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
             (other.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||
@@ -577,12 +582,12 @@ public abstract partial class SharedPhysicsSystem
             }
         }
 
-        var preventCollideMessage = new PreventCollideEvent(body, other);
+        var preventCollideMessage = new PreventCollideEvent(body, other, fixture, otherFixture);
         RaiseLocalEvent(body.Owner, ref preventCollideMessage);
 
         if (preventCollideMessage.Cancelled) return false;
 
-        preventCollideMessage = new PreventCollideEvent(other, body);
+        preventCollideMessage = new PreventCollideEvent(other, body, otherFixture, fixture);
         RaiseLocalEvent(other.Owner, ref preventCollideMessage);
 
         if (preventCollideMessage.Cancelled) return false;

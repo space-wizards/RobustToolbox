@@ -1,4 +1,5 @@
-﻿using Robust.Shared.GameObjects;
+﻿using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 
@@ -11,9 +12,11 @@ namespace Robust.Client.UserInterface.Controllers;
 ///     and <see cref="UISystemDependencyAttribute"/> to depend on <see cref="EntitySystem"/>s, which will be automatically
 ///     injected once they are created.
 /// </summary>
-public abstract class UIController
+public abstract partial class UIController
 {
     [Dependency] protected readonly IUserInterfaceManager UIManager = default!;
+    [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
+    [Dependency] protected readonly IEntityManager EntityManager = default!;
 
     public virtual void Initialize()
     {

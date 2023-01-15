@@ -74,10 +74,10 @@ namespace Robust.Client.Debugging
          * Used for debugging shapes, controllers, joints, contacts
          */
 
-        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
-
         private const int MaxContactPoints = 2048;
         internal int PointCount;
+
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
         internal ContactPoint[] Points = new ContactPoint[MaxContactPoints];
 
@@ -119,7 +119,8 @@ namespace Robust.Client.Debugging
                 if (manifold.PointCount == 0)
                     return;
 
-                Fixture fixtureA = contact.FixtureA!;
+                var fixtureA = contact.FixtureA!;
+                var fixtureB = contact.FixtureB!;
 
                 var state1 = new PointState[2];
                 var state2 = new PointState[2];
@@ -127,7 +128,9 @@ namespace Robust.Client.Debugging
                 CollisionManager.GetPointStates(ref state1, ref state2, oldManifold, manifold);
 
                 Span<Vector2> points = stackalloc Vector2[2];
-                contact.GetWorldManifold(_physicsManager, out var normal, points);
+                var transformA = _physics.GetPhysicsTransform(fixtureA.Body.Owner);
+                var transformB = _physics.GetPhysicsTransform(fixtureB.Body.Owner);
+                contact.GetWorldManifold(transformA, transformB, out var normal, points);
 
                 ContactPoint cp = Points[PointCount];
                 for (var i = 0; i < manifold.PointCount && PointCount < MaxContactPoints; ++i)

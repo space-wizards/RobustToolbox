@@ -35,15 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Removed the obsoleted `GlobalLinearVelocity()` EntityUid helper method.
+*None yet*
 
 ### New features
 
-* Added a new cvar to limit audio occlusion raycast lengths ("audio.raycast_length").
+*None yet*
 
 ### Bugfixes
 
-* Fixed broken click bound checks in the `Tree` UI Control.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,143 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.81.0.0
+
+### Breaking changes
+
+* TransformComponent,Parent has been removed. Use the ParentUid & get the component manually.
+
+### New features
+
+* The Popup control now has an OnPopupOpen event.
+
+### Other
+
+* Various transform methods are now obsolete. Use the methods provided by the transform system instead.
+* TransformComponent.MapUid is now cached (previously required a dictionary lookup)
+
+
+## 0.80.2.0
+
+### New features
+
+* Tooltips now provide the option to track the mouse cursor.
+
+
+## 0.80.1.0
+
+### New features
+
+* Added location of compile errors to XAML UI.
+* Add CC-BY to RSI.json
+* Allow customising radio buttons for RadioOptions.
+* Added CVar to override CEF useragent.
+
+### Bugfixes
+
+* Fix incorrect size of second window in split container.
+* Fix PreventCollideEvent fixture ordering.
+
+### Other
+
+* Obsoleted .Owner for future work in removing components storing a reference to their entityuid.
+
+
+## 0.80.0.0
+
+### Breaking changes
+
+* Moved ConvexHullPolygons and MaxPolygonVertices cvars to constants.
+* Moved the PhysicsMap Gravity property to its own controller.
+* Made some layout changes to Split Container.
+
+### New features
+
+* Added the colliding fixtures to PreventCollideEvent.
+
+### Bugfixes
+
+* Grids overlapping entities will now flag the entity for grid traversal.
+
+### Other
+
+* The split container `Measure()` override now more accurately reflects the space available to children. Additionally, the split position is now publicly settable.
+
+### Internal
+
+* Removed manual component registrations.
+
+
+## 0.79.0.1
+
+### New features
+
+* Add helper GetDirection to SharedMapSystem that offsets a Vector2i in the specified direction by the specified distance.
+* UIController now implements IEntityEventSubscriber
+
+### Bugfixes
+
+* The fast TryFindGridAt overload will now also return the queried map's MapGridComponent if it exists.
+
+### Other
+
+* Updated window dragging movement constraints. By default windows can now be partially dragged off-screen to the left. This is configurable per window. This also fixes a bug where windows could become unreachable.
+
+### Internal
+
+* Remove 2 TryGetComponents per physics contact per tick.
+
+
+## 0.79.0.0
+
+### Breaking changes
+
+* EntityInitializedMessage has been removed; the C# event invoked on EntityManager (EntityInitialized) should be used in its place.
+* TileChangedEventArgs has been removed.
+
+### Bugfixes
+
+* Fix tooltip panels being incorrectly sized for their first frame.
+* Client will no longer predict physics sleeping on bodies that are unable to sleep.
+* Style box texture scaling has been fixed.
+
+### Other
+
+* Added TaskCompletionSource to the sandbox.
+
+### Internal
+
+* IPhysManager has been removed for a slight physics contacts optimisation.
+* Optimise TryFindGridAt, particularly for grid traversals.
+* MapGridComponent now uses delta component states.
+* Removed some TryGetComponent from IsMapPaused, speeding up entity initialization in some instances.
+
+
+## 0.78.0.0
+
+### Breaking changes
+
+* Removed the obsoleted `GlobalLinearVelocity()` EntityUid helper method.
+* INetConfigurationManager now has client & server side variants. Clients can now properly set server authoritative cvars when in singleplayer mode
+* IPhysBody has been removed. Just use the physics component.
+* Physics joints haven been slightly refactored and some method signatures have changed.
+
+### New features
+
+* Added a new cvar to limit audio occlusion raycast lengths ("audio.raycast_length").
+* IRobustSerializer has new public methods for getting hashes and setting string serializer data.
+
+### Bugfixes
+
+* Fixed broken click bound checks in the `Tree` UI Control.
+* Removed erroneous debug assert in render code that was causing issued in debug mode.
+* Fixed some instances where rotation-less entities were gaining non-zero local rotation.
+
+### Other
+
+* Tickrate is now shown in the f3 debug monitors
 
 
 ## 0.77.0.2

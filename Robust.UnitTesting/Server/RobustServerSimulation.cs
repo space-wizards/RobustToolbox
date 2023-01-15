@@ -225,7 +225,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IManifoldManager, CollisionManager>();
             container.Register<IMapManagerInternal, MapManager>();
-            container.Register<IPhysicsManager, PhysicsManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<ITileDefinitionManager, TileDefinitionManager>();

@@ -19,7 +19,17 @@ namespace Robust.Client.UserInterface.Controls
         /// Width of the split in virtual pixels
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float SplitWidth { get; set; }
+        public float SplitWidth
+        {
+            get => _splitWidth;
+            set
+            {
+                _splitWidth = value;
+                InvalidateMeasure();
+            }
+        }
+
+        private float _splitWidth;
 
         /// <summary>
         /// Virtual pixel offset from the edge beyond which the split cannot be moved.
@@ -27,7 +37,36 @@ namespace Robust.Client.UserInterface.Controls
         [ViewVariables(VVAccess.ReadWrite)]
         public float SplitEdgeSeparation { get; set; }
 
-        private float _splitCenter;
+        private float _splitStart;
+
+        public float SplitCenter
+        {
+            get => _splitStart + _splitWidth / 2;
+            set
+            {
+                State = SplitState.Manual;
+                _splitStart = value - _splitWidth / 2;
+                ClampSplitCenter();
+                InvalidateMeasure();
+            }
+        }
+
+        public float SplitFraction
+        {
+            get
+            {
+                var size = Vertical ? Size.Y : Size.X;
+                if (size == 0)
+                    return 0;
+
+                return SplitCenter / size;
+            }
+            set
+            {
+                SplitCenter = value * (Vertical ? Size.Y : Size.X);
+            }
+        }
+
         private SplitState _splitState;
         private bool _dragging;
         private SplitOrientation _orientation;
@@ -75,9 +114,8 @@ namespace Robust.Client.UserInterface.Controls
             {
                 var newOffset = Vertical ? args.RelativePosition.Y : args.RelativePosition.X;
 
-                _splitCenter = ClampSplitCenter(newOffset, Size);
+                SplitCenter = newOffset;
                 DefaultCursorShape = Vertical ? CursorShape.VResize : CursorShape.HResize;
-                InvalidateArrange();
             }
             else
             {
@@ -122,27 +160,26 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (Vertical)
             {
-                return Math.Abs(relativePosition.Y - _splitCenter) <= SplitWidth;
+                return Math.Abs(relativePosition.Y - SplitCenter) <= _splitWidth;
             }
 
-            return Math.Abs(relativePosition.X - _splitCenter) <= SplitWidth;
+            return Math.Abs(relativePosition.X - SplitCenter) <= _splitWidth;
         }
 
         /// <summary>
         /// Ensures the split center is within all necessary limits
         /// </summary>
-        /// <param name="splitCenter">proposed split location</param>
         /// <param name="firstMinSize">min size of the first child, will calculate if null</param>
         /// <param name="secondMinSize">min size of the second child, will calculate if null</param>
         /// <returns></returns>
-        private float ClampSplitCenter(float splitCenter, Vector2 controlSize, float? firstMinSize = null, float? secondMinSize = null)
+        private void ClampSplitCenter(Vector2? desiredSize = null, float? firstMinSize = null, float? secondMinSize = null)
         {
             // min / max x and y extents in relative virtual pixels of where the split can go regardless
             // of anything else.
 
-            var splitMin = SplitWidth + SplitEdgeSeparation;
-            var splitMax = Vertical ? controlSize.Y - splitMin : controlSize.X - splitMin;
-            splitCenter = MathHelper.Clamp(splitCenter, splitMin, splitMax);
+            var controlSize = desiredSize ?? Size;
+            var splitMax = (Vertical ? controlSize.Y : controlSize.X) - _splitWidth - SplitEdgeSeparation;
+            _splitStart = MathHelper.Clamp(_splitStart, SplitEdgeSeparation, splitMax);
 
             if (ResizeMode == SplitResizeMode.RespectChildrenMinSize && ChildCount == 2)
             {
@@ -153,11 +190,9 @@ namespace Robust.Client.UserInterface.Controls
                 secondMinSize ??= (Vertical ? second.DesiredSize.Y : second.DesiredSize.X);
                 var size = Vertical ? controlSize.Y : controlSize.X;
 
-                splitCenter = MathHelper.Clamp(splitCenter, firstMinSize.Value,
-                    size - (secondMinSize.Value + SplitWidth));
+                _splitStart = MathHelper.Clamp(_splitStart, firstMinSize.Value,
+                    size - (secondMinSize.Value + _splitWidth));
             }
-
-            return splitCenter;
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
@@ -173,8 +208,8 @@ namespace Robust.Client.UserInterface.Controls
             var firstExpand = Vertical ? first.VerticalExpand : first.HorizontalExpand;
             var secondExpand = Vertical ? second.VerticalExpand : second.HorizontalExpand;
 
-            var firstMinSize = Vertical ? first.DesiredSize.Y : first.DesiredSize.X;
-            var secondMinSize = Vertical ? second.DesiredSize.Y : second.DesiredSize.X;
+            var firstDesiredSize = Vertical ? first.DesiredSize.Y : first.DesiredSize.X;
+            var secondDesiredSize = Vertical ? second.DesiredSize.Y : second.DesiredSize.X;
 
             var size = Vertical ? finalSize.Y : finalSize.X;
 
@@ -184,38 +219,46 @@ namespace Robust.Client.UserInterface.Controls
             {
                 case SplitState.Manual:
                     // min sizes of children may have changed, ensure the offset still respects the defined limits
-                    _splitCenter = ClampSplitCenter(_splitCenter, finalSize, firstMinSize, secondMinSize);
+                    ClampSplitCenter(finalSize, firstDesiredSize, secondDesiredSize);
                     break;
                 case SplitState.Auto:
                 {
                     if (firstExpand && secondExpand)
                     {
-                        _splitCenter = size * ratio - SplitWidth / 2;
+                        _splitStart = size * ratio - _splitWidth / 2;
                     }
                     else if (firstExpand)
                     {
-                        _splitCenter = size - secondMinSize - SplitWidth;
+                        _splitStart = size - secondDesiredSize - _splitWidth;
+                    }
+                    else if (secondExpand)
+                    {
+                        _splitStart = firstDesiredSize;
                     }
                     else
                     {
-                        _splitCenter = firstMinSize;
+                        ratio = firstDesiredSize + secondDesiredSize <= 0
+                            ? 0.5f
+                            : firstDesiredSize / (firstDesiredSize + secondDesiredSize);
+
+                        _splitStart = size * ratio - _splitWidth / 2;
                     }
 
-                    _splitCenter += MathHelper.Clamp(0f, firstMinSize - _splitCenter,
-                        size - secondMinSize - SplitWidth - _splitCenter);
+                    _splitStart += MathHelper.Clamp(0f, firstDesiredSize - _splitStart,
+                        size - secondDesiredSize - _splitWidth - _splitStart);
                     break;
                 }
             }
 
             if (Vertical)
             {
-                first.Arrange(new UIBox2(0, 0, finalSize.X, _splitCenter));
-                second.Arrange(new UIBox2(0, _splitCenter + SplitWidth, finalSize.X, finalSize.Y));
+                first.Arrange(new UIBox2(0, 0, finalSize.X, _splitStart));
+                second.Arrange(new UIBox2(0, _splitStart + _splitWidth, finalSize.X, finalSize.Y));
             }
             else
             {
-                first.Arrange(new UIBox2(0, 0, _splitCenter, finalSize.Y));
-                second.Arrange(new UIBox2(_splitCenter + SplitWidth, 0, finalSize.X, finalSize.Y));
+                first.Arrange(new UIBox2(0, 0, _splitStart, finalSize.Y));
+                second.Arrange(new UIBox2(_splitStart + _splitWidth, 0, finalSize.X, finalSize.Y));
             }
 
             return finalSize;
@@ -231,35 +274,52 @@ namespace Robust.Client.UserInterface.Controls
             var first = GetChild(0);
             var second = GetChild(1);
 
-            // TODO: Probably bad implementation with the new WPF layout.
+            if (State == SplitState.Manual)
+            {
+                var size = availableSize;
+                if (Vertical)
+                    size.Y = _splitStart;
+                else
+                    size.X = _splitStart;
 
-            if (Vertical)
-                availableSize.Y = MathF.Max(0, availableSize.Y - SplitWidth);
+                size = Vector2.ComponentMin(availableSize, size);
+                first.Measure(size);
+
+                size = availableSize;
+                if (Vertical)
+                    size.Y = availableSize.Y - _splitStart - _splitWidth;
+                else
+                    size.X = availableSize.X - _splitStart - _splitWidth;
+
+                size = Vector2.ComponentMax(size, Vector2.Zero);
+                second.Measure(size);
+            }
             else
-                availableSize.X = MathF.Max(0, availableSize.X - SplitWidth);
+            {
+                if (Vertical)
+                    availableSize.Y = MathF.Max(0, availableSize.Y - _splitWidth);
+                else
+                    availableSize.X = MathF.Max(0, availableSize.X - _splitWidth);
+                first.Measure(availableSize);
 
-            first.Measure(availableSize);
-            var (firstSizeX, firstSizeY) = first.DesiredSize;
-
-            if (Vertical)
-                availableSize.Y = MathF.Max(0, availableSize.Y - firstSizeY);
-            else
-                availableSize.X = MathF.Max(0, availableSize.X - firstSizeX);
-
-            second.Measure(availableSize);
-            var (secondSizeX, secondSizeY) = second.DesiredSize;
+                if (Vertical)
+                    availableSize.Y = MathF.Max(0, availableSize.Y - first.DesiredSize.Y);
+                else
+                    availableSize.X = MathF.Max(0, availableSize.X - first.DesiredSize.X);
+                second.Measure(availableSize);
+            }
 
             if (Vertical)
             {
-                var width = MathF.Max(firstSizeX, secondSizeX);
-                var height = firstSizeY + SplitWidth + secondSizeY;
+                var width = MathF.Max(first.DesiredSize.X, second.DesiredPixelSize.X);
+                var height = first.DesiredSize.Y + _splitWidth + second.DesiredPixelSize.Y;
 
                 return (width, height);
             }
             else
             {
-                var width = firstSizeX + SplitWidth + secondSizeX;
-                var height = MathF.Max(firstSizeY, secondSizeY);
+                var width = first.DesiredSize.X + _splitWidth + second.DesiredPixelSize.X;
+                var height = MathF.Max(first.DesiredSize.Y, second.DesiredPixelSize.Y);
 
                 return (width, height);
             }

@@ -30,7 +30,7 @@ using RSIDirection = Robust.Client.Graphics.RSI.State.Direction;
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(SharedSpriteComponent))]
-    [ComponentReference(typeof(ISpriteComponent))]
+    [RegisterComponent, ComponentReference(typeof(ISpriteComponent))]
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>
     {
@@ -305,6 +305,11 @@ namespace Robust.Client.GameObjects
 
         void ISerializationHooks.AfterDeserialization()
         {
+            // Please somebody burn this to the ground
+            // Fix prototype reload trying to update tree on deserialization dummy instances.
+            if (!Owner.IsValid())
+                return;
+
             IoCManager.InjectDependencies(this);
 
             {

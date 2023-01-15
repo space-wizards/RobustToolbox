@@ -19,6 +19,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
@@ -134,9 +135,24 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<MapGridComponent>();
             }
 
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(ContainerManagerComponent)))
+            {
+                compFactory.RegisterClass<ContainerManagerComponent>();
+            }
+
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MetaDataComponent)))
             {
                 compFactory.RegisterClass<MetaDataComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(TransformComponent)))
+            {
+                compFactory.RegisterClass<TransformComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(PhysicsComponent)))
+            {
+                compFactory.RegisterClass<PhysicsComponent>();
             }
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(PhysicsMapComponent)))

@@ -55,9 +55,9 @@ public abstract partial class SharedPhysicsSystem
         var velocity = component.LinearVelocity;
         Vector2 angularComponent = Vector2.Zero;
 
-        while (parent.IsValid())
+        while (parent != xform.MapUid && parent.IsValid())
         {
-            var parentXform = xformQuery.Value.GetComponent(parent);
+            xform = xformQuery.Value.GetComponent(parent);
 
             if (physicsQuery.Value.TryGetComponent(parent, out var body))
             {
@@ -66,11 +66,11 @@ public abstract partial class SharedPhysicsSystem
 
                 // add angular velocity that results from the parent's rotation (NOT in map coordinates, but in the parentXform.Parent's frame)
                 angularComponent += Vector2.Cross(body.AngularVelocity, localPos - body.LocalCenter);
-                angularComponent = parentXform.LocalRotation.RotateVec(angularComponent);
+                angularComponent = xform.LocalRotation.RotateVec(angularComponent);
             }
 
-            localPos = parentXform.LocalPosition + parentXform.LocalRotation.RotateVec(localPos);
-            parent = parentXform.ParentUid;
+            localPos = xform.LocalPosition + xform.LocalRotation.RotateVec(localPos);
+            parent = xform.ParentUid;
         }
 
         // angular component of the velocity should now be in terms of map coordinates and can be added onto the sum of
@@ -98,17 +98,15 @@ public abstract partial class SharedPhysicsSystem
         physicsQuery ??= EntityManager.GetEntityQuery<PhysicsComponent>();
 
         xform ??= xformQuery.Value.GetComponent(uid);
-        var parent = xform.ParentUid;
 
         var angularVelocity = component.AngularVelocity;
 
-        while (parent.IsValid())
+        while (xform.ParentUid != xform.MapUid && xform.ParentUid.IsValid())
         {
-            var parentXform = xformQuery.Value.GetComponent(parent);
-
-            if (physicsQuery.Value.TryGetComponent(parent, out var body))
+            if (physicsQuery.Value.TryGetComponent(xform.ParentUid, out var body))
                 angularVelocity += body.AngularVelocity;
-            parent = parentXform.ParentUid;
+
+            xform = xformQuery.Value.GetComponent(xform.ParentUid);
         }
 
         return angularVelocity;
@@ -136,9 +134,9 @@ public abstract partial class SharedPhysicsSystem
         var angularVelocity = component.AngularVelocity;
         Vector2 linearVelocityAngularContribution = Vector2.Zero;
 
-        while (parent.IsValid())
+        while (parent != xform.MapUid && parent.IsValid())
         {
-            var parentXform = xformQuery.Value.GetComponent(parent);
+            xform = xformQuery.Value.GetComponent(parent);
 
             if (physicsQuery.Value.TryGetComponent(parent, out var body))
             {
@@ -150,11 +148,11 @@ public abstract partial class SharedPhysicsSystem
                 // add the component of the linear velocity that results from the parent's rotation. This is NOT in map
                 // coordinates, this is the velocity in the parentXform.Parent's frame.
                 linearVelocityAngularContribution += Vector2.Cross(body.AngularVelocity, localPos - body.LocalCenter);
-                linearVelocityAngularContribution = parentXform.LocalRotation.RotateVec(linearVelocityAngularContribution);
+                linearVelocityAngularContribution = xform.LocalRotation.RotateVec(linearVelocityAngularContribution);
             }
 
-            localPos = parentXform.LocalPosition + parentXform.LocalRotation.RotateVec(localPos);
-            parent = parentXform.ParentUid;
+            localPos = xform.LocalPosition + xform.LocalRotation.RotateVec(localPos);
+            parent = xform.ParentUid;
         }
 
         return (linearVelocity + linearVelocityAngularContribution, angularVelocity);

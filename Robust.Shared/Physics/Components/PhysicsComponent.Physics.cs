@@ -33,7 +33,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Components;
 
-[NetworkedComponent, ComponentProtoName("Physics")]
+[RegisterComponent, NetworkedComponent]
 public sealed class PhysicsComponent : Component
 {
     /// <summary>

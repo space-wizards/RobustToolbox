@@ -25,7 +25,6 @@ namespace Robust.Shared.GameObjects
         protected ISawmill Sawmill = default!;
         private bool _enabled;
         private float _fixtureEnlargement;
-        private bool _convexHulls = true;
 
         internal const string ShowGridNodesCommand = "showgridnodes";
 
@@ -37,7 +36,6 @@ namespace Robust.Shared.GameObjects
 
             _cfg.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
             _cfg.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
-            _cfg.OnValueChanged(CVars.ConvexHullPolygons, SetConvexHulls, true);
 
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
         }
@@ -58,14 +56,11 @@ namespace Robust.Shared.GameObjects
 
             _cfg.UnsubValueChanged(CVars.GenerateGridFixtures, SetEnabled);
             _cfg.UnsubValueChanged(CVars.GridFixtureEnlargement, SetEnlargement);
-            _cfg.UnsubValueChanged(CVars.ConvexHullPolygons, SetConvexHulls);
         }
 
         private void SetEnabled(bool value) => _enabled = value;
 
         private void SetEnlargement(float value) => _fixtureEnlargement = value;
-
-        private void SetConvexHulls(bool value) => _convexHulls = value;
 
         internal void RegenerateCollision(
             EntityUid uid,
@@ -137,7 +132,7 @@ namespace Robust.Shared.GameObjects
                 vertices[2] = bounds.TopRight;
                 vertices[3] = bounds.TopLeft;
 
-                poly.SetVertices(vertices, _convexHulls);
+                poly.SetVertices(vertices, PhysicsConstants.ConvexHulls);
 
                 var newFixture = new Fixture(
                     poly,

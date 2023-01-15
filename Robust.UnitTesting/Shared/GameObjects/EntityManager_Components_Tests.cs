@@ -186,6 +186,23 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Test]
+        public void EnsureQueuedComponentDeletion()
+        {
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = entMan.AddComponent<DummyComponent>(entity);
+
+            Assert.That(component.LifeStage, Is.LessThanOrEqualTo(ComponentLifeStage.Running));
+            entMan.RemoveComponentDeferred(entity, component);
+            Assert.That(component.LifeStage, Is.EqualTo(ComponentLifeStage.Stopped));
+
+            Assert.False(entMan.EnsureComponent<DummyComponent>(entity, out var comp2));
+            Assert.That(comp2.LifeStage, Is.LessThanOrEqualTo(ComponentLifeStage.Running));
+            Assert.That(component.LifeStage, Is.EqualTo(ComponentLifeStage.Deleted));
+        }
+
+        [Test]
         public void RemoveNetComponentTest()
         {
             // Arrange

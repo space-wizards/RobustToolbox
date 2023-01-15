@@ -60,7 +60,7 @@ namespace Robust.Client
             deps.Register<IReflectionManager, ClientReflectionManager>();
             deps.Register<IConsoleHost, ClientConsoleHost>();
             deps.Register<IClientConsoleHost, ClientConsoleHost>();
-            deps.Register<IComponentFactory, ClientComponentFactory>();
+            deps.Register<IComponentFactory, ComponentFactory>();
             deps.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             deps.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
             deps.Register<GameController, GameController>();
@@ -89,7 +89,7 @@ namespace Robust.Client
             deps.Register<IMidiManager, MidiManager>();
             deps.Register<IAuthManager, AuthManager>();
             deps.Register<ProfViewManager>();
-            deps.Register<IPhysicsManager, PhysicsManager>();
+
             switch (mode)
             {
                 case GameController.DisplayMode.Headless:

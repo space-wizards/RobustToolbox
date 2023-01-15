@@ -10,6 +10,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
@@ -18,6 +19,7 @@ public abstract class SharedJointSystem : EntitySystem
 {
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
 
     // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
     // we can delete the component.
@@ -134,7 +136,7 @@ public abstract class SharedJointSystem : EntitySystem
         {
             if (existing.BodyBUid != bUid)
             {
-                _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(bUid)}, the connected entity {ToPrettyString(aUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyBUid)}.");
+                _sawmill.Error($"While adding joint {joint.ID} to entity {ToPrettyString(bUid)}, the connected entity {ToPrettyString(aUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyBUid)}.");
                 return;
             }
 
@@ -148,17 +150,17 @@ public abstract class SharedJointSystem : EntitySystem
                 return;
             }
 
-            _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(bUid)}, the joint already existed for the connected entity {ToPrettyString(aUid)}.");
+            _sawmill.Error($"While adding joint {joint.ID} to entity {ToPrettyString(bUid)}, the joint already existed for the connected entity {ToPrettyString(aUid)}.");
         }
         else if (!ignoreExisting && jointsB.TryGetValue(joint.ID, out existing))
         {
             if (existing.BodyAUid != aUid)
             {
-                _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(aUid)}, the connected entity {ToPrettyString(bUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyAUid)}.");
+                _sawmill.Error($"While adding joint {joint.ID} to entity {ToPrettyString(aUid)}, the connected entity {ToPrettyString(bUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyAUid)}.");
                 return;
             }
 
-            _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(aUid)}, the joint already existed for the connected entity {ToPrettyString(bUid)}.");
+            _sawmill.Error($"While adding joint {joint.ID} to entity {ToPrettyString(aUid)}, the joint already existed for the connected entity {ToPrettyString(bUid)}.");
         }
 
         jointsA.TryAdd(joint.ID, joint);
@@ -404,7 +406,11 @@ public abstract class SharedJointSystem : EntitySystem
         // Need to defer this for prediction reasons, yay!
         AddedJoints.Add(joint);
 
-        _sawmill.Info($"Added {joint.JointType} Joint with ID {joint.ID} from {bodyA.BodyType} to {bodyB.BodyType} ");
+        if (_gameTiming.IsFirstTimePredicted)
+        {
+            _sawmill.Debug($"Added {joint.JointType} Joint with ID {joint.ID} from {bodyA.BodyType} to {bodyB.BodyType} ");
+        }
+
     }
 
     public void ClearJoints(EntityUid uid, JointComponent? component = null)
@@ -421,7 +427,10 @@ public abstract class SharedJointSystem : EntitySystem
             RemoveJoint(a);
         }
 
-        _sawmill.Info($"Removed all joints from {ToPrettyString(uid)} ");
+        if(_gameTiming.IsFirstTimePredicted)
+        {
+            _sawmill.Debug($"Removed all joints from entity {ToPrettyString(uid)}");
+        }
     }
 
     [Obsolete("Use the other ClearJoints overload")]
@@ -507,7 +516,10 @@ public abstract class SharedJointSystem : EntitySystem
             EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
 
-            _sawmill.Info($"Removed {joint.JointType} joint with ID {joint.ID} from entity {ToPrettyString(bodyAUid)} to entity {ToPrettyString(bodyBUid)}" );
+            if (_gameTiming.IsFirstTimePredicted)
+            {
+                _sawmill.Debug($"Removed {joint.JointType} joint with ID {joint.ID} from entity {ToPrettyString(bodyAUid)} to entity {ToPrettyString(bodyBUid)}");
+            }
         }
 
         // We can't just check up front due to how prediction works.

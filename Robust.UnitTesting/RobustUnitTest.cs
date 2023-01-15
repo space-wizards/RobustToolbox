@@ -197,6 +197,11 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<LightTreeComponent>();
             }
 
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(Gravity2DComponent)))
+            {
+                compFactory.RegisterClass<Gravity2DComponent>();
+            }
+
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.
             // We want to bypass this and load our own systems hence we will manually initialize it here.
             entMan.Initialize();

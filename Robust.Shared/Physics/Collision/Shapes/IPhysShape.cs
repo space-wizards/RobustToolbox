@@ -35,11 +35,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         ShapeType ShapeType { get; }
 
         /// <summary>
-        /// Local Axis Aligned Bounding Box (AABB) of the shape.
-        /// </summary>
-        Box2 LocalBounds { get; }
-
-        /// <summary>
         /// Calculate the AABB of the shape.
         /// </summary>
         Box2 ComputeAABB(Transform transform, int childIndex);

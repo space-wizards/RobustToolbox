@@ -40,7 +40,7 @@ namespace Robust.Client.Physics
 
             foreach (var body in toRemove)
             {
-                body.Awake = false;
+                SetAwake(body.Owner, body, false);
             }
 
             base.Cleanup(component, frameTime);

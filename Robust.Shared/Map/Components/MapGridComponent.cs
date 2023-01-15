@@ -11,6 +11,7 @@ using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -85,7 +86,7 @@ namespace Robust.Shared.Map.Components
         /// </summary>
         internal void RegenerateCollision(IReadOnlySet<MapChunk> chunks)
         {
-            if (_entMan.HasComponent<MapComponent>(base.Owner))
+            if (_entMan.HasComponent<MapComponent>(Owner))
                 return;
 
             var chunkRectangles = new Dictionary<MapChunk, List<Box2i>>(chunks.Count);
@@ -106,9 +107,13 @@ namespace Robust.Shared.Map.Components
                 {
                     // Gone. Reduced to atoms
                     // Need to do this before RemoveChunk because it clears fixtures.
+                    FixturesComponent? manager = null;
+                    PhysicsComponent? body = null;
+                    TransformComponent? xform = null;
+
                     foreach (var fixture in mapChunk.Fixtures)
                     {
-                        fixtureSystem.DestroyFixture(fixture, false);
+                        fixtureSystem.DestroyFixture(Owner, fixture, false, manager: manager, body: body, xform: xform);
                     }
 
                     RemoveChunk(mapChunk.Indices);
@@ -137,13 +142,13 @@ namespace Robust.Shared.Map.Components
             }
 
             // May have been deleted from the bulk update above!
-            if (_entMan.Deleted(base.Owner))
+            if (_entMan.Deleted(Owner))
                 return;
 
             // TODO: Move this to the component when we combine.
-            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().WakeBody(base.Owner);
-            _mapManager.OnGridBoundsChange(base.Owner, this);
-            system?.RegenerateCollision(base.Owner, chunkRectangles, removedChunks);
+            _entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>().WakeBody(Owner);
+            _mapManager.OnGridBoundsChange(Owner, this);
+            system?.RegenerateCollision(Owner, chunkRectangles, removedChunks);
         }
 
         /// <summary>

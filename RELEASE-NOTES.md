@@ -35,19 +35,22 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* EffectSystem has been removed.
 
 ### New features
 
-*None yet*
+* Added Pidgin parser to the sandbox whitelisted. 
 
 ### Bugfixes
 
-*None yet*
+* Fixed physics ignoring parallelisation cvars
+* Global audio volume is no longer overridden every tick.
+* Fix `SpriteComponent.CopyFrom()` not working properly.
+* Fix cvar TOML parsing failing to read some numeric cvars.
 
 ### Other
 
-*None yet*
+* Improved physics joint logging.
 
 ### Internal
 

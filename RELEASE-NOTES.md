@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.84.0.0
+
+### Breaking changes
+
 * EffectSystem has been removed.
 
 ### New features
@@ -51,10 +74,6 @@ END TEMPLATE-->
 ### Other
 
 * Improved physics joint logging.
-
-### Internal
-
-*None yet*
 
 
 ## 0.83.0.0

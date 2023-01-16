@@ -158,40 +158,26 @@ namespace Robust.Client.GameObjects
 
         public bool TreeUpdateQueued { get; set; }
 
-        [DataField("layerDatums")]
-        private List<PrototypeLayerData> LayerDatums
+        public void SetLayerData(IEnumerable<PrototypeLayerData> data)
         {
-            get
+            Layers.Clear();
+            LayerMap = new();
+
+            foreach (var layer in data)
             {
-                var layerDatums = new List<PrototypeLayerData>();
-                foreach (var layer in Layers)
-                {
-                    layerDatums.Add(layer.ToPrototypeData());
-                }
-
-                return layerDatums;
+                AddLayer(layer);
             }
-            set
-            {
-                if (value == null) return;
 
-                Layers.Clear();
-                foreach (var layerDatum in value)
-                {
-                    AddLayer(layerDatum);
-                }
-
-                _layerMapShared = true;
-
-                QueueUpdateRenderTree();
-                QueueUpdateIsInert();
-            }
+            QueueUpdateRenderTree();
+            QueueUpdateIsInert();
         }
 
+        // TODO this should just handled via a custom type serializer for RSI. But that currently results in a ton of
+        // IoC resolves.
+        [DataField("sprite", readOnly: true)] internal readonly string? Sprite;
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataField("rsi", priority: 2)]
         public RSI? BaseRSI
         {
             get => _baseRsi;
@@ -229,11 +215,15 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [DataField("sprite", readOnly: true)] private string? rsi;
-        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
+        // TODO create custom layer data serializer and fix this shit.
+        [DataField("layers", readOnly: true)]
+        internal readonly IReadOnlyList<PrototypeLayerData>? _layerDatums;
 
-        [DataField("state", readOnly: true)] private string? state;
-        [DataField("texture", readOnly: true)] private string? texture;
+        [DataField("state", readOnly: true)]
+        internal readonly string? State;
+
+        [DataField("texture", readOnly: true)]
+        internal readonly string? Texture;
 
         /// <summary>
         ///     Should this entity show up in containers regardless of whether the container can show contents?
@@ -292,9 +282,9 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public bool RaiseShaderEvent = false;
 
-        [ViewVariables] private Dictionary<object, int> LayerMap = new();
-        [ViewVariables] private bool _layerMapShared;
-        [ViewVariables] private List<Layer> Layers = new();
+        [ViewVariables] internal Dictionary<object, int> LayerMap = new();
+
+        [ViewVariables] internal List<Layer> Layers = new();
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
@@ -305,51 +295,7 @@ namespace Robust.Client.GameObjects
         void ISerializationHooks.AfterDeserialization()
         {
             // Please somebody burn this to the ground
-            // Fix prototype reload trying to update tree on deserialization dummy instances.
-            if (!Owner.IsValid())
-                return;
-
             IoCManager.InjectDependencies(this);
-
-            {
-                if (!string.IsNullOrWhiteSpace(rsi))
-                {
-                    var rsiPath = TextureRoot / rsi;
-                    if(resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
-                    {
-                        BaseRSI = resource.RSI;
-                    }
-                    else
-                    {
-                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
-                    }
-                }
-            }
-
-            if (layerDatums.Count == 0)
-            {
-                if (state != null || texture != null)
-                {
-                    layerDatums.Insert(0, new PrototypeLayerData
-                    {
-                        TexturePath = string.IsNullOrWhiteSpace(texture) ? null : texture,
-                        State = string.IsNullOrWhiteSpace(state) ? null : state,
-                        Color = Color.White,
-                        Scale = Vector2.One,
-                        Visible = true,
-                    });
-                    state = null;
-                    texture = null;
-                }
-            }
-
-            if (layerDatums.Count != 0)
-            {
-                LayerMap.Clear();
-                LayerDatums = layerDatums;
-            }
-
-            UpdateLocalMatrix();
         }
 
         /// <summary>
@@ -360,10 +306,28 @@ namespace Robust.Client.GameObjects
         public void CopyFrom(SpriteComponent other)
         {
             //deep copying things to avoid entanglement
-            _baseRsi = other._baseRsi;
-            _bounds = other._bounds;
+
+            if (other.Initialized)
+            {
+                _baseRsi = other._baseRsi;
+                _bounds = other._bounds;
+                LayerMap = other.LayerMap.ShallowClone();
+                Layers = new List<Layer>(other.Layers.Count);
+                foreach (var otherLayer in other.Layers)
+                {
+                    Layers.Add(new Layer(otherLayer, this));
+                }
+                IsInert = other.IsInert;
+            }
+            else
+            {
+                // This is probably a prototype-component, not a real component.
+                // This can probably be removed once sprite layers get custom type serializers.
+                var sys = entities.System<SpriteSystem>();
+                sys.InitializeSprite(Owner, this, other.Sprite, other.Texture, other.State, other._layerDatums);
+            }
+
             _visible = other._visible;
-            _layerMapShared = other._layerMapShared;
             color = other.color;
             offset = other.offset;
             rotation = other.rotation;
@@ -373,14 +337,7 @@ namespace Robust.Client.GameObjects
             _screenLock = other._screenLock;
             _overrideDirection = other._overrideDirection;
             _enableOverrideDirection = other._enableOverrideDirection;
-            Layers = new List<Layer>(other.Layers.Count);
-            foreach (var otherLayer in other.Layers)
-            {
-                Layers.Add(new Layer(otherLayer, this));
-            }
-            IsInert = other.IsInert;
-            LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
-                entry => entry.Value);
+
             if (other.PostShader != null)
             {
                 // only need to copy the shader if it's mutable
@@ -412,14 +369,12 @@ namespace Robust.Client.GameObjects
                 throw new ArgumentOutOfRangeException();
             }
 
-            _layerMapEnsurePrivate();
             LayerMap.Add(key, layer);
         }
 
         /// <inheritdoc />
         public void LayerMapRemove(object key)
         {
-            _layerMapEnsurePrivate();
             LayerMap.Remove(key);
         }
 
@@ -462,17 +417,6 @@ namespace Robust.Client.GameObjects
         }
 
         public bool LayerExists(int layer, bool logError = true) => TryGetLayer(layer, out _, logError);
-
-        private void _layerMapEnsurePrivate()
-        {
-            if (!_layerMapShared)
-            {
-                return;
-            }
-
-            LayerMap = LayerMap.ShallowClone();
-            _layerMapShared = false;
-        }
 
         public int LayerMapReserveBlank(object key)
         {
@@ -790,7 +734,6 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
-                    _layerMapEnsurePrivate();
                     LayerMap[key] = index;
                 }
             }
@@ -1382,24 +1325,15 @@ namespace Robust.Client.GameObjects
             Color = thestate.Color;
             RenderOrder = thestate.RenderOrder;
 
-
             if (thestate.BaseRsiPath != null && BaseRSI != null)
             {
                 if (resourceCache.TryGetResource<RSIResource>(TextureRoot / thestate.BaseRsiPath, out var res))
-                {
-                    if (BaseRSI != res.RSI)
-                    {
-                        BaseRSI = res.RSI;
-                    }
-                }
+                    BaseRSI = res.RSI;
                 else
-                {
                     Logger.ErrorS(LogCategory, "Hey server, RSI '{0}' doesn't exist.", thestate.BaseRsiPath);
-                }
             }
 
-            // Maybe optimize this to NOT fully clear the layers. (see LayerDatums setter function)
-            LayerDatums = thestate.Layers;
+            SetLayerData(thestate.Layers);
         }
 
         private void QueueUpdateRenderTree()

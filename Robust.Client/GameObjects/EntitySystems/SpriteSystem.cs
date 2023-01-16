@@ -1,14 +1,18 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using static Robust.Shared.GameObjects.SharedSpriteComponent;
 
 namespace Robust.Client.GameObjects
 {
@@ -34,7 +38,63 @@ namespace Robust.Client.GameObjects
 
             _proto.PrototypesReloaded += OnPrototypesReloaded;
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
+            SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnCompInit);
             _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
+        }
+
+        private void OnCompInit(EntityUid uid, SpriteComponent component, ComponentInit args)
+        {
+            InitializeSprite(uid, component, component.Sprite, component.Texture, component.State, component._layerDatums);
+        }
+
+        internal void InitializeSprite(
+            EntityUid uid,
+            SpriteComponent sprite,
+            string? rsi,
+            string? texture,
+            string? state,
+            IReadOnlyList<PrototypeLayerData>? layers)
+        {
+            sprite.UpdateLocalMatrix();
+
+            // TODO this should just handled via a custom type serializer for RSI. But that currently results in a ton of
+            // IoC resolves.
+            if (rsi != null)
+            {
+                var rsiPath = TextureRoot / rsi;
+                if (_resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
+                    sprite.BaseRSI = resource.RSI;
+                else
+                    Logger.ErrorS(SpriteComponent.LogCategory, "Unable to load RSI '{0}'.", rsiPath);
+            }
+            else
+            {
+                sprite.BaseRSI = null;
+            }
+
+            // TODO this should be done via a custom type serializer for layer data
+            if (layers != null && layers.Count() > 0)
+            {
+                sprite.SetLayerData(layers);
+                return;
+            }
+
+            sprite.Layers.Clear();
+            sprite.LayerMap.Clear();
+            _treeSystem.QueueTreeUpdate(uid, sprite);
+            QueueUpdateInert(uid, sprite);
+
+            if (state == null && texture == null)
+                return;
+
+            sprite.AddLayer(new PrototypeLayerData
+            {
+                TexturePath = texture,
+                State = state,
+                Color = Color.White,
+                Scale = Vector2.One,
+                Visible = true,
+            });
         }
 
         public override void Shutdown()
@@ -50,6 +110,9 @@ namespace Robust.Client.GameObjects
         }
 
         private void QueueUpdateInert(EntityUid uid, SpriteComponent sprite, ref SpriteUpdateInertEvent ev)
+            => QueueUpdateInert(uid, sprite);
+
+        private void QueueUpdateInert(EntityUid uid, SpriteComponent sprite)
         {
             if (sprite._inertUpdateQueued)
                 return;

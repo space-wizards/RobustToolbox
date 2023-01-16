@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.ComponentTrees;
@@ -21,7 +20,6 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly SpriteTreeSystem _treeSystem = default!;
-        [Dependency] private readonly TransformSystem _transform = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
         private HashSet<SpriteComponent> _manualUpdate = new();
@@ -34,7 +32,14 @@ namespace Robust.Client.GameObjects
 
             _proto.PrototypesReloaded += OnPrototypesReloaded;
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
+            SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
             _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
+        }
+
+        private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
+        {
+            // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.
+            QueueUpdateInert(uid, component);
         }
 
         public override void Shutdown()
@@ -50,6 +55,9 @@ namespace Robust.Client.GameObjects
         }
 
         private void QueueUpdateInert(EntityUid uid, SpriteComponent sprite, ref SpriteUpdateInertEvent ev)
+            => QueueUpdateInert(uid, sprite);
+
+        public void QueueUpdateInert(EntityUid uid, SpriteComponent sprite)
         {
             if (sprite._inertUpdateQueued)
                 return;

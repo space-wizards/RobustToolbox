@@ -123,10 +123,11 @@ namespace Robust.Shared.CompNetworkGenerator
                 if (attribute.ConstructorArguments[0].Value is bool val && val)
                 {
                     getStateInit.Append($@"
-                {name} = new(component.{name}),");
+                {name} = component.{name},");
 
                     handleStateSetters.Append($@"
-            component.{name} = new(state.{name});");
+            if (state.{name} != null)
+                component.{name} = new(state.{name});");
                 }
                 else
                 {

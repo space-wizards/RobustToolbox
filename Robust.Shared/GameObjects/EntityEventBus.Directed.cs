@@ -57,12 +57,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <remarks>
         /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING.
         /// </remarks>
         /// <typeparam name="TEvent">Event to dispatch.</typeparam>
         /// <param name="component">Component receiving the event.</param>
         /// <param name="args">Event arguments for the event.</param>
-        internal void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+        public void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
             where TEvent : notnull;
 
         /// <summary>
@@ -70,13 +70,13 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <remarks>
         /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING.
         /// </remarks>
         /// <typeparam name="TEvent">Event to dispatch.</typeparam>
         /// <param name="component">Component receiving the event.</param>
         /// <param name="idx">Type of the component, for faster lookups.</param>
         /// <param name="args">Event arguments for the event.</param>
-        internal void RaiseComponentEvent<TEvent>(IComponent component, CompIdx idx, TEvent args)
+        public void RaiseComponentEvent<TEvent>(IComponent component, CompIdx idx, TEvent args)
             where TEvent : notnull;
 
         /// <summary>
@@ -84,12 +84,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <remarks>
         /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING.
         /// </remarks>
         /// <typeparam name="TEvent">Event to dispatch.</typeparam>
         /// <param name="component">Component receiving the event.</param>
         /// <param name="args">Event arguments for the event.</param>
-        internal void RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+        public void RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
             where TEvent : notnull;
 
         public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();

@@ -925,7 +925,7 @@ namespace Robust.Shared.GameObjects
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
             xform ??= xformQuery.GetComponent(uid);
-            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+            var (worldPos, worldRot) = xform.GetWorldPositionRotation(xformQuery);
 
             return GetAABB(uid, worldPos, worldRot, xform, xformQuery);
         }

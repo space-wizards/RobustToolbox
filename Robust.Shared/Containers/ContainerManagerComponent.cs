@@ -18,7 +18,7 @@ namespace Robust.Shared.Containers
     /// </summary>
     [ComponentReference(typeof(IContainerManager))]
     [NetworkedComponent]
-    [ComponentProtoName("ContainerContainer")]
+    [RegisterComponent, ComponentProtoName("ContainerContainer")]
     public sealed class ContainerManagerComponent : Component, IContainerManager, ISerializationHooks
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;

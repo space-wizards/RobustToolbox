@@ -20,19 +20,6 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
 
         /// <summary>
-        ///     Get the percentage that 2 bodies overlap. Ignores whether collision is turned on for either body.
-        /// </summary>
-        /// <param name="bodyA"></param>
-        /// <param name="bodyB"></param>
-        /// <returns> 0 -> 1.0f based on WorldAABB overlap</returns>
-        [Obsolete]
-        public float IntersectionPercent(PhysicsComponent bodyA, PhysicsComponent bodyB)
-        {
-            // TODO: Use actual shapes and not just the AABB?
-            return bodyA.GetWorldAABB().IntersectPercentage(bodyB.GetWorldAABB());
-        }
-
-        /// <summary>
         /// Checks to see if the specified collision rectangle collides with any of the physBodies under management.
         /// Also fires the OnCollide event of the first managed physBody to intersect with the collider.
         /// </summary>

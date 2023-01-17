@@ -184,7 +184,7 @@ namespace Robust.Client.UserInterface
 
                 _propagateVisibilityChanged(value);
                 // TODO: unhardcode this.
-                // Many containers ignore children if they're invisible, so that's why we're replicating that ehre.
+                // Many containers ignore children if they're invisible, so that's why we're replicating that here.
                 Parent?.InvalidateMeasure();
                 InvalidateMeasure();
             }
@@ -283,6 +283,11 @@ namespace Robust.Client.UserInterface
         /// control within the specified number of seconds.
         /// </summary>
         public float? TooltipDelay { get; set; }
+
+        /// <summary>
+        /// Should the tooltip track the mouse cursor.
+        /// </summary>
+        public bool TrackingTooltip { get; set; }
 
         /// <summary>
         /// When a tooltip should be shown for this control, this will be invoked to

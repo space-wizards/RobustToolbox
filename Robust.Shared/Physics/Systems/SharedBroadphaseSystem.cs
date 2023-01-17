@@ -419,6 +419,7 @@ namespace Robust.Shared.Physics.Systems
             _physicsSystem.DestroyContacts(body);
             if (!Resolve(body.Owner, ref xform, ref fixtures))
                 return;
+            _physicsSystem.SetAwake(body.Owner, body, true);
 
             if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
                 return;

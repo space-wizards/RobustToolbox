@@ -183,7 +183,6 @@ namespace Robust.Shared.Physics.Systems
                 _physics.DestroyContact(contact);
             }
 
-            var xform = Transform(body.Owner);
             if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
             {
                 var map = Transform(broadphase.Owner).MapUid;

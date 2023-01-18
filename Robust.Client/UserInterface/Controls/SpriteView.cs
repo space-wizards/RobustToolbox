@@ -58,7 +58,7 @@ namespace Robust.Client.UserInterface.Controls
             _spriteSystem ??= IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
             _spriteSystem?.ForceUpdate(Sprite);
 
-            renderHandle.DrawEntity(Sprite.Owner, PixelSize / 2, Scale * UIScale, OverrideDirection);
+            renderHandle.DrawEntity(Sprite.Owner, PixelSize / 2 + PixelSize * Sprite.Offset, Scale * UIScale, OverrideDirection);
         }
     }
 }

@@ -119,14 +119,7 @@ namespace Robust.Shared.GameObjects
 
             LifeStage = ComponentLifeStage.Stopping;
             entManager.EventBus.RaiseComponentEvent(this, CompShutdownInstance);
-            Shutdown();
-
-#if DEBUG
-            if (LifeStage != ComponentLifeStage.Stopped)
-            {
-                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Shutdown)} in derived method.");
-            }
-#endif
+            LifeStage = ComponentLifeStage.Stopped;
         }
 
         /// <summary>
@@ -195,14 +188,6 @@ namespace Robust.Shared.GameObjects
         protected virtual void Startup()
         {
             LifeStage = ComponentLifeStage.Running;
-        }
-
-        /// <summary>
-        ///     Shuts down the component. The is called Automatically by OnRemove.
-        /// </summary>
-        protected virtual void Shutdown()
-        {
-            LifeStage = ComponentLifeStage.Stopped;
         }
 
         /// <summary>

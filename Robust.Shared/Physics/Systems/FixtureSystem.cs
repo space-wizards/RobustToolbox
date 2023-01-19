@@ -271,8 +271,9 @@ namespace Robust.Shared.Physics.Systems
 
             // Add / update new fixtures
             // FUTURE SLOTH
-            // Do not touch this or I WILL END YOU.
-            // Updating fixtures in place causes prediction issues
+            // Do not touch this or I WILL GLASS YOU.
+            // Updating fixtures in place causes prediction issues with contacts.
+            // See PR #3431 for when this started.
             foreach (var (id, fixture) in newFixtures)
             {
                 if (!component.Fixtures.TryGetValue(id, out var existing))

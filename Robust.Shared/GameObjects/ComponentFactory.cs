@@ -136,15 +136,6 @@ namespace Robust.Shared.GameObjects
 
             static string CalculateComponentName(Type type)
             {
-                // Backward compatible fallback
-#pragma warning disable CS0618
-                if (type.GetProperty(nameof(Component.Name))!.DeclaringType != typeof(Component))
-#pragma warning restore CS0618
-                {
-                    var instance = (IComponent) Activator.CreateInstance(type)!;
-                    return instance.Name;
-                }
-
                 // Attributes can use any name they want, they are for bypassing the automatic names
                 // If a parent class has this attribute, a child class will use the same name, unless it also uses this attribute
                 if (Attribute.GetCustomAttribute(type, typeof(ComponentProtoNameAttribute)) is ComponentProtoNameAttribute attribute)

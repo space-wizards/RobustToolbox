@@ -14,12 +14,6 @@ namespace Robust.Shared.GameObjects
     public interface IComponent
     {
         /// <summary>
-        ///     Name that this component is represented with in prototypes.
-        /// </summary>
-        /// <seealso cref="IComponentRegistration.Name" />
-        string Name { get; }
-
-        /// <summary>
         ///     The current lifetime stage of this component. You can use this to check
         ///     if the component is initialized or being deleted.
         /// </summary>

@@ -265,6 +265,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Arrange
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var fac = sim.Resolve<IComponentFactory>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
             var component = IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
@@ -272,7 +273,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var result = entMan.GetComponents(entity);
 
             // Assert
-            var list = result.Where(c=>c.Name == "Dummy").ToList();
+            var list = result.Where(c=>fac.GetComponentName(c.GetType()) == "Dummy").ToList();
             Assert.That(list.Count, Is.EqualTo(1));
             Assert.That(list[0], Is.EqualTo(component));
         }

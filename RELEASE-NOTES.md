@@ -54,6 +54,19 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.85.0.0
+
+### Breaking changes
+
+* Component.Shutdown() has now been removed and the eventbus should be used in its place.
+* Component.Name has now been removed and IComponentFactory.GetComponentName(Type) should be used in its place.
+
+### Bugfixes
+
+* Ensure fixture contacts are destroyed even if no broadphase is found.
+* Ensure fixtures are re-created in client state handling. There was a subtle bug introduced by updating existing ones where contacts were incorrectly being retained across prediction. This was most obvious with slipping in SS14.
+
+
 ## 0.84.0.0
 
 ### Breaking changes

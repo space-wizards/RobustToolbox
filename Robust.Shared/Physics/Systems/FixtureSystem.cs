@@ -270,19 +270,19 @@ namespace Robust.Shared.Physics.Systems
             TransformComponent? xform = null;
 
             // Add / update new fixtures
+            // FUTURE SLOTH
+            // Do not touch this or I WILL GLASS YOU.
+            // Updating fixtures in place causes prediction issues with contacts.
+            // See PR #3431 for when this started.
             foreach (var (id, fixture) in newFixtures)
             {
-                if (component.Fixtures.TryGetValue(id, out var existing))
+                if (!component.Fixtures.TryGetValue(id, out var existing))
                 {
-                    if (!existing.Equivalent(fixture))
-                    {
-                        fixture.CopyTo(existing);
-                        computeProperties = true;
-                        _broadphase.Refilter(existing, xform);
-                    }
+                    toAddFixtures.Add(fixture);
                 }
-                else
+                else if (!existing.Equivalent(fixture))
                 {
+                    toRemoveFixtures.Add(fixture);
                     toAddFixtures.Add(fixture);
                 }
             }

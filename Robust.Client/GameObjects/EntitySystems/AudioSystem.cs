@@ -148,8 +148,6 @@ public sealed class AudioSystem : SharedAudioSystem
                 && stream.TrackingEntity == null
                 && stream.TrackingFallbackCoordinates == null);
 
-            // Does this really have to be set every frame???
-            stream.Source.SetVolume(stream.Volume);
             return;
         }
 

@@ -39,8 +39,6 @@ namespace Robust.Shared.Physics.Dynamics
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        internal SharedPhysicsSystem Physics = default!;
-
         public bool AutoClearForces;
 
         /// <summary>
@@ -52,59 +50,19 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
         /// </summary>
+        [ViewVariables]
         public readonly Dictionary<FixtureProxy, Box2> MoveBuffer = new();
-
-        /// <summary>
-        ///     Change the global gravity vector.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 Gravity
-        {
-            get => _gravity;
-            set
-            {
-                if (_gravity.EqualsApprox(value)) return;
-
-                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-                var bodyQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
-
-                // Force every body awake just in case.
-                WakeBodiesRecursive(Owner, xformQuery, bodyQuery);
-
-                _gravity = value;
-            }
-        }
-
-        private Vector2 _gravity;
-
-        private void WakeBodiesRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> bodyQuery)
-        {
-            if (bodyQuery.TryGetComponent(uid, out var body) &&
-                body.BodyType == BodyType.Dynamic)
-            {
-                Physics.WakeBody(uid, body);
-            }
-
-            var xform = xformQuery.GetComponent(uid);
-            var childEnumerator = xform.ChildEnumerator;
-
-            while (childEnumerator.MoveNext(out var child))
-            {
-                WakeBodiesRecursive(child.Value, xformQuery, bodyQuery);
-            }
-        }
 
         /// <summary>
         ///     All awake bodies on this map.
         /// </summary>
+        [ViewVariables]
         public readonly HashSet<PhysicsComponent> AwakeBodies = new();
 
         /// <summary>
         ///     Store last tick's invDT
         /// </summary>
         internal float _invDt0;
-
-        public MapId MapId => _entityManager.GetComponent<TransformComponent>(Owner).MapID;
 
         #region AddRemove
 

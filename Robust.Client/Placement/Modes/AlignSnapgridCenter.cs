@@ -22,11 +22,11 @@ namespace Robust.Client.Placement.Modes
         {
             if (Grid != null)
             {
-                var viewportSize = (Vector2)pManager._clyde.ScreenSize;
+                var viewportSize = (Vector2)pManager.Clyde.ScreenSize;
 
-                var gridPosition = Grid.MapToGrid(pManager.eyeManager.ScreenToMap(Vector2.Zero));
+                var gridPosition = Grid.MapToGrid(pManager.EyeManager.ScreenToMap(Vector2.Zero));
 
-                var gridstart = pManager.eyeManager.CoordinatesToScreen(
+                var gridstart = pManager.EyeManager.CoordinatesToScreen(
                     gridPosition.WithPosition(new Vector2(MathF.Floor(gridPosition.X), MathF.Floor(gridPosition.Y))));
 
                 for (var a = gridstart.X; a < viewportSize.X; a += SnapSize * EyeManager.PixelsPerMeter) //Iterate through screen creating gridlines

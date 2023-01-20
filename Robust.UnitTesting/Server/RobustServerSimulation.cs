@@ -31,6 +31,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Players;
@@ -225,7 +226,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IManifoldManager, CollisionManager>();
             container.Register<IMapManagerInternal, MapManager>();
-            container.Register<IPhysicsManager, PhysicsManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<ITileDefinitionManager, TileDefinitionManager>();
@@ -275,6 +275,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<CollisionWakeComponent>();
             compFactory.RegisterClass<OccluderComponent>();
             compFactory.RegisterClass<OccluderTreeComponent>();
+            compFactory.RegisterClass<Gravity2DComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -287,6 +288,7 @@ namespace Robust.UnitTesting.Server
 
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<Gravity2DController>();
             entitySystemMan.LoadExtraSystemType<SharedGridTraversalSystem>();
             entitySystemMan.LoadExtraSystemType<ContainerSystem>();
             entitySystemMan.LoadExtraSystemType<JointSystem>();

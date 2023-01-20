@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Utility;
@@ -127,7 +128,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private (float, float) GetInvMass(IPhysBody bodyA, IPhysBody bodyB)
+    private (float, float) GetInvMass(PhysicsComponent bodyA, PhysicsComponent bodyB)
     {
         // God this is shitcodey but uhhhh we need to snowflake KinematicController for nice collisions.
         // TODO: Might need more finagling with the kinematic bodytype
@@ -342,7 +343,7 @@ public abstract partial class SharedPhysicsSystem
         {
             var batches = (int) Math.Ceiling((float) contactCount / VelocityConstraintsPerThread);
 
-            Parallel.For(0, batches, i =>
+            Parallel.For(0, batches, options, i =>
             {
                 var start = i * VelocityConstraintsPerThread;
                 var end = Math.Min(start + VelocityConstraintsPerThread, contactCount);
@@ -673,7 +674,7 @@ public abstract partial class SharedPhysicsSystem
             var unsolved = 0;
             var batches = (int) Math.Ceiling((float) contactCount / PositionConstraintsPerThread);
 
-            Parallel.For(0, batches, i =>
+            Parallel.For(0, batches, options, i =>
             {
                 var start = i * PositionConstraintsPerThread;
                 var end = Math.Min(start + PositionConstraintsPerThread, contactCount);

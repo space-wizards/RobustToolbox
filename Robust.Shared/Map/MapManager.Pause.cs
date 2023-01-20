@@ -112,11 +112,10 @@ namespace Robust.Shared.Map
 
             var mapEuid = GetMapEntityId(mapId);
 
-            if (mapEuid == EntityUid.Invalid)
+            if (!EntityManager.TryGetComponent<MapComponent>(mapEuid, out var map))
                 return false;
 
-            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
-            return mapComp.MapPaused;
+            return map.MapPaused;
         }
 
         private void ClearMapPause(MapId mapId)
@@ -146,17 +145,24 @@ namespace Robust.Shared.Map
 
             var mapEuid = GetMapEntityId(mapId);
 
-            if (mapEuid == EntityUid.Invalid)
+            if (!EntityManager.TryGetComponent<MapComponent>(mapEuid, out var map))
                 return false;
 
-            var mapComp = EntityManager.GetComponent<MapComponent>(mapEuid);
-            return mapComp.MapPreInit;
+            return map.MapPreInit;
         }
 
         /// <inheritdoc />
         public bool IsMapPaused(MapId mapId)
         {
-            return CheckMapPause(mapId) || CheckMapPreInit(mapId);
+            if(mapId == MapId.Nullspace)
+                return false;
+
+            var mapEuid = GetMapEntityId(mapId);
+
+            if (!EntityManager.TryGetComponent<MapComponent>(mapEuid, out var map))
+                return false;
+
+            return map.MapPaused || map.MapPreInit;
         }
 
         /// <inheritdoc />

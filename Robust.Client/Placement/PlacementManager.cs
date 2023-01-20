@@ -684,12 +684,17 @@ namespace Robust.Client.Placement
 
         private void PreparePlacement(string templateName)
         {
+            // TODO: Garbage but placementmanager needs taking out back
+            if (EntityManager.EntityExists(CurrentPlacementOverlayEntity))
+            {
+                EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
+            }
+
             var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
             CurrentPrototype = prototype;
             IsActive = true;
 
-            var lst = SpriteComponent.GetPrototypeTextures(prototype, ResourceCache, out var noRot).ToList();
-            PreparePlacementTexList(lst, noRot, prototype);
+            CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(templateName, MapCoordinates.Nullspace);
         }
 
         public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot, EntityPrototype? prototype)

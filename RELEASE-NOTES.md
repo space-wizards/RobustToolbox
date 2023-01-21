@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.85.0.1
+
+### Bugfixes
+
+* Fix fixture client state handling not removing the existing fixture.
+* Use a dummy entity for placement manager preview so offsets are applied correctly.
+
+
 ## 0.85.0.0
 
 ### Breaking changes

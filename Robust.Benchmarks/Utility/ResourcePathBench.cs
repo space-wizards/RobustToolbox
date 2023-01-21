@@ -1,15 +1,18 @@
 ﻿using BenchmarkDotNet.Attributes;
 using JetBrains.Annotations;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Utility;
 
+#pragma warning disable CS0612
 namespace Robust.Benchmarks.Utility;
 
-public sealed class ResourcePathBench
+[Virtual]
+public class ResourcePathBench
 {
     private string _path = default!;
 
     [UsedImplicitly]
-    [Params(1, 10)]
+    [Params(1, 10, 100)]
     public int N;
 
     [GlobalSetup]
@@ -19,32 +22,38 @@ public sealed class ResourcePathBench
     }
 
     [Benchmark]
-    public void ReadResPath()
+    public ResPath ReadResPath()
     {
         var res = new ResPath(_path);
         for (var i = 0; i < N; i++)
         {
-            res = new($"{res}{i}");
+            res = new(_path);
         }
+        return res;
     }
 
     [Benchmark]
-    public void ReadResPathFast()
+    public ResPath ReadResPathFast()
     {
         var res = new ResPath(_path);
         for (var i = 0; i < N; i++)
         {
-            res = ResPath.CreateUnsafePath($"{res}{i}");
+            res = ResPath.CreateUnsafePath(_path);
         }
+
+        return res;
     }
 
     [Benchmark]
-    public void ReadResourcePathFast()
+    public ResourcePath ReadResourcePath()
+
     {
         var res = new ResourcePath(_path);
         for (var i = 0; i < N; i++)
         {
-            res = new ResourcePath($"{res}{i}");
+            res = new ResourcePath(_path);
         }
+        return res;
     }
 }
+#pragma warning restore CS0612

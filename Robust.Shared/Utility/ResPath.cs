@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -76,7 +75,7 @@ public readonly struct ResPath : IEquatable<ResPath>
         }
 
         var sb = new StringBuilder(canonPath.Length);
-        var segments = canonPath.Segments(separator).ToArray();
+        var segments = canonPath.Split(separator);
         if (canonPath[0] == separator) sb.Append('/');
 
         var needsSeparator = false;
@@ -237,13 +236,13 @@ public readonly struct ResPath : IEquatable<ResPath>
             if (CanonPath is "." or "")
                 return ".";
 
-            // CanonicalResource[..^1] avoids last char if its a folder, it won't matter if 
+            // CanonicalResource[..^1] avoids last char if its a folder, it won't matter if
             // it's a filename
             // Uses +1 to skip `/` found in or starts from beginning of string
             // if we found nothing (ind == -1)
             var ind = CanonPath[..^1].LastIndexOf('/') + 1;
             return CanonPath[^1] == '/'
-                ? CanonPath[ind .. ^1] // Omit last `/`  
+                ? CanonPath[ind .. ^1] // Omit last `/`
                 : CanonPath[ind..];
         }
     }
@@ -606,7 +605,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <returns>if true if path wouldn't be modifed </returns>
     public bool IsClean()
     {
-        var segments = CanonPath.Segments(Separator).ToArray();
+        var segments = CanonPath.Split(Separator).ToArray();
         for (var i = 0; i < segments.Length; i++)
         {
             if (segments[i] != "..") continue;
@@ -650,104 +649,10 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </remarks>
     public IEnumerable<string> EnumerateSegments()
     {
-        return CanonPath.Segments('/');
-    }
-}
-
-/// <summary>
-/// Iterator over segments in <see cref="ResPath"/> from the root directory to children.
-/// For example give path <c>/foo/bar/baz</c> will yield <c>foo</c> then <c>bar</c>, then
-/// <c>baz</c>.
-/// </summary>
-public struct SegmentEnumerator : IEnumerator<string>
-{
-    /// <summary>
-    /// Original path with custom separator
-    /// </summary>
-    private readonly string _path;
-
-    /// <summary>
-    /// Position of head used to extract segment via <see cref="ReadOnlySpan{T}"/>
-    /// </summary>
-    private int _pos;
-
-    /// <summary>
-    /// Length of segment <see cref="_pos"/> is pointing
-    /// </summary>
-    private int _len;
-
-    /// <summary>
-    /// Separator used. Defaults to <c>/</c>.
-    /// </summary>
-    private readonly char _separator;
-
-    /// <summary>
-    /// Construct <see cref="SegmentEnumerator"/>
-    /// </summary>
-    /// <param name="path">string input representing path</param>
-    /// <param name="separator">character used to separate paths. Defaults to <c>/</c></param>
-    public SegmentEnumerator(string path, char separator = '/')
-    {
-        _path = path;
-        _separator = separator;
-        // Small trick because _pos needs to always point at '/' so on first iteration
-        // if path is relative we treat like the separator is before start of string
-        _pos = _path.Length > 1 && _path[0] == _separator ? 0 : -1;
-        _len = 0;
-    }
-
-    /// <inheritdoc />
-    public bool MoveNext()
-    {
-        // Move Span start _pos by length of last string read
-        _pos += _len;
-        // Head points now to '/'.
-        // Increment to enable string search to work, and abort if position out of range
-        if (++_pos > _path.Length)
+        foreach (var fragment in CanonPath.Split(Separator))
         {
-            return false;
-        }
-
-        // Find next segment
-        var ind = _path.IndexOf(_separator, _pos);
-        // If segment not found, _len must account for the rest of string
-        _len = (ind == -1 ? _path.Length : ind) - _pos;
-
-        return _pos < _path.Length && _pos + _len <= _path.Length;
-    }
-
-    /// <inheritdoc />
-    public void Reset()
-    {
-        _pos = _path.Length > 1 && _path[0] == _separator ? 0 : -1;
-        _len = 0;
-    }
-
-    /// <inheritdoc />
-
-    object IEnumerator.Current => Current;
-
-    /// <inheritdoc />
-
-    public string Current => _path.AsSpan(_pos, _len).ToString();
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-    }
-}
-
-/// <summary>
-/// Helper Method for dividing string into segments.
-/// </summary>
-internal static class ResPathExtension
-{
-    public static IEnumerable<string> Segments(this string path, char separator)
-    {
-        var iter = new SegmentEnumerator(path, separator);
-        while (iter.MoveNext())
-        {
-            yield return iter.Current;
+            yield return fragment;
         }
     }
 }
+

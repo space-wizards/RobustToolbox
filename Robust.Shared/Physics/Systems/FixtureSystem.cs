@@ -282,7 +282,7 @@ namespace Robust.Shared.Physics.Systems
                 }
                 else if (!existing.Equivalent(fixture))
                 {
-                    toRemoveFixtures.Add(fixture);
+                    toRemoveFixtures.Add(existing);
                     toAddFixtures.Add(fixture);
                 }
             }

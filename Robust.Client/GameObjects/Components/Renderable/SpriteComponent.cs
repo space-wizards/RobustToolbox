@@ -305,7 +305,7 @@ namespace Robust.Client.GameObjects
         void ISerializationHooks.AfterDeserialization()
         {
             // Please somebody burn this to the ground. There is so much spaghetti.
-            
+
             IoCManager.InjectDependencies(this);
 
             {
@@ -764,6 +764,11 @@ namespace Robust.Client.GameObjects
                         "Shader prototype '{0}' does not exist.",
                         layerDatum.Shader);
                 }
+            }
+            else
+            {
+                layer.ShaderPrototype = null;
+                layer.Shader = null;
             }
 
             if (layerDatum.MapKeys != null)

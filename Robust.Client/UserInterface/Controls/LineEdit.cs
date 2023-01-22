@@ -479,7 +479,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorWordRight)
                 {
-                    _selectionStart = _cursorPosition = TextEditShared.NextWordPosition(_text, _cursorPosition);
+                    _selectionStart = _cursorPosition = TextEditShared.EndWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
@@ -513,7 +513,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorSelectWordRight)
                 {
-                    _cursorPosition = TextEditShared.NextWordPosition(_text, _cursorPosition);
+                    _cursorPosition = TextEditShared.EndWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }

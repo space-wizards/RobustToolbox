@@ -18,12 +18,6 @@ namespace Robust.Client.UserInterface.Controls
         private (Vector2 pos, float value)? _grabData;
         private float _valueTarget;
 
-        /// <summary>
-        /// Whether we need to draw the scroll bars or not.
-        /// See <see cref="Visible" />.
-        /// </summary>
-        protected bool _shouldDraw = true;
-
         public float ValueTarget
         {
             get => _valueTarget;
@@ -86,11 +80,8 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
-            if (_shouldDraw)
-            {
-                var styleBox = _getGrabberStyleBox();
-                styleBox?.Draw(handle, _getGrabberBox());
-            }
+            var styleBox = _getGrabberStyleBox();
+            styleBox?.Draw(handle, _getGrabberBox());
         }
 
         protected internal override void MouseExited()

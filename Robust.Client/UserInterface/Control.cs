@@ -30,7 +30,7 @@ namespace Robust.Client.UserInterface
         private bool _visible = true;
         // Determines if this control requires space, even when
         // it's visibility has been set to false
-        private bool _reservesSpace = true;
+        private bool _reservesSpace = false;
 
         // _marginSetSize is the size calculated by the margins,
         // but it's different from _size if min size is higher.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
@@ -17,6 +17,12 @@ namespace Robust.Client.UserInterface.Controls
         private bool _isHovered;
         private (Vector2 pos, float value)? _grabData;
         private float _valueTarget;
+
+        /// <summary>
+        /// Whether we need to draw the scroll bars or not.
+        /// See <see cref="Visible" />.
+        /// </summary>
+        protected bool _shouldDraw = true;
 
         public float ValueTarget
         {
@@ -77,11 +83,24 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        // We override Visible here to always return true, so that the layout engine
+        // always reserves space for this control. This avoids a bug where the layout
+        // constantly toggles the visiblity of the scroll bar. Since we still want
+        // to control the visiblilty of the bar itself, we'll save that to another
+        // property.
+        public override bool Visible
+        {
+            get => true;
+            set => _shouldDraw = value;
+        }
+
         protected internal override void Draw(DrawingHandleScreen handle)
         {
-            var styleBox = _getGrabberStyleBox();
-
-            styleBox?.Draw(handle, _getGrabberBox());
+            if (_shouldDraw)
+            {
+                var styleBox = _getGrabberStyleBox();
+                styleBox?.Draw(handle, _getGrabberBox());
+            }
         }
 
         protected internal override void MouseExited()

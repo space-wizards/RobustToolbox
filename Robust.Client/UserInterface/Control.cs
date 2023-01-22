@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -170,7 +170,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="VisibleInTree"/>
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
-        public bool Visible
+        public virtual bool Visible
         {
             get => _visible;
             set

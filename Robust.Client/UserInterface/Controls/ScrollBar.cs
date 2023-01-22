@@ -48,6 +48,7 @@ namespace Robust.Client.UserInterface.Controls
         protected ScrollBar(OrientationMode orientation)
         {
             MouseFilter = MouseFilterMode.Pass;
+            ReservesSpace = true;
 
             _orientation = orientation;
         }
@@ -81,17 +82,6 @@ namespace Robust.Client.UserInterface.Controls
                 Value = MathHelper.Lerp(Value, ValueTarget, Math.Min(args.DeltaSeconds * 15, 1));
                 _updating = false;
             }
-        }
-
-        // We override Visible here to always return true, so that the layout engine
-        // always reserves space for this control. This avoids a bug where the layout
-        // constantly toggles the visiblity of the scroll bar. Since we still want
-        // to control the visiblilty of the bar itself, we'll save that to another
-        // property.
-        public override bool Visible
-        {
-            get => true;
-            set => _shouldDraw = value;
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)

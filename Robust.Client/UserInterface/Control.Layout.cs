@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Map;
@@ -529,7 +529,7 @@ namespace Robust.Client.UserInterface
         /// <returns>The actual measured desired size of the control.</returns>
         protected virtual Vector2 MeasureCore(Vector2 availableSize)
         {
-            if (!Visible)
+            if (!(Visible || ReservesSpace))
                 return default;
 
             if (_stylingDirty)
@@ -621,7 +621,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         protected virtual void ArrangeCore(UIBox2 finalRect)
         {
-            if (!Visible)
+            if (!(Visible || ReservesSpace))
                 return;
 
             var withoutMargins = _margin.Deflate(finalRect);

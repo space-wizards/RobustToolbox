@@ -41,28 +41,28 @@ internal sealed class TextEditSharedTest
     [Test]
     // @formatter:off
     [TestCase("foo bar baz",   11, ExpectedResult = 11)]
-    [TestCase("foo bar baz",   0,  ExpectedResult = 4 )]
-    [TestCase("foo bar baz",   1,  ExpectedResult = 4 )]
-    [TestCase("foo bar baz",   3,  ExpectedResult = 4 )]
-    [TestCase("foo bar baz",   4,  ExpectedResult = 8 )]
-    [TestCase("foo bar baz",   5,  ExpectedResult = 8 )]
-    [TestCase("Foo Bar Baz",   0,  ExpectedResult = 4 )]
+    [TestCase("foo bar baz",   0,  ExpectedResult = 3 )]
+    [TestCase("foo bar baz",   1,  ExpectedResult = 3 )]
+    [TestCase("foo bar baz",   3,  ExpectedResult = 7 )]
+    [TestCase("foo bar baz",   4,  ExpectedResult = 7 )]
+    [TestCase("foo bar baz",   5,  ExpectedResult = 7 )]
+    [TestCase("Foo Bar Baz",   0,  ExpectedResult = 3 )]
     [TestCase("Foo Bar Baz",   8,  ExpectedResult = 11)]
-    [TestCase("foo +bar baz",  0,  ExpectedResult = 4 )]
+    [TestCase("foo +bar baz",  0,  ExpectedResult = 3 )]
     [TestCase("foo +bar baz",  4,  ExpectedResult = 5 )]
     [TestCase("Foo[Bar[Baz",   0,  ExpectedResult = 3 )]
     [TestCase("Foo[Bar[Baz",   3,  ExpectedResult = 4 )]
     [TestCase("Foo^Bar^Baz",   0,  ExpectedResult = 3 )]
     [TestCase("Foo^Bar^Baz",   3,  ExpectedResult = 5 )]
     [TestCase("Foo^^^Bar^Baz", 3,  ExpectedResult = 9 )]
-    [TestCase("^^^ ^^^",       0,  ExpectedResult = 7 )]
+    [TestCase("^^^ ^^^",       0,  ExpectedResult = 6 )]
     [TestCase("^^^ ^^^",       7,  ExpectedResult = 13)]
     // @formatter:on
-    public int TestNextWordPosition(string str, int cursor)
+    public int TestEndWordPosition(string str, int cursor)
     {
         // For my sanity.
         str = str.Replace("^", "👏");
 
-        return TextEditShared.NextWordPosition(str, cursor);
+        return TextEditShared.EndWordPosition(str, cursor);
     }
 }

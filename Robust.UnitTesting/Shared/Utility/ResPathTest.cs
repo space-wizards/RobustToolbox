@@ -318,7 +318,9 @@ public sealed class ResPathTest
     [TestCase(@".", ".")]
     public void TestRelativeSystemPaths(string systemIn, string canonStr)
     {
-        var systemPath = ResPath.FromRelativeSystemPath(systemIn);
+        // Prevents frivolous warning, will lead to test having OS specific fails
+        // ReSharper disable once RedundantArgumentDefaultValue
+        var systemPath = ResPath.FromRelativeSystemPath(systemIn, '\\');
         var canonPath = ResPath.CreateUnsafePath(canonStr);
         Assert.That(systemPath, Is.EqualTo(canonPath));
         Assert.That(systemPath.ToRelativeSystemPath(), Is.EqualTo(canonPath.ToRelativeSystemPath()));

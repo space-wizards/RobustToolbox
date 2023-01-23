@@ -1175,6 +1175,13 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ResTexturePreloadingEnabled =
             CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Upper limit on the size of the RSI atlas texture. A lower limit might waste less vram, but start to defeat
+        /// the purpose of using an atlas if it gets too small.
+        /// </summary>
+        public static readonly CVarDef<int> ResRSIAtlasSize =
+            CVarDef.Create("res.rsi_atlas_size", 8192, CVar.CLIENTONLY);
+
         // TODO: Currently unimplemented.
         /// <summary>
         /// Cache texture preload data to speed things up even further.

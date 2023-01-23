@@ -22,20 +22,20 @@ public class ResourcePathBench
     }
 
     [Benchmark]
-    public ResPath ReadResPath()
+    public ResPath CreateWithSeparatorResPath()
     {
-        var res = new ResPath(_path);
+        ResPath res = default;
         for (var i = 0; i < N; i++)
         {
-            res = new(_path);
+            res = ResPath.CreateWithSeparator(_path);
         }
         return res;
     }
 
     [Benchmark]
-    public ResPath ReadResPathFast()
+    public ResPath CreateUnsafePathResPath()
     {
-        var res = new ResPath(_path);
+        ResPath res = default;
         for (var i = 0; i < N; i++)
         {
             res = ResPath.CreateUnsafePath(_path);
@@ -45,7 +45,7 @@ public class ResourcePathBench
     }
 
     [Benchmark]
-    public ResourcePath ReadResourcePath()
+    public ResourcePath CreateResourcePath()
 
     {
         var res = new ResourcePath(_path);

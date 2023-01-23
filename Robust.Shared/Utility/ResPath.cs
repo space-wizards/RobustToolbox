@@ -22,16 +22,23 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
 #if WINDOWS
     public const char SystemSeparator = '\\';
+
     public const string SystemSeparatorStr = @"\";
 #else
     public const char SystemSeparator = '/';
     public const string SystemSeparatorStr = "/";
 #endif
     /// <summary>
-    /// Normalized separator. Chosen because <c>/</c> is illegal path
+    /// Normalized separator character. Chosen because <c>/</c> is illegal path
     /// character on Linux and Windows.
     /// </summary>
     public const char Separator = '/';
+
+    /// <summary>
+    /// Normalized separator string. Chosen because <c>/</c> is illegal path
+    /// character on Linux and Windows.
+    /// </summary>
+    public const string SeparatorStr = "/";
 
     /// <summary>
     ///     "." as a static. Separator used is <c>/</c>.
@@ -54,44 +61,6 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
     internal readonly string CanonPath;
 
-    /// <summary>
-    ///     Create a new path from a string, splitting it by the separator provided.
-    /// </summary>
-    /// <param name="canonPath">The string path to turn into a resource path.</param>
-    /// <param name="separator">The separator for the resource path. If null or empty it will default to <c>/</c></param>
-    /// <exception cref="ArgumentException">Thrown if you try to use "." as separator.</exception>
-    public ResPath(string canonPath, char separator = '/')
-    {
-        if (separator is '.')
-        {
-            throw new ArgumentException("Separator may not be `.`  Prefer \\ or /");
-        }
-
-
-        if (canonPath == "" || canonPath == ".")
-        {
-            CanonPath = ".";
-            return;
-        }
-
-        var sb = new StringBuilder(canonPath.Length);
-        var segments = canonPath.Split(separator);
-        if (canonPath[0] == separator) sb.Append('/');
-
-        var needsSeparator = false;
-        foreach (var segment in segments)
-        {
-            if ((segment == "." && segments.Length != 0) || segment == "") continue;
-
-            if (needsSeparator) sb.Append('/');
-
-            sb.Append(segment);
-            needsSeparator = true;
-        }
-
-        CanonPath = sb.Length == 0 ? "." : sb.ToString();
-    }
-
     private ResPath(string canonPath)
     {
         CanonPath = canonPath;
@@ -105,6 +74,44 @@ public readonly struct ResPath : IEquatable<ResPath>
     }
 
     /// <summary>
+    ///     Create a new path from a string, splitting it by the separator provided.
+    /// </summary>
+    /// <param name="path">The string path to turn into a resource path.</param>
+    /// <param name="separator">The separator for the resource path. If null or empty it will default to <c>/</c></param>
+    /// <exception cref="ArgumentException">Thrown if you try to use "." as separator.</exception>
+    public static ResPath CreateWithSeparator(string path, char separator = '/')
+    {
+        if (separator is '.')
+        {
+            throw new ArgumentException("Separator may not be `.`  Prefer \\ or /");
+        }
+
+        if (path == "" || path == ".")
+        {
+            return Self;
+        }
+
+        var sb = new StringBuilder(path.Length, path.Length * 2);
+        var segments = path.Split(separator);
+        if (path[0] == separator) sb.Append('/');
+
+        var needsSeparator = false;
+        foreach (var segment in segments)
+        {
+            if ((segment == "." && segments.Length != 0) || segment == "") continue;
+
+            if (needsSeparator) sb.Append('/');
+
+            sb.Append(segment);
+            needsSeparator = true;
+        }
+
+        return sb.Length == 0
+            ? Self
+            : new ResPath(sb.ToString());
+    }
+
+    /// <summary>
     /// Fast factory method will assume you did all necessary cleaning.
     /// WARNING: Breaking this assumption may lead to bugs
     /// </summary>
@@ -112,14 +119,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <returns></returns>
     public static ResPath CreateUnsafePath(string assumedCanon)
     {
-        // TODO is the switch necessary? might help with allocation at expense of branching
-        return assumedCanon switch
-        {
-            "" => Empty,
-            "." => Self,
-            "/" => Root,
-            _ => new ResPath(assumedCanon),
-        };
+        return new ResPath(assumedCanon);
     }
 
     /// <summary>
@@ -530,7 +530,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     public static ResPath FromRelativeSystemPath(string path, char newSeparator = SystemSeparator)
     {
         // ReSharper disable once RedundantArgumentDefaultValue
-        return new ResPath(path, newSeparator);
+        return CreateWithSeparator(path, newSeparator);
     }
 
     #endregion
@@ -602,7 +602,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <summary>
     ///     Check whether a path is clean, i.e. <see cref="Clean"/> would not modify it.
     /// </summary>
-    /// <returns>if true if path wouldn't be modifed </returns>
+    /// <returns>if true if path wouldn't be modified </returns>
     public bool IsClean()
     {
         var segments = CanonPath.Split(Separator).ToArray();
@@ -655,4 +655,3 @@ public readonly struct ResPath : IEquatable<ResPath>
         }
     }
 }
-

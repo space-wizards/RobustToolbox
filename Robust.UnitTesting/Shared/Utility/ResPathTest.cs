@@ -34,7 +34,7 @@ public sealed class ResPathTest
     [TestCase(". ", ". ")]
     public void InputCleanTest(string input, string expected)
     {
-        var resPath = new ResPath(input);
+        var resPath = ResPath.CreateWithSeparator(input);
         Assert.That(resPath.ToString(), Is.EqualTo(expected));
     }
 
@@ -72,7 +72,7 @@ public sealed class ResPathTest
     [TestCase(@"x.y.z", ExpectedResult = @"z")]
     public string ExtensionTest(string input)
     {
-        return new ResPath(input).Extension;
+        return ResPath.CreateWithSeparator(input).Extension;
     }
 
     [Test]
@@ -88,7 +88,7 @@ public sealed class ResPathTest
     [TestCase(@"bar/", ExpectedResult = @"bar")] // Trailing / gets trimmed.
     public string FilenameTest(string input)
     {
-        return new ResPath(input).Filename;
+        return ResPath.CreateWithSeparator(input).Filename;
     }
 
 
@@ -103,7 +103,7 @@ public sealed class ResPathTest
     [TestCase(@"x.y.z", ExpectedResult = @"x.y")]
     public string FilenameWithoutExtension(string input)
     {
-        return new ResPath(input).FilenameWithoutExtension;
+        return ResPath.CreateWithSeparator(input).FilenameWithoutExtension;
     }
 
     [Test]
@@ -115,7 +115,7 @@ public sealed class ResPathTest
     [TestCase(@"/foo/bar.txt", ExpectedResult = @"/foo")]
     public string DirectoryTest(string path)
     {
-        return new ResPath(path).Directory.ToString();
+        return ResPath.CreateWithSeparator(path).Directory.ToString();
     }
 
     [Test]
@@ -124,7 +124,7 @@ public sealed class ResPathTest
     [TestCase(@"/a/b/c", "\\", ExpectedResult = @"\a\b\c")]
     public string ChangeSeparatorTest(string input, string separator)
     {
-        return new ResPath(input).ChangeSeparator(separator);
+        return ResPath.CreateWithSeparator(input).ChangeSeparator(separator);
     }
 
     [Test]
@@ -142,8 +142,8 @@ public sealed class ResPathTest
     [TestCase("/a/b", ".", ExpectedResult = "/a/b")]
     public string CombineTest(string left, string right)
     {
-        var pathDivRes = new ResPath(left) / new ResPath(right);
-        var pathDivStr = new ResPath(left) / right;
+        var pathDivRes = ResPath.CreateUnsafePath(left) / ResPath.CreateWithSeparator(right);
+        var pathDivStr = ResPath.CreateUnsafePath(left) / right;
         Assert.That(pathDivRes, Is.EqualTo(pathDivStr));
         return pathDivRes.ToString();
     }
@@ -154,7 +154,7 @@ public sealed class ResPathTest
     {
         Assert.Catch(typeof(ArgumentException), () =>
         {
-            var _ = new ResPath("/x/y", separator);
+            var _ = ResPath.CreateWithSeparator("/x/y", separator);
         });
     }
 
@@ -168,7 +168,7 @@ public sealed class ResPathTest
     [TestCase("/..", ExpectedResult = "/")]
     public string CleanTest(string input)
     {
-        var path = new ResPath(input);
+        var path = ResPath.CreateWithSeparator(input);
         var cleaned = path.Clean();
         Assert.That(path.IsClean(), Is.EqualTo(path == cleaned));
         return path.Clean().ToString();
@@ -177,12 +177,12 @@ public sealed class ResPathTest
     [Test]
     public void RootedConversionsTest()
     {
-        var path = new ResPath("/a/b");
+        var path = ResPath.CreateWithSeparator("/a/b");
         Assert.That(path.IsRooted);
         Assert.That(path.ToRootedPath(), Is.EqualTo(path));
 
         var relative = path.ToRelativePath();
-        Assert.That(relative, Is.EqualTo(new ResPath("a/b")));
+        Assert.That(relative, Is.EqualTo(ResPath.CreateWithSeparator("a/b")));
         Assert.That(relative.IsRelative);
 
         Assert.That(relative.ToRelativePath(), Is.EqualTo(relative));
@@ -198,8 +198,8 @@ public sealed class ResPathTest
     [TestCase("/Textures/Weapons/laser.png", "/Textures/", ExpectedResult = "Weapons/laser.png")]
     public string RelativeToTest(string source, string baseDir)
     {
-        var path = new ResPath(source);
-        var basePath = new ResPath(baseDir);
+        var path = ResPath.CreateWithSeparator(source);
+        var basePath = ResPath.CreateWithSeparator(baseDir);
         return path.RelativeTo(basePath).ToString();
     }
 
@@ -211,8 +211,8 @@ public sealed class ResPathTest
     [TestCase("/", ".", false)]
     public void RelativeToFailTest(string left, string right, bool isRelative)
     {
-        var path = new ResPath(left);
-        var basePath = new ResPath(right);
+        var path = ResPath.CreateWithSeparator(left);
+        var basePath = ResPath.CreateWithSeparator(right);
         Assert.That(() => path.RelativeTo(basePath), Throws.ArgumentException);
     }
 
@@ -225,21 +225,21 @@ public sealed class ResPathTest
     [TestCase("a", "a", ExpectedResult = "a")]
     public string CommonBaseTest(string left, string right)
     {
-        return new ResPath(left).CommonBase(new ResPath(right)).ToString();
+        return ResPath.CreateWithSeparator(left).CommonBase(ResPath.CreateWithSeparator(right)).ToString();
     }
 
     [Test]
     public void CommonBaseFailTest()
     {
-        var path = new ResPath("a/b");
-        var basePath = new ResPath("b/a");
+        var path = ResPath.CreateWithSeparator("a/b");
+        var basePath = ResPath.CreateWithSeparator("b/a");
         Assert.That(() => path.CommonBase(basePath), Throws.ArgumentException);
     }
 
     [Test]
     public void WithNameTest()
     {
-        var path = new ResPath("/a/b");
+        var path = ResPath.CreateWithSeparator("/a/b");
         var modified = path.WithName("foo");
         Assert.That(modified.Filename, Is.EqualTo("foo"));
         modified = path.WithName("foo.exe");
@@ -250,7 +250,7 @@ public sealed class ResPathTest
     [Test]
     public void WithNameExceptionTest()
     {
-        var path = new ResPath("/a/b");
+        var path = ResPath.CreateWithSeparator("/a/b");
         Assert.That(() => path.WithName("/foo"), Throws.ArgumentException);
         Assert.That(() => path.WithName("."), Throws.ArgumentException);
         Assert.That(() => path.WithName(""), Throws.ArgumentException);
@@ -262,7 +262,7 @@ public sealed class ResPathTest
     [TestCase("/a/b.txt.bak", "png", "/a/b.txt.png")]
     public void WithExtensionTest(string start, string newExt, string expected)
     {
-        var startPath = new ResPath(start);
+        var startPath = ResPath.CreateWithSeparator(start);
         Assert.That(startPath.WithExtension(newExt).ToString(), Is.EqualTo(expected));
         Assert.That(startPath.WithExtension(newExt).ToString(), Is.EqualTo(expected));
     }
@@ -281,18 +281,18 @@ public sealed class ResPathTest
     [Test]
     public void RootToRelativeTest()
     {
-        var path = new ResPath("/");
+        var path = ResPath.CreateWithSeparator("/");
 
-        Assert.That(path.ToRelativePath(), Is.EqualTo(new ResPath(".")));
+        Assert.That(path.ToRelativePath(), Is.EqualTo(ResPath.CreateWithSeparator(".")));
     }
 
     [Test]
     public void TestEmptyEdgeCases()
     {
-        var empty = ResPath.Empty;
-        Assert.That(empty.Extension, Is.EqualTo(""));
-        Assert.That(empty.Filename, Is.EqualTo("."));
-        Assert.That(empty.FilenameWithoutExtension, Is.EqualTo("."));
+        ResPath? empty = ResPath.Empty;
+        Assert.That(empty?.Extension, Is.EqualTo(""));
+        Assert.That(empty?.Filename, Is.EqualTo("."));
+        Assert.That(empty?.FilenameWithoutExtension, Is.EqualTo("."));
         Assert.False(empty.Equals(null));
     }
 
@@ -318,7 +318,7 @@ public sealed class ResPathTest
     [TestCase(@".", ".")]
     public void TestRelativeSystemPaths(string systemIn, string canonStr)
     {
-        var systemPath = ResPath.FromRelativeSystemPath(systemIn, '\\');
+        var systemPath = ResPath.FromRelativeSystemPath(systemIn);
         var canonPath = ResPath.CreateUnsafePath(canonStr);
         Assert.That(systemPath, Is.EqualTo(canonPath));
         Assert.That(systemPath.ToRelativeSystemPath(), Is.EqualTo(canonPath.ToRelativeSystemPath()));

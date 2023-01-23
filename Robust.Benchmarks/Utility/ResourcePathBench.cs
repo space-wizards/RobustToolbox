@@ -12,7 +12,7 @@ public class ResourcePathBench
     private string _path = default!;
 
     [UsedImplicitly]
-    [Params(1, 10, 100)]
+    [Params(10, 100, 1000)]
     public int N;
 
     [GlobalSetup]
@@ -45,10 +45,10 @@ public class ResourcePathBench
     }
 
     [Benchmark]
-    public ResourcePath CreateResourcePath()
+    public ResourcePath? CreateResourcePath()
 
     {
-        var res = new ResourcePath(_path);
+        ResourcePath? res = null;
         for (var i = 0; i < N; i++)
         {
             res = new ResourcePath(_path);

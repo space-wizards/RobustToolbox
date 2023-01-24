@@ -51,7 +51,6 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
@@ -376,7 +375,7 @@ namespace Robust.Client.GameStates
         public void RequestFullState(EntityUid? missingEntity = null)
         {
             _sawmill.Info("Requesting full server state");
-            _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? EntityUid.Invalid });
+            _network.ClientSendMessage(new MsgStateRequestFull { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? EntityUid.Invalid });
             _processor.RequestFullState();
         }
 
@@ -391,8 +390,8 @@ namespace Robust.Client.GameStates
             }
 
             var input = _entitySystemManager.GetEntitySystem<InputSystem>();
-            var pendingInputEnumerator = _pendingInputs.GetEnumerator();
-            var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
+            using var pendingInputEnumerator = _pendingInputs.GetEnumerator();
+            using var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
             var hasPendingInput = pendingInputEnumerator.MoveNext();
             var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
@@ -520,7 +519,7 @@ namespace Robust.Client.GameStates
                 // Remove predicted component additions
                 foreach (var comp in toRemove)
                 {
-                    _entities.RemoveComponent(comp.Owner, comp);
+                    _entities.RemoveComponent(entity, comp);
                 }
 
                 // Re-add predicted removals
@@ -800,7 +799,7 @@ namespace Robust.Client.GameStates
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
             var currentEnts = _entities.GetEntities();
-            var toDelete = new List<EntityUid>(Math.Max(64, currentEnts.Count() - stateEnts.Count()));
+            var toDelete = new List<EntityUid>(Math.Max(64, _entities.EntityCount - stateEnts.Count));
             foreach (var ent in currentEnts)
             {
                 if (ent.IsClientSide())
@@ -1106,7 +1105,7 @@ namespace Robust.Client.GameStates
                         _sawmill.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
                         _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(HandleEntityState)}");
 #else
-                    _sawmill.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
+                    _sawmill.Error($"Failed to apply comp state: entity={uid}, comp={comp.GetType()}");
                     throw;
 #endif
                 }

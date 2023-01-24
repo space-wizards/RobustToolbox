@@ -39,11 +39,12 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* RSI's now get combined into a large atlas.
 
 ### Bugfixes
 
-*None yet*
+* Removed bad PlayAudioPositionalMessage error log & fixed fallback coordinate check.
+* Fixed MouseJoint parallelisation exception.
 
 ### Other
 
@@ -51,7 +52,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Fixed some warnings in GameStateManager
 
 
 ## 0.85.0.1

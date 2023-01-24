@@ -217,7 +217,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="ReservesSpace"/>
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
-        public virtual bool ReservesSpace
+        public bool ReservesSpace
         {
             get => _reservesSpace;
             set

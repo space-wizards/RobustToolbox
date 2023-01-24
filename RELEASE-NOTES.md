@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed GameStateManager error when resetting client-side prediction
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.85.1.1
+
+### Bugfixes
+
+* Fixed GameStateManager error when resetting client-side prediction
 
 
 ## 0.85.1.0

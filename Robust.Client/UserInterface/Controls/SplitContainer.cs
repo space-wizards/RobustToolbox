@@ -39,6 +39,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private float _splitStart;
 
+        /// <summary>
+        /// Virtual pixel offset from the center of the split.
+        /// </summary>
         public float SplitCenter
         {
             get => _splitStart + _splitWidth / 2;
@@ -51,6 +54,10 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        /// Virtual pixel fraction of the split.
+        /// </summary>
+        /// <value>Takes a float from 0 to 1.</value>
         public float SplitFraction
         {
             get
@@ -70,9 +77,13 @@ namespace Robust.Client.UserInterface.Controls
         private SplitState _splitState;
         private bool _dragging;
         private SplitOrientation _orientation;
+        private SplitStretchDirection _stretchDirection;
 
         private bool Vertical => Orientation == SplitOrientation.Vertical;
 
+        /// <summary>
+        /// Whether the split position should be set manually or automatically.
+        /// </summary>
         public SplitState State
         {
             get => _splitState;
@@ -82,7 +93,23 @@ namespace Robust.Client.UserInterface.Controls
                 InvalidateMeasure();
             }
         }
+        
+        /// <summary>
+        /// Determines which side of the split expands when the parent is resized.
+        /// </summary>
+        public SplitStretchDirection StretchDirection 
+        {
+            get => _stretchDirection;
+            set
+            {
+                _stretchDirection = value;
+                InvalidateMeasure();
+            }
+        }
 
+        /// <summary>
+        /// Whether the split is horizontal or vertical.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public SplitOrientation Orientation
         {
@@ -98,6 +125,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             MouseFilter = MouseFilterMode.Stop;
             _splitState = SplitState.Auto;
+            _stretchDirection = SplitStretchDirection.BottomRight;
             _dragging = false;
             ResizeMode = SplitResizeMode.RespectChildrenMinSize;
             SplitWidth = 10;
@@ -179,7 +207,10 @@ namespace Robust.Client.UserInterface.Controls
 
             var controlSize = desiredSize ?? Size;
             var splitMax = (Vertical ? controlSize.Y : controlSize.X) - _splitWidth - SplitEdgeSeparation;
-            _splitStart = MathHelper.Clamp(_splitStart, SplitEdgeSeparation, splitMax);
+            var desiredSplit = _splitStart;
+            if (desiredSize != null && StretchDirection == SplitStretchDirection.TopLeft)
+                desiredSplit += Vertical ? desiredSize.Value.Y - Size.Y : desiredSize.Value.X - Size.X;
+            _splitStart = MathHelper.Clamp(desiredSplit, SplitEdgeSeparation, splitMax);
 
             if (ResizeMode == SplitResizeMode.RespectChildrenMinSize && ChildCount == 2)
             {
@@ -365,6 +396,23 @@ namespace Robust.Client.UserInterface.Controls
         {
             Horizontal,
             Vertical
+        }
+        
+        /// <summary>
+        /// Specifies horizontal alignment modes.
+        /// </summary>
+        /// <seealso cref="Control.HorizontalAlignment"/>
+        public enum SplitStretchDirection
+        {
+            /// <summary>
+            /// The control should stretch the the control on the bottom or the right.
+            /// </summary>
+            BottomRight,
+            
+            /// <summary>
+            /// The control should stretch the the control on the top or the left.
+            /// </summary>
+            TopLeft,
         }
     }
 }

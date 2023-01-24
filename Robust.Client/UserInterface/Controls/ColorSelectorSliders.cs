@@ -109,7 +109,7 @@ public sealed class ColorSelectorSliders : Control
         _bottomColorSlider.OnValueChanged += _ => { OnColorSet(); };
         _alphaSlider.OnValueChanged += _ => { OnColorSet(); };
 
-        _topInputBox = new SpinBox()
+        _topInputBox = new SpinBox
         {
             IsValid = value => IsSpinBoxValid(value, ColorSliderOrder.Top)
         };

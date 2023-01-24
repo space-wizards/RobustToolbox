@@ -462,6 +462,7 @@ namespace Robust.Client.GameStates
 
             foreach (var entity in system.DirtyEntities)
             {
+                DebugTools.Assert(toRemove.Count == 0);
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
                     _sawmill.Debug($"Entity {entity} was made dirty.");
@@ -521,6 +522,7 @@ namespace Robust.Client.GameStates
                 {
                     _entities.RemoveComponent(entity, comp);
                 }
+                toRemove.Clear();
 
                 // Re-add predicted removals
                 if (system.RemovedComponents.TryGetValue(entity, out var netIds))

@@ -522,7 +522,10 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Component is not owned by entity.");
 
             if (component.Deleted)
+            {
+                Logger.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {component.GetType().Name}.");
                 return;
+            }
 
 #if EXCEPTION_TOLERANCE
             try

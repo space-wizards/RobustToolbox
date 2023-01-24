@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed GameStateManager error when resetting client-side prediction
 
 ### Other
 

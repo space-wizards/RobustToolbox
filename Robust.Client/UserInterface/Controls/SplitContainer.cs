@@ -30,6 +30,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private float _splitWidth;
+        private const float MinDraggableWidth = 10f;
 
         /// <summary>
         /// Virtual pixel offset from the edge beyond which the split cannot be moved.
@@ -158,12 +159,11 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool CanDragAt(Vector2 relativePosition)
         {
-            if (Vertical)
-            {
-                return Math.Abs(relativePosition.Y - SplitCenter) <= _splitWidth;
-            }
+            var distance = Vertical
+                ? Math.Abs(relativePosition.Y - SplitCenter)
+                : Math.Abs(relativePosition.X - SplitCenter);
 
-            return Math.Abs(relativePosition.X - SplitCenter) <= _splitWidth;
+            return distance <= _splitWidth || distance <= MinDraggableWidth;
         }
 
         /// <summary>

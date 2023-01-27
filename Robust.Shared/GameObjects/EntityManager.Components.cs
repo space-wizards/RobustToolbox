@@ -10,6 +10,7 @@ using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Log;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 #if EXCEPTION_TOLERANCE
@@ -828,6 +829,20 @@ namespace Robust.Shared.GameObjects
 
             component = null;
             return false;
+        }
+
+        ref Component? IEntityManager.TryGetComponentRefOrNullRef(EntityUid uid, CompIdx type, out bool exists)
+        {
+            var dict = _entTraitArray[type.Value];
+            ref var @ref = ref CollectionsMarshal.GetValueRefOrNullRef(dict, uid);
+            if (Unsafe.IsNullRef(ref @ref) || @ref.Deleted)
+            {
+                exists = false;
+                return ref @ref!;
+            }
+
+            exists = true;
+            return ref @ref!;
         }
 
         /// <inheritdoc />

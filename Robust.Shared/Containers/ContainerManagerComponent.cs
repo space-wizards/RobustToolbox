@@ -19,7 +19,7 @@ namespace Robust.Shared.Containers
     [ComponentReference(typeof(IContainerManager))]
     [NetworkedComponent]
     [RegisterComponent, ComponentProtoName("ContainerContainer")]
-    public sealed class ContainerManagerComponent : Component, IContainerManager, ISerializationHooks
+    public sealed partial class ContainerManagerComponent : Component, IContainerManager, ISerializationHooks
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
@@ -167,7 +167,7 @@ namespace Robust.Shared.Containers
         }
 
         [Serializable, NetSerializable]
-        internal sealed class ContainerManagerComponentState : ComponentState
+        internal sealed partial class ContainerManagerComponentState : ComponentState
         {
             public Dictionary<string, ContainerData> Containers;
 
@@ -206,7 +206,7 @@ namespace Robust.Shared.Containers
         }
 
         [DataDefinition]
-        private struct ContainerPrototypeData
+        private partial struct ContainerPrototypeData
         {
             [DataField("entities")] public List<EntityUid> Entities = new ();
 

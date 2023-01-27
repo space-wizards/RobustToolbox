@@ -61,7 +61,7 @@ public sealed partial class EntityEventBusTests
     }
 
 
-    private sealed class FooComponent : Component
+    private sealed partial class FooComponent : Component
     {
 
     }

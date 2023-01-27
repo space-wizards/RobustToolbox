@@ -106,7 +106,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
     }
 
     [DataDefinition]
-    public struct SeedChemQuantity
+    public partial struct SeedChemQuantity
     {
         [DataField("Min")]
         public int Min;

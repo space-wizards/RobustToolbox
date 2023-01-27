@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization.Manager;
 
 public sealed partial class SerializationManager
 {
-    public static Type[] SerializerInterfaces => new[]
+    private static Type[] SerializerInterfaces => new[]
     {
         typeof(ITypeReader<,>),
         typeof(ITypeInheritanceHandler<,>),
@@ -24,7 +24,7 @@ public sealed partial class SerializationManager
 
     private void InitializeTypeSerializers(IEnumerable<Type> typeSerializers)
     {
-        _regularSerializerProvider = new(typeSerializers);
+        _regularSerializerProvider = new SerializerProvider(typeSerializers);
     }
 
     private static object CreateSerializer(Type type)
@@ -35,9 +35,44 @@ public sealed partial class SerializationManager
         return Activator.CreateInstance(type)!;
     }
 
+    public ITypeReader<T, TNode> GetReader<T, TNode>() where TNode : DataNode
+    {
+        if (_regularSerializerProvider.TryGetTypeNodeSerializer(typeof(ITypeReader<,>), typeof(T), typeof(TNode),
+                out var reader))
+        {
+            return (ITypeReader<T, TNode>) reader;
+        }
+
+        throw new ArgumentException($"No type reader found for types {typeof(T)}, {typeof(TNode)}");
+    }
+
+    public bool TryGetCopier<T>([NotNullWhen(true)] out ITypeCopier<T>? copier)
+    {
+        if (_regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeCopier<>), typeof(T), out var copierUnCast))
+        {
+            copier = (ITypeCopier<T>) copierUnCast;
+            return true;
+        }
+
+        copier = null;
+        return false;
+    }
+
+    public bool TryGetCopyCreator<T>([NotNullWhen(true)] out ITypeCopyCreator<T>? copyCreator)
+    {
+        if (_regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeCopyCreator<>), typeof(T), out var copyCreatorUnCast))
+        {
+            copyCreator = (ITypeCopyCreator<T>) copyCreatorUnCast;
+            return true;
+        }
+
+        copyCreator = null;
+        return false;
+    }
+
     public sealed class SerializerProvider
     {
-        public SerializerProvider(IEnumerable<Type> typeSerializers)
+        internal SerializerProvider(IEnumerable<Type> typeSerializers)
         {
             foreach (var serializerInterface in SerializerInterfaces)
             {
@@ -70,7 +105,7 @@ public sealed partial class SerializationManager
 
         #region GetSerializerMethods
 
-        public bool TryGetTypeNodeSerializer<TInterface, TType, TNode>([NotNullWhen(true)] out TInterface? serializer)
+        internal bool TryGetTypeNodeSerializer<TInterface, TType, TNode>([NotNullWhen(true)] out TInterface? serializer)
             where TInterface : BaseSerializerInterfaces.ITypeNodeInterface<TType, TNode>
             where TNode : DataNode
         {
@@ -82,7 +117,7 @@ public sealed partial class SerializationManager
             return true;
         }
 
-        public bool TryGetTypeNodeSerializer(Type interfaceType, Type objectType, Type nodeType, [NotNullWhen(true)] out object? serializer)
+        internal bool TryGetTypeNodeSerializer(Type interfaceType, Type objectType, Type nodeType, [NotNullWhen(true)] out object? serializer)
         {
             lock (_lock)
             {
@@ -110,7 +145,7 @@ public sealed partial class SerializationManager
             }
         }
 
-        public TInterface GetTypeNodeSerializer<TInterface, TType, TNode>()
+        internal TInterface GetTypeNodeSerializer<TInterface, TType, TNode>()
             where TInterface : BaseSerializerInterfaces.ITypeNodeInterface<TType, TNode>
             where TNode : DataNode
         {
@@ -120,7 +155,7 @@ public sealed partial class SerializationManager
             return serializer;
         }
 
-        public object GetTypeNodeSerializer(Type interfaceType, Type objectType, Type nodeType)
+        internal object GetTypeNodeSerializer(Type interfaceType, Type objectType, Type nodeType)
         {
             if (!TryGetTypeNodeSerializer(interfaceType, objectType, nodeType, out var serializer))
                 throw new ArgumentOutOfRangeException();
@@ -128,7 +163,7 @@ public sealed partial class SerializationManager
             return serializer;
         }
 
-        public bool TryGetTypeSerializer<TInterface, TType>([NotNullWhen(true)] out TInterface? serializer)
+        internal bool TryGetTypeSerializer<TInterface, TType>([NotNullWhen(true)] out TInterface? serializer)
             where TInterface : BaseSerializerInterfaces.ITypeInterface<TType>
         {
             serializer = default;
@@ -139,7 +174,7 @@ public sealed partial class SerializationManager
             return true;
         }
 
-        public bool TryGetTypeSerializer(Type interfaceType, Type objectType, [NotNullWhen(true)] out object? serializer)
+        internal bool TryGetTypeSerializer(Type interfaceType, Type objectType, [NotNullWhen(true)] out object? serializer)
         {
             lock (_lock)
             {
@@ -167,7 +202,7 @@ public sealed partial class SerializationManager
             }
         }
 
-        public TInterface GetTypeSerializer<TInterface, TType>()
+        internal TInterface GetTypeSerializer<TInterface, TType>()
             where TInterface : BaseSerializerInterfaces.ITypeInterface<TType>
         {
             if (!TryGetTypeSerializer<TInterface, TType>(out var serializer))
@@ -176,7 +211,7 @@ public sealed partial class SerializationManager
             return serializer;
         }
 
-        public object GetTypeSerializer(Type interfaceType, Type objectType)
+        internal object GetTypeSerializer(Type interfaceType, Type objectType)
         {
             if (!TryGetTypeSerializer(interfaceType, objectType, out var serializer))
                 throw new ArgumentOutOfRangeException();
@@ -225,9 +260,9 @@ public sealed partial class SerializationManager
             }
         }
 
-        public T? RegisterSerializer<T>() => (T?)RegisterSerializer(typeof(T));
+        internal T? RegisterSerializer<T>() => (T?)RegisterSerializer(typeof(T));
 
-        public object? RegisterSerializer(Type type)
+        internal object? RegisterSerializer(Type type)
         {
             lock (_lock)
             {

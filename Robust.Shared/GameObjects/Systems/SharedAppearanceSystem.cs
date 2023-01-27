@@ -79,7 +79,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
 }
 
 [Serializable, NetSerializable]
-public sealed class AppearanceComponentState : ComponentState
+public sealed partial class AppearanceComponentState : ComponentState
 {
     public readonly Dictionary<Enum, object> Data;
 

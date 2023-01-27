@@ -9,7 +9,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.GameObjects
 {
     [NetworkedComponent()]
-    public abstract class SharedSpriteComponent : Component
+    public abstract partial class SharedSpriteComponent : Component
     {
         public abstract bool Visible { get; set; }
 
@@ -19,7 +19,7 @@ namespace Robust.Shared.GameObjects
         public static readonly ResourcePath TextureRoot = new("/Textures");
 
         [Serializable, NetSerializable]
-        protected sealed class SpriteComponentState : ComponentState
+        protected sealed partial class SpriteComponentState : ComponentState
         {
             public readonly bool Visible;
             public readonly int DrawDepth;
@@ -56,7 +56,7 @@ namespace Robust.Shared.GameObjects
 
         [Serializable, NetSerializable]
         [DataDefinition]
-        public sealed class PrototypeLayerData
+        public sealed partial class PrototypeLayerData
         {
             [DataField("shader")] public string? Shader;
             [DataField("texture")] public string? TexturePath;

@@ -5,7 +5,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
-    sealed class ClickableComponentState : ComponentState
+    sealed partial class ClickableComponentState : ComponentState
     {
         public Box2? LocalBounds { get; }
 

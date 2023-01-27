@@ -9,7 +9,7 @@ namespace Robust.Shared.Map.Components
 {
     [RegisterComponent]
     [NetworkedComponent]
-    public sealed class MapComponent : Component
+    public sealed partial class MapComponent : Component
     {
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
@@ -36,7 +36,7 @@ namespace Robust.Shared.Map.Components
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public sealed class MapComponentState : ComponentState
+    public sealed partial class MapComponentState : ComponentState
     {
         public MapId MapId;
         public bool LightingEnabled;

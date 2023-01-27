@@ -5,7 +5,7 @@ using Robust.Shared.GameObjects;
 namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
-    internal sealed class ViewSubscriberComponent : Component
+    internal sealed partial class ViewSubscriberComponent : Component
     {
         internal readonly HashSet<IPlayerSession> SubscribedSessions = new();
     }

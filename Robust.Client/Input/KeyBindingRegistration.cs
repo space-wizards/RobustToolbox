@@ -4,7 +4,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Client.Input
 {
     [DataDefinition]
-    public sealed class KeyBindingRegistration
+    public sealed partial class KeyBindingRegistration
     {
         [DataField("function")]
         public BoundKeyFunction Function;

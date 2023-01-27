@@ -43,7 +43,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
     }
 
-    public sealed class PriorityTestComponent : Component, ISerializationHooks
+    public sealed partial class PriorityTestComponent : Component, ISerializationHooks
     {
 
         public readonly List<string> Strings = new() {string.Empty, string.Empty, string.Empty};

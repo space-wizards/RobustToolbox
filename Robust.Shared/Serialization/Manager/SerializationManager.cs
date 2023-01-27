@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
@@ -18,7 +19,8 @@ namespace Robust.Shared.Serialization.Manager
 {
     public sealed partial class SerializationManager : ISerializationManager
     {
-        [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IModLoader _modLoader = default!;
 
         public IReflectionManager ReflectionManager => _reflectionManager;
 
@@ -30,7 +32,7 @@ namespace Robust.Shared.Serialization.Manager
         private readonly ConcurrentDictionary<Type, DataDefinition> _dataDefinitions = new();
         private readonly HashSet<Type> _copyByRefRegistrations = new();
 
-        [field: IoC.Dependency]
+        [field: Dependency]
         public IDependencyCollection DependencyCollection { get; } = default!;
 
         public void Initialize()

@@ -29,7 +29,7 @@ namespace Robust.Shared.Audio
     /// </summary>
     [Serializable, NetSerializable]
     [DataDefinition]
-    public struct AudioParams
+    public partial struct AudioParams
     {
         /// <summary>
         ///     The DistanceModel to use for this specific source.

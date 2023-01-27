@@ -56,7 +56,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         }
     }
 
-    public sealed class TestComponent : Component
+    public sealed partial class TestComponent : Component
     {
     }
 }

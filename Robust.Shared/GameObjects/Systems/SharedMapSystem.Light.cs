@@ -37,7 +37,7 @@ public abstract partial class SharedMapSystem
     }
 
     [Serializable, NetSerializable]
-    private sealed class MapLightComponentState : ComponentState
+    private sealed partial class MapLightComponentState : ComponentState
     {
         public Color AmbientLightColor;
     }

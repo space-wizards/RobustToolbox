@@ -9,7 +9,7 @@ namespace Robust.Client.GameObjects;
 /// </summary>
 [RegisterComponent]
 [ComponentReference(typeof(AppearanceComponent)), Access(typeof(AppearanceSystem))]
-public sealed class ClientAppearanceComponent : AppearanceComponent
+public sealed partial class ClientAppearanceComponent : AppearanceComponent
 {
     [DataField("visuals")]
     internal List<AppearanceVisualizer> Visualizers = new();

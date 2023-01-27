@@ -223,7 +223,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
   name: {LoadStringTestDummyId}";
     }
 
-    public sealed class TestBasicPrototypeComponent : Component
+    public sealed partial class TestBasicPrototypeComponent : Component
     {
 
         [DataField("foo")] public string Foo = null!;

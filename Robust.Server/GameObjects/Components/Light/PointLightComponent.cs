@@ -4,5 +4,5 @@ namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(SharedPointLightComponent))]
-    public sealed class PointLightComponent : SharedPointLightComponent {}
+    public sealed partial class PointLightComponent : SharedPointLightComponent {}
 }

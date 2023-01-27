@@ -23,7 +23,7 @@ public abstract class SoundSpecifier
 }
 
 [Serializable, NetSerializable]
-public sealed class SoundPathSpecifier : SoundSpecifier
+public sealed partial class SoundPathSpecifier : SoundSpecifier
 {
     public const string Node = "path";
 
@@ -54,7 +54,7 @@ public sealed class SoundPathSpecifier : SoundSpecifier
 }
 
 [Serializable, NetSerializable]
-public sealed class SoundCollectionSpecifier : SoundSpecifier
+public sealed partial class SoundCollectionSpecifier : SoundSpecifier
 {
     public const string Node = "collection";
 

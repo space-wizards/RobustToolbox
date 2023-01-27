@@ -10,7 +10,7 @@ namespace Robust.Server.GameObjects
     ///     This can then be used to re-serialize the entity with the same UID for the merge driver to recognize.
     /// </remarks>
     [RegisterComponent]
-    public sealed class MapSaveIdComponent : Component
+    public sealed partial class MapSaveIdComponent : Component
     {
         public int Uid { get; set; }
     }

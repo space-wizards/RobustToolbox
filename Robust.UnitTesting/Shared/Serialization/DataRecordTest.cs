@@ -32,7 +32,7 @@ public sealed class DataRecordTest : SerializationTest
     public record IntStructHolder(IntStruct Struct);
 
     [DataDefinition]
-    public struct IntStruct
+    public partial struct IntStruct
     {
         [DataField("value")] public int Value;
 

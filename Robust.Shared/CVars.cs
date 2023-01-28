@@ -718,6 +718,9 @@ namespace Robust.Shared
         public static readonly CVarDef<double> RenderSpriteDirectionBias =
             CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
 
+        public static readonly CVarDef<Color> RenderFOVColor =
+            CVarDef.Create("render.fov_color", Color.Black, CVar.ARCHIVE | CVar.CLIENTONLY);
+
         /*
          * DISPLAY
          */

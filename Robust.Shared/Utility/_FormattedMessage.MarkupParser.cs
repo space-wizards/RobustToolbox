@@ -6,7 +6,7 @@ using static Pidgin.Parser<char>;
 
 namespace Robust.Shared.Utility
 {
-    public partial class FormattedMessage
+    public partial class _FormattedMessage
     {
         // wtf I love parser combinators now.
         private const char TagBegin = '[';

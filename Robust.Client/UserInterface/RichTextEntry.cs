@@ -13,7 +13,7 @@ namespace Robust.Client.UserInterface
     /// </summary>
     internal struct RichTextEntry
     {
-        private static readonly FormattedMessage.TagColor TagBaseColor
+        private static readonly _FormattedMessage.TagColor TagBaseColor
             = new(new Color(200, 200, 200));
 
         public readonly FormattedMessage Message;
@@ -32,6 +32,9 @@ namespace Robust.Client.UserInterface
         ///     The combined text indices in the message's text tags to put line breaks.
         /// </summary>
         public ValueList<int> LineBreaks;
+
+        //TODO: fill this dictionary by iterating over MarkupTags inside the constructor and use the index from iterating as the dictionary key
+        private readonly Dictionary<int, Control> tagControls = new();
 
         public RichTextEntry(FormattedMessage message)
         {

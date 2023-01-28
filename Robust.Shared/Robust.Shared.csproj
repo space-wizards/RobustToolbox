@@ -50,8 +50,5 @@
       <DependentUpon>RobustMappedStringSerializer.cs</DependentUpon>
     </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Utility\RichText" />
-  </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
 </Project>

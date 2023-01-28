@@ -1,6 +1,10 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using JetBrains.Annotations;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility;
 
@@ -8,6 +12,8 @@ namespace Robust.Shared.Utility;
 ///     Represents a formatted message in the form of a list of "tags".
 ///     Does not do any concrete formatting, simply useful as an API surface.
 /// </summary>
+[PublicAPI]
+[Serializable, NetSerializable]
 public sealed partial class FormattedMessage
 {
     public IReadOnlyList<MarkupNode> Nodes => _nodes.AsReadOnly();
@@ -112,10 +118,10 @@ public sealed partial class FormattedMessage
         _nodes.Clear();
     }
 
-    /*public FormattedMessageRuneEnumerator EnumerateRunes()
+    public FormattedMessageRuneEnumerator EnumerateRunes()
     {
         return new FormattedMessageRuneEnumerator(this);
-    }*/
+    }
 
     /// <returns>The string without markup tags.</returns>
     public override string ToString()
@@ -125,7 +131,7 @@ public sealed partial class FormattedMessage
         foreach (var node in _nodes)
         {
             if (node.Name == null)
-                builder.Append(node.Value?.StringValue);
+                builder.Append(node.Value.StringValue);
         }
 
         return builder.ToString();
@@ -135,5 +141,61 @@ public sealed partial class FormattedMessage
     public string ToMarkup()
     {
         return string.Join("", _nodes);
+    }
+
+    public struct FormattedMessageRuneEnumerator : IEnumerable<Rune>, IEnumerator<Rune>
+    {
+        private readonly FormattedMessage _msg;
+        private IEnumerator<MarkupNode> _tagEnumerator;
+        private StringRuneEnumerator _runeEnumerator;
+
+        internal FormattedMessageRuneEnumerator(FormattedMessage msg)
+        {
+            _msg = msg;
+            _tagEnumerator = msg.Nodes.GetEnumerator();
+            // Rune enumerator will immediately give false on first iteration so I dont' need to special case anything.
+            _runeEnumerator = "".EnumerateRunes();
+        }
+
+        public IEnumerator<Rune> GetEnumerator() => this;
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public bool MoveNext()
+        {
+            while (!_runeEnumerator.MoveNext())
+            {
+                MarkupNode text;
+                while (true)
+                {
+                    var result = _tagEnumerator.MoveNext();
+                    if (!result)
+                        return false;
+
+                    if (_tagEnumerator.Current is not { Name: null, Value.StringValue: not null } nextText)
+                        continue;
+
+                    text = nextText;
+                    break;
+                }
+
+                _runeEnumerator = text.Value.StringValue!.EnumerateRunes();
+            }
+
+            return true;
+        }
+
+        public void Reset()
+        {
+            _tagEnumerator = _msg.Nodes.GetEnumerator();
+            _runeEnumerator = "".EnumerateRunes();
+        }
+
+        public Rune Current => _runeEnumerator.Current;
+
+        object IEnumerator.Current => Current;
+
+        void IDisposable.Dispose()
+        {
+        }
     }
 }

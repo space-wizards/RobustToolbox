@@ -9,17 +9,18 @@ public sealed class ColorTag : IMarkupTag
 
     public string Name => "color";
 
-    public void PushDrawContext(MarkupNode node, ref MarkupDrawingContext context)
+    public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
-        if (node.Value?.TryGetColor(out var color) ?? false)
+        if (node.Value.TryGetColor(out var color))
         {
             context.Color.Push(color.Value);
+            return;
         }
 
         context.Color.Push(DefaultColor);
     }
 
-    public void PopDrawContext(MarkupNode node, ref MarkupDrawingContext context)
+    public void PopDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
         context.Color.Pop();
     }

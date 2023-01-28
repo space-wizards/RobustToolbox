@@ -1,11 +1,8 @@
 using System.Collections.Generic;
-using System.Linq;
 using Pidgin;
 using Robust.Shared.Maths;
 using static Pidgin.Parser;
 using static Pidgin.Parser<char>;
-// ReSharper disable RedundantSuppressNullableWarningExpression
-
 namespace Robust.Shared.Utility;
 
 public sealed partial class FormattedMessage
@@ -130,7 +127,8 @@ public sealed partial class FormattedMessage
 
         var result = new List<MarkupNode>
         {
-            new(name,  parameter, attributes)
+            //Just pass null for attributes when the node doesn'T have any
+            new(name,  parameter, attributes.Count > 0 ? attributes : null)
         };
 
         if (selfClosing)

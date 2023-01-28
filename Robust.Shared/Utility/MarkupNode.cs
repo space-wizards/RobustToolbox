@@ -1,13 +1,16 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility;
 
+[Serializable, NetSerializable]
 public sealed class MarkupNode
 {
     public readonly string? Name;
-    public readonly MarkupParameter? Value;
+    public readonly MarkupParameter Value;
     public readonly Dictionary<string, MarkupParameter>? Attributes;
     public readonly bool Closing;
 
@@ -20,29 +23,45 @@ public sealed class MarkupNode
         Value = new MarkupParameter(text);
     }
 
+    public MarkupNode(string? name, MarkupParameter? value, Dictionary<string, MarkupParameter>? attributes, bool closing = false)
+    {
+        Name = name;
+        Value = value ?? new MarkupParameter();
+        Attributes = attributes;
+        Closing = closing;
+    }
+
     public override string ToString()
     {
         if(Name == null)
-            return Value?.StringValue ?? "";
+            return Value.StringValue ?? "";
 
         var attributesString = "";
         foreach (var (k, v) in Attributes ?? new Dictionary<string, MarkupParameter>())
         {
-            attributesString += $" {k}{("=\"")}{v}{("\"")}";
+            attributesString += $"{k}{v}";
         }
 
-        return $"[{(Closing ? "/" : "")}{Name}{(Value != null ? "=\"" : "")}{Value?.ToString().ReplaceLineEndings("\\n") ?? ""}{(Value != null ? "\"" : "")}{attributesString}]";
+        return $"[{(Closing ? "/" : "")}{Name}{Value.ToString().ReplaceLineEndings("\\n") ?? ""}{attributesString}]";
     }
 
-    public MarkupNode(string? name, MarkupParameter? value, Dictionary<string, MarkupParameter>? attributes, bool closing = false)
+    public override bool Equals(object? obj)
     {
-        Name = name;
-        Value = value;
-        Attributes = attributes;
-        Closing = closing;
+        return obj is MarkupNode node && Equals(node);
+    }
+
+    public bool Equals(MarkupNode node)
+    {
+        var equal = Name == node.Name;
+        equal &= Value.Equals(node.Value);
+        equal &= Attributes?.Equals(node.Attributes) ?? node.Attributes == null;
+        equal &= Closing == node.Closing;
+
+        return equal;
     }
 }
 
+[Serializable, NetSerializable]
 public readonly record struct MarkupParameter(string? StringValue = null, long? LongValue = null, Color? ColorValue = null)
 {
     public MarkupParameter(string? stringValue) : this(StringValue: stringValue)
@@ -84,6 +103,21 @@ public readonly record struct MarkupParameter(string? StringValue = null, long? 
         if (LongValue.HasValue)
             return LongValue?.ToString().Insert(0, "=") ?? "";
 
-        return ColorValue?.ToString().Insert(0, "=") ?? "";
+        if (ColorValue?.Name() != null)
+            return ColorValue.Value.Name()!.Insert(0, "=");
+
+        return ColorValue?.ToHex().Insert(0, "=") ?? "";
+    }
+
+    public bool Equals(MarkupParameter? other)
+    {
+        if (!other.HasValue)
+            return false;
+
+        var equal = StringValue == other.Value.StringValue;
+        equal &= LongValue == other.Value.LongValue;
+        equal &= ColorValue == other.Value.ColorValue;
+
+        return equal;
     }
 }

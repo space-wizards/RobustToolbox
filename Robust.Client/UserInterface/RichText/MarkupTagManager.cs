@@ -12,14 +12,30 @@ public sealed class MarkupTagManager
     [Dependency] private readonly IReflectionManager _reflectionManager = default!;
     [Dependency] private readonly ISandboxHelper _sandboxHelper = default!;
 
-    private readonly Dictionary<string, IMarkupTag> _markupTagTypes = new();
+    private readonly Dictionary<string, IMarkupTag> _markupTagTypes = new()
+    {
+        {"color", new ColorTag()}
+    };
+
+    private readonly List<Type> _engineTypes = new()
+    {
+        typeof(ColorTag)
+    };
 
     public void Initialize()
     {
         foreach (var type in _reflectionManager.GetAllChildren<IMarkupTag>())
         {
+            if (_engineTypes.Contains(type))
+                continue;
+
             var instance = (IMarkupTag)_sandboxHelper.CreateInstance(type);
             _markupTagTypes.Add(instance.Name.ToLower(),  instance);
+        }
+
+        foreach (var (_, tag) in _markupTagTypes)
+        {
+            IoCManager.InjectDependencies(tag);
         }
     }
 

@@ -18,7 +18,7 @@ public interface IMarkupTag
     /// </summary>
     /// <param name="node">The markup node containing the parameter and attributes</param>
     /// <param name="context">The context to push the state on</param>
-    public void PushDrawContext(MarkupNode node, ref MarkupDrawingContext context)
+    public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
     }
 
@@ -49,11 +49,12 @@ public interface IMarkupTag
     /// </summary>
     /// <param name="node">The markup node containing the parameter and attributes</param>
     /// <param name="context">The context to pop the state from</param>
-    public void PopDrawContext(MarkupNode node, ref MarkupDrawingContext context)
+    public void PopDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
     }
 
     /// <summary>
+    /// Rendering inline controls is currently not implemented!
     /// Called inside the constructor of <see cref="RichTextEntry"/> to
     /// supply a control that gets rendered inline before this tags children<br/>
     /// Text continues to the right of the control until the next line and then continues bellow it

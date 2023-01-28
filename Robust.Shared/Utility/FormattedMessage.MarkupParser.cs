@@ -22,7 +22,6 @@ public sealed partial class FormattedMessage
     /// </summary>
     public void AddMarkupPermissive(string markup)
     {
-        //TODO: I'm not sure what permissive should mean with the new parser
         _nodes.AddRange(ParseSafe(markup));
     }
 

@@ -22,12 +22,12 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
 #if WINDOWS
     public const char SystemSeparator = '\\';
-
     public const string SystemSeparatorStr = @"\";
 #else
     public const char SystemSeparator = '/';
     public const string SystemSeparatorStr = "/";
 #endif
+
     /// <summary>
     /// Normalized separator character. Chosen because <c>/</c> is illegal path
     /// character on Linux and Windows.
@@ -144,7 +144,10 @@ public readonly struct ResPath : IEquatable<ResPath>
     {
         get
         {
-            if (IsSelf) return Self;
+            if (IsSelf)
+            {
+                return Self;
+            }
 
             var ind = CanonPath.LastIndexOf('/');
             return ind != -1
@@ -234,7 +237,9 @@ public readonly struct ResPath : IEquatable<ResPath>
         get
         {
             if (CanonPath is "." or "")
+            {
                 return ".";
+            }
 
             // CanonicalResource[..^1] avoids last char if its a folder, it won't matter if
             // it's a filename
@@ -301,9 +306,15 @@ public readonly struct ResPath : IEquatable<ResPath>
     //   whereas path / (string / string) doesn't compile.
     public static ResPath operator /(ResPath left, ResPath right)
     {
-        if (right.IsRooted) return right;
+        if (right.IsRooted)
+        {
+            return right;
+        }
 
-        if (right.IsSelf) return left;
+        if (right.IsSelf)
+        {
+            return left;
+        }
 
         return new ResPath(left.CanonPath + "/" + right.CanonPath);
     }
@@ -454,7 +465,10 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <exception cref="ArgumentException">Thrown if we are not relative to the base path.</exception>
     public ResPath RelativeTo(ResPath basePath)
     {
-        if (TryRelativeTo(basePath, out var relative)) return relative.Value;
+        if (TryRelativeTo(basePath, out var relative))
+        {
+            return relative.Value;
+        }
 
         throw new ArgumentException($"{CanonPath} does not start with {basePath}.");
     }
@@ -508,7 +522,10 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <seealso cref="ToRootedPath" />
     public ResPath ToRelativePath()
     {
-        if (IsRelative) return this;
+        if (IsRelative)
+        {
+            return this;
+        }
 
         return this == Root
             ? Self
@@ -630,7 +647,11 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
     public string ChangeSeparator(string newSeparator)
     {
-        if (newSeparator is "." or "\0") throw new ArgumentException("New separator can't be `.` or `NULL`");
+        if (newSeparator is "." or "\0")
+        {
+            throw new ArgumentException("New separator can't be `.` or `NULL`");
+        }
+
 
         return newSeparator == "/"
             ? CanonPath

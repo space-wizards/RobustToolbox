@@ -21,9 +21,17 @@ public class EventDispatchBenchmark
     public delegate void StructEventDelegate(StructEvent ev);
     public delegate void ByRefStructEventDelegate(ref ByRefStructEvent ev);
 
+    public delegate void DirectedClassEventDelegate(EntityUid uid, ClassEvent ev);
+    public delegate void DirectedStructEventDelegate(EntityUid uid, StructEvent ev);
+    public delegate void DirectedByRefStructEventDelegate(EntityUid uid, ref ByRefStructEvent ev);
+
     public event ClassEventDelegate? ActionClassEvent;
     public event StructEventDelegate? ActionStructEvent;
     public event ByRefStructEventDelegate? ActionByRefStructEvent;
+
+    public event DirectedClassEventDelegate? DirectedActionClassEvent;
+    public event DirectedStructEventDelegate? DirectedActionStructEvent;
+    public event DirectedByRefStructEventDelegate? DirectedActionByRefStructEvent;
 
     [Params(1, 10, 100, 1000)]
     public int N { get; set; }
@@ -44,6 +52,10 @@ public class EventDispatchBenchmark
         ActionClassEvent += ClassEventHandler;
         ActionStructEvent += StructEventHandler;
         ActionByRefStructEvent += ByRefStructEventHandler;
+
+        DirectedActionClassEvent += DirectedClassEventHandler;
+        DirectedActionStructEvent += DirectedStructEventHandler;
+        DirectedActionByRefStructEvent += DirectedByRefStructEventHandler;
     }
 
     [Benchmark]
@@ -136,6 +148,36 @@ public class EventDispatchBenchmark
         }
     }
 
+    [Benchmark]
+    public void CSharpDirectedClassEvent()
+    {
+        for (var i = 0; i < N; i++)
+        {
+            var ev = new ClassEvent(i);
+            DirectedActionClassEvent?.Invoke(_entity, ev);
+        }
+    }
+
+    [Benchmark]
+    public void CSharpDirectedStructEvent()
+    {
+        for (var i = 0; i < N; i++)
+        {
+            var ev = new StructEvent(i);
+            DirectedActionStructEvent?.Invoke(_entity, ev);
+        }
+    }
+
+    [Benchmark]
+    public void CSharpDirectedByRefEvent()
+    {
+        for (var i = 0; i < N; i++)
+        {
+            var ev = new ByRefStructEvent(i);
+            DirectedActionByRefStructEvent?.Invoke(_entity, ref ev);
+        }
+    }
+
     private void ClassEventHandler(ClassEvent ev)
     {
         _accumulator += ev.Value;
@@ -149,6 +191,24 @@ public class EventDispatchBenchmark
     private void ByRefStructEventHandler(ref ByRefStructEvent ev)
     {
         _accumulator += ev.Value;
+    }
+
+    private void DirectedClassEventHandler(EntityUid uid, ClassEvent ev)
+    {
+        if(_entMan.TryGetComponent(uid, out EventDispatchTestComponent? comp))
+            comp.Accumulator += ev.Value;
+    }
+
+    private void DirectedStructEventHandler(EntityUid uid, StructEvent ev)
+    {
+        if(_entMan.TryGetComponent(uid, out EventDispatchTestComponent? comp))
+            comp.Accumulator += ev.Value;
+    }
+
+    private void DirectedByRefStructEventHandler(EntityUid uid, ref ByRefStructEvent ev)
+    {
+        if(_entMan.TryGetComponent(uid, out EventDispatchTestComponent? comp))
+            comp.Accumulator += ev.Value;
     }
 
     public class ClassEvent : EntityEventArgs
@@ -184,6 +244,7 @@ public class EventDispatchBenchmark
 
     public class EventDispatchTestComponent : Component
     {
+        public int Accumulator;
     }
 
     public class EventDispatchTestSystem : EntitySystem
@@ -218,17 +279,17 @@ public class EventDispatchBenchmark
 
         private void HandleDirectedClassEvent(EntityUid uid, EventDispatchTestComponent component, ClassEvent ev)
         {
-            Accumulator += ev.Value;
+            component.Accumulator += ev.Value;
         }
 
         private void HandleDirectedStructEvent(EntityUid uid, EventDispatchTestComponent component, StructEvent ev)
         {
-            Accumulator += ev.Value;
+            component.Accumulator += ev.Value;
         }
 
         private void HandleDirectedByRefStructEvent(EntityUid uid, EventDispatchTestComponent component, ref ByRefStructEvent ev)
         {
-            Accumulator += ev.Value;
+            component.Accumulator += ev.Value;
         }
     }
 }

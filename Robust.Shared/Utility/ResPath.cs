@@ -22,9 +22,11 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
 #if WINDOWS
     public const char SystemSeparator = '\\';
+
     public const string SystemSeparatorStr = @"\";
 #else
     public const char SystemSeparator = '/';
+
     public const string SystemSeparatorStr = "/";
 #endif
 

@@ -12,8 +12,9 @@ public sealed class CommandLinkTag : IMarkupTag
 {
     [Dependency] private readonly IClientConsoleHost _clientConsoleHost = default!;
 
-    public string Name => "cmdLink";
+    public string Name => "cmdlink";
 
+    /// <inheritdoc/>
     public bool TryGetControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
     {
         if (!node.Value.TryGetString(out var text)
@@ -27,9 +28,11 @@ public sealed class CommandLinkTag : IMarkupTag
 
         var label = new Label();
         label.Text = text;
+
         label.MouseFilter = Control.MouseFilterMode.Stop;
         label.FontColorOverride = Color.LightBlue;
         label.DefaultCursorShape = Control.CursorShape.Hand;
+
         label.OnMouseEntered += _ => label.FontColorOverride = Color.Blue;
         label.OnMouseExited += _ => label.FontColorOverride = Color.LightBlue;
         label.OnKeyBindDown += args => OnKeybindDown(args, command);

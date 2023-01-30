@@ -16,11 +16,21 @@ namespace Robust.Shared.Utility;
 [Serializable, NetSerializable]
 public sealed partial class FormattedMessage
 {
+    /// <summary>
+    /// The list of nodes the formatted message is made out of
+    /// </summary>
     public IReadOnlyList<MarkupNode> Nodes => _nodes.AsReadOnly();
+
+    /// <summary>
+    /// true if the formatted message doesn't contain any nodes
+    /// </summary>
     public bool IsEmpty => _nodes.Count > 0;
 
     private readonly List<MarkupNode> _nodes;
 
+    /// <summary>
+    /// Used for inserting the correct closing node when calling <see cref="Pop"/>
+    /// </summary>
     private readonly Stack<MarkupNode> _openNodeStack = new();
 
     public FormattedMessage()
@@ -72,21 +82,42 @@ public sealed partial class FormattedMessage
         return FromMarkup(text).ToString();
     }
 
+    /// <summary>
+    /// Adds a text node.
+    /// This node doesn't need to be closed with <see cref="Pop"/>.
+    /// </summary>
+    /// <param name="text">The text to add</param>
     public void AddText(string text)
     {
         PushTag(new MarkupNode(text));
     }
 
+    /// <summary>
+    /// Adds an open color node. It needs to later be closed by calling <see cref="Pop"/>
+    /// </summary>
+    /// <param name="color">The color of the node to add</param>
     public void PushColor(Color color)
     {
         PushTag(new MarkupNode("color", new MarkupParameter(color), null));
     }
 
+    /// <summary>
+    /// Adds a newline as a text node.
+    /// This node doesn't need to be closed with <see cref="Pop"/>.
+    /// </summary>
     public void PushNewline()
     {
         AddText("\n");
     }
 
+    /// <summary>
+    /// Adds a new open node to the formatted message.
+    /// The method for inserting closed nodes: <see cref="Pop"/>. It needs to be
+    /// called once for each inserted open node that isn't self closing.
+    /// </summary>
+    /// <param name="markupNode">The node to add</param>
+    /// <param name="selfClosing">Whether the node is self closing or not.
+    /// Self closing nodes automatically insert a closing node after the open one</param>
     public void PushTag(MarkupNode markupNode, bool selfClosing = false)
     {
         _nodes.Add(markupNode);
@@ -103,6 +134,9 @@ public sealed partial class FormattedMessage
         _openNodeStack.Push(markupNode);
     }
 
+    /// <summary>
+    /// Closes the last added node that wasn't self closing
+    /// </summary>
     public void Pop()
     {
         if (!_openNodeStack.TryPop(out var node))
@@ -111,16 +145,26 @@ public sealed partial class FormattedMessage
         _nodes.Add(new MarkupNode(node.Name, null, null, true));
     }
 
+    /// <summary>
+    /// Adds a formatted message to this one.
+    /// </summary>
+    /// <param name="other">The formatted message to be added</param>
     public void AddMessage(FormattedMessage other)
     {
         _nodes.AddRange(other._nodes);
     }
 
+    /// <summary>
+    /// Clears the formatted message
+    /// </summary>
     public void Clear()
     {
         _nodes.Clear();
     }
 
+    /// <summary>
+    /// Returns an enumerator that enumerates every rune for each text node contained in this formatted text instance.
+    /// </summary>
     public FormattedMessageRuneEnumerator EnumerateRunes()
     {
         return new FormattedMessageRuneEnumerator(this);

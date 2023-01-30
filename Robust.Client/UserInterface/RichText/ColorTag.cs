@@ -3,12 +3,16 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
+/// <summary>
+/// Colors the text inside its opening and closing nodes
+/// </summary>
 public sealed class ColorTag : IMarkupTag
 {
     private static readonly Color DefaultColor = new(200, 200, 200);
 
     public string Name => "color";
 
+    /// <inheritdoc/>
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
         if (node.Value.TryGetColor(out var color))
@@ -20,6 +24,7 @@ public sealed class ColorTag : IMarkupTag
         context.Color.Push(DefaultColor);
     }
 
+    /// <inheritdoc/>
     public void PopDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
         context.Color.Pop();

@@ -12,12 +12,18 @@ public sealed class MarkupTagManager
     [Dependency] private readonly IReflectionManager _reflectionManager = default!;
     [Dependency] private readonly ISandboxHelper _sandboxHelper = default!;
 
+    /// <summary>
+    /// Tags defined in engine need to be instantiated here because of sandboxing
+    /// </summary>
     private readonly Dictionary<string, IMarkupTag> _markupTagTypes = new()
     {
         {"color", new ColorTag()},
         {"cmdLink", new CommandLinkTag()}
     };
 
+    /// <summary>
+    /// A list of <see cref="IMarkupTag"/> types that shouldn't be instantiated through reflection
+    /// </summary>
     private readonly List<Type> _engineTypes = new()
     {
         typeof(ColorTag),
@@ -28,6 +34,7 @@ public sealed class MarkupTagManager
     {
         foreach (var type in _reflectionManager.GetAllChildren<IMarkupTag>())
         {
+            //Prevent tags defined inside engine from being instantiated
             if (_engineTypes.Contains(type))
                 continue;
 

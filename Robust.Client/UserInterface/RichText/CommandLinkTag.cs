@@ -18,7 +18,6 @@ public sealed class CommandLinkTag : IMarkupTag
     public bool TryGetControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
     {
         if (!node.Value.TryGetString(out var text)
-            || node.Attributes == null
             || !node.Attributes.TryGetValue("command", out var commandParameter)
             || !commandParameter.TryGetString(out var command))
         {

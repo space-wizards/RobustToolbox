@@ -11,7 +11,7 @@ public sealed class MarkupNode
 {
     public readonly string? Name;
     public readonly MarkupParameter Value;
-    public readonly Dictionary<string, MarkupParameter>? Attributes;
+    public readonly Dictionary<string, MarkupParameter> Attributes = new();
     public readonly bool Closing;
 
     /// <summary>
@@ -27,7 +27,7 @@ public sealed class MarkupNode
     {
         Name = name;
         Value = value ?? new MarkupParameter();
-        Attributes = attributes;
+        Attributes = attributes ?? new Dictionary<string, MarkupParameter>();
         Closing = closing;
     }
 

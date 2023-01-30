@@ -18,7 +18,8 @@ public sealed class MarkupTagManager
     private readonly Dictionary<string, IMarkupTag> _markupTagTypes = new()
     {
         {"color", new ColorTag()},
-        {"cmdLink", new CommandLinkTag()}
+        {"cmdlink", new CommandLinkTag()},
+        {"b", new BigTag()}
     };
 
     /// <summary>
@@ -27,7 +28,8 @@ public sealed class MarkupTagManager
     private readonly List<Type> _engineTypes = new()
     {
         typeof(ColorTag),
-        typeof(CommandLinkTag)
+        typeof(CommandLinkTag),
+        typeof(BigTag)
     };
 
     public void Initialize()

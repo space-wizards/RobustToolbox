@@ -50,6 +50,7 @@ public sealed partial class FormattedMessage
     private static IEnumerable<MarkupNode> ParseSafe(string input) => ParseNodesSafe.ParseOrThrow(input);
     private static Result<char, List<MarkupNode>> ParseResult(string input) => ParseNodes.Parse(input);
 
+    //TODO: Make Begin and End a cvar
     // Parser definitions for reserved characters
     private static readonly Parser<char, char> Escape = Char('\\');
     private static readonly Parser<char, char> Begin = Char('[');

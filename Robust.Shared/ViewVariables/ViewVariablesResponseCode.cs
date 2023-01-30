@@ -21,4 +21,9 @@ public enum ViewVariablesResponseCode : ushort
     ///     Object pointing to by the selector does not exist.
     /// </summary>
     NoObject = 404,
+
+    /// <summary>
+    ///     Failed to parse arguments.
+    /// </summary>
+    ParseFailure = 405,
 }

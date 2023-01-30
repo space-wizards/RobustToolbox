@@ -10,10 +10,10 @@ public delegate ViewVariablesPath? HandleTypePath(ViewVariablesPath path, string
 public delegate ViewVariablesPath? HandleTypePathNullable<in T>(T? obj, string relativePath);
 public delegate ViewVariablesPath? HandleTypePathComponent<in TComp>(EntityUid uid, TComp comp, string relativePath);
 public delegate ViewVariablesPath? HandleTypePath<in T>(T obj, string relativePath);
-public delegate IEnumerable<string> ListTypeCustomPaths(ViewVariablesPath path);
-public delegate IEnumerable<string> ListTypeCustomPaths<in T>(T obj);
-public delegate IEnumerable<string> ListTypeCustomPathsNullable<in T>(T? obj);
-public delegate IEnumerable<string> ListTypeCustomPathsComponent<in TComp>(EntityUid uid, TComp comp);
+public delegate IEnumerable<string> ListTypeCustomPaths(ViewVariablesPath path, VVListPathOptions options);
+public delegate IEnumerable<string> ListTypeCustomPaths<in T>(T obj, VVListPathOptions options);
+public delegate IEnumerable<string> ListTypeCustomPathsNullable<in T>(T? obj, VVListPathOptions options);
+public delegate IEnumerable<string> ListTypeCustomPathsComponent<in TComp>(EntityUid uid, TComp comp, VVListPathOptions options);
 public delegate ViewVariablesPath? PathHandler(ViewVariablesPath path);
 public delegate ViewVariablesPath? PathHandler<in T>(T obj);
 public delegate ViewVariablesPath? PathHandlerNullable<in T>(T? obj);
@@ -24,7 +24,7 @@ public delegate void ComponentPropertySetter<in TComp, in TValue>(EntityUid uid,
 public abstract class ViewVariablesTypeHandler
 {
     internal abstract ViewVariablesPath? HandlePath(ViewVariablesPath path, string relativePath);
-    internal abstract IEnumerable<string> ListPath(ViewVariablesPath path);
+    internal abstract IEnumerable<string> ListPath(ViewVariablesPath path, VVListPathOptions options);
 }
 
 public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
@@ -49,8 +49,8 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
         ViewVariablesPath? HandleWrapper(ViewVariablesPath path, string relativePath)
             => path.Get() is not {} obj ? null : handle((T)obj, relativePath);
 
-        IEnumerable<string> ListWrapper(ViewVariablesPath path)
-            => path.Get() is not {} obj ? Enumerable.Empty<string>() : list((T)obj);
+        IEnumerable<string> ListWrapper(ViewVariablesPath path, VVListPathOptions options)
+            => path.Get() is not {} obj ? Enumerable.Empty<string>() : list((T)obj, options);
 
         _handlers.Add(new TypeHandlerData(HandleWrapper, ListWrapper, handle, list));
         return this;
@@ -63,8 +63,8 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
         ViewVariablesPath? HandleWrapper(ViewVariablesPath path, string relativePath)
             => handle((T?)path.Get(), relativePath);
 
-        IEnumerable<string> ListWrapper(ViewVariablesPath path)
-            => list((T?) path.Get());
+        IEnumerable<string> ListWrapper(ViewVariablesPath path, VVListPathOptions options)
+            => list((T?) path.Get(), options);
 
         _handlers.Add(new TypeHandlerData(HandleWrapper, ListWrapper, handle, list));
         return this;
@@ -81,12 +81,12 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
             return handle(compPath.Owner, comp, relativePath);
         }
 
-        IEnumerable<string> ListWrapper(ViewVariablesPath path)
+        IEnumerable<string> ListWrapper(ViewVariablesPath path, VVListPathOptions options)
         {
             if (path is not ViewVariablesComponentPath compPath || compPath.Get() is not T comp)
                 return Enumerable.Empty<string>();
 
-            return list(compPath.Owner, comp);
+            return list(compPath.Owner, comp, options);
         }
 
         _handlers.Add(new TypeHandlerData(HandleWrapper, ListWrapper, handle, list));
@@ -254,11 +254,11 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
             : null;
     }
 
-    internal override IEnumerable<string> ListPath(ViewVariablesPath path)
+    internal override IEnumerable<string> ListPath(ViewVariablesPath path, VVListPathOptions options)
     {
         foreach (var data in _handlers)
         {
-            foreach (var p in data.List(path))
+            foreach (var p in data.List(path, options))
             {
                 yield return p;
             }

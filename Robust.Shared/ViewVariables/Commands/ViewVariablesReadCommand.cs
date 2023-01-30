@@ -6,6 +6,8 @@ public sealed class ViewVariablesReadCommand : ViewVariablesBaseCommand
 {
     public override string Command => "vvread";
 
+    protected override VVAccess RequiredAccess => VVAccess.ReadOnly;
+
     public override async void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length == 0)
@@ -20,7 +22,11 @@ public sealed class ViewVariablesReadCommand : ViewVariablesBaseCommand
         {
             if (!path.StartsWith("/c"))
             {
-                shell.WriteLine(await _vvm.ReadRemotePath(path) ?? "null");
+                var res = await _vvm.ReadRemotePath(path);
+                if (res.Item2 == ViewVariablesResponseCode.Ok)
+                    shell.WriteLine(res.Item1 ?? "null");
+                else
+                    shell.WriteError($"Failed to read. Error code: {res.Item2}. Error: {res.Item1}");
                 return;
             }
 
@@ -28,7 +34,9 @@ public sealed class ViewVariablesReadCommand : ViewVariablesBaseCommand
             path = path[2..];
         }
 
-        var obj = _vvm.ReadPathSerialized(path);
-        shell.WriteLine(obj ?? "null");
+        if (_vvm.TryReadPathSerialized(path, out var obj, out var error))
+            shell.WriteLine(obj ?? "null");
+        else
+            shell.WriteError($"Failed to read. Error: {error}");
     }
 }

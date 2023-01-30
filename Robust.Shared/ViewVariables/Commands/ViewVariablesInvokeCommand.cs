@@ -7,7 +7,9 @@ public sealed class ViewVariablesInvokeCommand : ViewVariablesBaseCommand
 {
     public override string Command => "vvinvoke";
 
-    public override void Execute(IConsoleShell shell, string argStr, string[] args)
+    protected override VVAccess RequiredAccess => VVAccess.Execute;
+
+    public async override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length == 0)
         {
@@ -22,7 +24,11 @@ public sealed class ViewVariablesInvokeCommand : ViewVariablesBaseCommand
         {
             if (!path.StartsWith("/c"))
             {
-                _vvm.InvokeRemotePath(path, arguments);
+                var res = await _vvm.InvokeRemotePath(path, arguments);
+                if (res.Item2 == ViewVariablesResponseCode.Ok)
+                    shell.WriteLine(res.Item1 ?? "null");
+                else
+                    shell.WriteError($"Failed to invoke. Error code: {res.Item2}. Error: {res.Item1}");
                 return;
             }
 
@@ -30,7 +36,9 @@ public sealed class ViewVariablesInvokeCommand : ViewVariablesBaseCommand
             path = path[2..];
         }
 
-        var obj = _vvm.InvokePath(path, arguments);
-        shell.WriteLine(obj?.ToString() ?? "null");
+        if (_vvm.TryInvokePath(path, arguments, out var obj, out var error))
+            shell.WriteLine(obj?.ToString() ?? "null");
+        else
+            shell.WriteError($"Failed to invoke. Error: {error}");
     }
 }

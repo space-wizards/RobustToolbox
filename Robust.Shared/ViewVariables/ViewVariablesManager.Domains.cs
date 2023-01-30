@@ -11,7 +11,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Shared.ViewVariables;
 
 public delegate (ViewVariablesPath? path, string[] segments) DomainResolveObject(string path);
-public delegate IEnumerable<string>? DomainListPaths(string[] segments);
+public delegate IEnumerable<string>? DomainListPaths(string[] segments, VVListPathOptions options);
 
 internal abstract partial class ViewVariablesManager
 {
@@ -62,7 +62,7 @@ internal abstract partial class ViewVariablesManager
             : EmptyResolve;
     }
 
-    private IEnumerable<string>? ListIoCPaths(string[] segments)
+    private IEnumerable<string>? ListIoCPaths(string[] segments, VVListPathOptions options)
     {
         if (segments.Length > 1 || IoCManager.Instance is not {} deps)
             return null;
@@ -96,7 +96,7 @@ internal abstract partial class ViewVariablesManager
         return (new ViewVariablesInstancePath(uid), segments[1..]);
     }
 
-    private IEnumerable<string>? ListEntityPaths(string[] segments)
+    private IEnumerable<string>? ListEntityPaths(string[] segments, VVListPathOptions options)
     {
         if (segments.Length > 1)
             return null;
@@ -136,7 +136,7 @@ internal abstract partial class ViewVariablesManager
             : EmptyResolve;
     }
 
-    private IEnumerable<string>? ListEntitySystemPaths(string[] segments)
+    private IEnumerable<string>? ListEntitySystemPaths(string[] segments, VVListPathOptions options)
     {
         if (segments.Length > 1)
             return null;
@@ -177,7 +177,7 @@ internal abstract partial class ViewVariablesManager
         return (new ViewVariablesInstancePath(prototype), segments[2..]);
     }
 
-    private IEnumerable<string>? ListPrototypePaths(string[] segments)
+    private IEnumerable<string>? ListPrototypePaths(string[] segments, VVListPathOptions options)
     {
         switch (segments.Length)
         {
@@ -223,7 +223,7 @@ internal abstract partial class ViewVariablesManager
         return (new ViewVariablesInstancePath(obj), segments[1..]);
     }
 
-    private IEnumerable<string>? ListStoredObjectPaths(string[] segments)
+    private IEnumerable<string>? ListStoredObjectPaths(string[] segments, VVListPathOptions options)
     {
         if (segments.Length > 1)
             return null;
@@ -246,7 +246,7 @@ internal abstract partial class ViewVariablesManager
         return (new ViewVariablesInstancePath(new VvTest()), segments);
     }
 
-    private IEnumerable<string>? ListVvTestObjectPaths(string[] segments)
+    private IEnumerable<string>? ListVvTestObjectPaths(string[] segments, VVListPathOptions options)
     {
         return null;
     }

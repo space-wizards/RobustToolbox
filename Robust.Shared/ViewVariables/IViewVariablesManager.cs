@@ -51,15 +51,15 @@ public interface IViewVariablesManager
 
     /// <param name="path">The path to be resolved.</param>
     /// <returns>An object representing the path, or null if the path couldn't be resolved.</returns>
-    ViewVariablesPath? ResolvePath(string path);
-    object? ReadPath(string path);
-    string? ReadPathSerialized(string path);
-    void WritePath(string path, string value);
-    object? InvokePath(string path, string arguments);
+    bool TryResolvePath(string path, out ViewVariablesPath? result, out string? error);
+    bool TryReadPath(string path, out object? result, out string? error);
+    bool TryReadPathSerialized(string path, out string? result, out string? error);
+    bool TryWritePath(string path, string value, out string? error);
+    bool TryInvokePath(string path, string arguments, out object? result, out string? error);
     IEnumerable<string> ListPath(string path, VVListPathOptions options);
 
-    Task<string?> ReadRemotePath(string path, ICommonSession? session = null);
-    Task WriteRemotePath(string path, string value, ICommonSession? session = null);
-    Task<string?> InvokeRemotePath(string path, string arguments, ICommonSession? session = null);
+    Task<(string?, ViewVariablesResponseCode)> ReadRemotePath(string path, ICommonSession? session = null);
+    Task<(string?, ViewVariablesResponseCode)> WriteRemotePath(string path, string value, ICommonSession? session = null);
+    Task<(string?, ViewVariablesResponseCode)> InvokeRemotePath(string path, string arguments, ICommonSession? session = null);
     Task<IEnumerable<string>> ListRemotePath(string path, VVListPathOptions options, ICommonSession? session = null);
 }

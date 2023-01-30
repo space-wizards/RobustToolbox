@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Robust.Shared.ViewVariables;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Reflection
 {
@@ -17,6 +17,21 @@ namespace Robust.Shared.Reflection
                 MemberTypes.Property => ((PropertyInfo) member).PropertyType,
                 _ => throw new ArgumentException("MemberInfo must be one of: EventInfo, FieldInfo, MethodInfo, PropertyInfo")
             };
+        }
+
+        internal static bool TryGetValue(this MemberInfo member, object instance, out object? value)
+        {
+            switch (member)
+            {
+                case FieldInfo field:
+                    value = field.GetValue(instance);
+                    return true;
+                case PropertyInfo property:
+                    value = property.GetValue(instance);
+                    return true;
+            }
+            value = null;
+            return false;
         }
 
         internal static object? GetValue(this MemberInfo member, object instance)
@@ -46,10 +61,14 @@ namespace Robust.Shared.Reflection
             }
         }
 
-        internal static MemberInfo? GetSingleMember(this Type type, string member, Type? declaringType = null)
+        internal static MemberInfo? GetSingleMember(
+            this Type type,
+            string member,
+            Type? declaringType = null,
+            BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
         {
             var members = type
-                .GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .GetMembers(flags)
                 .Where(m => m.Name == member)
                 .ToArray();
 
@@ -65,9 +84,31 @@ namespace Robust.Shared.Reflection
                 : members[0];
         }
 
-        internal static PropertyInfo? GetIndexer(this Type type)
+        /// <summary>
+        ///     Variant of <see cref="GetSingleMember(Type, string, Type?, BindingFlags)"/> that can also check for inherited private members.
+        /// </summary>
+        // why the fuck is this not just an available flag????
+        internal static MemberInfo? GetSingleMemberRecursive(
+            this Type type,
+            string member,
+            Type? declaringType = null,
+            BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
         {
-            foreach (var pInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            flags |= BindingFlags.DeclaredOnly;
+            foreach (var t in type.GetClassHierarchy())
+            {
+                var result = t.GetSingleMember(member, declaringType, flags);
+                if (result != null)
+                    return result;
+            }
+
+            return null;
+        }
+
+        internal static PropertyInfo? GetIndexer(this Type type,
+            BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+        {
+            foreach (var pInfo in type.GetProperties(flags))
             {
                 if (pInfo.GetIndexParameters().Length == 0)
                     continue;

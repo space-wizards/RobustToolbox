@@ -12,20 +12,31 @@ namespace Robust.Shared.Utility
         /// <summary>
         ///     Returns absolutely all fields, privates, readonlies, and ones from parents.
         /// </summary>
-        public static IEnumerable<FieldInfo> GetAllFields(this Type t)
+        public static IEnumerable<FieldInfo> GetAllFields(this Type t,
+            BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public)
         {
             // We need to fetch the entire class hierarchy and SelectMany(),
             // Because BindingFlags.FlattenHierarchy doesn't read privates,
             // Even when you pass BindingFlags.NonPublic.
+            flags |= BindingFlags.DeclaredOnly;
             foreach (var p in GetClassHierarchy(t))
             {
-                foreach (var field in p.GetFields(
-                    BindingFlags.NonPublic |
-                    BindingFlags.Instance |
-                    BindingFlags.DeclaredOnly |
-                    BindingFlags.Public))
+                foreach (var field in p.GetFields(flags))
                 {
                     yield return field;
+                }
+            }
+        }
+
+        public static IEnumerable<MemberInfo> GetAllMembers(this Type t,
+            BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public)
+        {
+            flags |= BindingFlags.DeclaredOnly;
+            foreach (var p in GetClassHierarchy(t))
+            {
+                foreach (var member in p.GetMembers(flags))
+                {
+                    yield return member;
                 }
             }
         }

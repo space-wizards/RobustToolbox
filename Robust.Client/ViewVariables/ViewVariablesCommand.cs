@@ -16,6 +16,7 @@ namespace Robust.Client.ViewVariables
         [Dependency] private readonly IEntityManager _entities = default!;
 
         public override string Command => "vv";
+        protected override VVAccess RequiredAccess => VVAccess.ReadOnly;
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {

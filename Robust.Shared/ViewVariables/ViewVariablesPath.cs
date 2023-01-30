@@ -109,7 +109,7 @@ internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
 
     public override object? Get()
     {
-        if (_access == null)
+        if (_access == null || (_access & VVAccess.ReadOnly) == 0)
             return null;
 
         try
@@ -126,7 +126,7 @@ internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
 
     public override void Set(object? value)
     {
-        if (_access != VVAccess.ReadWrite)
+        if (_access == null || (_access & VVAccess.Write) == 0)
             return;
 
         if (_object != null)
@@ -142,12 +142,10 @@ internal sealed class ViewVariablesMethodPath : ViewVariablesPath
     {
         _object = obj;
         _method = method;
-        ViewVariablesUtility.TryGetViewVariablesAccess(method, out _access);
     }
 
     private readonly object? _object;
     private readonly MethodInfo _method;
-    private readonly VVAccess? _access;
     public override Type Type => typeof(void);
     public override Type InvokeReturnType => _method.ReturnType;
 
@@ -159,22 +157,15 @@ internal sealed class ViewVariablesMethodPath : ViewVariablesPath
 
     public override object? Invoke(object?[]? parameters)
     {
-        if (_access != VVAccess.ReadWrite)
-            return null;
-
         return _object != null
             ? _method.Invoke(_object, parameters)
             : null;
     }
 
     public override Type[] InvokeParameterTypes
-        => _access == VVAccess.ReadWrite
-            ? _method.GetParameters().Select(info => info.ParameterType).ToArray()
-            : Array.Empty<Type>();
+        => _method.GetParameters().Select(info => info.ParameterType).ToArray();
     public override uint InvokeOptionalParameters
-        => _access == VVAccess.ReadWrite
-            ? (uint) _method.GetParameters().Count(info => info.IsOptional)
-            : 0;
+        => (uint)_method.GetParameters().Count(info => info.IsOptional);
 }
 
 internal sealed class ViewVariablesIndexedPath : ViewVariablesPath

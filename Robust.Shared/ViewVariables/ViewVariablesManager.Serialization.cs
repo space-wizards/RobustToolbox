@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using Robust.Shared.Serialization;
@@ -48,11 +49,19 @@ internal abstract partial class ViewVariablesManager
         return args.ToArray();
     }
 
-    private object?[]? DeserializeArguments(Type[] argumentTypes, int optionalArguments, string[] arguments)
+    private bool TryDeserializeArguments(
+        Type[] argumentTypes,
+        int optionalArguments,
+        string[] arguments,
+        [NotNullWhen(true)] out object?[]? args,
+        out string? error)
     {
-        // Incorrect number of arguments!
         if (arguments.Length < argumentTypes.Length - optionalArguments || arguments.Length > argumentTypes.Length)
-            return null;
+        {
+            error = $"Incorrect number of arguments. Expected between {argumentTypes.Length - optionalArguments} and {argumentTypes.Length} but got {argumentTypes.Length}";
+            args = null;
+            return false;
+        }
 
         var parameters = new List<object?>();
 
@@ -61,7 +70,11 @@ internal abstract partial class ViewVariablesManager
             var argument = arguments[i];
             var type = argumentTypes[i];
 
-            var value =  DeserializeValue(type, argument);
+            if (!TryDeserializeValue(type, argument, out var value, out error))
+            {
+                args = null;
+                return false;
+            }
 
             parameters.Add(value);
         }
@@ -71,14 +84,20 @@ internal abstract partial class ViewVariablesManager
             parameters.Add(Type.Missing);
         }
 
-        return parameters.ToArray();
+        args = parameters.ToArray();
+        error = null;
+        return true;
     }
 
-    private object? DeserializeValue(Type type, string value)
+    private bool TryDeserializeValue(Type type, string value, out object? result, out string? error)
     {
+        error = null;
         // Check if the argument is a VV path, and if not, deserialize the value with serv3.
-        if (ResolvePath(value)?.Get() is {} resolved && resolved.GetType().IsAssignableTo(type))
-            return resolved;
+        if (TryResolvePath(value, out var vvObj, out _) && vvObj.Get() is {} resolved && resolved.GetType().IsAssignableTo(type))
+        {
+            result = resolved;
+            return true;
+        }
 
         try
         {
@@ -88,11 +107,14 @@ internal abstract partial class ViewVariablesManager
             yamlStream.Load(stream);
             var document = yamlStream.Documents[0];
             var rootNode = document.RootNode;
-            return _serMan.Read(type, rootNode.ToDataNode());
+            result = _serMan.Read(type, rootNode.ToDataNode(), _context);
+            return true;
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            return null;
+            error = e.ToString();
+            result = null;
+            return false;
         }
     }
 
@@ -101,7 +123,7 @@ internal abstract partial class ViewVariablesManager
         if (value == null || type == typeof(void))
             return null;
 
-        var node = _serMan.WriteValue(type, value, true);
+        var node = _serMan.WriteValue(type, value, true, _context);
 
         // Don't replace an existing tag if it's null.
         if(!string.IsNullOrEmpty(nodeTag))

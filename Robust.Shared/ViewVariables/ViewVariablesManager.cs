@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -23,62 +24,86 @@ internal abstract partial class ViewVariablesManager : IViewVariablesManager
     [Dependency] private readonly INetManager _netMan = default!;
 
     private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
-
+    private ViewVariablesSerializationContext _context = default!;
     private const BindingFlags MembersBindings =
         BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
     public virtual void Initialize()
     {
+        _context = new ViewVariablesSerializationContext();
         InitializeDomains();
         InitializeTypeHandlers();
         InitializeRemote();
     }
 
-    public object? ReadPath(string path)
+    public bool TryReadPath(string path, out object? result, out string? error)
     {
-        return ResolvePath(path)?.Get();
+        if (TryResolvePath(path, out var resPath, out error))
+        {
+            result = resPath?.Get();
+            return true;
+        }
+
+        result = null;
+        return false;
     }
 
-    public string? ReadPathSerialized(string path)
+    public object? ReadPath(string path)
     {
-        if (ResolvePath(path) is not {} p)
-            return null;
+        TryReadPath(path, out var result, out _);
+        return result;
+    }
+
+    public bool TryReadPathSerialized(string path, out string? result, out string? error)
+    {
+        result = null;
+        if (!TryResolvePath(path, out var p, out error))
+            return false;
 
         var obj = p.Get();
 
         if (obj == null)
-            return "null";
+        {
+            result = "null";
+            return true;
+        }
 
         // This will throw if the object cannot be serialized, resort to ToString if so.
         try
         {
-            return SerializeValue(p.Type, obj);
+            result = SerializeValue(p.Type, obj);
         }
         catch (Exception)
         {
-            return obj.ToString();
+            result = obj.ToString();
         }
+        return true;
     }
 
-    public void WritePath(string path, string value)
+    public bool TryWritePath(string path, string value, out string? error)
     {
-        var resPath = ResolvePath(path);
-        resPath?.Set(DeserializeValue(resPath.Type, value));
+        if (!TryResolvePath(path, out var resPath, out error))
+            return false;
+
+        if (TryDeserializeValue(resPath.Type, value, out var result, out error))
+            resPath.Set(result);
+
+        return false;
     }
 
-    public object? InvokePath(string path, string arguments)
+    public bool TryInvokePath(string path, string arguments, out object? result, out string? error)
     {
-        var resPath = ResolvePath(path);
-
-        if (resPath == null)
-            return null;
+        result = null;
+        if (!TryResolvePath(path, out var resPath, out error))
+            return false;
 
         var args = ParseArguments(arguments);
 
-        var desArgs =
-            DeserializeArguments(resPath.InvokeParameterTypes, (int)resPath.InvokeOptionalParameters, args);
+        if (!TryDeserializeArguments(resPath.InvokeParameterTypes, (int)resPath.InvokeOptionalParameters, args, out var deserializedArgs, out error))
+            return false;
 
-        return resPath.Invoke(desArgs);
+        result = resPath.Invoke(deserializedArgs);
+        return true;
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Reflection;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.ViewVariables;
 
@@ -47,14 +48,14 @@ internal abstract partial class ViewVariablesManager
             return Domains();
 
         // Let the domain handle listing its paths...
-        var domainList = data.List(segments[1..]);
+        var domainList = data.List(segments[1..], options);
 
         // If the domain returned null, that means we're dealing with a path we need to resolve.
         if (domainList != null)
             return Full($"/{domain}", domainList);
 
         // Expensive :'(
-        var resolved = ResolvePath(path);
+        TryResolvePath(path, out var resolved, out _);
 
         // Attempt to get an object from the path...
         if (resolved?.Get() is not {} obj)
@@ -62,7 +63,7 @@ internal abstract partial class ViewVariablesManager
             // Okay maybe the last segment of the path is not full? Attempt to resolve the prior path
             segments = segments[..^1];
             path = string.Join('/', segments);
-            resolved = ResolvePath(path);
+            TryResolvePath(path, out resolved, out _);
 
             // If not even that worked, we probably just have an invalid path here... Return nothing.
             if(resolved?.Get() is not {} priorObj)
@@ -79,7 +80,7 @@ internal abstract partial class ViewVariablesManager
         // List paths from type handler, taking into account base types.
         foreach (var typeData in GetAllTypeHandlers(type))
         {
-            paths.AddRange(typeData.ListPath(resolved));
+            paths.AddRange(typeData.ListPath(resolved, options));
         }
 
         // We also use a set here for unique names as we need to handle member hiding properly...
@@ -87,28 +88,26 @@ internal abstract partial class ViewVariablesManager
         var uniqueMemberNames = new HashSet<string>(paths);
 
         // For member hiding handling purposes, we handle the members declared by the object's type itself first.
-        foreach (var memberInfo in type.GetMembers(MembersBindings).OrderBy(m => m.DeclaringType == type))
+        foreach (var memberInfo in type.GetAllMembers(MembersBindings).OrderBy(m => m.DeclaringType == type))
         {
             // Ignore the member if it's not a VV member.
             if (!ViewVariablesUtility.TryGetViewVariablesAccess(memberInfo, out var memberAccess))
                 continue;
 
             // Also take access level into account.
-            if (memberAccess < options.MinimumAccess)
+            if ((memberAccess & options.MinimumAccess) != options.MinimumAccess)
                 continue;
 
             var name = memberInfo.Name;
-
+;
             // If the member name is not unique, we adds the type specifier to it.
             if (!uniqueMemberNames.Add(name))
                 name = @$"{name}{{{memberInfo.DeclaringType?.FullName ?? typeof(void).FullName}}}";
 
             paths.Add(name);
 
-            var memberObj = memberInfo.GetValue(obj);
-
-            if(options.ListIndexers)
-                ListIndexers(memberObj, name, paths);
+            if (options.ListIndexers && memberInfo.TryGetValue(obj, out var value))
+                ListIndexers(value, name, paths);
         }
 
         if(options.ListIndexers)

@@ -212,7 +212,7 @@ namespace Robust.Server.ViewVariables
                 }
                 case ViewVariablesPathSelector paSelector:
                 {
-                    if (ResolvePath(paSelector.Path)?.Get() is not {} obj)
+                    if (!TryReadPath(paSelector.Path, out var res, out _) || res is not {} obj)
                     {
                         Deny(ViewVariablesResponseCode.NoObject);
                         return;

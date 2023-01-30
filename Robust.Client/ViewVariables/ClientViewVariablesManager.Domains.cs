@@ -19,7 +19,7 @@ internal sealed partial class ClientViewVariablesManager
             : null, segments);
     }
 
-    private IEnumerable<string>? ListGuiHoverPaths(string[] segments)
+    private IEnumerable<string>? ListGuiHoverPaths(string[] segments, VVListPathOptions options)
     {
         return null;
     }

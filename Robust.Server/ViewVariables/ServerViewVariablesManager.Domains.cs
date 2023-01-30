@@ -47,7 +47,7 @@ internal sealed partial class ServerViewVariablesManager
         return EmptyResolve;
     }
 
-    private IEnumerable<string>? ListPlayerPaths(string[] segments)
+    private IEnumerable<string>? ListPlayerPaths(string[] segments, VVListPathOptions options)
     {
         if (segments.Length > 1)
             return null;

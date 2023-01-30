@@ -18,9 +18,9 @@ internal abstract partial class ViewVariablesManager
     private uint _nextInvokeRequestId = 0;
     private uint _nextListRequestId = 0;
 
-    private readonly Dictionary<uint, TaskCompletionSource<string?>> _readRequests = new();
-    private readonly Dictionary<uint, TaskCompletionSource> _writeRequests = new();
-    private readonly Dictionary<uint, TaskCompletionSource<string?>> _invokeRequests = new();
+    private readonly Dictionary<uint, TaskCompletionSource<(string?, ViewVariablesResponseCode)>> _readRequests = new();
+    private readonly Dictionary<uint, TaskCompletionSource<(string?, ViewVariablesResponseCode)>> _writeRequests = new();
+    private readonly Dictionary<uint, TaskCompletionSource<(string?, ViewVariablesResponseCode)>> _invokeRequests = new();
     private readonly Dictionary<uint, TaskCompletionSource<IEnumerable<string>>> _listRequests = new();
 
     private void InitializeRemote()
@@ -36,10 +36,10 @@ internal abstract partial class ViewVariablesManager
         _netMan.RegisterNetMessage<MsgViewVariablesListPathRes>(ListRemotePathResponse);
     }
 
-    public Task<string?> ReadRemotePath(string path, ICommonSession? session = null)
+    public Task<(string?, ViewVariablesResponseCode)> ReadRemotePath(string path, ICommonSession? session = null)
     {
         if (!_netMan.IsConnected || (_netMan.IsServer && session == null))
-            return Task.FromResult<string?>(null);
+            return Task.FromResult<(string?, ViewVariablesResponseCode)>((null, ViewVariablesResponseCode.InvalidRequest));
 
         var msg = new MsgViewVariablesReadPathReq()
         {
@@ -48,17 +48,17 @@ internal abstract partial class ViewVariablesManager
             Session = session?.UserId ?? Guid.Empty,
         };
 
-        var tsc = new TaskCompletionSource<string?>();
+        var tsc = new TaskCompletionSource<(string?, ViewVariablesResponseCode)>();
         _readRequests.Add(msg.RequestId, tsc);
 
         SendMessage(msg, session?.ConnectedClient);
         return tsc.Task;
     }
 
-    public Task WriteRemotePath(string path, string value, ICommonSession? session = null)
+    public Task<(string?, ViewVariablesResponseCode)> WriteRemotePath(string path, string value, ICommonSession? session = null)
     {
         if (!_netMan.IsConnected || (_netMan.IsServer && session == null))
-            return Task.CompletedTask;
+            return Task.FromResult<(string?, ViewVariablesResponseCode)>((null, ViewVariablesResponseCode.InvalidRequest));
 
         var msg = new MsgViewVariablesWritePathReq()
         {
@@ -68,17 +68,17 @@ internal abstract partial class ViewVariablesManager
             Session = session?.UserId ?? Guid.Empty,
         };
 
-        var tsc = new TaskCompletionSource();
+        var tsc = new TaskCompletionSource<(string?, ViewVariablesResponseCode)>();
         _writeRequests.Add(msg.RequestId, tsc);
 
         SendMessage(msg, session?.ConnectedClient);
         return tsc.Task;
     }
 
-    public Task<string?> InvokeRemotePath(string path, string arguments, ICommonSession? session = null)
+    public Task<(string?, ViewVariablesResponseCode)> InvokeRemotePath(string path, string arguments, ICommonSession? session = null)
     {
         if (!_netMan.IsConnected || (_netMan.IsServer && session == null))
-            return Task.FromResult<string?>(null);
+            return Task.FromResult<(string?, ViewVariablesResponseCode)>((null, ViewVariablesResponseCode.InvalidRequest));
 
         var msg = new MsgViewVariablesInvokePathReq()
         {
@@ -88,7 +88,7 @@ internal abstract partial class ViewVariablesManager
             Session = session?.UserId ?? Guid.Empty,
         };
 
-        var tsc = new TaskCompletionSource<string?>();
+        var tsc = new TaskCompletionSource<(string?, ViewVariablesResponseCode)>();
         _invokeRequests.Add(msg.RequestId, tsc);
 
         SendMessage(msg, session?.ConnectedClient);
@@ -131,17 +131,18 @@ internal abstract partial class ViewVariablesManager
             var value = await ReadRemotePath(req.Path, session);
             SendMessage(new MsgViewVariablesReadPathRes(req)
             {
-                Response = new []{value ?? "null"}
+                Response = new []{value.Item1 ?? "null" },
+                ResponseCode = value.Item2,
+
             }, req.MsgChannel);
             return;
         }
 
-        var val = ReadPathSerialized(req.Path);
-
-        if (val == null)
+        if (!TryReadPathSerialized(req.Path, out var val, out var error) || val == null)
         {
             SendMessage(new MsgViewVariablesReadPathRes(req)
             {
+                Response = error == null ? Array.Empty<string>() : new[] { error }, 
                 ResponseCode = ViewVariablesResponseCode.NoObject,
             }, req.MsgChannel);
             return;
@@ -171,18 +172,26 @@ internal abstract partial class ViewVariablesManager
             return;
         }
 
-        var path = ResolvePath(req.Path);
-
-        if (path == null)
+        if (!TryResolvePath(req.Path, out var path, out var error))
         {
             SendMessage(new MsgViewVariablesWritePathRes(req)
             {
+                Response = error == null ? Array.Empty<string>(): new[] { error },
                 ResponseCode = ViewVariablesResponseCode.NoObject,
             }, req.MsgChannel);
             return;
         }
 
-        var value = req.Value != null ? DeserializeValue(path.Type, req.Value) : null;
+        object? value = null;
+        if (req.Value != null && !TryDeserializeValue(path.Type, req.Value, out value, out error))
+        {
+            SendMessage(new MsgViewVariablesWritePathRes(req)
+            {
+                Response = error == null ? Array.Empty<string>() : new[] { error },
+                ResponseCode = ViewVariablesResponseCode.ParseFailure,
+            }, req.MsgChannel);
+            return;
+        }
 
         try
         {
@@ -216,24 +225,36 @@ internal abstract partial class ViewVariablesManager
             var retVal = await InvokeRemotePath(req.Path, req.Value ?? string.Empty, session);
             SendMessage(new MsgViewVariablesInvokePathRes(req)
             {
-                Response = new []{retVal ?? "null"}
+                Response = new []{retVal.Item1 ?? "null"},
+                ResponseCode = retVal.Item2
             }, req.MsgChannel);
             return;
         }
 
-        var path = ResolvePath(req.Path);
+        ;
 
-        if (path == null)
+        if (!TryResolvePath(req.Path, out var path, out var error))
         {
             SendMessage(new MsgViewVariablesInvokePathRes(req)
             {
+                Response = error == null ? Array.Empty<string>() : new[] { error }, 
                 ResponseCode = ViewVariablesResponseCode.NoObject,
             }, req.MsgChannel);
             return;
         }
 
         var args = req.Value != null ? ParseArguments(req.Value) : Array.Empty<string>();
-        var desArgs = DeserializeArguments(path.InvokeParameterTypes, (int)path.InvokeOptionalParameters, args);
+
+        if (!TryDeserializeArguments(path.InvokeParameterTypes, (int)path.InvokeOptionalParameters, args, out var desArgs, out error))
+        {
+            SendMessage(new MsgViewVariablesInvokePathRes(req)
+            {
+                Response = error == null ? Array.Empty<string>() : new[] { error },
+                ResponseCode = ViewVariablesResponseCode.ParseFailure,
+            }, req.MsgChannel);
+            return;
+        }
+
         object? value;
 
         try
@@ -303,28 +324,19 @@ internal abstract partial class ViewVariablesManager
         if (!_readRequests.Remove(res.RequestId, out var tsc))
             return;
 
-        if (res.ResponseCode != ViewVariablesResponseCode.Ok)
-        {
-            tsc.TrySetResult(null); // TODO: Use exceptions
-            return;
-        }
-
         if (res.Response.Length == 0)
         {
-            tsc.TrySetResult(null);
+            tsc.TrySetResult((null, res.ResponseCode));
             return;
         }
 
-        tsc.TrySetResult(res.Response[0]);
+        tsc.TrySetResult((res.Response[0], res.ResponseCode));
     }
 
     private void WriteRemotePathResponse(MsgViewVariablesWritePathRes res)
     {
-        if (!_writeRequests.Remove(res.RequestId, out var tsc))
-            return;
-
-        // TODO: Use exceptions
-        tsc.SetResult();
+        if (_writeRequests.Remove(res.RequestId, out var tsc))
+            tsc.TrySetResult((null, res.ResponseCode));
     }
 
     private void InvokeRemotePathResponse(MsgViewVariablesInvokePathRes res)
@@ -332,19 +344,13 @@ internal abstract partial class ViewVariablesManager
         if (!_invokeRequests.Remove(res.RequestId, out var tsc))
             return;
 
-        if (res.ResponseCode != ViewVariablesResponseCode.Ok)
-        {
-            tsc.TrySetResult(null); // TODO: Use exceptions
-            return;
-        }
-
         if (res.Response.Length == 0)
         {
-            tsc.TrySetResult(null);
+            tsc.TrySetResult((null, res.ResponseCode));
             return;
         }
 
-        tsc.TrySetResult(res.Response[0]);
+        tsc.TrySetResult((res.Response[0], res.ResponseCode));
     }
 
     private void ListRemotePathResponse(MsgViewVariablesListPathRes res)

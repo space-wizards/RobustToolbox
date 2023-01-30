@@ -14,12 +14,14 @@ public sealed class MarkupTagManager
 
     private readonly Dictionary<string, IMarkupTag> _markupTagTypes = new()
     {
-        {"color", new ColorTag()}
+        {"color", new ColorTag()},
+        {"cmdLink", new CommandLinkTag()}
     };
 
     private readonly List<Type> _engineTypes = new()
     {
-        typeof(ColorTag)
+        typeof(ColorTag),
+        typeof(CommandLinkTag)
     };
 
     public void Initialize()

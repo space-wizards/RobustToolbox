@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.RichText;
@@ -35,16 +36,30 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public ValueList<int> LineBreaks;
 
-        //TODO: fill this dictionary by iterating over MarkupTags inside the constructor and use the index from iterating as the dictionary key
-        private readonly Dictionary<int, Control> tagControls = new();
+        private readonly Dictionary<int, Control> _tagControls = new();
 
-        public RichTextEntry(FormattedMessage message, MarkupTagManager tagManager)
+        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager)
         {
             Message = message;
             Height = 0;
             Width = 0;
             LineBreaks = default;
             _tagManager = tagManager;
+
+            var nodeIndex = -1;
+            foreach (var node in Message.Nodes)
+            {
+                nodeIndex++;
+
+                if (node.Name == null)
+                    continue;
+
+                if (!_tagManager.TryGetMarkupTag(node.Name, out var tag) || !tag.TryGetControl(node, out var control))
+                    continue;
+
+                parent.Children.Add(control);
+                _tagControls.Add(nodeIndex, control);
+            }
         }
 
         /// <summary>
@@ -70,33 +85,65 @@ namespace Robust.Client.UserInterface
 
             // Go over every node.
             // Nodes can change the markup drawing context and return additional text.
-            // It's also possible for nodes to return inline controls. They get treated as one large rune. (Not yet implemented.)
+            // It's also possible for nodes to return inline controls. They get treated as one large rune.
+            var nodeIndex = -1;
             foreach (var node in Message.Nodes)
             {
+                nodeIndex++;
                 var text = ProcessNode(node, context);
 
                 // And go over every character.
                 foreach (var rune in text.EnumerateRunes())
                 {
-                    wordWrap.NextRune(rune, out breakLine, out var breakNewLine, out var skip);
-                    CheckLineBreak(ref this, breakLine);
-                    CheckLineBreak(ref this, breakNewLine);
-                    if (skip)
+                    if (ProcessRune(ref this, rune, out breakLine))
                         continue;
 
                     // Uh just skip unknown characters I guess.
                     if (!context.Font.Peek().TryGetCharMetrics(rune, uiScale, out var metrics))
                         continue;
 
-                    wordWrap.NextMetrics(metrics, out breakLine, out var abort);
-                    CheckLineBreak(ref this, breakLine);
-                    if (abort)
+                    if (ProcessMetric(ref this, metrics, out breakLine))
                         return;
                 }
+
+                if (!_tagControls.TryGetValue(nodeIndex, out var control))
+                    continue;
+
+                if (ProcessRune(ref this, new Rune(' '), out breakLine))
+                    continue;
+
+                control.Measure(new Vector2(Width, Height));
+
+                var desiredSize = control.DesiredPixelSize;
+                var controlMetrics = new CharMetrics(
+                    0, 0,
+                    desiredSize.X,
+                    desiredSize.X,
+                    desiredSize.Y);
+
+                if (ProcessMetric(ref this, controlMetrics, out breakLine))
+                    return;
             }
 
             Width = wordWrap.FinalizeText(out breakLine);
             CheckLineBreak(ref this, breakLine);
+
+            bool ProcessRune(ref RichTextEntry src, Rune rune, out int? outBreakLine)
+            {
+                wordWrap.NextRune(rune, out breakLine, out var breakNewLine, out var skip);
+                CheckLineBreak(ref src, breakLine);
+                CheckLineBreak(ref src, breakNewLine);
+                outBreakLine = breakLine;
+                return skip;
+            }
+
+            bool ProcessMetric(ref RichTextEntry src, CharMetrics metrics, out int? outBreakLine)
+            {
+                wordWrap.NextMetrics(metrics, out breakLine, out var abort);
+                CheckLineBreak(ref src, breakLine);
+                outBreakLine = breakLine;
+                return abort;
+            }
 
             void CheckLineBreak(ref RichTextEntry src, int? line)
             {
@@ -123,9 +170,12 @@ namespace Robust.Client.UserInterface
             var globalBreakCounter = 0;
             var lineBreakIndex = 0;
             var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
+            var controlYAdvance = 0;
 
+            var nodeIndex = -1;
             foreach (var node in Message.Nodes)
             {
+                nodeIndex++;
                 var text = ProcessNode(node, context);
                 if (!context.Color.TryPeek(out var color) || !context.Font.TryPeek(out var font))
                 {
@@ -138,7 +188,8 @@ namespace Robust.Client.UserInterface
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
-                        baseLine = new Vector2(drawBox.Left, baseLine.Y + font.GetLineHeight(uiScale));
+                        baseLine = new Vector2(drawBox.Left, baseLine.Y + font.GetLineHeight(uiScale) + controlYAdvance);
+                        controlYAdvance = 0;
                         lineBreakIndex += 1;
                     }
 
@@ -147,6 +198,15 @@ namespace Robust.Client.UserInterface
 
                     globalBreakCounter += 1;
                 }
+
+                if (!_tagControls.TryGetValue(nodeIndex, out var control))
+                    continue;
+
+                control.Position = new Vector2(baseLine.X, baseLine.Y - defaultFont.GetAscent(uiScale));
+                control.Measure(new Vector2(Width, Height));
+                var advanceX = control.DesiredPixelSize.X;
+                controlYAdvance = Math.Max(0, control.DesiredPixelSize.Y - font.GetLineHeight(uiScale));
+                baseLine += new Vector2(advanceX, 0);
             }
         }
 

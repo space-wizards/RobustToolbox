@@ -88,7 +88,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public void AddMessage(FormattedMessage message)
         {
-            var entry = new RichTextEntry(message, _tagManager);
+            var entry = new RichTextEntry(message, this, _tagManager);
 
             entry.Update(_getFont(), _getContentBox().Width, UIScale);
 

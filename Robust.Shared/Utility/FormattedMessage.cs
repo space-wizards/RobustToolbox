@@ -91,7 +91,10 @@ public sealed partial class FormattedMessage
     {
         _nodes.Add(markupNode);
 
-        if (selfClosing && markupNode.Name != null)
+        if (markupNode.Name == null)
+            return;
+
+        if (selfClosing)
         {
             _nodes.Add(new MarkupNode(markupNode.Name, null, null, true));
             return;

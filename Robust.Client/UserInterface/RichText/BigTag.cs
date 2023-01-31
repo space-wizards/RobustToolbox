@@ -8,7 +8,7 @@ namespace Robust.Client.UserInterface.RichText;
 public sealed class BigTag : IMarkupTag
 {
     [Dependency] private readonly IResourceCache _resourceCache = default!;
-    public string Name => "b";
+    public string Name => "bold";
 
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {

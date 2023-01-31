@@ -19,7 +19,7 @@ public sealed class MarkupTagManager
     {
         {"color", new ColorTag()},
         {"cmdlink", new CommandLinkTag()},
-        {"b", new BigTag()}
+        {"bold", new BigTag()}
     };
 
     /// <summary>

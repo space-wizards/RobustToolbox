@@ -5,7 +5,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class BigTag : IMarkupTag
+public sealed class BoldTag : IMarkupTag
 {
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     public string Name => "bold";

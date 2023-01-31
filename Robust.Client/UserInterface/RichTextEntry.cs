@@ -92,6 +92,9 @@ namespace Robust.Client.UserInterface
                 nodeIndex++;
                 var text = ProcessNode(node, context);
 
+                if (!context.Font.TryPeek(out var font))
+                    font = defaultFont;
+
                 // And go over every character.
                 foreach (var rune in text.EnumerateRunes())
                 {
@@ -99,7 +102,7 @@ namespace Robust.Client.UserInterface
                         continue;
 
                     // Uh just skip unknown characters I guess.
-                    if (!context.Font.Peek().TryGetCharMetrics(rune, uiScale, out var metrics))
+                    if (!font.TryGetCharMetrics(rune, uiScale, out var metrics))
                         continue;
 
                     if (ProcessMetric(ref this, metrics, out breakLine))
@@ -150,7 +153,10 @@ namespace Robust.Client.UserInterface
                 if (line is { } l)
                 {
                     src.LineBreaks.Add(l);
-                    src.Height += context.Font.Peek().GetLineHeight(uiScale);
+                    if (!context.Font.TryPeek(out var font))
+                        font = defaultFont;
+
+                    src.Height += font.GetLineHeight(uiScale);
                 }
             }
         }

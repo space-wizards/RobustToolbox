@@ -19,7 +19,9 @@ public sealed class MarkupTagManager
     {
         {"color", new ColorTag()},
         {"cmdlink", new CommandLinkTag()},
-        {"bold", new BoldTag()}
+        {"font", new FontTag()},
+        {"bold", new BoldTag()},
+        {"italic", new ItalicTag()}
     };
 
     /// <summary>
@@ -29,7 +31,9 @@ public sealed class MarkupTagManager
     {
         typeof(ColorTag),
         typeof(CommandLinkTag),
-        typeof(BoldTag)
+        typeof(FontTag),
+        typeof(BoldTag),
+        typeof(ItalicTag)
     };
 
     public void Initialize()

@@ -15,7 +15,7 @@ using System.Linq;
 namespace Robust.Shared.GameObjects
 {
     public delegate void EntityUidQueryCallback(EntityUid uid);
-
+    
     /// <inheritdoc />
     [Virtual]
     public partial class EntityManager : IEntityManager
@@ -48,6 +48,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual IEntityNetworkManager? EntityNetManager => null;
 
+        protected readonly Queue<(string?, MapCoordinates)> QueuedEntitySpawns = new();
         protected readonly Queue<EntityUid> QueuedDeletions = new();
         protected readonly HashSet<EntityUid> QueuedDeletionsSet = new();
 
@@ -153,6 +154,15 @@ namespace Robust.Shared.GameObjects
                 QueuedDeletionsSet.Clear();
             }
 
+            using (histogram?.WithLabels("QueuedSpawn").NewTimer())
+            using (_prof.Group("QueueSpawn"))
+            {
+                while (QueuedEntitySpawns.TryDequeue(out (string? uid, MapCoordinates coordinates) t))
+                {
+                    SpawnEntity(t.uid, t.coordinates);
+                }
+            }
+
             using (histogram?.WithLabels("ComponentCull").NewTimer())
             using (_prof.Group("ComponentCull"))
             {
@@ -222,6 +232,22 @@ namespace Robust.Shared.GameObjects
             }
 
             return newEntity;
+        }
+
+        public virtual void QueueSpawnEntity(string? protoName, EntityCoordinates coordinates)
+        {
+            if (!coordinates.IsValid(this))
+                throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
+
+            coordinates.ToMap(this);
+            var transform = GetComponent<TransformComponent>(coordinates.EntityId);
+            var worldPos = _xforms.GetWorldMatrix(coordinates.EntityId).Transform(coordinates.Position);
+            var mapCoords = new MapCoordinates(worldPos, transform.MapID);
+            QueuedEntitySpawns.Enqueue((protoName, mapCoords));
+        }
+        public virtual void QueueSpawnEntity(string? protoName, MapCoordinates coordinates)
+        {
+            QueuedEntitySpawns.Enqueue((protoName, coordinates));
         }
 
         /// <inheritdoc />
@@ -480,6 +506,7 @@ namespace Robust.Shared.GameObjects
         {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
+            QueuedEntitySpawns.Clear();
             foreach (var e in GetEntities().ToArray())
             {
                 DeleteEntity(e);

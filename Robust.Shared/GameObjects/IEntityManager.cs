@@ -67,6 +67,24 @@ namespace Robust.Shared.GameObjects
         void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null);
 
         /// <summary>
+        /// Spawns an initialized entity at the default location, using the given prototype. Used in cases where adding an
+        /// entity immediately might cause an issue with an EntityQuery.
+        /// </summary>
+        /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
+        /// <param name="coordinates"></param>
+        /// <returns>Newly created entity.</returns>
+        void QueueSpawnEntity(string? protoName, EntityCoordinates coordinates);
+
+        /// <summary>
+        /// Spawns an entity at a specific position. Used in cases where adding an entity immediately might cause an issue
+        /// with an EntityQuery.
+        /// </summary>
+        /// <param name="protoName"></param>
+        /// <param name="coordinates"></param>
+        /// <returns></returns>
+        void QueueSpawnEntity(string? protoName, MapCoordinates coordinates);
+
+        /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
         /// </summary>
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>

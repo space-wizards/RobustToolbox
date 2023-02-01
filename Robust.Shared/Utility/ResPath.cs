@@ -25,7 +25,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     public const string SystemSeparatorStr = @"\";
 #else
     public const char SystemSeparator = '/';
-a    public const string SystemSeparatorStr = "/";
+    public const string SystemSeparatorStr = "/";
 #endif
 
     /// <summary>

@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
+using Robust.Shared.Collections;
 using Robust.Shared.Serialization;
 using ArgumentException = System.ArgumentException;
 
@@ -26,8 +25,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     public const string SystemSeparatorStr = @"\";
 #else
     public const char SystemSeparator = '/';
-
-    public const string SystemSeparatorStr = "/";
+a    public const string SystemSeparatorStr = "/";
 #endif
 
     /// <summary>
@@ -61,7 +59,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     ///     Internal system independent path. It uses `/` internally as
     ///     separator and will translate to it on creation.
     /// </summary>
-    internal readonly string CanonPath;
+    public readonly string CanonPath;
 
     private ResPath(string canonPath)
     {
@@ -562,18 +560,19 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </remarks>
     public ResPath Clean()
     {
-        var segments = new List<string>();
+
         if (CanonPath == "")
         {
             return Empty;
         }
 
+        var segments = new ValueList<string>();
         if (IsRooted)
         {
             segments.Add("/");
         }
 
-        foreach (var segment in EnumerateSegments())
+        foreach (var segment in CanonPath.Split(Separator))
         {
             // Skip pointless segments
             if (segment == "." || segment == "")
@@ -621,22 +620,31 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <summary>
     ///     Check whether a path is clean, i.e. <see cref="Clean"/> would not modify it.
     /// </summary>
-    /// <returns>if true if path wouldn't be modified </returns>
+    /// <returns>if true if path wouldn't be modified.</returns>
     public bool IsClean()
     {
-        var segments = CanonPath.Split(Separator).ToArray();
-        for (var i = 0; i < segments.Length; i++)
+        var rooted = IsRooted;
+        // False if the previous segment is `..` or first element
+        // True if segment is not first element or any thing else
+        var prevSegmentNotParent = false;
+
+        foreach (var segment in CanonPath.Split(Separator))
         {
-            if (segments[i] != "..") continue;
-
-            if (IsRooted)
+            if (segment == "..")
             {
-                return false;
+                // Why does this work?
+                // It works because Clean method will modify path if its rooted and `..` is encountered
+                // Otherwise path will be modified if a normal path segment `a` precedes a `..`
+                if (rooted || prevSegmentNotParent)
+                {
+                    return false;
+                }
+
+                prevSegmentNotParent = false;
             }
-
-            if (i > 0 && segments[i - 1] != "..")
+            else
             {
-                return false;
+                prevSegmentNotParent = true;
             }
         }
 
@@ -662,7 +670,7 @@ public readonly struct ResPath : IEquatable<ResPath>
 
 
     /// <summary>
-    ///     Enumerates the segments of this path.
+    ///     Enumerates the segments of this path. A convenience method for <c>CanonPath.Split(Separator)</c>
     /// </summary>
     /// <remarks>
     ///     Segments are returned from highest to deepest.
@@ -670,11 +678,8 @@ public readonly struct ResPath : IEquatable<ResPath>
     ///     No special indication is given for rooted paths,
     ///     so <c>/a/b</c> yields the same as <c>a/b</c>.
     /// </remarks>
-    public IEnumerable<string> EnumerateSegments()
+    public string[] EnumerateSegments()
     {
-        foreach (var fragment in CanonPath.Split(Separator))
-        {
-            yield return fragment;
-        }
+        return CanonPath.Split(Separator);
     }
 }

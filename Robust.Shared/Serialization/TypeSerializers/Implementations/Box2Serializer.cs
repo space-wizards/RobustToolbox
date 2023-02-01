@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public sealed class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>, ITypeCopyCreator<Box2>
     {
-        private static void NextOrThrow(
+        internal static void NextOrThrow(
             ref ReadOnlySpan<char> source,
             out ReadOnlySpan<char> splitValue,
             string errValue)
@@ -85,7 +85,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
-            return new(source.Left, source.Bottom, source.Right, source.Top);
+            return new Box2(source.Left, source.Bottom, source.Right, source.Top);
         }
     }
 }

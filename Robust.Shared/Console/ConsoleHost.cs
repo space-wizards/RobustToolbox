@@ -55,7 +55,7 @@ namespace Robust.Shared.Console
             // search for all client commands in all assemblies, and register them
             foreach (var type in ReflectionManager.GetAllChildren<IConsoleCommand>())
             {
-                var instance = (IConsoleCommand)_typeFactory.CreateInstanceUnchecked(type, true);
+                var instance = (IConsoleCommand)_typeFactory.CreateInstanceUnchecked(type, null, true);
                 if (RegisteredCommands.TryGetValue(instance.Command, out var duplicate))
                 {
                     throw new InvalidImplementationException(instance.GetType(), typeof(IConsoleCommand),

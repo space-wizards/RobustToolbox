@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+- Cleaned up `DynamicTypeFactory` and its interface, removed redundant overloads.
 
 
 ## 0.85.1.1
@@ -106,7 +106,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added Pidgin parser to the sandbox whitelisted. 
+* Added Pidgin parser to the sandbox whitelisted.
 
 ### Bugfixes
 

@@ -17,6 +17,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Window loop
             void EnterWindowLoop();
+            void PollEvents();
             void TerminateWindowLoop();
 
             // Event pump

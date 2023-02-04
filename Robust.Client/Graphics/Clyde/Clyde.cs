@@ -72,6 +72,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private IBindingsContext _glBindingsContext = default!;
         private bool _earlyGLInit;
+        private bool _threadWindowApi;
 
         public Clyde()
         {
@@ -92,6 +93,7 @@ namespace Robust.Client.Graphics.Clyde
             _cfg.OnValueChanged(CVars.DisplaySoftShadows, SoftShadowsChanged, true);
             // I can't be bothered to tear down and set these threads up in a cvar change handler.
             _threadWindowBlit = _cfg.GetCVar(CVars.DisplayThreadWindowBlit);
+            _threadWindowApi = _cfg.GetCVar(CVars.DisplayThreadWindowApi);
 
             return InitWindowing();
         }
@@ -107,7 +109,7 @@ namespace Robust.Client.Graphics.Clyde
             return true;
         }
 
-        public bool SeparateWindowThread => true;
+        public bool SeparateWindowThread => _threadWindowApi;
 
         public void EnterWindowLoop()
         {
@@ -121,6 +123,11 @@ namespace Robust.Client.Graphics.Clyde
 
         public void FrameProcess(FrameEventArgs eventArgs)
         {
+            if (!_threadWindowApi)
+            {
+                _windowing!.PollEvents();
+            }
+
             _windowing?.FlushDispose();
             FlushShaderInstanceDispose();
             FlushRenderTargetDispose();

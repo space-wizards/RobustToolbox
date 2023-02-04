@@ -953,6 +953,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayWin11ImmersiveDarkMode =
             CVarDef.Create("display.win11_immersive_dark_mode", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true, run the windowing system in another thread from the game thread.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadWindowApi =
+            CVarDef.Create("display.thread_window_api", false, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */

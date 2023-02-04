@@ -92,6 +92,12 @@ namespace Robust.Client.Graphics.Clyde
             _cfg.OnValueChanged(CVars.DisplayMaxLightsPerScene, MaxLightsPerSceneChanged, true);
             _cfg.OnValueChanged(CVars.DisplaySoftShadows, SoftShadowsChanged, true);
             // I can't be bothered to tear down and set these threads up in a cvar change handler.
+
+            // Windows and Linux can be trusted to not explode with threaded windowing,
+            // macOS cannot.
+            if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+                _cfg.OverrideDefault(CVars.DisplayThreadWindowApi, true);
+
             _threadWindowBlit = _cfg.GetCVar(CVars.DisplayThreadWindowBlit);
             _threadWindowApi = _cfg.GetCVar(CVars.DisplayThreadWindowApi);
 

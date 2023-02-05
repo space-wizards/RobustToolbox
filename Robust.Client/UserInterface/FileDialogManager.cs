@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -39,6 +40,42 @@ namespace Robust.Client.UserInterface
             }
 
             return File.Open(name, FileMode.Open);
+        }
+
+
+
+        public async IAsyncEnumerable<FileInFolder> OpenFolder()
+        {
+            var folderName = await GetOpenFolderName();
+
+            if (folderName == null)
+                yield break;
+
+            // Grab RSIs/folders nested 1 deep
+            foreach (var dir in Directory.EnumerateDirectories(folderName))
+            {
+                foreach (var file in Directory.EnumerateFiles(dir))
+                {
+                    yield return new FileInFolder(File.Open(file,FileMode.Open),
+                        Path.GetRelativePath(folderName,file));
+                }
+            }
+
+            foreach (var file in Directory.EnumerateFiles(folderName))
+            {
+                yield return new FileInFolder(File.Open(file,FileMode.Open),
+                    Path.GetRelativePath(folderName,file));
+            }
+        }
+
+        private async Task<string?> GetOpenFolderName()
+        {
+            if (await IsKDialogAvailable())
+            {
+                return await OpenFolderKDialog();
+            }
+
+            return await OpenFolderNfd();
         }
 
         private async Task<string?> GetOpenFileName(FileDialogFilters? filters)
@@ -144,20 +181,20 @@ namespace Robust.Client.UserInterface
             });
         }
 
-        /*
-        private unsafe Task<string?> OpenFolderNfd()
-        {
-            // Have to run it in the thread pool to avoid blocking the main thread.
-            return RunAsyncMaybe(() =>
-            {
-                byte* outPath;
 
-                var result = sw_NFD_PickFolder(null, &outPath);
+         private unsafe Task<string?> OpenFolderNfd()
+         {
+             // Have to run it in the thread pool to avoid blocking the main thread.
+             return RunAsyncMaybe(() =>
+             {
+                 byte* outPath;
 
-                return HandleNfdResult(result, outPath);
-            });
-        }
-        */
+                 var result = sw_NFD_PickFolder(null, &outPath);
+
+                 return HandleNfdResult(result, outPath);
+             });
+         }
+
 
         // ReSharper disable once MemberCanBeMadeStatic.Local
         private Task<string?> RunAsyncMaybe(Func<string?> action)
@@ -303,12 +340,11 @@ namespace Robust.Client.UserInterface
             return RunKDialog("--getsavefilename", Environment.GetEnvironmentVariable("HOME")!, filtersFormatted);
         }
 
-        /*
+
         private Task<string?> OpenFolderKDialog()
         {
             return RunKDialog("--getexistingdirectory");
         }
-        */
 
         private async Task<string?> RunKDialog(params string[] options)
         {
@@ -371,11 +407,11 @@ namespace Robust.Client.UserInterface
         private static extern unsafe sw_nfdresult
             sw_NFD_SaveDialog(byte* filterList, byte* defaultPath, byte** outPath);
 
-        /*
+
         [DllImport("swnfd.dll")]
         private static extern unsafe sw_nfdresult
             sw_NFD_PickFolder(byte* defaultPath, byte** outPath);
-            */
+
 
         [DllImport("swnfd.dll")]
         private static extern unsafe void sw_NFD_Free(void* ptr);

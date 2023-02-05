@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Client.UserInterface
 {
@@ -13,6 +15,10 @@ namespace Robust.Client.UserInterface
             return Task.FromResult<Stream?>(null);
         }
 
+        public async IAsyncEnumerable<FileInFolder> OpenFolder()
+        {
+            yield break;
+        }
         public Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(FileDialogFilters? filters = null)
         {
             return Task.FromResult<(Stream fileStream, bool alreadyExisted)?>(null);

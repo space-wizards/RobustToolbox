@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -22,6 +23,15 @@ namespace Robust.Client.UserInterface
         Task<Stream?> OpenFile(FileDialogFilters? filters = null);
 
         /// <summary>
+        ///     Open a folder dialog used for opening a directory.
+        /// </summary>
+        /// <returns>
+        /// An array of task<streams> for all items in the directory.
+        /// <see langword="null" /> if the user cancelled the action.
+        /// </returns>
+        IAsyncEnumerable<FileInFolder> OpenFolder();
+
+        /// <summary>
         ///     Open a file dialog used for saving a single file.
         /// </summary>
         /// <returns>
@@ -30,4 +40,6 @@ namespace Robust.Client.UserInterface
         /// </returns>
         Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(FileDialogFilters? filters = null);
     }
+
+    public readonly record struct FileInFolder(Stream Stream, string filename);
 }

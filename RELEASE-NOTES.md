@@ -39,15 +39,17 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Threaded windowing API usage is now behind a CVar, disabled by default on macOS to avoid crashes.
 
 ### Bugfixes
 
-*None yet*
+* MacOS with the SDL2 backend now has DPI scaling enabled.
+    * Fixed DPI scaling calculations on platforms outside Windows.
 
 ### Other
 
-*None yet*
+* System F3 panel now correctly fetches processor model on Apple Silicon devices.
+* UI content scale is now listed in the F3 coordinates panel.
 
 ### Internal
 
@@ -106,7 +108,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added Pidgin parser to the sandbox whitelisted. 
+* Added Pidgin parser to the sandbox whitelisted.
 
 ### Bugfixes
 

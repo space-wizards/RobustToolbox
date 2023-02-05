@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Robust.Shared.Map;
@@ -207,6 +207,11 @@ internal partial class Clyde
 
                 if (s.CreationApi == GLContextCreationApi.Egl)
                     WsiShared.EnsureEglAvailable();
+            }
+
+            if (OperatingSystem.IsMacOS())
+            {
+                windowFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
             }
 
             nint window = SDL_CreateWindow(

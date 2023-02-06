@@ -53,8 +53,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
-
+* `keyinfo` command has enum completions.
 
 ## 0.85.1.1
 

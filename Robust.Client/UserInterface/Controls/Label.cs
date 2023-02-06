@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Robust.Client.Graphics;
 using Robust.Shared.Animations;
@@ -253,7 +254,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (ClipText)
             {
-                return (0, _cachedTextHeight / UIScale);
+                return (_cachedTextWidths.Max() / UIScale, _cachedTextHeight / UIScale);
             }
 
             var totalWidth = 0;

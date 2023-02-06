@@ -24,7 +24,7 @@ public partial class PrototypeManager
     {
         _hasEverBeenReloaded = true;
         var streams = Resources.ContentFindFiles(path)
-            .Where(filePath => filePath.Extension is "yml" or "yaml" && !filePath.Filename.StartsWith("."))
+            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."))
             .ToArray();
 
         // Shuffle to avoid input data patterns causing uneven thread workloads.

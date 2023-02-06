@@ -24,7 +24,7 @@ public partial class PrototypeManager
     {
         _hasEverBeenReloaded = true;
         var streams = Resources.ContentFindFiles(path)
-            .Where(filePath => filePath.Extension is "yml" or "yaml" && !filePath.Filename.StartsWith("."))
+            .Where(ResourcePath.IsYamlResourceFile)
             .ToArray();
 
         // Shuffle to avoid input data patterns causing uneven thread workloads.
@@ -84,7 +84,7 @@ public partial class PrototypeManager
     public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
     {
         var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
-            .Where(filePath => filePath.Extension is "yml" or "yaml" && !filePath.Filename.StartsWith("."));
+            .Where(ResourcePath.IsYamlResourceFile);
 
         var dict = new Dictionary<string, HashSet<ErrorNode>>();
         foreach (var resourcePath in streams)

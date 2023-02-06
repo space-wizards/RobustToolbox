@@ -84,7 +84,7 @@ public partial class PrototypeManager
     public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
     {
         var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
-            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
+            .Where(filePath => filePath.Extension is "yml" or "yaml" && !filePath.Filename.StartsWith("."));
 
         var dict = new Dictionary<string, HashSet<ErrorNode>>();
         foreach (var resourcePath in streams)

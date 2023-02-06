@@ -47,7 +47,7 @@ namespace Robust.Client.Graphics.Clyde
             nint? WindowGetWin32Window(WindowReg window);
 
             // Keyboard
-            string KeyGetName(Keyboard.Key key);
+            string? KeyGetName(Keyboard.Key key);
 
             // Clipboard
             Task<string> ClipboardGetText(WindowReg mainWindow);

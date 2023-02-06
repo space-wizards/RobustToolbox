@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Robust.Client.Input;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using static SDL2.SDL;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -17,7 +15,6 @@ internal partial class Clyde
     {
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly ILocalizationManager _loc = default!;
 
         private readonly Clyde _clyde;
         private GCHandle _selfGCHandle;
@@ -73,7 +70,7 @@ internal partial class Clyde
 
             InitCursors();
             InitMonitors();
-            InitKeyMap();
+            ReloadKeyMap();
 
             SDL_AddEventWatch(&EventWatch, (void*) GCHandle.ToIntPtr(_selfGCHandle));
 

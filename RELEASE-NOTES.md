@@ -50,6 +50,7 @@ END TEMPLATE-->
 
 * System F3 panel now correctly fetches processor model on Apple Silicon devices.
 * UI content scale is now listed in the F3 coordinates panel.
+* SDL2 backend is now wired up to update key names dynamically on keyboard mode change.
 
 ### Internal
 

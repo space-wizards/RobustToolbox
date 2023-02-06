@@ -77,6 +77,9 @@ internal partial class Clyde
                 case EventWindowsFakeV ev:
                     ProcessWindowsFakeV(ev);
                     break;
+                case EventKeyMapChanged:
+                    ProcessKeyMapChanged();
+                    break;
                 default:
                     _sawmill.Error($"Unknown SDL2 event type: {evb.GetType().Name}");
                     break;
@@ -250,6 +253,11 @@ internal partial class Clyde
             };
 
             EmitKeyEvent(key, type, false, 0, 0);
+        }
+
+        private void ProcessKeyMapChanged()
+        {
+            _clyde.SendInputModeChanged();
         }
     }
 }

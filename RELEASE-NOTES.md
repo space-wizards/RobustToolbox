@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Undid `*.yaml` prototype loading change from previous version.
 
 ### New features
 
@@ -78,6 +78,7 @@ END TEMPLATE-->
 * UI content scale is now listed in the F3 coordinates panel.
 * SDL2 backend is now wired up to update key names dynamically on keyboard mode change.
 * The prototype reload event is no longer wrapped under #if !FULL_RELEASE.
+* The engine now loads `*.yaml` files (previously loading only `*.yml`) for prototypes.
 
 ### Internal
 

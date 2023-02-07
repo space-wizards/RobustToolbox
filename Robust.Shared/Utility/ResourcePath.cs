@@ -717,11 +717,5 @@ namespace Robust.Shared.Utility
                 throw new ArgumentException("Separator may not be . or ..");
             }
         }
-
-        public static bool IsYamlResourceFile(ResourcePath filePath)
-        {
-            return filePath.Extension is "yml" or "yaml" &&
-                   !filePath.Filename.StartsWith(".", StringComparison.Ordinal);
-        }
     }
 }

@@ -8,6 +8,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Timing;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -86,20 +87,13 @@ namespace Robust.Client.Prototypes
             foreach (var path in Resources.GetContentRoots().Select(r => r.ToString())
                 .Where(r => Directory.Exists(r + "/Prototypes")).Select(p => p + "/Prototypes"))
             {
-                var watcherYml = new FileSystemWatcher(path, "*.yml")
+                var watcher = new FileSystemWatcher(path, "*.yml")
                 {
                     IncludeSubdirectories = true,
                     NotifyFilter = NotifyFilters.LastWrite
                 };
 
-                //filesystemwatcher doesnt support multiple filters, so we gotta do this. its a debug feature, so i dont think its that critical
-                var watcherYaml = new FileSystemWatcher(path, "*.yaml")
-                {
-                    IncludeSubdirectories = true,
-                    NotifyFilter = NotifyFilters.LastWrite
-                };
-
-                void OnWatcherOnChanged(object _, FileSystemEventArgs args)
+                watcher.Changed += (_, args) =>
                 {
                     switch (args.ChangeType)
                     {
@@ -129,17 +123,12 @@ namespace Robust.Client.Prototypes
                             _reloadQueue.Add(relative);
                         }
                     });
-                }
-
-                watcherYml.Changed += OnWatcherOnChanged;
-                watcherYaml.Changed += OnWatcherOnChanged;
+                };
 
                 try
                 {
-                    watcherYml.EnableRaisingEvents = true;
-                    watcherYaml.EnableRaisingEvents = true;
-                    _watchers.Add(watcherYml);
-                    _watchers.Add(watcherYaml);
+                    watcher.EnableRaisingEvents = true;
+                    _watchers.Add(watcher);
                 }
                 catch (IOException ex)
                 {

@@ -37,6 +37,8 @@ using FN_DECIMAL = System.Single;
 using System;
 using System.Runtime.CompilerServices;
 
+#nullable disable
+
 namespace Robust.Shared.Noise
 {
 #pragma warning disable RA0003

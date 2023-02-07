@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NetSerializer;
@@ -16,7 +15,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 using static Robust.Shared.Utility.Base64Helpers;
@@ -121,6 +119,19 @@ namespace Robust.Shared.Serialization
         /// Thrown if the mapping is not locked.
         /// </exception>
         public ReadOnlySpan<byte> MappedStringsHash => _stringMapHash;
+
+        public (byte[] mapHash, byte[] package) GeneratePackage() => _dict.GeneratePackage();
+
+        public void SetPackage(byte[] hash, byte[] package)
+        {
+            _dict.LoadFromPackage(package, out var hashResult);
+
+            if (!hashResult.SequenceEqual(hash!))
+            {
+                throw new InvalidOperationException("Hash mismatch when setting string package." +
+                                                    $"\n{ConvertToBase64Url(hashResult)} vs. {ConvertToBase64Url(hash)}");
+            }
+        }
 
         public bool EnableCaching { get; set; } = true;
 

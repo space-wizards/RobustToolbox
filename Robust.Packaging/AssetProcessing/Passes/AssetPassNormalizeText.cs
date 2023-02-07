@@ -12,6 +12,7 @@ public sealed class AssetPassNormalizeText : AssetPass
         "txt",
         "json",
         "yml",
+        "yaml",
         "html",
         "css",
         "js",

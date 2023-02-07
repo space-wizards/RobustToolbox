@@ -1,4 +1,5 @@
 #if DEBUG
+using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -28,7 +29,7 @@ namespace Robust.Client.GameObjects
                         EntitySystem.Get<EntityLookupSystem>(),
                         IoCManager.Resolve<IEyeManager>(),
                         IoCManager.Resolve<IMapManager>(),
-                        Get<RenderingTreeSystem>());
+                        Get<LightTreeSystem>());
 
                     overlayManager.AddOverlay(_lightOverlay);
                 }
@@ -48,16 +49,16 @@ namespace Robust.Client.GameObjects
             private IEyeManager _eyeManager;
             private IMapManager _mapManager;
 
-            private RenderingTreeSystem _tree;
+            private LightTreeSystem _trees;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public DebugLightOverlay(EntityLookupSystem lookup, IEyeManager eyeManager, IMapManager mapManager, RenderingTreeSystem tree)
+            public DebugLightOverlay(EntityLookupSystem lookup, IEyeManager eyeManager, IMapManager mapManager, LightTreeSystem trees)
             {
                 _lookup = lookup;
                 _eyeManager = eyeManager;
                 _mapManager = mapManager;
-                _tree = tree;
+                _trees = trees;
             }
 
             protected internal override void Draw(in OverlayDrawArgs args)
@@ -65,9 +66,9 @@ namespace Robust.Client.GameObjects
                 var map = _eyeManager.CurrentMap;
                 if (map == MapId.Nullspace) return;
 
-                foreach (var tree in _tree.GetRenderTrees(map, args.WorldBounds))
+                foreach (var treeComp in _trees.GetIntersectingTrees(map, args.WorldBounds))
                 {
-                    foreach (var (light, xform) in tree.LightTree)
+                    foreach (var (light, xform) in treeComp.Tree)
                     {
                         var aabb = _lookup.GetWorldAABB(light.Owner, xform);
                         if (!aabb.Intersects(args.WorldAABB)) continue;

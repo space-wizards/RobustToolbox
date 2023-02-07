@@ -21,7 +21,7 @@ public sealed class CustomQueueSerializer<T, TCustomSerializer>
         SequenceDataNode node,
         IDependencyCollection dependencies,
         SerializationHookContext hookCtx,
-        ISerializationContext? context, ISerializationManager.InstantiationDelegate<Queue<T>>? instanceProvider = null)
+        ISerializationContext? context, ISerializationManager.InstantiationDelegate<Queue<T>>? instanceProvider)
     {
         var queue = instanceProvider != null ? instanceProvider() : new Queue<T>();
 

@@ -243,6 +243,8 @@ namespace Robust.Client.Graphics.Clyde
 
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
+            SetBlendFunc(loaded.BlendMode);
+
             var primitiveType = MapPrimitiveType(command.PrimitiveType);
             if (command.Indexed)
             {
@@ -255,6 +257,9 @@ namespace Robust.Client.Graphics.Clyde
                 GL.DrawArrays(primitiveType, command.StartIndex, command.Count);
                 CheckGlError();
             }
+
+            ResetBlendFunc();
+            GL.BlendEquation(BlendEquationMode.FuncAdd);
 
             _debugStats.LastGLDrawCalls += 1;
         }
@@ -869,6 +874,23 @@ namespace Robust.Client.Graphics.Clyde
             GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
         }
 
+        private void SetBlendFunc(ShaderBlendMode blend)
+        {
+            switch (blend)
+                {
+                    case ShaderBlendMode.Add:
+                        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.DstAlpha);
+                        break;
+                    case ShaderBlendMode.Subtract:
+                        GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.DstAlpha, BlendingFactorSrc.Zero, BlendingFactorDest.DstAlpha);
+                        GL.BlendEquation(BlendEquationMode.FuncReverseSubtract);
+                        break;
+                    case ShaderBlendMode.Multiply:
+                        GL.BlendFunc(BlendingFactor.DstColor, BlendingFactor.OneMinusSrcAlpha);
+                        break;
+                }
+        }
+
         private void ResetBlendFunc()
         {
             GL.BlendFuncSeparate(
@@ -1006,45 +1028,6 @@ namespace Robust.Client.Graphics.Clyde
             LineList,
             LineStrip,
             PointList,
-        }
-
-        private sealed class SpriteDrawingOrderComparer : IComparer<int>
-        {
-            private readonly RefList<(SpriteComponent, Vector2, Angle, Box2)> _drawList;
-
-            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Vector2, Angle, Box2)> drawList)
-            {
-                _drawList = drawList;
-            }
-
-            public int Compare(int x, int y)
-            {
-                var a = _drawList[x];
-                var b = _drawList[y];
-
-                var cmp = a.Item1.DrawDepth.CompareTo(b.Item1.DrawDepth);
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                cmp = a.Item1.RenderOrder.CompareTo(b.Item1.RenderOrder);
-
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                // compare the top of the sprite's BB for y-sorting. Because screen coordinates are flipped, the "top" of the BB is actually the "bottom".
-                cmp = a.Item4.Top.CompareTo(b.Item4.Top);
-
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                return a.Item1.Owner.CompareTo(b.Item1.Owner);
-            }
         }
 
         private readonly struct FullStoredRendererState

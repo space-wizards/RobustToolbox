@@ -43,6 +43,9 @@ internal partial class Clyde
                 case SDL_TEXTEDITING:
                     ProcessSdl2EventTextEditing(in ev.edit);
                     break;
+                case SDL_KEYMAPCHANGED:
+                    ProcessSdl2EventKeyMapChanged();
+                    break;
                 case SDL_TEXTEDITING_EXT:
                     ProcessSdl2EventTextEditingExt(in ev.editExt);
                     break;
@@ -123,6 +126,12 @@ internal partial class Clyde
             var str = Marshal.PtrToStringUTF8((nint) text) ?? "";
             // _logManager.GetSawmill("ime").Debug($"Editing: '{str}', start: {start}, len: {length}");
             SendEvent(new EventTextEditing(window, str, start, length));
+        }
+
+        private void ProcessSdl2EventKeyMapChanged()
+        {
+            ReloadKeyMap();
+            SendEvent(new EventKeyMapChanged());
         }
 
         private void ProcessSdl2KeyEvent(in SDL_KeyboardEvent ev)
@@ -265,6 +274,8 @@ internal partial class Clyde
 
         private record EventWindowsFakeV(HWND Window,
             uint Message, WPARAM WParam) : EventBase;
+
+        private record EventKeyMapChanged : EventBase;
 
         [StructLayout(LayoutKind.Sequential)]
         [SuppressMessage("ReSharper", "InconsistentNaming")]

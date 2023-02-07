@@ -41,18 +41,14 @@ namespace Robust.UnitTesting.Shared.Physics
             var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
             var body1 = entManager.AddComponent<PhysicsComponent>(ent1);
             var body2 = entManager.AddComponent<PhysicsComponent>(ent2);
-            physicsSystem.SetBodyType(body1, BodyType.Dynamic);
-            physicsSystem.SetBodyType(body2, BodyType.Dynamic);
+            var manager1 = entManager.EnsureComponent<FixturesComponent>(ent1);
+            var manager2 = entManager.EnsureComponent<FixturesComponent>(ent2);
 
-            fixtureSystem.TryCreateFixture(body1, new Fixture(new PhysShapeCircle()
-            {
-                Radius = 0.1f,
-            }, 1, 1, false));
+            physicsSystem.SetBodyType(ent1, BodyType.Dynamic, manager: manager1, body: body1);
+            physicsSystem.SetBodyType(ent2, BodyType.Dynamic, manager: manager2, body: body2);
 
-            fixtureSystem.TryCreateFixture(body2, new Fixture(new PhysShapeCircle()
-            {
-                Radius = 0.1f,
-            }, 1, 1, false));
+            fixtureSystem.CreateFixture(ent1, new Fixture(new PhysShapeCircle(0.1f), 1, 1, false), manager: manager1, body: body1);
+            fixtureSystem.CreateFixture(ent2, new Fixture(new PhysShapeCircle(0.1f), 1, 1, false), manager: manager2, body: body2);
 
             var joint = jointSystem.CreateDistanceJoint(ent1, ent2);
             Assert.That(joint.CollideConnected, Is.EqualTo(true));

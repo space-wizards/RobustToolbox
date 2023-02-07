@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
 using Robust.Server.Containers;
 using Robust.Server.Debugging;
@@ -18,6 +19,8 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
@@ -89,6 +92,7 @@ namespace Robust.UnitTesting
 
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
+            systems.LoadExtraSystemType<Gravity2DController>();
 
             if (Project == UnitTestProject.Client)
             {
@@ -120,6 +124,7 @@ namespace Robust.UnitTesting
             var mapMan = deps.Resolve<IMapManager>();
 
             // Required components for the engine to work
+            // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?
             var compFactory = deps.Resolve<IComponentFactory>();
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MapComponent)))
@@ -132,12 +137,27 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<MapGridComponent>();
             }
 
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(ContainerManagerComponent)))
+            {
+                compFactory.RegisterClass<ContainerManagerComponent>();
+            }
+
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MetaDataComponent)))
             {
                 compFactory.RegisterClass<MetaDataComponent>();
             }
 
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(SharedPhysicsMapComponent)))
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(TransformComponent)))
+            {
+                compFactory.RegisterClass<TransformComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(PhysicsComponent)))
+            {
+                compFactory.RegisterClass<PhysicsComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(PhysicsMapComponent)))
             {
                 compFactory.RegisterClass<PhysicsMapComponent>();
             }
@@ -155,6 +175,31 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(JointComponent)))
             {
                 compFactory.RegisterClass<JointComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(OccluderComponent)))
+            {
+                compFactory.RegisterClass<OccluderComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(OccluderTreeComponent)))
+            {
+                compFactory.RegisterClass<OccluderTreeComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(SpriteTreeComponent)))
+            {
+                compFactory.RegisterClass<SpriteTreeComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(LightTreeComponent)))
+            {
+                compFactory.RegisterClass<LightTreeComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(Gravity2DComponent)))
+            {
+                compFactory.RegisterClass<Gravity2DComponent>();
             }
 
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.

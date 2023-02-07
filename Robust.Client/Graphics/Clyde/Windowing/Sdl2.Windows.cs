@@ -209,6 +209,11 @@ internal partial class Clyde
                     WsiShared.EnsureEglAvailable();
             }
 
+            if (OperatingSystem.IsMacOS())
+            {
+                windowFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
+            }
+
             nint window = SDL_CreateWindow(
                 "",
                 SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -502,9 +507,22 @@ internal partial class Clyde
 
         private static (float h, float v) GetWindowScale(nint window)
         {
-            var display = SDL_GetWindowDisplayIndex(window);
-            SDL_GetDisplayDPI(display, out _, out var hDpi, out var vDpi);
-            return (hDpi / 96f, vDpi / 96f);
+            // Get scale by diving size in pixels with size in points.
+            SDL_GetWindowSizeInPixels(window, out var pixW, out var pixH);
+            SDL_GetWindowSize(window, out var pointW, out var pointH);
+
+            // Avoiding degenerate cases, not sure if these can actually happen.
+            if (pixW == 0 || pixH == 0 || pointW == 0 || pointH == 0)
+                return (1, 1);
+
+            var scaleH = pixW / (float) pointW;
+            var scaleV = pixH / (float) pointH;
+
+            // Round to 5% increments to avoid rounding errors causing constantly different scales.
+            scaleH = MathF.Round(scaleH * 20) / 20;
+            scaleV = MathF.Round(scaleV * 20) / 20;
+
+            return (scaleH, scaleV);
         }
 
         private static void CheckWindowDisposed(WindowReg reg)

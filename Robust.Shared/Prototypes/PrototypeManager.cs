@@ -253,21 +253,27 @@ namespace Robust.Shared.Prototypes
                             }
                         }
 
-                        if (nonPushedParent) continue;
+                        if (nonPushedParent)
+                            continue;
 
-                        // TODO DON'T FORGET TO FIX THIS
-                        /*foreach (var parent in parents)
+                        var parentMaps = new MappingDataNode[parents.Length];
+                        for (var i = 0; i < parentMaps.Length; i++)
                         {
-                            PushInstanceInheritance(type, id, parent);
-                        }*/
+                            parentMaps[i] = kindData.Results[parents[i]];
+                        }
+
+                        kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                            kind,
+                            parentMaps,
+                            kindData.Results[id]);
                     }
 
 
                     var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
-                    if (prototype == null)
-                        continue;
-
-                    kindData.Instances[id] = prototype;
+                    if (prototype != null)
+                    {
+                        kindData.Instances[id] = prototype;
+                    }
 
                     pushedSet.Add(id);
                 }
@@ -495,14 +501,6 @@ namespace Robust.Shared.Prototypes
                 Result = result;
                 CountParentsRemaining = countParentsRemaining;
             }
-        }
-
-        private MappingDataNode PushInstanceInheritance(Type type, MappingDataNode result, MappingDataNode[] parents)
-        {
-            return _serializationManager.PushCompositionWithGenericNode(
-                type,
-                parents,
-                result);
         }
 
         #endregion IPrototypeManager members

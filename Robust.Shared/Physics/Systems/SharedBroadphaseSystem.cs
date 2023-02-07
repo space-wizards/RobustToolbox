@@ -25,6 +25,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
+        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
 
         private ISawmill _logger = default!;
 
@@ -74,7 +75,7 @@ namespace Robust.Shared.Physics.Systems
         /// Check the AABB for each moved broadphase fixture and add any colliding entities to the movebuffer in case.
         /// </summary>
         private void FindGridContacts(
-            SharedPhysicsMapComponent component,
+            PhysicsMapComponent component,
             MapId mapId,
             HashSet<MapGridComponent> movedGrids,
             Dictionary<FixtureProxy, Box2> gridMoveBuffer,
@@ -106,6 +107,8 @@ namespace Robust.Shared.Physics.Systems
             foreach (var (proxy, worldAABB) in gridMoveBuffer)
             {
                 moveBuffer[proxy] = worldAABB;
+                // If something is in our AABB then try grid traversal for it
+                _traversal.CheckTraverse(proxy.Fixture.Body.Owner, xformQuery.GetComponent(proxy.Fixture.Body.Owner));
             }
         }
 
@@ -135,7 +138,7 @@ namespace Robust.Shared.Physics.Systems
         [Obsolete("Use the overload with SharedPhysicsMapComponent")]
         internal void FindNewContacts(MapId mapId)
         {
-            if (!TryComp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
+            if (!TryComp<PhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
                 return;
 
             FindNewContacts(physicsMap, mapId);
@@ -144,7 +147,7 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Go through every single created, moved, or touched proxy on the map and try to find any new contacts that should be created.
         /// </summary>
-        internal void FindNewContacts(SharedPhysicsMapComponent component, MapId mapId)
+        internal void FindNewContacts(PhysicsMapComponent component, MapId mapId)
         {
             var moveBuffer = component.MoveBuffer;
             var movedGrids = _mapManager.GetMovedGrids(mapId);
@@ -165,10 +168,9 @@ namespace Robust.Shared.Physics.Systems
 
             // FindNewContacts is inherently going to be a lot slower than Box2D's normal version so we need
             // to cache a bunch of stuff to make up for it.
-            var contactManager = component.ContactManager;
 
             // Handle grids first as they're not stored on map broadphase at all.
-            HandleGridCollisions(mapId, contactManager, movedGrids, physicsQuery, xformQuery);
+            HandleGridCollisions(mapId, movedGrids, physicsQuery, xformQuery);
 
             // EZ
             if (moveBuffer.Count == 0)
@@ -186,7 +188,7 @@ namespace Robust.Shared.Physics.Systems
                 pMoveBuffer[idx++] = (proxy, aabb);
             }
 
-            var options = new ParallelOptions()
+            var options = new ParallelOptions
             {
                 MaxDegreeOfParallelism = _parallel.ParallelProcessCount,
             };
@@ -219,7 +221,7 @@ namespace Robust.Shared.Physics.Systems
                             EntityQuery<BroadphaseComponent> broadphaseQuery) tuple) =>
                         {
                             ref var buffer = ref tuple.pairBuffer;
-                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, ((Component) grid).Owner, buffer, tuple.xformQuery, tuple.broadphaseQuery);
+                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, grid.Owner, buffer, tuple.xformQuery, tuple.broadphaseQuery);
                             return true;
                         });
 
@@ -234,10 +236,12 @@ namespace Robust.Shared.Physics.Systems
                 var proxyA = pMoveBuffer[i].Proxy;
                 var proxies = contactBuffer[i];
                 var proxyABody = proxyA.Fixture.Body;
+                FixturesComponent? manager = null;
 
                 foreach (var other in proxies)
                 {
                     var otherBody = other.Fixture.Body;
+
                     // Because we may be colliding with something asleep (due to the way grid movement works) need
                     // to make sure the contact doesn't fail.
                     // This is because we generate a contact across 2 different broadphases where both bodies aren't
@@ -245,11 +249,11 @@ namespace Robust.Shared.Physics.Systems
                     if (proxyA.Fixture.Hard && other.Fixture.Hard &&
                         (gridMoveBuffer.ContainsKey(proxyA) || gridMoveBuffer.ContainsKey(other)))
                     {
-                        _physicsSystem.WakeBody(proxyABody, force: true);
-                        _physicsSystem.WakeBody(otherBody, force: true);
+                        _physicsSystem.WakeBody(proxyABody.Owner, force: true, manager: manager, body: proxyABody);
+                        _physicsSystem.WakeBody(otherBody.Owner, force: true, body: otherBody);
                     }
 
-                    contactManager.AddPair(proxyA, other);
+                    _physicsSystem.AddPair(proxyA, other);
                 }
 
                 _bufferPool.Return(contactBuffer[i]);
@@ -264,7 +268,6 @@ namespace Robust.Shared.Physics.Systems
 
         private void HandleGridCollisions(
             MapId mapId,
-            ContactManager contactManager,
             HashSet<MapGridComponent> movedGrids,
             EntityQuery<PhysicsComponent> bodyQuery,
             EntityQuery<TransformComponent> xformQuery)
@@ -326,7 +329,7 @@ namespace Robust.Shared.Physics.Systems
                                             var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
 
                                             if (!fixAABB.Intersects(otherAABB)) continue;
-                                            contactManager.AddPair(fixture, i, otherFixture, j, ContactFlags.Grid);
+                                            _physicsSystem.AddPair(fixture, i, otherFixture, j, ContactFlags.Grid);
                                             break;
                                         }
                                     }
@@ -400,7 +403,7 @@ namespace Robust.Shared.Physics.Systems
                 // Logger.DebugS("physics", $"Checking {proxy.Fixture.Body.Owner} against {other.Fixture.Body.Owner} at {aabb}");
 
                 if (tuple.proxy == other ||
-                    !ContactManager.ShouldCollide(tuple.proxy.Fixture, other.Fixture) ||
+                    !SharedPhysicsSystem.ShouldCollide(tuple.proxy.Fixture, other.Fixture) ||
                     tuple.proxy.Fixture.Body == other.Fixture.Body)
                 {
                     return true;
@@ -411,7 +414,7 @@ namespace Robust.Shared.Physics.Systems
             }, aabb, true);
         }
 
-        public void RegenerateContacts(PhysicsComponent body, TransformComponent? xform = null, FixturesComponent? fixtures = null)
+        public void RegenerateContacts(PhysicsComponent body, FixturesComponent? fixtures = null, TransformComponent? xform = null)
         {
             _physicsSystem.DestroyContacts(body);
             if (!Resolve(body.Owner, ref xform, ref fixtures))
@@ -419,6 +422,8 @@ namespace Robust.Shared.Physics.Systems
 
             if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
+
+            _physicsSystem.SetAwake(body.Owner, body, true);
 
             foreach (var fixture in fixtures.Fixtures.Values)
             {
@@ -438,7 +443,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void AddToMoveBuffer(MapId mapId, FixtureProxy proxy, Box2 aabb)
         {
-            if (!TryComp<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
+            if (!TryComp<PhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
                 return;
 
             DebugTools.Assert(proxy.Fixture.Body.CanCollide);

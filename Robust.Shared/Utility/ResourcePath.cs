@@ -80,6 +80,7 @@ namespace Robust.Shared.Utility
 
             var splitSegments = path.Split(separator);
             var segments = new List<string>(splitSegments.Length);
+
             var i = 0;
             if (splitSegments[0] == "")
             {
@@ -715,6 +716,12 @@ namespace Robust.Shared.Utility
             {
                 throw new ArgumentException("Separator may not be . or ..");
             }
+        }
+
+        public static bool IsYamlResourceFile(ResourcePath filePath)
+        {
+            return filePath.Extension is "yml" or "yaml" &&
+                   !filePath.Filename.StartsWith(".", StringComparison.Ordinal);
         }
     }
 }

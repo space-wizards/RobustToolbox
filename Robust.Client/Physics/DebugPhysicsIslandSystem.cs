@@ -7,7 +7,10 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
+using TerraFX.Interop.DirectX;
 
 namespace Robust.Client.Physics
 {
@@ -35,6 +38,7 @@ namespace Robust.Client.Physics
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
 
         public DebugPhysicsIslandMode Mode { get; set; } = DebugPhysicsIslandMode.None;
 
@@ -43,7 +47,7 @@ namespace Robust.Client.Physics
          * This will draw above every body involved in a particular island solve.
          */
 
-        public readonly Queue<(TimeSpan Time, List<IPhysBody> Bodies)> IslandSolve = new();
+        public readonly Queue<(TimeSpan Time, List<PhysicsComponent> Bodies)> IslandSolve = new();
         public const float SolveDuration = 0.1f;
 
         public override void Initialize()
@@ -52,7 +56,7 @@ namespace Robust.Client.Physics
 
             SubscribeLocalEvent<IslandSolveMessage>(HandleIslandSolveMessage);
 
-            var overlay = new PhysicsIslandOverlay(this, _gameTiming, _eyeManager);
+            var overlay = new PhysicsIslandOverlay(this, _lookup, _gameTiming, _eyeManager);
             _overlayManager.AddOverlay(overlay);
         }
 
@@ -99,12 +103,14 @@ namespace Robust.Client.Physics
         private readonly IEyeManager _eyeManager;
         private readonly IGameTiming _gameTiming;
         private readonly DebugPhysicsIslandSystem _islandSystem;
+        private readonly EntityLookupSystem _lookup;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        public PhysicsIslandOverlay(DebugPhysicsIslandSystem system, IGameTiming gameTiming, IEyeManager eyeManager)
+        public PhysicsIslandOverlay(DebugPhysicsIslandSystem system, EntityLookupSystem lookup, IGameTiming gameTiming, IEyeManager eyeManager)
         {
             _islandSystem = system;
+            _lookup = lookup;
             _gameTiming = gameTiming;
             _eyeManager = eyeManager;
         }
@@ -132,7 +138,7 @@ namespace Robust.Client.Physics
 
                 foreach (var body in solve.Bodies)
                 {
-                    var worldAABB = body.GetWorldAABB();
+                    var worldAABB = _lookup.GetWorldAABB(body.Owner);
                     if (!viewport.Intersects(worldAABB)) continue;
 
                     handle.DrawRect(worldAABB, Color.Green.WithAlpha(ratio * 0.5f));

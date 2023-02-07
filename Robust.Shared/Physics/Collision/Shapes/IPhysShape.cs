@@ -14,7 +14,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
     }
 
     /// <summary>
-    /// A primitive physical shape that is used by a <see cref="IPhysBody"/>.
+    /// A primitive physical shape that is used by a <see cref="PhysicsComponent"/>.
     /// </summary>
     public interface IPhysShape : IEquatable<IPhysShape>
     {
@@ -33,11 +33,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         // If you really want it back then code it yaself (and also probably put it on the fixture).
 
         ShapeType ShapeType { get; }
-
-        /// <summary>
-        /// Local Axis Aligned Bounding Box (AABB) of the shape.
-        /// </summary>
-        Box2 LocalBounds { get; }
 
         /// <summary>
         /// Calculate the AABB of the shape.

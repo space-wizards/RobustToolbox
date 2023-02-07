@@ -29,7 +29,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ValueDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<Texture>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<Texture>? instanceProvider)
         {
             var path = serializationManager.Read<ResourcePath>(node, hookCtx, context, notNullableOverride: true);
             return new Texture(path);
@@ -39,7 +39,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ValueDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<SpriteSpecifier>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<SpriteSpecifier>? instanceProvider)
         {
             return ((ITypeReader<Texture, ValueDataNode>)this).Read(serializationManager, node, dependencies, hookCtx, context, (ISerializationManager.InstantiationDelegate<Texture>?)instanceProvider);
         }
@@ -48,7 +48,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ValueDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<EntityPrototype>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<EntityPrototype>? instanceProvider)
         {
             return new EntityPrototype(node.Value);
         }
@@ -57,7 +57,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             MappingDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<Rsi>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<Rsi>? instanceProvider)
         {
             if (!node.TryGet("sprite", out var pathNode))
             {
@@ -77,7 +77,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             MappingDataNode node,
             IDependencyCollection dependencies,
             SerializationHookContext hookCtx, ISerializationContext? context,
-            ISerializationManager.InstantiationDelegate<SpriteSpecifier>? instanceProvider = null)
+            ISerializationManager.InstantiationDelegate<SpriteSpecifier>? instanceProvider)
         {
             if (node.TryGet("entity", out var entityNode) && entityNode is ValueDataNode entityValueNode)
                 return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Read(serializationManager, entityValueNode, dependencies, hookCtx, context, (ISerializationManager.InstantiationDelegate<EntityPrototype>?)instanceProvider);

@@ -17,8 +17,7 @@ namespace Robust.Shared.Configuration
     /// <summary>
     ///     Stores and manages global configuration variables.
     /// </summary>
-    [Virtual]
-    internal class ConfigurationManager : IConfigurationManagerInternal
+    internal abstract class ConfigurationManager : IConfigurationManagerInternal
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
@@ -300,6 +299,20 @@ namespace Robust.Shared.Configuration
                 if (cVar.Registered)
                     Logger.ErrorS("cfg", $"The variable '{name}' has already been registered.");
 
+                if (!type.IsEnum && cVar.Value != null && !type.IsAssignableFrom(cVar.Value.GetType()))
+                {
+                    try
+                    {
+                        // try convert thing like int to float.
+                        cVar.Value = Convert.ChangeType(cVar.Value, type);
+                    }
+                    catch
+                    {
+                        Logger.Error($"TOML parsed cvar does not match registered cvar type. Name: {name}. Code Type: {type.Name}. Toml type: {cVar.Value.GetType().Name}");
+                        return;
+                    }
+                }
+
                 cVar.DefaultValue = defaultValue;
                 cVar.Flags = flags;
                 cVar.Registered = true;
@@ -448,7 +461,7 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public virtual void SetCVar(string name, object value)
+        public virtual void SetCVar(string name, object value, bool force = false)
         {
             SetCVarInternal(name, value, _gameTiming.CurTick);
         }
@@ -480,9 +493,9 @@ namespace Robust.Shared.Configuration
                 InvokeValueChanged(invoke.Value);
         }
 
-        public void SetCVar<T>(CVarDef<T> def, T value) where T : notnull
+        public void SetCVar<T>(CVarDef<T> def, T value, bool force = false) where T : notnull
         {
-            SetCVar(def.Name, value);
+            SetCVar(def.Name, value, force);
         }
 
         public void OverrideDefault(string name, object value)

@@ -25,6 +25,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -107,14 +108,6 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
     }
 
     private float _damping;
-
-    /// <summary>
-    /// The initial world target point. This is assumed
-    /// to coincide with the body anchor initially.
-    /// </summary>
-    public Vector2 Target =>
-        IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(BodyAUid).WorldPosition;
-
     private float _invMassB;
     private float _invIB;
     private Vector2 _rB;
@@ -169,17 +162,26 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
     private int _indexB;
     private Vector2 _localCenterB;
 
-    internal override void InitVelocityConstraints(SolverData data, PhysicsComponent bodyA, PhysicsComponent bodyB)
+    internal override void InitVelocityConstraints(
+        in SolverData data,
+        in SharedPhysicsSystem.IslandData island,
+        PhysicsComponent bodyA,
+        PhysicsComponent bodyB,
+        Vector2[] positions,
+        float[] angles,
+        Vector2[] linearVelocities,
+        float[] angularVelocities)
     {
-        _indexB = bodyB.IslandIndex[data.IslandIndex];
+        var offset = island.Offset;
+        _indexB = bodyB.IslandIndex[island.Index];
         _localCenterB = bodyB.LocalCenter;
         _invMassB = bodyB.InvMass;
         _invIB = bodyB.InvI;
 
-        var cB = data.Positions[_indexB];
-        var aB = data.Angles[_indexB];
-        var vB = data.LinearVelocities[_indexB];
-        var wB = data.AngularVelocities[_indexB];
+        var cB = positions[_indexB];
+        var aB = angles[_indexB];
+        var vB = linearVelocities[offset + _indexB];
+        var wB = angularVelocities[offset + _indexB];
 
         Quaternion2D qB = new(aB);
 
@@ -212,7 +214,8 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 
         _mass = K.GetInverse();
 
-        _C = cB + _rB - Target;
+        var target = positions[bodyA.IslandIndex[island.Index]];
+        _C = cB + _rB - target;
         _C *= _beta;
 
         // Cheat with some damping
@@ -229,14 +232,19 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
             _impulse = Vector2.Zero;
         }
 
-        data.LinearVelocities[_indexB] = vB;
-        data.AngularVelocities[_indexB] = wB;
+        linearVelocities[offset + _indexB] = vB;
+        angularVelocities[offset + _indexB] = wB;
     }
 
-    internal override void SolveVelocityConstraints(SolverData data)
+    internal override void SolveVelocityConstraints(
+        in SolverData data,
+        in SharedPhysicsSystem.IslandData island,
+        Vector2[] linearVelocities,
+        float[] angularVelocities)
     {
-        var vB = data.LinearVelocities[_indexB];
-        var wB = data.AngularVelocities[_indexB];
+        var offset = island.Offset;
+        var vB = linearVelocities[offset + _indexB];
+        var wB = angularVelocities[offset + _indexB];
 
         // Cdot = v + cross(w, r)
         var Cdot = vB + Vector2.Cross(wB, _rB);
@@ -255,11 +263,14 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         vB += impulse * _invMassB;
         wB += _invIB * Vector2.Cross(_rB, impulse);
 
-        data.LinearVelocities[_indexB] = vB;
-        data.AngularVelocities[_indexB] = wB;
+        linearVelocities[offset + _indexB] = vB;
+        angularVelocities[offset + _indexB] = wB;
     }
 
-    internal override bool SolvePositionConstraints(SolverData data)
+    internal override bool SolvePositionConstraints(
+        in SolverData data,
+        Vector2[] positions,
+        float[] angles)
     {
         return true;
     }

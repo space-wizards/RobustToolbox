@@ -217,16 +217,5 @@ namespace Robust.Client.GameStates
                 }
             }
         }
-
-        private sealed class NetShowGraphCommand : LocalizedCommands
-        {
-            // Yeah commands should be localized, but I'm lazy and this is really just a debug command.
-            public override string Command => "net_refresh";
-
-            public override void Execute(IConsoleShell shell, string argStr, string[] args)
-            {
-                IoCManager.Resolve<IClientGameStateManager>().RequestFullState();
-            }
-        }
     }
 }

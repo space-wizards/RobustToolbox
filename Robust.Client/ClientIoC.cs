@@ -1,5 +1,6 @@
 using System;
 using Robust.Client.Audio.Midi;
+using Robust.Client.Configuration;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
@@ -16,6 +17,7 @@ using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
 using Robust.Client.Replays;
 using Robust.Client.ResourceManagement;
+using Robust.Client.Serialization;
 using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
@@ -23,6 +25,7 @@ using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -34,6 +37,7 @@ using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -56,7 +60,7 @@ namespace Robust.Client
             deps.Register<IReflectionManager, ClientReflectionManager>();
             deps.Register<IConsoleHost, ClientConsoleHost>();
             deps.Register<IClientConsoleHost, ClientConsoleHost>();
-            deps.Register<IComponentFactory, ClientComponentFactory>();
+            deps.Register<IComponentFactory, ComponentFactory>();
             deps.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             deps.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
             deps.Register<GameController, GameController>();
@@ -85,7 +89,7 @@ namespace Robust.Client
             deps.Register<IMidiManager, MidiManager>();
             deps.Register<IAuthManager, AuthManager>();
             deps.Register<ProfViewManager>();
-            deps.Register<IPhysicsManager, PhysicsManager>();
+
             switch (mode)
             {
                 case GameController.DisplayMode.Headless:
@@ -123,6 +127,13 @@ namespace Robust.Client
             deps.Register<IClientViewVariablesManagerInternal, ClientViewVariablesManager>();
             deps.Register<IClientConGroupController, ClientConGroupController>();
             deps.Register<IScriptClient, ScriptClient>();
+            deps.Register<IRobustSerializer, ClientRobustSerializer>();
+            deps.Register<IClientRobustSerializer, ClientRobustSerializer>();
+            deps.Register<IConfigurationManager, ClientNetConfigurationManager>();
+            deps.Register<INetConfigurationManager, ClientNetConfigurationManager>();
+            deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
+            deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
+            deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
         }
     }
 }

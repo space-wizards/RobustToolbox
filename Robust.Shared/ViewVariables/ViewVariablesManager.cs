@@ -54,7 +54,7 @@ internal abstract partial class ViewVariablesManager : IViewVariablesManager
         {
             return SerializeValue(p.Type, obj);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return obj.ToString();
         }

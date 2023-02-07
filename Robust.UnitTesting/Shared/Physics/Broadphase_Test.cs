@@ -81,9 +81,9 @@ public sealed class Broadphase_Test
 
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        var fixture = new Fixture(physics, shape);
-        fixturesSystem.CreateFixture(physics, fixture);
-        physicsSystem.SetCanCollide(physics, true);
+        var fixture = new Fixture(shape, 0, 0, true);
+        fixturesSystem.CreateFixture(ent, fixture, body: physics, xform: xform);
+        physicsSystem.SetCanCollide(ent, true, body: physics);
         Assert.That(physics.CanCollide);
 
         // Now that we're collidable should be correctly on the grid's tree.
@@ -140,8 +140,9 @@ public sealed class Broadphase_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
-        var physicsSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
-        var lookup = sim.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
+        var system = entManager.EntitySysManager;
+        var physicsSystem = system.GetEntitySystem<SharedPhysicsSystem>();
+        var lookup = system.GetEntitySystem<EntityLookupSystem>();
 
         var mapId = mapManager.CreateMap();
         var grid = mapManager.CreateGrid(mapId);
@@ -161,7 +162,7 @@ public sealed class Broadphase_Test
         var child2 = entManager.SpawnEntity(null, new EntityCoordinates(child1, Vector2.Zero));
         var child2Xform = entManager.GetComponent<TransformComponent>(child2);
         var child2Body = entManager.AddComponent<PhysicsComponent>(child2);
-        physicsSystem.SetCanCollide(child2Body, false);
+        physicsSystem.SetCanCollide(child2, false, body: child2Body);
         Assert.That(!child2Body.CanCollide);
 
         Assert.That(child1Xform.ParentUid, Is.EqualTo(parent));
@@ -174,7 +175,7 @@ public sealed class Broadphase_Test
         grid.SetTile(Vector2i.Zero, Tile.Empty);
         Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(mapBroadphase));
         Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.FindBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child2), Is.EqualTo(mapBroadphase));
     }
 
     /// <summary>
@@ -188,10 +189,11 @@ public sealed class Broadphase_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
-        var lookup = sim.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
-        var xforms = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
-        var physSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
-        var fixtures = sim.Resolve<IEntitySystemManager>().GetEntitySystem<FixtureSystem>();
+        var system = entManager.EntitySysManager;
+        var lookup = system.GetEntitySystem<EntityLookupSystem>();
+        var xforms = system.GetEntitySystem<SharedTransformSystem>();
+        var physSystem = system.GetEntitySystem<SharedPhysicsSystem>();
+        var fixtures = system.GetEntitySystem<FixtureSystem>();
 
         // setup maps
         var mapAId = mapManager.CreateMap();
@@ -222,16 +224,15 @@ public sealed class Broadphase_Test
         // enable collision for the child
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        var fixture = new Fixture(childBody, shape);
-        fixtures.CreateFixture(childBody, fixture);
-        physSystem.SetCanCollide(childBody, true);
+        fixtures.CreateFixture(child, new Fixture(shape, 0, 0, false), body: childBody, xform: childXform);
+        physSystem.SetCanCollide(child, true, body: childBody);
         Assert.That(childBody.CanCollide);
 
         // Initially on mapA
         var AssertMap = (EntityUid map, EntityUid otherMap) =>
         {
             var broadphase = entManager.GetComponent<BroadphaseComponent>(map);
-            var physMap = entManager.GetComponent<SharedPhysicsMapComponent>(map);
+            var physMap = entManager.GetComponent<PhysicsMapComponent>(map);
             Assert.That(parentXform.ParentUid == map);
             Assert.That(parentXform.MapUid == map);
             Assert.That(childXform.MapUid == map);
@@ -240,7 +241,7 @@ public sealed class Broadphase_Test
             Assert.That(parentXform.Broadphase == new BroadphaseData(map, default, false, false));
             Assert.That(childXform.Broadphase == new BroadphaseData(map, map, true, true));
             Assert.That(physMap.MoveBuffer.ContainsKey(childFixtures.Fixtures.First().Value.Proxies.First()));
-            var otherPhysMap = entManager.GetComponent<SharedPhysicsMapComponent>(otherMap);
+            var otherPhysMap = entManager.GetComponent<PhysicsMapComponent>(otherMap);
             Assert.That(otherPhysMap.MoveBuffer.Count == 0);
         };
         AssertMap(mapA, mapB);
@@ -254,7 +255,7 @@ public sealed class Broadphase_Test
         // - grid to grid without a map change
         // - grid to map without a map change
 
-        // Move to map B (map to map with a map change) 
+        // Move to map B (map to map with a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(mapB, (200, 200)));
         AssertMap(mapB, mapA);
 
@@ -263,7 +264,7 @@ public sealed class Broadphase_Test
         var AssertGrid = (EntityUid grid, EntityUid map, EntityUid otherMap) =>
         {
             var broadphase = entManager.GetComponent<BroadphaseComponent>(grid);
-            var physMap = entManager.GetComponent<SharedPhysicsMapComponent>(map);
+            var physMap = entManager.GetComponent<PhysicsMapComponent>(map);
             var gridXform = entManager.GetComponent<TransformComponent>(grid);
             Assert.That(gridXform.ParentUid == map);
             Assert.That(gridXform.MapUid == map);
@@ -275,7 +276,7 @@ public sealed class Broadphase_Test
             Assert.That(parentXform.Broadphase == new BroadphaseData(grid, default, false, false));
             Assert.That(childXform.Broadphase == new BroadphaseData(grid, map, true, true));
             Assert.That(physMap.MoveBuffer.ContainsKey(childFixtures.Fixtures.First().Value.Proxies.First()));
-            var otherPhysMap = entManager.GetComponent<SharedPhysicsMapComponent>(otherMap);
+            var otherPhysMap = entManager.GetComponent<PhysicsMapComponent>(otherMap);
             Assert.That(otherPhysMap.MoveBuffer.Count == 0);
         };
         AssertGrid(gridA, mapA, mapB);
@@ -318,10 +319,11 @@ public sealed class Broadphase_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var xformSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
-        var physSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
-        var lookup = sim.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
-        var fixtures = sim.Resolve<IEntitySystemManager>().GetEntitySystem<FixtureSystem>();
+        var system = entManager.EntitySysManager;
+        var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
+        var physSystem = system.GetEntitySystem<SharedPhysicsSystem>();
+        var lookup = system.GetEntitySystem<EntityLookupSystem>();
+        var fixtures = system.GetEntitySystem<FixtureSystem>();
         var mapManager = sim.Resolve<IMapManager>();
 
         var mapId = mapManager.CreateMap();
@@ -332,7 +334,7 @@ public sealed class Broadphase_Test
 
         var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var parentXform = entManager.GetComponent<TransformComponent>(parent);
-        var parentBody = entManager.AddComponent<PhysicsComponent>(parent);
+        entManager.AddComponent<PhysicsComponent>(parent);
 
         var child1 = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var child1Xform = entManager.GetComponent<TransformComponent>(child1);
@@ -340,37 +342,36 @@ public sealed class Broadphase_Test
 
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        var fixture = new Fixture(child1Body, shape);
-        fixtures.CreateFixture(child1Body, fixture);
-        physSystem.SetCanCollide(child1Body, true);
+        fixtures.CreateFixture(child1, new Fixture(shape, 0, 0, false), body: child1Body, xform: child1Xform);
+        physSystem.SetCanCollide(child1, true, body: child1Body);
         Assert.That(child1Body.CanCollide);
 
         // Have a non-collidable child and check it doesn't get added too.
         var child2 = entManager.SpawnEntity(null, new EntityCoordinates(child1, Vector2.Zero));
         var child2Xform = entManager.GetComponent<TransformComponent>(child2);
         var child2Body = entManager.AddComponent<PhysicsComponent>(child2);
-        physSystem.SetCanCollide(child2Body, false);
+        physSystem.SetCanCollide(child2, false, body: child2Body);
         Assert.That(!child2Body.CanCollide);
 
         Assert.That(child1Xform.ParentUid, Is.EqualTo(parent));
         Assert.That(child2Xform.ParentUid, Is.EqualTo(child1));
 
-        Assert.That(lookup.FindBroadphase(parentBody.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.FindBroadphase(child1Body.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.FindBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child2), Is.EqualTo(mapBroadphase));
 
         // They should get deparented to the map and updated to the map's broadphase instead.
         xformSystem.DetachParentToNull(parentXform);
-        Assert.That(lookup.FindBroadphase(parentBody.Owner), Is.EqualTo(null));
-        Assert.That(lookup.FindBroadphase(child1Body.Owner), Is.EqualTo(null));
-        Assert.That(lookup.FindBroadphase(child2Body.Owner), Is.EqualTo(null));
+        Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(null));
+        Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(null));
+        Assert.That(lookup.FindBroadphase(child2), Is.EqualTo(null));
 
         // Can't assert CanCollide because they may still want to be valid when coming out of nullspace.
 
         // Check it goes back to normal
-        parentXform.AttachParent(mapUid);
-        Assert.That(lookup.FindBroadphase(parentBody.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.FindBroadphase(child1Body.Owner), Is.EqualTo(mapBroadphase));
-        Assert.That(lookup.FindBroadphase(child2Body.Owner), Is.EqualTo(mapBroadphase));
+        xformSystem.SetParent(parentXform, mapUid);
+        Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(mapBroadphase));
+        Assert.That(lookup.FindBroadphase(child2), Is.EqualTo(mapBroadphase));
     }
 }

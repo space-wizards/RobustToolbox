@@ -181,7 +181,7 @@ public sealed class MapLoaderSystem : EntitySystem
         return result;
     }
 
-    public void Save(EntityUid uid, string ymlPath)
+    public void Save(EntityUid uid, string ymlPath, MapSaveOptions? options = null)
     {
         if (!Exists(uid))
         {
@@ -195,9 +195,10 @@ public sealed class MapLoaderSystem : EntitySystem
             return;
         }
 
+        options ??= new MapSaveOptions();
         _logLoader.Info($"Saving entity {ToPrettyString(uid)} to {ymlPath}");
 
-        var document = new YamlDocument(GetSaveData(uid).ToYaml());
+        var document = new YamlDocument(GetSaveData(uid, options).ToYaml());
 
         var resPath = new ResourcePath(ymlPath).ToRootedPath();
         _resourceManager.UserData.CreateDir(resPath.Directory);
@@ -211,7 +212,7 @@ public sealed class MapLoaderSystem : EntitySystem
         _logLoader.Info($"Saved {ToPrettyString(uid)} to {ymlPath}");
     }
 
-    public void SaveMap(MapId mapId, string ymlPath)
+    public void SaveMap(MapId mapId, string ymlPath, MapSaveOptions? options = null)
     {
         if (!_mapManager.MapExists(mapId))
         {
@@ -219,7 +220,7 @@ public sealed class MapLoaderSystem : EntitySystem
             return;
         }
 
-        Save(_mapManager.GetMapEntityId(mapId), ymlPath);
+        Save(_mapManager.GetMapEntityId(mapId), ymlPath, options);
     }
 
     #endregion
@@ -809,10 +810,10 @@ public sealed class MapLoaderSystem : EntitySystem
 
     #region Saving
 
-    private MappingDataNode GetSaveData(EntityUid uid)
+    private MappingDataNode GetSaveData(EntityUid uid, MapSaveOptions options)
     {
         var data = new MappingDataNode();
-        WriteMetaSection(data, uid);
+        WriteMetaSection(data, uid, options);
         WriteTileMapSection(data);
 
         var entityUidMap = new Dictionary<EntityUid, int>();
@@ -833,14 +834,13 @@ public sealed class MapLoaderSystem : EntitySystem
         return data;
     }
 
-    private void WriteMetaSection(MappingDataNode rootNode, EntityUid uid)
+    private void WriteMetaSection(MappingDataNode rootNode, EntityUid uid, MapSaveOptions options)
     {
         var meta = new MappingDataNode();
         rootNode.Add("meta", meta);
         meta.Add("format", MapFormatVersion.ToString(CultureInfo.InvariantCulture));
-        // TODO: Make these values configurable.
-        meta.Add("name", "DemoStation");
-        meta.Add("author", "Space-Wizards");
+        meta.Add("name", options.Name);
+        meta.Add("author", options.Author);
 
         var xform = Transform(uid);
         var isPostInit = _mapManager.IsMapInitialized(xform.MapID);

@@ -98,7 +98,12 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            _ent.System<MapLoaderSystem>().Save(uid, args[1]);
+            var author = shell.Player?.Name;
+
+            _ent.System<MapLoaderSystem>().Save(uid, args[1], new MapSaveOptions()
+            {
+                Author = author ?? string.Empty,
+            });
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
 
@@ -258,8 +263,13 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            var author = shell.Player?.Name;
+
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
-            _system.GetEntitySystem<MapLoaderSystem>().SaveMap(mapId, args[1]);
+            _system.GetEntitySystem<MapLoaderSystem>().SaveMap(mapId, args[1], new MapSaveOptions()
+            {
+                Author = author ?? string.Empty,
+            });
             shell.WriteLine(Loc.GetString("cmd-savemap-success"));
         }
     }

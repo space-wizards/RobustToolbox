@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* The engine will now warn on startup if `*.yaml` files are found in resources, as this most likely indicates an accident.
 
 ### Internal
 

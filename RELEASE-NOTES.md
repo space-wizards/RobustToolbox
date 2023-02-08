@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Changed thread safety around `ResourceManager`'s VFS roots, removing the use of error prone reader-writer locks.
 
 
 ## 0.85.2.0

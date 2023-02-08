@@ -164,6 +164,8 @@ public sealed class FastNoiseLite
         SetSeed(seed);
     }
 
+    public int GetSeed() => mSeed;
+
     /// <summary>
     /// Sets seed used for all noise types
     /// </summary>
@@ -171,6 +173,8 @@ public sealed class FastNoiseLite
     /// Default: 1337
     /// </remarks>
     public void SetSeed(int seed) { mSeed = seed; }
+
+    public float GetFrequency() => mFrequency;
 
     /// <summary>
     /// Sets frequency for all noise types

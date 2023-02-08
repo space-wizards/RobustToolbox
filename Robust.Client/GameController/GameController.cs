@@ -130,12 +130,26 @@ namespace Robust.Client
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
+
+            // Start bad file extensions check after content init,
+            // in case content screws with the VFS.
+            var checkBadExtensions = ProgramShared.CheckBadFileExtensions(
+                _resourceCache,
+                _configurationManager,
+                _logManager.GetSawmill("res"));
+
             _resourceCache.PreloadTextures();
             _networkManager.Initialize(false);
             _configurationManager.SetupNetworking();
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
+
+            // Make sure this is done before we try to load prototypes,
+            // avoid any possibility of race conditions causing the check to not finish
+            // before prototype load.
+            ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
+
             _prototypeManager.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath("/EnginePrototypes/"));
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);

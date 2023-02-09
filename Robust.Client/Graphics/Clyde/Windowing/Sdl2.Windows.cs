@@ -268,7 +268,7 @@ internal partial class Clyde
 
             // LoadWindowIcon(window);
 
-            SDL_GL_GetDrawableSize(window, out var fbW, out var fbH);
+            SDL_GetWindowSizeInPixels(window, out var fbW, out var fbH);
             reg.FramebufferSize = (fbW, fbH);
 
             reg.WindowScale = GetWindowScale(window);

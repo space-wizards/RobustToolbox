@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* SDL2 backend now handles quit events (⌘+Q on macOS).
 
 ### Internal
 

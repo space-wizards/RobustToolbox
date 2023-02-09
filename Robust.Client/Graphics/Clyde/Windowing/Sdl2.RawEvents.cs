@@ -65,7 +65,15 @@ internal partial class Clyde
                 case SDL_SYSWMEVENT:
                     ProcessSdl2EventSysWM(in ev.syswm);
                     break;
+                case SDL_QUIT:
+                    ProcessSdl2EventQuit();
+                    break;
             }
+        }
+
+        private void ProcessSdl2EventQuit()
+        {
+            SendEvent(new EventQuit());
         }
 
         private void ProcessSdl2EventDisplay(in SDL_DisplayEvent evDisplay)
@@ -276,6 +284,7 @@ internal partial class Clyde
             uint Message, WPARAM WParam) : EventBase;
 
         private record EventKeyMapChanged : EventBase;
+        private record EventQuit : EventBase;
 
         [StructLayout(LayoutKind.Sequential)]
         [SuppressMessage("ReSharper", "InconsistentNaming")]

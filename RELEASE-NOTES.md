@@ -36,6 +36,8 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Undid `*.yaml` prototype loading change from previous version.
+* Several light related cvars have been renamed. E.g., "display.softshadows" is now "light.softshadows". 
+* The "display.lightmapdivider" integer cvar has been replaced with a float multiplier named "light.resolution_scale".
 
 ### New features
 
@@ -47,7 +49,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Added entity, occluder and shadow-casting light counts to the clyde debug panel.
 
 ### Internal
 

@@ -557,6 +557,9 @@ namespace Robust.Client.Graphics.Clyde
             public int LastBatches => 0;
             public (int vertices, int indices) LargestBatchSize => (0, 0);
             public int TotalLights => 0;
+            public int ShadowLights => 0;
+            public int Occluders => 0;
+            public int Entities => 0;
         }
 
         private sealed class DummyDebugInfo : IClydeDebugInfo

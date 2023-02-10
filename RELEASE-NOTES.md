@@ -53,6 +53,7 @@ END TEMPLATE-->
 ### Internal
 
 * Changed thread safety around `ResourceManager`'s VFS roots, removing the use of error prone reader-writer locks.
+* SDL2 log now shows log category.
 
 
 ## 0.85.2.0

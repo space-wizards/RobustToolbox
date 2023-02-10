@@ -61,8 +61,9 @@ internal partial class Clyde
             }
 
             SDL_GetVersion(out var version);
+            var videoDriver = SDL_GetCurrentVideoDriver();
             _sawmill.Debug(
-                "SDL2 initialized, version: {major}.{minor}.{patch}", version.major, version.minor, version.patch);
+                "SDL2 initialized, version: {major}.{minor}.{patch}, video driver: {videoDriver}", version.major, version.minor, version.patch, videoDriver);
 
             _sdlEventWakeup = SDL_RegisterEvents(1);
 

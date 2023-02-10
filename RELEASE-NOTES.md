@@ -48,6 +48,7 @@ END TEMPLATE-->
 ### Other
 
 * SDL2 backend now handles quit events (⌘+Q on macOS).
+* SDL2 backend now logs video driver backend used on initialization.
 
 ### Internal
 

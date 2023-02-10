@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* SDL2 backend now works if the client is started with fullscreen.
 
 ### Other
 

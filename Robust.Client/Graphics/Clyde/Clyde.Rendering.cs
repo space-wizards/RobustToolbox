@@ -243,6 +243,8 @@ namespace Robust.Client.Graphics.Clyde
 
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
+            SetBlendFunc(loaded.BlendMode);
+
             var primitiveType = MapPrimitiveType(command.PrimitiveType);
             if (command.Indexed)
             {
@@ -255,6 +257,9 @@ namespace Robust.Client.Graphics.Clyde
                 GL.DrawArrays(primitiveType, command.StartIndex, command.Count);
                 CheckGlError();
             }
+
+            ResetBlendFunc();
+            GL.BlendEquation(BlendEquationMode.FuncAdd);
 
             _debugStats.LastGLDrawCalls += 1;
         }
@@ -867,6 +872,23 @@ namespace Robust.Client.Graphics.Clyde
             _queuedShader = _defaultShader.Handle;
 
             GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
+        }
+
+        private void SetBlendFunc(ShaderBlendMode blend)
+        {
+            switch (blend)
+                {
+                    case ShaderBlendMode.Add:
+                        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.DstAlpha);
+                        break;
+                    case ShaderBlendMode.Subtract:
+                        GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.DstAlpha, BlendingFactorSrc.Zero, BlendingFactorDest.DstAlpha);
+                        GL.BlendEquation(BlendEquationMode.FuncReverseSubtract);
+                        break;
+                    case ShaderBlendMode.Multiply:
+                        GL.BlendFunc(BlendingFactor.DstColor, BlendingFactor.OneMinusSrcAlpha);
+                        break;
+                }
         }
 
         private void ResetBlendFunc()

@@ -26,6 +26,11 @@ internal partial class MapManager
         if (!_gridTrees.TryGetValue(mapId, out var gridTree))
             return;
 
+        if (EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var grid))
+        {
+            callback(grid);
+        }
+
         var state = (gridTree, callback);
 
         gridTree.Query(ref state, static (ref (
@@ -37,11 +42,6 @@ internal partial class MapManager
             tuple.callback(data!);
             return true;
         }, worldAABB);
-
-        if (EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var grid))
-        {
-            callback(grid);
-        }
     }
 
     public void FindGridsIntersectingApprox<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback)
@@ -92,6 +92,14 @@ internal partial class MapManager
         if (!_gridTrees.TryGetValue(mapId, out var gridTree)) return Enumerable.Empty<MapGridComponent>();
 
         DebugTools.Assert(grids.Count == 0);
+        var offset = 0;
+
+        if (EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var mapGrid))
+        {
+            grids.Add(mapGrid);
+            offset = 1;
+        }
+
         var state = (gridTree, grids);
 
         gridTree.Query(ref state,
@@ -104,7 +112,7 @@ internal partial class MapManager
 
         if (!approx)
         {
-            for (var i = grids.Count - 1; i >= 0; i--)
+            for (var i = grids.Count - 1; i >= offset; i--)
             {
                 var grid = grids[i];
 
@@ -142,11 +150,6 @@ internal partial class MapManager
 
                 grids.RemoveSwap(i);
             }
-        }
-
-        if (EntityManager.TryGetComponent<MapGridComponent>(GetMapEntityId(mapId), out var mapGrid))
-        {
-            grids.Add(mapGrid);
         }
 
         return grids;

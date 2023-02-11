@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -17,7 +18,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
     }
 
     [Virtual]
-    public class PrototypeIdHashSetSerializer<TPrototype> : ITypeValidator<HashSet<string>, SequenceDataNode> where TPrototype : class, IPrototype
+    public class PrototypeIdHashSetSerializer<TPrototype> :
+        ITypeValidator<HashSet<string>, SequenceDataNode>,
+        ITypeValidator<ImmutableHashSet<string>, SequenceDataNode>,
+        ITypeValidator<ISet<string>, SequenceDataNode>,
+        ITypeValidator<IReadOnlySet<string>, SequenceDataNode>
+        where TPrototype : class, IPrototype
     {
         protected virtual PrototypeIdSerializer<TPrototype> PrototypeSerializer => new();
 

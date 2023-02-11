@@ -842,5 +842,15 @@ namespace Robust.Client.Console.Commands
                 shell.WriteLine($"name: '{name}' ");
             }
         }
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                return CompletionResult.FromOptions(Enum.GetNames<Keyboard.Key>());
+            }
+
+            return CompletionResult.Empty;
+        }
     }
 }

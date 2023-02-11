@@ -813,6 +813,10 @@ namespace Robust.Client.Graphics.Clyde
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
+            if (!Color.TryParse(_cfg.GetCVar(CVars.RenderFOVColor), out var color))
+                color = Color.Black;
+
+            fovShader.SetUniformMaybe("occludeColor", color);
             FovSetTransformAndBlit(viewport, eye.Position.Position, fovShader);
 
             GL.StencilMask(0x00);
@@ -856,6 +860,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, TKStencilOp.Replace);
             CheckGlError();
 
+            fovShader.SetUniformMaybe("occludeColor", Color.Black);
             FovSetTransformAndBlit(viewport, eye.Position.Position, fovShader);
 
             if (_hasGLSamplerObjects)

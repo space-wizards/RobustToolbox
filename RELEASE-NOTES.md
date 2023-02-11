@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* The FOV color is now configurable via the "render.fov_color" cvar
 
 ### Bugfixes
 

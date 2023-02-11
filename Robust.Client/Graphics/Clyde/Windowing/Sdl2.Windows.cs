@@ -214,6 +214,11 @@ internal partial class Clyde
                 windowFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
             }
 
+            if (parameters.Fullscreen)
+            {
+                windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+            }
+
             nint window = SDL_CreateWindow(
                 "",
                 SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -230,7 +235,7 @@ internal partial class Clyde
                 return default;
             }
 
-            // TODO: Monitors, window maximize, fullscreen.
+            // TODO: Monitors, window maximize.
             // TODO: a bunch of win32 calls for funny window properties I still haven't ported to other platforms.
 
             // Make sure window thread doesn't keep hold of the GL context.
@@ -268,7 +273,7 @@ internal partial class Clyde
 
             // LoadWindowIcon(window);
 
-            SDL_GL_GetDrawableSize(window, out var fbW, out var fbH);
+            SDL_GetWindowSizeInPixels(window, out var fbW, out var fbH);
             reg.FramebufferSize = (fbW, fbH);
 
             reg.WindowScale = GetWindowScale(window);

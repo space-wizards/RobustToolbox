@@ -45,15 +45,19 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* SDL2 backend now works if the client is started with fullscreen.
 
 ### Other
 
+* SDL2 backend now handles quit events (⌘+Q on macOS).
+* SDL2 backend now logs video driver backend used on initialization.
 * Added entity, occluder and shadow-casting light counts to the clyde debug panel.
 
 ### Internal
 
 * Changed thread safety around `ResourceManager`'s VFS roots, removing the use of error prone reader-writer locks.
+* SDL2 log now shows log category.
+* Removed OpenTK DllMap code.
 
 
 ## 0.85.2.0

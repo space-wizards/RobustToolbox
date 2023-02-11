@@ -36,10 +36,11 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Undid `*.yaml` prototype loading change from previous version.
+* `IConsoleHost`'s `RegisteredCommands` field has been renamed to `AvailableCommands`.
 
 ### New features
 
-*None yet*
+* Command definitions have a new bool that restricts them to only be executable by the server or in single player mode. Several "server only" commands have been moved to to shared code and now use this option.
 
 ### Bugfixes
 

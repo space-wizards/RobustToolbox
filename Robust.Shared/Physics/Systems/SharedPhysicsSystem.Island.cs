@@ -365,7 +365,7 @@ public abstract partial class SharedPhysicsSystem
                 if (body.BodyType == BodyType.Static) continue;
 
                 // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                SetAwake(body, true, updateSleepTime: false);
+                SetAwake(body.Owner, body, true, updateSleepTime: false);
 
                 var node = body.Contacts.First;
 
@@ -399,7 +399,7 @@ public abstract partial class SharedPhysicsSystem
 
                 if (!jointQuery.TryGetComponent(body.Owner, out var jointComponent)) continue;
 
-                foreach (var (_, joint) in jointComponent.Joints)
+                foreach (var joint in jointComponent.Joints.Values)
                 {
                     if (joint.IslandFlag) continue;
 
@@ -512,7 +512,7 @@ public abstract partial class SharedPhysicsSystem
     private void SolveIslands(PhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
     {
         var iBegin = 0;
-        var gravity = component.Gravity;
+        var gravity = _gravity.GetGravity(component.Owner);
 
         var data = new SolverData(
             frameTime,
@@ -952,6 +952,7 @@ public abstract partial class SharedPhysicsSystem
             // Plus calcing worldpos can be costly so we skip that too which is nice.
             if (body.BodyType == BodyType.Static) continue;
 
+            var uid = body.Owner;
             var position = positions[offset + i];
             var angle = angles[offset + i];
             var xform = xformQuery.GetComponent(body.Owner);
@@ -966,14 +967,14 @@ public abstract partial class SharedPhysicsSystem
 
             if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
             {
-                SetLinearVelocity(body, linVelocity, false);
+                SetLinearVelocity(uid, linVelocity, false, body: body);
             }
 
             var angVelocity = angularVelocities[offset + i];
 
             if (!float.IsNaN(angVelocity))
             {
-                SetAngularVelocity(body, angVelocity, false);
+                SetAngularVelocity(uid, angVelocity, false, body: body);
             }
 
             // TODO: Should check if the values update.
@@ -992,7 +993,9 @@ public abstract partial class SharedPhysicsSystem
             if (!sleep)
                 continue;
 
-            SetAwake(island.Bodies[i], false);
+            var body = island.Bodies[i];
+
+            SetAwake(body.Owner, body, false);
         }
     }
 }

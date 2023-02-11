@@ -205,20 +205,17 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public PrismaticJoint() {}
 
-        public PrismaticJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid)
+        internal PrismaticJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid)
         {
             LocalAxisA = new Vector2(1f, 0f);
         }
 
-        public PrismaticJoint(EntityUid bodyAUid, EntityUid bodyBUid, Vector2 anchor, Vector2 axis, IEntityManager entityManager) : base(bodyAUid, bodyBUid)
+        public PrismaticJoint(EntityUid bodyAUid, EntityUid bodyBUid, Vector2 anchorA, Vector2 anchorB, Vector2 axis, float referenceAngle) : base(bodyAUid, bodyBUid)
         {
-            var xformA = entityManager.GetComponent<TransformComponent>(bodyAUid);
-            var xformB = entityManager.GetComponent<TransformComponent>(bodyBUid);
-
-            LocalAnchorA = xformA.InvWorldMatrix.Transform(anchor);
-            LocalAnchorB = xformB.InvWorldMatrix.Transform(anchor);
-            LocalAxisA = entityManager.GetComponent<PhysicsComponent>(bodyAUid).GetLocalVector2(axis);
-            ReferenceAngle = (float) (xformB.WorldRotation - xformA.WorldRotation);
+            LocalAnchorA = anchorA;
+            LocalAnchorB = anchorB;
+            LocalAxisA = axis;
+            ReferenceAngle = referenceAngle;
         }
 
         internal PrismaticJoint(PrismaticJointState state) : base(state)

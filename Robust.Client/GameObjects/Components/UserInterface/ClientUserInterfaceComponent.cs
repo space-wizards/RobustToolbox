@@ -9,7 +9,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
-    [ComponentReference(typeof(SharedUserInterfaceComponent))]
+    [RegisterComponent, ComponentReference(typeof(SharedUserInterfaceComponent))]
     public sealed class ClientUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;

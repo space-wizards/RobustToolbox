@@ -35,31 +35,6 @@ public sealed class GridChangedEventArgs : EventArgs
     public IReadOnlyCollection<(Vector2i position, Tile tile)> Modified { get; }
 }
 
-/// <summary>
-///     Arguments for when a single tile on a grid is changed locally or remotely.
-/// </summary>
-public sealed class TileChangedEventArgs : EventArgs
-{
-    /// <summary>
-    ///     Creates a new instance of this class.
-    /// </summary>
-    public TileChangedEventArgs(TileRef newTile, Tile oldTile)
-    {
-        NewTile = newTile;
-        OldTile = oldTile;
-    }
-
-    /// <summary>
-    ///     New tile that replaced the old one.
-    /// </summary>
-    public TileRef NewTile { get; }
-
-    /// <summary>
-    ///     Old tile that was replaced.
-    /// </summary>
-    public Tile OldTile { get; }
-}
-
 internal partial class MapManager
 {
     public MapGridComponent GetGridComp(EntityUid euid)
@@ -127,7 +102,7 @@ internal partial class MapManager
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
         return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(((Component) c).Owner).MapID == mapId)
+            .Where(c => xformQuery.GetComponent(c.Owner).MapID == mapId)
             .Select(c => c);
     }
 
@@ -157,9 +132,6 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public event EventHandler<TileChangedEventArgs>? TileChanged;
-
-    /// <inheritdoc />
     public bool SuppressOnTileChanged { get; set; }
 
     /// <summary>
@@ -176,9 +148,9 @@ internal partial class MapManager
         if (SuppressOnTileChanged)
             return;
 
-        TileChanged?.Invoke(this, new TileChangedEventArgs(tileRef, oldTile));
         var euid = tileRef.GridUid;
-        EntityManager.EventBus.RaiseLocalEvent(euid, new TileChangedEvent(euid, tileRef, oldTile), true);
+        var ev = new TileChangedEvent(euid, tileRef, oldTile);
+        EntityManager.EventBus.RaiseLocalEvent(euid, ref ev, true);
     }
 
     protected MapGridComponent CreateGrid(MapId currentMapId, ushort chunkSize, EntityUid forcedGridEuid)

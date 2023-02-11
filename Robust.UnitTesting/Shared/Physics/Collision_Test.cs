@@ -108,15 +108,15 @@ public sealed class Collision_Test
         var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
 
         var body1 = entManager.AddComponent<PhysicsComponent>(ent1);
-        physics.SetBodyType(body1, BodyType.Dynamic);
+        physics.SetBodyType(ent1, BodyType.Dynamic, body: body1);
         var body2 = entManager.AddComponent<PhysicsComponent>(ent2);
-        physics.SetBodyType(body2, BodyType.Dynamic);
+        physics.SetBodyType(ent2, BodyType.Dynamic, body: body2);
 
-        fixtures.CreateFixture(body1, new Fixture(new PhysShapeCircle() { Radius = 1f }, 1, 0, true));
-        fixtures.CreateFixture(body2, new Fixture(new PhysShapeCircle() { Radius = 1f }, 0, 1, true));
+        fixtures.CreateFixture(ent1, new Fixture(new PhysShapeCircle(1f), 1, 0, true), body: body1);
+        fixtures.CreateFixture(ent2, new Fixture(new PhysShapeCircle(1f), 0, 1, true), body: body2);
 
-        physics.WakeBody(body1);
-        physics.WakeBody(body2);
+        physics.WakeBody(ent1, body: body1);
+        physics.WakeBody(ent2, body: body2);
 
         Assert.That(body1.Awake && body2.Awake);
         Assert.That(body1.ContactCount == 0 && body2.ContactCount == 0);

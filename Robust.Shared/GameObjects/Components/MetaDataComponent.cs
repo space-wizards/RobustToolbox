@@ -56,7 +56,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
-    [NetworkedComponent]
+    [RegisterComponent, NetworkedComponent]
     public sealed class MetaDataComponent : Component
     {
         [DataField("name")] internal string? _entityName;

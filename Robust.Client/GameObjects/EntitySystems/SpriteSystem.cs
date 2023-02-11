@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.ComponentTrees;
@@ -21,10 +20,9 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly SpriteTreeSystem _treeSystem = default!;
-        [Dependency] private readonly TransformSystem _transform = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
-        private HashSet<ISpriteComponent> _manualUpdate = new();
+        private HashSet<SpriteComponent> _manualUpdate = new();
 
         public override void Initialize()
         {
@@ -34,7 +32,14 @@ namespace Robust.Client.GameObjects
 
             _proto.PrototypesReloaded += OnPrototypesReloaded;
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
+            SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
             _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
+        }
+
+        private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
+        {
+            // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.
+            QueueUpdateInert(uid, component);
         }
 
         public override void Shutdown()
@@ -50,6 +55,9 @@ namespace Robust.Client.GameObjects
         }
 
         private void QueueUpdateInert(EntityUid uid, SpriteComponent sprite, ref SpriteUpdateInertEvent ev)
+            => QueueUpdateInert(uid, sprite);
+
+        public void QueueUpdateInert(EntityUid uid, SpriteComponent sprite)
         {
             if (sprite._inertUpdateQueued)
                 return;
@@ -84,7 +92,7 @@ namespace Robust.Client.GameObjects
             var spriteState = (frameTime, _manualUpdate);
 
             _treeSystem.QueryAabb( ref spriteState, static (ref (float frameTime,
-                    HashSet<ISpriteComponent> _manualUpdate) tuple, in ComponentTreeEntry<SpriteComponent> value) =>
+                    HashSet<SpriteComponent> _manualUpdate) tuple, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
                     if (value.Component.IsInert)
                         return true;
@@ -101,7 +109,7 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Force update of the sprite component next frame
         /// </summary>
-        public void ForceUpdate(ISpriteComponent sprite)
+        public void ForceUpdate(SpriteComponent sprite)
         {
             _manualUpdate.Add(sprite);
         }

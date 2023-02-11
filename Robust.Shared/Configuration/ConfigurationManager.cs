@@ -299,6 +299,20 @@ namespace Robust.Shared.Configuration
                 if (cVar.Registered)
                     Logger.ErrorS("cfg", $"The variable '{name}' has already been registered.");
 
+                if (!type.IsEnum && cVar.Value != null && !type.IsAssignableFrom(cVar.Value.GetType()))
+                {
+                    try
+                    {
+                        // try convert thing like int to float.
+                        cVar.Value = Convert.ChangeType(cVar.Value, type);
+                    }
+                    catch
+                    {
+                        Logger.Error($"TOML parsed cvar does not match registered cvar type. Name: {name}. Code Type: {type.Name}. Toml type: {cVar.Value.GetType().Name}");
+                        return;
+                    }
+                }
+
                 cVar.DefaultValue = defaultValue;
                 cVar.Flags = flags;
                 cVar.Registered = true;

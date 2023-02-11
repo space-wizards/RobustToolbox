@@ -54,7 +54,7 @@ namespace Robust.Shared.GameObjects
                 _logger.Error($"Entity {ToPrettyString(ev.Entity)} is attaching itself to a terminating entity {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
         }
 
-        private void MapManagerOnTileChanged(TileChangedEvent e)
+        private void MapManagerOnTileChanged(ref TileChangedEvent e)
         {
             if(e.NewTile.Tile != Tile.Empty)
                 return;

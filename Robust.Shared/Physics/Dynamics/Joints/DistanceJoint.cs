@@ -112,14 +112,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// slightly. This helps when saving and loading a game.
         /// Warning Do not use a zero or short length.
         /// </summary>
-        /// <param name="bodyA">The first body</param>
-        /// <param name="bodyB">The second body</param>
-        /// <param name="anchorA">The first body anchor</param>
-        /// <param name="anchorB">The second body anchor</param>
-        public DistanceJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB)
-            : base(bodyA.Owner, bodyB.Owner)
+        public DistanceJoint(EntityUid uidA, EntityUid uidB, Vector2 anchorA, Vector2 anchorB, float length)
+            : base(uidA, uidB)
         {
-            Length = MathF.Max(PhysicsConstants.LinearSlop, (bodyB.GetWorldPoint(anchorB) - bodyA.GetWorldPoint(anchorA)).Length);
+            Length = MathF.Max(PhysicsConstants.LinearSlop, length);
             _minLength = _length;
             _maxLength = _length;
             LocalAnchorA = anchorA;

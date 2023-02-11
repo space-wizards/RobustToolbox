@@ -4,6 +4,7 @@ using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
@@ -952,6 +953,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayWin11ImmersiveDarkMode =
             CVarDef.Create("display.win11_immersive_dark_mode", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true, run the windowing system in another thread from the game thread.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadWindowApi =
+            CVarDef.Create("display.thread_window_api", false, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */
@@ -970,6 +977,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> AudioMasterVolume =
             CVarDef.Create("audio.mastervolume", 1.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum raycast distance for audio occlusion.
+        /// </summary>
+        public static readonly CVarDef<float> AudioRaycastLength =
+            CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
          * PLAYER
@@ -1063,18 +1076,6 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> Baumgarte =
             CVarDef.Create("physics.baumgarte", 0.2f);
-
-        /// <summary>
-        /// If true, it will run a GiftWrap convex hull on all polygon inputs.
-        /// This makes for a more stable engine when given random input,
-        /// but if speed of the creation of polygons are more important,
-        /// you might want to set this to false.
-        /// </summary>
-        public static readonly CVarDef<bool> ConvexHullPolygons =
-            CVarDef.Create("physics.convexhullpolygons", true);
-
-        public static readonly CVarDef<int> MaxPolygonVertices =
-            CVarDef.Create("physics.maxpolygonvertices", 8);
 
         public static readonly CVarDef<float> MaxLinearCorrection =
             CVarDef.Create("physics.maxlinearcorrection", 0.2f);
@@ -1179,6 +1180,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> ResTexturePreloadingEnabled =
             CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Upper limit on the size of the RSI atlas texture. A lower limit might waste less vram, but start to defeat
+        /// the purpose of using an atlas if it gets too small.
+        /// </summary>
+        public static readonly CVarDef<int> ResRSIAtlasSize =
+            CVarDef.Create("res.rsi_atlas_size", 8192, CVar.CLIENTONLY);
 
         // TODO: Currently unimplemented.
         /// <summary>

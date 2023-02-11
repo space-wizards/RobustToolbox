@@ -27,7 +27,7 @@ namespace Robust.Shared.Console
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
 
-        [ViewVariables] protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
+        [ViewVariables] protected readonly Dictionary<string, IConsoleCommand> RegisteredCommands = new();
 
         private readonly CommandBuffer _commandBuffer = new CommandBuffer();
 
@@ -38,7 +38,7 @@ namespace Robust.Shared.Console
         public IConsoleShell LocalShell { get; }
 
         /// <inheritdoc />
-        public virtual IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => AvailableCommands;
+        public virtual IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => RegisteredCommands;
 
         public abstract event ConAnyCommandCallback? AnyCommandExecuted;
 
@@ -58,13 +58,13 @@ namespace Robust.Shared.Console
             foreach (var type in ReflectionManager.GetAllChildren<IConsoleCommand>())
             {
                 var instance = (IConsoleCommand)_typeFactory.CreateInstanceUnchecked(type, true);
-                if (RegisteredCommands.TryGetValue(instance.Command, out var duplicate))
+                if (AvailableCommands.TryGetValue(instance.Command, out var duplicate))
                 {
                     throw new InvalidImplementationException(instance.GetType(), typeof(IConsoleCommand),
                         $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
                 }
 
-                AvailableCommands[instance.Command] = instance;
+                RegisteredCommands[instance.Command] = instance;
             }
         }
 
@@ -76,11 +76,11 @@ namespace Robust.Shared.Console
             ConCommandCallback callback,
             bool requireServerOrSingleplayer = false)
         {
-            if (AvailableCommands.ContainsKey(command))
+            if (RegisteredCommands.ContainsKey(command))
                 throw new InvalidOperationException($"Command already registered: {command}");
 
             var newCmd = new RegisteredCommand(command, description, help, callback, requireServerOrSingleplayer);
-            AvailableCommands.Add(command, newCmd);
+            RegisteredCommands.Add(command, newCmd);
         }
 
         public void RegisterCommand(
@@ -91,11 +91,11 @@ namespace Robust.Shared.Console
             ConCommandCompletionCallback completionCallback,
             bool requireServerOrSingleplayer = false)
         {
-            if (AvailableCommands.ContainsKey(command))
+            if (RegisteredCommands.ContainsKey(command))
                 throw new InvalidOperationException($"Command already registered: {command}");
 
             var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
-            AvailableCommands.Add(command, newCmd);
+            RegisteredCommands.Add(command, newCmd);
         }
 
         public void RegisterCommand(
@@ -106,11 +106,11 @@ namespace Robust.Shared.Console
             ConCommandCompletionAsyncCallback completionCallback,
             bool requireServerOrSingleplayer = false)
         {
-            if (AvailableCommands.ContainsKey(command))
+            if (RegisteredCommands.ContainsKey(command))
                 throw new InvalidOperationException($"Command already registered: {command}");
 
             var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
-            AvailableCommands.Add(command, newCmd);
+            RegisteredCommands.Add(command, newCmd);
         }
 
         public void RegisterCommand(string command, ConCommandCallback callback,
@@ -147,14 +147,14 @@ namespace Robust.Shared.Console
         /// <inheritdoc />
         public void UnregisterCommand(string command)
         {
-            if (!AvailableCommands.TryGetValue(command, out var cmd))
+            if (!RegisteredCommands.TryGetValue(command, out var cmd))
                 throw new KeyNotFoundException($"Command {command} is not registered.");
 
             if (cmd is not RegisteredCommand)
                 throw new InvalidOperationException(
                     "You cannot unregister commands that have been registered automatically.");
 
-            AvailableCommands.Remove(command);
+            RegisteredCommands.Remove(command);
         }
 
         //TODO: Pull up

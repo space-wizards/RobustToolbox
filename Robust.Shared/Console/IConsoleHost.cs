@@ -49,7 +49,7 @@ namespace Robust.Shared.Console
         /// <summary>
         /// A map of (commandName -> ICommand) of every registered command in the shell.
         /// </summary>
-        IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
+        IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands { get; }
 
         /// <summary>
         /// Invoked before any console command is executed.

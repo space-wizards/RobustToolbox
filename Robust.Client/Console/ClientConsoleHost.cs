@@ -78,8 +78,8 @@ namespace Robust.Client.Console
             LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
         }
 
-        private Dictionary<string, IConsoleCommand> _actuallyAvailableCommands = new();
-        public override IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => _actuallyAvailableCommands;
+        private readonly Dictionary<string, IConsoleCommand> _availableCommands = new();
+        public override IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => _availableCommands;
 
         private void OnLevelChanged(object? sender, RunLevelChangedEventArgs e)
         {
@@ -94,22 +94,17 @@ namespace Robust.Client.Console
 
         private void UpdateAvailableCommands()
         {
-            // so uhhh. AvailableCommands are all the currently registered commands.
-            // and uhhh RegisteredCommands are all the currently available commands.
-            // makes perfect sense.
-            // I cbf fixing this and bloating the PR.
+            _availableCommands.Clear();
 
-            _actuallyAvailableCommands.Clear();
-
-            foreach (var (name, cmd) in AvailableCommands)
+            foreach (var (name, cmd) in RegisteredCommands)
             {
                 if (!cmd.RequireServerOrSingleplayer || (_client.RunLevel is ClientRunLevel.Initialize or ClientRunLevel.SinglePlayerGame))
-                    _actuallyAvailableCommands.Add(name, cmd);
+                    _availableCommands.Add(name, cmd);
             }
 
             foreach (var (name, cmd) in _availableServerCommands)
             {
-                _actuallyAvailableCommands.TryAdd(name, cmd);
+                _availableCommands.TryAdd(name, cmd);
             }
         }
 
@@ -162,7 +157,7 @@ namespace Robust.Client.Console
 
             var commandName = args[0];
 
-            if (!RegisteredCommands.TryGetValue(commandName, out var cmd))
+            if (!AvailableCommands.TryGetValue(commandName, out var cmd))
             {
                 WriteError(null, "Unknown command: " + commandName);
                 return;

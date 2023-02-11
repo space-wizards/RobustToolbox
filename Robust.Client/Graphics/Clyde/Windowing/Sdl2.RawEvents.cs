@@ -65,7 +65,15 @@ internal partial class Clyde
                 case SDL_SYSWMEVENT:
                     ProcessSdl2EventSysWM(in ev.syswm);
                     break;
+                case SDL_QUIT:
+                    ProcessSdl2EventQuit();
+                    break;
             }
+        }
+
+        private void ProcessSdl2EventQuit()
+        {
+            SendEvent(new EventQuit());
         }
 
         private void ProcessSdl2EventDisplay(in SDL_DisplayEvent evDisplay)
@@ -153,7 +161,7 @@ internal partial class Clyde
                 case SDL_WINDOWEVENT_SIZE_CHANGED:
                     var width = ev.data1;
                     var height = ev.data2;
-                    SDL_GL_GetDrawableSize(window, out var fbW, out var fbH);
+                    SDL_GetWindowSizeInPixels(window, out var fbW, out var fbH);
                     var (xScale, yScale) = GetWindowScale(window);
 
                     _sawmill.Debug($"{width}x{height}, {fbW}x{fbH}, {xScale}x{yScale}");
@@ -276,6 +284,7 @@ internal partial class Clyde
             uint Message, WPARAM WParam) : EventBase;
 
         private record EventKeyMapChanged : EventBase;
+        private record EventQuit : EventBase;
 
         [StructLayout(LayoutKind.Sequential)]
         [SuppressMessage("ReSharper", "InconsistentNaming")]

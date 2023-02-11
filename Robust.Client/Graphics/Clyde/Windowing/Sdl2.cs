@@ -5,6 +5,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using static SDL2.SDL;
+using static SDL2.SDL.SDL_LogCategory;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde;
@@ -61,8 +62,9 @@ internal partial class Clyde
             }
 
             SDL_GetVersion(out var version);
+            var videoDriver = SDL_GetCurrentVideoDriver();
             _sawmill.Debug(
-                "SDL2 initialized, version: {major}.{minor}.{patch}", version.major, version.minor, version.patch);
+                "SDL2 initialized, version: {major}.{minor}.{patch}, video driver: {videoDriver}", version.major, version.minor, version.patch, videoDriver);
 
             _sdlEventWakeup = SDL_RegisterEvents(1);
 
@@ -158,7 +160,26 @@ internal partial class Clyde
             };
 
             var msg = Marshal.PtrToStringUTF8((IntPtr) message) ?? "";
-            obj._sawmillSdl2.Log(level, msg);
+            var categoryName = SdlLogCategoryName(category);
+            obj._sawmillSdl2.Log(level, $"[{categoryName}] {msg}");
+        }
+
+        private static string SdlLogCategoryName(int category)
+        {
+            return (SDL_LogCategory) category switch {
+                // @formatter:off
+                SDL_LOG_CATEGORY_APPLICATION => "application",
+                SDL_LOG_CATEGORY_ERROR       => "error",
+                SDL_LOG_CATEGORY_ASSERT      => "assert",
+                SDL_LOG_CATEGORY_SYSTEM      => "system",
+                SDL_LOG_CATEGORY_AUDIO       => "audio",
+                SDL_LOG_CATEGORY_VIDEO       => "video",
+                SDL_LOG_CATEGORY_RENDER      => "render",
+                SDL_LOG_CATEGORY_INPUT       => "input",
+                SDL_LOG_CATEGORY_TEST        => "test",
+                _                            => "unknown"
+                // @formatter:on
+            };
         }
     }
 }

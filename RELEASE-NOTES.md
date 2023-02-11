@@ -43,15 +43,19 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* SDL2 backend now works if the client is started with fullscreen.
 
 ### Other
 
+* SDL2 backend now handles quit events (⌘+Q on macOS).
+* SDL2 backend now logs video driver backend used on initialization.
 * The engine will now warn on startup if `*.yaml` files are found in resources, as this most likely indicates an accident.
 
 ### Internal
 
-*None yet*
+* Changed thread safety around `ResourceManager`'s VFS roots, removing the use of error prone reader-writer locks.
+* SDL2 log now shows log category.
+* Removed OpenTK DllMap code.
 
 
 ## 0.85.2.0

@@ -653,7 +653,9 @@ namespace Robust.UnitTesting
                     ("log.runtimelog", "false"),
                     (CVars.SysWinTickPeriod.Name, "-1"),
                     (CVars.SysGCCollectStart.Name, "false"),
-                    (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
+                    (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString()),
+
+                    (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
 
                 server.ContentStart = Options?.ContentStart ?? false;
@@ -827,6 +829,8 @@ namespace Robust.UnitTesting
                     (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString()),
 
                     (CVars.ResPrototypeReloadWatch.Name, "false"),
+
+                    (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
 
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),

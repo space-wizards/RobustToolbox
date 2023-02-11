@@ -6,6 +6,7 @@ using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 
@@ -718,8 +719,8 @@ namespace Robust.Shared
         public static readonly CVarDef<double> RenderSpriteDirectionBias =
             CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
 
-        public static readonly CVarDef<Color> RenderFOVColor =
-            CVarDef.Create("render.fov_color", Color.Black, CVar.ARCHIVE | CVar.CLIENTONLY);
+        public static readonly CVarDef<string> RenderFOVColor =
+            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
          * DISPLAY

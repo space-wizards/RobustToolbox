@@ -346,6 +346,7 @@ namespace Robust.Shared.GameObjects
         public bool Anchored
         {
             get => _anchored;
+            [Obsolete("Use the SharedTransformSystem.AnchorEntity/Unanchor methods instead.")]
             set
             {
                 // This will be set again when the transform initializes, actually anchoring it.

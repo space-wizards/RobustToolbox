@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
@@ -42,6 +42,7 @@ namespace Robust.Client.UserInterface.Controls
         protected ScrollBar(OrientationMode orientation)
         {
             MouseFilter = MouseFilterMode.Pass;
+            ReservesSpace = true;
 
             _orientation = orientation;
         }
@@ -80,7 +81,6 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             var styleBox = _getGrabberStyleBox();
-
             styleBox?.Draw(handle, _getGrabberBox());
         }
 

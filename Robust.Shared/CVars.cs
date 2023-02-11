@@ -953,6 +953,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayWin11ImmersiveDarkMode =
             CVarDef.Create("display.win11_immersive_dark_mode", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true, run the windowing system in another thread from the game thread.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadWindowApi =
+            CVarDef.Create("display.thread_window_api", false, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */
@@ -1174,6 +1180,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> ResTexturePreloadingEnabled =
             CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Upper limit on the size of the RSI atlas texture. A lower limit might waste less vram, but start to defeat
+        /// the purpose of using an atlas if it gets too small.
+        /// </summary>
+        public static readonly CVarDef<int> ResRSIAtlasSize =
+            CVarDef.Create("res.rsi_atlas_size", 8192, CVar.CLIENTONLY);
 
         // TODO: Currently unimplemented.
         /// <summary>

@@ -560,7 +560,7 @@ namespace Robust.Shared.GameObjects
             var physicsQuery = GetEntityQuery<PhysicsComponent>();
             if (oldBroadphase != null && oldBroadphase != newBroadphase)
             {
-                RemoveFromEntityTree(oldBroadphase.Owner, oldBroadphase, ref oldPhysMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
+                RemoveFromEntityTree(oldBroadphase.Owner, oldBroadphase, ref oldPhysMap, uid, xform, xformQuery, fixturesQuery);
             }
 
             if (newBroadphase == null)
@@ -749,7 +749,7 @@ namespace Robust.Shared.GameObjects
                     $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
             }
 
-            RemoveFromEntityTree(broadphase.Owner, broadphase, ref physMap, uid, xform, xformQuery, physicsQuery, fixturesQuery);
+            RemoveFromEntityTree(broadphase.Owner, broadphase, ref physMap, uid, xform, xformQuery, fixturesQuery);
         }
 
         /// <summary>
@@ -762,7 +762,6 @@ namespace Robust.Shared.GameObjects
             EntityUid uid,
             TransformComponent xform,
             EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<PhysicsComponent> physicsQuery,
             EntityQuery<FixturesComponent> fixturesQuery,
             bool recursive = true)
         {
@@ -812,7 +811,6 @@ namespace Robust.Shared.GameObjects
                     child.Value,
                     xformQuery.GetComponent(child.Value),
                     xformQuery,
-                    physicsQuery,
                     fixturesQuery);
             }
         }
@@ -927,7 +925,7 @@ namespace Robust.Shared.GameObjects
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
             xform ??= xformQuery.GetComponent(uid);
-            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+            var (worldPos, worldRot) = xform.GetWorldPositionRotation(xformQuery);
 
             return GetAABB(uid, worldPos, worldRot, xform, xformQuery);
         }

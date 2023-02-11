@@ -33,5 +33,11 @@ namespace Robust.Shared.Physics
         public const bool ConvexHulls = true;
 
         public const byte MaxPolygonVertices = 8;
+
+        public const float DefaultContactFriction = 0.4f;
+
+        public const float DefaultRestitution = 0f;
+
+        public const float DefaultDensity = 1f;
     }
 }

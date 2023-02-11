@@ -129,7 +129,7 @@ namespace Robust.Shared.Containers
             // got-inserted event, but really that event should run after the entity was actually inserted (so that
             // parent/map have updated). But we are better of disabling collision before doing map/parent changes.
             physicsQuery.Resolve(toinsert, ref physics, false);
-            RecursivelyUpdatePhysics(transform, physics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
+            RecursivelyUpdatePhysics(toinsert, transform, physics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
 
             // Attach to new parent
             var oldParent = transform.ParentUid;
@@ -157,7 +157,9 @@ namespace Robust.Shared.Containers
             return true;
         }
 
-        internal void RecursivelyUpdatePhysics(TransformComponent xform,
+        internal void RecursivelyUpdatePhysics(
+            EntityUid uid,
+            TransformComponent xform,
             PhysicsComponent? physics,
             SharedPhysicsSystem physicsSys,
             SharedJointSystem jointSys,
@@ -170,19 +172,21 @@ namespace Robust.Shared.Containers
                 // Here we intentionally don't dirty the physics comp. Client-side state handling will apply these same
                 // changes. This also ensures that the server doesn't have to send the physics comp state to every
                 // player for any entity inside of a container during init.
-                physicsSys.SetLinearVelocity(physics, Vector2.Zero, false);
-                physicsSys.SetAngularVelocity(physics, 0, false);
-                physicsSys.SetCanCollide(physics, false, false);
+                physicsSys.SetLinearVelocity(uid, Vector2.Zero, false, body: physics);
+                physicsSys.SetAngularVelocity(uid,0, false, body: physics);
+                physicsSys.SetCanCollide(uid, false, false, body: physics);
 
-                if (jointQuery.TryGetComponent(xform.Owner, out var joint))
-                    jointSys.ClearJoints(xform.Owner, joint);
+                if (jointQuery.TryGetComponent(uid, out var joint))
+                    jointSys.ClearJoints(uid, joint);
             }
 
-            foreach (var child in xform.ChildEntities)
+            var enumerator = xform.ChildEnumerator;
+
+            while (enumerator.MoveNext(out var child))
             {
-                var childXform = transformQuery.GetComponent(child);
-                physicsQuery.TryGetComponent(child, out var childPhysics);
-                RecursivelyUpdatePhysics(childXform, childPhysics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
+                var childXform = transformQuery.GetComponent(child.Value);
+                physicsQuery.TryGetComponent(child.Value, out var childPhysics);
+                RecursivelyUpdatePhysics(child.Value, childXform, childPhysics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
             }
         }
 

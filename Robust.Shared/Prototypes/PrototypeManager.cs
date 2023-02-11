@@ -279,6 +279,8 @@ namespace Robust.Shared.Prototypes
                 }
             }
 
+#endif
+
             //todo paul i hate it but i am not opening that can of worms in this refactor
             PrototypesReloaded?.Invoke(
                 new PrototypesReloadedEventArgs(
@@ -288,7 +290,6 @@ namespace Robust.Shared.Prototypes
                             g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
                                 g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
                                     .ToDictionary(a => a, a => _kinds[g.Key].Instances[a])))));
-#endif
         }
 
         /// <summary>

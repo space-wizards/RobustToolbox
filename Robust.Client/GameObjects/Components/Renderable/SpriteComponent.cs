@@ -30,9 +30,8 @@ using RSIDirection = Robust.Client.Graphics.RSI.State.Direction;
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(SharedSpriteComponent))]
-    [RegisterComponent, ComponentReference(typeof(ISpriteComponent))]
-    public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
-        IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>
+    [RegisterComponent]
+    public sealed class SpriteComponent : SharedSpriteComponent, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
@@ -305,11 +304,8 @@ namespace Robust.Client.GameObjects
 
         void ISerializationHooks.AfterDeserialization()
         {
-            // Please somebody burn this to the ground
-            // Fix prototype reload trying to update tree on deserialization dummy instances.
-            if (!Owner.IsValid())
-                return;
-
+            // Please somebody burn this to the ground. There is so much spaghetti.
+            
             IoCManager.InjectDependencies(this);
 
             {
@@ -1405,7 +1401,7 @@ namespace Robust.Client.GameObjects
 
         private void QueueUpdateRenderTree()
         {
-            if (TreeUpdateQueued || entities?.EventBus == null)
+            if (TreeUpdateQueued || !Owner.IsValid())
                 return;
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
@@ -1415,7 +1411,7 @@ namespace Robust.Client.GameObjects
 
         private void QueueUpdateIsInert()
         {
-            if (_inertUpdateQueued || entities?.EventBus == null)
+            if (_inertUpdateQueued || !Owner.IsValid())
                 return;
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.

@@ -77,10 +77,23 @@ internal partial class Clyde
                 case EventWindowsFakeV ev:
                     ProcessWindowsFakeV(ev);
                     break;
+                case EventKeyMapChanged:
+                    ProcessKeyMapChanged();
+                    break;
+                case EventQuit:
+                    ProcessEventQuit();
+                    break;
                 default:
                     _sawmill.Error($"Unknown SDL2 event type: {evb.GetType().Name}");
                     break;
             }
+        }
+
+        private void ProcessEventQuit()
+        {
+            // Interpret quit as closing of the main window.
+            var window = _clyde._mainWindow!;
+            _clyde.SendCloseWindow(window, new WindowRequestClosedEventArgs(window.Handle));
         }
 
         private void ProcessEventWindow(EventWindow ev)
@@ -250,6 +263,11 @@ internal partial class Clyde
             };
 
             EmitKeyEvent(key, type, false, 0, 0);
+        }
+
+        private void ProcessKeyMapChanged()
+        {
+            _clyde.SendInputModeChanged();
         }
     }
 }

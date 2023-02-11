@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using System.Text;
@@ -19,7 +20,14 @@ internal static class SystemInformation
                 return name;
         }
 
-        // TODO: ask OS as fallback for when x86 CPUID isn't available.
+        if (OperatingSystem.IsMacOS())
+        {
+            var name = GetProcessorModelMacOS();
+            if (name != null)
+                return name;
+        }
+
+        // TODO: ask OS as fallback for when x86 CPUID isn't available on Windows and Linux.
 
         return "Unknown processor model";
     }
@@ -49,4 +57,34 @@ internal static class SystemInformation
             return model;
         }
     }
+
+    private static unsafe string? GetProcessorModelMacOS()
+    {
+        fixed (byte* sysctlName = "machdep.cpu.brand_string"u8)
+        {
+            nint len = 0;
+            var err = sysctlbyname(sysctlName, null, &len, null, 0);
+            if (err != 0)
+                throw new Win32Exception(Marshal.GetLastPInvokeError());
+
+            Span<byte> brand = stackalloc byte[(int)len];
+            fixed (byte* brandPtr = brand)
+            {
+                err = sysctlbyname(sysctlName, brandPtr, &len, null, 0);
+            }
+
+            if (err != 0)
+                throw new Win32Exception(Marshal.GetLastPInvokeError());
+
+            return Encoding.UTF8.GetString(brand).TrimEnd();
+        }
+    }
+
+    [DllImport("libc", SetLastError = true)]
+    private static unsafe extern int sysctlbyname(
+        byte* name,
+        void* oldp,
+        nint* oldlenp,
+        void* newp,
+        nint newlen);
 }

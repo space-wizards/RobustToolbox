@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Undid `*.yaml` prototype loading change from previous version.
 
 ### New features
 
@@ -43,15 +43,144 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* SDL2 backend now works if the client is started with fullscreen.
 
 ### Other
 
-*None yet*
+* SDL2 backend now handles quit events (⌘+Q on macOS).
+* SDL2 backend now logs video driver backend used on initialization.
 
 ### Internal
 
-*None yet*
+* Changed thread safety around `ResourceManager`'s VFS roots, removing the use of error prone reader-writer locks.
+* SDL2 log now shows log category.
+* Removed OpenTK DllMap code.
+
+
+## 0.85.2.0
+
+### New features
+
+* Threaded windowing API usage is now behind a CVar, disabled by default on macOS to avoid crashes.
+* Box2i, ImmutableHashSet, ISet, and IReadonlySet can now be serialized.
+* Added helpers for Box2i Center / Vector2i Up-Down-Left-Right.
+* Implement blend modes for rendering.
+
+### Bugfixes
+
+* MacOS with the SDL2 backend now has DPI scaling enabled.
+    * Fixed DPI scaling calculations on platforms outside Windows.
+* Grids on top of maps that are also grids should render correctly now.
+* Fixed bug in ScrollContainer that could cause permanent loops.
+* Fixed occluder tree error.
+* Fixed Texture.GetPixel.
+
+### Other
+
+* System F3 panel now correctly fetches processor model on Apple Silicon devices.
+* UI content scale is now listed in the F3 coordinates panel.
+* SDL2 backend is now wired up to update key names dynamically on keyboard mode change.
+* The prototype reload event is no longer wrapped under #if !FULL_RELEASE.
+* The engine now loads `*.yaml` files (previously loading only `*.yml`) for prototypes.
+
+### Internal
+
+* `keyinfo` command has enum completions.
+
+## 0.85.1.1
+
+### Bugfixes
+
+* Fixed GameStateManager error when resetting client-side prediction
+
+
+## 0.85.1.0
+
+### New features
+
+* RSI's now get combined into a large atlas.
+
+### Bugfixes
+
+* Removed bad PlayAudioPositionalMessage error log & fixed fallback coordinate check.
+* Fixed MouseJoint parallelisation exception.
+
+### Internal
+
+* Fixed some warnings in GameStateManager
+
+
+## 0.85.0.1
+
+### Bugfixes
+
+* Fix fixture client state handling not removing the existing fixture.
+* Use a dummy entity for placement manager preview so offsets are applied correctly.
+
+
+## 0.85.0.0
+
+### Breaking changes
+
+* Component.Shutdown() has now been removed and the eventbus should be used in its place.
+* Component.Name has now been removed and IComponentFactory.GetComponentName(Type) should be used in its place.
+
+### Bugfixes
+
+* Ensure fixture contacts are destroyed even if no broadphase is found.
+* Ensure fixtures are re-created in client state handling. There was a subtle bug introduced by updating existing ones where contacts were incorrectly being retained across prediction. This was most obvious with slipping in SS14.
+
+
+## 0.84.0.0
+
+### Breaking changes
+
+* EffectSystem has been removed.
+
+### New features
+
+* Added Pidgin parser to the sandbox whitelisted.
+
+### Bugfixes
+
+* Fixed physics ignoring parallelisation cvars
+* Global audio volume is no longer overridden every tick.
+* Fix `SpriteComponent.CopyFrom()` not working properly.
+* Fix cvar TOML parsing failing to read some numeric cvars.
+
+### Other
+
+* Improved physics joint logging.
+
+
+## 0.83.0.0
+
+### Breaking changes
+
+* Physics has been ECSd with large API changes:
+- Shapes can be updated via the system rather than requiring the caller to handle it.
+- Access attributes have been added.
+- Implemented IEquatable for Fixture Shapes
+- Removed obsolete PhysicsComponent APIs.
+- Removed usage of Component.Owner internally.
+
+
+## 0.82.0.0
+
+### Breaking changes
+
+* `Box2Rotated.Centre` has been renamed to `.Center`
+* `ISpriteComponent` has been removed. Just use `SpriteComponent` instead.
+
+### Bugfixes
+
+* Fixed prototype reloading/uploading.
+* Fixed UI tooltips sometimes causing a null reference exception.
+
+### Other
+
+* Map/world velocity calculations should be slightly faster.
+* `EnsureComp` will now re-add a component if it has been queued for removal.
 
 
 ## 0.81.0.0

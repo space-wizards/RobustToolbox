@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -34,22 +35,18 @@ namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class PolygonShape : IPhysShape, ISerializationHooks, IApproxEquatable<PolygonShape>
+    public sealed class PolygonShape : IPhysShape, ISerializationHooks, IEquatable<PolygonShape>, IApproxEquatable<PolygonShape>
     {
         [ViewVariables]
         public int VertexCount => Vertices.Length;
 
-        /// <summary>
-        /// This is public so engine code can manipulate it directly.
-        /// NOTE! If you wish to manipulate this then you need to update the normals and centroid yourself!
-        /// </summary>
-        [DataField("vertices")]
+        [DataField("vertices"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public Vector2[] Vertices = Array.Empty<Vector2>();
 
-        [ViewVariables]
+        [ViewVariables, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public Vector2[] Normals = Array.Empty<Vector2>();
 
-        [ViewVariables]
+        [ViewVariables, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         internal Vector2 Centroid { get; set; } = Vector2.Zero;
 
         public int ChildCount => 1;
@@ -57,19 +54,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
         /// <summary>
         /// The radius of this polygon.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public float Radius
-        {
-            get => _radius;
-            set
-            {
-                if (MathHelper.CloseToPercent(_radius, value)) return;
-                _radius = value;
-                // TODO: Update
-            }
-        }
-
-        private float _radius;
+        [DataField("radius"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        public float Radius { get; set; } = PhysicsConstants.PolygonRadius;
 
         public void SetVertices(List<Vector2> vertices)
         {
@@ -173,17 +159,13 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public ShapeType ShapeType => ShapeType.Polygon;
 
-        /// <inheritdoc />
-        public Box2 LocalBounds => CalcLocalBounds();
-
         public PolygonShape()
         {
-            _radius = PhysicsConstants.PolygonRadius;
         }
 
         public PolygonShape(float radius)
         {
-            _radius = radius;
+            Radius = radius;
         }
 
         void ISerializationHooks.AfterDeserialization()
@@ -260,7 +242,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public bool EqualsApprox(PolygonShape other, double tolerance)
         {
-            if (Vertices.Length != other.Vertices.Length) return false;
+            if (Vertices.Length != other.Vertices.Length || !MathHelper.CloseTo(Radius, other.Radius, tolerance)) return false;
+
             for (var i = 0; i < Vertices.Length; i++)
             {
                 if (!Vertices[i].EqualsApprox(other.Vertices[i], tolerance)) return false;
@@ -282,23 +265,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 upper = Vector2.ComponentMax(upper, v);
             }
 
-            var r = new Vector2(_radius, _radius);
-            return new Box2(lower - r, upper + r);
-        }
-
-        private Box2 CalcLocalBounds()
-        {
-            var lower = Vertices[0];
-            var upper = lower;
-
-            for (var i = 1; i < Vertices.Length; ++i)
-            {
-                var v = Vertices[i];
-                lower = Vector2.ComponentMin(lower, v);
-                upper = Vector2.ComponentMax(upper, v);
-            }
-
-            var r = new Vector2(_radius, _radius);
+            var r = new Vector2(Radius, Radius);
             return new Box2(lower - r, upper + r);
         }
 
@@ -325,6 +292,38 @@ namespace Robust.Shared.Physics.Collision.Shapes
                     new Vector2(-1f, 0f),
                 },
             };
+        }
+
+        public bool Equals(PolygonShape? other)
+        {
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
+
+            if (!Radius.Equals(other.Radius) || VertexCount != other.VertexCount)
+                return false;
+
+            for (var i = 0; i < VertexCount; i++)
+            {
+                var vert = Vertices[i];
+                var otherVert = other.Vertices[i];
+
+                if (!vert.Equals(otherVert))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return ReferenceEquals(this, obj) || obj is PolygonShape other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Vertices, Radius);
         }
     }
 }

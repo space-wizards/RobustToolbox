@@ -60,6 +60,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 
             var mouseScreenPos = _inputManager.MouseScreenPosition;
             var screenSize = _displayManager.ScreenSize;
+            var screenScale = _displayManager.MainWindow.ContentScale;
 
             MapCoordinates mouseWorldMap;
             EntityCoordinates mouseGridPos;
@@ -82,7 +83,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             var controlHovered = UserInterfaceManager.CurrentlyHovered;
 
             _textBuilder.Append($@"Positioning Debug:
-Screen Size: {screenSize}
+Screen Size: {screenSize} (scale: {screenScale})
 Mouse Pos:
     Screen: {mouseScreenPos}
     {mouseWorldMap}

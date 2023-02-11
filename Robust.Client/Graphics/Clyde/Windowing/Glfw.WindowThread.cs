@@ -63,6 +63,11 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public void PollEvents()
+            {
+                GLFW.PollEvents();
+            }
+
             private void ProcessGlfwCmd(CmdBase cmdb)
             {
                 switch (cmdb)
@@ -168,20 +173,34 @@ namespace Robust.Client.Graphics.Clyde
 
             private void SendCmd(CmdBase cmd)
             {
-                _cmdWriter.TryWrite(cmd);
+                if (_clyde._threadWindowApi)
+                {
+                    _cmdWriter.TryWrite(cmd);
 
-                // Post empty event to unstuck WaitEvents if necessary.
-                if (!OperatingSystem.IsMacOS())
-                    GLFW.PostEmptyEvent();
+                    // Post empty event to unstuck WaitEvents if necessary.
+                    if (!OperatingSystem.IsMacOS())
+                        GLFW.PostEmptyEvent();
+                }
+                else
+                {
+                    ProcessGlfwCmd(cmd);
+                }
             }
 
             private void SendEvent(EventBase ev)
             {
-                var task = _eventWriter.WriteAsync(ev);
-
-                if (!task.IsCompletedSuccessfully)
+                if (_clyde._threadWindowApi)
                 {
-                    task.AsTask().Wait();
+                    var task = _eventWriter.WriteAsync(ev);
+
+                    if (!task.IsCompletedSuccessfully)
+                    {
+                        task.AsTask().Wait();
+                    }
+                }
+                else
+                {
+                    ProcessEvent(ev);
                 }
             }
 

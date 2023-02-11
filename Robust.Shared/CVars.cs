@@ -957,6 +957,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayWin11ImmersiveDarkMode =
             CVarDef.Create("display.win11_immersive_dark_mode", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true, run the windowing system in another thread from the game thread.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadWindowApi =
+            CVarDef.Create("display.thread_window_api", false, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */
@@ -1212,6 +1218,15 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> ResPrototypeReloadWatch =
             CVarDef.Create("res.prototype_reload_watch", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, do a warning check at startup for probably-erroneous file extensions like <c>.yaml</c> in resources.
+        /// </summary>
+        /// <remarks>
+        /// This check is always skipped on <c>FULL_RELEASE</c>.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResCheckBadFileExtensions =
+            CVarDef.Create("res.check_bad_file_extensions", true);
 
         /*
          * DEBUG

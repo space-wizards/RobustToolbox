@@ -18,12 +18,11 @@ namespace Robust.Shared.ContentPack
     {
         [Dependency] private readonly IConfigurationManager _config = default!;
 
-        private readonly ReaderWriterLockSlim _contentRootsLock = new(LockRecursionPolicy.SupportsRecursion);
-
-        private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots =
-            new();
+        private (ResourcePath prefix, IContentRoot root)[] _contentRoots =
+            new (ResourcePath prefix, IContentRoot root)[0];
 
         private StreamSeekMode _streamSeekMode;
+        private readonly object _rootMutateLock = new();
 
         // Special file names on Windows like serial ports.
         private static readonly Regex BadPathSegmentRegex =
@@ -99,15 +98,17 @@ namespace Robust.Shared.ContentPack
 
         public void AddRoot(ResourcePath prefix, IContentRoot loader)
         {
-            loader.Mount();
-            _contentRootsLock.EnterWriteLock();
-            try
+            lock (_rootMutateLock)
             {
-                _contentRoots.Add((prefix, loader));
-            }
-            finally
-            {
-                _contentRootsLock.ExitWriteLock();
+                loader.Mount();
+
+                // When adding a new root we atomically swap it into the existing list.
+                // So the list of content roots is thread safe.
+                // This does make adding new roots O(n). Oh well.
+                var copy = _contentRoots;
+                Array.Resize(ref copy, copy.Length + 1);
+                copy[^1] = (prefix, loader);
+                _contentRoots = copy;
             }
         }
 
@@ -184,31 +185,22 @@ namespace Robust.Shared.ContentPack
                 throw new FileNotFoundException($"Path '{path}' contains invalid characters/filenames.");
             }
 #endif
-            _contentRootsLock.EnterReadLock();
-
-            try
+            foreach (var (prefix, root) in _contentRoots)
             {
-                foreach (var (prefix, root) in _contentRoots)
+                if (!path.TryRelativeTo(prefix, out var relative))
                 {
-                    if (!path.TryRelativeTo(prefix, out var relative))
-                    {
-                        continue;
-                    }
-
-                    if (root.TryGetFile(relative, out var stream))
-                    {
-                        fileStream = WrapStream(stream);
-                        return true;
-                    }
+                    continue;
                 }
 
-                fileStream = null;
-                return false;
+                if (root.TryGetFile(relative, out var stream))
+                {
+                    fileStream = WrapStream(stream);
+                    return true;
+                }
             }
-            finally
-            {
-                _contentRootsLock.ExitReadLock();
-            }
+
+            fileStream = null;
+            return false;
         }
 
         /// <summary>
@@ -273,22 +265,14 @@ namespace Robust.Shared.ContentPack
 
             var entries = new HashSet<string>();
 
-            _contentRootsLock.EnterReadLock();
-            try
+            foreach (var (prefix, root) in _contentRoots)
             {
-                foreach (var (prefix, root) in _contentRoots)
+                if (!path.TryRelativeTo(prefix, out var relative))
                 {
-                    if (!path.TryRelativeTo(prefix, out var relative))
-                    {
-                        continue;
-                    }
-
-                    entries.UnionWith(root.GetEntries(relative));
+                    continue;
                 }
-            }
-            finally
-            {
-                _contentRootsLock.ExitReadLock();
+
+                entries.UnionWith(root.GetEntries(relative));
             }
 
             return entries;
@@ -309,58 +293,42 @@ namespace Robust.Shared.ContentPack
 
             var alreadyReturnedFiles = new HashSet<ResourcePath>();
 
-            _contentRootsLock.EnterReadLock();
-            try
+            foreach (var (prefix, root) in _contentRoots)
             {
-                foreach (var (prefix, root) in _contentRoots)
+                if (!path.TryRelativeTo(prefix, out var relative))
                 {
-                    if (!path.TryRelativeTo(prefix, out var relative))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    foreach (var filename in root.FindFiles(relative))
+                foreach (var filename in root.FindFiles(relative))
+                {
+                    var newPath = prefix / filename;
+                    if (!alreadyReturnedFiles.Contains(newPath))
                     {
-                        var newPath = prefix / filename;
-                        if (!alreadyReturnedFiles.Contains(newPath))
-                        {
-                            alreadyReturnedFiles.Add(newPath);
-                            yield return newPath;
-                        }
+                        alreadyReturnedFiles.Add(newPath);
+                        yield return newPath;
                     }
                 }
-            }
-            finally
-            {
-                _contentRootsLock.ExitReadLock();
             }
         }
 
         public bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath)
         {
             // loop over each root trying to get the file
-            _contentRootsLock.EnterReadLock();
-            try
+            foreach (var (prefix, root) in _contentRoots)
             {
-                foreach (var (prefix, root) in _contentRoots)
+                if (root is not DirLoader dirLoader || !path.TryRelativeTo(prefix, out var tempPath))
                 {
-                    if (root is not DirLoader dirLoader || !path.TryRelativeTo(prefix, out var tempPath))
-                    {
-                        continue;
-                    }
-
-                    diskPath = dirLoader.GetPath(tempPath);
-                    if (File.Exists(diskPath))
-                        return true;
+                    continue;
                 }
 
-                diskPath = null;
-                return false;
+                diskPath = dirLoader.GetPath(tempPath);
+                if (File.Exists(diskPath))
+                    return true;
             }
-            finally
-            {
-                _contentRootsLock.ExitReadLock();
-            }
+
+            diskPath = null;
+            return false;
         }
 
         public void MountStreamAt(MemoryStream stream, ResourcePath path)

@@ -24,6 +24,7 @@ namespace Robust.Shared.Maths
         public readonly Vector2i Size => new(Width, Height);
 
         public readonly int Area => Width * Height;
+        public readonly Vector2 Center => Size / 2f + BottomLeft;
 
         public Box2i(Vector2i bottomLeft, Vector2i topRight)
         {
@@ -97,7 +98,7 @@ namespace Robust.Shared.Maths
         }
 
         // override object.Equals
-        public override readonly bool Equals(object? obj)
+        public readonly override bool Equals(object? obj)
         {
             if (obj is Box2i box)
             {
@@ -113,7 +114,7 @@ namespace Robust.Shared.Maths
         }
 
         // override object.GetHashCode
-        public override readonly int GetHashCode()
+        public readonly override int GetHashCode()
         {
             var code = Left.GetHashCode();
             code = (code * 929) ^ Right.GetHashCode();
@@ -132,7 +133,7 @@ namespace Robust.Shared.Maths
             return new(box.Left, box.Bottom, box.Right, box.Top);
         }
 
-        public override readonly string ToString()
+        public readonly override string ToString()
         {
             return $"({Left}, {Bottom}, {Right}, {Top})";
         }

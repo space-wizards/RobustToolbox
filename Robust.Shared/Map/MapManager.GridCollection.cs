@@ -102,7 +102,7 @@ internal partial class MapManager
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
         return EntityManager.EntityQuery<MapGridComponent>(true)
-            .Where(c => xformQuery.GetComponent(((Component) c).Owner).MapID == mapId)
+            .Where(c => xformQuery.GetComponent(c.Owner).MapID == mapId)
             .Select(c => c);
     }
 

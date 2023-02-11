@@ -515,14 +515,11 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating)
         {
-            if (component == null)
-                throw new ArgumentNullException(nameof(component));
-
-            if (component.Owner != uid)
-                throw new InvalidOperationException("Component is not owned by entity.");
-
             if (component.Deleted)
+            {
+                Logger.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {_componentFactory.GetComponentName(component.GetType())}.");
                 return;
+            }
 
 #if EXCEPTION_TOLERANCE
             try

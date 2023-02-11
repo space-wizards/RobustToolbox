@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Undid `*.yaml` prototype loading change from previous version.
 
 ### New features
 
@@ -43,16 +43,50 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* SDL2 backend now works if the client is started with fullscreen.
 
 ### Other
 
-*None yet*
+* SDL2 backend now handles quit events (⌘+Q on macOS).
+* SDL2 backend now logs video driver backend used on initialization.
+* The engine will now warn on startup if `*.yaml` files are found in resources, as this most likely indicates an accident.
 
 ### Internal
 
-*None yet*
+* Changed thread safety around `ResourceManager`'s VFS roots, removing the use of error prone reader-writer locks.
+* SDL2 log now shows log category.
+* Removed OpenTK DllMap code.
 
+
+## 0.85.2.0
+
+### New features
+
+* Threaded windowing API usage is now behind a CVar, disabled by default on macOS to avoid crashes.
+* Box2i, ImmutableHashSet, ISet, and IReadonlySet can now be serialized.
+* Added helpers for Box2i Center / Vector2i Up-Down-Left-Right.
+* Implement blend modes for rendering.
+
+### Bugfixes
+
+* MacOS with the SDL2 backend now has DPI scaling enabled.
+    * Fixed DPI scaling calculations on platforms outside Windows.
+* Grids on top of maps that are also grids should render correctly now.
+* Fixed bug in ScrollContainer that could cause permanent loops.
+* Fixed occluder tree error.
+* Fixed Texture.GetPixel.
+
+### Other
+
+* System F3 panel now correctly fetches processor model on Apple Silicon devices.
+* UI content scale is now listed in the F3 coordinates panel.
+* SDL2 backend is now wired up to update key names dynamically on keyboard mode change.
+* The prototype reload event is no longer wrapped under #if !FULL_RELEASE.
+* The engine now loads `*.yaml` files (previously loading only `*.yml`) for prototypes.
+
+### Internal
+
+* `keyinfo` command has enum completions.
 
 ## 0.85.1.1
 
@@ -106,7 +140,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added Pidgin parser to the sandbox whitelisted. 
+* Added Pidgin parser to the sandbox whitelisted.
 
 ### Bugfixes
 

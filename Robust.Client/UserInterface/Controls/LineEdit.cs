@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using JetBrains.Annotations;
@@ -57,32 +57,42 @@ namespace Robust.Client.UserInterface.Controls
         public Func<string, bool>? IsValid { get; set; }
 
         /// <summary>
-        ///     The actual text currently stored in the LineEdit.
+        ///     The actual text currently stored in the LineEdit. Setting this does not invoke the text change event, use <see cref="SetText(string, bool)"/> for that.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public string Text
         {
             get => _text;
-            set
+            set => SetText(value);
+        }
+
+        /// <summary>
+        ///     Sets the current text, optionally invoking <see cref="OnTextChanged"/>.
+        /// </summary>
+        public void SetText(string value, bool invokeEvent = false)
+        {
+            if (value == _text)
+                return;
+
+            // Save cursor position or -1 for end
+            var cursorTarget = CursorPosition == _text.Length ? -1 : CursorPosition;
+
+            if (!InternalSetText(value))
             {
-                // Save cursor position or -1 for end
-                var cursorTarget = CursorPosition == _text.Length ? -1 : CursorPosition;
-
-                if (!InternalSetText(value))
-                {
-                    return;
-                }
-
-                var clamped = MathHelper.Clamp(cursorTarget == -1 ? _text.Length : cursorTarget, 0, _text.Length);
-                while (clamped < _text.Length && !Rune.TryGetRuneAt(_text, clamped, out _))
-                {
-                    clamped++;
-                }
-
-                _cursorPosition = clamped;
-                _selectionStart = _cursorPosition;
-                _updatePseudoClass();
+                return;
             }
+
+            var clamped = MathHelper.Clamp(cursorTarget == -1 ? _text.Length : cursorTarget, 0, _text.Length);
+            while (clamped < _text.Length && !Rune.TryGetRuneAt(_text, clamped, out _))
+            {
+                clamped++;
+            }
+
+            _cursorPosition = clamped;
+            _selectionStart = _cursorPosition;
+            _updatePseudoClass();
+            if (invokeEvent)
+                OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
         }
 
         /// <summary>

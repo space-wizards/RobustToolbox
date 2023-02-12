@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.ComponentTrees;
@@ -30,6 +31,8 @@ namespace Robust.Client.GameObjects
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
         private readonly HashSet<SpriteComponent> _manualUpdate = new();
 
+        private TimeSpan _syncTime;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -39,11 +42,7 @@ namespace Robust.Client.GameObjects
             _proto.PrototypesReloaded += OnPrototypesReloaded;
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
-            
-            SubscribeLocalEvent<SyncSpriteComponent, ComponentStartup>(OnSyncSpriteStartup);
-            SubscribeLocalEvent<SyncSpriteComponent, EntParentChangedMessage>(OnSyncSpriteParent);
-            SubscribeLocalEvent<SyncSpriteComponent, EntityUnpausedEvent>(OnSyncSpriteUnpaused);
-            
+
             _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
         }
 
@@ -51,39 +50,6 @@ namespace Robust.Client.GameObjects
         {
             // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.
             QueueUpdateInert(uid, component);
-        }
-
-        private void OnSyncSpriteUnpaused(EntityUid uid, SyncSpriteComponent component, ref EntityUnpausedEvent args)
-        {
-            if (!TryComp<SpriteComponent>(uid, out var sprite))
-            {
-                return;
-            }
-
-            SetAutoAnimateSync(sprite);
-        }
-
-        private void OnSyncSpriteStartup(EntityUid uid, SyncSpriteComponent component, ComponentStartup args)
-        {
-            if (!TryComp<SpriteComponent>(uid, out var sprite))
-            {
-                return;
-            }
-
-            SetAutoAnimateSync(sprite);
-        }
-
-        private void OnSyncSpriteParent(EntityUid uid, SyncSpriteComponent component, ref EntParentChangedMessage args)
-        {
-            // Only update if it came out of pvs.
-            if (args.OldMapId == args.Transform.MapID ||
-                args.OldMapId != MapId.Nullspace ||
-                !TryComp<SpriteComponent>(uid, out var sprite))
-            {
-                return;
-            }
-
-            SetAutoAnimateSync(sprite);
         }
 
         public override void Shutdown()
@@ -113,6 +79,8 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void FrameUpdate(float frameTime)
         {
+            _syncTime += TimeSpan.FromSeconds(frameTime);
+
             while (_inertUpdateQueue.TryDequeue(out var sprite))
             {
                 sprite.DoUpdateIsInert();
@@ -132,13 +100,29 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var spriteState = (frameTime, _manualUpdate);
+            var syncQuery = GetEntityQuery<SyncSpriteComponent>();
+            var spriteState = (frameTime, _manualUpdate, syncQuery, this);
 
-            _treeSystem.QueryAabb( ref spriteState, static (ref (float frameTime,
-                    HashSet<SpriteComponent> _manualUpdate) tuple, in ComponentTreeEntry<SpriteComponent> value) =>
+            _treeSystem.QueryAabb( ref spriteState, static (ref (
+                    float frameTime,
+                    HashSet<SpriteComponent> _manualUpdate,
+                    EntityQuery<SyncSpriteComponent> syncQuery,
+                    SpriteSystem system) tuple,
+                in ComponentTreeEntry<SpriteComponent> value) =>
                 {
                     if (value.Component.IsInert)
                         return true;
+
+                    // So the reason this is here is because we only update animations inside of our viewport(s)
+                    // The problem with this is if something comes in pvs range but may not necessarily be in our viewport
+                    // then the animation doesn't update. This means the synced sprites can desync before we see them.
+                    // However, we can't just have all of our animations update in pvs range in case of situations
+                    // where pvs is off (and update every single sprite ever),
+                    // hence we just query for every sprite and ensure its timing is correct.
+                    if (tuple.syncQuery.HasComponent(value.Uid))
+                    {
+                        tuple.system.SetAutoAnimateSync(value.Component);
+                    }
 
                     if (!tuple._manualUpdate.Contains(value.Component))
                         value.Component.FrameUpdate(tuple.frameTime);

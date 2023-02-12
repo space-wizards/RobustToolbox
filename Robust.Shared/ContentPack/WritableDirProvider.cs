@@ -104,6 +104,15 @@ namespace Robust.Shared.ContentPack
             return File.Open(fullPath, fileMode, access, share);
         }
 
+        public IWritableDirProvider OpenDirectory(ResourcePath path)
+        {
+            if (!IsDir(path))
+                throw new FileNotFoundException();
+
+            var dirInfo = new DirectoryInfo(GetFullPath(path));
+            return new WritableDirProvider(dirInfo);
+        }
+
         /// <inheritdoc />
         public void Rename(ResourcePath oldPath, ResourcePath newPath)
         {

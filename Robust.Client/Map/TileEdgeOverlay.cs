@@ -47,7 +47,7 @@ public sealed class TileEdgeOverlay : Overlay
             {
                 var tileDef = _tileDefManager[tileRef.Tile.TypeId];
 
-                if (tileDef.CardinalSprites.Count == 0 && tileDef.CornerSprites.Count == 0)
+                if (tileDef.EdgeSprites.Count == 0)
                     continue;
 
                 // Get what tiles border us to determine what sprites we need to draw.
@@ -66,90 +66,44 @@ public sealed class TileEdgeOverlay : Overlay
                             continue;
 
                         var direction = new Vector2i(x, y).AsDirection();
-                        var intDirection = (int)direction;
+
+                        // No edge tile
+                        if (!tileDef.EdgeSprites.TryGetValue(direction, out var edgePath))
+                            continue;
+
+                        var texture = _resource.GetResource<TextureResource>(edgePath);
                         var box = Box2.FromDimensions(neighborIndices, tileDimensions);
-                        var variants = tileDef.CornerSprites.Count;
-                        var variant = (tileRef.GridIndices.X + tileRef.GridIndices.Y * 4 + intDirection) % variants;
 
-                        Angle angle = Angle.Zero;
-                        Texture? texture = null;
+                        var angle = Angle.Zero;
 
+                        // If we ever need one for both cardinals and corners then update this.
                         switch (direction)
                         {
                             // Corner sprites
                             case Direction.SouthEast:
-                                if (tileDef.CornerSprites.Count > 0)
-                                {
-                                    texture = _resource.GetResource<TextureResource>(tileDef.CornerSprites[variant])
-                                        .Texture;
-                                }
                                 break;
                             case Direction.NorthEast:
-                                if (tileDef.CornerSprites.Count > 0)
-                                {
-                                    texture = _resource.GetResource<TextureResource>(tileDef.CornerSprites[variant])
-                                        .Texture;
-
-                                    angle = new Angle(MathF.PI / 2f);
-                                }
+                                angle = new Angle(MathF.PI / 2f);
                                 break;
                             case Direction.NorthWest:
-                                if (tileDef.CornerSprites.Count > 0)
-                                {
-                                    texture = _resource.GetResource<TextureResource>(tileDef.CornerSprites[variant])
-                                        .Texture;
-
-                                    angle = new Angle(MathF.PI);
-                                }
+                                angle = new Angle(MathF.PI);
                                 break;
                             case Direction.SouthWest:
-                                if (tileDef.CornerSprites.Count > 0)
-                                {
-                                    texture = _resource.GetResource<TextureResource>(tileDef.CornerSprites[variant])
-                                        .Texture;
-
-                                    angle = new Angle(MathF.PI * 1.5f);
-                                }
+                                angle = new Angle(MathF.PI * 1.5f);
                                 break;
                             // Edge sprites
                             case Direction.South:
-                                if (tileDef.CardinalSprites.Count > 0)
-                                {
-                                    texture = _resource.GetResource<TextureResource>(tileDef.CardinalSprites[variant])
-                                        .Texture;
-                                }
                                 break;
                             case Direction.East:
-                                if (tileDef.CardinalSprites.Count > 0)
-                                {
-                                    texture = _resource.GetResource<TextureResource>(tileDef.CardinalSprites[variant])
-                                        .Texture;
-
-                                    angle = new Angle(MathF.PI / 2f);
-                                }
+                                angle = new Angle(MathF.PI / 2f);
                                 break;
                             case Direction.North:
-                                if (tileDef.CardinalSprites.Count > 0)
-                                {
-                                    texture = _resource.GetResource<TextureResource>(tileDef.CardinalSprites[variant])
-                                        .Texture;
-
-                                    angle = new Angle(MathF.PI);
-                                }
+                                angle = new Angle(MathF.PI);
                                 break;
                             case Direction.West:
-                                if (tileDef.CardinalSprites.Count > 0)
-                                {
-                                    texture = _resource.GetResource<TextureResource>(tileDef.CardinalSprites[variant])
-                                        .Texture;
-
-                                    angle = new Angle(MathF.PI * 1.5f);
-                                }
+                                angle = new Angle(MathF.PI * 1.5f);
                                 break;
                         }
-
-                        if (texture == null)
-                            continue;
 
                         if (angle == Angle.Zero)
                             args.WorldHandle.DrawTextureRect(texture, box);

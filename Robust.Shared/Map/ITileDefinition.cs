@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
@@ -29,14 +30,9 @@ namespace Robust.Shared.Map
         ResourcePath? Sprite { get; }
 
         /// <summary>
-        /// Possible sprites to use if we're neighboring another tile in the corner.
+        /// Possible sprites to use if we're neighboring another tile.
         /// </summary>
-        List<ResourcePath> CornerSprites { get; }
-
-        /// <summary>
-        /// Possible sprites to use if we're neighboring another tile on an edge.
-        /// </summary>
-        List<ResourcePath> CardinalSprites { get; }
+        Dictionary<Direction, ResourcePath> EdgeSprites { get; }
 
         /// <summary>
         ///     Physics objects that are interacting on this tile are slowed down by this float.

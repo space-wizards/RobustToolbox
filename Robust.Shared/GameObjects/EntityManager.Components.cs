@@ -515,14 +515,11 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating)
         {
-            if (component == null)
-                throw new ArgumentNullException(nameof(component));
-
-            if (component.Owner != uid)
-                throw new InvalidOperationException("Component is not owned by entity.");
-
             if (component.Deleted)
+            {
+                Logger.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {_componentFactory.GetComponentName(component.GetType())}.");
                 return;
+            }
 
 #if EXCEPTION_TOLERANCE
             try
@@ -686,7 +683,13 @@ namespace Robust.Shared.GameObjects
         public T EnsureComponent<T>(EntityUid uid) where T : Component, new()
         {
             if (TryGetComponent<T>(uid, out var component))
-                return component;
+            {
+                // Check for deferred component removal.
+                if (component.LifeStage <= ComponentLifeStage.Running)
+                    return component;
+                else
+                    RemoveComponent(uid, component);
+            }
 
             return AddComponent<T>(uid);
         }
@@ -697,8 +700,14 @@ namespace Robust.Shared.GameObjects
         {
             if (TryGetComponent<T>(entity, out var comp))
             {
-                component = comp;
-                return true;
+                // Check for deferred component removal.
+                if (comp.LifeStage <= ComponentLifeStage.Running)
+                {
+                    component = comp;
+                    return true;
+                }
+                else
+                    RemoveComponent(entity, comp);
             }
 
             component = AddComponent<T>(entity);

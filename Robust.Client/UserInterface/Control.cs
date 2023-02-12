@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +28,9 @@ namespace Robust.Client.UserInterface
         private readonly List<Control> _orderedChildren = new();
 
         private bool _visible = true;
+        // Determines if this control requires space, even when
+        // it's visibility has been set to false
+        private bool _reservesSpace = false;
 
         // _marginSetSize is the size calculated by the margins,
         // but it's different from _size if min size is higher.
@@ -208,6 +211,33 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
+        ///     Whether or not this control and its children require
+        ///     space to be reserved, even when not visible.
+        /// </summary>
+        /// <seealso cref="ReservesSpace"/>
+        [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
+        public bool ReservesSpace
+        {
+            get => _reservesSpace;
+            set
+            {
+                if (_reservesSpace == value)
+                {
+                    return;
+                }
+
+                _reservesSpace = value;
+
+                // TODO: unhardcode this.
+                // Many containers ignore children if they're invisible, so that's why we're replicating that here.
+                Parent?.InvalidateMeasure();
+                InvalidateMeasure();
+            }
+        }
+
+
+        /// <summary>
         ///     Whether or not this control is an (possibly indirect) child of
         ///     <see cref="IUserInterfaceManager.RootControl"/>
         /// </summary>
@@ -283,6 +313,11 @@ namespace Robust.Client.UserInterface
         /// control within the specified number of seconds.
         /// </summary>
         public float? TooltipDelay { get; set; }
+
+        /// <summary>
+        /// Should the tooltip track the mouse cursor.
+        /// </summary>
+        public bool TrackingTooltip { get; set; }
 
         /// <summary>
         /// When a tooltip should be shown for this control, this will be invoked to

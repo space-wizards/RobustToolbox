@@ -90,14 +90,6 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
     {
-        var mapId = ev.Coordinates.GetMapId(EntityManager);
-
-        if (!_mapManager.MapExists(mapId))
-        {
-            Logger.Error($"Server tried to play sound on map {mapId}, which does not exist. Ignoring.");
-            return;
-        }
-
         var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
         if (stream != null)
             stream.NetIdentifier = ev.Identifier;
@@ -148,8 +140,6 @@ public sealed class AudioSystem : SharedAudioSystem
                 && stream.TrackingEntity == null
                 && stream.TrackingFallbackCoordinates == null);
 
-            // Does this really have to be set every frame???
-            stream.Source.SetVolume(stream.Volume);
             return;
         }
 
@@ -256,7 +246,8 @@ public sealed class AudioSystem : SharedAudioSystem
         if (stream.TrackingCoordinates != null)
         {
             mapPos = stream.TrackingCoordinates.Value.ToMap(EntityManager);
-            return mapPos != MapCoordinates.Nullspace;
+            if (mapPos != MapCoordinates.Nullspace)
+                return true;
         }
 
         if (xformQuery.TryGetComponent(stream.TrackingEntity, out var xform))

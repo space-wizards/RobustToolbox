@@ -708,6 +708,7 @@ Types:
       Methods:
         - "System.Collections.Specialized.NameValueCollection ParseQueryString(string, System.Text.Encoding)"
         - "System.Collections.Specialized.NameValueCollection ParseQueryString(string)"
+        - "string JavaScriptStringEncode(string)"
         - "string UrlDecode(string, System.Text.Encoding)"
         - "string UrlDecode(string)"
         - "string UrlEncode(string, System.Text.Encoding)"
@@ -1118,7 +1119,7 @@ Types:
       - "string Concat(string, string, string)"
       - "string Concat(string, string, string, string)"
       - "string Concat(string[])"
-      - "string Concat(System.Collections.Generic.IEnumerable`1<!!0>)"
+      - "string Concat<>(System.Collections.Generic.IEnumerable`1<!!0>)"
       - "string Concat(System.Collections.Generic.IEnumerable`1<string>)"
       - "string Concat(System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>)"
       - "string Concat(System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>)"
@@ -1371,3 +1372,13 @@ Types:
     YamlSequenceNode: { All: True }
     YamlStream: { All: True }
     YamlVisitorBase: { All: True }
+  Pidgin:
+    Unit: { All: True }
+    Parser: { All: True}
+    Parser`1: { All: True }
+    Parser`2: { All: True }
+    ParserExtensions:
+      # should be fine to do All: True, but this has some methods to read filestreams. So just in case this ever adds an extension method that directly opens a file:
+      Methods:
+      - "!!0 ParseOrThrow<>(Pidgin.Parser`2<char, !!0>, string, System.Func`3<char, Pidgin.SourcePos, Pidgin.SourcePos>)"
+    SourcePos: { }

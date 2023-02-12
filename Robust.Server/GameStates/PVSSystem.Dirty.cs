@@ -55,14 +55,6 @@ namespace Robust.Server.GameStates
                 _dirtyEntities[_currentIndex].Add(uid);
         }
 
-        private void CleanupDirty(IEnumerable<IPlayerSession> sessions)
-        {
-            // Just in case we desync somehow
-            _currentIndex = ((int) _gameTiming.CurTick.Value + 1) % DirtyBufferSize;
-            _addEntities[_currentIndex].Clear();
-            _dirtyEntities[_currentIndex].Clear();
-        }
-
         private bool TryGetTick(GameTick tick, [NotNullWhen(true)] out HashSet<EntityUid>? addEntities, [NotNullWhen(true)] out HashSet<EntityUid>? dirtyEntities)
         {
             var currentTick = _gameTiming.CurTick;

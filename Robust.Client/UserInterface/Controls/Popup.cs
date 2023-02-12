@@ -11,6 +11,16 @@ namespace Robust.Client.UserInterface.Controls
             Visible = false;
         }
 
+        /// <summary>
+        ///     Action that gets invoked just before the pop-up gets shown. This does not get invoked if the pop-up is
+        ///     moved / re-opened in another location.
+        /// </summary>
+        public event Action? OnPopupOpen;
+
+        /// <summary>
+        ///     Action that gets invoked just after a pop-up becomes invisible. This does not get invoked if the pop-up
+        ///     is moved / re-opened in another location.
+        /// </summary>
         public event Action? OnPopupHide;
 
         private Vector2 _desiredSize;
@@ -19,11 +29,15 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool CloseOnEscape { get; set; } = true;
 
-        public void Open(UIBox2? box = null, Vector2? altPos = null)
+        public virtual void Open(UIBox2? box = null, Vector2? altPos = null)
         {
             if (Visible)
             {
                 UserInterfaceManagerInternal.RemoveModal(this);
+            }
+            else
+            {
+                OnPopupOpen?.Invoke();
             }
 
             if (box != null &&
@@ -42,7 +56,7 @@ namespace Robust.Client.UserInterface.Controls
             UserInterfaceManagerInternal.PushModal(this);
         }
 
-        public void Close()
+        public virtual void Close()
         {
             if (!Visible) return;
             UserInterfaceManagerInternal.RemoveModal(this);

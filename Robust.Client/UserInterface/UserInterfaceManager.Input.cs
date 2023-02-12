@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -514,18 +514,18 @@ internal partial class UserInterfaceManager
             // show simple tooltip if there is one
             var tooltip = new Tooltip()
             {
-                Text = hovered.ToolTip
+                Text = hovered.ToolTip,
+                Tracking = hovered.TrackingTooltip,
             };
 
             _suppliedTooltip = tooltip;
         }
-        else
-        {
-            return;
-        }
 
-        PopupRoot.AddChild(_suppliedTooltip!);
-        Tooltips.PositionTooltip(_suppliedTooltip!);
+        if (_suppliedTooltip == null)
+            return;
+
+        PopupRoot.AddChild(_suppliedTooltip);
+        Tooltips.PositionTooltip(_suppliedTooltip);
         hovered.PerformShowTooltip();
     }
 

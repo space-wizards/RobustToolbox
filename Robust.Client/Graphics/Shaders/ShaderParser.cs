@@ -90,7 +90,7 @@ namespace Robust.Client.Graphics
                 }
                 else if (word.Word == "blend_mode")
                 {
-                    if (lightMode != null)
+                    if (blendMode != null)
                     {
                         throw new ShaderParseException("Already specified 'blend_mode' before!");
                     }

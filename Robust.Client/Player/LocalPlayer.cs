@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using Robust.Client.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -65,10 +64,17 @@ namespace Robust.Client.Player
             // Detach and cleanup first
             DetachEntity();
 
+            var entMan = IoCManager.Resolve<IEntityManager>();
+
+            if (!entMan.EntityExists(entity))
+            {
+                Logger.Error($"Attempting to attach player to non-existent entity {entity}!");
+                return;
+            }
+
             ControlledEntity = entity;
             InternalSession.AttachedEntity = entity;
 
-            var entMan = IoCManager.Resolve<IEntityManager>();
 
             if (!entMan.TryGetComponent<EyeComponent?>(entity, out var eye))
             {

@@ -1,8 +1,6 @@
 using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Network;
-using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
@@ -16,18 +14,13 @@ namespace Robust.Shared.GameObjects
     [ImplicitDataDefinitionForInheritors]
     public abstract class Component : IComponent
     {
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadOnly)]
-        [Obsolete("Resolve IComponentFactory and call GetComponentName instead")]
-        public virtual string Name => IoCManager.Resolve<IComponentFactory>().GetComponentName(GetType());
-
-        /// <inheritdoc />
         [DataField("netsync")]
         [ViewVariables(VVAccess.ReadWrite)]
         public bool _netSync { get; set; } = true;
 
         internal bool Networked = true;
 
+        /// <inheritdoc />
         public bool NetSyncEnabled
         {
             get => Networked && _netSync;
@@ -36,6 +29,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
+        [Obsolete("Update your API to allow accessing Owner through other means")]
         public EntityUid Owner { get; set; } = EntityUid.Invalid;
 
         /// <inheritdoc />
@@ -125,14 +119,7 @@ namespace Robust.Shared.GameObjects
 
             LifeStage = ComponentLifeStage.Stopping;
             entManager.EventBus.RaiseComponentEvent(this, CompShutdownInstance);
-            Shutdown();
-
-#if DEBUG
-            if (LifeStage != ComponentLifeStage.Stopped)
-            {
-                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Shutdown)} in derived method.");
-            }
-#endif
+            LifeStage = ComponentLifeStage.Stopped;
         }
 
         /// <summary>
@@ -204,14 +191,6 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Shuts down the component. The is called Automatically by OnRemove.
-        /// </summary>
-        protected virtual void Shutdown()
-        {
-            LifeStage = ComponentLifeStage.Stopped;
-        }
-
-        /// <summary>
         /// Called when the component is removed from an entity.
         /// Shuts down the component.
         /// The component has already been marked as deleted in the component manager.
@@ -261,7 +240,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// The life stages of an ECS component.
     /// </summary>
-    public enum ComponentLifeStage
+    public enum ComponentLifeStage : byte
     {
         /// <summary>
         /// The component has just been allocated.

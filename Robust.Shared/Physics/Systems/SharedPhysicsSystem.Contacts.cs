@@ -218,7 +218,7 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
 
         // Does a joint override collision? Is at least one body dynamic?
-        if (!ShouldCollide(bodyB, bodyA))
+        if (!ShouldCollide(bodyB, bodyA, fixtureA, fixtureB))
             return;
 
         // Call the factory.
@@ -265,22 +265,24 @@ public abstract partial class SharedPhysicsSystem
         Fixture fixtureB = contact.FixtureB!;
         PhysicsComponent bodyA = fixtureA.Body;
         PhysicsComponent bodyB = fixtureB.Body;
+        var aUid = bodyA.Owner;
+        var bUid = bodyB.Owner;
 
         if (contact.IsTouching)
         {
             var ev1 = new EndCollideEvent(fixtureA, fixtureB);
             var ev2 = new EndCollideEvent(fixtureB, fixtureA);
-            RaiseLocalEvent(bodyA.Owner, ref ev1);
-            RaiseLocalEvent(bodyB.Owner, ref ev2);
+            RaiseLocalEvent(aUid, ref ev1);
+            RaiseLocalEvent(bUid, ref ev2);
         }
 
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
         {
             if (bodyA.CanCollide)
-                SetAwake(contact.FixtureA.Body, true);
+                SetAwake(aUid, bodyA, true);
 
             if (bodyB.CanCollide)
-                SetAwake(contact.FixtureB.Body, true);
+                SetAwake(bUid, bodyB, true);
         }
 
         // Remove from the world
@@ -339,7 +341,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 // Check default filtering
                 if (!ShouldCollide(fixtureA, fixtureB) ||
-                    !ShouldCollide(bodyB, bodyA))
+                    !ShouldCollide(bodyB, bodyA, fixtureA, fixtureB))
                 {
                     DestroyContact(contact);
                     continue;
@@ -389,8 +391,8 @@ public abstract partial class SharedPhysicsSystem
 
             var proxyA = fixtureA.Proxies[indexA];
             var proxyB = fixtureB.Proxies[indexB];
-            var broadphaseA = _lookup.GetCurrentBroadphase(xformA);
-            var broadphaseB = _lookup.GetCurrentBroadphase(xformB);
+            var broadphaseA = xformA.Broadphase?.Uid;
+            var broadphaseB = xformB.Broadphase?.Uid;
             var overlap = false;
 
             // We can have cross-broadphase proxies hence need to change them to worldspace
@@ -402,8 +404,8 @@ public abstract partial class SharedPhysicsSystem
                 }
                 else
                 {
-                    var proxyAWorldAABB = _transform.GetWorldMatrix(broadphaseA.Owner, xformQuery).TransformBox(proxyA.AABB);
-                    var proxyBWorldAABB = _transform.GetWorldMatrix(broadphaseB.Owner, xformQuery).TransformBox(proxyB.AABB);
+                    var proxyAWorldAABB = _transform.GetWorldMatrix(xformQuery.GetComponent(broadphaseA.Value), xformQuery).TransformBox(proxyA.AABB);
+                    var proxyBWorldAABB = _transform.GetWorldMatrix(xformQuery.GetComponent(broadphaseB.Value), xformQuery).TransformBox(proxyB.AABB);
                     overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                 }
             }
@@ -514,9 +516,11 @@ public abstract partial class SharedPhysicsSystem
             var contact = contacts[i];
             var bodyA = contact.FixtureA!.Body;
             var bodyB = contact.FixtureB!.Body;
+            var aUid = bodyA.Owner;
+            var bUid = bodyB.Owner;
 
-            SetAwake(bodyA, true);
-            SetAwake(bodyB, true);
+            SetAwake(aUid, bodyA, true);
+            SetAwake(bUid, bodyB, true);
         }
 
         ArrayPool<bool>.Shared.Return(wake);
@@ -547,7 +551,7 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Used to prevent bodies from colliding; may lie depending on joints.
     /// </summary>
-    private bool ShouldCollide(PhysicsComponent body, PhysicsComponent other)
+    private bool ShouldCollide(PhysicsComponent body, PhysicsComponent other, Fixture fixture, Fixture otherFixture)
     {
         if (((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
             (other.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||
@@ -578,12 +582,12 @@ public abstract partial class SharedPhysicsSystem
             }
         }
 
-        var preventCollideMessage = new PreventCollideEvent(body, other);
+        var preventCollideMessage = new PreventCollideEvent(body, other, fixture, otherFixture);
         RaiseLocalEvent(body.Owner, ref preventCollideMessage);
 
         if (preventCollideMessage.Cancelled) return false;
 
-        preventCollideMessage = new PreventCollideEvent(other, body);
+        preventCollideMessage = new PreventCollideEvent(other, body, otherFixture, fixture);
         RaiseLocalEvent(other.Owner, ref preventCollideMessage);
 
         if (preventCollideMessage.Cancelled) return false;

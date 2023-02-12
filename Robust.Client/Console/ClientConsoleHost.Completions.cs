@@ -33,7 +33,7 @@ internal sealed partial class ClientConsoleHost
         {
             // Typing out command name, handle this ourselves.
             var cmdOptions = CompletionResult.FromOptions(
-                RegisteredCommands.Values
+                AvailableCommands.Values
                     .Where(c => CanExecute(c.Command))
                     .OrderBy(c => c.Command)
                     .Select(c => new CompletionOption(c.Command, c.Description)));
@@ -41,7 +41,7 @@ internal sealed partial class ClientConsoleHost
             return Task.FromResult(cmdOptions);
         }
 
-        if (!RegisteredCommands.TryGetValue(args[0], out var cmd))
+        if (!AvailableCommands.TryGetValue(args[0], out var cmd))
             return Task.FromResult(CompletionResult.Empty);
 
         return cmd.GetCompletionAsync(LocalShell, args.ToArray()[1..], cancel).AsTask();

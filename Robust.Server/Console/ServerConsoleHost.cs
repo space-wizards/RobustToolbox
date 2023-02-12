@@ -104,7 +104,7 @@ namespace Robust.Server.Console
 
                 string? cmdName = args[0];
 
-                if (AvailableCommands.TryGetValue(cmdName, out var conCmd)) // command registered
+                if (RegisteredCommands.TryGetValue(cmdName, out var conCmd)) // command registered
                 {
                     args.RemoveAt(0);
                     var cmdArgs = args.ToArray();
@@ -136,9 +136,9 @@ namespace Robust.Server.Console
             var message = new MsgConCmdReg();
 
             var counter = 0;
-            message.Commands = new MsgConCmdReg.Command[RegisteredCommands.Count];
+            message.Commands = new MsgConCmdReg.Command[AvailableCommands.Count];
 
-            foreach (var command in RegisteredCommands.Values)
+            foreach (var command in AvailableCommands.Values)
             {
                 message.Commands[counter++] = new MsgConCmdReg.Command
                 {
@@ -207,11 +207,11 @@ namespace Robust.Server.Console
             {
                 // Typing out command name, handle this ourselves.
                 return ValueTask.FromResult(CompletionResult.FromOptions(
-                    RegisteredCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description))));
+                    AvailableCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description))));
             }
 
             var cmdName = args[0];
-            if (!AvailableCommands.TryGetValue(cmdName, out var cmd))
+            if (!RegisteredCommands.TryGetValue(cmdName, out var cmd))
                 return ValueTask.FromResult(CompletionResult.Empty);
 
             if (!ShellCanExecute(shell, cmdName))

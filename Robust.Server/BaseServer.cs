@@ -11,6 +11,7 @@ using Robust.Server.GameStates;
 using Robust.Server.Log;
 using Robust.Server.Placement;
 using Robust.Server.Player;
+using Robust.Server.Replays;
 using Robust.Server.Scripting;
 using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
@@ -96,6 +97,7 @@ namespace Robust.Server
         [Dependency] private readonly ISerializationManager _serialization = default!;
         [Dependency] private readonly IStatusHost _statusHost = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IInternalReplayRecordingManager _replay = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -366,6 +368,7 @@ namespace Robust.Server
             _entityManager.Startup();
             _mapManager.Startup();
             _stateManager.Initialize();
+            _replay.Initialize();
 
             var reg = _entityManager.ComponentFactory.GetRegistration<TransformComponent>();
             if (!reg.NetID.HasValue)

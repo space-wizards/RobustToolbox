@@ -1,4 +1,7 @@
 using Robust.Shared.Replays;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using System.Collections.Generic;
+using System;
 
 namespace Robust.Client.Replays;
 
@@ -11,4 +14,10 @@ public sealed class ReplayRecordingManager : IReplayRecordingManager
     public void QueueReplayMessage(object args) { }
 
     public bool Recording => false;
+
+    /// <inheritdoc/>
+    public event Action<(MappingDataNode, List<object>)>? OnRecordingStarted;
+
+    /// <inheritdoc/>
+    public event Action<MappingDataNode>? OnRecordingStopped;
 }

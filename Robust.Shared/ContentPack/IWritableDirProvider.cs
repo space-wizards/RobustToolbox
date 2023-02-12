@@ -89,7 +89,7 @@ namespace Robust.Shared.ContentPack
         /// Returns a new <see cref="IWritableDirProvider"/> that points to a subdirectory.
         /// </summary>
         /// <param name="path">Path of directory to open.</param>
-        IWritableDirProvider OpenDirectory(ResourcePath path);
+        IWritableDirProvider OpenSubdirectory(ResourcePath path);
 
         /// <summary>
         /// Attempts to rename a file.

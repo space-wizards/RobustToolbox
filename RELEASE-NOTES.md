@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `IWritableDirProvider.OpenDirectory()`, which returns a new `IWritableDirProvider` pointing to some subdirectory.
+* Added `IWritableDirProvider.OpenSubdirectory()`, which returns a new `IWritableDirProvider` with the root set to some subdirectory.
 
 ### Bugfixes
 

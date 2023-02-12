@@ -104,7 +104,7 @@ namespace Robust.Shared.ContentPack
             return File.Open(fullPath, fileMode, access, share);
         }
 
-        public IWritableDirProvider OpenDirectory(ResourcePath path)
+        public IWritableDirProvider OpenSubdirectory(ResourcePath path)
         {
             if (!IsDir(path))
                 throw new FileNotFoundException();

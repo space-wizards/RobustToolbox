@@ -248,7 +248,7 @@ namespace Robust.Shared.ContentPack
             throw new InvalidOperationException("Unreachable.");
         }
 
-        public IWritableDirProvider OpenDirectory(ResourcePath path)
+        public IWritableDirProvider OpenSubdirectory(ResourcePath path)
         {
             if (!TryGetNodeAt(path, out var node) || node is not DirectoryNode dirNode)
                 throw new FileNotFoundException();

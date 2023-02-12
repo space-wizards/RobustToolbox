@@ -7,6 +7,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.ComponentTrees;
 
@@ -229,7 +230,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
             entry.Transform,
             entry.Component.TreeUid.Value,
             GetEntityQuery<TransformComponent>());
-        
+
         return ExtractAabb(in entry, pos, rot);
     }
 
@@ -255,7 +256,13 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
                 yield return treeComp;
         }
 
-        if (TryComp(_mapManager.GetMapEntityId(mapId), out TTreeComp? mapTreeComp))
+        var mapUid = _mapManager.GetMapEntityId(mapId);
+
+        // Don't double-iterate
+        if (HasComp<MapGridComponent>(mapUid))
+            yield break;
+
+        if (TryComp(mapUid, out TTreeComp? mapTreeComp))
             yield return mapTreeComp;
     }
 

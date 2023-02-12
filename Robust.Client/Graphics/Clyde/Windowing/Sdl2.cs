@@ -160,6 +160,11 @@ internal partial class Clyde
             };
 
             var msg = Marshal.PtrToStringUTF8((IntPtr) message) ?? "";
+            if (msg == "That operation is not supported")
+            {
+                obj._sawmillSdl2.Info(Environment.StackTrace);
+            }
+            
             var categoryName = SdlLogCategoryName(category);
             obj._sawmillSdl2.Log(level, $"[{categoryName}] {msg}");
         }

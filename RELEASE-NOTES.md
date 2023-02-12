@@ -37,10 +37,14 @@ END TEMPLATE-->
 
 * Undid `*.yaml` prototype loading change from previous version.
 * `IConsoleHost`'s `RegisteredCommands` field has been renamed to `AvailableCommands`.
+* Several light related cvars have been renamed. E.g., "display.softshadows" is now "light.softshadows". 
+* The "display.lightmapdivider" integer cvar has been replaced with a float multiplier named "light.resolution_scale".
+
 
 ### New features
 
 * Command definitions have a new bool that restricts them to only be executable by the server or in single player mode. Several "server only" commands have been moved to to shared code and now use this option.
+* The FOV color is now configurable via the "render.fov_color" cvar
 
 ### Bugfixes
 
@@ -51,6 +55,7 @@ END TEMPLATE-->
 * SDL2 backend now handles quit events (⌘+Q on macOS).
 * SDL2 backend now logs video driver backend used on initialization.
 * The engine will now warn on startup if `*.yaml` files are found in resources, as this most likely indicates an accident.
+* Added entity, occluder and shadow-casting light counts to the clyde debug panel.
 
 ### Internal
 

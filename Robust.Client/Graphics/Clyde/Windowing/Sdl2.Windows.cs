@@ -138,6 +138,7 @@ internal partial class Clyde
                 // Clear owner on close to avoid this.
 
                 SDL_SysWMinfo wmInfo = default;
+                SDL_VERSION(out wmInfo.version);
                 if (SDL_GetWindowWMInfo(cmd.Window, ref wmInfo) == SDL_TRUE && wmInfo.subsystem == SDL_SYSWM_WINDOWS)
                 {
                     var hWnd = (HWND)wmInfo.info.win.window;
@@ -245,6 +246,7 @@ internal partial class Clyde
             if (OperatingSystem.IsWindows())
             {
                 SDL_SysWMinfo info = default;
+                SDL_VERSION(out info.version);
                 if (SDL_GetWindowWMInfo(window, ref info) == SDL_TRUE && info.subsystem == SDL_SYSWM_WINDOWS)
                     WsiShared.WindowsSharedWindowCreate((HWND) info.info.win.window, _cfg);
             }
@@ -267,6 +269,7 @@ internal partial class Clyde
             var handle = new WindowHandle(_clyde, reg);
             reg.Handle = handle;
 
+            SDL_VERSION(out reg.SysWMinfo.version);
             var res = SDL_GetWindowWMInfo(window, ref reg.SysWMinfo);
             if (res == SDL_FALSE)
                 _sawmill.Error("Failed to get window WM info: {error}", SDL_GetError());

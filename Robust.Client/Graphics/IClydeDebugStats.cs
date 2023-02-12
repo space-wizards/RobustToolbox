@@ -29,5 +29,20 @@ namespace Robust.Client.Graphics
         ///     The amount of lights that were rendered last frame.
         /// </summary>
         int TotalLights { get; }
+
+        /// <summary>
+        ///     Number of shadow-casting lights that were rendered last frame.
+        /// </summary>
+        int ShadowLights { get; }
+
+        /// <summary>
+        ///     Number of occluders that were rendered last frame.
+        /// </summary>
+        int Occluders { get; }
+
+        /// <summary>
+        ///     Number of entities that were rendered last frame.
+        /// </summary>
+        int Entities { get; }
     }
 }

@@ -112,6 +112,8 @@ namespace Robust.Client.Graphics.Clyde
                 _prof.WriteValue("Max Batch Verts", ProfData.Int32(_debugStats.LargestBatchVertices));
                 _prof.WriteValue("Max Batch Idxes", ProfData.Int32(_debugStats.LargestBatchIndices));
                 _prof.WriteValue("Lights", ProfData.Int32(_debugStats.TotalLights));
+                _prof.WriteValue("Shadow Lights", ProfData.Int32(_debugStats.ShadowLights));
+                _prof.WriteValue("Occluders", ProfData.Int32(_debugStats.Occluders));
             }
         }
 
@@ -367,6 +369,7 @@ namespace Robust.Client.Graphics.Clyde
             ArrayPool<int>.Shared.Return(indexList);
             entityPostRenderTarget?.DisposeDeferred();
 
+            _debugStats.Entities += _drawingSpriteList.Count;
             _drawingSpriteList.Clear();
             FlushRenderQueue();
         }

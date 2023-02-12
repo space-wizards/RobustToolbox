@@ -64,8 +64,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private GLShaderProgram? _currentProgram;
 
-        private int _lightmapDivider = 2;
-        private int _maxLightsPerScene = 128;
+        private float _lightResolutionScale = 0.5f;
+        private int _maxLights = 2048;
+        private int _maxOccluders = 2048;
+        private int _maxShadowcastingLights = 128;
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
@@ -92,9 +94,11 @@ namespace Robust.Client.Graphics.Clyde
             _cfg.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
             _cfg.OnValueChanged(CVars.DisplayVSync, VSyncChanged, true);
             _cfg.OnValueChanged(CVars.DisplayWindowMode, WindowModeChanged, true);
-            _cfg.OnValueChanged(CVars.DisplayLightMapDivider, LightmapDividerChanged, true);
-            _cfg.OnValueChanged(CVars.DisplayMaxLightsPerScene, MaxLightsPerSceneChanged, true);
-            _cfg.OnValueChanged(CVars.DisplaySoftShadows, SoftShadowsChanged, true);
+            _cfg.OnValueChanged(CVars.LightResolutionScale, LightResolutionScaleChanged, true);
+            _cfg.OnValueChanged(CVars.MaxShadowcastingLights, MaxShadowcastingLightsChanged, true);
+            _cfg.OnValueChanged(CVars.LightSoftShadows, SoftShadowsChanged, true);
+            _cfg.OnValueChanged(CVars.MaxLightCount, MaxLightsChanged, true);
+            _cfg.OnValueChanged(CVars.MaxOccluderCount, MaxOccludersChanged, true);
             // I can't be bothered to tear down and set these threads up in a cvar change handler.
 
             // Windows and Linux can be trusted to not explode with threaded windowing,

@@ -35,23 +35,306 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Undid `*.yaml` prototype loading change from previous version.
 
 ### New features
 
-*None yet*
+* The FOV color is now configurable via the "render.fov_color" cvar
 
 ### Bugfixes
 
-*None yet*
+* SDL2 backend now works if the client is started with fullscreen.
 
 ### Other
 
-*None yet*
+* SDL2 backend now handles quit events (⌘+Q on macOS).
+* SDL2 backend now logs video driver backend used on initialization.
+* The engine will now warn on startup if `*.yaml` files are found in resources, as this most likely indicates an accident.
 
 ### Internal
 
-*None yet*
+* Changed thread safety around `ResourceManager`'s VFS roots, removing the use of error prone reader-writer locks.
+* SDL2 log now shows log category.
+* Removed OpenTK DllMap code.
+
+
+## 0.85.2.0
+
+### New features
+
+* Threaded windowing API usage is now behind a CVar, disabled by default on macOS to avoid crashes.
+* Box2i, ImmutableHashSet, ISet, and IReadonlySet can now be serialized.
+* Added helpers for Box2i Center / Vector2i Up-Down-Left-Right.
+* Implement blend modes for rendering.
+
+### Bugfixes
+
+* MacOS with the SDL2 backend now has DPI scaling enabled.
+    * Fixed DPI scaling calculations on platforms outside Windows.
+* Grids on top of maps that are also grids should render correctly now.
+* Fixed bug in ScrollContainer that could cause permanent loops.
+* Fixed occluder tree error.
+* Fixed Texture.GetPixel.
+
+### Other
+
+* System F3 panel now correctly fetches processor model on Apple Silicon devices.
+* UI content scale is now listed in the F3 coordinates panel.
+* SDL2 backend is now wired up to update key names dynamically on keyboard mode change.
+* The prototype reload event is no longer wrapped under #if !FULL_RELEASE.
+* The engine now loads `*.yaml` files (previously loading only `*.yml`) for prototypes.
+
+### Internal
+
+* `keyinfo` command has enum completions.
+
+## 0.85.1.1
+
+### Bugfixes
+
+* Fixed GameStateManager error when resetting client-side prediction
+
+
+## 0.85.1.0
+
+### New features
+
+* RSI's now get combined into a large atlas.
+
+### Bugfixes
+
+* Removed bad PlayAudioPositionalMessage error log & fixed fallback coordinate check.
+* Fixed MouseJoint parallelisation exception.
+
+### Internal
+
+* Fixed some warnings in GameStateManager
+
+
+## 0.85.0.1
+
+### Bugfixes
+
+* Fix fixture client state handling not removing the existing fixture.
+* Use a dummy entity for placement manager preview so offsets are applied correctly.
+
+
+## 0.85.0.0
+
+### Breaking changes
+
+* Component.Shutdown() has now been removed and the eventbus should be used in its place.
+* Component.Name has now been removed and IComponentFactory.GetComponentName(Type) should be used in its place.
+
+### Bugfixes
+
+* Ensure fixture contacts are destroyed even if no broadphase is found.
+* Ensure fixtures are re-created in client state handling. There was a subtle bug introduced by updating existing ones where contacts were incorrectly being retained across prediction. This was most obvious with slipping in SS14.
+
+
+## 0.84.0.0
+
+### Breaking changes
+
+* EffectSystem has been removed.
+
+### New features
+
+* Added Pidgin parser to the sandbox whitelisted.
+
+### Bugfixes
+
+* Fixed physics ignoring parallelisation cvars
+* Global audio volume is no longer overridden every tick.
+* Fix `SpriteComponent.CopyFrom()` not working properly.
+* Fix cvar TOML parsing failing to read some numeric cvars.
+
+### Other
+
+* Improved physics joint logging.
+
+
+## 0.83.0.0
+
+### Breaking changes
+
+* Physics has been ECSd with large API changes:
+- Shapes can be updated via the system rather than requiring the caller to handle it.
+- Access attributes have been added.
+- Implemented IEquatable for Fixture Shapes
+- Removed obsolete PhysicsComponent APIs.
+- Removed usage of Component.Owner internally.
+
+
+## 0.82.0.0
+
+### Breaking changes
+
+* `Box2Rotated.Centre` has been renamed to `.Center`
+* `ISpriteComponent` has been removed. Just use `SpriteComponent` instead.
+
+### Bugfixes
+
+* Fixed prototype reloading/uploading.
+* Fixed UI tooltips sometimes causing a null reference exception.
+
+### Other
+
+* Map/world velocity calculations should be slightly faster.
+* `EnsureComp` will now re-add a component if it has been queued for removal.
+
+
+## 0.81.0.0
+
+### Breaking changes
+
+* TransformComponent,Parent has been removed. Use the ParentUid & get the component manually.
+
+### New features
+
+* The Popup control now has an OnPopupOpen event.
+
+### Other
+
+* Various transform methods are now obsolete. Use the methods provided by the transform system instead.
+* TransformComponent.MapUid is now cached (previously required a dictionary lookup)
+
+
+## 0.80.2.0
+
+### New features
+
+* Tooltips now provide the option to track the mouse cursor.
+
+
+## 0.80.1.0
+
+### New features
+
+* Added location of compile errors to XAML UI.
+* Add CC-BY to RSI.json
+* Allow customising radio buttons for RadioOptions.
+* Added CVar to override CEF useragent.
+
+### Bugfixes
+
+* Fix incorrect size of second window in split container.
+* Fix PreventCollideEvent fixture ordering.
+
+### Other
+
+* Obsoleted .Owner for future work in removing components storing a reference to their entityuid.
+
+
+## 0.80.0.0
+
+### Breaking changes
+
+* Moved ConvexHullPolygons and MaxPolygonVertices cvars to constants.
+* Moved the PhysicsMap Gravity property to its own controller.
+* Made some layout changes to Split Container.
+
+### New features
+
+* Added the colliding fixtures to PreventCollideEvent.
+
+### Bugfixes
+
+* Grids overlapping entities will now flag the entity for grid traversal.
+
+### Other
+
+* The split container `Measure()` override now more accurately reflects the space available to children. Additionally, the split position is now publicly settable.
+
+### Internal
+
+* Removed manual component registrations.
+
+
+## 0.79.0.1
+
+### New features
+
+* Add helper GetDirection to SharedMapSystem that offsets a Vector2i in the specified direction by the specified distance.
+* UIController now implements IEntityEventSubscriber
+
+### Bugfixes
+
+* The fast TryFindGridAt overload will now also return the queried map's MapGridComponent if it exists.
+
+### Other
+
+* Updated window dragging movement constraints. By default windows can now be partially dragged off-screen to the left. This is configurable per window. This also fixes a bug where windows could become unreachable.
+
+### Internal
+
+* Remove 2 TryGetComponents per physics contact per tick.
+
+
+## 0.79.0.0
+
+### Breaking changes
+
+* EntityInitializedMessage has been removed; the C# event invoked on EntityManager (EntityInitialized) should be used in its place.
+* TileChangedEventArgs has been removed.
+
+### Bugfixes
+
+* Fix tooltip panels being incorrectly sized for their first frame.
+* Client will no longer predict physics sleeping on bodies that are unable to sleep.
+* Style box texture scaling has been fixed.
+
+### Other
+
+* Added TaskCompletionSource to the sandbox.
+
+### Internal
+
+* IPhysManager has been removed for a slight physics contacts optimisation.
+* Optimise TryFindGridAt, particularly for grid traversals.
+* MapGridComponent now uses delta component states.
+* Removed some TryGetComponent from IsMapPaused, speeding up entity initialization in some instances.
+
+
+## 0.78.0.0
+
+### Breaking changes
+
+* Removed the obsoleted `GlobalLinearVelocity()` EntityUid helper method.
+* INetConfigurationManager now has client & server side variants. Clients can now properly set server authoritative cvars when in singleplayer mode
+* IPhysBody has been removed. Just use the physics component.
+* Physics joints haven been slightly refactored and some method signatures have changed.
+
+### New features
+
+* Added a new cvar to limit audio occlusion raycast lengths ("audio.raycast_length").
+* IRobustSerializer has new public methods for getting hashes and setting string serializer data.
+
+### Bugfixes
+
+* Fixed broken click bound checks in the `Tree` UI Control.
+* Removed erroneous debug assert in render code that was causing issued in debug mode.
+* Fixed some instances where rotation-less entities were gaining non-zero local rotation.
+
+### Other
+
+* Tickrate is now shown in the f3 debug monitors
+
+
+## 0.77.0.2
+
+### New features
+
+* Scroll containers now have public methods to get & set their scroll positions.
+
+### Bugfixes
+
+* Fixed entity spawn menu sometimes not properly updating when filtering entities.
+
+### Other
+
+* Physics contacts are now stored per-world rather than per-map. This allows the multi-threading to be applicable to every contact rather than per-map.
+* Contacts will no longer implicitly be destroyed upon bodies changing maps.
 
 
 ## 0.77.0.1

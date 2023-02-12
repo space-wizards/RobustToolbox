@@ -69,6 +69,12 @@ namespace Robust.Client.WebView.Cef
                 CachePath = cachePath,
             };
 
+            var userAgentOverride = _cfg.GetCVar(WCVars.UserAgentOverride);
+            if (!string.IsNullOrEmpty(userAgentOverride))
+            {
+                settings.UserAgent = userAgentOverride;
+            }
+
             Logger.Info($"CEF Version: {CefRuntime.ChromeVersion}");
 
             _app = new RobustCefApp();

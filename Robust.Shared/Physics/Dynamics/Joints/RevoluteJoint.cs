@@ -112,11 +112,11 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public RevoluteJoint() {}
 
-        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner, bodyB.Owner)
+        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB, float referenceAngle) : base(bodyA.Owner, bodyB.Owner)
         {
-            LocalAnchorA = bodyA.GetLocalPoint(anchor);
-            LocalAnchorB = bodyB.GetLocalPoint(anchor);
-            ReferenceAngle = (float) (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(bodyB.Owner).WorldRotation - IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(bodyA.Owner).WorldRotation).Theta;
+            LocalAnchorA = anchorA;
+            LocalAnchorB = anchorB;
+            ReferenceAngle = referenceAngle;
         }
 
         public RevoluteJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}

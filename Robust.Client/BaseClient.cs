@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using Robust.Client.Configuration;
 using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
@@ -25,7 +26,7 @@ namespace Robust.Client
     {
         [Dependency] private readonly IClientNetManager _net = default!;
         [Dependency] private readonly IPlayerManager _playMan = default!;
-        [Dependency] private readonly INetConfigurationManager _configManager = default!;
+        [Dependency] private readonly IClientNetConfigurationManager _configManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;

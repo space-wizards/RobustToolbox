@@ -108,7 +108,7 @@ namespace Robust.Client.ViewVariables.Instances
                     top = new Label {Text = stringified};
                 }
 
-                if (_entityManager.TryGetComponent(_entity, out ISpriteComponent? sprite))
+                if (_entityManager.TryGetComponent(_entity, out SpriteComponent? sprite))
                 {
                     var hBox = new BoxContainer
                     {

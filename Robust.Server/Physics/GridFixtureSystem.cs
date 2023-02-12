@@ -14,6 +14,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -29,6 +30,7 @@ namespace Robust.Server.Physics
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IConGroupController _conGroup = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
         private ISawmill _logger = default!;
@@ -260,8 +262,8 @@ namespace Robust.Server.Physics
                     splitXform.WorldPosition = gridPos;
                     splitXform.WorldRotation = gridRot;
                     var splitBody = bodyQuery.GetComponent(splitGrid.Owner);
-                    splitBody.LinearVelocity = mapBody.LinearVelocity;
-                    splitBody.AngularVelocity = mapBody.AngularVelocity;
+                    _physics.SetLinearVelocity(splitGrid.Owner, mapBody.LinearVelocity, body: splitBody);
+                    _physics.SetAngularVelocity(splitGrid.Owner, mapBody.AngularVelocity, body: splitBody);
 
                     var gridComp = gridQuery.GetComponent(splitGrid.Owner);
                     var tileData = new List<(Vector2i GridIndices, Tile Tile)>(group.Sum(o => o.Indices.Count));

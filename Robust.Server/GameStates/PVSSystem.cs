@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
+using Robust.Server.Configuration;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -28,7 +29,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
     [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Shared.IoC.Dependency] private readonly INetConfigurationManager _netConfigManager = default!;
+    [Shared.IoC.Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
 
     public const float ChunkSize = 8;
@@ -244,6 +245,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void SetPvs(bool value)
     {
+        SeenAllEnts.Clear();
         CullingEnabled = value;
     }
 
@@ -255,23 +257,20 @@ internal sealed partial class PVSSystem : EntitySystem
         }
     }
 
-    public void Cleanup(IEnumerable<IPlayerSession> sessions)
+    public void CleanupDirty(IEnumerable<IPlayerSession> sessions)
     {
-        var playerSessions = sessions.ToArray();
-
         if (!CullingEnabled)
         {
-            foreach (var player in playerSessions)
+            SeenAllEnts.Clear();
+            foreach (var player in sessions)
             {
                 SeenAllEnts.Add(player);
             }
         }
-        else
-        {
-            SeenAllEnts.Clear();
-        }
 
-        CleanupDirty(playerSessions);
+        _currentIndex = ((int)_gameTiming.CurTick.Value + 1) % DirtyBufferSize;
+        _addEntities[_currentIndex].Clear();
+        _dirtyEntities[_currentIndex].Clear();
 
         foreach (var collection in _pvsCollections)
         {
@@ -1025,91 +1024,80 @@ internal sealed partial class PVSSystem : EntitySystem
     /// </summary>
     public (List<EntityState>?, List<EntityUid>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession player, GameTick fromTick, GameTick toTick)
     {
-        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-        // no point sending an empty collection
-        if (deletions.Count == 0) deletions = default;
-
-        var stateEntities = new List<EntityState>();
+        List<EntityState>? stateEntities;
         var seenEnts = new HashSet<EntityUid>();
-        var slowPath = false;
-        var metadataQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+        var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+        List<(HashSet<EntityUid>, HashSet<EntityUid>)>? tickData = null;
 
         if (!SeenAllEnts.Contains(player))
         {
             // Give them E V E R Y T H I N G
-            stateEntities = new List<EntityState>(EntityManager.EntityCount);
-
-            // This is the same as iterating every existing entity.
-            foreach (var md in EntityManager.EntityQuery<MetaDataComponent>(true))
-            {
-                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                stateEntities.Add(GetEntityState(player, md.Owner, GameTick.Zero, md));
-            }
-
-            return (stateEntities.Count == 0 ? default : stateEntities, deletions, null, fromTick);
+            fromTick = GameTick.Zero;
         }
-
-        // Just get the relevant entities that have been dirtied
-        // This should be extremely fast.
-        if (!slowPath)
+        else
         {
+            tickData = new();
             for (var i = fromTick.Value; i <= toTick.Value; i++)
             {
-                // Fallback to dumping every entity on them.
                 var tick = new GameTick(i);
                 if (!TryGetTick(tick, out var add, out var dirty))
                 {
-                    slowPath = true;
+                    // Fall back to dumping every entity on them.
+                    tickData = null;
                     break;
                 }
 
+                tickData.Add((add, dirty));
+            }
+        }
+
+        if (tickData == null)
+        {
+            stateEntities = new List<EntityState>(EntityManager.EntityCount);
+            foreach (var md in EntityManager.EntityQuery<MetaDataComponent>(true))
+            {
+                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
+                if (md.EntityLastModifiedTick > fromTick)
+                    stateEntities.Add(GetEntityState(player, md.Owner, fromTick, md));
+            }
+        }
+        else
+        {
+            stateEntities = new();
+            // Just get the relevant entities that have been dirtied
+            // This should be extremely fast.
+            foreach (var (add, dirty) in tickData)
+            {
                 foreach (var uid in add)
                 {
-                    if (!seenEnts.Add(uid)) continue;
-                    // This is essentially the same as IEntityManager.EntityExists, but returning MetaDataComponent.
-                    if (!metadataQuery.TryGetComponent(uid, out var md)) continue;
+                    if (!seenEnts.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
+                        continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-
                     if (md.EntityLastModifiedTick > fromTick)
-                        stateEntities.Add(GetEntityState(player, uid, GameTick.Zero, md));
+                        stateEntities.Add(GetEntityState(player, uid, fromTick, md));
                 }
 
                 foreach (var uid in dirty)
                 {
                     DebugTools.Assert(!add.Contains(uid));
-
-                    if (!seenEnts.Add(uid)) continue;
-                    if (!metadataQuery.TryGetComponent(uid, out var md)) continue;
+                    if (!seenEnts.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
+                        continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-
                     if (md.EntityLastModifiedTick > fromTick)
                         stateEntities.Add(GetEntityState(player, uid, fromTick, md));
                 }
             }
         }
 
-        if (!slowPath)
-        {
-            if (stateEntities.Count == 0) stateEntities = default;
+        List<EntityUid>? deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
-            return (stateEntities, deletions, null, fromTick);
-        }
+        if (deletions.Count == 0)
+            deletions = null;
 
-        stateEntities = new List<EntityState>(EntityManager.EntityCount);
-
-        // This is the same as iterating every existing entity.
-        foreach (var md in EntityManager.EntityQuery<MetaDataComponent>(true))
-        {
-            DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-
-            if (md.EntityLastModifiedTick >= fromTick)
-                stateEntities.Add(GetEntityState(player, md.Owner, fromTick, md));
-        }
-
-        // no point sending an empty collection
-        if (stateEntities.Count == 0) stateEntities = default;
+        if (stateEntities.Count == 0)
+            stateEntities = null;
 
         return (stateEntities, deletions, null, fromTick);
     }

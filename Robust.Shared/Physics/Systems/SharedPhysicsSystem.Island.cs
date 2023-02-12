@@ -277,21 +277,8 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     public void Step(PhysicsMapComponent component, float frameTime, bool prediction)
     {
-        // Box2D does this at the end of a step and also here when there's a fixture update.
-        // Given external stuff can move bodies we'll just do this here.
-        // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-        _broadphase.FindNewContacts(component, component.MapId);
-
         var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
         var dtRatio = component._invDt0 * frameTime;
-
-        var updateBeforeSolve = new PhysicsUpdateBeforeMapSolveEvent(prediction, component, frameTime);
-        RaiseLocalEvent(ref updateBeforeSolve);
-
-        component.ContactManager.Collide();
-        // Don't run collision behaviors during FrameUpdate?
-        if (!prediction)
-            component.ContactManager.PreSolve(frameTime);
 
         // Integrate velocities, solve velocity constraints, and do integration.
         Solve(component, frameTime, dtRatio, invDt, prediction);
@@ -320,15 +307,6 @@ public abstract partial class SharedPhysicsSystem
 
     private void Solve(PhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
     {
-        var contactNode = component.ContactManager._activeContacts.First;
-
-        while (contactNode != null)
-        {
-            var contact = contactNode.Value;
-            contactNode = contactNode.Next;
-            contact.Flags &= ~ContactFlags.Island;
-        }
-
         // Build and simulated islands from awake bodies.
         _bodyStack.EnsureCapacity(component.AwakeBodies.Count);
         _islandSet.EnsureCapacity(component.AwakeBodies.Count);
@@ -387,7 +365,7 @@ public abstract partial class SharedPhysicsSystem
                 if (body.BodyType == BodyType.Static) continue;
 
                 // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                SetAwake(body, true, updateSleepTime: false);
+                SetAwake(body.Owner, body, true, updateSleepTime: false);
 
                 var node = body.Contacts.First;
 
@@ -421,7 +399,7 @@ public abstract partial class SharedPhysicsSystem
 
                 if (!jointQuery.TryGetComponent(body.Owner, out var jointComponent)) continue;
 
-                foreach (var (_, joint) in jointComponent.Joints)
+                foreach (var joint in jointComponent.Joints.Values)
                 {
                     if (joint.IslandFlag) continue;
 
@@ -534,7 +512,7 @@ public abstract partial class SharedPhysicsSystem
     private void SolveIslands(PhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
     {
         var iBegin = 0;
-        var gravity = component.Gravity;
+        var gravity = _gravity.GetGravity(component.Owner);
 
         var data = new SolverData(
             frameTime,
@@ -974,6 +952,7 @@ public abstract partial class SharedPhysicsSystem
             // Plus calcing worldpos can be costly so we skip that too which is nice.
             if (body.BodyType == BodyType.Static) continue;
 
+            var uid = body.Owner;
             var position = positions[offset + i];
             var angle = angles[offset + i];
             var xform = xformQuery.GetComponent(body.Owner);
@@ -988,14 +967,14 @@ public abstract partial class SharedPhysicsSystem
 
             if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
             {
-                SetLinearVelocity(body, linVelocity, false);
+                SetLinearVelocity(uid, linVelocity, false, body: body);
             }
 
             var angVelocity = angularVelocities[offset + i];
 
             if (!float.IsNaN(angVelocity))
             {
-                SetAngularVelocity(body, angVelocity, false);
+                SetAngularVelocity(uid, angVelocity, false, body: body);
             }
 
             // TODO: Should check if the values update.
@@ -1014,7 +993,9 @@ public abstract partial class SharedPhysicsSystem
             if (!sleep)
                 continue;
 
-            SetAwake(island.Bodies[i], false);
+            var body = island.Bodies[i];
+
+            SetAwake(body.Owner, body, false);
         }
     }
 }

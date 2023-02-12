@@ -21,7 +21,7 @@ namespace Robust.Shared.Scripting
     public abstract class ScriptGlobalsShared
     {
         private const BindingFlags DefaultHelpFlags =
-            BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;
 
         [field: Dependency] public IEntityManager ent { get; } = default!;
         [field: Dependency] public IEntitySystemManager esm { get; } = default!;
@@ -61,11 +61,6 @@ namespace Robust.Shared.Scripting
             return new(i);
         }
 
-        public T gcm<T>(int i)
-        {
-            return ent.GetComponent<T>(eid(i));
-        }
-
         public MapGridComponent getgrid(int i)
         {
             return map.GetGrid(new EntityUid(i));
@@ -74,11 +69,6 @@ namespace Robust.Shared.Scripting
         public MapGridComponent getgrid(EntityUid mapId)
         {
             return map.GetGrid(mapId);
-        }
-
-        public EntityUid spawn(string prototype, EntityCoordinates position)
-        {
-            return ent.SpawnEntity(prototype, position);
         }
 
         public T res<T>()
@@ -125,7 +115,12 @@ namespace Robust.Shared.Scripting
 
         public void help()
         {
-            help(GetType(), DefaultHelpFlags &~ BindingFlags.NonPublic, false, false);
+            help(GetType(), DefaultHelpFlags, false, false);
+        }
+
+        public void help(object obj, BindingFlags flags = DefaultHelpFlags, bool specialNameMethods = true, bool modifiers = true)
+        {
+            help(obj.GetType(), flags, specialNameMethods, modifiers);
         }
 
         public void help(Type type, BindingFlags flags = DefaultHelpFlags, bool specialNameMethods = true, bool modifiers = true)
@@ -169,5 +164,72 @@ namespace Robust.Shared.Scripting
         protected abstract void WriteSyntax(object toString);
         public abstract void write(object toString);
         public abstract void show(object obj);
+
+        #region EntityManager proxy methods
+        public T Comp<T>(EntityUid uid)
+            => ent.GetComponent<T>(uid);
+            
+        public bool TryComp<T>(EntityUid uid, out T? comp)
+            => ent.TryGetComponent(uid, out comp);
+
+        public bool HasComp<T>(EntityUid uid)
+            => ent.HasComponent<T>(uid);
+
+        public EntityUid Spawn(string? prototype, EntityCoordinates position)
+            => ent.SpawnEntity(prototype, position);
+
+        public void Del(EntityUid uid)
+            => ent.DeleteEntity(uid);
+
+        public void Dirty(EntityUid uid)
+            => ent.DirtyEntity(uid);
+
+        public void Dirty(Component comp)
+            => ent.Dirty(comp);
+
+        public string Name(EntityUid uid)
+            => ent.GetComponent<MetaDataComponent>(uid).EntityName;
+
+        public string Desc(EntityUid uid)
+            => ent.GetComponent<MetaDataComponent>(uid).EntityDescription;
+
+        public EntityPrototype? Prototype(EntityUid uid)
+            => ent.GetComponent<MetaDataComponent>(uid).EntityPrototype;
+            
+        public EntityStringRepresentation ToPrettyString(EntityUid uid)
+            => ent.ToPrettyString(uid);
+
+        public IEnumerable<IComponent> AllComps(EntityUid uid)
+            => ent.GetComponents(uid);
+
+        public TransformComponent Transform(EntityUid uid)
+            => ent.GetComponent<TransformComponent>(uid);
+
+        public MetaDataComponent MetaData(EntityUid uid)
+            => ent.GetComponent<MetaDataComponent>(uid);
+
+        public EntityCoordinates Pos(EntityUid uid) => Transform(uid).Coordinates;
+
+        public IEnumerable<TComp1> Query<TComp1>(bool includePaused = false)
+            where TComp1 : IComponent
+        {
+            return ent.EntityQuery<TComp1>(includePaused);
+        }
+
+        public IEnumerable<(TComp1, TComp2)> Query<TComp1, TComp2>(bool includePaused = false)
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+        {
+            return ent.EntityQuery<TComp1, TComp2>(includePaused);
+        }
+
+        public IEnumerable<(TComp1, TComp2, TComp3)> Query<TComp1, TComp2, TComp3>(bool includePaused = false)
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+        {
+            return ent.EntityQuery<TComp1, TComp2, TComp3>(includePaused);
+        }
+        #endregion
     }
 }

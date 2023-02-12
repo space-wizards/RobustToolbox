@@ -68,6 +68,10 @@ namespace Robust.Shared.Console
             }
         }
 
+        protected virtual void UpdateAvailableCommands()
+        {
+        }
+
         #region RegisterCommand
         public void RegisterCommand(
             string command,
@@ -81,6 +85,7 @@ namespace Robust.Shared.Console
 
             var newCmd = new RegisteredCommand(command, description, help, callback, requireServerOrSingleplayer);
             RegisteredCommands.Add(command, newCmd);
+            UpdateAvailableCommands();
         }
 
         public void RegisterCommand(
@@ -96,6 +101,7 @@ namespace Robust.Shared.Console
 
             var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
             RegisteredCommands.Add(command, newCmd);
+            UpdateAvailableCommands();
         }
 
         public void RegisterCommand(
@@ -111,6 +117,7 @@ namespace Robust.Shared.Console
 
             var newCmd = new RegisteredCommand(command, description, help, callback, completionCallback, requireServerOrSingleplayer);
             RegisteredCommands.Add(command, newCmd);
+            UpdateAvailableCommands();
         }
 
         public void RegisterCommand(string command, ConCommandCallback callback,
@@ -155,6 +162,7 @@ namespace Robust.Shared.Console
                     "You cannot unregister commands that have been registered automatically.");
 
             RegisteredCommands.Remove(command);
+            UpdateAvailableCommands();
         }
 
         //TODO: Pull up

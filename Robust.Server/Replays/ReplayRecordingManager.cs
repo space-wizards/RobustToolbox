@@ -125,8 +125,8 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         _curStream = new(_tickBatchSize * 2);
         _index = 0;
         _firstTick = true;
-        WriteInitialMetadata();
         _recordingStart = (_timing.CurTick, _timing.CurTime);
+        WriteInitialMetadata();
         if (duration != null)
             _recordingEnd = _timing.CurTime + duration.Value;
 
@@ -250,10 +250,10 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
 
             // Time data
             var timeBase = _timing.TimeBase;
-            _yamlMetadata["startTick"] = new ValueDataNode(_timing.CurTick.Value.ToString());
+            _yamlMetadata["startTick"] = new ValueDataNode(_recordingStart.Tick.Value.ToString());
             _yamlMetadata["timeBaseTick"] = new ValueDataNode(timeBase.Item2.Value.ToString());
             _yamlMetadata["timeBaseTimespan"] = new ValueDataNode(timeBase.Item1.Ticks.ToString());
-            _yamlMetadata["recordingStartTime"] = new ValueDataNode(_recordingStart.ToString());
+            _yamlMetadata["recordingStartTime"] = new ValueDataNode(_recordingStart.Time.ToString());
 
             OnRecordingStarted?.Invoke((_yamlMetadata, extraData));
 

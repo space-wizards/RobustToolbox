@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.86.0.0
+
+### Breaking changes
+
 * Undid `*.yaml` prototype loading change from previous version.
 * `IConsoleHost`'s `RegisteredCommands` field has been renamed to `AvailableCommands`.
 * Several light related cvars have been renamed. E.g., "display.softshadows" is now "light.softshadows". 

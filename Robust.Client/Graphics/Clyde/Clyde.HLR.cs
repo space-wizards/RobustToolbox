@@ -230,6 +230,7 @@ namespace Robust.Client.Graphics.Clyde
             RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB, worldBounds);
             var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
 
+            var spriteSystem = _entityManager.System<SpriteSystem>();
             GetSprites(mapId, viewport, eye, worldBounds, out var indexList);
 
             var screenSize = viewport.Size;
@@ -326,7 +327,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                entry.Sprite.Render(_renderHandle.DrawingHandleWorld, eye.Rotation, in entry.WorldRot, in entry.WorldPos);
+                spriteSystem.Render(entry.Uid, entry.Sprite, _renderHandle.DrawingHandleWorld, eye.Rotation, in entry.WorldRot, in entry.WorldPos);
 
                 if (entry.Sprite.PostShader != null && entityPostRenderTarget != null)
                 {

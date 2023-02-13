@@ -17,7 +17,7 @@ internal sealed class HelpCommand : LocalizedCommands
 
             case 1:
                 var commandName = args[0];
-                if (!shell.ConsoleHost.RegisteredCommands.TryGetValue(commandName, out var cmd))
+                if (!shell.ConsoleHost.AvailableCommands.TryGetValue(commandName, out var cmd))
                 {
                     shell.WriteError(Loc.GetString("cmd-help-unknown", ("command", commandName)));
                     return;
@@ -40,7 +40,7 @@ internal sealed class HelpCommand : LocalizedCommands
         {
             var host = shell.ConsoleHost;
             return CompletionResult.FromHintOptions(
-                host.RegisteredCommands.Values.OrderBy(c => c.Command).Select(c => new CompletionOption(c.Command, c.Description)).ToArray(),
+                host.AvailableCommands.Values.OrderBy(c => c.Command).Select(c => new CompletionOption(c.Command, c.Description)).ToArray(),
                 Loc.GetString("cmd-help-arg-cmdname"));
         }
 

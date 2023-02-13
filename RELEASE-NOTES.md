@@ -54,6 +54,133 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.87.0.0
+
+### Breaking changes
+
+* `UIScreen.GetOrNewWidget()` has been replaced with `GetOrAddWidget()`.
+
+### New features
+
+* Added `IWritableDirProvider.OpenSubdirectory()`, which returns a new `IWritableDirProvider` with the root set to some subdirectory.
+* Added `UiScreen.TryGetWidget()`
+* Added a virtual `Shutdown()` method for game/module entry points.
+
+### Bugfixes
+
+* Fixed SyncSpriteComponent not properly syncing entities that are out of view.
+* Fixed a bug preventing client-side commands from being properly registered.
+* Fixed a bug causing PVS to unnecessarily send extra data.
+
+
+## 0.86.0.0
+
+### Breaking changes
+
+* Undid `*.yaml` prototype loading change from previous version.
+* `IConsoleHost`'s `RegisteredCommands` field has been renamed to `AvailableCommands`.
+* Several light related cvars have been renamed. E.g., "display.softshadows" is now "light.softshadows". 
+* The "display.lightmapdivider" integer cvar has been replaced with a float multiplier named "light.resolution_scale".
+
+
+### New features
+
+* Command definitions have a new bool that restricts them to only be executable by the server or in single player mode. Several "server only" commands have been moved to to shared code and now use this option.
+* The FOV color is now configurable via the "render.fov_color" cvar
+
+### Bugfixes
+
+* SDL2 backend now works if the client is started with fullscreen.
+
+### Other
+
+* SDL2 backend now handles quit events (⌘+Q on macOS).
+* SDL2 backend now logs video driver backend used on initialization.
+* The engine will now warn on startup if `*.yaml` files are found in resources, as this most likely indicates an accident.
+* Added entity, occluder and shadow-casting light counts to the clyde debug panel.
+* The HistoryLineEdit control now invokes `OnTextChanged` events when selecting history items
+
+### Internal
+
+* Changed thread safety around `ResourceManager`'s VFS roots, removing the use of error prone reader-writer locks.
+* SDL2 log now shows log category.
+* Removed OpenTK DllMap code.
+
+
+## 0.85.2.0
+
+### New features
+
+* Threaded windowing API usage is now behind a CVar, disabled by default on macOS to avoid crashes.
+* Box2i, ImmutableHashSet, ISet, and IReadonlySet can now be serialized.
+* Added helpers for Box2i Center / Vector2i Up-Down-Left-Right.
+* Implement blend modes for rendering.
+
+### Bugfixes
+
+* MacOS with the SDL2 backend now has DPI scaling enabled.
+    * Fixed DPI scaling calculations on platforms outside Windows.
+* Grids on top of maps that are also grids should render correctly now.
+* Fixed bug in ScrollContainer that could cause permanent loops.
+* Fixed occluder tree error.
+* Fixed Texture.GetPixel.
+
+### Other
+
+* System F3 panel now correctly fetches processor model on Apple Silicon devices.
+* UI content scale is now listed in the F3 coordinates panel.
+* SDL2 backend is now wired up to update key names dynamically on keyboard mode change.
+* The prototype reload event is no longer wrapped under #if !FULL_RELEASE.
+* The engine now loads `*.yaml` files (previously loading only `*.yml`) for prototypes.
+
+### Internal
+
+* `keyinfo` command has enum completions.
+
+## 0.85.1.1
+
+### Bugfixes
+
+* Fixed GameStateManager error when resetting client-side prediction
+
+
+## 0.85.1.0
+
+### New features
+
+* RSI's now get combined into a large atlas.
+
+### Bugfixes
+
+* Removed bad PlayAudioPositionalMessage error log & fixed fallback coordinate check.
+* Fixed MouseJoint parallelisation exception.
+
+### Internal
+
+* Fixed some warnings in GameStateManager
+
+
+## 0.85.0.1
+
+### Bugfixes
+
+* Fix fixture client state handling not removing the existing fixture.
+* Use a dummy entity for placement manager preview so offsets are applied correctly.
+
+
+## 0.85.0.0
+
+### Breaking changes
+
+* Component.Shutdown() has now been removed and the eventbus should be used in its place.
+* Component.Name has now been removed and IComponentFactory.GetComponentName(Type) should be used in its place.
+
+### Bugfixes
+
+* Ensure fixture contacts are destroyed even if no broadphase is found.
+* Ensure fixtures are re-created in client state handling. There was a subtle bug introduced by updating existing ones where contacts were incorrectly being retained across prediction. This was most obvious with slipping in SS14.
+
+
 ## 0.84.0.0
 
 ### Breaking changes
@@ -62,7 +189,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added Pidgin parser to the sandbox whitelisted. 
+* Added Pidgin parser to the sandbox whitelisted.
 
 ### Bugfixes
 

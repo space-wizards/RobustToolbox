@@ -11,6 +11,7 @@ using Robust.Server.GameStates;
 using Robust.Server.Log;
 using Robust.Server.Placement;
 using Robust.Server.Player;
+using Robust.Server.Replays;
 using Robust.Server.Scripting;
 using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
@@ -96,6 +97,7 @@ namespace Robust.Server
         [Dependency] private readonly ISerializationManager _serialization = default!;
         [Dependency] private readonly IStatusHost _statusHost = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IInternalReplayRecordingManager _replay = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -338,10 +340,23 @@ namespace Robust.Server
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
+
+            // Start bad file extensions check after content init,
+            // in case content screws with the VFS.
+            var checkBadExtensions = ProgramShared.CheckBadFileExtensions(
+                _resources,
+                _config,
+                _log.GetSawmill("res"));
+
             _entityManager.Initialize();
             _mapManager.Initialize();
 
             _serialization.Initialize();
+
+            // Make sure this is done before we try to load prototypes,
+            // avoid any possibility of race conditions causing the check to not finish
+            // before prototype load and maybe break something.
+            ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
@@ -353,6 +368,7 @@ namespace Robust.Server
             _entityManager.Startup();
             _mapManager.Startup();
             _stateManager.Initialize();
+            _replay.Initialize();
 
             var reg = _entityManager.ComponentFactory.GetRegistration<TransformComponent>();
             if (!reg.NetID.HasValue)

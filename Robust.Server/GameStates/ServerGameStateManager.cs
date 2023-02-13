@@ -23,6 +23,7 @@ using Robust.Shared.Utility;
 using SharpZstd.Interop;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Players;
+using Robust.Server.Replays;
 
 namespace Robust.Server.GameStates
 {
@@ -42,6 +43,7 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
+        [Dependency] private readonly IInternalReplayRecordingManager _replay = default!;
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IParallelManager _parallelMgr = default!;
@@ -71,7 +73,7 @@ namespace Robust.Server.GameStates
             _networkManager.Connected += HandleClientConnected;
             _networkManager.Disconnect += HandleClientDisconnect;
 
-            _pvs = EntitySystem.Get<PVSSystem>();
+            _pvs = _entityManager.System<PVSSystem>();
 
             _parallelMgr.AddAndInvokeParallelCountChanged(ResetParallelism);
 
@@ -107,7 +109,7 @@ namespace Robust.Server.GameStates
             }
         }
 
-        private sealed class PvsThreadResources
+        internal sealed class PvsThreadResources
         {
             public ZStdCompressionContext CompressionContext;
 
@@ -168,16 +170,13 @@ namespace Robust.Server.GameStates
                 // Prevent deletions piling up if we have no clients.
                 _pvs.CullDeletionHistory(GameTick.MaxValue);
                 _mapManager.CullDeletionHistory(GameTick.MaxValue);
-                _pvs.Cleanup(_playerManager.ServerSessions);
+                _pvs.CleanupDirty(Enumerable.Empty<IPlayerSession>());
                 return;
             }
 
             var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
 
             var oldestAckValue = GameTick.MaxValue.Value;
-
-            var mainThread = Thread.CurrentThread;
-            var parentDeps = IoCManager.Instance!;
 
             _pvs.ProcessCollections();
 
@@ -227,11 +226,17 @@ namespace Robust.Server.GameStates
             }
 
             Parallel.For(
-                0, players.Length,
+                _replay.Recording ? -1 : 0, players.Length,
                 new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
-                () => _threadResourcesPool.Get(),
+                _threadResourcesPool.Get,
                 (i, _, resource) =>
                 {
+                    if (i == -1)
+                    {
+                        _replay.SaveReplayData(resource);
+                        return resource;
+                    }
+
                     try
                     {
                         SendStateUpdate(i, resource);
@@ -242,7 +247,7 @@ namespace Robust.Server.GameStates
                     }
                     return resource;
                 },
-                resource => _threadResourcesPool.Return(resource)
+                _threadResourcesPool.Return
             );
 
             void SendStateUpdate(int sessionIndex, PvsThreadResources resources)
@@ -305,7 +310,7 @@ namespace Robust.Server.GameStates
 
             if (_pvs.CullingEnabled)
                 _pvs.ReturnToPool(playerChunks);
-            _pvs.Cleanup(_playerManager.ServerSessions);
+            _pvs.CleanupDirty(_playerManager.ServerSessions);
             var oldestAck = new GameTick(oldestAckValue);
 
             // keep the deletion history buffers clean

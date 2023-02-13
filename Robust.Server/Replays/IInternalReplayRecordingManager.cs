@@ -1,5 +1,6 @@
 using Robust.Shared.IoC;
 using System.Threading;
+using static Robust.Server.GameStates.ServerGameStateManager;
 
 namespace Robust.Server.Replays;
 
@@ -17,5 +18,5 @@ internal interface IInternalReplayRecordingManager : IServerReplayRecordingManag
     /// <remarks>
     ///     This is intended to be called by PVS in parallel with other game-state networking.
     /// </remarks>
-    void SaveReplayData(Thread mainThread, IDependencyCollection parentDeps);
+    void SaveReplayData(PvsThreadResources resource);
 }

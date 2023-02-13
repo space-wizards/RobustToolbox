@@ -13,61 +13,6 @@ using Robust.Shared.Network;
 
 namespace Robust.Server.Console.Commands
 {
-    internal sealed class TeleportCommand : LocalizedCommands
-    {
-        [Dependency] private readonly IMapManager _map = default!;
-
-        public override string Command => "tp";
-
-        public override void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            var player = shell.Player as IPlayerSession;
-            if (player?.Status != SessionStatus.InGame)
-                return;
-
-            var transform = player.AttachedEntityTransform;
-            if (transform == null)
-                return;
-
-            if (args.Length < 2 || !float.TryParse(args[0], out var posX) || !float.TryParse(args[1], out var posY))
-            {
-                shell.WriteError(Help);
-                return;
-            }
-
-            var position = new Vector2(posX, posY);
-
-            transform.AttachToGridOrMap();
-
-            MapId mapId;
-            if (args.Length == 3 && int.TryParse(args[2], out var intMapId))
-                mapId = new MapId(intMapId);
-            else
-                mapId = transform.MapID;
-
-            if (!_map.MapExists(mapId))
-            {
-                shell.WriteError($"Map {mapId} doesn't exist!");
-                return;
-            }
-
-            if (_map.TryFindGridAt(mapId, position, out var grid))
-            {
-                var gridPos = grid.WorldToLocal(position);
-
-                transform.Coordinates = new EntityCoordinates(grid.Owner, gridPos);
-            }
-            else
-            {
-                var mapEnt = _map.GetMapEntityIdOrThrow(mapId);
-                transform.WorldPosition = position;
-                transform.AttachParent(mapEnt);
-            }
-
-            shell.WriteLine($"Teleported {player} to {mapId}:{posX},{posY}.");
-        }
-    }
-
     public sealed class TeleportToCommand : LocalizedCommands
     {
         [Dependency] private readonly IPlayerManager _players = default!;

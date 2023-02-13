@@ -111,6 +111,11 @@ namespace Robust.Shared.ContentPack
             {
                 foreach (var entryPoint in module.EntryPoints)
                 {
+                    entryPoint.Shutdown();
+                }
+
+                foreach (var entryPoint in module.EntryPoints)
+                {
                     entryPoint.Dispose();
                 }
             }

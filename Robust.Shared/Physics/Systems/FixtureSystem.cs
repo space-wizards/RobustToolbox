@@ -178,18 +178,16 @@ namespace Robust.Shared.Physics.Systems
                 return;
             }
 
+            foreach (var contact in fixture.Contacts.Values.ToArray())
+            {
+                _physics.DestroyContact(contact);
+            }
+
             if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
             {
                 var map = Transform(broadphase.Owner).MapUid;
-                if (TryComp<PhysicsMapComponent>(map, out var physicsMap))
-                {
-                    foreach (var contact in fixture.Contacts.Values.ToArray())
-                    {
-                        _physics.DestroyContact(contact);
-                    }
-                }
+                TryComp<PhysicsMapComponent>(map, out var physicsMap);
                 _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
-
             }
 
             if (updates)
@@ -272,19 +270,19 @@ namespace Robust.Shared.Physics.Systems
             TransformComponent? xform = null;
 
             // Add / update new fixtures
+            // FUTURE SLOTH
+            // Do not touch this or I WILL GLASS YOU.
+            // Updating fixtures in place causes prediction issues with contacts.
+            // See PR #3431 for when this started.
             foreach (var (id, fixture) in newFixtures)
             {
-                if (component.Fixtures.TryGetValue(id, out var existing))
+                if (!component.Fixtures.TryGetValue(id, out var existing))
                 {
-                    if (!existing.Equivalent(fixture))
-                    {
-                        fixture.CopyTo(existing);
-                        computeProperties = true;
-                        _broadphase.Refilter(existing, xform);
-                    }
+                    toAddFixtures.Add(fixture);
                 }
-                else
+                else if (!existing.Equivalent(fixture))
                 {
+                    toRemoveFixtures.Add(existing);
                     toAddFixtures.Add(fixture);
                 }
             }

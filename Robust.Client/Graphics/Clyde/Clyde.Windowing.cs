@@ -82,13 +82,6 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public string GetKeyName(Keyboard.Key key)
-        {
-            DebugTools.AssertNotNull(_windowing);
-
-            return _windowing!.KeyGetName(key);
-        }
-
         public uint? GetX11WindowId()
         {
             return _windowing?.WindowGetX11Id(_mainWindow!) ?? null;

@@ -108,14 +108,6 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
     }
 
     private float _damping;
-
-    /// <summary>
-    /// The initial world target point. This is assumed
-    /// to coincide with the body anchor initially.
-    /// </summary>
-    public Vector2 Target =>
-        IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(BodyAUid).WorldPosition;
-
     private float _invMassB;
     private float _invIB;
     private Vector2 _rB;
@@ -222,7 +214,8 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 
         _mass = K.GetInverse();
 
-        _C = cB + _rB - Target;
+        var target = positions[bodyA.IslandIndex[island.Index]];
+        _C = cB + _rB - target;
         _C *= _beta;
 
         // Cheat with some damping

@@ -92,7 +92,7 @@ namespace Robust.Client.Console
             UpdateAvailableCommands();
         }
 
-        private void UpdateAvailableCommands()
+        protected override void UpdateAvailableCommands()
         {
             _availableCommands.Clear();
 

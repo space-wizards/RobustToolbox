@@ -41,10 +41,13 @@ END TEMPLATE-->
 
 * Added `IWritableDirProvider.OpenSubdirectory()`, which returns a new `IWritableDirProvider` with the root set to some subdirectory.
 * Added `UiScreen.TryGetWidget()`
+* Added a virtual `Shutdown()` method for game/module entry points.
 
 ### Bugfixes
 
-*None yet*
+* Fixed SyncSpriteComponent not properly syncing entities that are out of view.
+* Fixed a bug preventing client-side commands from being properly registered.
+* Fixed a bug causing PVS to unnecessarily send extra data.
 
 ### Other
 

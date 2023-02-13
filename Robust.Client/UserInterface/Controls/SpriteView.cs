@@ -55,10 +55,12 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _spriteSystem ??= IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
-            _spriteSystem?.ForceUpdate(Sprite);
+            var uid = Sprite.Owner;
 
-            renderHandle.DrawEntity(Sprite.Owner, PixelSize / 2, Scale * UIScale, OverrideDirection);
+            _spriteSystem ??= IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
+            _spriteSystem?.ForceUpdate(uid);
+
+            renderHandle.DrawEntity(uid, PixelSize / 2, Scale * UIScale, OverrideDirection);
         }
     }
 }

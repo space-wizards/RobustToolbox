@@ -79,6 +79,7 @@ internal partial class Clyde
                 static (ref RefList<SpriteData> state, in ComponentTreeEntry<SpriteComponent> value) =>
                 {
                     ref var entry = ref state.AllocAdd();
+                    entry.Uid = value.Uid;
                     entry.Sprite = value.Component;
                     entry.Xform = value.Transform;
                     return true;
@@ -204,6 +205,7 @@ internal partial class Clyde
 
     private struct SpriteData
     {
+        public EntityUid Uid;
         public SpriteComponent Sprite;
         public TransformComponent Xform;
         public Vector2 WorldPos;

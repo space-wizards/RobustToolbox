@@ -1133,10 +1133,10 @@ internal sealed partial class PVSSystem : EntitySystem
                 continue;
             }
 
-            if (component.SendOnlyToOwner && player != null && player.AttachedEntity != component.Owner)
+            if (component.SendOnlyToOwner && player != null && player.AttachedEntity != entityUid)
                 continue;
 
-            if (component.LastModifiedTick <= fromTick && fromTick != GameTick.Zero)
+            if (component.LastModifiedTick <= fromTick)
             {
                 if (sendCompList && (!component.SessionSpecific || player == null || EntityManager.CanGetComponentState(bus, component, player)))
                     netComps!.Add(netId);
@@ -1175,7 +1175,7 @@ internal sealed partial class PVSSystem : EntitySystem
             if (!component.NetSyncEnabled)
                 continue;
 
-            if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
+            if (component.SendOnlyToOwner && player.AttachedEntity != entityUid)
                 continue;
 
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))

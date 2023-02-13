@@ -35,11 +35,12 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `UIScreen.GetOrNewWidget()` has been replaced with `GetOrAddWidget()`.
 
 ### New features
 
 * Added `IWritableDirProvider.OpenSubdirectory()`, which returns a new `IWritableDirProvider` with the root set to some subdirectory.
+* Added `UiScreen.TryGetWidget()`
 
 ### Bugfixes
 

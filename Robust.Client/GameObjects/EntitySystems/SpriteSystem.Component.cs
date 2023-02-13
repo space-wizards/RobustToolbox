@@ -5,23 +5,23 @@ namespace Robust.Client.GameObjects;
 public sealed partial class SpriteSystem
 {
     /// <summary>
-    /// Resets the sprite's animated layers to align with realtime.
+    /// Resets the sprite's animated layers to align with a given time (in seconds).
     /// </summary>
-    public void SetAutoAnimateSync(SpriteComponent sprite)
+    public void SetAutoAnimateSync(SpriteComponent sprite, double time)
     {
         foreach (var layer in sprite.AllLayers)
         {
-            if (!layer.AutoAnimated || layer is not SpriteComponent.Layer spriteLayer)
+            if (layer is not SpriteComponent.Layer spriteLayer)
                 continue;
 
-            SetAutoAnimateSync(sprite, spriteLayer);
+            SetAutoAnimateSync(sprite, spriteLayer, time);
         }
     }
 
     /// <summary>
-    /// Resets the layer's animation to align with realtime.
+    /// Resets the layer's animation to align with a given time (in seconds).
     /// </summary>
-    public void SetAutoAnimateSync(SpriteComponent sprite, SpriteComponent.Layer layer)
+    public void SetAutoAnimateSync(SpriteComponent sprite, SpriteComponent.Layer layer, double time)
     {
         if (!layer.AutoAnimated)
             return;
@@ -38,10 +38,7 @@ public sealed partial class SpriteSystem
             return;
         }
 
-        var animationDuration = state.GetDelays().Sum();
-        var curTime = _timing.RealTime;
-
-        layer.AnimationTimeLeft = (float) -(curTime.TotalSeconds % animationDuration);
+        layer.AnimationTimeLeft = (float) -(time % state.TotalDelay);
         layer.AnimationFrame = 0;
     }
 }

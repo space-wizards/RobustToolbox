@@ -28,6 +28,11 @@ namespace Robust.Client.UserInterface.Controls
         public SpriteComponent? Sprite { get; set; }
 
         /// <summary>
+        /// Should the sprite's offset be applied to the control.
+        /// </summary>
+        public bool SpriteOffset = true;
+
+        /// <summary>
         ///     Overrides the direction used to render the sprite.
         /// </summary>
         /// <remarks>
@@ -60,7 +65,7 @@ namespace Robust.Client.UserInterface.Controls
             _spriteSystem ??= IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
             _spriteSystem?.ForceUpdate(uid);
 
-            renderHandle.DrawEntity(uid, PixelSize / 2, Scale * UIScale, OverrideDirection);
+            renderHandle.DrawEntity(uid, PixelSize / 2 + PixelSize * (SpriteOffset ? Sprite.Offset : Vector2.Zero), Scale * UIScale, OverrideDirection);
         }
     }
 }

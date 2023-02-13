@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.87.0.0
+
+### Breaking changes
+
 * `UIScreen.GetOrNewWidget()` has been replaced with `GetOrAddWidget()`.
 
 ### New features
@@ -48,14 +71,6 @@ END TEMPLATE-->
 * Fixed SyncSpriteComponent not properly syncing entities that are out of view.
 * Fixed a bug preventing client-side commands from being properly registered.
 * Fixed a bug causing PVS to unnecessarily send extra data.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
 
 
 ## 0.86.0.0

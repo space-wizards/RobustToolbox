@@ -65,6 +65,7 @@ namespace Robust.Shared.Map
 
             mapComp.MapPreInit = false;
             mapComp.MapPaused = false;
+            EntityManager.Dirty(mapComp);
 
             RecursiveDoMapInit(mapEnt, in xformQuery, in metaQuery, in metaSystem);
         }

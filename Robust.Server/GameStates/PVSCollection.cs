@@ -144,6 +144,15 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             _deletionHistory.Add((tick, index));
         }
 
+        foreach (var index in _changedIndices)
+        {
+            var oldLoc = RemoveIndexInternal(index);
+            if(oldLoc is GridChunkLocation or MapChunkLocation)
+                _dirtyChunks.Add((IChunkIndexLocation) oldLoc);
+
+            AddIndexInternal(index, _locationChangeBuffer[index], _dirtyChunks);
+        }
+
         // remove empty chunk-subsets
         foreach (var chunkLocation in _dirtyChunks)
         {
@@ -162,15 +171,6 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                         mapChunks.Remove(mapChunkLocation.ChunkIndices);
                     break;
             }
-        }
-
-        foreach (var index in _changedIndices)
-        {
-            var oldLoc = RemoveIndexInternal(index);
-            if(oldLoc is GridChunkLocation or MapChunkLocation)
-                _dirtyChunks.Add((IChunkIndexLocation) oldLoc);
-
-            AddIndexInternal(index, _locationChangeBuffer[index], _dirtyChunks);
         }
 
         _changedIndices.Clear();

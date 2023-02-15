@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed `WritableDirProvider.Find()`. This fixes custom MIDI soundfonts on Windows.
+* Fixed server startup crash with string serializer length checks.
 
 ### Other
 

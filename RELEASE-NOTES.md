@@ -43,6 +43,21 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.87.1.0
+
+### Bugfixes
+
 * Fixed a PVS bug that would sometimes cause it to attempt to send deleted entities.
 * Fixed server commands not getting sent to clients after disconnecting and reconnecting.
 * Fixed a text input error when using the right arrow key while at the second to last character.
@@ -52,10 +67,6 @@ END TEMPLATE-->
 
 * Sprite view controls now use the sprite's offset when rendering.
 * The sprite system should now animate any rendered sprites with RSI animations, instead of only animating those visible in the main viewport and sprite view controls.
-
-### Internal
-
-*None yet*
 
 
 ## 0.87.0.0

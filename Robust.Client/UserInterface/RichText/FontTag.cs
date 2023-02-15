@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
@@ -12,14 +13,18 @@ namespace Robust.Client.UserInterface.RichText;
 /// </summary>
 public sealed class FontTag : IMarkupTag
 {
+    public const string DefaultFont = "Default";
+
     [Dependency] private readonly IResourceCache _resourceCache = default!;
+    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     public string Name => "font";
 
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
-        string fontPath = node.Value.StringValue ?? "/Fonts/NotoSans/NotoSans.ttf";
-        var font = CreateFont(context.Font, node, _resourceCache, fontPath);
+        string fontId = node.Value.StringValue ?? DefaultFont;
+
+        var font = CreateFont(context.Font, node, _resourceCache, _prototypeManager, fontId);
         context.Font.Push(font);
     }
 
@@ -29,10 +34,15 @@ public sealed class FontTag : IMarkupTag
     }
 
     /// <summary>
-    /// Creates the a vector font from the supplied resource path.<br/>
+    /// Creates the a vector font from the supplied font id.<br/>
     /// The size of the resulting font will be either the size supplied as a parameter to the tag, the previous font size or 12
     /// </summary>
-    public static Font CreateFont(Stack<Font> contextFontStack, MarkupNode node, IResourceCache cache, string resourcePath)
+    public static Font CreateFont(
+        Stack<Font> contextFontStack,
+        MarkupNode node,
+        IResourceCache cache,
+        IPrototypeManager prototypeManager,
+        string fontId)
     {
         var size = 12;
 
@@ -55,7 +65,10 @@ public sealed class FontTag : IMarkupTag
         if (node.Attributes.TryGetValue("size", out var sizeParameter))
             size = (int) (sizeParameter.LongValue ?? size);
 
-        var fontResource = cache.GetResource<FontResource>(resourcePath);
+        if (!prototypeManager.TryIndex<FontPrototype>(fontId, out var prototype))
+            prototype = prototypeManager.Index<FontPrototype>(DefaultFont);
+
+        var fontResource = cache.GetResource<FontResource>(prototype.Path);
         return new VectorFont(fontResource, size);
     }
 }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Robust.Client.Graphics;
+using Robust.Client.UserInterface.RichText;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -13,6 +15,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class OutputPanel : Control
     {
+        [Dependency] private readonly MarkupTagManager _tagManager = default!;
+
         public const string StylePropertyStyleBox = "stylebox";
 
         private readonly List<RichTextEntry> _entries = new();
@@ -27,6 +31,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public OutputPanel()
         {
+            IoCManager.InjectDependencies(this);
             MouseFilter = MouseFilterMode.Pass;
             RectClipContent = true;
 
@@ -83,7 +88,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public void AddMessage(FormattedMessage message)
         {
-            var entry = new RichTextEntry(message);
+            var entry = new RichTextEntry(message, this, _tagManager);
 
             entry.Update(_getFont(), _getContentBox().Width, UIScale);
 
@@ -126,7 +131,7 @@ namespace Robust.Client.UserInterface.Controls
             // A stack for format tags.
             // This stack contains the format tag to RETURN TO when popped off.
             // So when a new color tag gets hit this stack gets the previous color pushed on.
-            var formatStack = new Stack<FormattedMessage.Tag>(2);
+            var context = new MarkupDrawingContext(2);
 
             foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
             {
@@ -141,7 +146,7 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 }
 
-                entry.Draw(handle, font, contentBox, entryOffset, formatStack, UIScale);
+                entry.Draw(handle, font, contentBox, entryOffset, context, UIScale);
 
                 entryOffset += entry.Height + font.GetLineSeparation(UIScale);
             }

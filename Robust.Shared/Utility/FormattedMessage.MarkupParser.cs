@@ -173,8 +173,7 @@ public sealed partial class FormattedMessage
 
         var result = new List<MarkupNode>
         {
-            //Just pass null for attributes when the node doesn't have any
-            new(name,  parameter, attributes.Count > 0 ? attributes : null)
+            new(name,  parameter, attributes)
         };
 
         if (selfClosing)

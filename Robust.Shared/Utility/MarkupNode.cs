@@ -7,7 +7,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.Utility;
 
 [Serializable, NetSerializable]
-public sealed class MarkupNode
+public sealed class MarkupNode : IComparable<MarkupNode>
 {
     public readonly string? Name;
     public readonly MarkupParameter Value;
@@ -37,7 +37,7 @@ public sealed class MarkupNode
             return Value.StringValue ?? "";
 
         var attributesString = "";
-        foreach (var (k, v) in Attributes ?? new Dictionary<string, MarkupParameter>())
+        foreach (var (k, v) in Attributes)
         {
             attributesString += $"{k}{v}";
         }
@@ -54,10 +54,21 @@ public sealed class MarkupNode
     {
         var equal = Name == node.Name;
         equal &= Value.Equals(node.Value);
-        equal &= Attributes?.Equals(node.Attributes) ?? node.Attributes == null;
+        equal &= Attributes.Count == 0 && node.Attributes.Count == 0 || Attributes.Equals(node.Attributes);
         equal &= Closing == node.Closing;
 
         return equal;
+    }
+
+    public int CompareTo(MarkupNode? other)
+    {
+        if (ReferenceEquals(this, other))
+            return 0;
+        if (ReferenceEquals(null, other))
+            return 1;
+
+        var nameComparison = string.Compare(Name, other.Name, StringComparison.Ordinal);
+        return nameComparison != 0 ? nameComparison : Closing.CompareTo(other.Closing);
     }
 }
 
@@ -119,5 +130,10 @@ public readonly record struct MarkupParameter(string? StringValue = null, long? 
         equal &= ColorValue == other.Value.ColorValue;
 
         return equal;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(StringValue, LongValue, ColorValue);
     }
 }

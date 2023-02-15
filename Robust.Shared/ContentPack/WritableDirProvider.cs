@@ -67,12 +67,12 @@ namespace Robust.Shared.ContentPack
 
             foreach (var file in files)
             {
-                resFiles.Add(new ResourcePath(file.Substring(rootLen), "\\"));
+                resFiles.Add(new ResourcePath(file.Substring(rootLen), ResourcePath.SYSTEM_SEPARATOR).ChangeSeparator("/"));
             }
 
             foreach (var dir in dirs)
             {
-                resDirs.Add(new ResourcePath(dir.Substring(rootLen), "\\"));
+                resDirs.Add(new ResourcePath(dir.Substring(rootLen), ResourcePath.SYSTEM_SEPARATOR).ChangeSeparator("/"));
             }
 
             return (resFiles, resDirs);

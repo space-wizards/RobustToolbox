@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed `WritableDirProvider.Find()`. This fixes custom MIDI soundfonts on Windows.
 
 ### Other
 
@@ -118,7 +118,7 @@ END TEMPLATE-->
 
 * Undid `*.yaml` prototype loading change from previous version.
 * `IConsoleHost`'s `RegisteredCommands` field has been renamed to `AvailableCommands`.
-* Several light related cvars have been renamed. E.g., "display.softshadows" is now "light.softshadows". 
+* Several light related cvars have been renamed. E.g., "display.softshadows" is now "light.softshadows".
 * The "display.lightmapdivider" integer cvar has been replaced with a float multiplier named "light.resolution_scale".
 
 

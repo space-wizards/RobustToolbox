@@ -35,17 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* A `Default` font prototype is now required. I.e.:
-    ```yaml
-    - type: font
-      id: Default
-      path: /Fonts/NotoSans/NotoSans-Regular.ttf
-    ```
+*None yet*
 
 ### New features
-* `FormattedText.MarkupParser` got refactored to be more robust and support arbitrary tags.
-* New rich text tags can be added by implementing `IMarkupTag`
 
+*None yet*
 
 ### Bugfixes
 
@@ -58,6 +52,23 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.88.0.0
+
+### Breaking changes
+
+* A `Default` font prototype is now required. I.e.:
+    ```yaml
+    - type: font
+      id: Default
+      path: /Fonts/NotoSans/NotoSans-Regular.ttf
+    ```
+
+### New features
+* `FormattedText.MarkupParser` got refactored to be more robust and support arbitrary tags.
+* New rich text tags can be added by implementing `IMarkupTag`
+
 
 
 ## 0.87.1.1

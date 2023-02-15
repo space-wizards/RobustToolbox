@@ -89,6 +89,7 @@ namespace Robust.Client.Console
         private void OnNetworkDisconnected(object? sender, NetDisconnectedArgs e)
         {
             _availableServerCommands.Clear();
+            _requestedCommands = false;
             UpdateAvailableCommands();
         }
 

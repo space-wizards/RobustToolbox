@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed server commands not getting sent to clients after disconnecting and reconnecting.
 
 ### Other
 

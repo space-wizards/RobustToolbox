@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.87.1.1
+
+### Bugfixes
+
+* Fixed source of PVS assert tripping in debug.
+
+
 ## 0.87.1.0
 
 ### Bugfixes

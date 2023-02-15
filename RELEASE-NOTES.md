@@ -35,11 +35,17 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* A `Default` font prototype is now required. I.e.:
+    ```yaml
+    - type: font
+      id: Default
+      path: /Fonts/NotoSans/NotoSans-Regular.ttf
+    ```
 
 ### New features
+* `FormattedText.MarkupParser` got refactored to be more robust and support arbitrary tags.
+* New rich text tags can be added by implementing `IMarkupTag`
 
-*None yet*
 
 ### Bugfixes
 
@@ -83,7 +89,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added Pidgin parser to the sandbox whitelisted. 
+* Added Pidgin parser to the sandbox whitelisted.
 
 ### Bugfixes
 

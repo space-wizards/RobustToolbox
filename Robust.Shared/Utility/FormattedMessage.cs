@@ -24,7 +24,7 @@ public sealed partial class FormattedMessage
     /// <summary>
     /// true if the formatted message doesn't contain any nodes
     /// </summary>
-    public bool IsEmpty => _nodes.Count > 0;
+    public bool IsEmpty => _nodes.Count == 0;
 
     private readonly List<MarkupNode> _nodes;
 

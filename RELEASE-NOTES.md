@@ -46,6 +46,7 @@ END TEMPLATE-->
 * Fixed `WritableDirProvider.Find()`. This fixes custom MIDI soundfonts on Windows.
 * Fixed server startup crash with string serializer length checks.
 * Fixed `CS8981` errors in `Robust.Benchmarks`.
+* Fixed C# interactive errors when engine started without content-start.
 
 ### Other
 

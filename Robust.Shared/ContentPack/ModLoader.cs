@@ -48,9 +48,7 @@ namespace Robust.Shared.ContentPack
         public ModLoader()
         {
             var id = Interlocked.Increment(ref _modLoaderId);
-            // Imma just turn on collectible assemblies for the heck of it.
-            // Even though we don't need it yet.
-            _loadContext = new AssemblyLoadContext($"ModLoader-{id}", true);
+            _loadContext = new AssemblyLoadContext($"ModLoader-{id}");
 
             _loadContext.Resolving += ResolvingAssembly;
 

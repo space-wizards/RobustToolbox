@@ -133,12 +133,14 @@ namespace Robust.Shared.Serialization
                 {
                     DebugTools.Assert(str.Length < MaxMappedStringSize);
 
-                    var l = Encoding.UTF8.GetBytes(str, buf);
-
-                    if (l >= MaxMappedStringSize)
+                    if (Encoding.UTF8.GetByteCount(str) > MaxMappedStringSize)
                     {
-                        throw new NotImplementedException("Overly long string in strings package.");
+                        // Ok so the code checks the goddamn string size before encoding to UTF-8 to check length.
+                        // Yes, this code sucks, but I don't care to fix it right now.
+                        continue;
                     }
+
+                    var l = Encoding.UTF8.GetBytes(str, buf);
 
                     Primitives.WritePrimitive(hasherStream, (uint) l);
                     hasherStream.Write(buf[..l]);

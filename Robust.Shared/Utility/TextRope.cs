@@ -483,16 +483,10 @@ public static class Rope
     [Pure]
     public static long RuneShiftRight(long index, Node rope)
     {
-        index += 1;
+        if (char.IsHighSurrogate(Index(rope, index)))
+            return index + 2;
 
-        // Before you confuse yourself on "shouldn't this be high surrogate since shifting left checks low"
-        // (Because yes, I did myself too a week after writing it)
-        // char.IsLowSurrogate(_text[_cursorPosition]) means "is the cursor between a surrogate pair"
-        // because we ALREADY moved.
-        if (char.IsLowSurrogate(Index(rope, index)))
-            index += 1;
-
-        return index;
+        return index + 1;
     }
 
     /// <summary>

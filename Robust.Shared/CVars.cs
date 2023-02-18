@@ -6,6 +6,7 @@ using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 
@@ -194,7 +195,7 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
-        /// ZSTD compression level to use when compressing game states.
+        /// ZSTD compression level to use when compressing game states. Also used for replays.
         /// </summary>
         public static readonly CVarDef<int> NetPVSCompressLevel =
             CVarDef.Create("net.pvs_compress_level", 3, CVar.SERVERONLY);
@@ -630,7 +631,50 @@ namespace Robust.Shared
         /// outside of our viewport.
         /// </remarks>
         public static readonly CVarDef<float> MaxLightRadius =
-            CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY);
+            CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum number of lights that the client will draw.
+        /// </summary>
+        public static readonly CVarDef<int> MaxLightCount =
+            CVarDef.Create("light.max_light_count", 2048, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum number of occluders that the client will draw. Values below 1024 have no effect.
+        /// </summary>
+        public static readonly CVarDef<int> MaxOccluderCount =
+            CVarDef.Create("light.max_occluder_count", 2048, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Scale used to modify the horizontal and vertical resolution of lighting framebuffers,
+        /// relative to the viewport framebuffer size.
+        /// </summary>
+        public static readonly CVarDef<float> LightResolutionScale =
+            CVarDef.Create("light.resolution_scale", 0.5f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum amount of shadow-casting lights that can be rendered in a single viewport at once.
+        /// </summary>
+        public static readonly CVarDef<int> MaxShadowcastingLights =
+            CVarDef.Create("light.max_shadowcasting_lights", 128, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Whether to give shadows a soft edge when rendering.
+        /// </summary>
+        public static readonly CVarDef<bool> LightSoftShadows =
+            CVarDef.Create("light.soft_shadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Apply a gaussian blur to the final lighting framebuffer to smoothen it out a little.
+        /// </summary>
+        public static readonly CVarDef<bool> LightBlur=
+            CVarDef.Create("light.blur", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Factor by which to blur the lighting framebuffer under <c>light.blur</c>.
+        /// </summary>
+        public static readonly CVarDef<float> LightBlurFactor =
+            CVarDef.Create("light.blur_factor", 0.001f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * Lookup
@@ -718,6 +762,9 @@ namespace Robust.Shared
         public static readonly CVarDef<double> RenderSpriteDirectionBias =
             CVarDef.Create("render.sprite_direction_bias", -0.05, CVar.ARCHIVE | CVar.CLIENTONLY);
 
+        public static readonly CVarDef<string> RenderFOVColor =
+            CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.ARCHIVE | CVar.CLIENTONLY);
+
         /*
          * DISPLAY
          */
@@ -745,37 +792,6 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> DisplayHeight =
             CVarDef.Create("display.height", 720, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Factor by which to divide the horizontal and vertical resolution of lighting framebuffers,
-        /// relative to the viewport framebuffer size.
-        /// </summary>
-        public static readonly CVarDef<int> DisplayLightMapDivider =
-            CVarDef.Create("display.lightmapdivider", 2, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        /// <summary>
-        /// Maximum amount of lights that can be rendered in a single viewport at once.
-        /// </summary>
-        public static readonly CVarDef<int> DisplayMaxLightsPerScene =
-            CVarDef.Create("display.maxlightsperscene", 128, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        /// <summary>
-        /// Whether to give shadows a soft edge when rendering.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplaySoftShadows =
-            CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        /// <summary>
-        /// Apply a gaussian blur to the final lighting framebuffer to smoothen it out a little.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayBlurLight =
-            CVarDef.Create("display.blur_light", true, CVar.CLIENTONLY | CVar.ARCHIVE);
-
-        /// <summary>
-        /// Factor by which to blur the lighting framebuffer under <c>display.blur_light</c>.
-        /// </summary>
-        public static readonly CVarDef<float> DisplayBlurLightFactor =
-            CVarDef.Create("display.blur_light_factor", 0.001f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// UI scale for all UI controls. If zero, this value is automatically calculated from the OS.
@@ -952,6 +968,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> DisplayWin11ImmersiveDarkMode =
             CVarDef.Create("display.win11_immersive_dark_mode", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, run the windowing system in another thread from the game thread.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadWindowApi =
+            CVarDef.Create("display.thread_window_api", false, CVar.CLIENTONLY);
 
         /*
          * AUDIO
@@ -1209,6 +1231,15 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ResPrototypeReloadWatch =
             CVarDef.Create("res.prototype_reload_watch", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true, do a warning check at startup for probably-erroneous file extensions like <c>.yaml</c> in resources.
+        /// </summary>
+        /// <remarks>
+        /// This check is always skipped on <c>FULL_RELEASE</c>.
+        /// </remarks>
+        public static readonly CVarDef<bool> ResCheckBadFileExtensions =
+            CVarDef.Create("res.check_bad_file_extensions", true);
+
         /*
          * DEBUG
          */
@@ -1376,6 +1407,38 @@ namespace Robust.Shared
         /// Index log buffer size for the profiling system.
         /// </summary>
         public static readonly CVarDef<int> ProfIndexSize = CVarDef.Create("prof.index_size", 128);
+
+        /*
+         * Replays
+         */
+
+        /// <summary>
+        /// The folder within the server data directory where a replay will be recorded. Note that existing files in
+        /// this directory will be removed when starting a new recording.
+        /// </summary>
+        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replay", CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size", 1024 * 100, CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Maximum uncompressed size of a replay recording (in kilobytes) before recording automatically stops.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size", 1024 * 300, CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data
+        /// for one or more tick. Actual files may be slightly larger, this is just a lower threshold. After
+        /// compressing, the files are generally ~30% of their uncompressed size.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayTickBatchSize = CVarDef.Create("replay.replay_tick_batchSize", 1024, CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Whether or not recording replays is enabled.
+        /// </summary>
+        public static readonly CVarDef<bool> ReplayEnabled = CVarDef.Create("replay.enabled", true, CVar.SERVERONLY | CVar.ARCHIVE);
 
         /*
          * CFG

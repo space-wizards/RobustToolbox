@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.GameObjects;
@@ -110,6 +110,7 @@ namespace Robust.Client.Placement
             }
 
             var dirAng = pManager.Direction.ToAngle();
+            var spriteSys = pManager.EntityManager.System<SpriteSystem>();
             foreach (var coordinate in locationcollection)
             {
                 if (!coordinate.IsValid(pManager.EntityManager))
@@ -118,7 +119,7 @@ namespace Robust.Client.Placement
                 var worldRot = pManager.EntityManager.GetComponent<TransformComponent>(coordinate.EntityId).WorldRotation + dirAng;
 
                 sc.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
-                sc.Render(handle, pManager.EyeManager.CurrentEye.Rotation, worldRot, worldPos);
+                spriteSys.Render(sce.Value, sc, handle, pManager.EyeManager.CurrentEye.Rotation, worldRot, worldPos);
             }
         }
 

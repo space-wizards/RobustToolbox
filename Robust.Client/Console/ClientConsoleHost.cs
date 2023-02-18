@@ -9,13 +9,13 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Console
 {
@@ -51,6 +51,9 @@ namespace Robust.Client.Console
         [Dependency] private readonly IClientConGroupController _conGroup = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IPlayerManager _player = default!;
+        [Dependency] private readonly IBaseClient _client = default!;
+
+        [ViewVariables] private readonly Dictionary<string, IConsoleCommand> _availableServerCommands = new();
 
         private bool _requestedCommands;
 
@@ -67,10 +70,43 @@ namespace Robust.Client.Console
 
             _requestedCommands = false;
             NetManager.Connected += OnNetworkConnected;
+            NetManager.Disconnect += OnNetworkDisconnected;
+            _client.RunLevelChanged += OnLevelChanged;
 
             LoadConsoleCommands();
             SendServerCommandRequest();
             LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
+        }
+
+        private readonly Dictionary<string, IConsoleCommand> _availableCommands = new();
+        public override IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => _availableCommands;
+
+        private void OnLevelChanged(object? sender, RunLevelChangedEventArgs e)
+        {
+            UpdateAvailableCommands();
+        }
+
+        private void OnNetworkDisconnected(object? sender, NetDisconnectedArgs e)
+        {
+            _availableServerCommands.Clear();
+            _requestedCommands = false;
+            UpdateAvailableCommands();
+        }
+
+        protected override void UpdateAvailableCommands()
+        {
+            _availableCommands.Clear();
+
+            foreach (var (name, cmd) in RegisteredCommands)
+            {
+                if (!cmd.RequireServerOrSingleplayer || (_client.RunLevel is ClientRunLevel.Initialize or ClientRunLevel.SinglePlayerGame))
+                    _availableCommands.Add(name, cmd);
+            }
+
+            foreach (var (name, cmd) in _availableServerCommands)
+            {
+                _availableCommands.TryAdd(name, cmd);
+            }
         }
 
         private void ProcessCommand(MsgConCmd message)
@@ -122,24 +158,24 @@ namespace Robust.Client.Console
 
             var commandName = args[0];
 
-            if (AvailableCommands.ContainsKey(commandName))
+            if (!AvailableCommands.TryGetValue(commandName, out var cmd))
             {
-                if (!CanExecute(commandName))
-                {
-                    WriteError(null, $"Insufficient perms for command: {commandName}");
-                    return;
-                }
-
-                var command1 = AvailableCommands[commandName];
-                args.RemoveAt(0);
-                var shell = new ConsoleShell(this, null);
-                var cmdArgs = args.ToArray();
-
-                AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
-                command1.Execute(shell, command, cmdArgs);
-            }
-            else
                 WriteError(null, "Unknown command: " + commandName);
+                return;
+            }
+
+            if (!CanExecute(commandName))
+            {
+                WriteError(null, $"Insufficient perms for command: {commandName}");
+                return;
+            }
+
+            args.RemoveAt(0);
+            var shell = new ConsoleShell(this, null);
+            var cmdArgs = args.ToArray();
+
+            AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
+            cmd.Execute(shell, command, cmdArgs);
         }
 
         private bool CanExecute(string cmdName)
@@ -200,15 +236,17 @@ namespace Robust.Client.Console
                 string? commandName = cmd.Name;
 
                 // Do not do duplicate commands.
-                if (AvailableCommands.ContainsKey(commandName))
+                if (_availableServerCommands.ContainsKey(commandName))
                 {
-                    Logger.DebugS("console", $"Server sent console command {commandName}, but we already have one with the same name. Ignoring.");
+                    Logger.Error("console", $"Server sent duplicate console command {commandName}");
                     continue;
                 }
 
                 var command = new ServerDummyCommand(commandName, cmd.Help, cmd.Description);
-                AvailableCommands[commandName] = command;
+                _availableServerCommands[commandName] = command;
             }
+
+            UpdateAvailableCommands();
         }
 
         /// <summary>

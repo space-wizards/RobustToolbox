@@ -43,7 +43,8 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed `WritableDirProvider.Find()`. This fixes custom MIDI soundfonts on Windows.
+* Fixed server startup crash with string serializer length checks.
 
 ### Other
 
@@ -53,6 +54,128 @@ END TEMPLATE-->
 
 *None yet*
 
+
+## 0.88.0.0
+
+### Breaking changes
+
+* A `Default` font prototype is now required. I.e.:
+    ```yaml
+    - type: font
+      id: Default
+      path: /Fonts/NotoSans/NotoSans-Regular.ttf
+    ```
+
+### New features
+* `FormattedText.MarkupParser` got refactored to be more robust and support arbitrary tags.
+* New rich text tags can be added by implementing `IMarkupTag`
+
+
+
+## 0.87.1.1
+
+### Bugfixes
+
+* Fixed source of PVS assert tripping in debug.
+
+
+## 0.87.1.0
+
+### Bugfixes
+
+* Fixed a PVS bug that would sometimes cause it to attempt to send deleted entities.
+* Fixed server commands not getting sent to clients after disconnecting and reconnecting.
+* Fixed a text input error when using the right arrow key while at the second to last character.
+
+
+### Other
+
+* Sprite view controls now use the sprite's offset when rendering.
+* The sprite system should now animate any rendered sprites with RSI animations, instead of only animating those visible in the main viewport and sprite view controls.
+
+
+## 0.87.0.0
+
+### Breaking changes
+
+* `UIScreen.GetOrNewWidget()` has been replaced with `GetOrAddWidget()`.
+
+### New features
+
+* Added `IWritableDirProvider.OpenSubdirectory()`, which returns a new `IWritableDirProvider` with the root set to some subdirectory.
+* Added `UiScreen.TryGetWidget()`
+* Added a virtual `Shutdown()` method for game/module entry points.
+
+### Bugfixes
+
+* Fixed SyncSpriteComponent not properly syncing entities that are out of view.
+* Fixed a bug preventing client-side commands from being properly registered.
+* Fixed a bug causing PVS to unnecessarily send extra data.
+
+
+## 0.86.0.0
+
+### Breaking changes
+
+* Undid `*.yaml` prototype loading change from previous version.
+* `IConsoleHost`'s `RegisteredCommands` field has been renamed to `AvailableCommands`.
+* Several light related cvars have been renamed. E.g., "display.softshadows" is now "light.softshadows".
+* The "display.lightmapdivider" integer cvar has been replaced with a float multiplier named "light.resolution_scale".
+
+
+### New features
+
+* Command definitions have a new bool that restricts them to only be executable by the server or in single player mode. Several "server only" commands have been moved to to shared code and now use this option.
+* The FOV color is now configurable via the "render.fov_color" cvar
+
+### Bugfixes
+
+* SDL2 backend now works if the client is started with fullscreen.
+
+### Other
+
+* SDL2 backend now handles quit events (⌘+Q on macOS).
+* SDL2 backend now logs video driver backend used on initialization.
+* The engine will now warn on startup if `*.yaml` files are found in resources, as this most likely indicates an accident.
+* Added entity, occluder and shadow-casting light counts to the clyde debug panel.
+* The HistoryLineEdit control now invokes `OnTextChanged` events when selecting history items
+
+### Internal
+
+* Changed thread safety around `ResourceManager`'s VFS roots, removing the use of error prone reader-writer locks.
+* SDL2 log now shows log category.
+* Removed OpenTK DllMap code.
+
+
+## 0.85.2.0
+
+### New features
+
+* Threaded windowing API usage is now behind a CVar, disabled by default on macOS to avoid crashes.
+* Box2i, ImmutableHashSet, ISet, and IReadonlySet can now be serialized.
+* Added helpers for Box2i Center / Vector2i Up-Down-Left-Right.
+* Implement blend modes for rendering.
+
+### Bugfixes
+
+* MacOS with the SDL2 backend now has DPI scaling enabled.
+    * Fixed DPI scaling calculations on platforms outside Windows.
+* Grids on top of maps that are also grids should render correctly now.
+* Fixed bug in ScrollContainer that could cause permanent loops.
+* Fixed occluder tree error.
+* Fixed Texture.GetPixel.
+
+### Other
+
+* System F3 panel now correctly fetches processor model on Apple Silicon devices.
+* UI content scale is now listed in the F3 coordinates panel.
+* SDL2 backend is now wired up to update key names dynamically on keyboard mode change.
+* The prototype reload event is no longer wrapped under #if !FULL_RELEASE.
+* The engine now loads `*.yaml` files (previously loading only `*.yml`) for prototypes.
+
+### Internal
+
+* `keyinfo` command has enum completions.
 
 ## 0.85.1.1
 
@@ -106,7 +229,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added Pidgin parser to the sandbox whitelisted. 
+* Added Pidgin parser to the sandbox whitelisted.
 
 ### Bugfixes
 

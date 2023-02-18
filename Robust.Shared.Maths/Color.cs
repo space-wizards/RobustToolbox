@@ -1912,5 +1912,20 @@ namespace Robust.Shared.Maths
         {
             return DefaultColorsInverted.TryGetValue(this, out var name) ? name : null;
         }
+
+        public static bool TryParse(string input, out Color color)
+        {
+            if (TryFromName(input, out color))
+                return true;
+
+            var nullableColor = TryFromHex(input);
+            if (nullableColor != null)
+            {
+                color = nullableColor.Value;
+                return true;
+            }
+
+            return false;
+        }
     }
 }

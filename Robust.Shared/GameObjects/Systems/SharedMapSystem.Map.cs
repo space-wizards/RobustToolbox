@@ -32,11 +32,13 @@ public abstract partial class SharedMapSystem
         var xformQuery = GetEntityQuery<TransformComponent>();
 
         xformQuery.GetComponent(uid).ChangeMapId(state.MapId, xformQuery);
+
+        MapManager.SetMapPaused(state.MapId, state.MapPaused);
     }
 
     private void OnMapGetState(EntityUid uid, MapComponent component, ref ComponentGetState args)
     {
-        args.State = new MapComponentState(component.WorldMap, component.LightingEnabled);
+        args.State = new MapComponentState(component.WorldMap, component.LightingEnabled, component.MapPaused);
     }
 
     protected abstract void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args);

@@ -14,7 +14,17 @@ namespace Robust.Shared.ContentPack
     public sealed class VirtualWritableDirProvider : IWritableDirProvider
     {
         // Just a simple tree. No need to over complicate this.
-        private readonly DirectoryNode _rootDirectoryNode = new();
+        private readonly DirectoryNode _rootDirectoryNode;
+
+        public VirtualWritableDirProvider()
+        {
+            _rootDirectoryNode = new();
+        }
+
+        private VirtualWritableDirProvider(DirectoryNode node)
+        {
+            _rootDirectoryNode = node;
+        }
 
         /// <inheritdoc />
         public string? RootDir => null;
@@ -236,6 +246,14 @@ namespace Robust.Shared.ContentPack
             }
 
             throw new InvalidOperationException("Unreachable.");
+        }
+
+        public IWritableDirProvider OpenSubdirectory(ResourcePath path)
+        {
+            if (!TryGetNodeAt(path, out var node) || node is not DirectoryNode dirNode)
+                throw new FileNotFoundException();
+
+            return new VirtualWritableDirProvider(dirNode);
         }
 
         private interface INode

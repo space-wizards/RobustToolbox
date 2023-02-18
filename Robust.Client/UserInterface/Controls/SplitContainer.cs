@@ -30,7 +30,12 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private float _splitWidth;
-        private const float MinDraggableWidth = 10f;
+
+        /// <summary>
+        ///     This width determines the minimum size of the draggable area around the split. This has no effect if it
+        ///     is smaller than <see cref="SplitWidth"/>, which determines the visual padding/width.
+        /// </summary>
+        public float MinDraggableWidth = 10f;
 
         /// <summary>
         /// Virtual pixel offset from the edge beyond which the split cannot be moved.

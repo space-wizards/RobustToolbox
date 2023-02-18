@@ -39,7 +39,8 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added a new OnScreenChanged event that gets invoked when `IUserInterfaceManager.ActiveScreen` changes.
+* UI state interfaces such as `IOnStateEntered<TState>` now also get invoked whenever the current state inherits from `TState`.
 
 ### Bugfixes
 
@@ -47,10 +48,12 @@ END TEMPLATE-->
 * Fixed server startup crash with string serializer length checks.
 * Fixed `CS8981` errors in `Robust.Benchmarks`.
 * Fixed C# interactive errors when engine started without content-start.
+* Fixed FormattedMessage.IsEmpty() returning the wrong result.
 
 ### Other
 
-*None yet*
+* Map pausing now gets properly networked
+* SplitContainers controls now have a minimum draggable area, so that they can function without any padding.
 
 ### Internal
 

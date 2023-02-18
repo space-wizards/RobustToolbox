@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* `dump_netserializer_type_map` command to debug desynchronization issues with NetSerializer's type map.
 
 ### Internal
 

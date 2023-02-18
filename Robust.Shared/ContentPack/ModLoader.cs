@@ -360,7 +360,6 @@ namespace Robust.Shared.ContentPack
 
         public void Dispose()
         {
-            _loadContext.Unload();
             AssemblyLoadContext.Default.Resolving -= DefaultOnResolving;
         }
 

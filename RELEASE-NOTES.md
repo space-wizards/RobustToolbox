@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.88.1.0
+
+### New features
+
 * Added a new OnScreenChanged event that gets invoked when `IUserInterfaceManager.ActiveScreen` changes.
 * UI state interfaces such as `IOnStateEntered<TState>` now also get invoked whenever the current state inherits from `TState`.
 

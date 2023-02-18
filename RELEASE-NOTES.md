@@ -45,6 +45,7 @@ END TEMPLATE-->
 
 * Fixed `WritableDirProvider.Find()`. This fixes custom MIDI soundfonts on Windows.
 * Fixed server startup crash with string serializer length checks.
+* Fixed `CS8981` errors in `Robust.Benchmarks`.
 
 ### Other
 
@@ -52,7 +53,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Fixed `CS8981` errors in `Robust.Benchmarks`.
 
 
 ## 0.88.0.0

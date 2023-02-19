@@ -165,9 +165,11 @@ namespace Robust.Client
             var maxPlayers = _configManager.GetCVar<int>("game.maxplayers");
             info.ServerMaxPlayers = maxPlayers;
 
+            var ServerPlayers = _playMan.PlayerCount;
+
             var userName = _net.ServerChannel!.UserName;
             var userId = _net.ServerChannel.UserId;
-            _discord.Update(info.ServerName, userName, info.ServerMaxPlayers.ToString());
+            _discord.Update(info.ServerName, userName, info.ServerMaxPlayers.ToString(), ServerPlayers.ToString());
             // start up player management
             _playMan.Startup();
 

@@ -1,4 +1,4 @@
-﻿using DiscordRPC;
+using DiscordRPC;
 using DiscordRPC.Logging;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -12,13 +12,11 @@ namespace Robust.Client.Utility
     {
         private static readonly RichPresence _defaultPresence = new()
         {
-            Details = "In Main Menu",
             State = "In Main Menu",
             Assets = new Assets
             {
-                LargeImageKey = "devstation",
-                LargeImageText = "I think coolsville SUCKS",
-                SmallImageKey = "logo"
+                LargeImageKey = "logo",
+                LargeImageText = "I think coolsville SUCKS"
             }
         };
 
@@ -92,12 +90,12 @@ namespace Robust.Client.Utility
             _client = null;
         }
 
-        public void Update(string serverName, string username, string maxUser)
+        public void Update(string serverName, string username, string maxUser, string Users)
         {
             _activePresence = new RichPresence
             {
                 Details = $"On Server: {serverName}",
-                State = $"Max players: {maxUser}",
+                State = $"Players: {Users}/{maxUser}",
                 Assets = new Assets
                 {
                     LargeImageKey = "devstation",

@@ -17,6 +17,8 @@ public static class Diagnostics
     public const string IdInvalidNotNullableFlagImplementation = "RA0010";
     public const string IdInvalidNotNullableFlagType = "RA0011";
     public const string IdNotNullableFlagValueType = "RA0012";
+    public const string IdByRefEventRaisedByValue = "RA0013";
+    public const string IdValueEventRaisedByRef = "RA0014";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

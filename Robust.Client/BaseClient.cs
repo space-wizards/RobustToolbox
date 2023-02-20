@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net;
 using Robust.Client.Configuration;
 using Robust.Client.Debugging;
@@ -63,7 +64,14 @@ namespace Robust.Client
             _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged, invokeImmediately: true);
 
             _playMan.Initialize();
+            _playMan.PlayerListUpdated += OnPlayerListUpdated;
             Reset();
+        }
+
+        private void OnPlayerListUpdated(object? sender, EventArgs e)
+        {
+            var serverPlayers = _playMan.PlayerCount;
+            _discord.Update(GameInfo!.ServerName, _net.ServerChannel!.UserName, GameInfo.ServerMaxPlayers.ToString(), serverPlayers.ToString());
         }
 
         private void SyncTimeBase(MsgSyncTimeBase message)
@@ -165,11 +173,9 @@ namespace Robust.Client
             var maxPlayers = _configManager.GetCVar<int>("game.maxplayers");
             info.ServerMaxPlayers = maxPlayers;
 
-            var ServerPlayers = _playMan.PlayerCount;
-
             var userName = _net.ServerChannel!.UserName;
             var userId = _net.ServerChannel.UserId;
-            _discord.Update(info.ServerName, userName, info.ServerMaxPlayers.ToString(), ServerPlayers.ToString());
+
             // start up player management
             _playMan.Startup();
 
@@ -177,6 +183,10 @@ namespace Robust.Client
             _playMan.LocalPlayer.Name = userName;
 
             _playMan.LocalPlayer.StatusChanged += OnLocalStatusChanged;
+
+            var serverPlayers = _playMan.PlayerCount;
+            _discord.Update(info.ServerName, userName, info.ServerMaxPlayers.ToString(), serverPlayers.ToString());
+
         }
 
         /// <summary>

@@ -97,9 +97,9 @@ namespace Robust.Shared.GameObjects
                 // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
                 // Avoid unnecessary entity updates.
                 if (EntityManager.IsQueuedForDeletion(entity))
-                    DetachParentToNull(xform, xformQuery, metaQuery, gridXform);
+                    DetachParentToNull(entity, xform, xformQuery, metaQuery, gridXform);
                 else
-                    SetParent(xform, mapTransform.Owner, parentXform: mapTransform);
+                    SetParent(entity, xform, mapTransform.Owner, parentXform: mapTransform);
             }
         }
 

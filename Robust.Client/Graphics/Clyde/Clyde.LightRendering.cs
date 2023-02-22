@@ -19,8 +19,8 @@ namespace Robust.Client.Graphics.Clyde
 {
     // This file handles everything about light rendering.
     // That includes shadow casting and also FOV.
-    // A detailed explanation of how all this works can be found on HackMD:
-    // https://hackmd.io/@ss14/lighting-fov
+    // A detailed explanation of how all this works can be found here:
+    // https://docs.spacestation14.io/en/engine/lighting-fov
 
     internal partial class Clyde
     {

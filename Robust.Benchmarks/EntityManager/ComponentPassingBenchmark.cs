@@ -2,7 +2,7 @@
 using Robust.Shared.Analyzers;
 using static Robust.Benchmarks.EntityManager.ArchetypeComponentAccessBenchmark;
 
-namespace Robust.Benchmarks.Arrays;
+namespace Robust.Benchmarks.EntityManager;
 
 [MemoryDiagnoser]
 [Virtual]

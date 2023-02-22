@@ -30,7 +30,6 @@ public sealed class AudioSystem : SharedAudioSystem
     [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
     [Dependency] private readonly IClydeAudio _clyde = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;

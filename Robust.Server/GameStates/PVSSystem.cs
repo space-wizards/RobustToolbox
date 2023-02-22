@@ -287,7 +287,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private PVSCollection<TIndex> RegisterPVSCollection<TIndex>() where TIndex : IComparable<TIndex>, IEquatable<TIndex>
     {
-        var collection = new PVSCollection<TIndex>(EntityManager);
+        var collection = new PVSCollection<TIndex>(EntityManager, _transform);
         _pvsCollections.Add(collection);
         return collection;
     }
@@ -1068,11 +1068,13 @@ internal sealed partial class PVSSystem : EntitySystem
         if (tickData == null)
         {
             stateEntities = new List<EntityState>(EntityManager.EntityCount);
-            foreach (var md in EntityManager.EntityQuery<MetaDataComponent>(true))
+            var query = EntityManager.EntityQueryEnumerator<MetaDataComponent>();
+            while (query.MoveNext(out var uid, out var md))
             {
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
                 if (md.EntityLastModifiedTick > fromTick)
-                    stateEntities.Add(GetEntityState(player, md.Owner, fromTick, md));
+                    stateEntities.Add(GetEntityState(player, uid, fromTick, md));
+
             }
         }
         else

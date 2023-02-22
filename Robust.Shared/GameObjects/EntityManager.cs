@@ -266,7 +266,9 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
+#pragma warning disable CS0618
                 DebugTools.Assert(metadata.Owner == uid);
+#pragma warning restore CS0618
             }
 
             if (metadata.EntityLastModifiedTick == _gameTiming.CurTick) return;
@@ -281,7 +283,9 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Dirty(Component component, MetaDataComponent? meta = null)
         {
+#pragma warning disable CS0618
             var owner = component.Owner;
+#pragma warning restore CS0618
 
             // Deserialization will cause this to be true.
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
@@ -312,13 +316,12 @@ namespace Robust.Shared.GameObjects
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?
-            if (!metaQuery.TryGetComponent(e, out var comp)
-                || comp is not MetaDataComponent meta || meta.EntityDeleted)
+            if (!metaQuery.TryGetComponent(e, out var meta) || meta.EntityDeleted)
                 return;
 
             if (meta.EntityLifeStage == EntityLifeStage.Terminating)
             {
-                var msg = $"Called Delete on an entity already being deleted. Entity: {ToPrettyString(meta.Owner)}";
+                var msg = $"Called Delete on an entity already being deleted. Entity: {ToPrettyString(e)}";
 #if !EXCEPTION_TOLERANCE
                 throw new InvalidOperationException(msg);
 #else
@@ -327,15 +330,18 @@ namespace Robust.Shared.GameObjects
             }
 
             // Notify all entities they are being terminated prior to detaching & deleting
-            RecursiveFlagEntityTermination(meta, metaQuery, xformQuery, xformSys);
+            RecursiveFlagEntityTermination(e, meta, metaQuery, xformQuery);
 
             // Then actually delete them
-            RecursiveDeleteEntity(meta, metaQuery, xformQuery, xformSys);
+            RecursiveDeleteEntity(e, meta, metaQuery, xformQuery, xformSys);
         }
 
-        private void RecursiveFlagEntityTermination(MetaDataComponent metadata, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery, SharedTransformSystem xformSys)
+        private void RecursiveFlagEntityTermination(
+            EntityUid uid,
+            MetaDataComponent metadata,
+            EntityQuery<MetaDataComponent> metaQuery,
+            EntityQuery<TransformComponent> xformQuery)
         {
-            var uid = metadata.Owner;
             var transform = xformQuery.GetComponent(uid);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
 
@@ -358,15 +364,19 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                RecursiveFlagEntityTermination(childMeta, metaQuery, xformQuery, xformSys);
+                RecursiveFlagEntityTermination(uid, childMeta, metaQuery, xformQuery);
             }
         }
 
-        private void RecursiveDeleteEntity(MetaDataComponent metadata, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery, SharedTransformSystem xformSys)
+        private void RecursiveDeleteEntity(
+            EntityUid uid,
+            MetaDataComponent metadata,
+            EntityQuery<MetaDataComponent> metaQuery,
+            EntityQuery<TransformComponent> xformQuery,
+            SharedTransformSystem xformSys)
         {
             // Note about this method: #if EXCEPTION_TOLERANCE is not used here because we're gonna it in the future...
 
-            var uid = metadata.Owner;
             var transform = xformQuery.GetComponent(uid);
 
             // Detach the base entity to null before iterating over children
@@ -387,7 +397,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    RecursiveDeleteEntity(metaQuery.GetComponent(child), metaQuery, xformQuery, xformSys);
+                    RecursiveDeleteEntity(child, metaQuery.GetComponent(child), metaQuery, xformQuery, xformSys);
                 }
                 catch(Exception e)
                 {
@@ -531,7 +541,9 @@ namespace Robust.Shared.GameObjects
             EntityAdded?.Invoke(uid);
             _eventBus.OnEntityAdded(uid);
 
+#pragma warning disable CS0618
             metadata = new MetaDataComponent { Owner = uid };
+#pragma warning restore CS0618
 
             Entities.Add(uid);
             // add the required MetaDataComponent directly.

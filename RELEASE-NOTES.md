@@ -47,11 +47,34 @@ END TEMPLATE-->
 
 ### Other
 
-* `dump_netserializer_type_map` command to debug desynchronization issues with NetSerializer's type map.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 0.89.0.0
+
+### Breaking changes
+
+* Add EntityUid as an arg to SharedTransformSystem and remove more .Owner calls.
+
+### New features
+
+* Add by-ref event analyzer.
+* Add option to hide scrollbars for ScrollContainers.
+* Add an out EntityUid overload to EntityQueryEnumerator<T>.
+
+### Bugfixes
+
+* Fix exception on server shutdown.
+* Fix concurrent update error in byref registrations for serializationmanager.
+* New grids created from placement manager start at 0,0 rather than -1,-1.
+
+### Other
+
+* `dump_netserializer_type_map` command to debug desynchronization issues with NetSerializer's type map.
 
 
 ## 0.88.1.0

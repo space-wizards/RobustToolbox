@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Robust.Shared.Analyzers;
+using static Robust.Benchmarks.EntityManager.ArchetypeComponentAccessBenchmark;
 
 namespace Robust.Benchmarks.Arrays;
 
@@ -13,6 +14,17 @@ public class ArrayAccessBenchmark
     [Params(5)]
     public int Element;
 
+    [Params(500)]
+    public int Handle;
+
+    public Archetype<int, int, int, int, int, int, int, int, int, int> Archetype = default!;
+
+    [GlobalSetup]
+    public void GlobalSetup()
+    {
+        Archetype = new Archetype<int, int, int, int, int, int, int, int, int, int>(1000);
+    }
+
     [Benchmark]
     public int? GetArrayElement()
     {
@@ -23,6 +35,12 @@ public class ArrayAccessBenchmark
     public int? GetExisting()
     {
         return Consume(Element);
+    }
+
+    [Benchmark]
+    public int? GetArchetype()
+    {
+        return Consume(Archetype.GetComponentUnsafeHandle<int>(Handle));
     }
 
     private int? Consume(int? value = null)

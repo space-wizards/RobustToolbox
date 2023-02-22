@@ -160,7 +160,7 @@ namespace Robust.Shared.Maths
 
         public static explicit operator Vector2i(Vector2 vector)
         {
-            return new((int) vector.X, (int) vector.Y);
+            return new((int) Math.Floor(vector.X), (int) Math.Floor(vector.Y));
         }
 
         public static implicit operator Vector2i((int x, int y) tuple)

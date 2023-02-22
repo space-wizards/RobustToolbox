@@ -54,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 var dummy = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.Owner, offset));
                 Assert.That(entityManager.TryGetComponent(dummy, out PhysicsComponent? body));
                 Assert.That(entityManager.TryGetComponent(dummy, out TransformComponent? xform));
-                xformSystem.SetParent(xform!, gridUidA);
+                xformSystem.SetParent(dummy, xform!, gridUidA);
 
                 // Test Linear Velocities
                 physicsSys.SetLinearVelocity(gridUidA, Vector2.One, body: gridPhysics);
@@ -83,7 +83,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(velocities.Item2, Is.Approximately(angularVelocity, 1e-6));
 
                 // Check that velocity does not change when changing parent
-                xformSystem.SetParent(xform!, grid2.Owner);
+                xformSystem.SetParent(dummy, xform!, grid2.Owner);
                 linearVelocity = physicsSys.GetMapLinearVelocity(dummy, body);
                 angularVelocity = physicsSys.GetMapAngularVelocity(dummy, body);
                 velocities = physicsSys.GetMapVelocities(dummy, body);
@@ -111,27 +111,28 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 var mapId = mapManager.CreateMap();
                 var grid = mapManager.CreateGrid(mapId);
+                var gridUid = grid.Owner;
 
-                Assert.That(entityManager.TryGetComponent<PhysicsComponent>(grid.Owner, out var gridPhysics));
-                physicsSys.SetBodyType(grid.Owner, BodyType.Dynamic, body: gridPhysics);
+                Assert.That(entityManager.TryGetComponent<PhysicsComponent>(gridUid, out var gridPhysics));
+                physicsSys.SetBodyType(gridUid, BodyType.Dynamic, body: gridPhysics);
 
                 Vector2 offset1 = new(2, 0);
-                var dummy1 = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.Owner, offset1));
+                var dummy1 = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(gridUid, offset1));
                 Assert.That(entityManager.TryGetComponent(dummy1, out PhysicsComponent? body1));
                 Assert.That(entityManager.TryGetComponent(dummy1, out TransformComponent? xform1));
-                xformSystem.SetParent(xform1!, grid.Owner);
+                xformSystem.SetParent(dummy1, xform1!, gridUid);
 
                 // create another entity attached to the dummy1
                 Vector2 offset2 = new(-1, 0);
                 var dummy2 = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(dummy1, offset2));
                 Assert.That(entityManager.TryGetComponent(dummy2, out PhysicsComponent? body2));
                 Assert.That(entityManager.TryGetComponent(dummy2, out TransformComponent? xform2));
-                xformSystem.SetParent(xform2!, dummy1);
+                xformSystem.SetParent(dummy2, xform2!, dummy1);
 
-                Assert.That(xform2!.WorldPosition, Is.Approximately(new Vector2(1, 0), 1e-6));
+                Assert.That(xformSystem.GetWorldPosition(xform2!), Is.Approximately(new Vector2(1, 0), 1e-6));
 
-                physicsSys.SetLinearVelocity(grid.Owner, new Vector2(1, 0), body: gridPhysics);
-                physicsSys.SetAngularVelocity(grid.Owner, 1, body: gridPhysics);
+                physicsSys.SetLinearVelocity(gridUid, new Vector2(1, 0), body: gridPhysics);
+                physicsSys.SetAngularVelocity(gridUid, 1, body: gridPhysics);
 
                 // check that dummy2 properly gets the velocities from its grand-parent
                 var linearVelocity = physicsSys.GetMapLinearVelocity(dummy2, body2);
@@ -155,7 +156,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(velocities.Item2, Is.Approximately(angularVelocity, 1e-6));
 
                 // but not if we update the local position:
-                xform2.WorldPosition = Vector2.Zero;
+                xformSystem.SetWorldPosition(xform2!, Vector2.Zero);
                 linearVelocity = physicsSys.GetMapLinearVelocity(dummy2, body2);
                 angularVelocity = physicsSys.GetMapAngularVelocity(dummy2, body2);
                 velocities = physicsSys.GetMapVelocities(dummy2, body2);

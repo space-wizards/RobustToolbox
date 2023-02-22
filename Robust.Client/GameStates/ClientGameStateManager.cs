@@ -822,11 +822,11 @@ namespace Robust.Client.GameStates
                     continue;
 
                 // this entity is going to get deleted, but maybe some if its children won't be, so lets detach them to null.
-                xformSys.DetachParentToNull(xform, xforms, metas);
+                xformSys.DetachParentToNull(ent, xform, xforms, metas);
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(xforms.GetComponent(child.Value), xforms, metas, xform);
+                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xforms, metas, xform);
 
                     if (!deleteClientSideEnts && child.Value.IsClientSide())
                     {
@@ -868,13 +868,13 @@ namespace Robust.Client.GameStates
                     continue; // Already deleted? or never sent to us?
 
                 // First, a single recursive map change
-                xformSys.DetachParentToNull(xform, xforms, metas);
+                xformSys.DetachParentToNull(id, xform, xforms, metas);
 
                 // Then detach all children.
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(xforms.GetComponent(child.Value), xforms, metas, xform);
+                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xforms, metas, xform);
                 }
 
                 // Finally, delete the entity.
@@ -940,7 +940,7 @@ namespace Robust.Client.GameStates
                         }
 
                         meta._flags |= MetaDataFlags.Detached;
-                        xformSys.DetachParentToNull(xform, xforms, metas);
+                        xformSys.DetachParentToNull(ent, xform, xforms, metas);
                         DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
 
                         if (container != null)
@@ -1181,7 +1181,7 @@ namespace Robust.Client.GameStates
                     containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container, null, true);
                 }
 
-                _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(xform);
+                _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(uid, xform);
 
                 if (container != null)
                     containerSys.AddExpectedEntity(uid, container);

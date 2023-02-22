@@ -298,7 +298,7 @@ namespace Robust.Shared.GameObjects
                 return new EntityCoordinates(valid ? _parent : Owner, valid ? LocalPosition : Vector2.Zero);
             }
             [Obsolete("Use the system's setter method instead.")]
-            set => _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, value);
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(Owner, this, value);
         }
 
         /// <summary>
@@ -356,14 +356,14 @@ namespace Robust.Shared.GameObjects
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
-                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
+                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
                 }
                 else if (!value && _anchored)
                 {
                     // An anchored entity is always parented to the grid.
                     // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
                     // then this will be false.
-                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(this);
+                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(Owner, this);
                 }
             }
         }
@@ -449,7 +449,7 @@ namespace Robust.Shared.GameObjects
                 if (!_mapManager.IsMap(Owner))
                     Logger.Warning($"Detached a non-map entity ({_entMan.ToPrettyString(Owner)}) to null-space. Unless this entity is being deleted, this should not happen.");
 
-                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().DetachParentToNull(this);
+                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().DetachParentToNull(Owner, this);
                 return;
             }
 
@@ -460,7 +460,7 @@ namespace Robust.Shared.GameObjects
             }
 
             var newMapEntityXform = _entMan.GetComponent<TransformComponent>(newMapEntity);
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, new(newMapEntity, newMapEntityXform.InvWorldMatrix.Transform(mapPos.Position)));
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(Owner, this, new(newMapEntity, newMapEntityXform.InvWorldMatrix.Transform(mapPos.Position)));
             _entMan.Dirty(this);
         }
 
@@ -471,7 +471,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Use TransformSystem.SetParent() instead")]
         public void AttachParent(TransformComponent newParent)
         {
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(this, newParent.Owner, newParent);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(Owner, this, newParent.Owner, newParent);
         }
 
         internal void ChangeMapId(MapId newMapId, EntityQuery<TransformComponent> xformQuery)
@@ -524,7 +524,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Use TransformSystem.SetParent() instead")]
         public void AttachParent(EntityUid parent)
         {
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(this, parent, _entMan.GetEntityQuery<TransformComponent>());
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(Owner, this, parent, _entMan.GetEntityQuery<TransformComponent>());
         }
 
         /// <summary>

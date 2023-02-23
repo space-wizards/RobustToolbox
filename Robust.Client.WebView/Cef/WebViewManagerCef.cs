@@ -26,15 +26,22 @@ namespace Robust.Client.WebView.Cef
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
         [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly ILocalizationManager _localization = default!;
+
+        private ISawmill _sawmill = default!;
 
         public void Initialize()
         {
             IoCManager.Instance!.InjectDependencies(this, oneOff: true);
 
-            _consoleHost.RegisterCommand("flushcookies", Loc.GetString("cmd-flushcookies-desc"), Loc.GetString("cmd-flushcookies-help"), (_, _, _) =>
-            {
-                CefCookieManager.GetGlobal(null).FlushStore(null);
-            });
+            _sawmill = _logManager.GetSawmill("web.cef");
+
+            _consoleHost.RegisterCommand(
+                "flushcookies",
+                _localization.GetString("cmd-flushcookies-desc"),
+                _localization.GetString("cmd-flushcookies-help"),
+                (_, _, _) => CefCookieManager.GetGlobal(null).FlushStore(null));
 
             string subProcessName;
             if (OperatingSystem.IsWindows())
@@ -46,6 +53,7 @@ namespace Robust.Client.WebView.Cef
 
             var subProcessPath = Path.Combine(BasePath, subProcessName);
             var cefResourcesPath = LocateCefResources();
+            _sawmill.Debug($"Subprocess path: {subProcessPath}, resources: {cefResourcesPath}");
 
             // System.Console.WriteLine(AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES"));
 
@@ -75,9 +83,9 @@ namespace Robust.Client.WebView.Cef
                 settings.UserAgent = userAgentOverride;
             }
 
-            Logger.Info($"CEF Version: {CefRuntime.ChromeVersion}");
+            _sawmill.Info($"CEF Version: {CefRuntime.ChromeVersion}");
 
-            _app = new RobustCefApp();
+            _app = new RobustCefApp(_sawmill);
 
             // We pass no main arguments...
             CefRuntime.Initialize(new CefMainArgs(null), settings, _app, IntPtr.Zero);

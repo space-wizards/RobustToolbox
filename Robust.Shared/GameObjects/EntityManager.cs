@@ -364,7 +364,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                RecursiveFlagEntityTermination(uid, childMeta, metaQuery, xformQuery);
+                RecursiveFlagEntityTermination(child, childMeta, metaQuery, xformQuery);
             }
         }
 

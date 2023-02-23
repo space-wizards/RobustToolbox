@@ -60,7 +60,6 @@ namespace Robust.Server.Console.Commands
                         return;
 
                     transformSystem.SetCoordinates(uid.Value, targetCoords);
-                    victimTransform.Coordinates = targetCoords;
                     victimTransform.AttachToGridOrMap();
                 }
             }

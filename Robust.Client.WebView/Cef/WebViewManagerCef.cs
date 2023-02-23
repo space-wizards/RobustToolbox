@@ -33,8 +33,6 @@ namespace Robust.Client.WebView.Cef
 
         public void Initialize()
         {
-            IoCManager.Instance!.InjectDependencies(this, oneOff: true);
-
             _sawmill = _logManager.GetSawmill("web.cef");
 
             _consoleHost.RegisterCommand(
@@ -77,7 +75,7 @@ namespace Robust.Client.WebView.Cef
                 CachePath = cachePath,
             };
 
-            var userAgentOverride = _cfg.GetCVar(WCVars.UserAgentOverride);
+            var userAgentOverride = _cfg.GetCVar(WCVars.WebUserAgentOverride);
             if (!string.IsNullOrEmpty(userAgentOverride))
             {
                 settings.UserAgent = userAgentOverride;
@@ -96,7 +94,11 @@ namespace Robust.Client.WebView.Cef
 
             if (_cfg.GetCVar(WCVars.WebResProtocol))
             {
-                var handler = new ResourceSchemeFactoryHandler(this, _resourceManager, Logger.GetSawmill("web.res"));
+                var handler = new ResourceSchemeFactoryHandler(
+                    this,
+                    _resourceManager,
+                    _logManager.GetSawmill("web.res"));
+
                 CefRuntime.RegisterSchemeHandlerFactory("res", "", handler);
             }
         }

@@ -39,19 +39,19 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `web.headless` CVar can now be used to avoid loading CEF with graphical client.
 
 ### Bugfixes
 
-*None yet*
+* `web.user_agent` CVar can now be overriden by content before WebView is initialized.
 
 ### Other
 
-*None yet*
+* WebView works again and is properly available from the launcher.
 
 ### Internal
 
-*None yet*
+* Clean up WebView initialization logic to avoid static `IoCManager`.
 
 
 ## 0.89.0.0

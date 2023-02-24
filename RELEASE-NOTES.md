@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.89.1.0
+
+### New features
+
 * `web.headless` CVar can now be used to avoid loading CEF with graphical client.
 
 ### Bugfixes

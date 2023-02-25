@@ -16,7 +16,6 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
-        [Dependency] private readonly MetaDataSystem _metaSys = default!;
 
         // Needed on release no remove.
         // ReSharper disable once NotAccessedField.Local

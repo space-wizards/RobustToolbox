@@ -274,7 +274,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         var state = new HashSet<ComponentTreeEntry<TComp>>();
         foreach (var treeComp in GetIntersectingTrees(mapId, worldBounds))
         {
-            var bounds = Transform(treeComp.Owner).InvWorldMatrix.TransformBox(worldBounds);
+            var bounds = XformSystem.GetInvWorldMatrix(treeComp.Owner).TransformBox(worldBounds);
 
             treeComp.Tree.QueryAabb(ref state, static (ref HashSet<ComponentTreeEntry<TComp>> state, in ComponentTreeEntry<TComp> value) =>
             {

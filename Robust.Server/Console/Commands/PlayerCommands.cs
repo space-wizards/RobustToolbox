@@ -7,8 +7,6 @@ using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Network;
 
 namespace Robust.Server.Console.Commands
@@ -27,9 +25,10 @@ namespace Robust.Server.Console.Commands
 
             var target = args[^1];
 
-            if (!TryGetTransformFromUidOrUsername(target, shell, _entities, _players, out var targetTransform))
+            if (!TryGetTransformFromUidOrUsername(target, shell, _entities, _players, out _, out var targetTransform))
                 return;
 
+            var transformSystem = _entities.System<SharedTransformSystem>();
             var targetCoords = targetTransform.Coordinates;
 
             if (args.Length == 1)
@@ -47,7 +46,7 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                playerTransform.Coordinates = targetCoords;
+                transformSystem.SetCoordinates(player.AttachedEntity!.Value, targetCoords);
                 playerTransform.AttachToGridOrMap();
             }
             else
@@ -57,31 +56,43 @@ namespace Robust.Server.Console.Commands
                     if (victim == target)
                         continue;
 
-                    if (!TryGetTransformFromUidOrUsername(victim, shell, _entities, _players, out var victimTransform))
+                    if (!TryGetTransformFromUidOrUsername(victim, shell, _entities, _players, out var uid, out var victimTransform))
                         return;
 
-                    victimTransform.Coordinates = targetCoords;
+                    transformSystem.SetCoordinates(uid.Value, targetCoords);
                     victimTransform.AttachToGridOrMap();
                 }
             }
         }
 
-        private static bool TryGetTransformFromUidOrUsername(string str, IConsoleShell shell, IEntityManager entMan,
-            IPlayerManager playerMan, [NotNullWhen(true)] out TransformComponent? transform)
+        private static bool TryGetTransformFromUidOrUsername(
+            string str,
+            IConsoleShell shell,
+            IEntityManager entMan,
+            IPlayerManager playerMan,
+            [NotNullWhen(true)] out EntityUid? victimUid,
+            [NotNullWhen(true)] out TransformComponent? transform)
         {
-            if (int.TryParse(str, out var uid)
-                && entMan.TryGetComponent(new EntityUid(uid), out transform))
+            if (EntityUid.TryParse(str, out var uid) && entMan.TryGetComponent(uid, out transform))
+            {
+                victimUid = uid;
                 return true;
+            }
 
             if (playerMan.TryGetSessionByUsername(str, out var session)
                 && entMan.TryGetComponent(session.AttachedEntity, out transform))
+            {
+                victimUid = session.AttachedEntity;
                 return true;
+            }
 
             if (session == null)
                 shell.WriteError("Can't find username/id: " + str);
             else
                 shell.WriteError(str + " does not have an entity.");
+
             transform = null;
+            victimUid = default;
             return false;
         }
     }
@@ -135,7 +146,7 @@ namespace Robust.Server.Console.Commands
                     shell.WriteLine("You need to provide a player to kick.");
                     return;
                 }
-                shell.WriteLine($"You need to provide a player to kick. Try running 'kick {toKickPlayer?.Name}' as an example.");
+                shell.WriteLine($"You need to provide a player to kick. Try running 'kick {toKickPlayer.Name}' as an example.");
                 return;
             }
 

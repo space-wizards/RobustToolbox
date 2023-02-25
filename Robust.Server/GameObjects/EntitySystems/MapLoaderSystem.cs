@@ -743,10 +743,18 @@ public sealed class MapLoaderSystem : EntitySystem
     private void StartupEntity(EntityUid uid, MetaDataComponent metadata, MapData data)
     {
         ResetNetTicks(uid, metadata, data.EntitiesToDeserialize[uid]);
+
+        var isPaused = data is { MapIsPaused: true, MapIsPostInit: false };
+        _meta.SetEntityPaused(uid, isPaused, metadata);
+
         // TODO: Apply map transforms if root node.
         _serverEntityManager.FinishEntityInitialization(uid, metadata);
         _serverEntityManager.FinishEntityStartup(uid);
-        MapInit(uid, metadata, data);
+
+        if (data.MapIsPostInit)
+        {
+            metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
+        }
     }
 
     private void ResetNetTicks(EntityUid entity, MetaDataComponent metadata, MappingDataNode data)
@@ -780,28 +788,6 @@ public sealed class MapLoaderSystem : EntitySystem
             // This component is not modified by the map file,
             // so the client will have the same data after instantiating it from prototype ID.
             component.ClearTicks();
-        }
-    }
-
-    private void MapInit(EntityUid uid, MetaDataComponent metadata, MapData data)
-    {
-        var isPaused = data.MapIsPaused;
-
-        if (data.MapIsPostInit)
-        {
-            metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
-        }
-        else if (_mapManager.IsMapInitialized(data.TargetMap))
-        {
-            EntityManager.RunMapInit(uid, metadata);
-
-            if (isPaused)
-                _meta.SetEntityPaused(uid, true, metadata);
-
-        }
-        else if (isPaused)
-        {
-            _meta.SetEntityPaused(uid, true, metadata);
         }
     }
 

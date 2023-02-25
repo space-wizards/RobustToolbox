@@ -1,17 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>../bin/Server</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <!-- Try to fix sporadic errors against Robust.Packaging, apparently?? -->
     <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
   </PropertyGroup>
-  <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
     <PackageReference Include="SpaceWizards.HttpListener" Version="0.1.0" />
@@ -41,5 +38,6 @@
       <LogicalName>Robust.Server.ExtraMappedSerializerStrings.txt</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
-  <Import Project="..\MSBuild\Robust.Engine.targets" />
+
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
 </Project>

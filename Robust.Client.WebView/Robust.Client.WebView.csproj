@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
 
   <PropertyGroup>
@@ -7,10 +6,6 @@
     <OutputType>WinExe</OutputType>
     <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
   </PropertyGroup>
-
-  <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
-  <Target Name="RobustAfterBuild" AfterTargets="Build" />
-  <Import Project="..\MSBuild\Robust.Engine.targets" />
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" />
@@ -21,4 +16,6 @@
     <ProjectReference Include="..\cefglue\CefGlue\CefGlue.csproj" />
     <ProjectReference Include="..\Robust.Client\Robust.Client.csproj" />
   </ItemGroup>
+
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
 </Project>

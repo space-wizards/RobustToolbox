@@ -27,23 +27,11 @@ public class ResourcePathBench
         ResPath res = default;
         for (var i = 0; i < N; i++)
         {
-            res = ResPath.CreateWithSeparator(_path);
+            res = new ResPath(_path);
         }
         return res;
     }
-
-    [Benchmark]
-    public ResPath CreateUnsafePathResPath()
-    {
-        ResPath res = default;
-        for (var i = 0; i < N; i++)
-        {
-            res = ResPath.CreateUnsafePath(_path);
-        }
-
-        return res;
-    }
-
+    
     [Benchmark]
     public ResourcePath? CreateResourcePath()
 

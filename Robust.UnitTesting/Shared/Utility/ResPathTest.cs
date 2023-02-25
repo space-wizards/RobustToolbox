@@ -12,58 +12,6 @@ namespace Robust.UnitTesting.Shared.Utility;
 [TestOf(typeof(ResPath))]
 public sealed class ResPathTest
 {
-    // Tests whether input and output remains unchanged.
-    [Test]
-    [TestCase("/Textures", "/Textures")]
-    [TestCase("Textures", "Textures")]
-    [TestCase("Textures/", "Textures")]
-    [TestCase("Textures/Laser.png", "Textures/Laser.png")]
-    [TestCase("Textures//Laser.png", "Textures/Laser.png")]
-    [TestCase("Textures/..//Radio.png/", "Textures/../Radio.png")]
-    [TestCase("", ".")]
-    [TestCase(".", ".")]
-    [TestCase("./foo", "foo")]
-    [TestCase("./foo/bar", "foo/bar")]
-    [TestCase("foo/.", "foo")]
-    [TestCase("foo/./bar", "foo/bar")]
-    [TestCase("./", ".")]
-    [TestCase("/.", "/")]
-    [TestCase("/", "/")]
-    [TestCase(" ", " ")] // Note the spaces here]
-    [TestCase(" / ", " / ")]
-    [TestCase(". ", ". ")]
-    public void InputCleanTest(string input, string expected)
-    {
-        var resPath = ResPath.CreateWithSeparator(input);
-        Assert.That(resPath.ToString(), Is.EqualTo(expected));
-    }
-
-    [Test]
-    [TestCase("/Textures", "/Textures")]
-    [TestCase("Textures", "Textures")]
-    [TestCase("Textures/", "Textures")]
-    [TestCase("Textures/Laser.png", "Textures/Laser.png")]
-    [TestCase("Textures//Laser.png", "Textures/Laser.png")]
-    [TestCase("Textures/..//Radio.png/", "Radio.png")]
-    [TestCase("/../../Radio.png/", "/Radio.png")]
-    [TestCase("", "")]
-    [TestCase(".", ".")]
-    [TestCase("./foo", "foo")]
-    [TestCase("./foo/bar", "foo/bar")]
-    [TestCase("foo/.", "foo")]
-    [TestCase("foo/./bar", "foo/bar")]
-    [TestCase("./", ".")]
-    [TestCase("/.", "/")]
-    [TestCase("/", "/")]
-    [TestCase(" ", " ")] // Note the spaces here]
-    [TestCase(" / ", " / ")]
-    [TestCase(". ", ". ")]
-    public void UnsafeCleanTest(string input, string expected)
-    {
-        var resPath = ResPath.CreateUnsafePath(input).Clean();
-        Assert.That(resPath.ToString(), Is.EqualTo(expected));
-    }
-
     [Test]
     [TestCase("foo", ExpectedResult = "")]
     [TestCase("foo.png", ExpectedResult = "png")]
@@ -73,7 +21,7 @@ public sealed class ResPathTest
     [TestCase("x.y.z", ExpectedResult = "z")]
     public string ExtensionTest(string input)
     {
-        var resPathExt = ResPath.CreateWithSeparator(input).Extension;
+        var resPathExt = new ResPath(input).Extension;
         var resourceExt = new ResourcePath(input).Extension;
         Assert.That(resPathExt, Is.EqualTo(resourceExt),
             message: "Found discrepancy between ResPath and ResourcePath Extension");
@@ -93,7 +41,7 @@ public sealed class ResPathTest
     [TestCase("bar/", ExpectedResult = "bar")] // Trailing / gets trimmed.
     public string FilenameTest(string input)
     {
-        var resPathFilename = ResPath.CreateWithSeparator(input).Filename;
+        var resPathFilename = new ResPath(input).Filename;
         var resourceFilename = new ResourcePath(input).Filename;
         Assert.That(resPathFilename, Is.EqualTo(resourceFilename),
             message: "Found discrepancy between ResPath and ResourcePath Extension");
@@ -112,7 +60,7 @@ public sealed class ResPathTest
     [TestCase(@"x.y.z", ExpectedResult = @"x.y")]
     public string FilenameWithoutExtension(string input)
     {
-        var resPathFileNoExt = ResPath.CreateWithSeparator(input).FilenameWithoutExtension;
+        var resPathFileNoExt = new ResPath(input).FilenameWithoutExtension;
         var resourceFileNoExt = new ResourcePath(input).FilenameWithoutExtension;
         Assert.That(resPathFileNoExt, Is.EqualTo(resourceFileNoExt),
             message: "Found discrepancy between ResPath and ResourcePath FilenameWithoutExtension methods");
@@ -128,7 +76,7 @@ public sealed class ResPathTest
     [TestCase(@"/foo/bar.txt", ExpectedResult = @"/foo")]
     public string DirectoryTest(string path)
     {
-        var resPathDirectory = ResPath.CreateWithSeparator(path).Directory.ToString();
+        var resPathDirectory = new ResPath(path).Directory.ToString();
         var resourceDirectory = new ResourcePath(path).Directory.ToString();
         Assert.That(resPathDirectory, Is.EqualTo(resourceDirectory),
             message: "Found discrepancy between ResPath and ResourcePath Directory methods");
@@ -141,7 +89,7 @@ public sealed class ResPathTest
     [TestCase(@"/a/b/c", "\\", ExpectedResult = @"\a\b\c")]
     public string ChangeSeparatorTest(string input, string separator)
     {
-        return ResPath.CreateWithSeparator(input).ChangeSeparator(separator);
+        return new ResPath(input).ChangeSeparator(separator);
     }
 
     [Test]
@@ -149,7 +97,7 @@ public sealed class ResPathTest
     [TestCase("\0a\0b\0c", "\0")]
     public void ChangeSeparatorTestException(string input, string separator)
     {
-        Assert.Catch(typeof(ArgumentException), () => { ResPath.CreateUnsafePath(input).ChangeSeparator(separator); });
+        Assert.Catch(typeof(ArgumentException), () => {new ResPath(input).ChangeSeparator(separator); });
     }
 
     [Test]
@@ -159,51 +107,21 @@ public sealed class ResPathTest
     [TestCase("/a/b", ".", ExpectedResult = "/a/b")]
     public string CombineTest(string left, string right)
     {
-        var pathDivRes = ResPath.CreateUnsafePath(left) / ResPath.CreateWithSeparator(right);
-        var pathDivStr = ResPath.CreateUnsafePath(left) / right;
+        var pathDivRes = new ResPath(left) / new ResPath(right);
+        var pathDivStr = new ResPath(left) / right;
         Assert.That(pathDivRes, Is.EqualTo(pathDivStr));
         return pathDivRes.ToString();
     }
 
     [Test]
-    [TestCase('.')]
-    public void ResPathCtorFail(char separator)
-    {
-        Assert.Catch(typeof(ArgumentException), () =>
-        {
-            var _ = ResPath.CreateWithSeparator("/x/y", separator);
-        });
-    }
-
-    [Test]
-    [TestCase("//a/b/../c/./ss14.png", ExpectedResult = "/a/c/ss14.png")]
-    [TestCase("../a", ExpectedResult = "../a")]
-    [TestCase("../a/..", ExpectedResult = "..")]
-    [TestCase("../..", ExpectedResult = "../..")]
-    [TestCase("/../../Radio", ExpectedResult = "/Radio")]
-    [TestCase("a/..", ExpectedResult = ".")]
-    [TestCase("/../a", ExpectedResult = "/a")]
-    [TestCase("/..", ExpectedResult = "/")]
-    public string CleanTest(string input)
-    {
-        var path = ResPath.CreateWithSeparator(input);
-        var cleaned = path.Clean();
-        Assert.That(path.IsClean(), Is.EqualTo(path == cleaned));
-        var resourceClean = new ResourcePath(input).Clean().ToString();
-        Assert.That(cleaned.ToString(), Is.EqualTo(resourceClean),
-            message: "Found discrepancy between ResPath and ResourcePath Clean methods");
-        return cleaned.ToString();
-    }
-
-    [Test]
     public void RootedConversionsTest()
     {
-        var path = ResPath.CreateWithSeparator("/a/b");
+        var path = new ResPath("/a/b");
         Assert.That(path.IsRooted);
         Assert.That(path.ToRootedPath(), Is.EqualTo(path));
 
         var relative = path.ToRelativePath();
-        Assert.That(relative, Is.EqualTo(ResPath.CreateWithSeparator("a/b")));
+        Assert.That(relative, Is.EqualTo( new ResPath("a/b")));
         Assert.That(relative.IsRelative);
 
         Assert.That(relative.ToRelativePath(), Is.EqualTo(relative));
@@ -219,8 +137,8 @@ public sealed class ResPathTest
     [TestCase("/Textures/Weapons/laser.png", "/Textures/", ExpectedResult = "Weapons/laser.png")]
     public string RelativeToTest(string source, string baseDir)
     {
-        var path = ResPath.CreateWithSeparator(source);
-        var basePath = ResPath.CreateWithSeparator(baseDir);
+        var path = new ResPath(source);
+        var basePath = new ResPath(baseDir);
         return path.RelativeTo(basePath).ToString();
     }
 
@@ -232,35 +150,15 @@ public sealed class ResPathTest
     [TestCase("/", ".", false)]
     public void RelativeToFailTest(string left, string right, bool isRelative)
     {
-        var path = ResPath.CreateWithSeparator(left);
-        var basePath = ResPath.CreateWithSeparator(right);
+        var path = new ResPath(left);
+        var basePath = new ResPath(right);
         Assert.That(() => path.RelativeTo(basePath), Throws.ArgumentException);
-    }
-
-
-    [Test]
-    [TestCase("/a/b", "/a/c", ExpectedResult = "/a")]
-    [TestCase("a/b", "a/c", ExpectedResult = "a")]
-    [TestCase("/usr", "/bin", ExpectedResult = "/")]
-    [TestCase("/a", "/a", ExpectedResult = "/a")]
-    [TestCase("a", "a", ExpectedResult = "a")]
-    public string CommonBaseTest(string left, string right)
-    {
-        return ResPath.CreateWithSeparator(left).CommonBase(ResPath.CreateWithSeparator(right)).ToString();
-    }
-
-    [Test]
-    public void CommonBaseFailTest()
-    {
-        var path = ResPath.CreateWithSeparator("a/b");
-        var basePath = ResPath.CreateWithSeparator("b/a");
-        Assert.That(() => path.CommonBase(basePath), Throws.ArgumentException);
     }
 
     [Test]
     public void WithNameTest()
     {
-        var path = ResPath.CreateWithSeparator("/a/b");
+        var path = new ResPath("/a/b");
         var modified = path.WithName("foo");
         Assert.That(modified.Filename, Is.EqualTo("foo"));
         modified = path.WithName("foo.exe");
@@ -271,7 +169,7 @@ public sealed class ResPathTest
     [Test]
     public void WithNameExceptionTest()
     {
-        var path = ResPath.CreateWithSeparator("/a/b");
+        ResPath path = new("/a/b");
         Assert.That(() => path.WithName("/foo"), Throws.ArgumentException);
         Assert.That(() => path.WithName("."), Throws.ArgumentException);
         Assert.That(() => path.WithName(""), Throws.ArgumentException);
@@ -283,7 +181,7 @@ public sealed class ResPathTest
     [TestCase("/a/b.txt.bak", "png", "/a/b.txt.png")]
     public void WithExtensionTest(string start, string newExt, string expected)
     {
-        var startPath = ResPath.CreateWithSeparator(start);
+        var startPath = new ResPath(start);
         Assert.That(startPath.WithExtension(newExt).ToString(), Is.EqualTo(expected));
         Assert.That(startPath.WithExtension(newExt).ToString(), Is.EqualTo(expected));
     }
@@ -295,16 +193,16 @@ public sealed class ResPathTest
     [TestCase("")]
     public void WithExtensionExceptionTest(string ext)
     {
-        var resPath = ResPath.CreateUnsafePath("/a/b");
+        var resPath = new ResPath("/a/b");
         Assert.Catch(typeof(ArgumentException), () => { resPath.WithExtension(ext); });
     }
 
     [Test]
     public void RootToRelativeTest()
     {
-        var path = ResPath.CreateWithSeparator("/");
+        var path = new ResPath("/");
 
-        Assert.That(path.ToRelativePath(), Is.EqualTo(ResPath.CreateWithSeparator(".")));
+        Assert.That(path.ToRelativePath(), Is.EqualTo(new ResPath(".")));
     }
 
     [Test]
@@ -326,8 +224,8 @@ public sealed class ResPathTest
     [TestCase("/bin", "/usr", ExpectedResult = false)]
     public bool TestHashAndEquals(string left, string right)
     {
-        var pathA = ResPath.CreateUnsafePath(left);
-        var pathB = ResPath.CreateUnsafePath(right);
+        var pathA = new ResPath(left);
+        var pathB = new ResPath(right);
         Assert.That(pathA.GetHashCode() == pathB.GetHashCode(), Is.EqualTo(pathA == pathB));
         Assert.That(pathA.GetHashCode() != pathB.GetHashCode(), Is.EqualTo(pathA != pathB));
         return pathA == pathB;
@@ -342,7 +240,7 @@ public sealed class ResPathTest
         // Prevents frivolous warning, will lead to test having OS specific fails
         // ReSharper disable once RedundantArgumentDefaultValue
         var systemPath = ResPath.FromRelativeSystemPath(systemIn, '\\');
-        var canonPath = ResPath.CreateUnsafePath(canonStr);
+        var canonPath = new ResPath(canonStr);
         Assert.That(systemPath, Is.EqualTo(canonPath));
         Assert.That(systemPath.ToRelativeSystemPath(), Is.EqualTo(canonPath.ToRelativeSystemPath()));
     }

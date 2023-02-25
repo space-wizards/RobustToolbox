@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using JetBrains.Annotations;
-using Robust.Shared.Collections;
 using Robust.Shared.Serialization;
 using ArgumentException = System.ArgumentException;
 
@@ -61,7 +59,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
     public readonly string CanonPath;
 
-    private ResPath(string canonPath)
+    public ResPath(string canonPath)
     {
         CanonPath = canonPath;
     }
@@ -71,55 +69,6 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
     public ResPath() : this("")
     {
-    }
-
-    /// <summary>
-    ///     Create a new path from a string, splitting it by the separator provided.
-    /// </summary>
-    /// <param name="path">The string path to turn into a resource path.</param>
-    /// <param name="separator">The separator for the resource path. If null or empty it will default to <c>/</c></param>
-    /// <exception cref="ArgumentException">Thrown if you try to use "." as separator.</exception>
-    public static ResPath CreateWithSeparator(string path, char separator = '/')
-    {
-        if (separator is '.')
-        {
-            throw new ArgumentException("Separator may not be `.`  Prefer \\ or /");
-        }
-
-        if (path == "" || path == ".")
-        {
-            return Self;
-        }
-
-        var sb = new StringBuilder(path.Length, path.Length * 2);
-        var segments = path.Split(separator);
-        if (path[0] == separator) sb.Append('/');
-
-        var needsSeparator = false;
-        foreach (var segment in segments)
-        {
-            if ((segment == "." && segments.Length != 0) || segment == "") continue;
-
-            if (needsSeparator) sb.Append('/');
-
-            sb.Append(segment);
-            needsSeparator = true;
-        }
-
-        return sb.Length == 0
-            ? Self
-            : new ResPath(sb.ToString());
-    }
-
-    /// <summary>
-    /// Fast factory method will assume you did all necessary cleaning.
-    /// WARNING: Breaking this assumption may lead to bugs
-    /// </summary>
-    /// <param name="assumedCanon"></param>
-    /// <returns></returns>
-    public static ResPath CreateUnsafePath(string assumedCanon)
-    {
-        return new ResPath(assumedCanon);
     }
 
     /// <summary>
@@ -149,7 +98,9 @@ public readonly struct ResPath : IEquatable<ResPath>
                 return Self;
             }
 
-            var ind = CanonPath.LastIndexOf('/');
+            var ind = CanonPath[^1] == '/' 
+                ? CanonPath[..^1].LastIndexOf('/')
+                : CanonPath.LastIndexOf('/');
             return ind != -1
                 ? new ResPath(CanonPath[..ind])
                 : Self;
@@ -406,50 +357,6 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// <seealso cref="ToRelativePath"/>
     public bool IsRelative => !IsRooted;
 
-    /// <summary>
-    ///     Gets the common base of two paths.
-    /// </summary>
-    /// <example>
-    ///     <code>
-    ///     var path1 = new ResourcePath("/a/b/c");
-    ///     var path2 = new ResourcePath("/a/e/d");
-    ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "/a".
-    ///     </code>
-    /// </example>
-    /// <param name="other">The other path.</param>
-    /// <exception cref="ArgumentException">Thrown if there is no common base between the two paths.</exception>
-    public ResPath CommonBase(ResPath other)
-    {
-        if (CanonPath.Equals(other.CanonPath))
-        {
-            return this;
-        }
-
-        var minLen = Math.Min(CanonPath.Length, other.CanonPath.Length);
-        var lastSeparatorPos = IsRooted && other.IsRooted ? 1 : 0;
-        for (int len = lastSeparatorPos; len < minLen; len++)
-        {
-            if (CanonPath[len] != other.CanonPath[len])
-            {
-                break;
-            }
-
-            if (CanonPath[len] != '/')
-            {
-                continue;
-            }
-
-            lastSeparatorPos = len;
-        }
-
-        if (lastSeparatorPos == 0)
-        {
-            throw new ArgumentException($"{this} and {other} have no common base.");
-        }
-
-        return new ResPath(CanonPath[..lastSeparatorPos]);
-    }
-
 
     /// <summary>
     ///     Returns the path of how this instance is "relative" to <paramref name="basePath" />,
@@ -547,109 +454,10 @@ public readonly struct ResPath : IEquatable<ResPath>
     public static ResPath FromRelativeSystemPath(string path, char newSeparator = SystemSeparator)
     {
         // ReSharper disable once RedundantArgumentDefaultValue
-        return CreateWithSeparator(path, newSeparator);
+        return new ResPath(path.Replace(newSeparator, '/'));
     }
 
     #endregion
-
-    /// <summary>
-    ///     Returns cleaned version of the resource path, removing <c>..</c>.
-    /// </summary>
-    /// <remarks>
-    ///     If <c>..</c> appears at the base of a path, it is left alone. If it appears at root level (like <c>/..</c>) it is removed entirely.
-    /// </remarks>
-    public ResPath Clean()
-    {
-
-        if (CanonPath == "")
-        {
-            return Empty;
-        }
-
-        var segments = new ValueList<string>();
-        if (IsRooted)
-        {
-            segments.Add("/");
-        }
-
-        foreach (var segment in CanonPath.Split(Separator))
-        {
-            // Skip pointless segments
-            if (segment == "." || segment == "")
-            {
-                continue;
-            }
-
-            // If you have ".." cleaning that up doesn't remove that.
-            if (segment == ".." && segments.Count > 0)
-            {
-                if (segments is ["/"])
-                {
-                    continue;
-                }
-
-                var pos = segments.Count - 1;
-                if (segments[pos] != "..")
-                {
-                    segments.RemoveAt(pos);
-                    continue;
-                }
-            }
-
-            segments.Add(segment);
-        }
-
-        // Build Canon path from segments with StringBuilder
-        var sb = new StringBuilder(CanonPath.Length);
-        var start = IsRooted && segments.Count > 1 ? 1 : 0;
-        for (var i = 0; i < segments.Count; i++)
-        {
-            if (i > start)
-            {
-                sb.Append('/');
-            }
-
-            sb.Append(segments[i]);
-        }
-
-        return sb.Length == 0
-            ? Self
-            : new ResPath(sb.ToString());
-    }
-
-    /// <summary>
-    ///     Check whether a path is clean, i.e. <see cref="Clean"/> would not modify it.
-    /// </summary>
-    /// <returns>if true if path wouldn't be modified.</returns>
-    public bool IsClean()
-    {
-        var rooted = IsRooted;
-        // False if the previous segment is `..` or first element
-        // True if segment is not first element or any thing else
-        var prevSegmentNotParent = false;
-
-        foreach (var segment in CanonPath.Split(Separator))
-        {
-            if (segment == "..")
-            {
-                // Why does this work?
-                // It works because Clean method will modify path if its rooted and `..` is encountered
-                // Otherwise path will be modified if a normal path segment `a` precedes a `..`
-                if (rooted || prevSegmentNotParent)
-                {
-                    return false;
-                }
-
-                prevSegmentNotParent = false;
-            }
-            else
-            {
-                prevSegmentNotParent = true;
-            }
-        }
-
-        return true;
-    }
 
     /// <summary>
     ///     Turns the path into a relative path with system-specific separator.
@@ -661,25 +469,9 @@ public readonly struct ResPath : IEquatable<ResPath>
         {
             throw new ArgumentException("New separator can't be `.` or `NULL`");
         }
-
-
+        
         return newSeparator == "/"
             ? CanonPath
             : CanonPath.Replace("/", newSeparator);
-    }
-
-
-    /// <summary>
-    ///     Enumerates the segments of this path. A convenience method for <c>CanonPath.Split(Separator)</c>
-    /// </summary>
-    /// <remarks>
-    ///     Segments are returned from highest to deepest.
-    ///     For example <c>/a/b</c> will yield <c>a</c> then <c>b</c>.
-    ///     No special indication is given for rooted paths,
-    ///     so <c>/a/b</c> yields the same as <c>a/b</c>.
-    /// </remarks>
-    public string[] EnumerateSegments()
-    {
-        return CanonPath.Split(Separator);
     }
 }

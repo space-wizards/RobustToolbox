@@ -16,7 +16,7 @@ namespace Robust.Shared.Utility
     /// </summary>
     [PublicAPI, Serializable, NetSerializable]
     [Obsolete(@$"Use {nameof(ResPath)} instead, for extra performance
-        use {nameof(ResPath.CreateUnsafePath)} but only if '/' is the separator")]
+        use {nameof(ResPath)} but only if '/' is the separator")]
     public sealed class ResourcePath : IEquatable<ResourcePath>
     {
         /// <summary>

@@ -26,7 +26,7 @@ public sealed class ResPathSerializer : ITypeSerializer<ResPath, ValueDataNode>,
             path /= "meta.json";
         }
 
-        if (!path.EnumerateSegments().First().Equals("Textures", StringComparison.InvariantCultureIgnoreCase))
+        if (!path.CanonPath.Split('/').First().Equals("Textures", StringComparison.InvariantCultureIgnoreCase))
         {
             path = SharedSpriteComponent.TextureRootResPath / path;
         }
@@ -62,7 +62,7 @@ public sealed class ResPathSerializer : ITypeSerializer<ResPath, ValueDataNode>,
         SerializationHookContext hookCtx, ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<ResPath>? instanceProvider = null)
     {
-        return ResPath.CreateUnsafePath(node.Value);
+        return new ResPath(node.Value);
     }
 
     public DataNode Write(ISerializationManager serializationManager, ResPath value, IDependencyCollection dependencies,
@@ -75,6 +75,6 @@ public sealed class ResPathSerializer : ITypeSerializer<ResPath, ValueDataNode>,
         SerializationHookContext hookCtx,
         ISerializationContext? context = null)
     {
-        return ResPath.CreateUnsafePath(source.ToString());
+        return new ResPath(source.ToString());
     }
 }

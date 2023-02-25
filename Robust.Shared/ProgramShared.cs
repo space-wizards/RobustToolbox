@@ -78,7 +78,7 @@ internal static class ProgramShared
 
     internal static Task CheckBadFileExtensions(IResourceManager res, IConfigurationManager cfg, ISawmill sawmill)
     {
-#if FULL_RELEASE
+#if !DEBUG
         return Task.CompletedTask;
 #else
         if (!cfg.GetCVar(CVars.ResCheckBadFileExtensions))

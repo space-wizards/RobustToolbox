@@ -489,8 +489,6 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _mapIndices.Clear();
         _gridIndices.Clear();
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        var physicsQuery = GetEntityQuery<PhysicsComponent>();
 
         for (int i = 0; i < sessions.Length; i++)
         {
@@ -559,14 +557,14 @@ internal sealed partial class PVSSystem : EntitySystem
                             List<(uint, IChunkIndexLocation)> _chunkList) tuple) =>
                     {
                         {
-                            var localPos = tuple.transformQuery.GetComponent(((Component) mapGrid).Owner).InvWorldMatrix.Transform(tuple.viewPos);
+                            var localPos = tuple.transformQuery.GetComponent(mapGrid.Owner).InvWorldMatrix.Transform(tuple.viewPos);
 
                             var gridChunkEnumerator =
                                 new ChunkIndicesEnumerator(localPos, tuple.range, ChunkSize);
 
                             while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                             {
-                                var chunkLocation = new GridChunkLocation(((Component) mapGrid).Owner, gridChunkIndices.Value);
+                                var chunkLocation = new GridChunkLocation(mapGrid.Owner, gridChunkIndices.Value);
                                 var entry = (tuple.visMask, chunkLocation);
 
                                 if (tuple.gridDict.TryGetValue(chunkLocation, out var indexOf))
@@ -690,11 +688,8 @@ internal sealed partial class PVSSystem : EntitySystem
     private bool AddToChunkSetRecursively(in EntityUid uid, uint visMask, RobustTree<EntityUid> tree, Dictionary<EntityUid, MetaDataComponent> set, EntityQuery<TransformComponent> transform,
         EntityQuery<MetaDataComponent> metadata)
     {
-        //are we valid?
-        //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
-        if (!uid.IsValid()) return false;
-
-        if (set.ContainsKey(uid)) return true;
+        if (set.ContainsKey(uid))
+            return true;
 
         var mComp = metadata.GetComponent(uid);
 
@@ -703,10 +698,22 @@ internal sealed partial class PVSSystem : EntitySystem
         if ((visMask & mComp.VisibilityMask) != mComp.VisibilityMask)
             return false;
 
-        var parent = transform.GetComponent(uid).ParentUid;
+        var xform = transform.GetComponent(uid);
 
-        if (parent.IsValid() && //is it not a worldentity?
-            !set.ContainsKey(parent) && //was the parent not yet added to toSend?
+        // is this a map or grid?
+        var isRoot = !xform.ParentUid.IsValid() || uid == xform.GridUid;
+        if (isRoot)
+        {
+            DebugTools.Assert(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid));
+            tree.Set(uid);
+            set.Add(uid, mComp);
+            return true;
+        }
+
+        DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+
+        var parent = xform.ParentUid;
+        if (!set.ContainsKey(parent) && //was the parent not yet added to toSend?
             !AddToChunkSetRecursively(in parent, visMask, tree, set, transform, metadata)) //did we just fail to add the parent?
             return false; //we failed? suppose we dont get added either
 
@@ -746,6 +753,11 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             var cache = chunkCache[i];
             if(!cache.HasValue) continue;
+
+            // This isn't actually required, but currently if this fails it is a sign that something has gone wrong
+            // somewhere, as the root nodes should always simply be a map or a grid entity.
+            DebugTools.Assert(cache.Value.tree.RootNodes.Count == 1 && Exists(cache.Value.tree.RootNodes.First()));
+
             foreach (var rootNode in cache.Value.tree.RootNodes)
             {
                 RecursivelyAddTreeNode(in rootNode, cache.Value.tree, lastAcked, lastSent, visibleEnts, lastSeen, cache.Value.metadata, stack, in fromTick,
@@ -887,13 +899,12 @@ internal sealed partial class PVSSystem : EntitySystem
 
         while (stack.TryPop(out var currentNodeIndex))
         {
-            //are we valid?
-            //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
+            DebugTools.Assert(currentNodeIndex.IsValid());
 
             // As every map is parented to uid 0 in the tree we still need to get their children, plus because we go top-down
             // we may find duplicate parents with children we haven't encountered before
             // on different chunks (this is especially common with direct grid children)
-            if (currentNodeIndex.IsValid() && !toSend.ContainsKey(currentNodeIndex))
+            if (!toSend.ContainsKey(currentNodeIndex))
             {
                 var (entered, shouldAdd) = ProcessEntry(in currentNodeIndex, lastAcked, lastSent, lastSeen,
                     ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
@@ -992,7 +1003,6 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void AddToSendSet(in EntityUid uid, MetaDataComponent metaDataComponent, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, in bool entered, ref int entStateCount)
     {
-        // This check shouldn't be required, but temporarily adding it to try debug PVS errors.
         if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
         {
             var rep = new EntityStringRepresentation(uid, metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
@@ -1022,14 +1032,18 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     ///     Gets all entity states that have been modified after and including the provided tick.
     /// </summary>
-    public (List<EntityState>?, List<EntityUid>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession player, GameTick fromTick, GameTick toTick)
+    public (List<EntityState>?, List<EntityUid>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
     {
         List<EntityState>? stateEntities;
         var seenEnts = new HashSet<EntityUid>();
         var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
         List<(HashSet<EntityUid>, HashSet<EntityUid>)>? tickData = null;
 
-        if (!SeenAllEnts.Contains(player))
+        bool sendAll = player == null
+            ? fromTick == GameTick.Zero
+            : !SeenAllEnts.Contains(player);
+
+        if (sendAll)
         {
             // Give them E V E R Y T H I N G
             fromTick = GameTick.Zero;
@@ -1105,12 +1119,12 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     /// Generates a network entity state for the given entity.
     /// </summary>
-    /// <param name="player">The player to generate this state for.</param>
+    /// <param name="player">The player to generate this state for. This may be null if the state is for replay recordings.</param>
     /// <param name="entityUid">Uid of the entity to generate the state from.</param>
     /// <param name="fromTick">Only provide delta changes from this tick.</param>
     /// <param name="meta">The entity's metadata component</param>
     /// <returns>New entity State for the given entity.</returns>
-    private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
+    private EntityState GetEntityState(ICommonSession? player, EntityUid entityUid, GameTick fromTick, MetaDataComponent meta)
     {
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
@@ -1129,17 +1143,17 @@ internal sealed partial class PVSSystem : EntitySystem
                 continue;
             }
 
-            if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
+            if (component.SendOnlyToOwner && player != null && player.AttachedEntity != entityUid)
                 continue;
 
             if (component.LastModifiedTick <= fromTick)
             {
-                if (sendCompList && (!component.SessionSpecific || EntityManager.CanGetComponentState(bus, component, player)))
+                if (sendCompList && (!component.SessionSpecific || player == null || EntityManager.CanGetComponentState(bus, component, player)))
                     netComps!.Add(netId);
                 continue;
             }
 
-            if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
+            if (component.SessionSpecific && player != null && !EntityManager.CanGetComponentState(bus, component, player))
                 continue;
 
             var state = EntityManager.GetComponentState(bus, component, player, fromTick);
@@ -1171,7 +1185,7 @@ internal sealed partial class PVSSystem : EntitySystem
             if (!component.NetSyncEnabled)
                 continue;
 
-            if (component.SendOnlyToOwner && player.AttachedEntity != component.Owner)
+            if (component.SendOnlyToOwner && player.AttachedEntity != entityUid)
                 continue;
 
             if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))

@@ -49,7 +49,7 @@ namespace Robust.Shared.Console
         /// <summary>
         /// A map of (commandName -> ICommand) of every registered command in the shell.
         /// </summary>
-        IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
+        IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands { get; }
 
         /// <summary>
         /// Invoked before any console command is executed.
@@ -63,6 +63,7 @@ namespace Robust.Shared.Console
         /// </summary>
         void LoadConsoleCommands();
 
+        #region RegisterCommand
         /// <summary>
         /// Registers a console command into the console system. This is an alternative to
         /// creating an <see cref="IConsoleCommand"/> class.
@@ -77,7 +78,8 @@ namespace Robust.Shared.Console
             string command,
             string description,
             string help,
-            ConCommandCallback callback);
+            ConCommandCallback callback,
+            bool requireServerOrSingleplayer = false);
 
         /// <summary>
         /// Registers a console command into the console system. This is an alternative to
@@ -97,7 +99,8 @@ namespace Robust.Shared.Console
             string description,
             string help,
             ConCommandCallback callback,
-            ConCommandCompletionCallback completionCallback);
+            ConCommandCompletionCallback completionCallback,
+            bool requireServerOrSingleplayer = false);
 
         /// <summary>
         /// Registers a console command into the console system. This is an alternative to
@@ -117,7 +120,59 @@ namespace Robust.Shared.Console
             string description,
             string help,
             ConCommandCallback callback,
-            ConCommandCompletionAsyncCallback completionCallback);
+            ConCommandCompletionAsyncCallback completionCallback,
+            bool requireServerOrSingleplayer = false);
+
+        /// <summary>
+        /// Registers a console command into the console system. This is an alternative to creating an <see
+        /// cref="IConsoleCommand"/> class. This override will try to automatically resolve localized help & description
+        /// strings based on the command name.
+        /// </summary>
+        /// <param name="command">A string as identifier for this command.</param>
+        /// <param name="callback">
+        /// Callback to invoke when this command is executed.
+        /// </param>
+        void RegisterCommand(
+            string command,
+            ConCommandCallback callback,
+            bool requireServerOrSingleplayer = false);
+
+        /// <summary>
+        /// Registers a console command into the console system. This is an alternative to creating an <see
+        /// cref="IConsoleCommand"/> class. This override will try to automatically resolve localized help & description
+        /// strings based on the command name.
+        /// </summary>
+        /// <param name="command">A string as identifier for this command.</param>
+        /// <param name="callback">
+        /// Callback to invoke when this command is executed.
+        /// </param>
+        /// <param name="completionCallback">
+        /// Callback to fetch completions with.
+        /// </param>
+        void RegisterCommand(
+            string command,
+            ConCommandCallback callback,
+            ConCommandCompletionCallback completionCallback,
+            bool requireServerOrSingleplayer = false);
+
+        /// <summary>
+        /// Registers a console command into the console system. This is an alternative to creating an <see
+        /// cref="IConsoleCommand"/> class. This override will try to automatically resolve localized help & description
+        /// strings based on the command name.
+        /// </summary>
+        /// <param name="command">A string as identifier for this command.</param>
+        /// <param name="callback">
+        /// Callback to invoke when this command is executed.
+        /// </param>
+        /// <param name="completionCallback">
+        /// Callback to fetch completions with (async variant).
+        /// </param>
+        void RegisterCommand(
+            string command,
+            ConCommandCallback callback,
+            ConCommandCompletionAsyncCallback completionCallback,
+            bool requireServerOrSingleplayer = false);
+        #endregion
 
         /// <summary>
         /// Unregisters a console command that has been registered previously with <see cref="RegisterCommand(string,string,string,Robust.Shared.Console.ConCommandCallback)"/>.

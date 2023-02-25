@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Configuration;
@@ -107,11 +108,12 @@ public abstract class UIScreen : LayoutContainer
         return (T?) _widgets.GetValueOrDefault(typeof(T));
     }
 
-    public T GetOrNewWidget<T>() where T : UIWidget, new()
+    public T GetOrAddWidget<T>() where T : UIWidget, new()
     {
         if (!_widgets.TryGetValue(typeof(T), out var widget))
         {
             widget = new T();
+            AddWidget(widget);
         }
 
         return (T) widget;
@@ -120,6 +122,18 @@ public abstract class UIScreen : LayoutContainer
     public bool IsWidgetShown<T>() where T : UIWidget
     {
         return _widgets.TryGetValue(typeof(T), out var widget) && widget.Visible;
+    }
+
+    public bool TryGetWidget<T>([NotNullWhen(true)] out T? widget) where T : UIWidget, new()
+    {
+        if (!_widgets.TryGetValue(typeof(T), out var baseWidget))
+        {
+            widget = null;
+            return false;
+        }
+
+        widget = (T)baseWidget;
+        return true;
     }
 
     public void ShowWidget<T>(bool show) where T : UIWidget

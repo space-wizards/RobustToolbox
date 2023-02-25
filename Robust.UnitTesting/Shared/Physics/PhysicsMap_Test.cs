@@ -57,12 +57,12 @@ public sealed class PhysicsMap_Test
 
         Assert.That(physicsMap.AwakeBodies, Does.Contain(childBody));
 
-        xformSystem.SetParent(parentXform, mapUid2);
+        xformSystem.SetParent(parent, parentXform, mapUid2);
 
         Assert.That(physicsMap.AwakeBodies, Is.Empty);
         Assert.That(physicsMap2.AwakeBodies, Has.Count.EqualTo(2));
 
-        xformSystem.SetParent(parentXform, mapUid);
+        xformSystem.SetParent(parent, parentXform, mapUid);
 
         Assert.That(physicsMap.AwakeBodies, Has.Count.EqualTo(2));
         Assert.That(physicsMap2.AwakeBodies, Is.Empty);

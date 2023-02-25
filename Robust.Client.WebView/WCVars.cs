@@ -18,6 +18,12 @@ public static class WCVars
     /// <summary>
     /// Overrides the default CEF user-agent when set to a non-empty string.
     /// </summary>
-    public static readonly CVarDef<string> UserAgentOverride =
+    public static readonly CVarDef<string> WebUserAgentOverride =
         CVarDef.Create("web.user_agent", "", CVar.CLIENTONLY);
+
+    /// <summary>
+    /// If true, use headless WebView implementation even with graphical client (turn off CEF).
+    /// </summary>
+    public static readonly CVarDef<bool> WebHeadless =
+        CVarDef.Create("web.headless", false, CVar.CLIENTONLY);
 }

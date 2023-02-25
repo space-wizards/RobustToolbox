@@ -28,6 +28,7 @@ internal partial class MapManager
         {
             Logger.ErrorS("map", $"Unable to get moved grids for {mapId}");
             moved = new HashSet<MapGridComponent>();
+            DebugTools.Assert(false);
         }
 
         return moved;

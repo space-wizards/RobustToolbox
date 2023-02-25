@@ -15,9 +15,6 @@ namespace Robust.Client.GameObjects;
 
 public sealed partial class SpriteSystem
 {
-    [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-
     private readonly Dictionary<string, IRsiStateLike> _cachedPrototypeIcons = new();
 
     public Texture Frame0(SpriteSpecifier specifier)

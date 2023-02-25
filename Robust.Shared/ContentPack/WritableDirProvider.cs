@@ -67,12 +67,12 @@ namespace Robust.Shared.ContentPack
 
             foreach (var file in files)
             {
-                resFiles.Add(new ResourcePath(file.Substring(rootLen), "\\"));
+                resFiles.Add(new ResourcePath(file.Substring(rootLen), ResourcePath.SYSTEM_SEPARATOR).ChangeSeparator("/"));
             }
 
             foreach (var dir in dirs)
             {
-                resDirs.Add(new ResourcePath(dir.Substring(rootLen), "\\"));
+                resDirs.Add(new ResourcePath(dir.Substring(rootLen), ResourcePath.SYSTEM_SEPARATOR).ChangeSeparator("/"));
             }
 
             return (resFiles, resDirs);
@@ -102,6 +102,15 @@ namespace Robust.Shared.ContentPack
         {
             var fullPath = GetFullPath(path);
             return File.Open(fullPath, fileMode, access, share);
+        }
+
+        public IWritableDirProvider OpenSubdirectory(ResourcePath path)
+        {
+            if (!IsDir(path))
+                throw new FileNotFoundException();
+
+            var dirInfo = new DirectoryInfo(GetFullPath(path));
+            return new WritableDirProvider(dirInfo);
         }
 
         /// <inheritdoc />

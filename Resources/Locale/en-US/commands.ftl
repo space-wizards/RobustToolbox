@@ -522,14 +522,32 @@ cmd-vvread-desc = Retrieve a path's value using VV (View Variables).
 cmd-vvread-desc = Usage: vvread <path>
 
 cmd-vvwrite-desc = Modify a path's value using VV (View Variables).
-cmd-vvwrite-desc = Usage: vvwrite <path>
+cmd-vvwrite-help = Usage: vvwrite <path>
 
 cmd-vv-desc = Opens View Variables (VV).
-cmd-vv-desc = Usage: vv <path|entity ID|guihover>
+cmd-vv-help = Usage: vv <path|entity ID|guihover>
 
 cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
-cmd-vvinvoke-desc = Usage: vvinvoke <path> [arguments...]
+cmd-vvinvoke-help = Usage: vvinvoke <path> [arguments...]
+
+cmd-replaystart-desc = Starts a replay recording, optionally with some time limit.
+cmd-replaystart-help = Usage: replaystart [minutes] [directory] [overwrite bool]
+cmd-replaystart-success = Started recording a replay.
+cmd-replaystart-already-recording = Already recording a replay.
+cmd-replaystart-error = An error occurred while trying to start the recording.
+
+cmd-replaystop-desc = Stops a replay recording.
+cmd-replaystop-help = Usage: replaystop
+cmd-replaystop-success = Stopped recording a replay.
+cmd-replaystop-not-recording = Not currently recording a replay.
+
+cmd-replaystats-desc = Displays information about the current replay recording.
+cmd-replaystats-help = Usage: replaystats
+cmd-replaystats-result = Duration: {$time} min, Ticks: {$ticks}, Size: {$size} mb, rate: {$rate} mb/min.
 
 cmd-dump_dependency_injectors-desc = Dump IoCManager's dependency injector cache.
 cmd-dump_dependency_injectors-help = Usage: dump_dependency_injectors
 cmd-dump_dependency_injectors-total-count = Total count: { $total }
+
+cmd-dump_netserializer_type_map-desc = Dump NetSerializer's type map and serializer hash.
+cmd-dump_netserializer_type_map-help = Usage: dump_netserializer_type_map

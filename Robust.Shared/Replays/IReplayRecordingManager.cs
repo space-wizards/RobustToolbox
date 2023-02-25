@@ -1,4 +1,7 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.Replays;
 
@@ -20,4 +23,16 @@ public interface IReplayRecordingManager
     ///     Whether the server is currently recording replay data.
     /// </summary>
     bool Recording { get; }
+
+    /// <summary>
+    ///     This gets invoked whenever a replay recording starts. Subscribers can use this to add extra yaml metadata
+    ///     data to the recording, as well as to effectively "raise" networked events that would get sent to a newly
+    ///     connecting "client".
+    /// </summary>
+    event Action<(MappingDataNode, List<object>)>? OnRecordingStarted;
+
+    /// <summary>
+    ///     This gets invoked whenever a replay recording ends. Subscribers can use this to add extra yaml metadata data to the recording.
+    /// </summary>
+    event Action<MappingDataNode>? OnRecordingStopped;
 }

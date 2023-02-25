@@ -306,7 +306,7 @@ public abstract partial class SharedMapSystem
 
             // Mapgrid moment
             if (mapUid != uid)
-                _transform.SetParent(xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
+                _transform.SetParent(uid, xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
         }
 
         // Force networkedmapmanager to send it due to non-ECS legacy code.

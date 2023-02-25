@@ -185,7 +185,7 @@ namespace Robust.Shared.GameObjects
 
             if (coordinates.IsValid(this))
             {
-                _xforms.SetCoordinates(GetComponent<TransformComponent>(newEntity), coordinates, unanchor: false);
+                _xforms.SetCoordinates(newEntity, GetComponent<TransformComponent>(newEntity), coordinates, unanchor: false);
             }
 
             return newEntity;
@@ -213,12 +213,12 @@ namespace Robust.Shared.GameObjects
             if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var grid))
             {
                 coords = new(grid.Owner, grid.WorldToLocal(coordinates.Position));
-                _xforms.SetCoordinates(transform, coords, unanchor: false);
+                _xforms.SetCoordinates(newEntity, transform, coords, unanchor: false);
             }
             else
             {
                 coords = new EntityCoordinates(mapEnt, coordinates.Position);
-                _xforms.SetCoordinates(transform, coords, null, newParent: mapXform);
+                _xforms.SetCoordinates(newEntity, transform, coords, null, newParent: mapXform);
             }
 
             return newEntity;
@@ -375,7 +375,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    xformSys.DetachParentToNull(transform, xformQuery, metaQuery);
+                    xformSys.DetachParentToNull(uid, transform, xformQuery, metaQuery);
                 }
                 catch (Exception e)
                 {

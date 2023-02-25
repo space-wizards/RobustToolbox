@@ -122,7 +122,7 @@ namespace Robust.Shared.Containers
             transform.Broadphase = BroadphaseData.Invalid;
 
             // Unanchor the entity (without changing physics body types).
-            xformSys.Unanchor(transform, false);
+            xformSys.Unanchor(toinsert, transform, false);
 
             // Next, update physics. Note that this cannot just be done in the physics system via parent change events,
             // because the insertion may not result in a parent change. This could alternatively be done via a
@@ -133,7 +133,7 @@ namespace Robust.Shared.Containers
 
             // Attach to new parent
             var oldParent = transform.ParentUid;
-            xformSys.SetCoordinates(transform, new EntityCoordinates(Owner, Vector2.Zero), Angle.Zero);
+            xformSys.SetCoordinates(toinsert, transform, new EntityCoordinates(Owner, Vector2.Zero), Angle.Zero);
             transform.Broadphase = old;
 
             // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
@@ -276,7 +276,7 @@ namespace Robust.Shared.Containers
             if (destination != null)
             {
                 // Container ECS when.
-                entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(xform, destination.Value, localRotation);
+                entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(toRemove, xform, destination.Value, localRotation);
             }
             else if (reparent)
             {

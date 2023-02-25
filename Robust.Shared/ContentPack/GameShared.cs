@@ -34,6 +34,10 @@ namespace Robust.Shared.ContentPack
         {
         }
 
+        public virtual void Shutdown()
+        {
+        }
+
         public void Dispose()
         {
             Dispose(true);

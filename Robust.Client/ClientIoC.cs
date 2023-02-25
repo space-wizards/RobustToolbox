@@ -21,6 +21,7 @@ using Robust.Client.Serialization;
 using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.RichText;
 using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
@@ -128,12 +129,14 @@ namespace Robust.Client
             deps.Register<IClientConGroupController, ClientConGroupController>();
             deps.Register<IScriptClient, ScriptClient>();
             deps.Register<IRobustSerializer, ClientRobustSerializer>();
+            deps.Register<IRobustSerializerInternal, ClientRobustSerializer>();
             deps.Register<IClientRobustSerializer, ClientRobustSerializer>();
             deps.Register<IConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
             deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
+            deps.Register<MarkupTagManager>();
         }
     }
 }

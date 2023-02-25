@@ -32,6 +32,12 @@ namespace Robust.Client.UserInterface.Controls
         private float _splitWidth;
 
         /// <summary>
+        ///     This width determines the minimum size of the draggable area around the split. This has no effect if it
+        ///     is smaller than <see cref="SplitWidth"/>, which determines the visual padding/width.
+        /// </summary>
+        public float MinDraggableWidth = 10f;
+
+        /// <summary>
         /// Virtual pixel offset from the edge beyond which the split cannot be moved.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
@@ -158,12 +164,11 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool CanDragAt(Vector2 relativePosition)
         {
-            if (Vertical)
-            {
-                return Math.Abs(relativePosition.Y - SplitCenter) <= _splitWidth;
-            }
+            var distance = Vertical
+                ? Math.Abs(relativePosition.Y - SplitCenter)
+                : Math.Abs(relativePosition.X - SplitCenter);
 
-            return Math.Abs(relativePosition.X - SplitCenter) <= _splitWidth;
+            return distance <= _splitWidth || distance <= MinDraggableWidth;
         }
 
         /// <summary>

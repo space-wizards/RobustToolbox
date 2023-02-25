@@ -35,10 +35,163 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Undid `*.yaml` prototype loading change from previous version.
+*None yet*
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.89.1.0
+
+### New features
+
+* `web.headless` CVar can now be used to avoid loading CEF with graphical client.
+
+### Bugfixes
+
+* `web.user_agent` CVar can now be overriden by content before WebView is initialized.
+
+### Other
+
+* WebView works again and is properly available from the launcher.
+
+### Internal
+
+* Clean up WebView initialization logic to avoid static `IoCManager`.
+
+
+## 0.89.0.0
+
+### Breaking changes
+
+* Add EntityUid as an arg to SharedTransformSystem and remove more .Owner calls.
+
+### New features
+
+* Add by-ref event analyzer.
+* Add option to hide scrollbars for ScrollContainers.
+* Add an out EntityUid overload to EntityQueryEnumerator<T>.
+
+### Bugfixes
+
+* Fix exception on server shutdown.
+* Fix concurrent update error in byref registrations for serializationmanager.
+* New grids created from placement manager start at 0,0 rather than -1,-1.
+
+### Other
+
+* `dump_netserializer_type_map` command to debug desynchronization issues with NetSerializer's type map.
+
+
+## 0.88.1.0
+
+### New features
+
+* Added a new OnScreenChanged event that gets invoked when `IUserInterfaceManager.ActiveScreen` changes.
+* UI state interfaces such as `IOnStateEntered<TState>` now also get invoked whenever the current state inherits from `TState`.
+
+### Bugfixes
+
+* Fixed `WritableDirProvider.Find()`. This fixes custom MIDI soundfonts on Windows.
+* Fixed server startup crash with string serializer length checks.
+* Fixed `CS8981` errors in `Robust.Benchmarks`.
+* Fixed C# interactive errors when engine started without content-start.
+* Fixed FormattedMessage.IsEmpty() returning the wrong result.
+
+### Other
+
+* Map pausing now gets properly networked
+* SplitContainers controls now have a minimum draggable area, so that they can function without any padding.
+
+### Internal
+
+* Fixed `CS8981` errors in `Robust.Benchmarks`.
+
+
+## 0.88.0.0
+
+### Breaking changes
+
+* A `Default` font prototype is now required. I.e.:
+    ```yaml
+    - type: font
+      id: Default
+      path: /Fonts/NotoSans/NotoSans-Regular.ttf
+    ```
+
+### New features
+* `FormattedText.MarkupParser` got refactored to be more robust and support arbitrary tags.
+* New rich text tags can be added by implementing `IMarkupTag`
+
+
+
+## 0.87.1.1
+
+### Bugfixes
+
+* Fixed source of PVS assert tripping in debug.
+
+
+## 0.87.1.0
+
+### Bugfixes
+
+* Fixed a PVS bug that would sometimes cause it to attempt to send deleted entities.
+* Fixed server commands not getting sent to clients after disconnecting and reconnecting.
+* Fixed a text input error when using the right arrow key while at the second to last character.
+
+
+### Other
+
+* Sprite view controls now use the sprite's offset when rendering.
+* The sprite system should now animate any rendered sprites with RSI animations, instead of only animating those visible in the main viewport and sprite view controls.
+
+
+## 0.87.0.0
+
+### Breaking changes
+
+* `UIScreen.GetOrNewWidget()` has been replaced with `GetOrAddWidget()`.
+
+### New features
+
+* Added `IWritableDirProvider.OpenSubdirectory()`, which returns a new `IWritableDirProvider` with the root set to some subdirectory.
+* Added `UiScreen.TryGetWidget()`
+* Added a virtual `Shutdown()` method for game/module entry points.
+
+### Bugfixes
+
+* Fixed SyncSpriteComponent not properly syncing entities that are out of view.
+* Fixed a bug preventing client-side commands from being properly registered.
+* Fixed a bug causing PVS to unnecessarily send extra data.
+
+
+## 0.86.0.0
+
+### Breaking changes
+
+* Undid `*.yaml` prototype loading change from previous version.
+* `IConsoleHost`'s `RegisteredCommands` field has been renamed to `AvailableCommands`.
+* Several light related cvars have been renamed. E.g., "display.softshadows" is now "light.softshadows".
+* The "display.lightmapdivider" integer cvar has been replaced with a float multiplier named "light.resolution_scale".
+
+
+### New features
+
+* Command definitions have a new bool that restricts them to only be executable by the server or in single player mode. Several "server only" commands have been moved to to shared code and now use this option.
 * The FOV color is now configurable via the "render.fov_color" cvar
 
 ### Bugfixes
@@ -50,6 +203,8 @@ END TEMPLATE-->
 * SDL2 backend now handles quit events (⌘+Q on macOS).
 * SDL2 backend now logs video driver backend used on initialization.
 * The engine will now warn on startup if `*.yaml` files are found in resources, as this most likely indicates an accident.
+* Added entity, occluder and shadow-casting light counts to the clyde debug panel.
+* The HistoryLineEdit control now invokes `OnTextChanged` events when selecting history items
 
 ### Internal
 

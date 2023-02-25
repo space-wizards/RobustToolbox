@@ -587,7 +587,7 @@ public partial class SharedPhysicsSystem
             return new Transform();
 
         xformQuery ??= GetEntityQuery<TransformComponent>();
-        var (worldPos, worldRot) = xform.GetWorldPositionRotation(xformQuery.Value);
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery.Value);
 
         return new Transform(worldPos, worldRot);
     }
@@ -600,7 +600,7 @@ public partial class SharedPhysicsSystem
         if (!Resolve(uid, ref manager, ref body, ref xform))
             return new Box2();
 
-        var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, GetEntityQuery<TransformComponent>());
 
         var transform = new Transform(worldPos, (float) worldRot.Theta);
 
@@ -625,7 +625,7 @@ public partial class SharedPhysicsSystem
             return new Box2();
         }
 
-        var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, GetEntityQuery<TransformComponent>());
 
         var transform = new Transform(worldPos, (float) worldRot.Theta);
 

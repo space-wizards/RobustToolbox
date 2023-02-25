@@ -9,25 +9,23 @@ namespace Robust.Client.GameObjects
 {
     public sealed class AnimationPlayerSystem : EntitySystem
     {
-        private readonly List<AnimationPlayerComponent> _activeAnimations = new();
-
         [Dependency] private readonly IComponentFactory _compFact = default!;
 
         public override void FrameUpdate(float frameTime)
         {
-            for (var i = _activeAnimations.Count - 1; i >= 0; i--)
+            foreach (var (active, comp) in EntityQuery<ActiveAnimationPlayerComponent, AnimationPlayerComponent>())
             {
-                var anim = _activeAnimations[i];
-                if (!Update(anim, frameTime)) continue;
-                _activeAnimations.RemoveSwap(i);
-                anim.HasPlayingAnimation = false;
+                var uid = active.Owner;
+                if (!Update(comp, frameTime)) continue;
+                RemCompDeferred<ActiveAnimationPlayerComponent>(uid);
+                comp.HasPlayingAnimation = false;
             }
         }
 
-        internal void AddComponent(AnimationPlayerComponent component)
+        internal void AddComponent(EntityUid uid, AnimationPlayerComponent component)
         {
             if (component.HasPlayingAnimation) return;
-            _activeAnimations.Add(component);
+            EnsureComp<ActiveAnimationPlayerComponent>(uid);
             component.HasPlayingAnimation = true;
         }
 
@@ -77,7 +75,8 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void Play(AnimationPlayerComponent component, Animation animation, string key)
         {
-            AddComponent(component);
+            var uid = component.Owner;
+            AddComponent(uid, component);
             var playback = new AnimationPlaybackShared.AnimationPlayback(animation);
 
 #if DEBUG

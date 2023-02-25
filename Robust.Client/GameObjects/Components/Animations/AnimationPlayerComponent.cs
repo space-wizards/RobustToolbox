@@ -32,7 +32,7 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use AnimationPlayerSystem.Play() instead")]
         public void Play(Animation animation, string key)
         {
-            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AnimationPlayerSystem>().AddComponent(this);
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AnimationPlayerSystem>().AddComponent(Owner, this);
             var playback = new AnimationPlayback(animation);
 
             PlayingAnimations.Add(key, playback);

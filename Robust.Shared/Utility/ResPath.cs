@@ -98,7 +98,7 @@ public readonly struct ResPath : IEquatable<ResPath>
                 return Self;
             }
 
-            var ind = CanonPath[^1] == '/' 
+            var ind = CanonPath.Length > 1 && CanonPath[^1] == '/' 
                 ? CanonPath[..^1].LastIndexOf('/')
                 : CanonPath.LastIndexOf('/');
             return ind != -1

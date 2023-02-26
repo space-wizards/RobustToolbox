@@ -3,6 +3,7 @@
   <PropertyGroup>
       <IsPackable>false</IsPackable>
       <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+      <OutputPath>../bin/Benchmarks</OutputPath>
       <OutputType>Exe</OutputType>
       <NoWarn>RA0003</NoWarn>
   </PropertyGroup>

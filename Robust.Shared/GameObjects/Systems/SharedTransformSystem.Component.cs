@@ -83,6 +83,7 @@ public abstract partial class SharedTransformSystem
             return false;
 
         var wasAnchored = xform._anchored;
+        Dirty(xform);
         xform._anchored = true;
 
         // Mark as static before doing position changes, to avoid the velocity change on parent change.
@@ -94,7 +95,7 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(uid, ref ev, true);
         }
 
-        // Anchor snapping. Note that set coordiantes will dirty the component for us.
+        // Anchor snapping. If there is a coordinate change, it will dirty the component for us.
         var pos = new EntityCoordinates(gridUid, grid.GridTileToLocal(tileIndices).Position);
         SetCoordinates(uid, xform, pos, unanchor: false);
 

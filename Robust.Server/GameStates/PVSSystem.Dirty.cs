@@ -51,7 +51,7 @@ namespace Robust.Server.GameStates
                 _dirtyEntities[_currentIndex].Add(uid);
         }
 
-        private bool TryGetTick(GameTick tick, [NotNullWhen(true)] out HashSet<EntityUid>? addEntities, [NotNullWhen(true)] out HashSet<EntityUid>? dirtyEntities)
+        private bool TryGetDirtyEntities(GameTick tick, [NotNullWhen(true)] out HashSet<EntityUid>? addEntities, [NotNullWhen(true)] out HashSet<EntityUid>? dirtyEntities)
         {
             var currentTick = _gameTiming.CurTick;
             if (currentTick.Value - tick.Value >= DirtyBufferSize)

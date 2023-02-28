@@ -1072,7 +1072,7 @@ internal sealed partial class PVSSystem : EntitySystem
             var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
             for (var i = fromTick.Value + 1; i <= toTick.Value; i++)
             {
-                if (!TryGetTick(new GameTick(i), out var add, out var dirty))
+                if (!TryGetDirtyEntities(new GameTick(i), out var add, out var dirty))
                 {
                     // This should be unreachable if `enumerateAll` is false.
                     throw new Exception($"Failed to get tick dirty data. tick: {i}, from: {fromTick}, to {toTick}, buffer: {DirtyBufferSize}");

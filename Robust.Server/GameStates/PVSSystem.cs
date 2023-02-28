@@ -16,7 +16,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -268,7 +267,7 @@ internal sealed partial class PVSSystem : EntitySystem
             }
         }
 
-        _currentIndex = ((int)_gameTiming.CurTick.Value + 1) % DirtyBufferSize;
+        _currentIndex = ((int)_gameTiming.CurTick.Value + 1) % TickBuffer;
         _addEntities[_currentIndex].Clear();
         _dirtyEntities[_currentIndex].Clear();
 
@@ -1051,7 +1050,7 @@ internal sealed partial class PVSSystem : EntitySystem
         else
         {
             tickData = new();
-            for (var i = fromTick.Value; i <= toTick.Value; i++)
+            for (var i = fromTick.Value + 1; i <= toTick.Value; i++)
             {
                 var tick = new GameTick(i);
                 if (!TryGetTick(tick, out var add, out var dirty))
@@ -1068,13 +1067,13 @@ internal sealed partial class PVSSystem : EntitySystem
         if (tickData == null)
         {
             stateEntities = new List<EntityState>(EntityManager.EntityCount);
-            var query = EntityManager.EntityQueryEnumerator<MetaDataComponent>();
+            var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
             while (query.MoveNext(out var uid, out var md))
             {
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
+                DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
                 if (md.EntityLastModifiedTick > fromTick)
                     stateEntities.Add(GetEntityState(player, uid, fromTick, md));
-
             }
         }
         else
@@ -1090,8 +1089,9 @@ internal sealed partial class PVSSystem : EntitySystem
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    if (md.EntityLastModifiedTick > fromTick)
-                        stateEntities.Add(GetEntityState(player, uid, fromTick, md));
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    stateEntities.Add(GetEntityState(player, uid, fromTick, md));
                 }
 
                 foreach (var uid in dirty)
@@ -1101,8 +1101,9 @@ internal sealed partial class PVSSystem : EntitySystem
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    if (md.EntityLastModifiedTick > fromTick)
-                        stateEntities.Add(GetEntityState(player, uid, fromTick, md));
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    stateEntities.Add(GetEntityState(player, uid, fromTick, md));
                 }
             }
         }

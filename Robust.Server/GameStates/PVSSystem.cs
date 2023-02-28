@@ -34,7 +34,7 @@ internal sealed partial class PVSSystem : EntitySystem
     public const float ChunkSize = 8;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
-    public const int TickBuffer = 20;
+    public const int DirtyBufferSize = 20;
     // Note: If a client has ping higher than TickBuffer / TickRate, then the server will treat every entity as if it
     // had entered PVS for the first time. Note that due to the PVS budget, this buffer is easily overwhelmed.
 
@@ -267,7 +267,7 @@ internal sealed partial class PVSSystem : EntitySystem
             }
         }
 
-        _currentIndex = ((int)_gameTiming.CurTick.Value + 1) % TickBuffer;
+        _currentIndex = ((int)_gameTiming.CurTick.Value + 1) % DirtyBufferSize;
         _addEntities[_currentIndex].Clear();
         _dirtyEntities[_currentIndex].Clear();
 
@@ -1048,7 +1048,7 @@ internal sealed partial class PVSSystem : EntitySystem
             fromTick = GameTick.Zero;
         }
 
-        if (_gameTiming.CurTick.Value - fromTick.Value > TickBuffer)
+        if (_gameTiming.CurTick.Value - fromTick.Value > DirtyBufferSize)
         {
             // Fall back to enumerating over all entities.
             enumerateAll = true;
@@ -1075,7 +1075,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 if (!TryGetTick(new GameTick(i), out var add, out var dirty))
                 {
                     // This should be unreachable if `enumerateAll` is false.
-                    throw new Exception($"Failed to get tick dirty data. tick: {i}, from: {fromTick}, to {toTick}, buffer: {TickBuffer}");
+                    throw new Exception($"Failed to get tick dirty data. tick: {i}, from: {fromTick}, to {toTick}, buffer: {DirtyBufferSize}");
                 }
 
                 foreach (var uid in add)
@@ -1277,9 +1277,9 @@ internal sealed partial class PVSSystem : EntitySystem
     private sealed class SessionPVSData
     {
         /// <summary>
-        /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="TickBuffer"/> ticks.
+        /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="DirtyBufferSize"/> ticks.
         /// </summary>
-        public readonly OverflowDictionary<GameTick, Dictionary<EntityUid, PVSEntityVisiblity>> SentEntities = new(TickBuffer);
+        public readonly OverflowDictionary<GameTick, Dictionary<EntityUid, PVSEntityVisiblity>> SentEntities = new(DirtyBufferSize);
 
         /// <summary>
         ///     The most recently acked entities
@@ -1293,7 +1293,7 @@ internal sealed partial class PVSSystem : EntitySystem
         public readonly Dictionary<EntityUid, GameTick> LastSeenAt = new();
 
         /// <summary>
-        ///     <see cref="_sentData"/> overflow in case a player's last ack is more than <see cref="TickBuffer"/> ticks behind the current tick.
+        ///     <see cref="_sentData"/> overflow in case a player's last ack is more than <see cref="DirtyBufferSize"/> ticks behind the current tick.
         /// </summary>
         public (GameTick Tick, Dictionary<EntityUid, PVSEntityVisiblity> SentEnts)? Overflow;
 

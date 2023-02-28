@@ -1034,37 +1034,27 @@ internal sealed partial class PVSSystem : EntitySystem
     public (List<EntityState>?, List<EntityUid>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
     {
         List<EntityState>? stateEntities;
-        var seenEnts = new HashSet<EntityUid>();
-        var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
-        List<(HashSet<EntityUid>, HashSet<EntityUid>)>? tickData = null;
+        var toSend = _uidSetPool.Get();
+        DebugTools.Assert(toSend.Count == 0);
+        bool enumerateAll = false;
 
-        bool sendAll = player == null
-            ? fromTick == GameTick.Zero
-            : !SeenAllEnts.Contains(player);
-
-        if (sendAll)
+        if (player == null)
         {
-            // Give them E V E R Y T H I N G
+            enumerateAll = fromTick == GameTick.Zero;
+        }
+        else if (!SeenAllEnts.Contains(player))
+        {
+            enumerateAll = true;
             fromTick = GameTick.Zero;
         }
-        else
-        {
-            tickData = new();
-            for (var i = fromTick.Value + 1; i <= toTick.Value; i++)
-            {
-                var tick = new GameTick(i);
-                if (!TryGetTick(tick, out var add, out var dirty))
-                {
-                    // Fall back to dumping every entity on them.
-                    tickData = null;
-                    break;
-                }
 
-                tickData.Add((add, dirty));
-            }
+        if (_gameTiming.CurTick.Value - fromTick.Value > TickBuffer)
+        {
+            // Fall back to enumerating over all entities.
+            enumerateAll = true;
         }
 
-        if (tickData == null)
+        if (enumerateAll)
         {
             stateEntities = new List<EntityState>(EntityManager.EntityCount);
             var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
@@ -1079,13 +1069,18 @@ internal sealed partial class PVSSystem : EntitySystem
         else
         {
             stateEntities = new();
-            // Just get the relevant entities that have been dirtied
-            // This should be extremely fast.
-            foreach (var (add, dirty) in tickData)
+            var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+            for (var i = fromTick.Value + 1; i <= toTick.Value; i++)
             {
+                if (!TryGetTick(new GameTick(i), out var add, out var dirty))
+                {
+                    // This should be unreachable if `enumerateAll` is false.
+                    throw new Exception($"Failed to get tick dirty data. tick: {i}, from: {fromTick}, to {toTick}, buffer: {TickBuffer}");
+                }
+
                 foreach (var uid in add)
                 {
-                    if (!seenEnts.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
+                    if (!toSend.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
@@ -1097,7 +1092,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 foreach (var uid in dirty)
                 {
                     DebugTools.Assert(!add.Contains(uid));
-                    if (!seenEnts.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
+                    if (!toSend.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
@@ -1108,6 +1103,7 @@ internal sealed partial class PVSSystem : EntitySystem
             }
         }
 
+        _uidSetPool.Return(toSend);
         List<EntityUid>? deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         if (deletions.Count == 0)

@@ -62,13 +62,6 @@ namespace Robust.Server.GameStates
             }
 
             var index = tick.Value % TickBuffer;
-            if (index > _dirtyEntities.Length - 1)
-            {
-                addEntities = null;
-                dirtyEntities = null;
-                return false;
-            }
-
             addEntities = _addEntities[index];
             dirtyEntities = _dirtyEntities[index];
             return true;

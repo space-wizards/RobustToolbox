@@ -237,7 +237,7 @@ namespace Robust.Shared.GameObjects
 
             // Fast path, we're not on a grid.
             if (xform.GridUid == null)
-                return (Vector2i) xform.WorldPosition;
+                return GetWorldPosition(xform).Floored();
 
             // We're on a grid, need to convert the coordinates to grid tiles.
             return _mapManager.GetGrid(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);

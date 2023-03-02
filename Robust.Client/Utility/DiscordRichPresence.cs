@@ -1,8 +1,9 @@
-﻿using DiscordRPC;
+using DiscordRPC;
 using DiscordRPC.Logging;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using LogLevel = DiscordRPC.Logging.LogLevel;
 
@@ -10,17 +11,7 @@ namespace Robust.Client.Utility
 {
     internal sealed class DiscordRichPresence : IDiscordRichPresence
     {
-        private static readonly RichPresence _defaultPresence = new()
-        {
-            Details = "In Main Menu",
-            State = "In Main Menu",
-            Assets = new Assets
-            {
-                LargeImageKey = "devstation",
-                LargeImageText = "I think coolsville SUCKS",
-                SmallImageKey = "logo"
-            }
-        };
+        private static RichPresence _defaultPresence = new() {};
 
         private RichPresence? _activePresence;
 
@@ -28,11 +19,21 @@ namespace Robust.Client.Utility
 
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly ILocalizationManager _loc = default!;
 
         private bool _initialized;
 
         public void Initialize()
         {
+            _defaultPresence = new()
+            {
+                State = _loc.GetString("discord-rpc-in-main-menu"),
+                Assets = new Assets
+                {
+                    LargeImageKey = "logo",
+                    LargeImageText = "I think coolsville SUCKS"
+                }
+            };
             _configurationManager.OnValueChanged(CVars.DiscordEnabled, newValue =>
             {
                 if (!_initialized)
@@ -52,7 +53,7 @@ namespace Robust.Client.Utility
                     _stop();
                 }
             });
-            
+
             if (_configurationManager.GetCVar(CVars.DiscordEnabled))
             {
                 _start();
@@ -92,16 +93,16 @@ namespace Robust.Client.Utility
             _client = null;
         }
 
-        public void Update(string serverName, string username, string maxUser)
+        public void Update(string serverName, string username, string maxUsers, string users)
         {
             _activePresence = new RichPresence
             {
-                Details = $"On Server: {serverName}",
-                State = $"Max players: {maxUser}",
+                Details = _loc.GetString("discord-rpc-on-server", ("servername", serverName)),
+                State = _loc.GetString("discord-rpc-players", ("players", users), ("maxplayers", maxUsers)),
                 Assets = new Assets
                 {
                     LargeImageKey = "devstation",
-                    LargeImageText = $"Character: {username}",
+                    LargeImageText = _loc.GetString("discord-rpc-character", ("username", username)),
                     SmallImageKey = "logo"
                 }
             };

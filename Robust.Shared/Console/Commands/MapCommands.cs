@@ -133,6 +133,9 @@ internal sealed class ListMapsCommand : LocalizedCommands
 
     public override string Command => "lsmap";
 
+    // PVS prevents the player from knowing about all maps.
+    public override bool RequireServerOrSingleplayer => true;
+
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var msg = new StringBuilder();
@@ -156,6 +159,10 @@ internal sealed class ListGridsCommand : LocalizedCommands
     [Dependency] private readonly IMapManager _map = default!;
 
     public override string Command => "lsgrid";
+
+    // PVS prevents the player from knowing about all maps.
+    public override bool RequireServerOrSingleplayer => true;
+
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var msg = new StringBuilder();

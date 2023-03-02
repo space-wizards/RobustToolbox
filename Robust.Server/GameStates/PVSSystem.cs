@@ -16,7 +16,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -35,7 +34,7 @@ internal sealed partial class PVSSystem : EntitySystem
     public const float ChunkSize = 8;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
-    public const int TickBuffer = 20;
+    public const int DirtyBufferSize = 20;
     // Note: If a client has ping higher than TickBuffer / TickRate, then the server will treat every entity as if it
     // had entered PVS for the first time. Note that due to the PVS budget, this buffer is easily overwhelmed.
 
@@ -1035,78 +1034,76 @@ internal sealed partial class PVSSystem : EntitySystem
     public (List<EntityState>?, List<EntityUid>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
     {
         List<EntityState>? stateEntities;
-        var seenEnts = new HashSet<EntityUid>();
-        var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
-        List<(HashSet<EntityUid>, HashSet<EntityUid>)>? tickData = null;
+        var toSend = _uidSetPool.Get();
+        DebugTools.Assert(toSend.Count == 0);
+        bool enumerateAll = false;
 
-        bool sendAll = player == null
-            ? fromTick == GameTick.Zero
-            : !SeenAllEnts.Contains(player);
-
-        if (sendAll)
+        if (player == null)
         {
-            // Give them E V E R Y T H I N G
+            enumerateAll = fromTick == GameTick.Zero;
+        }
+        else if (!SeenAllEnts.Contains(player))
+        {
+            enumerateAll = true;
             fromTick = GameTick.Zero;
         }
-        else
-        {
-            tickData = new();
-            for (var i = fromTick.Value; i <= toTick.Value; i++)
-            {
-                var tick = new GameTick(i);
-                if (!TryGetTick(tick, out var add, out var dirty))
-                {
-                    // Fall back to dumping every entity on them.
-                    tickData = null;
-                    break;
-                }
 
-                tickData.Add((add, dirty));
-            }
+        if (_gameTiming.CurTick.Value - fromTick.Value > DirtyBufferSize)
+        {
+            // Fall back to enumerating over all entities.
+            enumerateAll = true;
         }
 
-        if (tickData == null)
+        if (enumerateAll)
         {
             stateEntities = new List<EntityState>(EntityManager.EntityCount);
-            var query = EntityManager.EntityQueryEnumerator<MetaDataComponent>();
+            var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
             while (query.MoveNext(out var uid, out var md))
             {
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
+                DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
                 if (md.EntityLastModifiedTick > fromTick)
                     stateEntities.Add(GetEntityState(player, uid, fromTick, md));
-
             }
         }
         else
         {
             stateEntities = new();
-            // Just get the relevant entities that have been dirtied
-            // This should be extremely fast.
-            foreach (var (add, dirty) in tickData)
+            var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+            for (var i = fromTick.Value + 1; i <= toTick.Value; i++)
             {
+                if (!TryGetDirtyEntities(new GameTick(i), out var add, out var dirty))
+                {
+                    // This should be unreachable if `enumerateAll` is false.
+                    throw new Exception($"Failed to get tick dirty data. tick: {i}, from: {fromTick}, to {toTick}, buffer: {DirtyBufferSize}");
+                }
+
                 foreach (var uid in add)
                 {
-                    if (!seenEnts.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
+                    if (!toSend.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    if (md.EntityLastModifiedTick > fromTick)
-                        stateEntities.Add(GetEntityState(player, uid, fromTick, md));
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    stateEntities.Add(GetEntityState(player, uid, fromTick, md));
                 }
 
                 foreach (var uid in dirty)
                 {
                     DebugTools.Assert(!add.Contains(uid));
-                    if (!seenEnts.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
+                    if (!toSend.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    if (md.EntityLastModifiedTick > fromTick)
-                        stateEntities.Add(GetEntityState(player, uid, fromTick, md));
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    stateEntities.Add(GetEntityState(player, uid, fromTick, md));
                 }
             }
         }
 
+        _uidSetPool.Return(toSend);
         List<EntityUid>? deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         if (deletions.Count == 0)
@@ -1280,9 +1277,9 @@ internal sealed partial class PVSSystem : EntitySystem
     private sealed class SessionPVSData
     {
         /// <summary>
-        /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="TickBuffer"/> ticks.
+        /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="DirtyBufferSize"/> ticks.
         /// </summary>
-        public readonly OverflowDictionary<GameTick, Dictionary<EntityUid, PVSEntityVisiblity>> SentEntities = new(TickBuffer);
+        public readonly OverflowDictionary<GameTick, Dictionary<EntityUid, PVSEntityVisiblity>> SentEntities = new(DirtyBufferSize);
 
         /// <summary>
         ///     The most recently acked entities
@@ -1296,7 +1293,7 @@ internal sealed partial class PVSSystem : EntitySystem
         public readonly Dictionary<EntityUid, GameTick> LastSeenAt = new();
 
         /// <summary>
-        ///     <see cref="_sentData"/> overflow in case a player's last ack is more than <see cref="TickBuffer"/> ticks behind the current tick.
+        ///     <see cref="_sentData"/> overflow in case a player's last ack is more than <see cref="DirtyBufferSize"/> ticks behind the current tick.
         /// </summary>
         public (GameTick Tick, Dictionary<EntityUid, PVSEntityVisiblity> SentEnts)? Overflow;
 

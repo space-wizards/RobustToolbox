@@ -193,6 +193,8 @@ namespace Robust.Client.GameStates
                     {
                         var old = compData[change.NetID];
 
+                        DebugTools.Assert(old is IComponentDeltaState oldDelta && oldDelta.FullState, "last state is not a full state");
+
                         if (cloneDelta)
                         {
                             compState = delta.CreateNewFullState(old);
@@ -202,7 +204,7 @@ namespace Robust.Client.GameStates
                             delta.ApplyToFullState(old);
                             compState = old;
                         }
-                        DebugTools.Assert(compState is IComponentDeltaState newState && newState.FullState);
+                        DebugTools.Assert(compState is IComponentDeltaState newState && newState.FullState, "newly constructed state is not a full state");
                     }
 
                     compData[change.NetID] = compState;

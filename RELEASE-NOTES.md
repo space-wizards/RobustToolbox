@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `IntegrationOptions` now allows changing the `ILogHandler` used by the integration test via `OverrideLogHandler`.
 
 ### Bugfixes
 
-*None yet*
+* Default integration test log output should more reliably capture `TestContext.Out` now.
 
 ### Other
 

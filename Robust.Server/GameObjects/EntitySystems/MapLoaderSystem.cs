@@ -253,10 +253,10 @@ public sealed class MapLoaderSystem : EntitySystem
         return true;
     }
 
-    private bool Deserialize(MapData data)
+    private bool Deserialize(MapData data, bool strict = false)
     {
         // Verify that prototypes for all the entities exist
-        if (!VerifyEntitiesExist(data))
+        if (strict && !VerifyEntitiesExist(data))
             return false;
 
         // First we load map meta data like version.
@@ -390,15 +390,21 @@ public sealed class MapLoaderSystem : EntitySystem
                 uid = uidNode.AsInt();
             }
 
-            var entity = _serverEntityManager.AllocEntity(type);
-            data.Entities.Add(entity);
-            data.UidEntityMap.Add(uid, entity);
-            data.EntitiesToDeserialize.Add(entity, entityDef);
+            try {
+                var entity = _serverEntityManager.AllocEntity(type);
+                data.Entities.Add(entity);
+                data.UidEntityMap.Add(uid, entity);
+                data.EntitiesToDeserialize.Add(entity, entityDef);
 
-            if (data.Options.StoreMapUids)
+                if (data.Options.StoreMapUids)
+                {
+                    var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
+                    comp.Uid = uid;
+                }
+            }
+            catch (UnknownPrototypeException e)
             {
-                var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
-                comp.Uid = uid;
+                Logger.ErrorS("loader", "Ignoring unknown prototype " + type.ToString());
             }
         }
 

@@ -74,7 +74,17 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
                 var variant = reader.ReadByte();
 
                 var defName = tileMap[id];
-                id = tileDefinitionManager[defName].TileId;
+                try
+                {
+                    // ITileDefinitionManager doesn't have a public Contains() method, so
+                    // we have to do it this way.
+                    id = tileDefinitionManager[defName].TileId;
+                }
+                catch (KeyNotFoundException e)
+                {
+                    string ReplacementTile = "Plating";
+                    id = tileDefinitionManager[ReplacementTile].TileId;
+                }
 
                 var tile = new Tile(id, flags, variant);
                 chunk.SetTile(x, y, tile);

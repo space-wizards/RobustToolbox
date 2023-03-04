@@ -63,6 +63,8 @@ namespace Robust.Client.GameObjects
             if (args.Current is not ContainerManagerComponentState cast)
                 return;
 
+            var query = EntityManager.GetEntityQuery<TransformComponent>();
+
             // Delete now-gone containers.
             var toDelete = new ValueList<string>();
             foreach (var (id, container) in component.Containers)
@@ -70,7 +72,11 @@ namespace Robust.Client.GameObjects
                 if (cast.Containers.ContainsKey(id))
                     continue;
 
-                EmptyContainer(container, true, null, false, EntityManager);
+                foreach (var entity in container.ContainedEntities.ToArray())
+                {
+                    container.Remove(entity, EntityManager, query.GetComponent(entity), force: true, reparent: false);
+                }
+
                 container.Shutdown(EntityManager, _netMan);
                 toDelete.Add(id);
             }

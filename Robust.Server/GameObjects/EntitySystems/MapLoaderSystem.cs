@@ -404,7 +404,8 @@ public sealed class MapLoaderSystem : EntitySystem
             }
             catch (UnknownPrototypeException e)
             {
-                Logger.ErrorS("loader", "Ignoring unknown prototype " + type.ToString());
+                if (type != null)
+                    Logger.ErrorS("loader", "Ignoring unknown prototype " + type.ToString());
             }
         }
 

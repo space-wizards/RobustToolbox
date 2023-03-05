@@ -54,6 +54,23 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.90.0.0
+
+### Breaking changes
+
+* Add tile edge rendering support.
+
+### New features
+
+* Add .AsUint() for ValueDataNode.
+
+### Bugfixes
+
+* Fix AnchorEntity replication when the coordinate doesn't change
+* Fix some PVS bugs.
+* Fix rounding in GetGridOrMapTilePosition.
+
+
 ## 0.89.1.0
 
 ### New features

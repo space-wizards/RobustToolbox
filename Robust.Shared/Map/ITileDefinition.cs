@@ -1,4 +1,6 @@
-﻿using Robust.Shared.Utility;
+﻿using System.Collections.Generic;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
@@ -26,6 +28,11 @@ namespace Robust.Shared.Map
         ///     The path of the sprite to draw.
         /// </summary>
         ResourcePath? Sprite { get; }
+
+        /// <summary>
+        /// Possible sprites to use if we're neighboring another tile.
+        /// </summary>
+        Dictionary<Direction, ResourcePath> EdgeSprites { get; }
 
         /// <summary>
         ///     Physics objects that are interacting on this tile are slowed down by this float.

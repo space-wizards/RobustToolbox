@@ -19,32 +19,26 @@ public sealed class DebugTools_Test
         // The JIT is allowed to re-order allocations since it's not really a side effect it cares about.
         // I had the boxing allocation at the bottom be re-ordered to be before the GetAllocatedBytesForCurrentThread().
 
-        NoInline();
+        var delta = AssertAaaah(check, val);
 
+        Assert.That(delta, Is.Zero);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static long AssertAaaah(bool check, int val)
+    {
         var allocA = GC.GetAllocatedBytesForCurrentThread();
-
-        NoInline();
 
         AssertWrap(check, val);
 
-        NoInline();
-
         var allocB = GC.GetAllocatedBytesForCurrentThread();
 
-        NoInline();
-
-        Assert.That(allocB, Is.EqualTo(allocA));
+        return allocB - allocA;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static void AssertWrap(bool check, int val)
     {
         DebugTools.Assert(check, $"Oops: {val}");
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void NoInline()
-    {
-
     }
 }

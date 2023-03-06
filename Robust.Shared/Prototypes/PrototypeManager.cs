@@ -194,7 +194,7 @@ namespace Robust.Shared.Prototypes
 
         protected void ReloadPrototypes(IEnumerable<ResourcePath> filePaths)
         {
-#if !FULL_RELEASE
+#if TOOLS
             var changed = new Dictionary<Type, HashSet<string>>();
             foreach (var filePath in filePaths)
             {
@@ -207,7 +207,7 @@ namespace Robust.Shared.Prototypes
 
         public void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes)
         {
-#if !FULL_RELEASE
+#if TOOLS
             var prototypeTypeOrder = prototypes.Keys.ToList();
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 

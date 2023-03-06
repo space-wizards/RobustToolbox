@@ -47,12 +47,16 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Added new `DebugOpt` and `Tools` build configurations. These must be added to your solution file and apply to all projects importing `Robust.Properties.targets`.
+  * `DebugOpt` is "`Debug` with optimizations enabled".
+  * `Tools` has development tools (e.g. `launchauth` command) that release builds don't, while still having asserts (`DEBUG`) off and optimizations on.
+* All configurations except `Release` now define `TOOLS`.
+* `Release` is now intended to be "as close to published release as possible" with game configuration. Use `Tools` as build configuration instead for scenarios such as mapping.
+* `Robust.Properties.targets` should now be included at the end of project files. `Robust.Analyzers.targets` and `Robust.DefineConstants.targets` are now included by it automatically.
 
 ### Internal
 
-*None yet*
-
+* General cleanup to MSBuild files.
 
 ## 0.91.0.0
 

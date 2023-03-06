@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `ColorSelectorSliders` now uses SpinBox instead of FloatSpinBox.
 
 ### New features
 

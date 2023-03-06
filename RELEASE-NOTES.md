@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.91.0.0
+
+### Breaking changes
+
 * `ColorSelectorSliders` now uses SpinBox instead of FloatSpinBox.
 
 ### New features
@@ -44,14 +67,6 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Default integration test log output should more reliably capture `TestContext.Out` now.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
 
 
 ## 0.90.0.0

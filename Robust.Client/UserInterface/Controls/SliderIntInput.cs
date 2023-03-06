@@ -82,7 +82,7 @@ namespace Robust.Client.UserInterface.Controls
             Value = (int) slider.Value;
         }
 
-        private void OnSpinBoxChanged(object? sender, ValueChangedEventArgs e)
+        private void OnSpinBoxChanged(ValueChangedEventArgs e)
         {
             Value = e.Value;
         }

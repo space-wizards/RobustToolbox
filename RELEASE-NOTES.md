@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.92.0.0
+
+### New features
+
 * Exposed more properties on `FastNoiseLite`.
 * Added fallback culture for localization.
 

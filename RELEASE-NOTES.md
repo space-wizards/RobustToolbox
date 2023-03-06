@@ -39,11 +39,12 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Exposed more properties on `FastNoiseLite`.
+* Added fallback culture for localization.
 
 ### Bugfixes
 
-*None yet*
+* Fixed noise DD.
 
 ### Other
 

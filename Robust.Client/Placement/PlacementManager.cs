@@ -693,6 +693,12 @@ namespace Robust.Client.Placement
             CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(templateName, MapCoordinates.Nullspace);
         }
 
+        public void PreparePlacementSprite(SpriteComponent sprite)
+        {
+            var sc = SetupPlacementOverlayEntity();
+            sc.CopyFrom(sprite);
+        }
+
         public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot, EntityPrototype? prototype)
         {
             var sc = SetupPlacementOverlayEntity();

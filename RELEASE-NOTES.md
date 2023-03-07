@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Updated Lidgren to v0.2.4.
 
 
 ## 0.92.0.0

@@ -667,12 +667,13 @@ namespace Robust.Client.Placement
 
         private void EnsureNoPlacementOverlayEntity()
         {
-            if (CurrentPlacementOverlayEntity != null)
-            {
-                if (!EntityManager.Deleted(CurrentPlacementOverlayEntity))
-                    EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
-                CurrentPlacementOverlayEntity = null;
-            }
+            if (CurrentPlacementOverlayEntity == null)
+                return;
+
+            if (!EntityManager.Deleted(CurrentPlacementOverlayEntity))
+                EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
+
+            CurrentPlacementOverlayEntity = null;
         }
 
         private SpriteComponent SetupPlacementOverlayEntity()

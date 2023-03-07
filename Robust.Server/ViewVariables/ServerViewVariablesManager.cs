@@ -272,7 +272,7 @@ namespace Robust.Server.ViewVariables
             switch (input)
             {
                 case ViewVariablesBlobMembers.PrototypeReferenceToken token:
-                    if (!_prototypeManager.TryGetVariantType(token.Variant, out var variantType))
+                    if (!_prototypeManager.TryGetKindType(token.Variant, out var variantType))
                         return false;
 
                     if (!_prototypeManager.TryIndex(variantType, token.ID, out var prototype))

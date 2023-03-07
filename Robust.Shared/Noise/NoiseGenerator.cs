@@ -4,6 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Noise
 {
+    [Obsolete("Use FastNoiseLite")]
     [PublicAPI]
     public sealed class NoiseGenerator
     {

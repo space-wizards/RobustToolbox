@@ -22,6 +22,21 @@ namespace Robust.Client.UserInterface.Controls
         public int ScrollSpeedX { get; set; } = 50;
         public int ScrollSpeedY { get; set; } = 50;
 
+        private bool _reserveScrollbarSpace;
+        public bool ReserveScrollbarSpace
+        {
+            get => _reserveScrollbarSpace;
+            set
+            {
+                if (value == _reserveScrollbarSpace)
+                    return;
+
+                _reserveScrollbarSpace = value;
+                _vScrollBar.ReservesSpace = value;
+                _hScrollBar.ReservesSpace = value;
+            }
+        }
+
         public bool ReturnMeasure { get; set; } = false;
 
         public event Action? OnScrolled;
@@ -48,6 +63,8 @@ namespace Robust.Client.UserInterface.Controls
             AddChild(_vScrollBar);
             _hScrollBar.OnValueChanged += ev;
             _vScrollBar.OnValueChanged += ev;
+            _vScrollBar.ReservesSpace = ReserveScrollbarSpace;
+            _hScrollBar.ReservesSpace = ReserveScrollbarSpace;
         }
 
         public bool VScrollEnabled

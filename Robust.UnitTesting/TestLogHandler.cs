@@ -14,12 +14,12 @@ namespace Robust.UnitTesting
         private readonly TextWriter _writer;
         private readonly Stopwatch _sw = Stopwatch.StartNew();
 
-        public TestLogHandler(IConfigurationManager cfg, string? prefix = null)
+        public TestLogHandler(IConfigurationManager cfg, string? prefix = null, TextWriter? testOutput = null)
         {
             cfg.OnValueChanged(RTCVars.FailureLogLevel, value => FailureLevel = value, true);
 
             _prefix = prefix;
-            _writer = TestContext.Out;
+            _writer = testOutput ?? TestContext.Out;
             _writer.WriteLine($"{GetPrefix()}Started {DateTime.Now:o}");
         }
 

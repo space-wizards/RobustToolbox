@@ -43,8 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed `WritableDirProvider.Find()`. This fixes custom MIDI soundfonts on Windows.
-* Fixed server startup crash with string serializer length checks.
+*None yet*
 
 ### Other
 
@@ -53,6 +52,129 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.92.0.0
+
+### New features
+
+* Exposed more properties on `FastNoiseLite`.
+* Added fallback culture for localization.
+
+### Bugfixes
+
+* Fixed noise DD.
+
+### Other
+
+* Added new `DebugOpt` and `Tools` build configurations. These must be added to your solution file and apply to all projects importing `Robust.Properties.targets`.
+  * `DebugOpt` is "`Debug` with optimizations enabled".
+  * `Tools` has development tools (e.g. `launchauth` command) that release builds don't, while still having asserts (`DEBUG`) off and optimizations on.
+* All configurations except `Release` now define `TOOLS`.
+* `Release` is now intended to be "as close to published release as possible" with game configuration. Use `Tools` as build configuration instead for scenarios such as mapping.
+* `Robust.Properties.targets` should now be included at the end of project files. `Robust.Analyzers.targets` and `Robust.DefineConstants.targets` are now included by it automatically.
+
+### Internal
+
+* General cleanup to MSBuild files.
+
+## 0.91.0.0
+
+### Breaking changes
+
+* `ColorSelectorSliders` now uses SpinBox instead of FloatSpinBox.
+
+### New features
+
+* `IntegrationOptions` now allows changing the `ILogHandler` used by the integration test via `OverrideLogHandler`.
+
+### Bugfixes
+
+* Default integration test log output should more reliably capture `TestContext.Out` now.
+
+
+## 0.90.0.0
+
+### Breaking changes
+
+* Add tile edge rendering support.
+
+### New features
+
+* Add .AsUint() for ValueDataNode.
+
+### Bugfixes
+
+* Fix AnchorEntity replication when the coordinate doesn't change
+* Fix some PVS bugs.
+* Fix rounding in GetGridOrMapTilePosition.
+
+
+## 0.89.1.0
+
+### New features
+
+* `web.headless` CVar can now be used to avoid loading CEF with graphical client.
+
+### Bugfixes
+
+* `web.user_agent` CVar can now be overriden by content before WebView is initialized.
+
+### Other
+
+* WebView works again and is properly available from the launcher.
+
+### Internal
+
+* Clean up WebView initialization logic to avoid static `IoCManager`.
+
+
+## 0.89.0.0
+
+### Breaking changes
+
+* Add EntityUid as an arg to SharedTransformSystem and remove more .Owner calls.
+
+### New features
+
+* Add by-ref event analyzer.
+* Add option to hide scrollbars for ScrollContainers.
+* Add an out EntityUid overload to EntityQueryEnumerator<T>.
+
+### Bugfixes
+
+* Fix exception on server shutdown.
+* Fix concurrent update error in byref registrations for serializationmanager.
+* New grids created from placement manager start at 0,0 rather than -1,-1.
+
+### Other
+
+* `dump_netserializer_type_map` command to debug desynchronization issues with NetSerializer's type map.
+
+
+## 0.88.1.0
+
+### New features
+
+* Added a new OnScreenChanged event that gets invoked when `IUserInterfaceManager.ActiveScreen` changes.
+* UI state interfaces such as `IOnStateEntered<TState>` now also get invoked whenever the current state inherits from `TState`.
+
+### Bugfixes
+
+* Fixed `WritableDirProvider.Find()`. This fixes custom MIDI soundfonts on Windows.
+* Fixed server startup crash with string serializer length checks.
+* Fixed `CS8981` errors in `Robust.Benchmarks`.
+* Fixed C# interactive errors when engine started without content-start.
+* Fixed FormattedMessage.IsEmpty() returning the wrong result.
+
+### Other
+
+* Map pausing now gets properly networked
+* SplitContainers controls now have a minimum draggable area, so that they can function without any padding.
+
+### Internal
+
+* Fixed `CS8981` errors in `Robust.Benchmarks`.
 
 
 ## 0.88.0.0

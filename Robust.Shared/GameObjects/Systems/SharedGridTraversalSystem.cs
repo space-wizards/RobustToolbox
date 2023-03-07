@@ -92,7 +92,7 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
             if (grid.Owner != xform.GridUid)
             {
-                _transform.SetParent(xform, grid.Owner);
+                _transform.SetParent(entity, xform, grid.Owner);
                 var ev = new ChangedGridEvent(entity, xform.GridUid, grid.Owner);
                 RaiseLocalEvent(entity, ref ev, true);
             }
@@ -104,7 +104,7 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
             // Attach them to map / they are on an invalid grid
             if (oldGridId != null)
             {
-                _transform.SetParent(xform, _mapManager.GetMapEntityIdOrThrow(xform.MapID));
+                _transform.SetParent(entity, xform, _mapManager.GetMapEntityIdOrThrow(xform.MapID));
                 var ev = new ChangedGridEvent(entity, oldGridId, null);
                 RaiseLocalEvent(entity, ref ev);
             }

@@ -84,6 +84,7 @@ namespace Robust.Server
             deps.Register<IBqlQueryManager, BqlQueryManager>();
             deps.Register<HubManager, HubManager>();
             deps.Register<IRobustSerializer, ServerRobustSerializer>();
+            deps.Register<IRobustSerializerInternal, ServerRobustSerializer>();
             deps.Register<IConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<INetConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();

@@ -15,7 +15,7 @@ namespace Robust.Shared.Map
             var grid = mapManager.GetGrid(gridId);
             var tile = grid.TileSize;
 
-            return new EntityCoordinates(grid.Owner, (vector.X * tile, vector.Y * tile));
+            return new EntityCoordinates(gridId, (vector.X * tile, vector.Y * tile));
         }
 
         public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)

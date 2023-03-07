@@ -129,6 +129,7 @@ namespace Robust.Client
             deps.Register<IClientConGroupController, ClientConGroupController>();
             deps.Register<IScriptClient, ScriptClient>();
             deps.Register<IRobustSerializer, ClientRobustSerializer>();
+            deps.Register<IRobustSerializerInternal, ClientRobustSerializer>();
             deps.Register<IClientRobustSerializer, ClientRobustSerializer>();
             deps.Register<IConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManager, ClientNetConfigurationManager>();

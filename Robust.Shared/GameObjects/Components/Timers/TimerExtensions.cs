@@ -6,9 +6,9 @@ using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Shared.GameObjects
 {
+    [Obsolete("Use a system update loop instead")]
     public static class TimerExtensions
     {
-        [Obsolete("Use a system update loop instead")]
         private static TimerComponent EnsureTimerComponent(this EntityUid entity)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();

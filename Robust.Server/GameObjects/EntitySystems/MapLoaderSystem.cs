@@ -553,7 +553,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                         if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
                         {
-                            _transform.SetParent(xform, newRootUid);
+                            _transform.SetParent(ent, xform, newRootUid);
                         }
                     }
 
@@ -601,7 +601,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 if (!xform.ParentUid.IsValid())
                 {
-                    _transform.SetParent(xform, mapNode);
+                    _transform.SetParent(ent, xform, mapNode);
                 }
             }
         }

@@ -51,6 +51,17 @@ END TEMPLATE-->
 
 ### Internal
 
+*None yet*
+
+
+## 0.92.1.0
+
+### New features
+
+* Add option to SplitContainer for which split expands on parent resize
+
+### Internal
+
 * Updated Lidgren to v0.2.4.
 
 

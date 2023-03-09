@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
@@ -368,11 +369,6 @@ namespace Robust.Shared.Map.Components
                 }
             }
         }
-                    {
-                        yield return tile;
-                    }
-                }
-            }
 
         private bool TryGetTile(Vector2i indices, bool ignoreEmpty, [NotNullWhen(true)] out TileRef? tileRef, Predicate<TileRef>? predicate = null)
         {

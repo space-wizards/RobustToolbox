@@ -63,7 +63,7 @@ namespace Robust.Client.GameObjects
             if (args.Current is not ContainerManagerComponentState cast)
                 return;
 
-            var query = EntityManager.GetEntityQuery<TransformComponent>();
+            var query = GetEntityQuery<TransformComponent>();
 
             // Delete now-gone containers.
             var toDelete = new ValueList<string>();

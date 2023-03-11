@@ -305,7 +305,7 @@ namespace Robust.Client.GameObjects
         void ISerializationHooks.AfterDeserialization()
         {
             // Please somebody burn this to the ground. There is so much spaghetti.
-            
+
             IoCManager.InjectDependencies(this);
 
             {
@@ -1907,6 +1907,7 @@ namespace Robust.Client.GameObjects
             /// </summary>
             internal void UpdateActualState()
             {
+                _parent.QueueUpdateIsInert();
                 if (!State.IsValid)
                 {
                     _actualState = null;

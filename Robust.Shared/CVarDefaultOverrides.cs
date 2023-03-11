@@ -12,34 +12,28 @@ internal static class CVarDefaultOverrides
     {
         OverrideShared(cfg);
 
-#if FULL_RELEASE
-        return;
-#endif
-
+#if TOOLS
         // Profiling is currently only useful on the client, so only enable it there.
         cfg.OverrideDefault(CVars.ProfEnabled, true);
+#endif
     }
 
     public static void OverrideServer(IConfigurationManager cfg)
     {
         OverrideShared(cfg);
 
-#if FULL_RELEASE
-        return;
-#endif
-
+#if TOOLS
         // Set auth to optional in case you're doing any funny development shenanigans.
         cfg.OverrideDefault(CVars.AuthMode, (int) AuthMode.Optional);
+#endif
     }
 
     private static void OverrideShared(IConfigurationManager cfg)
     {
-#if FULL_RELEASE
-        return;
-#endif
-
+#if TOOLS
         // Increase default profiler memory use on local builds to make it more useful.
         cfg.OverrideDefault(CVars.ProfBufferSize, 65536);
         cfg.OverrideDefault(CVars.ProfIndexSize, 1024);
+#endif
     }
 }

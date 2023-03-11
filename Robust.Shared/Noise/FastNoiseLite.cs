@@ -159,9 +159,14 @@ public sealed class FastNoiseLite
     /// <summary>
     /// Create new FastNoise object with optional seed
     /// </summary>
-    public FastNoiseLite(int seed = 1337)
+    public FastNoiseLite(int seed)
     {
         SetSeed(seed);
+    }
+
+    public FastNoiseLite()
+    {
+        SetSeed(1337);
     }
 
     public int GetSeed() => mSeed;
@@ -184,6 +189,8 @@ public sealed class FastNoiseLite
     /// </remarks>
     public void SetFrequency(float frequency) { mFrequency = frequency; }
 
+    public NoiseType GetNoiseType() => mNoiseType;
+
     /// <summary>
     /// Sets noise algorithm used for GetNoise(...)
     /// </summary>
@@ -195,6 +202,8 @@ public sealed class FastNoiseLite
         mNoiseType = noiseType;
         UpdateTransformType3D();
     }
+
+    public RotationType3D GetRotationType3D() => mRotationType3D;
 
     /// <summary>
     /// Sets domain rotation type for 3D Noise and 3D DomainWarp.
@@ -219,6 +228,8 @@ public sealed class FastNoiseLite
     /// </remarks>
     public void SetFractalType(FractalType fractalType) { mFractalType = fractalType; }
 
+    public FractalType GetFractalType() => mFractalType;
+
     /// <summary>
     /// Sets octave count for all fractal noise types
     /// </summary>
@@ -231,6 +242,8 @@ public sealed class FastNoiseLite
         CalculateFractalBounding();
     }
 
+    public int GetFractalOctaves() => mOctaves;
+
     /// <summary>
     /// Sets octave lacunarity for all fractal noise types
     /// </summary>
@@ -238,6 +251,8 @@ public sealed class FastNoiseLite
     /// Default: 2.0
     /// </remarks>
     public void SetFractalLacunarity(float lacunarity) { mLacunarity = lacunarity; }
+
+    public float GetFractalLacunarity() => mLacunarity;
 
     /// <summary>
     /// Sets octave gain for all fractal noise types
@@ -277,6 +292,8 @@ public sealed class FastNoiseLite
     /// </remarks>
     public void SetCellularDistanceFunction(CellularDistanceFunction cellularDistanceFunction) { mCellularDistanceFunction = cellularDistanceFunction; }
 
+    public CellularDistanceFunction GetCellularDistanceFunction() => mCellularDistanceFunction;
+
     /// <summary>
     /// Sets return type from cellular noise calculations
     /// </summary>
@@ -284,6 +301,8 @@ public sealed class FastNoiseLite
     /// Default: EuclideanSq
     /// </remarks>
     public void SetCellularReturnType(CellularReturnType cellularReturnType) { mCellularReturnType = cellularReturnType; }
+
+    public CellularReturnType GetCellularReturnType() => mCellularReturnType;
 
     /// <summary>
     /// Sets the maximum distance a cellular point can move from it's grid position
@@ -294,6 +313,7 @@ public sealed class FastNoiseLite
     /// </remarks>
     public void SetCellularJitter(float cellularJitter) { mCellularJitterModifier = cellularJitter; }
 
+    public float GetCellularJitter() => mCellularJitterModifier;
 
     /// <summary>
     /// Sets the warp algorithm when using DomainWarp(...)

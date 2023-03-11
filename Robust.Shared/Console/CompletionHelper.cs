@@ -2,7 +2,10 @@
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
@@ -99,5 +102,12 @@ public static class CompletionHelper
 
         var playerOptions = players.Sessions.Select(p => new CompletionOption(p.Name));
         return sorted ? playerOptions.OrderBy(o => o.Value) : playerOptions;
+    }
+
+    public static IEnumerable<CompletionOption> MapIds(IEntityManager? entManager = null)
+    {
+        IoCManager.Resolve(ref entManager);
+
+        return entManager.EntityQuery<MapComponent>(true).Select(o => new CompletionOption(o.WorldMap.ToString()));
     }
 }

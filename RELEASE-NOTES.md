@@ -54,6 +54,94 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.92.2.1
+
+### Bugfixes
+
+* Revert tile bound shrinkage as it was causing erroneous test failures on content.
+
+
+## 0.92.2.0
+
+### New features
+
+* Added Box2iEdgeEnumerator for iterating its bounds.
+* Added a CompletionResult helper for MapIds
+* Added some helper methods for System.Random (useful for seeded RNG)
+
+### Bugfixes
+
+* Shrink tile bounds by 0.05. In some cases the polygon skin radius was causing overlap on other tiles and leading to erroneous lookup r
+* Use preset matrixes for certain Matrix3 angles to avoid imprecision issues with transformations.
+
+
+## 0.92.1.0
+
+### New features
+
+* Add option to SplitContainer for which split expands on parent resize
+
+### Internal
+
+* Updated Lidgren to v0.2.4.
+
+
+## 0.92.0.0
+
+### New features
+
+* Exposed more properties on `FastNoiseLite`.
+* Added fallback culture for localization.
+
+### Bugfixes
+
+* Fixed noise DD.
+
+### Other
+
+* Added new `DebugOpt` and `Tools` build configurations. These must be added to your solution file and apply to all projects importing `Robust.Properties.targets`.
+  * `DebugOpt` is "`Debug` with optimizations enabled".
+  * `Tools` has development tools (e.g. `launchauth` command) that release builds don't, while still having asserts (`DEBUG`) off and optimizations on.
+* All configurations except `Release` now define `TOOLS`.
+* `Release` is now intended to be "as close to published release as possible" with game configuration. Use `Tools` as build configuration instead for scenarios such as mapping.
+* `Robust.Properties.targets` should now be included at the end of project files. `Robust.Analyzers.targets` and `Robust.DefineConstants.targets` are now included by it automatically.
+
+### Internal
+
+* General cleanup to MSBuild files.
+
+## 0.91.0.0
+
+### Breaking changes
+
+* `ColorSelectorSliders` now uses SpinBox instead of FloatSpinBox.
+
+### New features
+
+* `IntegrationOptions` now allows changing the `ILogHandler` used by the integration test via `OverrideLogHandler`.
+
+### Bugfixes
+
+* Default integration test log output should more reliably capture `TestContext.Out` now.
+
+
+## 0.90.0.0
+
+### Breaking changes
+
+* Add tile edge rendering support.
+
+### New features
+
+* Add .AsUint() for ValueDataNode.
+
+### Bugfixes
+
+* Fix AnchorEntity replication when the coordinate doesn't change
+* Fix some PVS bugs.
+* Fix rounding in GetGridOrMapTilePosition.
+
+
 ## 0.89.1.0
 
 ### New features

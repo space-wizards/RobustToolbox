@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 using Robust.Shared.Utility;
@@ -50,6 +51,24 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        ///     Gets the length (magnitude) of the vector.
+        /// </summary>
+        public readonly float Length
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MathF.Sqrt(LengthSquared);
+        }
+
+        /// <summary>
+        ///     Gets the squared length of the vector.
+        /// </summary>
+        public readonly float LengthSquared
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => X * X + Y * Y;
+        }
+
+        /// <summary>
         /// Compare a vector to another vector and check if they are equal.
         /// </summary>
         /// <param name="other">Other vector to check.</param>
@@ -64,7 +83,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="obj">Other object to check.</param>
         /// <returns>True if Object and vector are equal.</returns>
-        public override readonly bool Equals(object? obj)
+        public readonly override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Vector2i vector && Equals(vector);
@@ -74,7 +93,7 @@ namespace Robust.Shared.Maths
         /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A unique hash code for this instance.</returns>
-        public override readonly int GetHashCode()
+        public readonly override int GetHashCode()
         {
             unchecked
             {

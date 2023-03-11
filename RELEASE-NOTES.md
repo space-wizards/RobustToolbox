@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.92.2.1
+
+### Bugfixes
+
+* Revert tile bound shrinkage as it was causing erroneous test failures on content.
+
+
 ## 0.92.2.0
 
 ### New features

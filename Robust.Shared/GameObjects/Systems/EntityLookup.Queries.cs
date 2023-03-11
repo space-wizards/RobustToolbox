@@ -882,9 +882,7 @@ public sealed partial class EntityLookupSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize)
     {
-        var gridPos = (Vector2)gridIndices;
-        // To avoid marginal overlap from other tiles
-        return new Box2(gridPos * tileSize + 0.05f, (gridPos + 1) * tileSize - 0.05f);
+        return new Box2(gridIndices * tileSize, (gridIndices + 1) * tileSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

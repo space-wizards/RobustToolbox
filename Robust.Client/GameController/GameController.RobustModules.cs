@@ -37,9 +37,9 @@ namespace Robust.Client
 
             var managerType = attribute.ImplementationType;
             _webViewHook = (IWebViewManagerHook)Activator.CreateInstance(managerType)!;
-            _webViewHook.Initialize(mode);
+            _webViewHook.PreInitialize(_dependencyCollection, mode);
 
-            Logger.Debug("Done initializing Robust.Client.WebView");
+            Logger.Debug("Done pre-initializing Robust.Client.WebView");
         }
 
         /// <summary>

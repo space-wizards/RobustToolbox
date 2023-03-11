@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -47,6 +48,7 @@ namespace Robust.Shared.Players
         /// <summary>
         ///     Porting convenience for admin commands which use such logic as "at the player's feet", etc: the transform component of the attached entity.
         /// </summary>
+        [Obsolete("Query manually from the EntityUid")]
         TransformComponent? AttachedEntityTransform => IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(AttachedEntity);
     }
 }

@@ -16,7 +16,6 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
-        [Dependency] private readonly MetaDataSystem _metaSys = default!;
 
         // Needed on release no remove.
         // ReSharper disable once NotAccessedField.Local
@@ -237,7 +236,7 @@ namespace Robust.Shared.GameObjects
 
             // Fast path, we're not on a grid.
             if (xform.GridUid == null)
-                return (Vector2i) xform.WorldPosition;
+                return GetWorldPosition(xform).Floored();
 
             // We're on a grid, need to convert the coordinates to grid tiles.
             return _mapManager.GetGrid(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);

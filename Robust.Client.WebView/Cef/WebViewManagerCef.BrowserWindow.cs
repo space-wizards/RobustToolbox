@@ -27,7 +27,7 @@ namespace Robust.Client.WebView.Cef
             var impl = new WebViewWindowImpl(this);
 
             var lifeSpanHandler = new WindowLifeSpanHandler(impl);
-            var reqHandler = new RobustRequestHandler(Logger.GetSawmill("root"));
+            var reqHandler = new RobustRequestHandler(_sawmill);
             var client = new WindowCefClient(lifeSpanHandler, reqHandler);
             var settings = new CefBrowserSettings();
 

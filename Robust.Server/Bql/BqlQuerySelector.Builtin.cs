@@ -165,8 +165,18 @@ namespace Robust.Server.Bql
 
         public override IEnumerable<EntityUid> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return DoSelection(entityManager.EntityQuery<TransformComponent>(true).Select(x => x.Owner), arguments,
+            return DoSelection(
+                Query(entityManager.AllEntityQueryEnumerator<TransformComponent>()),
+                arguments,
                 isInverted, entityManager);
+
+            IEnumerable<EntityUid> Query(AllEntityQueryEnumerator<TransformComponent> enumerator)
+            {
+                while (enumerator.MoveNext(out var entityUid, out _))
+                {
+                    yield return entityUid;
+                }
+            }
         }
     }
 
@@ -311,8 +321,8 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var radius = (float)(double)arguments[0];
-            var entityLookup = EntitySystem.Get<EntityLookupSystem>();
-            var xformQuery = IoCManager.Resolve<IEntityManager>().GetEntityQuery<TransformComponent>();
+            var entityLookup = entityManager.System<EntityLookupSystem>();
+            var xformQuery = entityManager.GetEntityQuery<TransformComponent>();
             var distinct = new HashSet<EntityUid>();
 
             foreach (var uid in input)

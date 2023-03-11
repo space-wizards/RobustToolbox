@@ -54,10 +54,7 @@ namespace Robust.Server.Physics
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
-#if !FULL_RELEASE
-            // It makes mapping painful
-            _cfg.OverrideDefault(CVars.GridSplitting, false);
-#endif
+
             _cfg.OnValueChanged(CVars.GridSplitting, SetSplitAllowed, true);
         }
 

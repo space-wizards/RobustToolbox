@@ -67,12 +67,24 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(uid, ref ev);
     }
 
+    [Obsolete("Use overload that takes an explicit EntityUid for the grid instead.")]
     public bool AnchorEntity(EntityUid uid, TransformComponent xform, MapGridComponent grid, Vector2i tileIndices)
+    {
+        return AnchorEntity(uid, xform, grid.Owner, grid, tileIndices);
+    }
+
+    public bool AnchorEntity(
+        EntityUid uid,
+        TransformComponent xform,
+        EntityUid gridUid,
+        MapGridComponent grid,
+        Vector2i tileIndices)
     {
         if (!grid.AddToSnapGridCell(tileIndices, uid))
             return false;
 
         var wasAnchored = xform._anchored;
+        Dirty(xform);
         xform._anchored = true;
 
         // Mark as static before doing position changes, to avoid the velocity change on parent change.
@@ -84,8 +96,8 @@ public abstract partial class SharedTransformSystem
             RaiseLocalEvent(uid, ref ev, true);
         }
 
-        // Anchor snapping. Note that set coordiantes will dirty the component for us.
-        var pos = new EntityCoordinates(grid.Owner, grid.GridTileToLocal(tileIndices).Position);
+        // Anchor snapping. If there is a coordinate change, it will dirty the component for us.
+        var pos = new EntityCoordinates(gridUid, grid.GridTileToLocal(tileIndices).Position);
         SetCoordinates(uid, xform, pos, unanchor: false);
 
         return true;
@@ -346,7 +358,9 @@ public abstract partial class SharedTransformSystem
 
     public virtual void SetLocalPosition(TransformComponent xform, Vector2 value)
     {
+#pragma warning disable CS0618
         xform.LocalPosition = value;
+#pragma warning restore CS0618
     }
 
     public void SetLocalPositionNoLerp(EntityUid uid, Vector2 value, TransformComponent? xform = null)
@@ -357,7 +371,9 @@ public abstract partial class SharedTransformSystem
 
     public virtual void SetLocalPositionNoLerp(TransformComponent xform, Vector2 value)
     {
+#pragma warning disable CS0618
         xform.LocalPosition = value;
+#pragma warning restore CS0618
     }
 
     #endregion

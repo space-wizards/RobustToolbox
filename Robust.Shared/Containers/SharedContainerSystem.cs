@@ -178,9 +178,6 @@ namespace Robust.Shared.Containers
             EntityQuery<MetaDataComponent>? metas = null,
             EntityQuery<TransformComponent>? xforms = null)
         {
-            DebugTools.Assert(meta == null || meta.Owner == uid);
-            DebugTools.Assert(xform == null || xform.Owner == uid);
-
             if (meta == null)
             {
                 metas ??= EntityManager.GetEntityQuery<MetaDataComponent>();

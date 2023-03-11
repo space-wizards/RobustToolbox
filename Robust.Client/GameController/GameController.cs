@@ -131,6 +131,10 @@ namespace Robust.Client
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
+
+            // Finish initialization of WebView if loaded.
+            _webViewHook?.Initialize();
+
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
             // Start bad file extensions check after content init,

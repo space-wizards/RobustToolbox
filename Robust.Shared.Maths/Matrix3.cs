@@ -467,7 +467,14 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 CreateTransform(in Vector2 position, in Angle angle)
         {
-            return CreateTransform(position.X, position.Y, (float)angle.Theta);
+            // Rounding moment
+            return angle.Theta switch
+            {
+                -Math.PI / 2 => new Matrix3(0f, 1f, position.X, -1f, 0f, position.Y, 0f, 0f, 1f),
+                Math.PI / 2 => new Matrix3(0f, -1f, position.X, 1f, 0f, position.Y, 0f, 0f, 1f),
+                Math.PI => new Matrix3(-1f, 0f, position.X, 0f, -1f, position.Y, 0f, 0f, 1f),
+                _ => CreateTransform(position.X, position.Y, (float) angle.Theta)
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

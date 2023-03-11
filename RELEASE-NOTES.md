@@ -51,6 +51,38 @@ END TEMPLATE-->
 
 ### Internal
 
+*None yet*
+
+
+## 0.92.2.1
+
+### Bugfixes
+
+* Revert tile bound shrinkage as it was causing erroneous test failures on content.
+
+
+## 0.92.2.0
+
+### New features
+
+* Added Box2iEdgeEnumerator for iterating its bounds.
+* Added a CompletionResult helper for MapIds
+* Added some helper methods for System.Random (useful for seeded RNG)
+
+### Bugfixes
+
+* Shrink tile bounds by 0.05. In some cases the polygon skin radius was causing overlap on other tiles and leading to erroneous lookup r
+* Use preset matrixes for certain Matrix3 angles to avoid imprecision issues with transformations.
+
+
+## 0.92.1.0
+
+### New features
+
+* Add option to SplitContainer for which split expands on parent resize
+
+### Internal
+
 * Updated Lidgren to v0.2.4.
 
 

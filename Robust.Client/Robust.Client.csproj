@@ -26,9 +26,9 @@
     <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" Version="1.2.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.0.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.0.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.1.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.1.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.1.0" />
 
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
   </ItemGroup>
@@ -57,6 +57,6 @@
   <Import Project="..\MSBuild\Robust.Properties.targets" />
 
   <Import Project="..\MSBuild\XamlIL.targets" />
-  
+
   <Import Project="..\MSBuild\Robust.Trimming.targets" />
 </Project>

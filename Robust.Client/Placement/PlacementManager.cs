@@ -685,11 +685,7 @@ namespace Robust.Client.Placement
 
         private void PreparePlacement(string templateName)
         {
-            // TODO: Garbage but placementmanager needs taking out back
-            if (EntityManager.EntityExists(CurrentPlacementOverlayEntity))
-            {
-                EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
-            }
+            EnsureNoPlacementOverlayEntity();
 
             var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
             CurrentPrototype = prototype;

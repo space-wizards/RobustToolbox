@@ -550,7 +550,7 @@ internal sealed partial class MidiManager : IMidiManager
             return 0;
         }
 
-        public override int Seek(IntPtr sfHandle, int offset, SeekOrigin origin)
+        public override int Seek(IntPtr sfHandle, long offset, SeekOrigin origin)
         {
             var stream = _openStreams[(int) sfHandle];
 
@@ -559,11 +559,11 @@ internal sealed partial class MidiManager : IMidiManager
             return 0;
         }
 
-        public override int Tell(IntPtr sfHandle)
+        public override long Tell(IntPtr sfHandle)
         {
             var stream = _openStreams[(int) sfHandle];
 
-            return (int) stream.Position;
+            return (long) stream.Position;
         }
 
         public override int Close(IntPtr sfHandle)

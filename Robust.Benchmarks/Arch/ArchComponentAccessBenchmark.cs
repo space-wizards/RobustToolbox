@@ -1,6 +1,5 @@
 ﻿using System;
 using Arch.Core;
-using Arch.Core.Extensions;
 using Arch.Core.Utils;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
@@ -47,16 +46,19 @@ public class ArchComponentAccessBenchmark
             if (entity.Id == 1584)
                 _entity = entity;
 
-            entity.Add(new Struct1());
-            entity.Add(new Struct2());
-            entity.Add(new Struct3());
-            entity.Add(new Struct4());
-            entity.Add(new Struct5());
-            entity.Add(new Struct6());
-            entity.Add(new Struct7());
-            entity.Add(new Struct8());
-            entity.Add(new Struct9());
-            entity.Add(new Struct10());
+            _world.Add(
+                entity,
+                new Struct1(),
+                new Struct2(),
+                new Struct3(),
+                new Struct4(),
+                new Struct5(),
+                new Struct6(),
+                new Struct7(),
+                new Struct8(),
+                new Struct9(),
+                new Struct10()
+            );
         }
 
         _singleQuery = new QueryDescription().WithAll<Struct1>();

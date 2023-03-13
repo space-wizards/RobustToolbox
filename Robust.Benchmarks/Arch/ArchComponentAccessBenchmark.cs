@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Arch.Core;
-using Arch.Core.Utils;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using Robust.Shared.Analyzers;
@@ -24,17 +24,6 @@ public class ArchComponentAccessBenchmark
     public void GlobalSetup()
     {
         var _ = new JobScheduler.JobScheduler("ArchBenchmark");
-
-        ComponentRegistry.Add<Struct1>();
-        ComponentRegistry.Add<Struct2>();
-        ComponentRegistry.Add<Struct3>();
-        ComponentRegistry.Add<Struct4>();
-        ComponentRegistry.Add<Struct5>();
-        ComponentRegistry.Add<Struct6>();
-        ComponentRegistry.Add<Struct7>();
-        ComponentRegistry.Add<Struct8>();
-        ComponentRegistry.Add<Struct9>();
-        ComponentRegistry.Add<Struct10>();
 
         _world = World.Create();
 
@@ -179,6 +168,7 @@ public class ArchComponentAccessBenchmark
     {
         private static readonly Consumer Consumer = new();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Update(in Entity entity)
         {
             Consumer.Consume(entity);

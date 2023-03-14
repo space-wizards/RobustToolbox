@@ -11,6 +11,7 @@ entity:
   uid: int()
   type: str(required=False)
   components: list(comp())
+  missingComponents: list(str(), required=False)
 
 # Example
 # meta:

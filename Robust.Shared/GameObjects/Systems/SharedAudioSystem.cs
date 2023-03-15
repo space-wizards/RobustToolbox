@@ -181,6 +181,17 @@ public abstract class SharedAudioSystem : EntitySystem
     }
 
     /// <summary>
+    /// Play an audio file at the specified EntityCoordinates for every entity in PVS range.
+    /// </summary>
+    /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
+    /// <param name="uid">The EntityCoordinates to attach the audio source to.</param>
+    /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
+    public IPlayingAudioStream? PlayPvs(SoundSpecifier? sound, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    {
+        return sound == null ? null : Play(GetSound(sound), Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager), coordinates, true, audioParams ?? sound.Params);
+    }
+
+    /// <summary>
     /// Play an audio file following an entity for every entity in PVS range.
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>

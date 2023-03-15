@@ -118,6 +118,18 @@ namespace Robust.Shared.Map
         /// <remarks>
         /// This method will never return the map's default grid.
         /// </remarks>
+        /// <param name="mapId">Map to search.</param>
+        /// <param name="worldPos">Location on the map to check for a grid.</param>
+        /// <param name="grid">Grid that was found, if any.</param>
+        /// <returns>Returns true when a grid was found under the location.</returns>
+        bool TryFindGridAt(MapId mapId, Vector2 worldPos, EntityQuery<TransformComponent> query, [NotNullWhen(true)] out MapGridComponent? grid);
+
+        /// <summary>
+        /// Attempts to find the map grid under the map location.
+        /// </summary>
+        /// <remarks>
+        /// This method will never return the map's default grid.
+        /// </remarks>
         /// <param name="mapCoordinates">Location on the map to check for a grid.</param>
         /// <param name="grid">Grid that was found, if any.</param>
         /// <returns>Returns true when a grid was found under the location.</returns>

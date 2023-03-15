@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.93.0.0
+
+### Breaking changes
+
 * Arguments of ContainerSystem's `EmptyContainer()` have changed. It now also returns removed entities.
 
 ### New features
@@ -54,10 +77,6 @@ END TEMPLATE-->
 * `TransformComponentAttachToGridOrMap()` is now obsoleted. use the newly added system method instead.
 * Made RSI preloading more error toletant.
 * Added some new benchmarks for testing archetype ECS.
-
-### Internal
-
-*None yet*
 
 
 ## 0.92.2.1

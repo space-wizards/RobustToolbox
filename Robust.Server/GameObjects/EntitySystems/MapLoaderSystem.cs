@@ -966,7 +966,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                     foreach (var (compType, comp) in prototype.Components)
                     {
-                        cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component));
+                        cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component, alwaysWrite: true, context: _context));
                     }
 
                     cache.GetOrNew(metadataName);
@@ -990,16 +990,28 @@ public sealed class MapLoaderSystem : EntitySystem
                 var compType = component.GetType();
                 var compName = _factory.GetComponentName(compType);
                 _context.CurrentWritingComponent = compName;
-                var compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, context: _context);
-
+                MappingDataNode? compMapping;
                 MappingDataNode? protMapping = null;
                 if (cache != null && cache.TryGetValue(compName, out protMapping))
                 {
+                    // If this has a prototype, we need to use alwaysWrite: true.
+                    // E.g., an anchored prototype might have anchored: true. If we we are saving an un-anchored
+                    // instance of this entity, and if we have alwaysWrite: false, then compMapping would not include
+                    // the anchored data-field (as false is the default for this bool data field), so the entity would
+                    // implicitly be saved as anchored.
+                    compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true,
+                        context: _context);
+
                     // This will NOT recursively call Except() on the values of the mapping. It will only remove
                     // key-value pairs if both the keys and values are equal.
                     compMapping = compMapping.Except(protMapping);
                     if(compMapping == null)
                         continue;
+                }
+                else
+                {
+                    compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: false,
+                        context: _context);
                 }
 
                 // Don't need to write it if nothing was written! Note that if this entity has no associated

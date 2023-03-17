@@ -944,6 +944,9 @@ public sealed class MapLoaderSystem : EntitySystem
         var metadataName = _factory.GetComponentName(typeof(MetaDataComponent));
         var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
 
+        var emptyMetaNode = _serManager.WriteValueAs<MappingDataNode>(typeof(MetaDataComponent), new MetaDataComponent(), alwaysWrite: true, context: _context);
+        var emptyXformNode = _serManager.WriteValueAs<MappingDataNode>(typeof(TransformComponent), new TransformComponent(), alwaysWrite: true, context: _context);
+
         foreach (var (saveId, entityUid) in uidEntityMap.OrderBy( e=> e.Key))
         {
             _context.CurrentWritingEntity = entityUid;
@@ -969,7 +972,8 @@ public sealed class MapLoaderSystem : EntitySystem
                         cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component, alwaysWrite: true, context: _context));
                     }
 
-                    cache.GetOrNew(metadataName);
+                    cache.TryAdd("MetaData", emptyMetaNode);
+                    cache.TryAdd("Transform", emptyXformNode);
                 }
             }
 

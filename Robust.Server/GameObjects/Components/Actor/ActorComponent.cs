@@ -8,6 +8,6 @@ namespace Robust.Server.GameObjects
     public sealed class ActorComponent : Component
     {
         [ViewVariables]
-        public IPlayerSession PlayerSession { get; internal set; } = default!;
+        public IPlayerSession? PlayerSession { get; internal set; } = default;
     }
 }

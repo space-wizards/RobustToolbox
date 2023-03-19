@@ -1018,6 +1018,44 @@ public sealed class MapLoaderSystem : EntitySystem
                         context: _context);
                 }
 
+                void Bandaid_MappingDataNode_RemoveNullsRecursive(MappingDataNode node)
+                {
+                    foreach (var m in node.ToArray())
+                    {
+                        if (m.Value.IsNull || m.Key.IsNull)
+                            node.Remove(m);
+                        if (m.Value is MappingDataNode mv)
+                        {
+                            Bandaid_MappingDataNode_RemoveNullsRecursive(mv);
+                            if (mv.IsEmpty) node.Remove(m);
+                        }
+                        else if (m.Value is SequenceDataNode sv)
+                        {
+                            Bandaid_SequenceDataNode_RemoveNullsRecursive(sv);
+                            if (sv.IsEmpty) node.Remove(m);
+                        }
+                    }
+                }
+                void Bandaid_SequenceDataNode_RemoveNullsRecursive(SequenceDataNode node)
+                {
+                    foreach (var m in node.ToArray())
+                    {
+                        if (m.IsNull)
+                            node.Remove(m);
+                        if (m is MappingDataNode mv)
+                        {
+                            Bandaid_MappingDataNode_RemoveNullsRecursive(mv);
+                            if (mv.IsEmpty) node.Remove(m);
+                        }
+                        else if (m is SequenceDataNode sv)
+                        {
+                            Bandaid_SequenceDataNode_RemoveNullsRecursive(sv);
+                            if (sv.IsEmpty) node.Remove(m);
+                        }
+                    }
+                }
+                Bandaid_MappingDataNode_RemoveNullsRecursive(compMapping);
+
                 // Don't need to write it if nothing was written! Note that if this entity has no associated
                 // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
                 // information that needs to be written.

@@ -252,7 +252,7 @@ namespace Robust.Shared.Reflection
         public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum,
             bool shouldThrow = true)
         {
-            if (!reference.StartsWith("enum."))
+            if (reference == null || !reference.StartsWith("enum."))
             {
                 @enum = default;
                 return false;

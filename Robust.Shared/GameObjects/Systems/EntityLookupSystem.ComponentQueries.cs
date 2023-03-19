@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -201,7 +202,27 @@ public sealed partial class EntityLookupSystem
 
         // TODO: Actual circles
         var worldAABB = new Box2(worldPos - range, worldPos + range);
-        return GetComponentsIntersecting<T>(mapId, worldAABB);
+        var comps = GetComponentsIntersecting<T>(mapId, worldAABB);
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var toRemove = new ValueList<T>();
+
+        foreach (var comp in comps)
+        {
+            var uid = comp.Owner;
+
+            if (xformQuery.TryGetComponent(uid, out var xform) &&
+                (_transform.GetWorldPosition(xform, xformQuery) - worldPos).Length > range)
+            {
+                toRemove.Add(comp);
+            }
+        }
+
+        foreach (var comp in toRemove)
+        {
+            comps.Remove(comp);
+        }
+
+        return comps;
     }
 
     #endregion

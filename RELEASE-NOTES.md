@@ -54,6 +54,31 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.93.0.0
+
+### Breaking changes
+
+* Arguments of ContainerSystem's `EmptyContainer()` have changed. It now also returns removed entities.
+
+### New features
+
+* Added a TerminatingOrDeleted() helper function
+* Added a `hub_advertise_now` command.
+
+### Bugfixes
+
+* Fixed some multi-threading IoC errors in the audio system.
+* The map validator now allows entities to specify missing components.
+* Fixed a potential stack overflow in the colour slider control.
+* Fixed sprites sometimes not updating `IsInert`.
+
+### Other
+
+* `TransformComponentAttachToGridOrMap()` is now obsoleted. use the newly added system method instead.
+* Made RSI preloading more error toletant.
+* Added some new benchmarks for testing archetype ECS.
+
+
 ## 0.92.2.1
 
 ### Bugfixes

@@ -121,13 +121,10 @@ namespace Robust.Server.GameObjects
 
         private void OnActorShutdown(EntityUid entity, ActorComponent component, ComponentShutdown args)
         {
-            if (component.PlayerSession != null)
-            {
-                component.PlayerSession.SetAttachedEntity(null);
+            component.PlayerSession.SetAttachedEntity(null);
 
-                // The player is fully detached now that the component has shut down.
-                RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession), true);
-            }
+            // The player is fully detached now that the component has shut down.
+            RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession), true);
         }
     }
 

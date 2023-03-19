@@ -988,7 +988,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
             foreach (var component in EntityManager.GetComponents(entityUid))
             {
-                if (component is MapSaveIdComponent)
+                if (component is MapSaveIdComponent || component is ActorComponent)
                     continue;
 
                 var compType = component.GetType();

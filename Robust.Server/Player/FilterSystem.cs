@@ -10,7 +10,7 @@ namespace Robust.Server.Player
         {
             foreach (var uid in entities)
             {
-                if (EntityManager.TryGetComponent(uid, out ActorComponent? actor) && actor.PlayerSession != null)
+                if (EntityManager.TryGetComponent(uid, out ActorComponent? actor))
                     filter.AddPlayer(actor.PlayerSession);
             }
 

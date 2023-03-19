@@ -183,7 +183,7 @@ namespace Robust.Server.Placement
             if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
-            var playerConnection = actor.PlayerSession?.ConnectedClient;
+            var playerConnection = actor.PlayerSession.ConnectedClient;
             if (playerConnection == null)
                 return;
 
@@ -204,7 +204,7 @@ namespace Robust.Server.Placement
             if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
-            var playerConnection = actor.PlayerSession?.ConnectedClient;
+            var playerConnection = actor.PlayerSession.ConnectedClient;
             if (playerConnection == null)
                 return;
 
@@ -225,7 +225,7 @@ namespace Robust.Server.Placement
             if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
-            var playerConnection = actor.PlayerSession?.ConnectedClient;
+            var playerConnection = actor.PlayerSession.ConnectedClient;
             if (playerConnection == null)
                 return;
 

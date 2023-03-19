@@ -520,7 +520,7 @@ namespace Robust.Server.Player
 
         public bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session)
         {
-            if (!(_entityManager.TryGetComponent(uid, out ActorComponent? actor) && actor.PlayerSession != null))
+            if (!_entityManager.TryGetComponent(uid, out ActorComponent? actor))
             {
                 session = null;
                 return false;

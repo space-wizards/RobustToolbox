@@ -191,6 +191,13 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawUseShader(clydeShader?.Handle ?? _clyde._defaultShader.Handle);
             }
 
+            public void UseShaders(ShaderInstance[] shaders)
+            {
+
+                var clydeShaders = Array.ConvertAll(shaders, item => ((ClydeShaderInstance)item).Handle);
+                _clyde.DrawUseShaders(clydeShaders);
+            }
+
             public void Viewport(Box2i viewport)
             {
                 _clyde.DrawViewport(viewport);
@@ -255,7 +262,10 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     _renderHandle.UseShader(shader);
                 }
-
+                public override void UseShaders(ShaderInstance[] shaders)
+                {
+                    _renderHandle.UseShaders(shaders);
+                }
                 public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
                     ReadOnlySpan<DrawVertexUV2DColor> vertices)
                 {
@@ -324,6 +334,10 @@ namespace Robust.Client.Graphics.Clyde
                 public override void UseShader(ShaderInstance? shader)
                 {
                     _renderHandle.UseShader(shader);
+                }
+                public override void UseShaders(ShaderInstance[] shaders)
+                {
+                    _renderHandle.UseShaders(shaders);
                 }
 
                 public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true)

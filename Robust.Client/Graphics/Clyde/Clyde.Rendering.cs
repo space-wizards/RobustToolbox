@@ -74,7 +74,7 @@ namespace Robust.Client.Graphics.Clyde
 
         // private LoadedTexture? _batchLoadedTexture;
         // Contains the shader instance that's currently being used by the (queue) stage for new commands.
-        private ClydeHandle _queuedShader;
+        private ClydeHandle[] _queuedShaders = new ClydeHandle[0];
 
         // Current projection & view matrices that are being used ot render.
         // This gets updated to keep track during (queue) and (misc), but not during (submit).
@@ -216,48 +216,49 @@ namespace Robust.Client.Graphics.Clyde
             BindVertexArray(BatchVAO.Handle);
             CheckGlError();
 
-            var (program, loaded) = ActivateShaderInstance(command.ShaderInstance);
-            SetupGlobalUniformsImmediate(program, loadedTexture.IsSrgb);
+            foreach(ClydeHandle SI in command.ShaderInstances){
+                var (program, loaded) = ActivateShaderInstance(SI);
+                SetupGlobalUniformsImmediate(program, loadedTexture.IsSrgb);
 
-            GL.ActiveTexture(TextureUnit.Texture0);
-            CheckGlError();
-            GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
-            CheckGlError();
-
-            if (_lightingReady && loaded.HasLighting)
-            {
-                SetTexture(TextureUnit.Texture1, _currentViewport!.LightRenderTarget.Texture);
-            }
-            else
-            {
-                SetTexture(TextureUnit.Texture1, _stockTextureWhite);
-            }
-
-            program.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            program.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
-
-            // Model matrix becomes identity since it's built into the batch mesh.
-            program.SetUniformMaybe(UniIModelMatrix, command.ModelMatrix);
-            // Reset ModUV to ensure it's identity and doesn't touch anything.
-            program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
-
-            program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
-
-            SetBlendFunc(loaded.BlendMode);
-
-            var primitiveType = MapPrimitiveType(command.PrimitiveType);
-            if (command.Indexed)
-            {
-                GL.DrawElements(primitiveType, command.Count, DrawElementsType.UnsignedShort,
-                    command.StartIndex * sizeof(ushort));
+                GL.ActiveTexture(TextureUnit.Texture0);
                 CheckGlError();
-            }
-            else
-            {
-                GL.DrawArrays(primitiveType, command.StartIndex, command.Count);
+                GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
                 CheckGlError();
-            }
 
+                if (_lightingReady && loaded.HasLighting)
+                {
+                    SetTexture(TextureUnit.Texture1, _currentViewport!.LightRenderTarget.Texture);
+                }
+                else
+                {
+                    SetTexture(TextureUnit.Texture1, _stockTextureWhite);
+                }
+
+                program.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+                program.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
+
+                // Model matrix becomes identity since it's built into the batch mesh.
+                program.SetUniformMaybe(UniIModelMatrix, command.ModelMatrix);
+                // Reset ModUV to ensure it's identity and doesn't touch anything.
+                program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
+
+                program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
+
+                SetBlendFunc(loaded.BlendMode);
+
+                var primitiveType = MapPrimitiveType(command.PrimitiveType);
+                if (command.Indexed)
+                {
+                    GL.DrawElements(primitiveType, command.Count, DrawElementsType.UnsignedShort,
+                        command.StartIndex * sizeof(ushort));
+                    CheckGlError();
+                }
+                else
+                {
+                    GL.DrawArrays(primitiveType, command.StartIndex, command.Count);
+                    CheckGlError();
+                }
+            }
             ResetBlendFunc();
             GL.BlendEquation(BlendEquationMode.FuncAdd);
 
@@ -309,7 +310,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Reset renderer state.
             _currentMatrixModel = Matrix3.Identity;
-            _queuedShader = _defaultShader.Handle;
+            _queuedShaders = new ClydeHandle[]{_defaultShader.Handle};
             SetScissorFull(null);
         }
 
@@ -553,7 +554,7 @@ namespace Robust.Client.Graphics.Clyde
             in Box2 texCoords)
         {
             EnsureBatchSpaceAvailable(4, GetQuadBatchIndexCount());
-            EnsureBatchState(texture, true, GetQuadBatchPrimitiveType(), _queuedShader);
+            EnsureBatchState(texture, true, GetQuadBatchPrimitiveType(), _queuedShaders);
 
             bl = _currentMatrixModel.Transform(bl);
             br = _currentMatrixModel.Transform(br);
@@ -604,7 +605,7 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.StartIndex = BatchIndexIndex;
             command.DrawBatch.PrimitiveType = MapDrawToBatchPrimitiveType(primitiveTopology);
             command.DrawBatch.TextureId = textureId;
-            command.DrawBatch.ShaderInstance = _queuedShader;
+            command.DrawBatch.ShaderInstances = _queuedShaders;
 
             command.DrawBatch.Count = indices.Length;
             command.DrawBatch.ModelMatrix = _currentMatrixModel;
@@ -630,7 +631,7 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.StartIndex = BatchVertexIndex;
             command.DrawBatch.PrimitiveType = MapDrawToBatchPrimitiveType(primitiveTopology);
             command.DrawBatch.TextureId = textureId;
-            command.DrawBatch.ShaderInstance = _queuedShader;
+            command.DrawBatch.ShaderInstances = _queuedShaders;
 
             command.DrawBatch.Count = vertices.Length;
             command.DrawBatch.ModelMatrix = _currentMatrixModel;
@@ -657,7 +658,7 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawLine(Vector2 a, Vector2 b, Color color)
         {
             EnsureBatchSpaceAvailable(2, 0);
-            EnsureBatchState(_stockTextureWhite.TextureId, false, BatchPrimitiveType.LineList, _queuedShader);
+            EnsureBatchState(_stockTextureWhite.TextureId, false, BatchPrimitiveType.LineList, _queuedShaders);
 
             a = _currentMatrixModel.Transform(a);
             b = _currentMatrixModel.Transform(b);
@@ -696,7 +697,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawUseShader(ClydeHandle handle)
         {
-            _queuedShader = handle;
+            _queuedShaders = new ClydeHandle[]{handle};
+        }
+
+        private void DrawUseShaders(ClydeHandle[] handles)
+        {
+            _queuedShaders = handles;
         }
 
         private void DrawClear(Color color, int stencil, ClearBufferMask mask)
@@ -735,7 +741,7 @@ namespace Robust.Client.Graphics.Clyde
         ///     If not, the current batch is finished and a new one is started.
         /// </summary>
         private void EnsureBatchState(ClydeHandle textureId, bool indexed,
-            BatchPrimitiveType primitiveType, ClydeHandle shaderInstance)
+            BatchPrimitiveType primitiveType, ClydeHandle[] shaderInstances)
         {
             if (_batchMetaData.HasValue)
             {
@@ -743,7 +749,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (metaData.TextureId == textureId &&
                     indexed == metaData.Indexed &&
                     metaData.PrimitiveType == primitiveType &&
-                    metaData.ShaderInstance == shaderInstance)
+                    metaData.ShaderInstance == shaderInstances)
                 {
                     // Data matches, don't have to do anything.
                     return;
@@ -755,7 +761,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // ... and start another.
             _batchMetaData = new BatchMetaData(textureId, indexed, primitiveType,
-                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
+                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstances);
 
             /*
             if (textureId != default)
@@ -787,7 +793,7 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.StartIndex = metaData.StartIndex;
             command.DrawBatch.PrimitiveType = metaData.PrimitiveType;
             command.DrawBatch.TextureId = metaData.TextureId;
-            command.DrawBatch.ShaderInstance = metaData.ShaderInstance;
+            command.DrawBatch.ShaderInstances =  metaData.ShaderInstance;
 
             command.DrawBatch.Count = currentIndex - metaData.StartIndex;
             command.DrawBatch.ModelMatrix = Matrix3.Identity;
@@ -869,7 +875,7 @@ namespace Robust.Client.Graphics.Clyde
             SetScissorFull(null);
             BindRenderTargetFull(_mainWindow!.RenderTarget);
             _batchMetaData = null;
-            _queuedShader = _defaultShader.Handle;
+            _queuedShaders = new ClydeHandle[] { _defaultShader.Handle };
 
             GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
         }
@@ -911,26 +917,26 @@ namespace Robust.Client.Graphics.Clyde
             rt.LastGLSync = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
         }
 
-        [StructLayout(LayoutKind.Explicit)]
+        //[StructLayout(LayoutKind.Explicit)]
         private struct RenderCommand
         {
             // Use a tagged union to store all render commands.
             // This significantly improves performance vs doing sum types via inheritance.
             // Also means I don't have to declare a pool for every command type.
-            [FieldOffset(0)] public RenderCommandType Type;
+            public RenderCommandType Type;
 
-            [FieldOffset(4)] public RenderCommandDrawBatch DrawBatch;
-            [FieldOffset(4)] public RenderCommandProjViewMatrix ProjView;
-            [FieldOffset(4)] public RenderCommandScissor Scissor;
-            [FieldOffset(4)] public RenderCommandRenderTarget RenderTarget;
-            [FieldOffset(4)] public RenderCommandViewport Viewport;
-            [FieldOffset(4)] public RenderCommandClear Clear;
+            public RenderCommandDrawBatch DrawBatch;
+            public RenderCommandProjViewMatrix ProjView;
+            public RenderCommandScissor Scissor;
+            public RenderCommandRenderTarget RenderTarget;
+            public RenderCommandViewport Viewport;
+            public RenderCommandClear Clear;
         }
 
         private struct RenderCommandDrawBatch
         {
             public ClydeHandle TextureId;
-            public ClydeHandle ShaderInstance;
+            public ClydeHandle[] ShaderInstances;
 
             public int StartIndex;
             public int Count;
@@ -1007,16 +1013,16 @@ namespace Robust.Client.Graphics.Clyde
             public readonly bool Indexed;
             public readonly BatchPrimitiveType PrimitiveType;
             public readonly int StartIndex;
-            public readonly ClydeHandle ShaderInstance;
+            public readonly ClydeHandle[] ShaderInstance;
 
             public BatchMetaData(ClydeHandle textureId, bool indexed, BatchPrimitiveType primitiveType,
-                int startIndex, ClydeHandle shaderInstance)
+                int startIndex, ClydeHandle[] shaderInstances)
             {
                 TextureId = textureId;
                 Indexed = indexed;
                 PrimitiveType = primitiveType;
                 StartIndex = startIndex;
-                ShaderInstance = shaderInstance;
+                ShaderInstance = shaderInstances;
             }
         }
 

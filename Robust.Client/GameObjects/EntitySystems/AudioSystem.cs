@@ -430,6 +430,14 @@ public sealed class AudioSystem : SharedAudioSystem
         return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
     }
 
+    public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user,
+        AudioParams? audioParams = null)
+    {
+        if (_timing.IsFirstTimePredicted || sound == null)
+            return Play(sound, Filter.Local(), coordinates, false, audioParams);
+        return null;
+    }
+
     private void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source)
     {
         if (!audioParams.HasValue)

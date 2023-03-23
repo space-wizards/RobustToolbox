@@ -66,6 +66,18 @@ public partial class EntitySystem
     }
 
     /// <summary>
+    ///     Checks whether the entity is being or has been deleted (or never existed in the first place).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TerminatingOrDeleted(EntityUid uid, MetaDataComponent? metaData = null)
+    {
+        if (!Resolve(uid, ref metaData, false))
+            return true;
+
+        return metaData.EntityLifeStage >= EntityLifeStage.Terminating;
+    }
+
+    /// <summary>
     ///     Retrieves whether the entity is deleted or is nonexistent.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

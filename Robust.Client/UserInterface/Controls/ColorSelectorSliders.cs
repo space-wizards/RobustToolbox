@@ -14,11 +14,8 @@ public sealed class ColorSelectorSliders : Control
         get => _currentColor;
         set
         {
-            _updating = true;
             _currentColor = value;
-
             Update();
-            _updating = false;
         }
     }
 
@@ -27,12 +24,9 @@ public sealed class ColorSelectorSliders : Control
         get => _currentType;
         set
         {
-            _updating = true;
             _currentType = value;
-
             UpdateType();
             Update();
-            _updating = false;
         }
     }
 
@@ -217,10 +211,8 @@ public sealed class ColorSelectorSliders : Control
 
         rootBox.AddChild(bodyBox);
 
-        _updating = true;
         UpdateType();
         Update();
-        _updating = false;
     }
 
     private void UpdateType()
@@ -234,6 +226,12 @@ public sealed class ColorSelectorSliders : Control
 
     private void Update()
     {
+        // This code is a mess of UI events causing stack overflows. Also, updating one slider triggers all sliders to
+        // update, which due to rounding errors causes them to actually change values, specifically for HSV sliders.
+        if (_updating)
+            return;
+
+        _updating = true;
         _topColorSlider.SetColor(_currentColor);
         _middleColorSlider.SetColor(_currentColor);
         _bottomColorSlider.SetColor(_currentColor);
@@ -278,6 +276,7 @@ public sealed class ColorSelectorSliders : Control
 
         _alphaSlider.Value = Color.A;
         _alphaInputBox.Value = (int)(Color.A * 100.0f);
+        _updating = false;
     }
 
     private bool IsSpinBoxValid(int value, ColorSliderOrder ordering)

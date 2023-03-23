@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -667,12 +666,13 @@ namespace Robust.Client.Placement
 
         private void EnsureNoPlacementOverlayEntity()
         {
-            if (CurrentPlacementOverlayEntity != null)
-            {
-                if (!EntityManager.Deleted(CurrentPlacementOverlayEntity))
-                    EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
-                CurrentPlacementOverlayEntity = null;
-            }
+            if (CurrentPlacementOverlayEntity == null)
+                return;
+
+            if (!EntityManager.Deleted(CurrentPlacementOverlayEntity))
+                EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
+
+            CurrentPlacementOverlayEntity = null;
         }
 
         private SpriteComponent SetupPlacementOverlayEntity()
@@ -684,17 +684,19 @@ namespace Robust.Client.Placement
 
         private void PreparePlacement(string templateName)
         {
-            // TODO: Garbage but placementmanager needs taking out back
-            if (EntityManager.EntityExists(CurrentPlacementOverlayEntity))
-            {
-                EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
-            }
+            EnsureNoPlacementOverlayEntity();
 
             var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
             CurrentPrototype = prototype;
             IsActive = true;
 
             CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(templateName, MapCoordinates.Nullspace);
+        }
+
+        public void PreparePlacementSprite(SpriteComponent sprite)
+        {
+            var sc = SetupPlacementOverlayEntity();
+            sc.CopyFrom(sprite);
         }
 
         public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot, EntityPrototype? prototype)

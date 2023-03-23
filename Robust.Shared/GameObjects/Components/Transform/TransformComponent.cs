@@ -420,48 +420,10 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
+        [Obsolete("Use the system's method instead.")]
         public void AttachToGridOrMap()
         {
-            bool TerminatingOrDeleted(EntityUid uid)
-            {
-                return !_entMan.TryGetComponent(uid, out MetaDataComponent? meta)
-                       || meta.EntityLifeStage >= EntityLifeStage.Terminating;
-            }
-
-            // nothing to do
-            if (!_parent.IsValid())
-                return;
-
-            var mapPos = MapPosition;
-
-            EntityUid newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.Owner))
-            {
-                newMapEntity = mapGrid.Owner;
-            }
-            else if (_mapManager.GetMapEntityId(mapPos.MapId) is { Valid: true } mapEnt
-                     && !TerminatingOrDeleted(mapEnt))
-            {
-                newMapEntity = mapEnt;
-            }
-            else
-            {
-                if (!_mapManager.IsMap(Owner))
-                    Logger.Warning($"Detached a non-map entity ({_entMan.ToPrettyString(Owner)}) to null-space. Unless this entity is being deleted, this should not happen.");
-
-                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().DetachParentToNull(Owner, this);
-                return;
-            }
-
-            // this would be a no-op
-            if (newMapEntity == _parent)
-            {
-                return;
-            }
-
-            var newMapEntityXform = _entMan.GetComponent<TransformComponent>(newMapEntity);
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(Owner, this, new(newMapEntity, newMapEntityXform.InvWorldMatrix.Transform(mapPos.Position)));
-            _entMan.Dirty(this);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AttachToGridOrMap(Owner, this);
         }
 
         /// <summary>

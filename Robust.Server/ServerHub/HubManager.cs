@@ -60,6 +60,12 @@ internal sealed class HubManager
         _advertiseUrl = url;
     }
 
+    public void AdvertiseNow()
+    {
+        // Next heartbeat will immediately advertise to hub.
+        _nextPing = TimeSpan.Zero;
+    }
+
     private void UpdateInterval(int interval)
     {
         _interval = TimeSpan.FromSeconds(interval);

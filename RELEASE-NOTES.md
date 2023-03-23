@@ -54,8 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.93.2.0
+
+### New features
+
+* Add CompletionHelpers for components and entityuids.
+
+
 ## 0.93.1.0
 
+### New features
+
+* Add PlayPredicted audio method for EntityCoordinates.
 
 ## 0.93.0.0
 

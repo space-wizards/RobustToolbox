@@ -860,7 +860,7 @@ public sealed class MapLoaderSystem : EntitySystem
             if (!gridQuery.TryGetComponent(ent, out var grid))
                 continue;
 
-            var tileEnumerator = grid.GetAllTilesEnumerator();
+            var tileEnumerator = grid.GetAllTilesEnumerator(false);
 
             while (tileEnumerator.MoveNext(out var tileRef))
             {

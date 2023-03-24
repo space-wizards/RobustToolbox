@@ -43,7 +43,8 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* `MetaDataComponent.PauseTime` is now a yaml data-field
+* The client-side `(un)pausemap` command is now disabled while connected to a server.
 
 ### Other
 

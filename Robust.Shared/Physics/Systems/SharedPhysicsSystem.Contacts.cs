@@ -389,7 +389,7 @@ public abstract partial class SharedPhysicsSystem
                         _sawmill.Error($"Insufficient contact length at 388! Index {index} and length is {_contacts.Count}. Tell Sloth");
                     }
 
-                    _contacts[index++] = contact;
+                    _contacts.Add(contact);
                 }
 
                 continue;
@@ -431,7 +431,7 @@ public abstract partial class SharedPhysicsSystem
                 _sawmill.Error($"Insufficient contact length at 429! Index {index} and length is {_contacts.Count}. Tell Sloth");
             }
 
-            _contacts[index++] = contact;
+            _contacts.Add(contact);
         }
 
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);

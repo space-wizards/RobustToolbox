@@ -67,6 +67,13 @@ namespace Robust.Shared.Map.Components
         [ViewVariables]
         public Box2 LocalAABB { get; private set; }
 
+        /// <summary>
+        /// Set to enable or disable grid splitting.
+        /// You must ensure you handle this properly and check for splits afterwards if relevant!
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite), DataField("canSplit")]
+        public bool CanSplit = true;
+
         internal void RemoveChunk(Vector2i origin)
         {
             if (!Chunks.TryGetValue(origin, out var chunk))

@@ -42,7 +42,6 @@ public sealed class MapLoaderSystem : EntitySystem
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
     private ISawmill _logLoader = default!;
 
@@ -58,6 +57,7 @@ public sealed class MapLoaderSystem : EntitySystem
         base.Initialize();
         _serverEntityManager = (IServerEntityManagerInternal)EntityManager;
         _logLoader = Logger.GetSawmill("loader");
+        _logLoader.Level = LogLevel.Info;
         _context = new MapSerializationContext();
     }
 
@@ -195,7 +195,7 @@ public sealed class MapLoaderSystem : EntitySystem
             return;
         }
 
-        _logLoader.Info($"Saving entity {ToPrettyString(uid)} to {ymlPath}");
+        _logLoader.Debug($"Saving entity {ToPrettyString(uid)} to {ymlPath}");
 
         var document = new YamlDocument(GetSaveData(uid).ToYaml());
 
@@ -432,7 +432,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 var datanode = compData.Copy();
                 datanode.Remove("type");
                 var value = ((ValueDataNode)compData["type"]).Value;
-                var compType = _componentFactory.GetRegistration(value).Type;
+                var compType = _factory.GetRegistration(value).Type;
                 if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protData))
                 {
                     datanode =
@@ -813,7 +813,6 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         var data = new MappingDataNode();
         WriteMetaSection(data, uid);
-        WriteTileMapSection(data);
 
         var entityUidMap = new Dictionary<EntityUid, int>();
         var uidEntityMap = new Dictionary<int, EntityUid>();
@@ -821,6 +820,8 @@ public sealed class MapLoaderSystem : EntitySystem
 
         _stopwatch.Restart();
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
+        WriteTileMapSection(data, entities);
+
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
         var pauseTime = _meta.GetPauseTime(uid);
         _context.Set(uidEntityMap, entityUidMap, pauseTime);
@@ -848,13 +849,34 @@ public sealed class MapLoaderSystem : EntitySystem
         meta.Add("postmapinit", isPostInit ? "true" : "false");
     }
 
-    private void WriteTileMapSection(MappingDataNode rootNode)
+    private void WriteTileMapSection(MappingDataNode rootNode, List<EntityUid> entities)
     {
+        // Although we could use tiledefmanager it might write tiledata we don't need so we'll compress it
+        var gridQuery = GetEntityQuery<MapGridComponent>();
+        var tileDefs = new HashSet<ushort>();
+
+        foreach (var ent in entities)
+        {
+            if (!gridQuery.TryGetComponent(ent, out var grid))
+                continue;
+
+            var tileEnumerator = grid.GetAllTilesEnumerator(false);
+
+            while (tileEnumerator.MoveNext(out var tileRef))
+            {
+                tileDefs.Add(tileRef.Value.Tile.TypeId);
+            }
+        }
+
         var tileMap = new MappingDataNode();
         rootNode.Add("tilemap", tileMap);
-        foreach (var tileDefinition in _tileDefManager)
+        var ordered = new List<ushort>(tileDefs);
+        ordered.Sort();
+
+        foreach (var tyleId in ordered)
         {
-            tileMap.Add(tileDefinition.TileId.ToString(CultureInfo.InvariantCulture), tileDefinition.ID);
+            var tileDef = _tileDefManager[tyleId];
+            tileMap.Add(tyleId.ToString(CultureInfo.InvariantCulture), tileDef.ID);
         }
     }
 

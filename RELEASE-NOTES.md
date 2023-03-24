@@ -54,6 +54,48 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.94.0.0
+
+### Breaking changes
+
+* `IGameTiming.IsFirstTimePredicted` is now false while applying game states.
+
+### Bugfixes
+
+* `MetaDataComponent.PauseTime` is now a yaml data-field
+* The client-side `(un)pausemap` command is now disabled while connected to a server.
+
+### Internal
+
+* Use a List<Contact> for contacts instead of a shared arraypool to try to fix the contact indexing exception.
+* Moved IoC dependencies off of physics contacts.
+
+
+## 0.93.3.0
+
+### New features
+
+* Unnecessary tiles are no longer written to map file tilemaps.
+* Added the ability to enable or disable grid splitting per grid.
+
+### Other
+
+* Added additional logs around contact issue
+
+
+## 0.93.2.0
+
+### New features
+
+* Add CompletionHelpers for components and entityuids.
+
+
+## 0.93.1.0
+
+### New features
+
+* Add PlayPredicted audio method for EntityCoordinates.
+
 ## 0.93.0.0
 
 ### Breaking changes

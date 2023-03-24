@@ -56,6 +56,15 @@ END TEMPLATE-->
 
 ## 0.93.3.0
 
+### New features
+
+* Unnecessary tiles are no longer written to map file tilemaps.
+* Added the ability to enable or disable grid splitting per grid.
+
+### Other
+
+* Added additional logs around contact issue
+
 
 ## 0.93.2.0
 

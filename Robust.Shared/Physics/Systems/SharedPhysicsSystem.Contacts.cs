@@ -384,11 +384,6 @@ public abstract partial class SharedPhysicsSystem
                 {
                     // Grid contact is still alive.
                     contact.Flags &= ~ContactFlags.Island;
-                    if (index >= _contacts.Count)
-                    {
-                        _sawmill.Error($"Insufficient contact length at 388! Index {index} and length is {_contacts.Count}. Tell Sloth");
-                    }
-
                     _contacts.Add(contact);
                 }
 
@@ -426,11 +421,6 @@ public abstract partial class SharedPhysicsSystem
             // Contact is actually going to live for manifold generation and solving.
             // This can also short-circuit above for grid contacts.
             contact.Flags &= ~ContactFlags.Island;
-            if (index >= _contacts.Count)
-            {
-                _sawmill.Error($"Insufficient contact length at 429! Index {index} and length is {_contacts.Count}. Tell Sloth");
-            }
-
             _contacts.Add(contact);
         }
 
@@ -441,14 +431,8 @@ public abstract partial class SharedPhysicsSystem
         BuildManifolds(_contacts, index, status, worldPoints);
 
         // Single-threaded so content doesn't need to worry about race conditions.
-        for (var i = 0; i < index; i++)
+        for (var i = 0; i < _contacts.Count; i++)
         {
-            if (index >= _contacts.Count)
-            {
-                _sawmill.Error($"Invalid contact length for contact events!");
-                continue;
-            }
-
             var contact = _contacts[i];
 
             switch (status[i])

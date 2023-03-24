@@ -305,12 +305,8 @@ public abstract partial class SharedPhysicsSystem
         _contactPool.Return(contact);
     }
 
-    internal void CollideContacts()
+    private void CollideContacts()
     {
-        // Due to the fact some contacts may be removed (and we need to update this array as we iterate).
-        // the length may not match the actual contact count, hence we track the index.
-        var index = 0;
-
         // Can be changed while enumerating
         // TODO: check for null instead?
         // Work out which contacts are still valid before we decide to update manifolds.
@@ -424,6 +420,9 @@ public abstract partial class SharedPhysicsSystem
             _contacts.Add(contact);
         }
 
+        // Due to the fact some contacts may be removed (and we need to update this array as we iterate).
+        // the length may not match the actual contact count, hence we track the index.
+        var index = _contacts.Count;
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
         var worldPoints = ArrayPool<Vector2>.Shared.Rent(index);
 

@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `IGameTiming.IsFirstTimePredicted` is now false while applying game states.
+*None yet*
 
 ### New features
 
@@ -43,8 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* `MetaDataComponent.PauseTime` is now a yaml data-field
-* The client-side `(un)pausemap` command is now disabled while connected to a server.
+*None yet*
 
 ### Other
 
@@ -53,6 +52,23 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.94.0.0
+
+### Breaking changes
+
+* `IGameTiming.IsFirstTimePredicted` is now false while applying game states.
+
+### Bugfixes
+
+* `MetaDataComponent.PauseTime` is now a yaml data-field
+* The client-side `(un)pausemap` command is now disabled while connected to a server.
+
+### Internal
+
+* Use a List<Contact> for contacts instead of a shared arraypool to try to fix the contact indexing exception.
+* Moved IoC dependencies off of physics contacts.
 
 
 ## 0.93.3.0

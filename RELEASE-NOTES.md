@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `IGameTiming.IsFirstTimePredicted` is now false while applying game states.
 
 ### New features
 

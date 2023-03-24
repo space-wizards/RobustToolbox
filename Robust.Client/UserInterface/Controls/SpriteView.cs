@@ -61,11 +61,13 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var uid = Sprite.Owner;
+            //Add the Sprite.Offset and if SpriteOffset = false, adjust the SpriteOffset center point if the sprite is > 32px.
+            var  offsetAdj = (SpriteOffset ? Sprite.Offset : new Vector2(0,(1.0f/(32*Sprite.Bounds.Height))*32));
 
             _spriteSystem ??= IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
             _spriteSystem?.ForceUpdate(uid);
 
-            renderHandle.DrawEntity(uid, PixelSize / 2 + PixelSize * (SpriteOffset ? Sprite.Offset : Vector2.Zero), Scale * UIScale, OverrideDirection);
+            renderHandle.DrawEntity(uid, PixelSize / 2 + PixelSize * offsetAdj, Scale * UIScale, OverrideDirection);
         }
     }
 }

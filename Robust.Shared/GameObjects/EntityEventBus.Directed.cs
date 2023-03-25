@@ -57,7 +57,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <remarks>
         /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING.
+        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
+        /// is because of the component network source generator.
         /// </remarks>
         /// <typeparam name="TEvent">Event to dispatch.</typeparam>
         /// <param name="component">Component receiving the event.</param>
@@ -70,7 +71,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <remarks>
         /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING.
+        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
+        /// is because of the component network source generator.
         /// </remarks>
         /// <typeparam name="TEvent">Event to dispatch.</typeparam>
         /// <param name="component">Component receiving the event.</param>
@@ -84,7 +86,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <remarks>
         /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING.
+        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
+        /// is because of the component network source generator.
         /// </remarks>
         /// <typeparam name="TEvent">Event to dispatch.</typeparam>
         /// <param name="component">Component receiving the event.</param>

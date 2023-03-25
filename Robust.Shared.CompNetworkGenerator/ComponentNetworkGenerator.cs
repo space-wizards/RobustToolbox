@@ -284,7 +284,7 @@ public partial class {componentName}
         {
             if (!Debugger.IsAttached)
             {
-                Debugger.Launch();
+                //Debugger.Launch();
             }
             context.RegisterForSyntaxNotifications(() => new NameReferenceSyntaxReceiver());
         }

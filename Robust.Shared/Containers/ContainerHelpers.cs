@@ -39,8 +39,8 @@ namespace Robust.Shared.Containers
             IoCManager.Resolve(ref entMan);
             DebugTools.Assert(entMan.EntityExists(entity));
 
-            var parentTransform = entMan.GetComponent<TransformComponent>(entity).Parent;
-            if (parentTransform != null && TryGetManagerComp(parentTransform.Owner, out manager, entMan) && manager.ContainsEntity(entity))
+            var parent = entMan.GetComponent<TransformComponent>(entity).ParentUid;
+            if (parent.IsValid() && TryGetManagerComp(parent, out manager, entMan) && manager.ContainsEntity(entity))
                 return true;
 
             manager = default;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
@@ -245,6 +246,8 @@ namespace Robust.UnitTesting
             private protected readonly ChannelReader<object> _fromInstanceReader;
             private protected readonly ChannelWriter<object> _fromInstanceWriter;
 
+            private protected TextWriter _testOut;
+
             private int _currentTicksId = 1;
             private int _ackTicksId;
 
@@ -302,6 +305,7 @@ namespace Robust.UnitTesting
             private protected IntegrationInstance(IntegrationOptions? options)
             {
                 Options = options;
+                _testOut = TestContext.Out;
 
                 var toInstance = Channel.CreateUnbounded<object>(new UnboundedChannelOptions
                 {
@@ -653,11 +657,14 @@ namespace Robust.UnitTesting
                     ("log.runtimelog", "false"),
                     (CVars.SysWinTickPeriod.Name, "-1"),
                     (CVars.SysGCCollectStart.Name, "false"),
-                    (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
+                    (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString()),
+
+                    (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
 
                 server.ContentStart = Options?.ContentStart ?? false;
-                if (server.Start(serverOptions, () => new TestLogHandler(cfg, "SERVER")))
+                var logHandler = Options?.OverrideLogHandler ?? (() => new TestLogHandler(cfg, "SERVER", _testOut));
+                if (server.Start(serverOptions, logHandler))
                 {
                     throw new Exception("Server failed to start.");
                 }
@@ -827,6 +834,8 @@ namespace Robust.UnitTesting
                     (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString()),
 
                     (CVars.ResPrototypeReloadWatch.Name, "false"),
+
+                    (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
 
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
@@ -836,7 +845,7 @@ namespace Robust.UnitTesting
                 client.ContentStart = Options?.ContentStart ?? false;
                 client.StartupSystemSplash(
                     clientOptions,
-                    () => new TestLogHandler(cfg, "CLIENT"),
+                    Options?.OverrideLogHandler ?? (() => new TestLogHandler(cfg, "CLIENT", _testOut)),
                     globalExceptionLog: false);
                 client.StartupContinue(GameController.DisplayMode.Headless);
 
@@ -982,6 +991,8 @@ namespace Robust.UnitTesting
             public Dictionary<string, string> CVarOverrides { get; } = new();
             public bool Asynchronous { get; set; } = true;
             public bool? Pool { get; set; }
+
+            public Func<ILogHandler>? OverrideLogHandler { get; set; }
         }
 
         /// <summary>

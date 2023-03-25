@@ -7,6 +7,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.ComponentTrees;
 
@@ -149,8 +150,15 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
             UpdateTreePositions();
     }
 
-    private void UpdateTreePositions()
+    /// <summary>
+    ///     Processes any pending position updates. Note that this should generally always get run before directly
+    ///     querying a tree.
+    /// </summary>
+    public void UpdateTreePositions()
     {
+        if (_updateQueue.Count == 0)
+            return;
+
         var xforms = GetEntityQuery<TransformComponent>();
         var trees = GetEntityQuery<TTreeComp>();
 
@@ -222,7 +230,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
             entry.Transform,
             entry.Component.TreeUid.Value,
             GetEntityQuery<TransformComponent>());
-        
+
         return ExtractAabb(in entry, pos, rot);
     }
 
@@ -235,6 +243,11 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     public IEnumerable<TTreeComp> GetIntersectingTrees(MapId mapId, Box2 worldAABB)
     {
+        // Anything that queries these trees should only do so if there are no queued updates, otherwise it can lead to
+        // errors. Currently there is no easy way to enforce this, but this should work as long as nothing queries the
+        // trees directly:
+        UpdateTreePositions();
+
         if (mapId == MapId.Nullspace) yield break;
 
         foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
@@ -243,7 +256,13 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
                 yield return treeComp;
         }
 
-        if (TryComp(_mapManager.GetMapEntityId(mapId), out TTreeComp? mapTreeComp))
+        var mapUid = _mapManager.GetMapEntityId(mapId);
+
+        // Don't double-iterate
+        if (HasComp<MapGridComponent>(mapUid))
+            yield break;
+
+        if (TryComp(mapUid, out TTreeComp? mapTreeComp))
             yield return mapTreeComp;
     }
 
@@ -255,7 +274,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         var state = new HashSet<ComponentTreeEntry<TComp>>();
         foreach (var treeComp in GetIntersectingTrees(mapId, worldBounds))
         {
-            var bounds = Transform(treeComp.Owner).InvWorldMatrix.TransformBox(worldBounds);
+            var bounds = XformSystem.GetInvWorldMatrix(treeComp.Owner).TransformBox(worldBounds);
 
             treeComp.Tree.QueryAabb(ref state, static (ref HashSet<ComponentTreeEntry<TComp>> state, in ComponentTreeEntry<TComp> value) =>
             {

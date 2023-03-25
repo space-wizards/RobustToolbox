@@ -13,6 +13,7 @@ using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.RichText;
 using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
@@ -73,6 +74,7 @@ namespace Robust.Client
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
+        [Dependency] private readonly MarkupTagManager _tagManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -129,13 +131,31 @@ namespace Robust.Client
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
+
+            // Finish initialization of WebView if loaded.
+            _webViewHook?.Initialize();
+
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
+
+            // Start bad file extensions check after content init,
+            // in case content screws with the VFS.
+            var checkBadExtensions = ProgramShared.CheckBadFileExtensions(
+                _resourceCache,
+                _configurationManager,
+                _logManager.GetSawmill("res"));
+
             _resourceCache.PreloadTextures();
             _networkManager.Initialize(false);
             _configurationManager.SetupNetworking();
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
+
+            // Make sure this is done before we try to load prototypes,
+            // avoid any possibility of race conditions causing the check to not finish
+            // before prototype load.
+            ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
+
             _prototypeManager.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath("/EnginePrototypes/"));
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
@@ -151,6 +171,7 @@ namespace Robust.Client
             _client.Initialize();
             _discord.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
+            _tagManager.Initialize();
             _userInterfaceManager.PostInitialize();
 
             if (_commandLineArgs?.Username != null)

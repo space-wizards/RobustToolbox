@@ -1,11 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
@@ -16,6 +16,7 @@ namespace Robust.Shared.Containers
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedJointSystem _joint = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -177,9 +178,6 @@ namespace Robust.Shared.Containers
             EntityQuery<MetaDataComponent>? metas = null,
             EntityQuery<TransformComponent>? xforms = null)
         {
-            DebugTools.Assert(meta == null || meta.Owner == uid);
-            DebugTools.Assert(xform == null || xform.Owner == uid);
-
             if (meta == null)
             {
                 metas ??= EntityManager.GetEntityQuery<MetaDataComponent>();
@@ -364,16 +362,18 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        /// Attempts to remove all entities in a container.
+        /// Attempts to remove all entities in a container. Returns removed entities.
         /// </summary>
-        public void EmptyContainer(IContainer container, bool force = false, EntityCoordinates? moveTo = null,
-            bool attachToGridOrMap = false, IEntityManager? entMan = null)
+        public IEnumerable<EntityUid> EmptyContainer(
+            IContainer container,
+            bool force = false,
+            EntityCoordinates? destination = null,
+            bool reparent = true)
         {
-            var query = EntityManager.GetEntityQuery<TransformComponent>();
             foreach (var entity in container.ContainedEntities.ToArray())
             {
-                if (query.TryGetComponent(entity, out var xform))
-                    container.Remove(entity, EntityManager, xform, null, attachToGridOrMap, force, moveTo);
+                if (container.Remove(entity, EntityManager, reparent: reparent, force: force, destination: destination))
+                    yield return entity;
             }
         }
 
@@ -392,6 +392,9 @@ namespace Robust.Shared.Containers
 
         public void AttachParentToContainerOrGrid(TransformComponent transform)
         {
+            // TODO make this check upwards for any container, and parent to that.
+            // Currently this just checks the direct parent, so entities will still teleport through containers.
+
             if (!transform.ParentUid.IsValid()
                 || !TryGetContainingContainer(transform.ParentUid, out var container)
                 || !TryInsertIntoContainer(transform, container))

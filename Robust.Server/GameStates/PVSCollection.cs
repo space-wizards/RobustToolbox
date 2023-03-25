@@ -52,6 +52,7 @@ public interface IPVSCollection
 public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
 {
     private readonly IEntityManager _entityManager;
+    private readonly SharedTransformSystem _transformSystem;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2i GetChunkIndices(Vector2 coordinates)
@@ -118,9 +119,10 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// </summary>
     private HashSet<IChunkIndexLocation> _dirtyChunks = new();
 
-    public PVSCollection(IEntityManager entityManager)
+    public PVSCollection(IEntityManager entityManager, SharedTransformSystem transformSystem)
     {
         _entityManager = entityManager;
+        _transformSystem = transformSystem;
     }
 
     public void Process()
@@ -144,6 +146,15 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             _deletionHistory.Add((tick, index));
         }
 
+        foreach (var index in _changedIndices)
+        {
+            var oldLoc = RemoveIndexInternal(index);
+            if(oldLoc is GridChunkLocation or MapChunkLocation)
+                _dirtyChunks.Add((IChunkIndexLocation) oldLoc);
+
+            AddIndexInternal(index, _locationChangeBuffer[index], _dirtyChunks);
+        }
+
         // remove empty chunk-subsets
         foreach (var chunkLocation in _dirtyChunks)
         {
@@ -162,15 +173,6 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                         mapChunks.Remove(mapChunkLocation.ChunkIndices);
                     break;
             }
-        }
-
-        foreach (var index in _changedIndices)
-        {
-            var oldLoc = RemoveIndexInternal(index);
-            if(oldLoc is GridChunkLocation or MapChunkLocation)
-                _dirtyChunks.Add((IChunkIndexLocation) oldLoc);
-
-            AddIndexInternal(index, _locationChangeBuffer[index], _dirtyChunks);
         }
 
         _changedIndices.Clear();
@@ -402,7 +404,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             return;
         }
 
-        var mapCoordinates = coordinates.ToMap(_entityManager);
+        var mapCoordinates = coordinates.ToMap(_entityManager, _transformSystem);
         var mapIndices = GetChunkIndices(coordinates.Position);
         UpdateIndex(index, mapCoordinates.MapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
     }
@@ -416,7 +418,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             return new GridChunkLocation(gridId, gridIndices);
         }
 
-        var mapCoordinates = coordinates.ToMap(_entityManager);
+        var mapCoordinates = coordinates.ToMap(_entityManager, _transformSystem);
         var mapIndices = GetChunkIndices(coordinates.Position);
         return new MapChunkLocation(mapCoordinates.MapId, mapIndices);
     }

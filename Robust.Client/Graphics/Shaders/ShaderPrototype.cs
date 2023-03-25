@@ -230,8 +230,12 @@ namespace Robust.Client.Graphics
                     {
                         return node.AsVector4();
                     }
+                case ShaderDataType.Mat3:
+                    return node.AsMatrix3();
+                case ShaderDataType.Mat4:
+                    return node.AsMatrix4();
                 default:
-                    throw new NotSupportedException("Unsupported uniform type.");
+                    throw new NotSupportedException($"Unsupported uniform type '{dataType}'.");
             }
         }
 
@@ -268,6 +272,12 @@ namespace Robust.Client.Graphics
                         instance.SetParameter(key, i);
                         break;
                     case bool i:
+                        instance.SetParameter(key, i);
+                        break;
+                    case Matrix3 i:
+                        instance.SetParameter(key, i);
+                        break;
+                    case Matrix4 i:
                         instance.SetParameter(key, i);
                         break;
                 }

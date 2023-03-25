@@ -343,7 +343,7 @@ public abstract partial class SharedPhysicsSystem
         {
             var batches = (int) Math.Ceiling((float) contactCount / VelocityConstraintsPerThread);
 
-            Parallel.For(0, batches, i =>
+            Parallel.For(0, batches, options, i =>
             {
                 var start = i * VelocityConstraintsPerThread;
                 var end = Math.Min(start + VelocityConstraintsPerThread, contactCount);
@@ -674,7 +674,7 @@ public abstract partial class SharedPhysicsSystem
             var unsolved = 0;
             var batches = (int) Math.Ceiling((float) contactCount / PositionConstraintsPerThread);
 
-            Parallel.For(0, batches, i =>
+            Parallel.For(0, batches, options, i =>
             {
                 var start = i * PositionConstraintsPerThread;
                 var end = Math.Min(start + PositionConstraintsPerThread, contactCount);

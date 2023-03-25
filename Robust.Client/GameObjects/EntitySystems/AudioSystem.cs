@@ -8,6 +8,7 @@ using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -30,14 +31,16 @@ public sealed class AudioSystem : SharedAudioSystem
     [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
     [Dependency] private readonly IClydeAudio _clyde = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 
     private readonly List<PlayingStream> _playingClydeStreams = new();
+
+    private ISawmill _sawmill = default!;
 
     private float _maxRayLength;
 
@@ -49,6 +52,8 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
         SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
+
+        _sawmill = Logger.GetSawmill("audio");
 
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
     }
@@ -90,14 +95,6 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
     {
-        var mapId = ev.Coordinates.GetMapId(EntityManager);
-
-        if (!_mapManager.MapExists(mapId))
-        {
-            Logger.Error($"Server tried to play sound on map {mapId}, which does not exist. Ignoring.");
-            return;
-        }
-
         var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
         if (stream != null)
             stream.NetIdentifier = ev.Identifier;
@@ -125,6 +122,11 @@ public sealed class AudioSystem : SharedAudioSystem
         {
             Parallel.ForEach(_playingClydeStreams, opts, (stream) => ProcessStream(stream, ourPos, xforms, physics));
         }
+        catch (Exception e)
+        {
+            _sawmill.Error($"Caught exception while processing entity streams.");
+            _runtimeLog.LogException(e, $"{nameof(AudioSystem)}.{nameof(FrameUpdate)}");
+        }
         finally
         {
             _playingClydeStreams.RemoveAll(p => p.Done);
@@ -148,8 +150,6 @@ public sealed class AudioSystem : SharedAudioSystem
                 && stream.TrackingEntity == null
                 && stream.TrackingFallbackCoordinates == null);
 
-            // Does this really have to be set every frame???
-            stream.Source.SetVolume(stream.Volume);
             return;
         }
 
@@ -192,7 +192,7 @@ public sealed class AudioSystem : SharedAudioSystem
         var audioPos = stream.Attenuation != Attenuation.NoAttenuation ? mapPos.Value : listener;
         if (!stream.Source.SetPosition(audioPos.Position))
         {
-            Logger.Warning("Interrupting positional audio, can't set position.");
+            _sawmill.Warning("Interrupting positional audio, can't set position.");
             stream.Source.StopPlaying();
             return;
         }
@@ -256,10 +256,12 @@ public sealed class AudioSystem : SharedAudioSystem
         if (stream.TrackingCoordinates != null)
         {
             mapPos = stream.TrackingCoordinates.Value.ToMap(EntityManager);
-            return mapPos != MapCoordinates.Nullspace;
+            if (mapPos != MapCoordinates.Nullspace)
+                return true;
         }
 
-        if (xformQuery.TryGetComponent(stream.TrackingEntity, out var xform))
+        if (xformQuery.TryGetComponent(stream.TrackingEntity, out var xform)
+            && xform.MapID != MapId.Nullspace)
         {
             mapPos = new MapCoordinates(_xformSys.GetWorldPosition(xform, xformQuery), xform.MapID);
             return true;
@@ -287,7 +289,7 @@ public sealed class AudioSystem : SharedAudioSystem
         if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out audio))
             return true;
 
-        Logger.Error($"Server tried to play audio file {filename} which does not exist.");
+        _sawmill.Error($"Server tried to play audio file {filename} which does not exist.");
         return false;
     }
 
@@ -408,12 +410,9 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!source.SetPosition(fallbackCoordinates.Position))
         {
             source.Dispose();
-            Logger.Warning($"Can't play positional audio \"{stream.Name}\", can't set position.");
+            _sawmill.Warning($"Can't play positional audio \"{stream.Name}\", can't set position.");
             return null;
         }
-
-        if (!coordinates.IsValid(EntityManager))
-            coordinates = fallbackCoordinates;
 
         var playing = CreateAndStartPlayingStream(source, audioParams);
         playing.TrackingCoordinates = coordinates;
@@ -429,6 +428,14 @@ public sealed class AudioSystem : SharedAudioSystem
         if (_timing.IsFirstTimePredicted || sound == null)
             return Play(sound, Filter.Local(), source, false, audioParams);
         return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
+    }
+
+    public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user,
+        AudioParams? audioParams = null)
+    {
+        if (_timing.IsFirstTimePredicted || sound == null)
+            return Play(sound, Filter.Local(), coordinates, false, audioParams);
+        return null;
     }
 
     private void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source)
@@ -501,7 +508,7 @@ public sealed class AudioSystem : SharedAudioSystem
             return Play(audio, entity, null, audioParams);
         }
 
-        Logger.Error($"Server tried to play audio file {filename} which does not exist.");
+        _sawmill.Error($"Server tried to play audio file {filename} which does not exist.");
         return default;
     }
 

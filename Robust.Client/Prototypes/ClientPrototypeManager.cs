@@ -44,7 +44,7 @@ namespace Robust.Client.Prototypes
 
         private void WindowFocusedChanged(WindowFocusedEventArgs args)
         {
-#if !FULL_RELEASE
+#if TOOLS
             if (args.Focused && _reloadQueue.Count > 0)
             {
                 Timer.Spawn(_reloadDelay, ReloadPrototypeQueue, _reloadToken.Token);
@@ -59,7 +59,7 @@ namespace Robust.Client.Prototypes
 
         private void ReloadPrototypeQueue()
         {
-#if !FULL_RELEASE
+#if TOOLS
             var sw = Stopwatch.StartNew();
 
             var msg = new MsgReloadPrototypes();
@@ -83,7 +83,7 @@ namespace Robust.Client.Prototypes
             if (!_cfg.GetCVar(CVars.ResPrototypeReloadWatch))
                 return;
 
-#if !FULL_RELEASE
+#if TOOLS
             foreach (var path in Resources.GetContentRoots().Select(r => r.ToString())
                 .Where(r => Directory.Exists(r + "/Prototypes")).Select(p => p + "/Prototypes"))
             {

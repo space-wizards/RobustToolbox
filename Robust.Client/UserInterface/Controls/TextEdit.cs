@@ -545,7 +545,7 @@ public sealed class TextEdit : Control
             case MoveType.RightWord:
             {
                 var runes = Rope.EnumerateRunes(TextRope, _cursorPosition.Index);
-                var pos = _cursorPosition.Index + TextEditShared.NextWordPosition(runes.GetEnumerator());
+                var pos = _cursorPosition.Index + TextEditShared.EndWordPosition(runes.GetEnumerator());
 
                 return new CursorPos(pos, LineBreakBias.Bottom);
             }

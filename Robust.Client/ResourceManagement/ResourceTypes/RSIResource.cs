@@ -39,20 +39,14 @@ namespace Robust.Client.ResourceManagement
             var loadStepData = new LoadStepData {Path = path};
             LoadPreTexture(cache, loadStepData);
 
-            // Load atlas.
-            LoadTexture(clyde, loadStepData);
+            loadStepData.AtlasTexture = clyde.LoadTextureFromImage(
+                loadStepData.AtlasSheet,
+                loadStepData.Path.ToString());
 
             LoadPostTexture(loadStepData);
             LoadFinish(cache, loadStepData);
 
             loadStepData.AtlasSheet.Dispose();
-        }
-
-        internal static void LoadTexture(IClyde clyde, LoadStepData loadStepData)
-        {
-            loadStepData.AtlasTexture = clyde.LoadTextureFromImage(
-                loadStepData.AtlasSheet,
-                loadStepData.Path.ToString());
         }
 
         internal static void LoadPreTexture(IResourceCache cache, LoadStepData data)
@@ -210,7 +204,7 @@ namespace Robust.Client.ResourceManagement
                         var sheetPos = (sheetColumn * frameSize.X, sheetRow * frameSize.Y);
 
                         dirOffsets[j] = sheetPos;
-                        dirOutput[j] = new AtlasTexture(texture, UIBox2.FromDimensions(sheetPos, frameSize));
+                        dirOutput[j] = new AtlasTexture(texture, UIBox2.FromDimensions(data.AtlasOffset + sheetPos, frameSize));
                     }
                 }
 
@@ -386,6 +380,7 @@ namespace Robust.Client.ResourceManagement
             public Vector2i FrameSize;
             public Dictionary<RSI.StateId, Vector2i[][]> CallbackOffsets = default!;
             public Texture AtlasTexture = default!;
+            public Vector2i AtlasOffset;
             public RSI Rsi = default!;
         }
 

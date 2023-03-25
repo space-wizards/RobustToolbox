@@ -8,6 +8,7 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using System;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Robust.Shared.GameObjects
 {
@@ -56,7 +57,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
-    [NetworkedComponent]
+    [RegisterComponent, NetworkedComponent]
     public sealed class MetaDataComponent : Component
     {
         [DataField("name")] internal string? _entityName;
@@ -66,7 +67,8 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// When this entity was paused, if applicable
         /// </summary>
-        internal TimeSpan? PauseTime;
+        [DataField("pauseTime", customTypeSerializer:typeof(TimeOffsetSerializer))]
+        public TimeSpan? PauseTime { get; internal set; }
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]

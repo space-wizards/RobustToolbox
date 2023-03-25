@@ -14,7 +14,7 @@ namespace Robust.Benchmarks.Migrations
 {
     [DbContext(typeof(BenchmarkContext))]
     [Migration("20221010144620_param_work")]
-    partial class param_work
+    partial class ParamWork
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

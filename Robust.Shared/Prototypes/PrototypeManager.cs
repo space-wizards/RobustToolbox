@@ -194,7 +194,7 @@ namespace Robust.Shared.Prototypes
 
         protected void ReloadPrototypes(IEnumerable<ResourcePath> filePaths)
         {
-#if !FULL_RELEASE
+#if TOOLS
             var changed = new Dictionary<Type, HashSet<string>>();
             foreach (var filePath in filePaths)
             {
@@ -207,7 +207,7 @@ namespace Robust.Shared.Prototypes
 
         public void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes)
         {
-#if !FULL_RELEASE
+#if TOOLS
             var prototypeTypeOrder = prototypes.Keys.ToList();
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
@@ -253,25 +253,33 @@ namespace Robust.Shared.Prototypes
                             }
                         }
 
-                        if (nonPushedParent) continue;
+                        if (nonPushedParent)
+                            continue;
 
-                        // TODO DON'T FORGET TO FIX THIS
-                        /*foreach (var parent in parents)
+                        var parentMaps = new MappingDataNode[parents.Length];
+                        for (var i = 0; i < parentMaps.Length; i++)
                         {
-                            PushInstanceInheritance(type, id, parent);
-                        }*/
+                            parentMaps[i] = kindData.Results[parents[i]];
+                        }
+
+                        kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                            kind,
+                            parentMaps,
+                            kindData.Results[id]);
                     }
 
 
                     var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
-                    if (prototype == null)
-                        continue;
-
-                    kindData.Instances[id] = prototype;
+                    if (prototype != null)
+                    {
+                        kindData.Instances[id] = prototype;
+                    }
 
                     pushedSet.Add(id);
                 }
             }
+
+#endif
 
             //todo paul i hate it but i am not opening that can of worms in this refactor
             PrototypesReloaded?.Invoke(
@@ -282,7 +290,6 @@ namespace Robust.Shared.Prototypes
                             g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
                                 g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
                                     .ToDictionary(a => a, a => _kinds[g.Key].Instances[a])))));
-#endif
         }
 
         /// <summary>
@@ -494,14 +501,6 @@ namespace Robust.Shared.Prototypes
                 Result = result;
                 CountParentsRemaining = countParentsRemaining;
             }
-        }
-
-        private MappingDataNode PushInstanceInheritance(Type type, MappingDataNode result, MappingDataNode[] parents)
-        {
-            return _serializationManager.PushCompositionWithGenericNode(
-                type,
-                parents,
-                result);
         }
 
         #endregion IPrototypeManager members

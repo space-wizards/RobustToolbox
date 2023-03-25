@@ -22,11 +22,13 @@ namespace Robust.Server.Bql
                 return;
             }
 
+            var transformSystem = _entities.System<SharedTransformSystem>();
+
             var (entities, rest) = _bql.SimpleParseAndExecute(argStr[6..]);
 
             foreach (var ent in entities.ToList())
             {
-                var cmds = SubstituteEntityDetails(_entities, shell, ent, rest).Split(";");
+                var cmds = SubstituteEntityDetails(_entities, transformSystem, shell, ent, rest).Split(";");
                 foreach (var cmd in cmds)
                 {
                     shell.ExecuteCommand(cmd);
@@ -37,6 +39,7 @@ namespace Robust.Server.Bql
         // This will be refactored out soon.
         private static string SubstituteEntityDetails(
             IEntityManager entMan,
+            SharedTransformSystem transformSystem,
             IConsoleShell shell,
             EntityUid ent,
             string ruleString)
@@ -44,33 +47,29 @@ namespace Robust.Server.Bql
             var transform = entMan.GetComponent<TransformComponent>(ent);
             var metadata = entMan.GetComponent<MetaDataComponent>(ent);
 
+            var worldPos = transformSystem.GetWorldPosition(transform);
+            var localPos = transform.LocalPosition;
+
             // gross, is there a better way to do this?
             ruleString = ruleString.Replace("$ID", ent.ToString());
-            ruleString = ruleString.Replace("$WX",
-                transform.WorldPosition.X.ToString(CultureInfo.InvariantCulture));
-            ruleString = ruleString.Replace("$WY",
-                transform.WorldPosition.Y.ToString(CultureInfo.InvariantCulture));
-            ruleString = ruleString.Replace("$LX",
-                transform.LocalPosition.X.ToString(CultureInfo.InvariantCulture));
-            ruleString = ruleString.Replace("$LY",
-                transform.LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
+            ruleString = ruleString.Replace("$WX", worldPos.X.ToString(CultureInfo.InvariantCulture));
+            ruleString = ruleString.Replace("$WY", worldPos.Y.ToString(CultureInfo.InvariantCulture));
+            ruleString = ruleString.Replace("$LX", localPos.X.ToString(CultureInfo.InvariantCulture));
+            ruleString = ruleString.Replace("$LY", localPos.Y.ToString(CultureInfo.InvariantCulture));
             ruleString = ruleString.Replace("$NAME", metadata.EntityName);
 
-            if (shell.Player is IPlayerSession player)
+            if (shell.Player is { AttachedEntity: { } pEntity})
             {
-                var ptransform = player.AttachedEntityTransform;
-                if (ptransform != null)
-                {
-                    ruleString = ruleString.Replace("$PID", ptransform.Owner.ToString());
-                    ruleString = ruleString.Replace("$PWX",
-                        ptransform.WorldPosition.X.ToString(CultureInfo.InvariantCulture));
-                    ruleString = ruleString.Replace("$PWY",
-                        ptransform.WorldPosition.Y.ToString(CultureInfo.InvariantCulture));
-                    ruleString = ruleString.Replace("$PLX",
-                        ptransform.LocalPosition.X.ToString(CultureInfo.InvariantCulture));
-                    ruleString = ruleString.Replace("$PLY",
-                        ptransform.LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
-                }
+                var pTransform = entMan.GetComponent<TransformComponent>(pEntity);
+
+                var pWorldPos = transformSystem.GetWorldPosition(pTransform);
+                var pLocalPos = pTransform.LocalPosition;
+
+                ruleString = ruleString.Replace("$PID", pEntity.ToString());
+                ruleString = ruleString.Replace("$PWX", pWorldPos.X.ToString(CultureInfo.InvariantCulture));
+                ruleString = ruleString.Replace("$PWY", pWorldPos.Y.ToString(CultureInfo.InvariantCulture));
+                ruleString = ruleString.Replace("$PLX", pLocalPos.X.ToString(CultureInfo.InvariantCulture));
+                ruleString = ruleString.Replace("$PLY", pLocalPos.Y.ToString(CultureInfo.InvariantCulture));
             }
 
             return ruleString;

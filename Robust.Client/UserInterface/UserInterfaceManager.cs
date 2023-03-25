@@ -170,10 +170,6 @@ namespace Robust.Client.UserInterface
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
             RootControl.AddChild(PopupRoot);
-
-            _tooltip = new Tooltip();
-            PopupRoot.AddChild(_tooltip);
-            _tooltip.Visible = false;
         }
 
         public void InitializeTesting()
@@ -269,7 +265,7 @@ namespace Robust.Client.UserInterface
 
             // count down tooltip delay if we're not showing one yet and
             // are hovering the mouse over a control without moving it
-            if (_tooltipDelay != null && !showingTooltip)
+            if (_tooltipDelay != null && !_showingTooltip)
             {
                 _tooltipTimer += args.DeltaSeconds;
                 if (_tooltipTimer >= _tooltipDelay)

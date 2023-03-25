@@ -2,7 +2,10 @@
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
@@ -99,5 +102,42 @@ public static class CompletionHelper
 
         var playerOptions = players.Sessions.Select(p => new CompletionOption(p.Name));
         return sorted ? playerOptions.OrderBy(o => o.Value) : playerOptions;
+    }
+
+    public static IEnumerable<CompletionOption> MapIds(IEntityManager? entManager = null)
+    {
+        IoCManager.Resolve(ref entManager);
+
+        return entManager.EntityQuery<MapComponent>(true).Select(o => new CompletionOption(o.WorldMap.ToString()));
+    }
+
+    public static IEnumerable<CompletionOption> EntityUids(string text, IEntityManager? entManager = null)
+    {
+        IoCManager.Resolve(ref entManager);
+
+        foreach (var ent in entManager.GetEntities())
+        {
+            var entString = ent.ToString();
+
+            if (!entString.StartsWith(text))
+                continue;
+
+            yield return new CompletionOption(entString);
+        }
+    }
+
+    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : Component
+    {
+        IoCManager.Resolve(ref entManager);
+
+        var query = entManager.AllEntityQueryEnumerator<T>();
+
+        while (query.MoveNext(out var uid, out _))
+        {
+            if (!uid.ToString().StartsWith(text))
+                continue;
+
+            yield return new CompletionOption(uid.ToString());
+        }
     }
 }

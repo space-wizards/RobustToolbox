@@ -51,7 +51,6 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
@@ -376,7 +375,7 @@ namespace Robust.Client.GameStates
         public void RequestFullState(EntityUid? missingEntity = null)
         {
             _sawmill.Info("Requesting full server state");
-            _network.ClientSendMessage(new MsgStateRequestFull() { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? EntityUid.Invalid });
+            _network.ClientSendMessage(new MsgStateRequestFull { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? EntityUid.Invalid });
             _processor.RequestFullState();
         }
 
@@ -391,8 +390,8 @@ namespace Robust.Client.GameStates
             }
 
             var input = _entitySystemManager.GetEntitySystem<InputSystem>();
-            var pendingInputEnumerator = _pendingInputs.GetEnumerator();
-            var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
+            using var pendingInputEnumerator = _pendingInputs.GetEnumerator();
+            using var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
             var hasPendingInput = pendingInputEnumerator.MoveNext();
             var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
@@ -449,8 +448,7 @@ namespace Robust.Client.GameStates
             PredictionNeedsResetting = false;
 
             using var _ = _prof.Group("ResetPredictedEntities");
-            using var __ = _timing.StartPastPredictionArea();
-            using var ___ = _timing.StartStateApplicationArea();
+            using var __ = _timing.StartStateApplicationArea();
 
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
@@ -463,6 +461,7 @@ namespace Robust.Client.GameStates
 
             foreach (var entity in system.DirtyEntities)
             {
+                DebugTools.Assert(toRemove.Count == 0);
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
                     _sawmill.Debug($"Entity {entity} was made dirty.");
@@ -520,8 +519,9 @@ namespace Robust.Client.GameStates
                 // Remove predicted component additions
                 foreach (var comp in toRemove)
                 {
-                    _entities.RemoveComponent(comp.Owner, comp);
+                    _entities.RemoveComponent(entity, comp);
                 }
+                toRemove.Clear();
 
                 // Re-add predicted removals
                 if (system.RemovedComponents.TryGetValue(entity, out var netIds))
@@ -800,7 +800,7 @@ namespace Robust.Client.GameStates
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
             var currentEnts = _entities.GetEntities();
-            var toDelete = new List<EntityUid>(Math.Max(64, currentEnts.Count() - stateEnts.Count()));
+            var toDelete = new List<EntityUid>(Math.Max(64, _entities.EntityCount - stateEnts.Count));
             foreach (var ent in currentEnts)
             {
                 if (ent.IsClientSide())
@@ -821,11 +821,11 @@ namespace Robust.Client.GameStates
                     continue;
 
                 // this entity is going to get deleted, but maybe some if its children won't be, so lets detach them to null.
-                xformSys.DetachParentToNull(xform, xforms, metas);
+                xformSys.DetachParentToNull(ent, xform, xforms, metas);
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(xforms.GetComponent(child.Value), xforms, metas, xform);
+                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xforms, metas, xform);
 
                     if (!deleteClientSideEnts && child.Value.IsClientSide())
                     {
@@ -867,13 +867,13 @@ namespace Robust.Client.GameStates
                     continue; // Already deleted? or never sent to us?
 
                 // First, a single recursive map change
-                xformSys.DetachParentToNull(xform, xforms, metas);
+                xformSys.DetachParentToNull(id, xform, xforms, metas);
 
                 // Then detach all children.
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(xforms.GetComponent(child.Value), xforms, metas, xform);
+                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xforms, metas, xform);
                 }
 
                 // Finally, delete the entity.
@@ -939,7 +939,7 @@ namespace Robust.Client.GameStates
                         }
 
                         meta._flags |= MetaDataFlags.Detached;
-                        xformSys.DetachParentToNull(xform, xforms, metas);
+                        xformSys.DetachParentToNull(ent, xform, xforms, metas);
                         DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
 
                         if (container != null)
@@ -1106,7 +1106,7 @@ namespace Robust.Client.GameStates
                         _sawmill.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
                         _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(HandleEntityState)}");
 #else
-                    _sawmill.Error($"Failed to apply comp state: entity={comp.Owner}, comp={comp.GetType()}");
+                    _sawmill.Error($"Failed to apply comp state: entity={uid}, comp={comp.GetType()}");
                     throw;
 #endif
                 }
@@ -1180,7 +1180,7 @@ namespace Robust.Client.GameStates
                     containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container, null, true);
                 }
 
-                _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(xform);
+                _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(uid, xform);
 
                 if (container != null)
                     containerSys.AddExpectedEntity(uid, container);

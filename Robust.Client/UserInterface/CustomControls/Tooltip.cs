@@ -1,4 +1,5 @@
-﻿using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -12,9 +13,32 @@ namespace Robust.Client.UserInterface.CustomControls
             set => _label.Text = value;
         }
 
+        /// <summary>
+        /// Should we track the mouse cursor.
+        /// </summary>
+        public bool Tracking = false;
+
         public Tooltip()
         {
-            AddChild(_label = new Label());
+            var vbox = new BoxContainer()
+            {
+                Orientation = BoxContainer.LayoutOrientation.Vertical,
+                RectClipContent = true,
+            };
+
+            AddChild(vbox);
+
+            vbox.AddChild(_label = new Label());
+        }
+
+        protected override void FrameUpdate(FrameEventArgs args)
+        {
+            base.FrameUpdate(args);
+
+            if (!Tracking)
+                return;
+
+            Tooltips.PositionTooltip(this);
         }
     }
 }

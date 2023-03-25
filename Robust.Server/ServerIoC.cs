@@ -69,6 +69,8 @@ namespace Robust.Server
             deps.Register<IServerEntityManagerInternal, ServerEntityManager>();
             deps.Register<IServerGameStateManager, ServerGameStateManager>();
             deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
+            deps.Register<IServerReplayRecordingManager, ReplayRecordingManager>();
+            deps.Register<IInternalReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IServerNetManager, NetManager>();
             deps.Register<IStatusHost, StatusHost>();
             deps.Register<ISystemConsoleManager, SystemConsoleManager>();
@@ -79,10 +81,10 @@ namespace Robust.Server
             deps.Register<IScriptHost, ScriptHost>();
             deps.Register<IMetricsManager, MetricsManager>();
             deps.Register<IAuthManager, AuthManager>();
-            deps.Register<IPhysicsManager, PhysicsManager>();
             deps.Register<IBqlQueryManager, BqlQueryManager>();
             deps.Register<HubManager, HubManager>();
             deps.Register<IRobustSerializer, ServerRobustSerializer>();
+            deps.Register<IRobustSerializerInternal, ServerRobustSerializer>();
             deps.Register<IConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<INetConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();

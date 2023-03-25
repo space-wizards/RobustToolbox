@@ -181,6 +181,17 @@ public abstract class SharedAudioSystem : EntitySystem
     }
 
     /// <summary>
+    /// Play an audio file at the specified EntityCoordinates for every entity in PVS range.
+    /// </summary>
+    /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
+    /// <param name="uid">The EntityCoordinates to attach the audio source to.</param>
+    /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
+    public IPlayingAudioStream? PlayPvs(SoundSpecifier? sound, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    {
+        return sound == null ? null : Play(GetSound(sound), Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager), coordinates, true, audioParams ?? sound.Params);
+    }
+
+    /// <summary>
     /// Play an audio file following an entity for every entity in PVS range.
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
@@ -201,6 +212,17 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="user">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
     /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
     public abstract IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null);
+
+    /// <summary>
+    /// Plays a predicted sound following an EntityCoordinates. The server will send the sound to every player in PVS range,
+    /// unless that player is attached to the "user" entity that initiated the sound. The client-side system plays
+    /// this sound as normal
+    /// </summary>
+    /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
+    /// <param name="coordinates">The entitycoordinates "emitting" the audio</param>
+    /// <param name="user">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
+    /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
+    public abstract IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user, AudioParams? audioParams = null);
 
     // TODO rename to play static
     /// <summary>

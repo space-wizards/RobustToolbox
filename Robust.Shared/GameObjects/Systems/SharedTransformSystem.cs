@@ -16,7 +16,6 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
-        [Dependency] private readonly MetaDataSystem _metaSys = default!;
 
         // Needed on release no remove.
         // ReSharper disable once NotAccessedField.Local
@@ -54,7 +53,7 @@ namespace Robust.Shared.GameObjects
                 _logger.Error($"Entity {ToPrettyString(ev.Entity)} is attaching itself to a terminating entity {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
         }
 
-        private void MapManagerOnTileChanged(TileChangedEvent e)
+        private void MapManagerOnTileChanged(ref TileChangedEvent e)
         {
             if(e.NewTile.Tile != Tile.Empty)
                 return;
@@ -97,9 +96,9 @@ namespace Robust.Shared.GameObjects
                 // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
                 // Avoid unnecessary entity updates.
                 if (EntityManager.IsQueuedForDeletion(entity))
-                    DetachParentToNull(xform, xformQuery, metaQuery, gridXform);
+                    DetachParentToNull(entity, xform, xformQuery, metaQuery, gridXform);
                 else
-                    SetParent(xform, mapTransform.Owner, parentXform: mapTransform);
+                    SetParent(entity, xform, mapTransform.Owner, parentXform: mapTransform);
             }
         }
 
@@ -237,7 +236,7 @@ namespace Robust.Shared.GameObjects
 
             // Fast path, we're not on a grid.
             if (xform.GridUid == null)
-                return (Vector2i) xform.WorldPosition;
+                return GetWorldPosition(xform).Floored();
 
             // We're on a grid, need to convert the coordinates to grid tiles.
             return _mapManager.GetGrid(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);

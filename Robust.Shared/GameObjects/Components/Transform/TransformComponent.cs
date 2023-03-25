@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Stores the position and orientation of the entity.
     /// </summary>
-    [NetworkedComponent]
+    [RegisterComponent, NetworkedComponent]
     public sealed class TransformComponent : Component, IComponentDebug
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
@@ -99,14 +99,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The EntityUid of the map which this object is on, if any.
         /// </summary>
-        public EntityUid? MapUid
-        {
-            get
-            {
-                var id = _mapManager.GetMapEntityId(MapID);
-                return id.IsValid() ? id : null;
-            }
-        }
+        public EntityUid? MapUid { get; internal set; }
 
         /// <summary>
         ///     The EntityUid of the grid which this object is on, if any.
@@ -167,6 +160,7 @@ namespace Robust.Shared.GameObjects
         ///     Current world rotation of the entity.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Obsolete("Use the system method instead")]
         public Angle WorldRotation
         {
             get
@@ -195,15 +189,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <summary>
-        ///     Reference to the transform of the container of this object if it exists, can be nested several times.
-        /// </summary>
+        // lazy VV convenience variable.
         [ViewVariables]
-        [Obsolete("Use ParentUid and query the parent TransformComponent")]
-        public TransformComponent? Parent
-        {
-            get => !_parent.IsValid() ? null : _entMan.GetComponent<TransformComponent>(_parent);
-        }
+        private TransformComponent? _parentXform => !_parent.IsValid() ? null : _entMan.GetComponent<TransformComponent>(_parent);
 
         /// <summary>
         /// The UID of the parent entity that this entity is attached to.
@@ -213,6 +201,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Matrix for transforming points from local to world space.
         /// </summary>
+        [Obsolete("Use the system method instead")]
         public Matrix3 WorldMatrix
         {
             get
@@ -238,6 +227,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Matrix for transforming points from world to local space.
         /// </summary>
+        [Obsolete("Use the system method instead")]
         public Matrix3 InvWorldMatrix
         {
             get
@@ -266,6 +256,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
+        [Obsolete("Use the system method instead")]
         public Vector2 WorldPosition
         {
             get
@@ -307,7 +298,7 @@ namespace Robust.Shared.GameObjects
                 return new EntityCoordinates(valid ? _parent : Owner, valid ? LocalPosition : Vector2.Zero);
             }
             [Obsolete("Use the system's setter method instead.")]
-            set => _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, value);
+            set => _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(Owner, this, value);
         }
 
         /// <summary>
@@ -326,6 +317,7 @@ namespace Robust.Shared.GameObjects
         public Vector2 LocalPosition
         {
             get => _localPosition;
+            [Obsolete("Use the system method instead")]
             set
             {
                 if(Anchored)
@@ -354,6 +346,7 @@ namespace Robust.Shared.GameObjects
         public bool Anchored
         {
             get => _anchored;
+            [Obsolete("Use the SharedTransformSystem.AnchorEntity/Unanchor methods instead.")]
             set
             {
                 // This will be set again when the transform initializes, actually anchoring it.
@@ -363,14 +356,14 @@ namespace Robust.Shared.GameObjects
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
-                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(this, grid);
+                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
                 }
                 else if (!value && _anchored)
                 {
                     // An anchored entity is always parented to the grid.
                     // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
                     // then this will be false.
-                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(this);
+                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(Owner, this);
                 }
             }
         }
@@ -427,48 +420,10 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
+        [Obsolete("Use the system's method instead.")]
         public void AttachToGridOrMap()
         {
-            bool TerminatingOrDeleted(EntityUid uid)
-            {
-                return !_entMan.TryGetComponent(uid, out MetaDataComponent? meta)
-                       || meta.EntityLifeStage >= EntityLifeStage.Terminating;
-            }
-
-            // nothing to do
-            if (!_parent.IsValid())
-                return;
-
-            var mapPos = MapPosition;
-
-            EntityUid newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.Owner))
-            {
-                newMapEntity = mapGrid.Owner;
-            }
-            else if (_mapManager.GetMapEntityId(mapPos.MapId) is { Valid: true } mapEnt
-                     && !TerminatingOrDeleted(mapEnt))
-            {
-                newMapEntity = mapEnt;
-            }
-            else
-            {
-                if (!_mapManager.IsMap(Owner))
-                    Logger.Warning($"Detached a non-map entity ({_entMan.ToPrettyString(Owner)}) to null-space. Unless this entity is being deleted, this should not happen.");
-
-                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().DetachParentToNull(this);
-                return;
-            }
-
-            // this would be a no-op
-            if (newMapEntity == _parent)
-            {
-                return;
-            }
-
-            var newMapEntityXform = _entMan.GetComponent<TransformComponent>(newMapEntity);
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(this, new(newMapEntity, newMapEntityXform.InvWorldMatrix.Transform(mapPos.Position)));
-            _entMan.Dirty(this);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AttachToGridOrMap(Owner, this);
         }
 
         /// <summary>
@@ -478,13 +433,15 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Use TransformSystem.SetParent() instead")]
         public void AttachParent(TransformComponent newParent)
         {
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(this, newParent.Owner, newParent);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(Owner, this, newParent.Owner, newParent);
         }
 
         internal void ChangeMapId(MapId newMapId, EntityQuery<TransformComponent> xformQuery)
         {
             if (newMapId == MapID)
                 return;
+
+            EntityUid? newUid = newMapId == MapId.Nullspace ? null : _mapManager.GetMapEntityId(newMapId);
 
             //Set Paused state
             var mapPaused = _mapManager.IsMapPaused(newMapId);
@@ -493,12 +450,14 @@ namespace Robust.Shared.GameObjects
             var metaSystem = _entMan.EntitySysManager.GetEntitySystem<MetaDataSystem>();
             metaSystem.SetEntityPaused(Owner, mapPaused, metaData);
 
+            MapUid = newUid;
             MapID = newMapId;
-            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts, metaSystem);
+            UpdateChildMapIdsRecursive(MapID, newUid, mapPaused, xformQuery, metaEnts, metaSystem);
         }
 
         internal void UpdateChildMapIdsRecursive(
             MapId newMapId,
+            EntityUid? newUid,
             bool mapPaused,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<MetaDataComponent> metaQuery,
@@ -514,11 +473,12 @@ namespace Robust.Shared.GameObjects
 
                 var concrete = xformQuery.GetComponent(child.Value);
 
+                concrete.MapUid = newUid;
                 concrete.MapID = newMapId;
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery, system);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, newUid, mapPaused, xformQuery, metaQuery, system);
                 }
             }
         }
@@ -526,12 +486,13 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Use TransformSystem.SetParent() instead")]
         public void AttachParent(EntityUid parent)
         {
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(this, parent, _entMan.GetEntityQuery<TransformComponent>());
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(Owner, this, parent, _entMan.GetEntityQuery<TransformComponent>());
         }
 
         /// <summary>
         /// Get the WorldPosition and WorldRotation of this entity faster than each individually.
         /// </summary>
+        [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation()
         {
             // Worldmatrix needs calculating anyway for worldpos so we'll just drop it.
@@ -540,6 +501,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <see cref="GetWorldPositionRotation()"/>
+        [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(EntityQuery<TransformComponent> xforms)
         {
             var (worldPos, worldRot, _) = GetWorldPositionRotationMatrix(xforms);
@@ -549,6 +511,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
+        [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix) GetWorldPositionRotationMatrix(EntityQuery<TransformComponent> xforms)
         {
             var parent = _parent;
@@ -574,6 +537,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
+        [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix) GetWorldPositionRotationMatrix()
         {
             var xforms = _entMan.GetEntityQuery<TransformComponent>();
@@ -583,6 +547,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
+        [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix()
         {
             var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
@@ -592,6 +557,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
+        [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityQuery<TransformComponent> xformQuery)
         {
             var (worldPos, worldRot, _, invWorldMatrix) = GetWorldPositionRotationMatrixWithInv(xformQuery);
@@ -601,6 +567,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
+        [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv()
         {
             var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
@@ -610,6 +577,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
+        [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv(EntityQuery<TransformComponent> xformQuery)
         {
             var parent = _parent;

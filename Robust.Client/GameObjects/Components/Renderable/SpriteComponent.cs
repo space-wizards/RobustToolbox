@@ -30,9 +30,8 @@ using RSIDirection = Robust.Client.Graphics.RSI.State.Direction;
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(SharedSpriteComponent))]
-    [ComponentReference(typeof(ISpriteComponent))]
-    public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
-        IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>
+    [RegisterComponent]
+    public sealed class SpriteComponent : SharedSpriteComponent, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
@@ -295,7 +294,7 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
-        [ViewVariables] private List<Layer> Layers = new();
+        [ViewVariables] internal List<Layer> Layers = new();
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
@@ -305,6 +304,8 @@ namespace Robust.Client.GameObjects
 
         void ISerializationHooks.AfterDeserialization()
         {
+            // Please somebody burn this to the ground. There is so much spaghetti.
+
             IoCManager.InjectDependencies(this);
 
             {
@@ -367,8 +368,8 @@ namespace Robust.Client.GameObjects
             UpdateLocalMatrix();
             drawDepth = other.drawDepth;
             _screenLock = other._screenLock;
-            _overrideDirection = other._overrideDirection;
-            _enableOverrideDirection = other._enableOverrideDirection;
+            DirectionOverride = other.DirectionOverride;
+            EnableDirectionOverride = other.EnableDirectionOverride;
             Layers = new List<Layer>(other.Layers.Count);
             foreach (var otherLayer in other.Layers)
             {
@@ -1243,36 +1244,18 @@ namespace Robust.Client.GameObjects
         private bool _snapCardinals = false;
 
         [DataField("overrideDir")]
-        private Direction _overrideDirection = Direction.East;
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Direction DirectionOverride = Direction.East;
 
         [DataField("enableOverrideDir")]
-        private bool _enableOverrideDirection;
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool EnableDirectionOverride;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public bool NoRotation { get => _screenLock; set => _screenLock = value; }
 
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Direction DirectionOverride { get => _overrideDirection; set => _overrideDirection = value; }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool EnableDirectionOverride { get => _enableOverrideDirection; set => _enableOverrideDirection = value; }
-
-        // Sprite rendering path
-        public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
-        {
-            Direction? overrideDir = null;
-            if (_enableOverrideDirection)
-            {
-                overrideDir = _overrideDirection;
-            }
-
-            RenderInternal(drawingHandle, eyeRotation, worldRotation, worldPosition, overrideDir);
-        }
-
-        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
+        internal void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             var cardinal = Angle.Zero;
@@ -1319,51 +1302,6 @@ namespace Robust.Client.GameObjects
             };
         }
 
-        public void FrameUpdate(float delta)
-        {
-            foreach (var t in Layers)
-            {
-                var layer = t;
-                // Since StateId is a struct, we can't null-check it directly.
-                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated || layer.Blank)
-                {
-                    continue;
-                }
-
-                var rsi = layer.RSI ?? BaseRSI;
-                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
-                {
-                    state = GetFallbackState(resourceCache);
-                }
-
-                if (!state.IsAnimated)
-                {
-                    continue;
-                }
-
-                layer.AnimationTime += delta;
-                layer.AnimationTimeLeft -= delta;
-                _advanceFrameAnimation(layer, state);
-            }
-        }
-
-        private static void _advanceFrameAnimation(Layer layer, RSI.State state)
-        {
-            var delayCount = state.DelayCount;
-            while (layer.AnimationTimeLeft < 0)
-            {
-                layer.AnimationFrame += 1;
-
-                if (layer.AnimationFrame >= delayCount)
-                {
-                    layer.AnimationFrame = 0;
-                    layer.AnimationTime = -layer.AnimationTimeLeft;
-                }
-
-                layer.AnimationTimeLeft += state.GetDelay(layer.AnimationFrame);
-            }
-        }
-
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState is not SpriteComponentState thestate)
@@ -1400,7 +1338,7 @@ namespace Robust.Client.GameObjects
 
         private void QueueUpdateRenderTree()
         {
-            if (TreeUpdateQueued || entities?.EventBus == null)
+            if (TreeUpdateQueued || !Owner.IsValid())
                 return;
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
@@ -1410,7 +1348,7 @@ namespace Robust.Client.GameObjects
 
         private void QueueUpdateIsInert()
         {
-            if (_inertUpdateQueued || entities?.EventBus == null)
+            if (_inertUpdateQueued || !Owner.IsValid())
                 return;
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
@@ -1821,8 +1759,7 @@ namespace Robust.Client.GameObjects
                 }
 
                 AnimationTime = animationTime;
-                // After setting timing data correctly, run advance to get to the correct frame.
-                _advanceFrameAnimation(this, state);
+                AdvanceFrameAnimation(state);
             }
 
             public void SetAutoAnimated(bool value)
@@ -1970,6 +1907,7 @@ namespace Robust.Client.GameObjects
             /// </summary>
             internal void UpdateActualState()
             {
+                _parent.QueueUpdateIsInert();
                 if (!State.IsValid)
                 {
                     _actualState = null;
@@ -2086,6 +2024,23 @@ namespace Robust.Client.GameObjects
                     return Texture ?? _parent.resourceCache.GetFallback<TextureResource>().Texture;
 
                 return state.GetFrame(dir, AnimationFrame);
+            }
+
+            internal void AdvanceFrameAnimation(RSI.State state)
+            {
+                var delayCount = state.DelayCount;
+                while (AnimationTimeLeft < 0)
+                {
+                    AnimationFrame += 1;
+
+                    if (AnimationFrame >= delayCount)
+                    {
+                        AnimationFrame = 0;
+                        AnimationTime = -AnimationTimeLeft;
+                    }
+
+                    AnimationTimeLeft += state.GetDelay(AnimationFrame);
+                }
             }
         }
 

@@ -21,6 +21,7 @@ using Robust.Client.Serialization;
 using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.RichText;
 using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
@@ -60,7 +61,7 @@ namespace Robust.Client
             deps.Register<IReflectionManager, ClientReflectionManager>();
             deps.Register<IConsoleHost, ClientConsoleHost>();
             deps.Register<IClientConsoleHost, ClientConsoleHost>();
-            deps.Register<IComponentFactory, ClientComponentFactory>();
+            deps.Register<IComponentFactory, ComponentFactory>();
             deps.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             deps.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
             deps.Register<GameController, GameController>();
@@ -89,7 +90,7 @@ namespace Robust.Client
             deps.Register<IMidiManager, MidiManager>();
             deps.Register<IAuthManager, AuthManager>();
             deps.Register<ProfViewManager>();
-            deps.Register<IPhysicsManager, PhysicsManager>();
+
             switch (mode)
             {
                 case GameController.DisplayMode.Headless:
@@ -128,12 +129,14 @@ namespace Robust.Client
             deps.Register<IClientConGroupController, ClientConGroupController>();
             deps.Register<IScriptClient, ScriptClient>();
             deps.Register<IRobustSerializer, ClientRobustSerializer>();
+            deps.Register<IRobustSerializerInternal, ClientRobustSerializer>();
             deps.Register<IClientRobustSerializer, ClientRobustSerializer>();
             deps.Register<IConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
             deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
+            deps.Register<MarkupTagManager>();
         }
     }
 }

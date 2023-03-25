@@ -51,7 +51,22 @@ namespace Robust.Shared.Serialization
         event Action ClientHandshakeComplete;
 
         byte[] GetSerializableTypesHash();
+        string GetSerializableTypesHashString();
 
         (byte[] Hash, byte[] Package) GetStringSerializerPackage();
+    }
+
+    internal interface IRobustSerializerInternal : IRobustSerializer
+    {
+        Dictionary<Type, uint> GetTypeMap();
+
+        long LargestObjectSerializedBytes { get; }
+        Type? LargestObjectSerializedType { get; }
+        long BytesSerialized { get; }
+        long ObjectsSerialized { get; }
+        long LargestObjectDeserializedBytes { get; }
+        Type? LargestObjectDeserializedType { get; }
+        long BytesDeserialized { get; }
+        long ObjectsDeserialized { get; }
     }
 }

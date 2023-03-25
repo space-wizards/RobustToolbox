@@ -40,11 +40,13 @@ namespace Robust.Shared.Map.Components
     {
         public MapId MapId;
         public bool LightingEnabled;
+        public bool MapPaused;
 
-        public MapComponentState(MapId mapId, bool lightingEnabled)
+        public MapComponentState(MapId mapId, bool lightingEnabled, bool paused)
         {
             MapId = mapId;
             LightingEnabled = lightingEnabled;
+            MapPaused = paused;
         }
     }
 }

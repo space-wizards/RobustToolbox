@@ -19,6 +19,7 @@ namespace Robust.Server.Prototypes
         {
             RegisterIgnore("shader");
             RegisterIgnore("uiTheme");
+            RegisterIgnore("font");
         }
 
         public override void Initialize()
@@ -30,7 +31,7 @@ namespace Robust.Server.Prototypes
 
         private void HandleReloadPrototypes(MsgReloadPrototypes msg)
         {
-#if !FULL_RELEASE
+#if TOOLS
             if (!_playerManager.TryGetSessionByChannel(msg.MsgChannel, out var player) ||
                 !_conGroups.CanAdminReloadPrototypes(player))
             {

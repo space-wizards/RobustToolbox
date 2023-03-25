@@ -160,7 +160,6 @@ namespace Robust.Shared.GameObjects
 #endif
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
             metadata.EntityLifeStage = EntityLifeStage.Initialized;
-            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(uid));
         }
 
         public void StartComponents(EntityUid uid)
@@ -516,14 +515,11 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating)
         {
-            if (component == null)
-                throw new ArgumentNullException(nameof(component));
-
-            if (component.Owner != uid)
-                throw new InvalidOperationException("Component is not owned by entity.");
-
             if (component.Deleted)
+            {
+                Logger.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {_componentFactory.GetComponentName(component.GetType())}.");
                 return;
+            }
 
 #if EXCEPTION_TOLERANCE
             try
@@ -687,7 +683,13 @@ namespace Robust.Shared.GameObjects
         public T EnsureComponent<T>(EntityUid uid) where T : Component, new()
         {
             if (TryGetComponent<T>(uid, out var component))
-                return component;
+            {
+                // Check for deferred component removal.
+                if (component.LifeStage <= ComponentLifeStage.Running)
+                    return component;
+                else
+                    RemoveComponent(uid, component);
+            }
 
             return AddComponent<T>(uid);
         }
@@ -698,8 +700,14 @@ namespace Robust.Shared.GameObjects
         {
             if (TryGetComponent<T>(entity, out var comp))
             {
-                component = comp;
-                return true;
+                // Check for deferred component removal.
+                if (comp.LifeStage <= ComponentLifeStage.Running)
+                {
+                    component = comp;
+                    return true;
+                }
+                else
+                    RemoveComponent(entity, comp);
             }
 
             component = AddComponent<T>(entity);
@@ -1416,12 +1424,13 @@ namespace Robust.Shared.GameObjects
             _metaDict = metaDict;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1)
         {
             while (true)
             {
                 if (!_traitDict.MoveNext())
                 {
+                    uid = default;
                     comp1 = null;
                     return false;
                 }
@@ -1438,9 +1447,16 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
+                uid = current.Key;
                 comp1 = (TComp1)current.Value;
                 return true;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
+        {
+            return MoveNext(out _, out comp1);
         }
 
         public void Dispose()
@@ -1470,12 +1486,13 @@ namespace Robust.Shared.GameObjects
             _metaDict = metaDict;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
             while (true)
             {
                 if (!_traitDict.MoveNext())
                 {
+                    uid = default;
                     comp1 = null;
                     comp2 = null;
                     return false;
@@ -1498,10 +1515,17 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
+                uid = current.Key;
                 comp1 = (TComp1)current.Value;
                 comp2 = (TComp2)comp2Obj;
                 return true;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
+        {
+            return MoveNext(out _, out comp1, out comp2);
         }
 
         public void Dispose()
@@ -1535,12 +1559,13 @@ namespace Robust.Shared.GameObjects
             _metaDict = metaDict;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
         {
             while (true)
             {
                 if (!_traitDict.MoveNext())
                 {
+                    uid = default;
                     comp1 = null;
                     comp2 = null;
                     comp3 = null;
@@ -1569,11 +1594,21 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
+                uid = current.Key;
                 comp1 = (TComp1)current.Value;
                 comp2 = (TComp2)comp2Obj;
                 comp3 = (TComp3)comp3Obj;
                 return true;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext(
+            [NotNullWhen(true)] out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3)
+        {
+            return MoveNext(out _, out comp1, out comp2, out comp3);
         }
 
         public void Dispose()
@@ -1611,12 +1646,13 @@ namespace Robust.Shared.GameObjects
             _metaDict = metaDict;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
         {
             while (true)
             {
                 if (!_traitDict.MoveNext())
                 {
+                    uid = default;
                     comp1 = null;
                     comp2 = null;
                     comp3 = null;
@@ -1651,12 +1687,23 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
+                uid = current.Key;
                 comp1 = (TComp1)current.Value;
                 comp2 = (TComp2)comp2Obj;
                 comp3 = (TComp3)comp3Obj;
                 comp4 = (TComp4)comp4Obj;
                 return true;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext(
+            [NotNullWhen(true)] out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3,
+            [NotNullWhen(true)] out TComp4? comp4)
+        {
+            return MoveNext(out _, out comp1, out comp2, out comp3, out comp4);
         }
 
         public void Dispose()
@@ -1683,12 +1730,13 @@ namespace Robust.Shared.GameObjects
             _traitDict = traitDict.GetEnumerator();
         }
 
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1)
         {
             while (true)
             {
                 if (!_traitDict.MoveNext())
                 {
+                    uid = default;
                     comp1 = null;
                     return false;
                 }
@@ -1700,9 +1748,16 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
+                uid = current.Key;
                 comp1 = (TComp1)current.Value;
                 return true;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
+        {
+            return MoveNext(out _, out comp1);
         }
 
         public void Dispose()
@@ -1729,12 +1784,13 @@ namespace Robust.Shared.GameObjects
             _traitDict2 = traitDict2;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
             while (true)
             {
                 if (!_traitDict.MoveNext())
                 {
+                    uid = default;
                     comp1 = null;
                     comp2 = null;
                     return false;
@@ -1752,10 +1808,17 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
+                uid = current.Key;
                 comp1 = (TComp1)current.Value;
                 comp2 = (TComp2)comp2Obj;
                 return true;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
+        {
+            return MoveNext(out _, out comp1, out comp2);
         }
 
         public void Dispose()
@@ -1786,12 +1849,13 @@ namespace Robust.Shared.GameObjects
             _traitDict3 = traitDict3;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
         {
             while (true)
             {
                 if (!_traitDict.MoveNext())
                 {
+                    uid = default;
                     comp1 = null;
                     comp2 = null;
                     comp3 = null;
@@ -1815,11 +1879,21 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
+                uid = current.Key;
                 comp1 = (TComp1)current.Value;
                 comp2 = (TComp2)comp2Obj;
                 comp3 = (TComp3)comp3Obj;
                 return true;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext(
+            [NotNullWhen(true)] out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3)
+        {
+            return MoveNext(out _, out comp1, out comp2, out comp3);
         }
 
         public void Dispose()
@@ -1854,12 +1928,13 @@ namespace Robust.Shared.GameObjects
             _traitDict4 = traitDict4;
         }
 
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
         {
             while (true)
             {
                 if (!_traitDict.MoveNext())
                 {
+                    uid = default;
                     comp1 = null;
                     comp2 = null;
                     comp3 = null;
@@ -1889,12 +1964,23 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
+                uid = current.Key;
                 comp1 = (TComp1)current.Value;
                 comp2 = (TComp2)comp2Obj;
                 comp3 = (TComp3)comp3Obj;
                 comp4 = (TComp4)comp4Obj;
                 return true;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext(
+            [NotNullWhen(true)] out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3,
+            [NotNullWhen(true)] out TComp4? comp4)
+        {
+            return MoveNext(out _, out comp1, out comp2, out comp3, out comp4);
         }
 
         public void Dispose()

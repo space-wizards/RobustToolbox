@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Server.Player;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
@@ -15,8 +13,6 @@ namespace Robust.Server.GameStates
     internal sealed partial class PVSSystem
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
-
-        private const int DirtyBufferSize = 4;
 
         /// <summary>
         /// if it's a new entity we need to GetEntityState from tick 0.
@@ -55,15 +51,7 @@ namespace Robust.Server.GameStates
                 _dirtyEntities[_currentIndex].Add(uid);
         }
 
-        private void CleanupDirty(IEnumerable<IPlayerSession> sessions)
-        {
-            // Just in case we desync somehow
-            _currentIndex = ((int) _gameTiming.CurTick.Value + 1) % DirtyBufferSize;
-            _addEntities[_currentIndex].Clear();
-            _dirtyEntities[_currentIndex].Clear();
-        }
-
-        private bool TryGetTick(GameTick tick, [NotNullWhen(true)] out HashSet<EntityUid>? addEntities, [NotNullWhen(true)] out HashSet<EntityUid>? dirtyEntities)
+        private bool TryGetDirtyEntities(GameTick tick, [NotNullWhen(true)] out HashSet<EntityUid>? addEntities, [NotNullWhen(true)] out HashSet<EntityUid>? dirtyEntities)
         {
             var currentTick = _gameTiming.CurTick;
             if (currentTick.Value - tick.Value >= DirtyBufferSize)
@@ -74,13 +62,6 @@ namespace Robust.Server.GameStates
             }
 
             var index = tick.Value % DirtyBufferSize;
-            if (index > _dirtyEntities.Length - 1)
-            {
-                addEntities = null;
-                dirtyEntities = null;
-                return false;
-            }
-
             addEntities = _addEntities[index];
             dirtyEntities = _dirtyEntities[index];
             return true;

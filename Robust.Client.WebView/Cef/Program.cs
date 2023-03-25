@@ -20,7 +20,7 @@ namespace Robust.Client.WebView.Cef
             var mainArgs = new CefMainArgs(argv);
 
             // This will block executing until the subprocess is shut down.
-            var code = CefRuntime.ExecuteProcess(mainArgs, new RobustCefApp(), IntPtr.Zero);
+            var code = CefRuntime.ExecuteProcess(mainArgs, new RobustCefApp(null), IntPtr.Zero);
 
             if (code != 0)
             {

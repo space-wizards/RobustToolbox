@@ -4,7 +4,7 @@
 
 namespace Robust.Benchmarks.Migrations
 {
-    public partial class db : Migration
+    public partial class DB : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

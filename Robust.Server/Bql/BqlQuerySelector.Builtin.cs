@@ -82,14 +82,12 @@ namespace Robust.Server.Bql
             {
                 if (!entityManager.TryGetComponent<TransformComponent>(e, out var transform))
                     return isInverted;
-                var cur = transform;
-                while (cur.ParentUid != EntityUid.Invalid)
+                while (transform.ParentUid != EntityUid.Invalid)
                 {
-                    if ((cur.ParentUid == uid) ^ isInverted)
+                    if ((transform.ParentUid == uid) ^ isInverted)
                         return true;
-                    if (cur.Parent is null)
+                    if (!entityManager.TryGetComponent(transform.ParentUid, out transform))
                         return false;
-                    cur = cur.Parent;
                 }
 
                 return false;
@@ -167,8 +165,18 @@ namespace Robust.Server.Bql
 
         public override IEnumerable<EntityUid> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return DoSelection(entityManager.EntityQuery<TransformComponent>(true).Select(x => x.Owner), arguments,
+            return DoSelection(
+                Query(entityManager.AllEntityQueryEnumerator<TransformComponent>()),
+                arguments,
                 isInverted, entityManager);
+
+            IEnumerable<EntityUid> Query(AllEntityQueryEnumerator<TransformComponent> enumerator)
+            {
+                while (enumerator.MoveNext(out var entityUid, out _))
+                {
+                    yield return entityUid;
+                }
+            }
         }
     }
 
@@ -313,8 +321,8 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var radius = (float)(double)arguments[0];
-            var entityLookup = EntitySystem.Get<EntityLookupSystem>();
-            var xformQuery = IoCManager.Resolve<IEntityManager>().GetEntityQuery<TransformComponent>();
+            var entityLookup = entityManager.System<EntityLookupSystem>();
+            var xformQuery = entityManager.GetEntityQuery<TransformComponent>();
             var distinct = new HashSet<EntityUid>();
 
             foreach (var uid in input)

@@ -28,7 +28,9 @@ namespace Robust.Shared.Serialization.Manager
         private bool _initialized;
 
         private readonly ConcurrentDictionary<Type, DataDefinition> _dataDefinitions = new();
-        private readonly HashSet<Type> _copyByRefRegistrations = new();
+
+        // Always has a dummy value of 0 for any types that should be copied by ref
+        private readonly ConcurrentDictionary<Type, byte> _copyByRefRegistrations = new();
 
         [field: IoC.Dependency]
         public IDependencyCollection DependencyCollection { get; } = default!;
@@ -117,9 +119,10 @@ namespace Robust.Shared.Serialization.Manager
                 }
 
                 var isRecord = records.ContainsKey(type);
-                if (!type.IsValueType && !isRecord && !type.HasParameterlessConstructor())
+                if (!type.IsValueType && !isRecord && !type.HasParameterlessConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                 {
-                    sawmill.Debug(
+                    // If someone attempts to save or load an entity that uses this DataDefinition, this will lead to errors.
+                    sawmill.Warning(
                         $"Skipping registering data definition for type {type} since it has no parameterless ctor");
                     return;
                 }
@@ -169,7 +172,7 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"Invalid Types used for include fields:\n{invalidIncludes}");
             }
 
-            _copyByRefRegistrations.Add(typeof(Type));
+            _copyByRefRegistrations[typeof(Type)] = 0;
 
             _initialized = true;
             _initializing = false;
@@ -209,7 +212,7 @@ namespace Robust.Shared.Serialization.Manager
                     implicitDataRecord.Add(type);
 
                 if (type.IsDefined(typeof(CopyByRefAttribute)))
-                    _copyByRefRegistrations.Add(type);
+                    _copyByRefRegistrations[type] = 0;
             });
         }
 

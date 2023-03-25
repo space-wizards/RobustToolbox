@@ -17,13 +17,15 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        private readonly EntityLookupSystem _lookup;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
         private readonly ShaderInstance _shader;
 
-        public NetInterpOverlay()
+        public NetInterpOverlay(EntityLookupSystem lookup)
         {
             IoCManager.InjectDependencies(this);
+            _lookup = lookup;
             _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
         }
 
@@ -33,32 +35,28 @@ namespace Robust.Client.GameStates
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = args.WorldAABB;
-            var timing = IoCManager.Resolve<IGameTiming>();
-            foreach (var boundingBox in _entityManager.EntityQuery<PhysicsComponent>(true))
+
+            foreach (var physics in _entityManager.EntityQuery<PhysicsComponent>(true))
             {
                 // all entities have a TransformComponent
-                var transform = _entityManager.GetComponent<TransformComponent>(boundingBox.Owner);
+                var transform = _entityManager.GetComponent<TransformComponent>(physics.Owner);
 
                 // if not on the same map, continue
-                if (transform.MapID != _eyeManager.CurrentMap || boundingBox.Owner.IsInContainer(_entityManager))
+                if (transform.MapID != _eyeManager.CurrentMap || physics.Owner.IsInContainer(_entityManager))
                     continue;
 
                 // This entity isn't lerping, no need to draw debug info for it
                 if(transform.NextPosition == null)
                     continue;
 
-                var aabb = boundingBox.GetWorldAABB();
+                var aabb = _lookup.GetWorldAABB(physics.Owner);
 
                 // if not on screen, or too small, continue
                 if (!aabb.Intersects(viewport) || aabb.IsEmpty())
                     continue;
 
-                timing.InSimulation = true;
-
                 var boxOffset = transform.NextPosition.Value - transform.LocalPosition;
                 var boxPosWorld = transform.WorldPosition + boxOffset;
-
-                timing.InSimulation = false;
 
                 worldHandle.DrawLine(transform.WorldPosition, boxPosWorld, Color.Yellow);
                 worldHandle.DrawRect(aabb.Translated(boxOffset), Color.Yellow.WithAlpha(0.5f), false);
@@ -67,20 +65,21 @@ namespace Robust.Client.GameStates
 
         private sealed class NetShowInterpCommand : LocalizedCommands
         {
+            [Dependency] private readonly IEntityManager _entManager = default!;
+            [Dependency] private readonly IOverlayManager _overlay = default!;
+
             public override string Command => "net_draw_interp";
 
             public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                var overlayMan = IoCManager.Resolve<IOverlayManager>();
-
-                if (!overlayMan.HasOverlay<NetInterpOverlay>())
+                if (!_overlay.HasOverlay<NetInterpOverlay>())
                 {
-                    overlayMan.AddOverlay(new NetInterpOverlay());
+                    _overlay.AddOverlay(new NetInterpOverlay(_entManager.System<EntityLookupSystem>()));
                     shell.WriteLine("Enabled network interp overlay.");
                 }
                 else
                 {
-                    overlayMan.RemoveOverlay<NetInterpOverlay>();
+                    _overlay.RemoveOverlay<NetInterpOverlay>();
                     shell.WriteLine("Disabled network interp overlay.");
                 }
             }

@@ -125,6 +125,16 @@ public sealed class AudioSystem : SharedAudioSystem
         return Play(sound, filter, source, true, audioParams);
     }
 
+    public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user,
+        AudioParams? audioParams = null)
+    {
+        if (sound == null)
+            return null;
+
+        var filter = Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager).RemoveWhereAttachedEntity(e => e == user);
+        return Play(sound, filter, coordinates, true, audioParams);
+    }
+
     public override IPlayingAudioStream? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)
     {
         return PlayGlobal(filename, Filter.SinglePlayer(recipient), false, audioParams);

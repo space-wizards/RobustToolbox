@@ -42,7 +42,6 @@ public sealed class MapLoaderSystem : EntitySystem
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
     private ISawmill _logLoader = default!;
 
@@ -58,6 +57,7 @@ public sealed class MapLoaderSystem : EntitySystem
         base.Initialize();
         _serverEntityManager = (IServerEntityManagerInternal)EntityManager;
         _logLoader = Logger.GetSawmill("loader");
+        _logLoader.Level = LogLevel.Info;
         _context = new MapSerializationContext();
     }
 
@@ -195,7 +195,7 @@ public sealed class MapLoaderSystem : EntitySystem
             return;
         }
 
-        _logLoader.Info($"Saving entity {ToPrettyString(uid)} to {ymlPath}");
+        _logLoader.Debug($"Saving entity {ToPrettyString(uid)} to {ymlPath}");
 
         var document = new YamlDocument(GetSaveData(uid).ToYaml());
 
@@ -432,7 +432,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 var datanode = compData.Copy();
                 datanode.Remove("type");
                 var value = ((ValueDataNode)compData["type"]).Value;
-                var compType = _componentFactory.GetRegistration(value).Type;
+                var compType = _factory.GetRegistration(value).Type;
                 if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protData))
                 {
                     datanode =
@@ -553,7 +553,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                         if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
                         {
-                            _transform.SetParent(xform, newRootUid);
+                            _transform.SetParent(ent, xform, newRootUid);
                         }
                     }
 
@@ -601,7 +601,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 if (!xform.ParentUid.IsValid())
                 {
-                    _transform.SetParent(xform, mapNode);
+                    _transform.SetParent(ent, xform, mapNode);
                 }
             }
         }
@@ -813,7 +813,6 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         var data = new MappingDataNode();
         WriteMetaSection(data, uid);
-        WriteTileMapSection(data);
 
         var entityUidMap = new Dictionary<EntityUid, int>();
         var uidEntityMap = new Dictionary<int, EntityUid>();
@@ -821,6 +820,8 @@ public sealed class MapLoaderSystem : EntitySystem
 
         _stopwatch.Restart();
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
+        WriteTileMapSection(data, entities);
+
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
         var pauseTime = _meta.GetPauseTime(uid);
         _context.Set(uidEntityMap, entityUidMap, pauseTime);
@@ -848,13 +849,34 @@ public sealed class MapLoaderSystem : EntitySystem
         meta.Add("postmapinit", isPostInit ? "true" : "false");
     }
 
-    private void WriteTileMapSection(MappingDataNode rootNode)
+    private void WriteTileMapSection(MappingDataNode rootNode, List<EntityUid> entities)
     {
+        // Although we could use tiledefmanager it might write tiledata we don't need so we'll compress it
+        var gridQuery = GetEntityQuery<MapGridComponent>();
+        var tileDefs = new HashSet<ushort>();
+
+        foreach (var ent in entities)
+        {
+            if (!gridQuery.TryGetComponent(ent, out var grid))
+                continue;
+
+            var tileEnumerator = grid.GetAllTilesEnumerator(false);
+
+            while (tileEnumerator.MoveNext(out var tileRef))
+            {
+                tileDefs.Add(tileRef.Value.Tile.TypeId);
+            }
+        }
+
         var tileMap = new MappingDataNode();
         rootNode.Add("tilemap", tileMap);
-        foreach (var tileDefinition in _tileDefManager)
+        var ordered = new List<ushort>(tileDefs);
+        ordered.Sort();
+
+        foreach (var tyleId in ordered)
         {
-            tileMap.Add(tileDefinition.TileId.ToString(CultureInfo.InvariantCulture), tileDefinition.ID);
+            var tileDef = _tileDefManager[tyleId];
+            tileMap.Add(tyleId.ToString(CultureInfo.InvariantCulture), tileDef.ID);
         }
     }
 
@@ -944,6 +966,9 @@ public sealed class MapLoaderSystem : EntitySystem
         var metadataName = _factory.GetComponentName(typeof(MetaDataComponent));
         var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
 
+        var emptyMetaNode = _serManager.WriteValueAs<MappingDataNode>(typeof(MetaDataComponent), new MetaDataComponent(), alwaysWrite: true, context: _context);
+        var emptyXformNode = _serManager.WriteValueAs<MappingDataNode>(typeof(TransformComponent), new TransformComponent(), alwaysWrite: true, context: _context);
+
         foreach (var (saveId, entityUid) in uidEntityMap.OrderBy( e=> e.Key))
         {
             _context.CurrentWritingEntity = entityUid;
@@ -966,10 +991,11 @@ public sealed class MapLoaderSystem : EntitySystem
 
                     foreach (var (compType, comp) in prototype.Components)
                     {
-                        cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component));
+                        cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component, alwaysWrite: true, context: _context));
                     }
 
-                    cache.GetOrNew(metadataName);
+                    cache.TryAdd("MetaData", emptyMetaNode);
+                    cache.TryAdd("Transform", emptyXformNode);
                 }
             }
 
@@ -990,16 +1016,28 @@ public sealed class MapLoaderSystem : EntitySystem
                 var compType = component.GetType();
                 var compName = _factory.GetComponentName(compType);
                 _context.CurrentWritingComponent = compName;
-                var compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, context: _context);
-
+                MappingDataNode? compMapping;
                 MappingDataNode? protMapping = null;
                 if (cache != null && cache.TryGetValue(compName, out protMapping))
                 {
+                    // If this has a prototype, we need to use alwaysWrite: true.
+                    // E.g., an anchored prototype might have anchored: true. If we we are saving an un-anchored
+                    // instance of this entity, and if we have alwaysWrite: false, then compMapping would not include
+                    // the anchored data-field (as false is the default for this bool data field), so the entity would
+                    // implicitly be saved as anchored.
+                    compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true,
+                        context: _context);
+
                     // This will NOT recursively call Except() on the values of the mapping. It will only remove
                     // key-value pairs if both the keys and values are equal.
                     compMapping = compMapping.Except(protMapping);
                     if(compMapping == null)
                         continue;
+                }
+                else
+                {
+                    compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: false,
+                        context: _context);
                 }
 
                 // Don't need to write it if nothing was written! Note that if this entity has no associated

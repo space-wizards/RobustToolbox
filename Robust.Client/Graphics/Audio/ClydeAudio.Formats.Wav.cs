@@ -21,12 +21,12 @@ namespace Robust.Client.Graphics.Audio
             }
 
             // Read outer most chunks.
-            Span<char> fourCc = stackalloc char[4];
+            Span<byte> fourCc = stackalloc byte[4];
             while (true)
             {
                 _readFourCC(reader, fourCc);
 
-                if (!fourCc.SequenceEqual("RIFF"))
+                if (!fourCc.SequenceEqual("RIFF"u8))
                 {
                     SkipChunk();
                     continue;
@@ -42,26 +42,26 @@ namespace Robust.Client.Graphics.Audio
             reader.BaseStream.Position += length;
         }
 
-        private static void _readFourCC(BinaryReader reader, Span<char> fourCc)
+        private static void _readFourCC(BinaryReader reader, Span<byte> fourCc)
         {
-            fourCc[0] = (char) reader.ReadByte();
-            fourCc[1] = (char) reader.ReadByte();
-            fourCc[2] = (char) reader.ReadByte();
-            fourCc[3] = (char) reader.ReadByte();
+            fourCc[0] = reader.ReadByte();
+            fourCc[1] = reader.ReadByte();
+            fourCc[2] = reader.ReadByte();
+            fourCc[3] = reader.ReadByte();
         }
 
         private static WavData _readRiffChunk(BinaryReader reader)
         {
-            Span<char> format = stackalloc char[4];
+            Span<byte> format = stackalloc byte[4];
             reader.ReadUInt32();
             _readFourCC(reader, format);
-            if (!format.SequenceEqual("WAVE"))
+            if (!format.SequenceEqual("WAVE"u8))
             {
                 throw new InvalidDataException("File is not a WAVE file.");
             }
 
             _readFourCC(reader, format);
-            if (!format.SequenceEqual("fmt "))
+            if (!format.SequenceEqual("fmt "u8))
             {
                 throw new InvalidDataException("Expected fmt chunk.");
             }
@@ -91,7 +91,7 @@ namespace Robust.Client.Graphics.Audio
             while (true)
             {
                 _readFourCC(reader, format);
-                if (!format.SequenceEqual("data"))
+                if (!format.SequenceEqual("data"u8))
                 {
                     _skipChunk(reader);
                     continue;

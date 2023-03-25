@@ -30,10 +30,16 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
+            EntityManager.EntityInitialized += HandleEntityInitialized;
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
+        }
+
+        public override void Shutdown()
+        {
+            EntityManager.EntityInitialized -= HandleEntityInitialized;
+            base.Shutdown();
         }
 
         protected override void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing)
@@ -41,21 +47,23 @@ namespace Robust.Client.GameObjects
             DebugTools.Assert(ExpectedEntities.TryGetValue(missing, out var expectedContainer) && expectedContainer == cont && cont.ExpectedEntities.Contains(missing));
         }
 
-        private void HandleEntityInitialized(EntityInitializedMessage ev)
+        private void HandleEntityInitialized(EntityUid uid)
         {
-            if (!RemoveExpectedEntity(ev.Entity, out var container))
+            if (!RemoveExpectedEntity(uid, out var container))
                 return;
 
             if (container.Deleted)
                 return;
 
-            container.Insert(ev.Entity);
+            container.Insert(uid);
         }
 
         private void HandleComponentState(EntityUid uid, ContainerManagerComponent component, ref ComponentHandleState args)
         {
             if (args.Current is not ContainerManagerComponentState cast)
                 return;
+
+            var query = GetEntityQuery<TransformComponent>();
 
             // Delete now-gone containers.
             var toDelete = new ValueList<string>();
@@ -64,7 +72,11 @@ namespace Robust.Client.GameObjects
                 if (cast.Containers.ContainsKey(id))
                     continue;
 
-                EmptyContainer(container, true, null, false, EntityManager);
+                foreach (var entity in container.ContainedEntities.ToArray())
+                {
+                    container.Remove(entity, EntityManager, query.GetComponent(entity), force: true, reparent: false);
+                }
+
                 container.Shutdown(EntityManager, _netMan);
                 toDelete.Add(id);
             }

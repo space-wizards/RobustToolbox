@@ -43,11 +43,22 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Reverted making `MetaDataComponent.PauseTime` a yaml data-field, as it caused issues when saving uninitialised maps.
+*None yet*
 
 ### Other
 
 *None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.95.0.0
+
+### Bugfixes
+
+* Reverted making `MetaDataComponent.PauseTime` a yaml data-field, as it caused issues when saving uninitialised maps.
 
 ### Internal
 

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Reverted making `MetaDataComponent.PauseTime` a yaml data-field, as it caused issues when saving uninitialised maps.
 
 ### Other
 
@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* `TextEdit`'s `NextWordPosition` has been replaced with `EndWordPosition`
 
 
 ## 0.94.0.0

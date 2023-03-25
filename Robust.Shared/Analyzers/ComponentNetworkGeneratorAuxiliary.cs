@@ -1,7 +1,8 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 
-namespace Robust.Shared.GameObjects;
+namespace Robust.Shared.Analyzers;
 
 /// <summary>
 ///     When a component is marked with this attribute, any members it has marked with <see cref="AutoNetworkedFieldAttribute"/>

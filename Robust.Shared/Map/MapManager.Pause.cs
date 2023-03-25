@@ -176,8 +176,7 @@ namespace Robust.Shared.Map
                     }
 
                     SetMapPaused(mapId, true);
-                },
-                requireServerOrSingleplayer: true);
+                });
 
             _conhost.RegisterCommand("querymappaused",
                 "Check whether a map is paused or not.",
@@ -215,8 +214,7 @@ namespace Robust.Shared.Map
                     }
 
                     SetMapPaused(mapId, false);
-                },
-                requireServerOrSingleplayer: true);
+                });
         }
     }
 }

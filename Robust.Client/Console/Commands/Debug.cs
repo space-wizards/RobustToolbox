@@ -191,6 +191,19 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal sealed class ShowRotationsCommand : LocalizedCommands
+    {
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+
+        public override string Command => "showrot";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
+            mgr.DebugRotations = !mgr.DebugRotations;
+        }
+    }
+
     internal sealed class ShowRayCommand : LocalizedCommands
     {
         [Dependency] private readonly IEntitySystemManager _entitySystems = default!;

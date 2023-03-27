@@ -306,6 +306,7 @@ public abstract partial class SharedPhysicsSystem
 
     private void CollideContacts()
     {
+        _contacts.Clear();
         // Can be changed while enumerating
         // TODO: check for null instead?
         // Work out which contacts are still valid before we decide to update manifolds.
@@ -429,7 +430,7 @@ public abstract partial class SharedPhysicsSystem
         BuildManifolds(_contacts, index, status, worldPoints);
 
         // Single-threaded so content doesn't need to worry about race conditions.
-        for (var i = 0; i < _contacts.Count; i++)
+        for (var i = 0; i < index; i++)
         {
             var contact = _contacts[i];
 
@@ -480,7 +481,6 @@ public abstract partial class SharedPhysicsSystem
             }
         }
 
-        _contacts.Clear();
         ArrayPool<ContactStatus>.Shared.Return(status);
         ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
@@ -532,6 +532,18 @@ public abstract partial class SharedPhysicsSystem
         for (var i = start; i < end; i++)
         {
             var contact = contacts[i];
+
+            // TODO: Temporary measure. When Box2D 3.0 comes out expect a major refactor
+            // of everything
+            if (contact.FixtureA == null || contact.FixtureB == null)
+            {
+                _sawmill.Error($"Found a null contact for contact at {i}");
+                status[i] = ContactStatus.NoContact;
+                wake[i] = false;
+                DebugTools.Assert(false);
+                continue;
+            }
+
             var uidA = contact.FixtureA!.Body.Owner;
             var uidB = contact.FixtureB!.Body.Owner;
             var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA), xformQuery);

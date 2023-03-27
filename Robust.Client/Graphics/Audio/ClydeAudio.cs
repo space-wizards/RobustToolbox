@@ -291,7 +291,7 @@ namespace Robust.Client.Graphics.Audio
             var error = AL.GetError();
             if (error != ALError.NoError)
             {
-                _openALSawmill.Error("[{0}:{1}] AL error: {2}, {3}", callerMember, callerLineNumber, error, Environment.StackTrace);
+                _openALSawmill.Error("[{0}:{1}] AL error: {2}", callerMember, callerLineNumber, error);
             }
         }
 

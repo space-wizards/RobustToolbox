@@ -94,10 +94,10 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     {
         if (!_entityUidMap.TryGetValue(value, out var entityUidMapped))
         {
-            // Terrible hack to mute this warning on the grids themselves when serializing blueprints.
-            if (CurrentWritingComponent != "Transform")
+            // Terrible hack to mute this error on the grids themselves when serializing blueprints.
+            if (value.IsValid() || CurrentWritingComponent != "Transform")
             {
-                Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);
+                Logger.ErrorS("map", "Encountered an invalid entityUid '{0}' while serializing a map.", value);
             }
 
             return new ValueDataNode("invalid");

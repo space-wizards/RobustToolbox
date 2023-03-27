@@ -430,7 +430,7 @@ public abstract partial class SharedPhysicsSystem
         BuildManifolds(_contacts, index, status, worldPoints);
 
         // Single-threaded so content doesn't need to worry about race conditions.
-        for (var i = 0; i < _contacts.Count; i++)
+        for (var i = 0; i < index; i++)
         {
             var contact = _contacts[i];
 

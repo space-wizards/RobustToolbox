@@ -386,6 +386,20 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
+            if (indexA >= fixtureA.Proxies.Length)
+            {
+                _sawmill.Error($"Found invalid contact index of {indexA} on {fixtureA.ID} / {ToPrettyString(bodyA.Owner)}, expected {fixtureA.Proxies.Length}");
+                DestroyContact(contact);
+                continue;
+            }
+
+            if (indexB >= fixtureB.Proxies.Length)
+            {
+                _sawmill.Error($"Found invalid contact index of {indexB} on {fixtureB.ID} / {ToPrettyString(bodyB.Owner)}, expected {fixtureB.Proxies.Length}");
+                DestroyContact(contact);
+                continue;
+            }
+
             var proxyA = fixtureA.Proxies[indexA];
             var proxyB = fixtureB.Proxies[indexB];
             var broadphaseA = xformA.Broadphase?.Uid;

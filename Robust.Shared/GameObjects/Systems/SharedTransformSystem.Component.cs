@@ -215,7 +215,7 @@ public abstract partial class SharedTransformSystem
                 // second level node, terminates recursion up the branch of the tree
                 if (entMan.TryGetComponent(uid, out MapComponent? mapComp))
                 {
-                    value = mapComp.WorldMap;
+                    value = mapComp.MapId;
                 }
                 else
                 {

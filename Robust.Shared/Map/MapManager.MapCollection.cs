@@ -155,10 +155,10 @@ internal partial class MapManager
         {
             raiseEvent = true;
 
-            if (mapComp.WorldMap != mapId)
+            if (mapComp.MapId != mapId)
             {
                 Logger.WarningS("map",
-                    $"Setting map {mapId} root to entity {newMapEntity}, but entity thinks it is root node of map {mapComp.WorldMap}.");
+                    $"Setting map {mapId} root to entity {newMapEntity}, but entity thinks it is root node of map {mapComp.MapId}.");
             }
         }
 
@@ -168,7 +168,7 @@ internal partial class MapManager
         mapComp.MapPreInit = preInit;
         mapComp.MapPaused = paused;
 
-        mapComp.WorldMap = mapId;
+        mapComp.MapId = mapId;
         _mapEntities[mapId] = newMapEntity;
 
         // Yeah this sucks but I just want to save maps for now, deal.
@@ -248,7 +248,7 @@ internal partial class MapManager
             MapComponent? result = null;
             foreach (var mapComp in mapComps)
             {
-                if (mapComp.WorldMap != actualId)
+                if (mapComp.MapId != actualId)
                     continue;
 
                 result = mapComp;
@@ -267,7 +267,7 @@ internal partial class MapManager
                 _mapEntities.Add(actualId, newEnt);
 
                 var mapComp = EntityManager.AddComponent<MapComponent>(newEnt);
-                mapComp.WorldMap = actualId;
+                mapComp.MapId = actualId;
                 EntityManager.Dirty(mapComp);
                 EntityManager.InitializeComponents(newEnt);
                 EntityManager.StartComponents(newEnt);

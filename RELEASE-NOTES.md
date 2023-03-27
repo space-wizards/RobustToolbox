@@ -35,7 +35,8 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Removed `MapId` serializer. Serialize the map's EntityUid instead.
+* Renamed `MapComponent.WorldMap` to `MapComponent.MapId`.
 
 ### New features
 

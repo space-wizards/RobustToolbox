@@ -250,7 +250,7 @@ namespace Robust.Client.Graphics.Audio
 
             if (!AL.IsSource(source))
             {
-                _openALSawmill.Error("Failed to generate source. Too many simultaneous audio streams?");
+                _openALSawmill.Error("Failed to generate source. Too many simultaneous audio streams? {0}", Environment.StackTrace);
                 return null;
             }
 
@@ -291,7 +291,7 @@ namespace Robust.Client.Graphics.Audio
             var error = AL.GetError();
             if (error != ALError.NoError)
             {
-                _openALSawmill.Error("[{0}:{1}] AL error: {2}", callerMember, callerLineNumber, error);
+                _openALSawmill.Error("[{0}:{1}] AL error: {2}, {3}", callerMember, callerLineNumber, error, Environment.StackTrace);
             }
         }
 

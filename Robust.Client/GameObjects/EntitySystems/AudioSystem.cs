@@ -295,6 +295,14 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private bool TryCreateAudioSource(AudioStream stream, [NotNullWhen(true)] out IClydeAudioSource? source)
     {
+        if (!_timing.IsFirstTimePredicted)
+        {
+            source = null;
+            _sawmill.Error($"Tried to create audio source outside of prediction!");
+            DebugTools.Assert(false);
+            return false;
+        }
+
         source = _clyde.CreateAudioSource(stream);
         return source != null;
     }
@@ -334,7 +342,10 @@ public sealed class AudioSystem : SharedAudioSystem
     private IPlayingAudioStream? Play(AudioStream stream, AudioParams? audioParams = null)
     {
         if (!TryCreateAudioSource(stream, out var source))
+        {
+            _sawmill.Error($"Error setting up global audio for {stream.Name}: {0}", Environment.StackTrace);
             return null;
+        }
 
         source.SetGlobal();
 
@@ -365,7 +376,10 @@ public sealed class AudioSystem : SharedAudioSystem
         AudioParams? audioParams = null)
     {
         if (!TryCreateAudioSource(stream, out var source))
+        {
+            _sawmill.Error($"Error setting up entity audio for {stream.Name} / {ToPrettyString(entity)}: {0}", Environment.StackTrace);
             return null;
+        }
 
         var query = GetEntityQuery<TransformComponent>();
         var xform = query.GetComponent(entity);
@@ -405,7 +419,10 @@ public sealed class AudioSystem : SharedAudioSystem
         EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null)
     {
         if (!TryCreateAudioSource(stream, out var source))
+        {
+            _sawmill.Error($"Error setting up coordinates audio for {stream.Name} / {coordinates}: {0}", Environment.StackTrace);
             return null;
+        }
 
         if (!source.SetPosition(fallbackCoordinates.Position))
         {

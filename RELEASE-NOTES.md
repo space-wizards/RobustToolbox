@@ -35,8 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Removed `MapId` serializer. Serialize the map's EntityUid instead.
-* Renamed `MapComponent.WorldMap` to `MapComponent.MapId`.
+*None yet*
 
 ### New features
 
@@ -53,6 +52,23 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.96.0.0
+
+### Breaking changes
+
+* Removed `MapId` serializer. Serialize the map's EntityUid instead.
+* Renamed `MapComponent.WorldMap` to `MapComponent.MapId`.
+
+### New features
+
+* Added showrot command as a counterpart to showpos.
+
+### Other
+
+* Added error logs when QueueDel is called on the client for networked entities.
+* Added logs around physics contact errors that have been happening.
 
 
 ## 0.95.0.0

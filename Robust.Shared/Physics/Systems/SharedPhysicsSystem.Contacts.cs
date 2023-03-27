@@ -433,50 +433,57 @@ public abstract partial class SharedPhysicsSystem
         {
             var contact = _contacts[i];
 
-            switch (status[i])
+            try
             {
-                case ContactStatus.StartTouching:
+                switch (status[i])
                 {
-                    if (!contact.IsTouching) continue;
+                    case ContactStatus.StartTouching:
+                    {
+                        if (!contact.IsTouching) continue;
 
-                    var fixtureA = contact.FixtureA!;
-                    var fixtureB = contact.FixtureB!;
-                    var bodyA = fixtureA.Body;
-                    var bodyB = fixtureB.Body;
-                    var worldPoint = worldPoints[i];
+                        var fixtureA = contact.FixtureA!;
+                        var fixtureB = contact.FixtureB!;
+                        var bodyA = fixtureA.Body;
+                        var bodyB = fixtureB.Body;
+                        var worldPoint = worldPoints[i];
 
-                    var ev1 = new StartCollideEvent(fixtureA, fixtureB, worldPoint);
-                    var ev2 = new StartCollideEvent(fixtureB, fixtureA, worldPoint);
+                        var ev1 = new StartCollideEvent(fixtureA, fixtureB, worldPoint);
+                        var ev2 = new StartCollideEvent(fixtureB, fixtureA, worldPoint);
 
-                    RaiseLocalEvent(bodyA.Owner, ref ev1, true);
-                    RaiseLocalEvent(bodyB.Owner, ref ev2, true);
-                    break;
+                        RaiseLocalEvent(bodyA.Owner, ref ev1, true);
+                        RaiseLocalEvent(bodyB.Owner, ref ev2, true);
+                        break;
+                    }
+                    case ContactStatus.Touching:
+                        break;
+                    case ContactStatus.EndTouching:
+                    {
+                        var fixtureA = contact.FixtureA;
+                        var fixtureB = contact.FixtureB;
+
+                        // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
+                        // then we'll just skip the EndCollide.
+                        if (fixtureA == null || fixtureB == null) continue;
+
+                        var bodyA = fixtureA.Body;
+                        var bodyB = fixtureB.Body;
+
+                        var ev1 = new EndCollideEvent(fixtureA, fixtureB);
+                        var ev2 = new EndCollideEvent(fixtureB, fixtureA);
+
+                        RaiseLocalEvent(bodyA.Owner, ref ev1);
+                        RaiseLocalEvent(bodyB.Owner, ref ev2);
+                        break;
+                    }
+                    case ContactStatus.NoContact:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
-                case ContactStatus.Touching:
-                    break;
-                case ContactStatus.EndTouching:
-                {
-                    var fixtureA = contact.FixtureA;
-                    var fixtureB = contact.FixtureB;
-
-                    // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
-                    // then we'll just skip the EndCollide.
-                    if (fixtureA == null || fixtureB == null) continue;
-
-                    var bodyA = fixtureA.Body;
-                    var bodyB = fixtureB.Body;
-
-                    var ev1 = new EndCollideEvent(fixtureA, fixtureB);
-                    var ev2 = new EndCollideEvent(fixtureB, fixtureA);
-
-                    RaiseLocalEvent(bodyA.Owner, ref ev1);
-                    RaiseLocalEvent(bodyB.Owner, ref ev2);
-                    break;
-                }
-                case ContactStatus.NoContact:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+            }
+            catch (KeyNotFoundException key)
+            {
+                _sawmill.Fatal("Issue raising contacts on content! {0}", key.StackTrace);
             }
         }
 

@@ -26,7 +26,7 @@
     <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
     <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
-    <ProjectReference Include="..\Arch\src\Arch\Arch.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\Arch\Arch.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Utility\TypeAbbreviations.yaml">

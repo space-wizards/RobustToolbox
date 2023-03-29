@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.96.0.2
+
+### Bugfixes
+
+* Fix adding MapGridComponent to a map with pre-existing child entities.
+
+
 ## 0.96.0.1
 
 ### Other

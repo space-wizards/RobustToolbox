@@ -93,8 +93,8 @@ namespace Robust.Shared.GameObjects
             get
             {
                 if (_entityName == null)
-                    return _entityPrototype != null ? _entityPrototype.Name : string.Empty;
-                return _entityName;
+                    return _entityPrototype != null ? _entityPrototype.Name + " (Property of Mime)" : "Property of Mime";
+                return _entityName + " (Property of Mime)";
             }
             set
             {

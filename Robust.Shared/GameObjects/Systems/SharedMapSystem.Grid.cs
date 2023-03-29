@@ -298,16 +298,6 @@ public abstract partial class SharedMapSystem
     {
         var xformQuery = GetEntityQuery<TransformComponent>();
         var xform = xformQuery.GetComponent(uid);
-        var mapId = xform.MapID;
-
-        if (MapManager.HasMapEntity(mapId))
-        {
-            var mapUid = MapManager.GetMapEntityIdOrThrow(mapId);
-
-            // Mapgrid moment
-            if (mapUid != uid)
-                _transform.SetParent(uid, xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
-        }
 
         // Force networkedmapmanager to send it due to non-ECS legacy code.
         var curTick = _timing.CurTick;
@@ -320,8 +310,23 @@ public abstract partial class SharedMapSystem
 
         component.LastTileModifiedTick = curTick;
 
-        // Just in case.
-        _transform.SetGridId(xform, uid, xformQuery);
+        var mapId = xform.MapID;
+
+        if (MapManager.HasMapEntity(mapId))
+        {
+            var mapUid = MapManager.GetMapEntityIdOrThrow(mapId);
+
+            // Mapgrid moment
+            if (mapUid != uid)
+                _transform.SetParent(uid, xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
+
+            _transform.SetGridIdNoRecursive(xform, uid);
+        }
+        else
+        {
+            // Just in case.
+            _transform.SetGridId(xform, uid, xformQuery);
+        }
 
         var msg = new GridInitializeEvent(uid);
         RaiseLocalEvent(uid, msg, true);

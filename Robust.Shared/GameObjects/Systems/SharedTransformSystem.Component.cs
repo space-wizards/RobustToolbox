@@ -322,6 +322,19 @@ public abstract partial class SharedTransformSystem
     #region GridId
 
     /// <summary>
+    /// Sets the <see cref="GridId"/> for the transformcomponent without updating its children. Does not Dirty it.
+    /// </summary>
+    internal void SetGridIdNoRecursive(TransformComponent xform, EntityUid? gridUid)
+    {
+        if (xform._gridUid == gridUid)
+            return;
+
+        DebugTools.Assert(gridUid == null || HasComp<MapGridComponent>(gridUid));
+
+        xform._gridUid = gridUid;
+    }
+
+    /// <summary>
     /// Sets the <see cref="GridId"/> for the transformcomponent. Does not Dirty it.
     /// </summary>
     public void SetGridId(TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)

@@ -86,8 +86,6 @@ public abstract partial class SharedPhysicsSystem
 
     private int ContactCount => _activeContacts.Count;
 
-    private List<Contact> _contacts = new(ContactPoolInitialSize);
-
     private const int ContactPoolInitialSize = 128;
     private const int ContactsPerThread = 32;
 
@@ -305,9 +303,13 @@ public abstract partial class SharedPhysicsSystem
         _contactPool.Return(contact);
     }
 
-    private void CollideContacts()
+    internal void CollideContacts()
     {
-        _contacts.Clear();
+        // Due to the fact some contacts may be removed (and we need to update this array as we iterate).
+        // the length may not match the actual contact count, hence we track the index.
+        var contacts = ArrayPool<Contact>.Shared.Rent(ContactCount);
+        var index = 0;
+
         // Can be changed while enumerating
         // TODO: check for null instead?
         // Work out which contacts are still valid before we decide to update manifolds.
@@ -381,7 +383,11 @@ public abstract partial class SharedPhysicsSystem
                 {
                     // Grid contact is still alive.
                     contact.Flags &= ~ContactFlags.Island;
-                    _contacts.Add(contact);
+                    if (index >= contacts.Length)
+                    {
+                        _sawmill.Error($"Insufficient contact length at 388! Index {index} and length is {contacts.Length}. Tell Sloth");
+                    }
+                    contacts[index++] = contact;
                 }
 
                 continue;
@@ -432,22 +438,29 @@ public abstract partial class SharedPhysicsSystem
             // Contact is actually going to live for manifold generation and solving.
             // This can also short-circuit above for grid contacts.
             contact.Flags &= ~ContactFlags.Island;
-            _contacts.Add(contact);
+            if (index >= contacts.Length)
+            {
+                _sawmill.Error($"Insufficient contact length at 429! Index {index} and length is {contacts.Length}. Tell Sloth");
+            }
+            contacts[index++] = contact;
         }
 
-        // Due to the fact some contacts may be removed (and we need to update this array as we iterate).
-        // the length may not match the actual contact count, hence we track the index.
-        var index = _contacts.Count;
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
         var worldPoints = ArrayPool<Vector2>.Shared.Rent(index);
 
         // Update contacts all at once.
-        BuildManifolds(_contacts, index, status, worldPoints);
+        BuildManifolds(contacts, index, status, worldPoints);
 
         // Single-threaded so content doesn't need to worry about race conditions.
         for (var i = 0; i < index; i++)
         {
-            var contact = _contacts[i];
+            if (index >= contacts.Length)
+            {
+                _sawmill.Error($"Invalid contact length for contact events!");
+                continue;
+            }
+
+            var contact = contacts[i];
 
             switch (status[i])
             {
@@ -496,11 +509,12 @@ public abstract partial class SharedPhysicsSystem
             }
         }
 
+        ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
         ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
 
-    private void BuildManifolds(List<Contact> contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
+    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
         var wake = ArrayPool<bool>.Shared.Rent(count);
 
@@ -540,7 +554,7 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<bool>.Shared.Return(wake);
     }
 
-    private void UpdateContacts(List<Contact> contacts, int start, int end, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
+    private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
     {
         var xformQuery = GetEntityQuery<TransformComponent>();
 

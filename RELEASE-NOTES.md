@@ -54,6 +54,16 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.96.0.1
+
+### Other
+
+* Set blend function for shaders with ShaderBlendMode.None
+* Add logs around fixture lengths in contact updates.
+* Revert previous contact changes to try to make physics slightly more stable until Box2D 3.0.
+* Adjusted QueueDeleteEntity log on client to care if the entity is deleted in prediction.
+
+
 ## 0.96.0.0
 
 ### Breaking changes

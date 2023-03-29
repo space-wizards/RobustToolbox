@@ -455,7 +455,7 @@ namespace Robust.Shared.GameObjects
             Entities.Remove(uid);
         }
 
-        public void QueueDeleteEntity(EntityUid uid)
+        public virtual void QueueDeleteEntity(EntityUid uid)
         {
             if(QueuedDeletionsSet.Add(uid))
                 QueuedDeletions.Enqueue(uid);

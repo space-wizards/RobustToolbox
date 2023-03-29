@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
@@ -108,7 +109,18 @@ public static class CompletionHelper
     {
         IoCManager.Resolve(ref entManager);
 
-        return entManager.EntityQuery<MapComponent>(true).Select(o => new CompletionOption(o.WorldMap.ToString()));
+        return entManager.EntityQuery<MapComponent>(true).Select(o => new CompletionOption(o.MapId.ToString()));
+    }
+
+    public static IEnumerable<CompletionOption> MapUids(IEntityManager? entManager = null)
+    {
+        IoCManager.Resolve(ref entManager);
+
+        var query = entManager.AllEntityQueryEnumerator<MapComponent>();
+        while (query.MoveNext(out var uid, out _))
+        {
+            yield return new CompletionOption(uid.ToString());
+        }
     }
 
     public static IEnumerable<CompletionOption> EntityUids(string text, IEntityManager? entManager = null)

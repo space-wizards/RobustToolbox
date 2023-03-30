@@ -434,7 +434,7 @@ namespace Robust.Client.GameObjects
             if (!result && logError)
             {
                 Logger.ErrorS(LogCategory, "{0} - Layer with key '{1}' does not exist! Trace:\n{2}",
-                    entities.ToPrettyString(Owner), layer, Environment.StackTrace);
+                    entities.ToPrettyString(Owner), key, Environment.StackTrace);
             }
 
             return result;

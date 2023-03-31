@@ -41,12 +41,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 {
     public sealed class Contact : IEquatable<Contact>
     {
-        private readonly IManifoldManager _manifoldManager;
-
-#if DEBUG
-        internal SharedDebugPhysicsSystem _debugPhysics = default!;
-#endif
-
         // Store these nodes so we can do fast removals when required, rather than having to iterate every node
         // trying to find it.
 
@@ -74,10 +68,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         internal ContactFlags Flags = ContactFlags.None;
 
-        internal Contact(IManifoldManager manifoldManager)
+        internal Contact()
         {
-            _manifoldManager = manifoldManager;
-
             MapNode = new LinkedListNode<Contact>(this);
             BodyANode = new LinkedListNode<Contact>(this);
             BodyBNode = new LinkedListNode<Contact>(this);
@@ -118,6 +110,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public float TangentSpeed { get; set; }
 
+        public bool IsSensor => !(FixtureA!.Hard && FixtureB!.Hard);
+
         public void ResetRestitution()
         {
             Restitution = MathF.Max(FixtureA?.Restitution ?? 0.0f, FixtureB?.Restitution ?? 0.0f);
@@ -137,144 +131,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             var shapeB = FixtureB?.Shape!;
 
             SharedPhysicsSystem.InitializeManifold(ref Manifold, transformA, transformB, shapeA.Radius, shapeB.Radius, out normal, points);
-        }
-
-        /// <summary>
-        /// Update the contact manifold and touching status.
-        /// Note: do not assume the fixture AABBs are overlapping or are valid.
-        /// </summary>
-        /// <param name="wake">Whether we should wake the bodies due to touching changing.</param>
-        /// <returns>What current status of the contact is (e.g. start touching, end touching, etc.)</returns>
-        internal ContactStatus Update(Transform bodyATransform, Transform bodyBTransform, out bool wake)
-        {
-            var oldManifold = Manifold;
-
-            // Re-enable this contact.
-            Enabled = true;
-
-            bool touching;
-            var wasTouching = IsTouching;
-
-            wake = false;
-            var sensor = !(FixtureA!.Hard && FixtureB!.Hard);
-
-            // Is this contact a sensor?
-            if (sensor)
-            {
-                var shapeA = FixtureA!.Shape;
-                var shapeB = FixtureB!.Shape;
-                touching = _manifoldManager.TestOverlap(shapeA,  ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
-
-                // Sensors don't generate manifolds.
-                Manifold.PointCount = 0;
-            }
-            else
-            {
-                Evaluate(ref Manifold, bodyATransform, bodyBTransform);
-                touching = Manifold.PointCount > 0;
-
-                // Match old contact ids to new contact ids and copy the
-                // stored impulses to warm start the solver.
-                for (var i = 0; i < Manifold.PointCount; ++i)
-                {
-                    var mp2 = Manifold.Points[i];
-                    mp2.NormalImpulse = 0.0f;
-                    mp2.TangentImpulse = 0.0f;
-                    var id2 = mp2.Id;
-
-                    for (var j = 0; j < oldManifold.PointCount; ++j)
-                    {
-                        var mp1 = oldManifold.Points[j];
-
-                        if (mp1.Id.Key == id2.Key)
-                        {
-                            mp2.NormalImpulse = mp1.NormalImpulse;
-                            mp2.TangentImpulse = mp1.TangentImpulse;
-                            break;
-                        }
-                    }
-
-                    Manifold.Points[i] = mp2;
-                }
-
-                if (touching != wasTouching)
-                {
-                    wake = true;
-                }
-            }
-
-            IsTouching = touching;
-            var status = ContactStatus.NoContact;
-
-            if (!wasTouching)
-            {
-                if (touching)
-                {
-                    status = ContactStatus.StartTouching;
-                }
-            }
-            else
-            {
-                if (!touching)
-                {
-                    status = ContactStatus.EndTouching;
-                }
-            }
-
-#if DEBUG
-            if (!sensor)
-            {
-                _debugPhysics.HandlePreSolve(this, oldManifold);
-            }
-#endif
-
-            return status;
-        }
-
-        /// <summary>
-        ///     Evaluate this contact with your own manifold and transforms.
-        /// </summary>
-        /// <param name="manifold">The manifold.</param>
-        /// <param name="transformA">The first transform.</param>
-        /// <param name="transformB">The second transform.</param>
-        private void Evaluate(ref Manifold manifold, in Transform transformA, in Transform transformB)
-        {
-            // This is expensive and shitcodey, see below.
-            switch (Type)
-            {
-                // TODO: Need a unit test for these.
-                case ContactType.Polygon:
-                    _manifoldManager.CollidePolygons(ref manifold, (PolygonShape) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
-                    break;
-                case ContactType.PolygonAndCircle:
-                    _manifoldManager.CollidePolygonAndCircle(ref manifold, (PolygonShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
-                    break;
-                case ContactType.EdgeAndCircle:
-                    _manifoldManager.CollideEdgeAndCircle(ref manifold, (EdgeShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
-                    break;
-                case ContactType.EdgeAndPolygon:
-                    _manifoldManager.CollideEdgeAndPolygon(ref manifold, (EdgeShape) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
-                    break;
-                case ContactType.ChainAndCircle:
-                    throw new NotImplementedException();
-                    /*
-                    ChainShape chain = (ChainShape)FixtureA.Shape;
-                    chain.GetChildEdge(_edge, ChildIndexA);
-                    Collision.CollisionManager.CollideEdgeAndCircle(ref manifold, _edge, ref transformA, (CircleShape)FixtureB.Shape, ref transformB);
-                    */
-                case ContactType.ChainAndPolygon:
-                    throw new NotImplementedException();
-                    /*
-                    ChainShape loop2 = (ChainShape)FixtureA.Shape;
-                    loop2.GetChildEdge(_edge, ChildIndexA);
-                    Collision.CollisionManager.CollideEdgeAndPolygon(ref manifold, _edge, ref transformA, (PolygonShape)FixtureB.Shape, ref transformB);
-                    */
-                case ContactType.Circle:
-                    _manifoldManager.CollideCircles(ref manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException($"Collision between {FixtureA!.Shape.GetType()} and {FixtureB!.Shape.GetType()} not supported");
-            }
         }
 
         public enum ContactType : byte

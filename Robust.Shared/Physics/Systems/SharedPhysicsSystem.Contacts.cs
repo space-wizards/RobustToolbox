@@ -86,6 +86,8 @@ public abstract partial class SharedPhysicsSystem
 
     private int ContactCount => _activeContacts.Count;
 
+    private List<Contact> _contacts = new(ContactPoolInitialSize);
+
     private const int ContactPoolInitialSize = 128;
     private const int ContactsPerThread = 32;
 
@@ -106,13 +108,12 @@ public abstract partial class SharedPhysicsSystem
 
         public Contact Create()
         {
-            var contact = new Contact(_manifoldManager);
-#if DEBUG
-            contact._debugPhysics = _debugPhysicsSystem;
-#endif
-            contact.Manifold = new Manifold
+            var contact = new Contact
             {
-                Points = new ManifoldPoint[2]
+                Manifold = new Manifold
+                {
+                    Points = new ManifoldPoint[2]
+                }
             };
 
             return contact;
@@ -303,13 +304,9 @@ public abstract partial class SharedPhysicsSystem
         _contactPool.Return(contact);
     }
 
-    internal void CollideContacts()
+    private void CollideContacts()
     {
-        // Due to the fact some contacts may be removed (and we need to update this array as we iterate).
-        // the length may not match the actual contact count, hence we track the index.
-        var contacts = ArrayPool<Contact>.Shared.Rent(ContactCount);
-        var index = 0;
-
+        _contacts.Clear();
         // Can be changed while enumerating
         // TODO: check for null instead?
         // Work out which contacts are still valid before we decide to update manifolds.
@@ -383,11 +380,7 @@ public abstract partial class SharedPhysicsSystem
                 {
                     // Grid contact is still alive.
                     contact.Flags &= ~ContactFlags.Island;
-                    if (index >= contacts.Length)
-                    {
-                        _sawmill.Error($"Insufficient contact length at 388! Index {index} and length is {contacts.Length}. Tell Sloth");
-                    }
-                    contacts[index++] = contact;
+                    _contacts.Add(contact);
                 }
 
                 continue;
@@ -438,29 +431,22 @@ public abstract partial class SharedPhysicsSystem
             // Contact is actually going to live for manifold generation and solving.
             // This can also short-circuit above for grid contacts.
             contact.Flags &= ~ContactFlags.Island;
-            if (index >= contacts.Length)
-            {
-                _sawmill.Error($"Insufficient contact length at 429! Index {index} and length is {contacts.Length}. Tell Sloth");
-            }
-            contacts[index++] = contact;
+            _contacts.Add(contact);
         }
 
+        // Due to the fact some contacts may be removed (and we need to update this array as we iterate).
+        // the length may not match the actual contact count, hence we track the index.
+        var index = _contacts.Count;
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
         var worldPoints = ArrayPool<Vector2>.Shared.Rent(index);
 
         // Update contacts all at once.
-        BuildManifolds(contacts, index, status, worldPoints);
+        BuildManifolds(_contacts, index, status, worldPoints);
 
         // Single-threaded so content doesn't need to worry about race conditions.
         for (var i = 0; i < index; i++)
         {
-            if (index >= contacts.Length)
-            {
-                _sawmill.Error($"Invalid contact length for contact events!");
-                continue;
-            }
-
-            var contact = contacts[i];
+            var contact = _contacts[i];
 
             switch (status[i])
             {
@@ -509,12 +495,11 @@ public abstract partial class SharedPhysicsSystem
             }
         }
 
-        ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
         ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
 
-    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
+    private void BuildManifolds(List<Contact> contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
         var wake = ArrayPool<bool>.Shared.Rent(count);
 
@@ -554,7 +539,7 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<bool>.Shared.Return(wake);
     }
 
-    private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
+    private void UpdateContacts(List<Contact> contacts, int start, int end, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
     {
         var xformQuery = GetEntityQuery<TransformComponent>();
 
@@ -578,7 +563,13 @@ public abstract partial class SharedPhysicsSystem
             var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA), xformQuery);
             var bodyBTransform = GetPhysicsTransform(uidB, xformQuery.GetComponent(uidB), xformQuery);
 
-            var contactStatus = contact.Update(bodyATransform, bodyBTransform, out wake[i]);
+            var oldManifold = contact.Manifold;
+            var contactStatus = Update(contact, bodyATransform, bodyBTransform, out wake[i]);
+
+#if DEBUG
+            _debugPhysics.HandlePreSolve(contact, oldManifold);
+#endif
+
             status[i] = contactStatus;
 
             if (contactStatus == ContactStatus.StartTouching)
@@ -587,6 +578,141 @@ public abstract partial class SharedPhysicsSystem
             }
         }
     }
+
+    /// <summary>
+        /// Update the contact manifold and touching status.
+        /// Note: do not assume the fixture AABBs are overlapping or are valid.
+        /// </summary>
+        /// <param name="wake">Whether we should wake the bodies due to touching changing.</param>
+        /// <returns>What current status of the contact is (e.g. start touching, end touching, etc.)</returns>
+        internal ContactStatus Update(Contact contact, Transform bodyATransform, Transform bodyBTransform, out bool wake)
+        {
+            var oldManifold = contact.Manifold;
+            ref var manifold = ref contact.Manifold;
+
+            // Re-enable this contact.
+            contact.Enabled = true;
+
+            bool touching;
+            var wasTouching = contact.IsTouching;
+
+            wake = false;
+            var sensor = contact.IsSensor;
+
+            // Is this contact a sensor?
+            if (sensor)
+            {
+                var shapeA = contact.FixtureA!.Shape;
+                var shapeB = contact.FixtureB!.Shape;
+                touching = _manifoldManager.TestOverlap(shapeA, contact.ChildIndexA, shapeB, contact.ChildIndexB, bodyATransform, bodyBTransform);
+
+                // Sensors don't generate manifolds.
+                manifold.PointCount = 0;
+            }
+            else
+            {
+                Evaluate(contact, ref manifold, bodyATransform, bodyBTransform);
+                touching = manifold.PointCount > 0;
+
+                // Match old contact ids to new contact ids and copy the
+                // stored impulses to warm start the solver.
+                for (var i = 0; i < manifold.PointCount; ++i)
+                {
+                    var mp2 = manifold.Points[i];
+                    mp2.NormalImpulse = 0.0f;
+                    mp2.TangentImpulse = 0.0f;
+                    var id2 = mp2.Id;
+
+                    for (var j = 0; j < oldManifold.PointCount; ++j)
+                    {
+                        var mp1 = oldManifold.Points[j];
+
+                        if (mp1.Id.Key == id2.Key)
+                        {
+                            mp2.NormalImpulse = mp1.NormalImpulse;
+                            mp2.TangentImpulse = mp1.TangentImpulse;
+                            break;
+                        }
+                    }
+
+                    manifold.Points[i] = mp2;
+                }
+
+                if (touching != wasTouching)
+                {
+                    wake = true;
+                }
+            }
+
+            contact.IsTouching = touching;
+            var status = ContactStatus.NoContact;
+
+            if (!wasTouching)
+            {
+                if (touching)
+                {
+                    status = ContactStatus.StartTouching;
+                }
+            }
+            else
+            {
+                if (!touching)
+                {
+                    status = ContactStatus.EndTouching;
+                }
+            }
+
+            return status;
+        }
+
+        /// <summary>
+        ///     Evaluate this contact with your own manifold and transforms.
+        /// </summary>
+        /// <param name="manifold">The manifold.</param>
+        /// <param name="transformA">The first transform.</param>
+        /// <param name="transformB">The second transform.</param>
+        private void Evaluate(Contact contact, ref Manifold manifold, in Transform transformA, in Transform transformB)
+        {
+            var shapeA = contact.FixtureA!.Shape;
+            var shapeB = contact.FixtureB!.Shape;
+
+            // This is expensive and shitcodey, see below.
+            switch (contact.Type)
+            {
+                // TODO: Need a unit test for these.
+                case Contact.ContactType.Polygon:
+                    _manifoldManager.CollidePolygons(ref manifold, (PolygonShape) shapeA, transformA, (PolygonShape) shapeB, transformB);
+                    break;
+                case Contact.ContactType.PolygonAndCircle:
+                    _manifoldManager.CollidePolygonAndCircle(ref manifold, (PolygonShape) shapeA, transformA, (PhysShapeCircle) shapeB, transformB);
+                    break;
+                case Contact.ContactType.EdgeAndCircle:
+                    _manifoldManager.CollideEdgeAndCircle(ref manifold, (EdgeShape) shapeA, transformA, (PhysShapeCircle) shapeB, transformB);
+                    break;
+                case Contact.ContactType.EdgeAndPolygon:
+                    _manifoldManager.CollideEdgeAndPolygon(ref manifold, (EdgeShape) shapeA, transformA, (PolygonShape) shapeB, transformB);
+                    break;
+                case Contact.ContactType.ChainAndCircle:
+                    throw new NotImplementedException();
+                    /*
+                    ChainShape chain = (ChainShape)FixtureA.Shape;
+                    chain.GetChildEdge(_edge, ChildIndexA);
+                    Collision.CollisionManager.CollideEdgeAndCircle(ref manifold, _edge, ref transformA, (CircleShape)FixtureB.Shape, ref transformB);
+                    */
+                case Contact.ContactType.ChainAndPolygon:
+                    throw new NotImplementedException();
+                    /*
+                    ChainShape loop2 = (ChainShape)FixtureA.Shape;
+                    loop2.GetChildEdge(_edge, ChildIndexA);
+                    Collision.CollisionManager.CollideEdgeAndPolygon(ref manifold, _edge, ref transformA, (PolygonShape)FixtureB.Shape, ref transformB);
+                    */
+                case Contact.ContactType.Circle:
+                    _manifoldManager.CollideCircles(ref manifold, (PhysShapeCircle) shapeA, in transformA, (PhysShapeCircle) shapeB, in transformB);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"Collision between {shapeA.GetType()} and {shapeB.GetType()} not supported");
+            }
+        }
 
     /// <summary>
     ///     Used to prevent bodies from colliding; may lie depending on joints.

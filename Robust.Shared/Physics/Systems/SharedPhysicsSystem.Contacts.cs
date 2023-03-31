@@ -454,7 +454,7 @@ public abstract partial class SharedPhysicsSystem
         // Single-threaded so content doesn't need to worry about race conditions.
         for (var i = 0; i < index; i++)
         {
-            if (index >= contacts.Length)
+            if (i >= contacts.Length)
             {
                 _sawmill.Error($"Invalid contact length for contact events!");
                 continue;

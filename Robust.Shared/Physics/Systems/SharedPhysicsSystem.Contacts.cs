@@ -446,7 +446,19 @@ public abstract partial class SharedPhysicsSystem
         // Single-threaded so content doesn't need to worry about race conditions.
         for (var i = 0; i < index; i++)
         {
+            if (index >= _contacts.Count)
+            {
+                _sawmill.Error($"Contact index was modified! Expected {index} and found {_contacts.Count}");
+                continue;
+            }
+
             var contact = _contacts[i];
+
+            if (contact == null)
+            {
+                _sawmill.Error($"Found null contact at {i}");
+                continue;
+            }
 
             switch (status[i])
             {

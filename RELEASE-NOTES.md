@@ -54,6 +54,40 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.96.0.2
+
+### Bugfixes
+
+* Fix adding MapGridComponent to a map with pre-existing child entities.
+
+
+## 0.96.0.1
+
+### Other
+
+* Set blend function for shaders with ShaderBlendMode.None
+* Add logs around fixture lengths in contact updates.
+* Revert previous contact changes to try to make physics slightly more stable until Box2D 3.0.
+* Adjusted QueueDeleteEntity log on client to care if the entity is deleted in prediction.
+
+
+## 0.96.0.0
+
+### Breaking changes
+
+* Removed `MapId` serializer. Serialize the map's EntityUid instead.
+* Renamed `MapComponent.WorldMap` to `MapComponent.MapId`.
+
+### New features
+
+* Added showrot command as a counterpart to showpos.
+
+### Other
+
+* Added error logs when QueueDel is called on the client for networked entities.
+* Added logs around physics contact errors that have been happening.
+
+
 ## 0.95.0.0
 
 ### Bugfixes

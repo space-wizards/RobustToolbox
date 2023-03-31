@@ -66,7 +66,7 @@ namespace Robust.Client.GameObjects
 
         public override void QueueDeleteEntity(EntityUid uid)
         {
-            if (!_gameTiming.InPrediction || uid.IsClientSide())
+            if (uid.IsClientSide())
             {
                 base.QueueDeleteEntity(uid);
                 return;

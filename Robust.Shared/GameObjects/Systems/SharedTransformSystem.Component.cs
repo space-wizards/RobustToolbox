@@ -215,7 +215,7 @@ public abstract partial class SharedTransformSystem
                 // second level node, terminates recursion up the branch of the tree
                 if (entMan.TryGetComponent(uid, out MapComponent? mapComp))
                 {
-                    value = mapComp.WorldMap;
+                    value = mapComp.MapId;
                 }
                 else
                 {
@@ -320,6 +320,19 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region GridId
+
+    /// <summary>
+    /// Sets the <see cref="GridId"/> for the transformcomponent without updating its children. Does not Dirty it.
+    /// </summary>
+    internal void SetGridIdNoRecursive(TransformComponent xform, EntityUid? gridUid)
+    {
+        if (xform._gridUid == gridUid)
+            return;
+
+        DebugTools.Assert(gridUid == null || HasComp<MapGridComponent>(gridUid));
+
+        xform._gridUid = gridUid;
+    }
 
     /// <summary>
     /// Sets the <see cref="GridId"/> for the transformcomponent. Does not Dirty it.

@@ -20,7 +20,7 @@ public abstract partial class SharedMapSystem
         if (args.Current is not MapComponentState state)
             return;
 
-        component.WorldMap = state.MapId;
+        component.MapId = state.MapId;
 
         if (!MapManager.MapExists(state.MapId))
         {
@@ -38,14 +38,14 @@ public abstract partial class SharedMapSystem
 
     private void OnMapGetState(EntityUid uid, MapComponent component, ref ComponentGetState args)
     {
-        args.State = new MapComponentState(component.WorldMap, component.LightingEnabled, component.MapPaused);
+        args.State = new MapComponentState(component.MapId, component.LightingEnabled, component.MapPaused);
     }
 
     protected abstract void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args);
 
     private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
     {
-        var msg = new MapChangedEvent(uid, component.WorldMap, true);
+        var msg = new MapChangedEvent(uid, component.MapId, true);
         RaiseLocalEvent(uid, msg, true);
     }
 
@@ -53,9 +53,9 @@ public abstract partial class SharedMapSystem
     {
         var iMap = (IMapManagerInternal)MapManager;
 
-        iMap.TrueDeleteMap(component.WorldMap);
+        iMap.TrueDeleteMap(component.MapId);
 
-        var msg = new MapChangedEvent(uid, component.WorldMap, false);
+        var msg = new MapChangedEvent(uid, component.MapId, false);
         RaiseLocalEvent(uid, msg, true);
     }
 }

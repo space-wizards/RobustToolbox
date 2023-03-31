@@ -54,6 +54,20 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.96.0.3
+
+### Bugfixes
+
+* Fix sprite error log to report the key not the layer.
+* Fix log length for physics contact error.
+* Fix discord null errors.
+* Adjust InRange lookups to check if the centre of body is in range.
+
+### Other
+
+* Add more audio logs.
+
+
 ## 0.96.0.2
 
 ### Bugfixes

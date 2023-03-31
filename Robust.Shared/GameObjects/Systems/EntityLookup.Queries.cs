@@ -579,7 +579,25 @@ public sealed partial class EntityLookupSystem
 
         // TODO: Actual circles
         var worldAABB = new Box2(worldPos - range, worldPos + range);
-        return GetEntitiesIntersecting(mapId, worldAABB, flags);
+        var entities =  GetEntitiesIntersecting(mapId, worldAABB, flags);
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var toRemove = new ValueList<EntityUid>();
+
+        foreach (var uid in entities)
+        {
+            if (xformQuery.TryGetComponent(uid, out var xform) &&
+                (_transform.GetWorldPosition(xform, xformQuery) - worldPos).Length > range)
+            {
+                toRemove.Add(uid);
+            }
+        }
+
+        foreach (var comp in toRemove)
+        {
+            entities.Remove(comp);
+        }
+
+        return entities;
     }
 
     #endregion

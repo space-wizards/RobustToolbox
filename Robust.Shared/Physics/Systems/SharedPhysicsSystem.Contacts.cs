@@ -454,12 +454,6 @@ public abstract partial class SharedPhysicsSystem
 
             var contact = _contacts[i];
 
-            if (contact == null)
-            {
-                _sawmill.Error($"Found null contact at {i}");
-                continue;
-            }
-
             switch (status[i])
             {
                 case ContactStatus.StartTouching:

@@ -71,7 +71,8 @@ namespace Robust.Client
         private void OnPlayerListUpdated(object? sender, EventArgs e)
         {
             var serverPlayers = _playMan.PlayerCount;
-            _discord.Update(GameInfo!.ServerName, _net.ServerChannel!.UserName, GameInfo.ServerMaxPlayers.ToString(), serverPlayers.ToString());
+            if (_net.ServerChannel != null && GameInfo != null && _net.IsConnected)
+                _discord.Update(GameInfo.ServerName, _net.ServerChannel.UserName, GameInfo.ServerMaxPlayers.ToString(), serverPlayers.ToString());
         }
 
         private void SyncTimeBase(MsgSyncTimeBase message)

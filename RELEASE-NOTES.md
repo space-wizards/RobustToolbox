@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed container state handling sometimes failing to insert or remove entities.
 
 ### Other
 

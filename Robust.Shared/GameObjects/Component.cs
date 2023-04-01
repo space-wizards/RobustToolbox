@@ -16,7 +16,7 @@ namespace Robust.Shared.GameObjects
     {
         [DataField("netsync")]
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool _netSync { get; set; } = true;
+        private bool _netSync { get; set; } = true;
 
         internal bool Networked = true;
 

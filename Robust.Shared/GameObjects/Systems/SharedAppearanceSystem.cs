@@ -19,10 +19,8 @@ public abstract class SharedAppearanceSystem : EntitySystem
         SubscribeLocalEvent<AppearanceComponent, ComponentGetState>(OnAppearanceGetState);
     }
 
-    private static void OnAppearanceGetState(EntityUid uid, AppearanceComponent component, ref ComponentGetState args)
-    {
-        args.State = new AppearanceComponentState(component.AppearanceData);
-    }
+    protected abstract void OnAppearanceGetState(EntityUid uid, AppearanceComponent component,
+        ref ComponentGetState args);
 
     /// <summary>
     ///     Mark an appearance component as dirty, so that the appearance will get updated in the next frame update.

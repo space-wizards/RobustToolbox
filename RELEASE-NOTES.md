@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.96.0.4
+
+### Bugfixes
+
+* Revert InRange entity lookup range change due to content bugs.
+* Fix implicit appearance state data.
+
+
 ## 0.96.0.3
 
 ### Bugfixes

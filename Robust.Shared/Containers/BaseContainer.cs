@@ -68,7 +68,8 @@ namespace Robust.Shared.Containers
             TransformComponent? transform = null,
             TransformComponent? ownerTransform = null,
             MetaDataComponent? meta = null,
-            PhysicsComponent? physics = null)
+            PhysicsComponent? physics = null,
+            bool force = false)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
@@ -79,7 +80,7 @@ namespace Robust.Shared.Containers
             IoCManager.Resolve(ref entMan);
 
             //Verify we can insert into this container
-            if (!CanInsert(toinsert, entMan))
+            if (!force && !CanInsert(toinsert, entMan))
                 return false;
 
             var physicsQuery = entMan.GetEntityQuery<PhysicsComponent>();

@@ -75,7 +75,6 @@ namespace Robust.Shared.Containers
             if (contained != ContainedEntity)
                 return false;
 
-
             var flags = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(contained).Flags;
             DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0);
 
@@ -86,6 +85,7 @@ namespace Robust.Shared.Containers
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
         {
             DebugTools.Assert(ContainedEntity == null);
+            DebugTools.Assert(!toInsert.IsClientSide() || Owner.IsClientSide() || !Manager.NetSyncEnabled);
             ContainedEntity = toInsert;
         }
 

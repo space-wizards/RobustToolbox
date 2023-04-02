@@ -29,6 +29,11 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool ScrollFollowing { get; set; } = true;
 
+        /// <summary>
+        /// Margin between the text and the scrollbar.
+        /// </summary>
+        public float ScrollMargin = 4f;
+
         public OutputPanel()
         {
             IoCManager.InjectDependencies(this);
@@ -38,7 +43,7 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar = new VScrollBar
             {
                 Name = "_v_scroll",
-                HorizontalAlignment = HAlignment.Right
+                HorizontalAlignment = HAlignment.Right,
             };
             AddChild(_scrollBar);
             _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
@@ -230,7 +235,8 @@ namespace Robust.Client.UserInterface.Controls
         private UIBox2 _getContentBox()
         {
             var style = _getStyleBox();
-            return style?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
+            var box = style?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
+            return new UIBox2(box.Left, box.Top, box.Right - _scrollBar.SizeBox.Width - Margin.Right - ScrollMargin, box.Bottom);
         }
 
         protected internal override void UIScaleChanged()

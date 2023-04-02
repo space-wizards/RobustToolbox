@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed `ContainerSystem.EmptyContainer` sometimes failing to empty containers.
+* Fixed container state handling sometimes failing to insert or remove entities.
 
 ### Other
 

@@ -364,17 +364,25 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Attempts to remove all entities in a container. Returns removed entities.
         /// </summary>
-        public IEnumerable<EntityUid> EmptyContainer(
+        public List<EntityUid> EmptyContainer(
             IContainer container,
             bool force = false,
             EntityCoordinates? destination = null,
             bool reparent = true)
         {
-            foreach (var entity in container.ContainedEntities.ToArray())
+            var removed = new List<EntityUid>(container.ContainedEntities);
+            for (var i = removed.Count - 1; i >= 0; i--)
             {
-                if (container.Remove(entity, EntityManager, reparent: reparent, force: force, destination: destination))
-                    yield return entity;
+                if (container.Remove(removed[i], EntityManager, reparent: reparent, force: force, destination: destination))
+                    continue;
+
+                // failed to remove entity.
+                DebugTools.Assert(container.Contains(removed[i]));
+                removed.RemoveSwap(i);
+                i++;
             }
+
+            return removed;
         }
 
         /// <summary>

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed `ContainerSystem.EmptyContainer` sometimes failing to empty containers.
 
 ### Other
 

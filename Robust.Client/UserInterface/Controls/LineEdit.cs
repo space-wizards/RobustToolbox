@@ -368,7 +368,7 @@ namespace Robust.Client.UserInterface.Controls
             _imeData = null;
         }
 
-        public event Action<LineEditBackspaceEventArgs>? OnBackspace;
+        public event Action<LineEditTextRemovedEventArgs>? OnTextRemoved;
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
         {
@@ -415,7 +415,7 @@ namespace Robust.Client.UserInterface.Controls
                             _selectionStart = _cursorPosition;
                             OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                             _updatePseudoClass();
-                            OnBackspace?.Invoke(new LineEditBackspaceEventArgs(oldText, _text, cursor, selectStart));
+                            OnTextRemoved?.Invoke(new LineEditTextRemovedEventArgs(oldText, _text, cursor, selectStart));
                         }
                     }
 
@@ -446,6 +446,71 @@ namespace Robust.Client.UserInterface.Controls
                             _selectionStart = _cursorPosition;
                             OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                             _updatePseudoClass();
+                            OnTextRemoved?.Invoke(new LineEditTextRemovedEventArgs(_text, _text, _cursorPosition, _selectionStart));
+                        }
+                    }
+
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextWordBackspace)
+                {
+                    if (Editable)
+                    {
+                        var changed = false;
+
+                        // If there is a selection, we just delete the selection. Otherwise we delete the previous word
+                        if (_selectionStart != _cursorPosition)
+                        {
+                            _text = _text.Remove(SelectionLower, SelectionLength);
+                            _cursorPosition = SelectionLower;
+                            changed = true;
+                        }
+                        else if (_cursorPosition != 0)
+                        {
+                            int remAmt = _cursorPosition - TextEditShared.PrevWordPosition(_text, _cursorPosition);
+
+                            _text = _text.Remove(_cursorPosition - remAmt, remAmt);
+                            _cursorPosition -= remAmt;
+                            changed = true;
+                        }
+
+                        if (changed)
+                        {
+                            _selectionStart = _cursorPosition;
+                            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                            _updatePseudoClass();
+                            OnTextRemoved?.Invoke(new LineEditTextRemovedEventArgs(_text, _text, _cursorPosition, _selectionStart));
+                        }
+                    }
+
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextWordDelete)
+                {
+                    if (Editable)
+                    {
+                        var changed = false;
+
+                        // If there is a selection, we just delete the selection. Otherwise we delete the next word
+                        if (_selectionStart != _cursorPosition)
+                        {
+                            _text = _text.Remove(SelectionLower, SelectionLength);
+                            _cursorPosition = SelectionLower;
+                            changed = true;
+                        }
+                        else if (_cursorPosition < _text.Length)
+                        {
+                            int nextWord = TextEditShared.EndWordPosition(_text, _cursorPosition);
+                            _text = _text.Remove(_cursorPosition, nextWord - _cursorPosition);
+                            changed = true;
+                        }
+
+                        if (changed)
+                        {
+                            _selectionStart = _cursorPosition;
+                            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                            _updatePseudoClass();
+                            OnTextRemoved?.Invoke(new LineEditTextRemovedEventArgs(_text, _text, _cursorPosition, _selectionStart));
                         }
                     }
 
@@ -839,14 +904,14 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public sealed class LineEditBackspaceEventArgs : EventArgs
+        public sealed class LineEditTextRemovedEventArgs : EventArgs
         {
             public string OldText { get; }
             public string NewText { get; }
             public int OldCursorPosition { get; }
             public int OldSelectionStart { get; }
 
-            public LineEditBackspaceEventArgs(
+            public LineEditTextRemovedEventArgs(
                 string oldText,
                 string newText,
                 int oldCursorPosition,

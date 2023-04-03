@@ -357,6 +357,65 @@ public sealed class TextEdit : Control
                 args.Handle();
             }
         }
+        else if (args.Function == EngineKeyFunctions.TextWordBackspace)
+        {
+            if (Editable)
+            {
+                var changed = false;
+
+                // If there is a selection, we just delete the selection. Otherwise we delete the previous word
+                if (_selectionStart != _cursorPosition)
+                {
+                    TextRope = Rope.Delete(TextRope, SelectionLower.Index, SelectionLength);
+                    _cursorPosition = SelectionLower;
+                    changed = true;
+                }
+                else if (_cursorPosition.Index < TextLength)
+                {
+                    var runes = Rope.EnumerateRunesReverse(TextRope, _cursorPosition.Index);
+                    int remAmt = -TextEditShared.PrevWordPosition(runes.GetEnumerator());
+
+                    TextRope = Rope.Delete(TextRope, _cursorPosition.Index - remAmt, remAmt);
+                    _cursorPosition.Index -= remAmt;
+                    changed = true;
+                }
+
+                if (changed)
+                    _selectionStart = _cursorPosition;
+
+                InvalidateHorizontalCursorPos();
+                args.Handle();
+            }
+        }
+        else if (args.Function == EngineKeyFunctions.TextWordDelete)
+        {
+            if (Editable)
+            {
+                var changed = false;
+
+                // If there is a selection, we just delete the selection. Otherwise we delete the next word
+                if (_selectionStart != _cursorPosition)
+                {
+                    TextRope = Rope.Delete(TextRope, SelectionLower.Index, SelectionLength);
+                    _cursorPosition = SelectionLower;
+                    changed = true;
+                }
+                else if (_cursorPosition.Index < TextLength)
+                {
+                    var runes = Rope.EnumerateRunes(TextRope, _cursorPosition.Index);
+                    int endWord = _cursorPosition.Index + TextEditShared.EndWordPosition(runes.GetEnumerator());
+
+                    TextRope = Rope.Delete(TextRope, _cursorPosition.Index, endWord - _cursorPosition.Index);
+                    changed = true;
+                }
+
+                if (changed)
+                    _selectionStart = _cursorPosition;
+
+                InvalidateHorizontalCursorPos();
+                args.Handle();
+            }
+        }
         else if (args.Function == EngineKeyFunctions.TextNewline)
         {
             InsertAtCursor("\n");

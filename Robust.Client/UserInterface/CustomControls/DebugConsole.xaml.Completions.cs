@@ -43,7 +43,7 @@ public sealed partial class DebugConsole
     {
         CommandBar.OnTextTyped += CommandBarOnOnTextTyped;
         CommandBar.OnFocusExit += CommandBarOnOnFocusExit;
-        CommandBar.OnBackspace += CommandBarOnOnBackspace;
+        CommandBar.OnTextRemoved += CommandBarOnTextRemoved;
     }
 
     private void CommandBarOnOnFocusExit(LineEdit.LineEditEventArgs obj)
@@ -56,7 +56,7 @@ public sealed partial class DebugConsole
         TypeUpdateCompletions(true);
     }
 
-    private void CommandBarOnOnBackspace(LineEdit.LineEditBackspaceEventArgs eventArgs)
+    private void CommandBarOnTextRemoved(LineEdit.LineEditTextRemovedEventArgs eventArgs)
     {
         if (eventArgs.OldCursorPosition == 0 || eventArgs.OldSelectionStart != eventArgs.OldCursorPosition)
         {

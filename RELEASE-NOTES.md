@@ -43,8 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed `ContainerSystem.EmptyContainer` sometimes failing to empty containers.
-* Fixed container state handling sometimes failing to insert or remove entities.
+*None yet*
 
 ### Other
 
@@ -53,6 +52,21 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.96.1.0
+
+### New features
+
+* Implemented deleting a full word at a time.
+
+### Bugfixes
+
+* Fixed `ContainerSystem.EmptyContainer` sometimes failing to empty containers.
+* Fixed container state handling sometimes failing to insert or remove entities.
+* Fix content test workflow.
+* Text contents won't draw over the scrollbar for OutputPanel controls anymore.
+* Invalidate OutputPanel entries upon it entering the UI tree. This fixes some bugs where text is added while it's outside of the tree without the UI scale cvar being set causing separate sizings in entries.
 
 
 ## 0.96.0.4

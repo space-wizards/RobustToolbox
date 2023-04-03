@@ -54,6 +54,9 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.96.2.0
+
+
 ## 0.96.1.0
 
 ### New features

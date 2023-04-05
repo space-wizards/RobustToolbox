@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Updated server SQLitePCLRaw to 2.1.4.
 
 ### Internal
 

@@ -19,23 +19,29 @@ namespace Robust.Shared.IoC
         ///     The type MUST have a parameterless constructor.
         /// </summary>
         /// <param name="type">Type of object to instantiate.</param>
+        /// <param name="oneOff">If true, do not cache injector delegates.</param>
+        /// <param name="inject">If false, will not inject dependencies.</param>
         /// <returns>Newly created object.</returns>
-        object CreateInstance(Type type);
+        object CreateInstance(Type type, bool oneOff = false, bool inject = true);
 
         /// <summary>
         ///     Constructs a new instance of the given type with Dependencies resolved.
         /// </summary>
         /// <param name="type">Type of object to instantiate.</param>
         /// <param name="args">The arguments to be passed to the constructor.</param>
+        /// <param name="oneOff">If true, do not cache injector delegates.</param>
+        /// <param name="inject">If false, will not inject dependencies.</param>
         /// <returns>Newly created object.</returns>
-        object CreateInstance(Type type, object[] args);
+        object CreateInstance(Type type, object[] args, bool oneOff = false, bool inject = true);
 
         /// <summary>
         ///     Constructs a new instance of the given type with Dependencies resolved.
         /// </summary>
+        /// <param name="oneOff">If true, do not cache injector delegates.</param>
+        /// <param name="inject">If false, will not inject dependencies.</param>
         /// <typeparam name="T">Type of object to instantiate.</typeparam>
         /// <returns>Newly created object.</returns>
-        T CreateInstance<T>() where T : new();
+        T CreateInstance<T>(bool oneOff = false, bool inject = true) where T : new();
     }
 
     internal interface IDynamicTypeFactoryInternal : IDynamicTypeFactory
@@ -46,23 +52,28 @@ namespace Robust.Shared.IoC
         /// </summary>
         /// <param name="type">Type of object to instantiate.</param>
         /// <param name="oneOff">If true, do not cache injector delegates.</param>
+        /// <param name="inject">If false, will not inject dependencies.</param>
         /// <returns>Newly created object.</returns>
-        object CreateInstanceUnchecked(Type type, bool oneOff = false);
+        object CreateInstanceUnchecked(Type type, bool oneOff = false, bool inject = true);
 
         /// <summary>
         ///     Constructs a new instance of the given type with Dependencies resolved.
         /// </summary>
         /// <param name="type">Type of object to instantiate.</param>
         /// <param name="args">The arguments to be passed to the constructor.</param>
+        /// <param name="oneOff">If true, do not cache injector delegates.</param>
+        /// <param name="inject">If false, will not inject dependencies.</param>
         /// <returns>Newly created object.</returns>
-        object CreateInstanceUnchecked(Type type, object[] args);
+        object CreateInstanceUnchecked(Type type, object[] args, bool oneOff = false, bool inject = true);
 
         /// <summary>
         ///     Constructs a new instance of the given type with Dependencies resolved.
         /// </summary>
+        /// <param name="oneOff">If true, do not cache injector delegates.</param>
+        /// <param name="inject">If false, will not inject dependencies.</param>
         /// <typeparam name="T">Type of object to instantiate.</typeparam>
         /// <returns>Newly created object.</returns>
-        T CreateInstanceUnchecked<T>() where T : new();
+        T CreateInstanceUnchecked<T>(bool oneOff = false, bool inject = true) where T : new();
     }
 
     /// <summary>
@@ -75,12 +86,15 @@ namespace Robust.Shared.IoC
         /// </summary>
         /// <param name="dynamicTypeFactory">The dynamic type factory to use.</param>
         /// <param name="type">The type to instantiate.</param>
+        /// <param name="oneOff">If true, do not cache injector delegates.</param>
+        /// <param name="inject">If false, will not inject dependencies.</param>
         /// <typeparam name="T">The type that the instance will be cast to.</typeparam>
         /// <returns>Newly created object, cast to <typeparamref name="T"/>.</returns>
-        public static T CreateInstance<T>(this IDynamicTypeFactory dynamicTypeFactory, Type type)
+        public static T CreateInstance<T>(this IDynamicTypeFactory dynamicTypeFactory, Type type,
+            bool oneOff = false, bool inject = true)
         {
             DebugTools.Assert(typeof(T).IsAssignableFrom(type), "type must be subtype of T");
-            return (T) dynamicTypeFactory.CreateInstance(type);
+            return (T) dynamicTypeFactory.CreateInstance(type, oneOff, inject);
         }
 
         /// <summary>
@@ -89,12 +103,19 @@ namespace Robust.Shared.IoC
         /// <param name="dynamicTypeFactory">The dynamic type factory to use.</param>
         /// <param name="type">The type to instantiate.</param>
         /// <param name="args">The arguments to pass to the constructor.</param>
+        /// <param name="oneOff">If true, do not cache injector delegates.</param>
+        /// <param name="inject">If false, will not inject dependencies.</param>
         /// <typeparam name="T">The type that the instance will be cast to.</typeparam>
         /// <returns>Newly created object, cast to <typeparamref name="T"/>.</returns>
-        public static T CreateInstance<T>(this IDynamicTypeFactory dynamicTypeFactory, Type type, object[] args)
+        public static T CreateInstance<T>(
+            this IDynamicTypeFactory dynamicTypeFactory,
+            Type type,
+            object[] args,
+            bool oneOff = false,
+            bool inject = true)
         {
             DebugTools.Assert(typeof(T).IsAssignableFrom(type), "type must be subtype of T");
-            return (T) dynamicTypeFactory.CreateInstance(type, args);
+            return (T) dynamicTypeFactory.CreateInstance(type, args, oneOff, inject);
         }
 
         /// <summary>
@@ -103,15 +124,17 @@ namespace Robust.Shared.IoC
         /// <param name="dynamicTypeFactory">The dynamic type factory to use.</param>
         /// <param name="type">The type to instantiate.</param>
         /// <param name="oneOff">If true, do not cache injector delegates.</param>
+        /// <param name="inject">If false, will not inject dependencies.</param>
         /// <typeparam name="T">The type that the instance will be cast to.</typeparam>
         /// <returns>Newly created object, cast to <typeparamref name="T"/>.</returns>
         internal static T CreateInstanceUnchecked<T>(
             this IDynamicTypeFactoryInternal dynamicTypeFactory,
             Type type,
-            bool oneOff = false)
+            bool oneOff = false,
+            bool inject = true)
         {
             DebugTools.Assert(typeof(T).IsAssignableFrom(type), "type must be subtype of T");
-            return (T) dynamicTypeFactory.CreateInstanceUnchecked(type, oneOff);
+            return (T) dynamicTypeFactory.CreateInstanceUnchecked(type, oneOff, inject);
         }
 
         /// <summary>
@@ -119,16 +142,20 @@ namespace Robust.Shared.IoC
         /// </summary>
         /// <param name="dynamicTypeFactory">The dynamic type factory to use.</param>
         /// <param name="type">The type to instantiate.</param>
+        /// <param name="oneOff">If true, do not cache injector delegates.</param>
+        /// <param name="inject">If false, will not inject dependencies.</param>
         /// <param name="args">The arguments to pass to the constructor.</param>
         /// <typeparam name="T">The type that the instance will be cast to.</typeparam>
         /// <returns>Newly created object, cast to <typeparamref name="T"/>.</returns>
         internal static T CreateInstanceUnchecked<T>(
             this IDynamicTypeFactoryInternal dynamicTypeFactory,
             Type type,
-            object[] args)
+            object[] args,
+            bool oneOff = false,
+            bool inject = true)
         {
             DebugTools.Assert(typeof(T).IsAssignableFrom(type), "type must be subtype of T");
-            return (T) dynamicTypeFactory.CreateInstanceUnchecked(type, args);
+            return (T) dynamicTypeFactory.CreateInstanceUnchecked(type, args, oneOff, inject);
         }
     }
 
@@ -141,28 +168,28 @@ namespace Robust.Shared.IoC
         [Dependency] private readonly IModLoader _modLoader = default!;
 
         /// <inheritdoc />
-        public object CreateInstance(Type type)
+        public object CreateInstance(Type type, bool oneOff = false, bool inject = true)
         {
             if (!_modLoader.IsContentTypeAccessAllowed(type))
             {
                 throw new SandboxArgumentException("Creating non-content types is not allowed.");
             }
 
-            return CreateInstanceUnchecked(type);
+            return CreateInstanceUnchecked(type, oneOff, inject);
         }
 
-        public object CreateInstance(Type type, object[] args)
+        public object CreateInstance(Type type, object[] args, bool oneOff = false, bool inject = true)
         {
             if (!_modLoader.IsContentTypeAccessAllowed(type))
             {
                 throw new SandboxArgumentException("Creating non-content types is not allowed.");
             }
 
-            return CreateInstanceUnchecked(type, args);
+            return CreateInstanceUnchecked(type, args, oneOff, inject);
         }
 
         /// <inheritdoc />
-        public T CreateInstance<T>()
+        public T CreateInstance<T>(bool oneOff = false, bool inject = true)
             where T : new()
         {
             if (!_modLoader.IsContentTypeAccessAllowed(typeof(T)))
@@ -170,33 +197,39 @@ namespace Robust.Shared.IoC
                 throw new SandboxArgumentException("Creating non-content types is not allowed.");
             }
 
-            return CreateInstanceUnchecked<T>();
+            return CreateInstanceUnchecked<T>(oneOff, inject);
         }
 
-        public object CreateInstanceUnchecked(Type type, bool oneOff = false)
+        public object CreateInstanceUnchecked(Type type, bool oneOff = false, bool inject = true)
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
             var instance = Activator.CreateInstance(type)!;
-            _dependencies.InjectDependencies(instance, oneOff);
+
+            if (inject)
+                _dependencies.InjectDependencies(instance, oneOff);
             return instance;
         }
 
-        public object CreateInstanceUnchecked(Type type, object[] args)
+        public object CreateInstanceUnchecked(Type type, object[] args, bool oneOff = false, bool inject = true)
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
             var instance = Activator.CreateInstance(type, args)!;
-            _dependencies.InjectDependencies(instance);
+
+            if (inject)
+                _dependencies.InjectDependencies(instance, oneOff);
             return instance;
         }
 
-        public T CreateInstanceUnchecked<T>() where T : new()
+        public T CreateInstanceUnchecked<T>(bool oneOff = false, bool inject = true) where T : new()
         {
             var instance = new T();
-            _dependencies.InjectDependencies(instance);
+
+            if (inject)
+                _dependencies.InjectDependencies(instance, oneOff);
             return instance;
         }
     }

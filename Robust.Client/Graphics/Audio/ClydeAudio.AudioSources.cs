@@ -263,19 +263,11 @@ namespace Robust.Client.Graphics.Audio
 
             private void Dispose(bool disposing)
             {
-                if (!disposing)
-                {
-                    // We can't run this code inside the finalizer thread so tell Clyde to clear it up later.
-                    _master.DeleteSourceOnMainThread(SourceHandle, FilterHandle);
-                }
-                else
-                {
-                    if (FilterHandle != 0) EFX.DeleteFilter(FilterHandle);
-                    AL.DeleteSource(SourceHandle);
-                    _master._audioSources.Remove(SourceHandle);
-                    _master._checkAlError();
-                }
+                if (_isDisposed())
+                    return;
 
+                // We can't run this code inside the finalizer thread so tell Clyde to clear it up later.
+                _master.DeleteSourceOnMainThread(SourceHandle, FilterHandle);
                 SourceHandle = -1;
             }
 

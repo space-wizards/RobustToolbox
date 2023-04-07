@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -132,13 +131,11 @@ namespace Robust.Shared.Network
             var hasPubKey = !string.IsNullOrEmpty(pubKey);
             var authenticate = !string.IsNullOrEmpty(authToken);
 
-            var hwId = ImmutableArray.Create(HWId.Calc());
             var msgLogin = new MsgLoginStart
             {
                 UserName = userNameRequest,
                 CanAuth = authenticate,
                 NeedPubKey = !hasPubKey,
-                HWId = hwId,
                 Encrypt = encrypt
             };
 
@@ -146,8 +143,21 @@ namespace Robust.Shared.Network
             msgLogin.WriteToBuffer(outLoginMsg, _serializer);
             peer.Peer.SendMessage(outLoginMsg, connection, NetDeliveryMethod.ReliableOrdered);
 
+            var response = await AwaitData(connection);
+            var msgHWIdReq = new MsgLoginHWIdRequest();
+            msgHWIdReq.ReadFromBuffer(response, _serializer);
+
+            var hwId = HWId.HWIDs(msgHWIdReq.Salt);
+            var msgHWIdResp = new MsgLoginHWIdResponse()
+            {
+                HWId = hwId
+            };
+            var outHWIdResp = peer.Peer.CreateMessage();
+            msgHWIdResp.WriteToBuffer(outHWIdResp, _serializer);
+            peer.Peer.SendMessage(outHWIdResp, connection, NetDeliveryMethod.ReliableOrdered);
+
             NetEncryption? encryption = null;
-            var response = await AwaitData(connection, cancel);
+            response = await AwaitData(connection, cancel);
             var loginSuccess = response.ReadBoolean();
             response.ReadPadBits();
             if (!loginSuccess)

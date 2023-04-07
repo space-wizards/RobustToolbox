@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Network
@@ -15,7 +14,7 @@ namespace Robust.Shared.Network
         [ViewVariables]
         public string? PatronTier { get; init; }
         [ViewVariables]
-        public ImmutableArray<byte> HWId { get; init; }
+        public HWIdData HWId { get; init; }
 
         public NetUserData(NetUserId userId, string userName)
         {

@@ -57,6 +57,18 @@ namespace Robust.Shared.Network
                     }
                 }
 
+                var msgHWIdReq = new MsgLoginHWIdRequest
+                {
+                    Salt = _config.GetCVar(CVars.HWIdSalt)
+                };
+                var outHWIdReq = peer.Peer.CreateMessage();
+                msgHWIdReq.WriteToBuffer(outHWIdReq, _serializer);
+                peer.Peer.SendMessage(outHWIdReq, connection, NetDeliveryMethod.ReliableOrdered);
+
+                incPacket = await AwaitData(connection);
+                var msgHWIdResp = new MsgLoginHWIdResponse();
+                msgHWIdResp.ReadFromBuffer(incPacket, _serializer);
+
                 NetEncryption? encryption = null;
                 NetUserData userData;
                 LoginType type;
@@ -128,7 +140,7 @@ namespace Robust.Shared.Network
                     userData = new NetUserData(userId, joinedRespJson.UserData.UserName)
                     {
                         PatronTier = joinedRespJson.UserData.PatronTier,
-                        HWId = msgLogin.HWId
+                        HWId = msgHWIdResp.HWId
                     };
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
@@ -162,7 +174,7 @@ namespace Robust.Shared.Network
 
                     userData = new NetUserData(userId, name)
                     {
-                        HWId = msgLogin.HWId
+                        HWId = msgHWIdResp.HWId
                     };
                 }
 

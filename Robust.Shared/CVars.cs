@@ -747,6 +747,22 @@ namespace Robust.Shared
             CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
         /*
+         * HWID
+         */
+
+        /// <summary>
+        /// >=16 character string required to enable additional HWIDs.
+        /// </summary>
+        /// <remarks>
+        /// Should be shared across all severs that share HWID records.
+        /// Must be shared across all servers that want to be able to use HWIDs from connections to each other.
+        /// Should not be shared across servers managed by different groups.
+        /// This is not a secret value, but to reduce the chances of reuse it should not be made public in ways/places that are not necessary.
+        /// </remarks>
+        public static readonly CVarDef<string> HWIdSalt =
+            CVarDef.Create("hwid.salt", "", CVar.SERVERONLY);
+
+        /*
          * RENDERING
          */
 

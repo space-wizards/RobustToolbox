@@ -47,7 +47,7 @@ public sealed class MapLoaderSystem : EntitySystem
     private ISawmill _logLoader = default!;
 
     private static readonly MapLoadOptions DefaultLoadOptions = new();
-    private const int MapFormatVersion = 3;
+    private const int MapFormatVersion = 4;
     private const int BackwardsVersion = 2;
 
     private MapSerializationContext _context = default!;
@@ -256,12 +256,12 @@ public sealed class MapLoaderSystem : EntitySystem
 
     private bool Deserialize(MapData data)
     {
-        // Verify that prototypes for all the entities exist
-        if (!VerifyEntitiesExist(data))
-            return false;
-
         // First we load map meta data like version.
         if (!ReadMetaSection(data))
+            return false;
+
+        // Verify that prototypes for all the entities exist
+        if (!VerifyEntitiesExist(data))
             return false;
 
         // Tile map
@@ -293,19 +293,41 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         _stopwatch.Restart();
         var fail = false;
-        var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
         var reportedError = new HashSet<string>();
 
-        foreach (var entityDef in entities.Cast<MappingDataNode>())
+        if (data.Version >= 4)
         {
-            if (entityDef.TryGet<ValueDataNode>("type", out var typeNode))
+            var meta = data.RootMappingNode.Get<SequenceDataNode>("entities");
+
+            foreach (var metaDef in meta.Cast<MappingDataNode>())
             {
-                var type = typeNode.Value;
-                if (!_prototypeManager.HasIndex<EntityPrototype>(type) && !reportedError.Contains(type))
+                if (metaDef.TryGet<ValueDataNode>("type", out var typeNode))
                 {
-                    Logger.ErrorS("map", "Missing prototype for map: {0}", type);
-                    fail = true;
-                    reportedError.Add(type);
+                    var type = typeNode.Value;
+                    if (type != string.Empty && !_prototypeManager.HasIndex<EntityPrototype>(type) && !reportedError.Contains(type))
+                    {
+                        Logger.ErrorS("map", "Missing prototype for map: {0}", type);
+                        fail = true;
+                        reportedError.Add(type);
+                    }
+                }
+            }
+        }
+        else
+        {
+            var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
+
+            foreach (var entityDef in entities.Cast<MappingDataNode>())
+            {
+                if (entityDef.TryGet<ValueDataNode>("type", out var typeNode))
+                {
+                    var type = typeNode.Value;
+                    if (!_prototypeManager.HasIndex<EntityPrototype>(type) && !reportedError.Contains(type))
+                    {
+                        Logger.ErrorS("map", "Missing prototype for map: {0}", type);
+                        fail = true;
+                        reportedError.Add(type);
+                    }
                 }
             }
         }
@@ -325,7 +347,7 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         var meta = data.RootMappingNode.Get<MappingDataNode>("meta");
         var ver = meta.Get<ValueDataNode>("format").AsInt();
-        if (ver != MapFormatVersion && ver != BackwardsVersion)
+        if (ver < BackwardsVersion)
         {
             _logLoader.Error($"Cannot handle this map file version, found {ver} and require {MapFormatVersion}");
             return false;
@@ -366,40 +388,79 @@ public sealed class MapLoaderSystem : EntitySystem
     private void AllocEntities(MapData data)
     {
         _stopwatch.Restart();
-        var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
         var mapUid = _mapManager.GetMapEntityId(data.TargetMap);
         var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
         _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), pauseTime);
-        data.Entities.EnsureCapacity(entities.Count);
-        data.UidEntityMap.EnsureCapacity(entities.Count);
-        data.EntitiesToDeserialize.EnsureCapacity(entities.Count);
 
-        foreach (var entityDef in entities.Cast<MappingDataNode>())
+        if (data.Version >= 4)
         {
-            string? type = null;
-            if (entityDef.TryGet<ValueDataNode>("type", out var typeNode))
+            var metaEntities = data.RootMappingNode.Get<SequenceDataNode>("entities");
+
+            foreach (var metaDef in metaEntities.Cast<MappingDataNode>())
             {
-                type = typeNode.Value;
+                string? type = null;
+                if (metaDef.TryGet<ValueDataNode>("type", out var typeNode))
+                {
+                    type = typeNode.Value;
+                }
+
+                var entities = (SequenceDataNode) metaDef["entities"];
+
+                foreach (var entityDef in entities.Cast<MappingDataNode>())
+                {
+                    // TODO Fix this. If the entities are ever defined out of order, and if one of them does not have a
+                    // "uid" node, then defaulting to Entities.Count will error.
+                    var uid = data.Entities.Count;
+
+                    if (entityDef.TryGet<ValueDataNode>("uid", out var uidNode))
+                    {
+                        uid = uidNode.AsInt();
+                    }
+
+                    var entity = _serverEntityManager.AllocEntity(type);
+                    data.Entities.Add(entity);
+                    data.UidEntityMap.Add(uid, entity);
+                    data.EntitiesToDeserialize.Add(entity, entityDef);
+
+                    if (data.Options.StoreMapUids)
+                    {
+                        var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
+                        comp.Uid = uid;
+                    }
+                }
             }
+        }
+        else
+        {
+            var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
 
-            // TODO Fix this. If the entities are ever defined out of order, and if one of them does not have a
-            // "uid" node, then defaulting to Entities.Count will error.
-            var uid = data.Entities.Count;
-
-            if (entityDef.TryGet<ValueDataNode>("uid", out var uidNode))
+            foreach (var entityDef in entities.Cast<MappingDataNode>())
             {
-                uid = uidNode.AsInt();
-            }
+                string? type = null;
+                if (entityDef.TryGet<ValueDataNode>("type", out var typeNode))
+                {
+                    type = typeNode.Value;
+                }
 
-            var entity = _serverEntityManager.AllocEntity(type);
-            data.Entities.Add(entity);
-            data.UidEntityMap.Add(uid, entity);
-            data.EntitiesToDeserialize.Add(entity, entityDef);
+                // TODO Fix this. If the entities are ever defined out of order, and if one of them does not have a
+                // "uid" node, then defaulting to Entities.Count will error.
+                var uid = data.Entities.Count;
 
-            if (data.Options.StoreMapUids)
-            {
-                var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
-                comp.Uid = uid;
+                if (entityDef.TryGet<ValueDataNode>("uid", out var uidNode))
+                {
+                    uid = uidNode.AsInt();
+                }
+
+                var entity = _serverEntityManager.AllocEntity(type);
+                data.Entities.Add(entity);
+                data.UidEntityMap.Add(uid, entity);
+                data.EntitiesToDeserialize.Add(entity, entityDef);
+
+                if (data.Options.StoreMapUids)
+                {
+                    var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
+                    comp.Uid = uid;
+                }
             }
         }
 

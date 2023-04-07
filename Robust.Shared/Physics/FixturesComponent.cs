@@ -16,10 +16,8 @@ namespace Robust.Shared.Physics
     /// <remarks>
     /// In its own component to decrease physics comp state size significantly.
     /// </remarks>
-    [RegisterComponent]
-    [NetworkedComponent]
-    [ComponentReference(typeof(ILookupWorldBox2Component))]
-    public sealed class FixturesComponent : Component, ILookupWorldBox2Component
+    [RegisterComponent, NetworkedComponent]
+    public sealed class FixturesComponent : Component
     {
         // This is a snowflake component whose main job is making physics states smaller for massive bodies
         // (e.g. grids)

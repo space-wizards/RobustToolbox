@@ -1,4 +1,6 @@
-using Robust.Shared.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -13,9 +15,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.GameObjects
 {
@@ -910,7 +909,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle)
         {
-            if (TryComp<ILookupWorldBox2Component>(uid, out var worldLookup))
+            if (TryComp<FixturesComponent>(uid, out var worldLookup))
             {
                 var transform = new Transform(position, angle);
                 return worldLookup.GetAABB(transform);

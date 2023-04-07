@@ -15,8 +15,8 @@
     <PackageReference Include="SpaceWizards.HttpListener" Version="0.1.0" />
     <!--  -->
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="6.0.9" />
-    <PackageReference Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.2" Condition="'$(UseSystemSqlite)' == 'True'" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.2" Condition="'$(UseSystemSqlite)' != 'True'" />
+    <PackageReference Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.4" Condition="'$(UseSystemSqlite)' == 'True'" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.4" Condition="'$(UseSystemSqlite)' != 'True'" />
     <PackageReference Include="prometheus-net" Version="4.1.1" />
     <PackageReference Include="Serilog.Sinks.Loki" Version="4.0.0-beta3" />
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="6.0.0" />

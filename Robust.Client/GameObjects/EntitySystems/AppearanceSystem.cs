@@ -20,6 +20,12 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<ClientAppearanceComponent, ComponentHandleState>(OnAppearanceHandleState);
         }
 
+        protected override void OnAppearanceGetState(EntityUid uid, AppearanceComponent component, ref ComponentGetState args)
+        {
+            var clone = CloneAppearanceData(component.AppearanceData);
+            args.State = new AppearanceComponentState(clone);
+        }
+
         private void OnAppearanceInit(EntityUid uid, ClientAppearanceComponent component, ComponentInit args)
         {
             foreach (var visual in component.Visualizers)

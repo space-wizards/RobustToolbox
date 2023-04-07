@@ -56,6 +56,9 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.TextCursorSelectEnd);
 
             common.AddFunction(EngineKeyFunctions.TextBackspace);
+            common.AddFunction(EngineKeyFunctions.TextDelete);
+            common.AddFunction(EngineKeyFunctions.TextWordBackspace);
+            common.AddFunction(EngineKeyFunctions.TextWordDelete);
             common.AddFunction(EngineKeyFunctions.TextNewline);
             common.AddFunction(EngineKeyFunctions.TextSubmit);
             common.AddFunction(EngineKeyFunctions.TextCopy);
@@ -66,7 +69,6 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.TextHistoryNext);
             common.AddFunction(EngineKeyFunctions.TextReleaseFocus);
             common.AddFunction(EngineKeyFunctions.TextScrollToBottom);
-            common.AddFunction(EngineKeyFunctions.TextDelete);
             common.AddFunction(EngineKeyFunctions.TextTabComplete);
             common.AddFunction(EngineKeyFunctions.TextCompleteNext);
             common.AddFunction(EngineKeyFunctions.TextCompletePrev);

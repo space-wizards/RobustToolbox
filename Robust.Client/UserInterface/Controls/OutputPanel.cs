@@ -244,5 +244,14 @@ namespace Robust.Client.UserInterface.Controls
         {
             return font.GetLineHeight(scale) * 2;
         }
+
+        protected override void EnteredTree()
+        {
+            base.EnteredTree();
+            // Due to any number of reasons the entries may be invalidated if added when not visible in the tree.
+            // e.g. the control has not had its UI scale set and the messages were added, but the
+            // existing ones were valid when the UI scale was set.
+            _invalidateEntries();
+        }
     }
 }

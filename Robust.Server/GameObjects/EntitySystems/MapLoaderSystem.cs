@@ -301,7 +301,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
             foreach (var metaDef in meta.Cast<MappingDataNode>())
             {
-                if (metaDef.TryGet<ValueDataNode>("type", out var typeNode))
+                if (metaDef.TryGet<ValueDataNode>("proto", out var typeNode))
                 {
                     var type = typeNode.Value;
                     if (type != string.Empty && !_prototypeManager.HasIndex<EntityPrototype>(type) && !reportedError.Contains(type))
@@ -399,7 +399,7 @@ public sealed class MapLoaderSystem : EntitySystem
             foreach (var metaDef in metaEntities.Cast<MappingDataNode>())
             {
                 string? type = null;
-                if (metaDef.TryGet<ValueDataNode>("type", out var typeNode))
+                if (metaDef.TryGet<ValueDataNode>("proto", out var typeNode))
                 {
                     type = typeNode.Value;
                 }
@@ -1056,7 +1056,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
             var node = new MappingDataNode()
             {
-                { "type", proto },
+                { "proto", proto },
                 { "entities", entities},
             };
 

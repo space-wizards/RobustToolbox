@@ -639,6 +639,16 @@ namespace Robust.Client.GameStates
                 if (!metas.TryGetComponent(es.Uid, out var meta))
                 {
                     toCreate.Add(es.Uid, es);
+
+                    var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
+                    if (metaState == null)
+                        throw new MissingMetadataException(es.Uid);
+
+                    _entities.CreateEntity(metaState.PrototypeId, es.Uid);
+                    toApply.Add(es.Uid, (false, GameTick.Zero, es, null));
+
+                    var newMeta = metas.GetComponent(es.Uid);
+                    newMeta.LastStateApplied = curState.ToSequence;
                     continue;
                 }
 
@@ -656,26 +666,6 @@ namespace Robust.Client.GameStates
 
                 toApply.Add(es.Uid, (isEnteringPvs, meta.LastStateApplied, es, null));
                 meta.LastStateApplied = curState.ToSequence;
-            }
-
-            // Create new entities
-            if (toCreate.Count > 0)
-            {
-                using var _ = _prof.Group("Create uninitialized entities");
-                _prof.WriteValue("Count", ProfData.Int32(toCreate.Count));
-
-                foreach (var (uid, es) in toCreate)
-                {
-                    var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
-                    if (metaState == null)
-                        throw new MissingMetadataException(uid);
-
-                    _entities.CreateEntity(metaState.PrototypeId, uid);
-                    toApply.Add(uid, (false, GameTick.Zero, es, null));
-
-                    var newMeta = metas.GetComponent(uid);
-                    newMeta.LastStateApplied = curState.ToSequence;
-                }
             }
 
             // Detach entities to null space

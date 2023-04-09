@@ -135,11 +135,11 @@ namespace Robust.Shared.GameObjects
                 poly.SetVertices(vertices, PhysicsConstants.ConvexHulls);
 
                 var newFixture = new Fixture(
+                    $"grid_chunk-{bounds.Left}-{bounds.Bottom}",
                     poly,
                     MapGridHelpers.CollisionGroup,
                     MapGridHelpers.CollisionGroup,
-                    true) {ID = $"grid_chunk-{bounds.Left}-{bounds.Bottom}",
-                    Body = body};
+                    true) { Body = body};
 
                 newFixtures.Add(newFixture);
             }

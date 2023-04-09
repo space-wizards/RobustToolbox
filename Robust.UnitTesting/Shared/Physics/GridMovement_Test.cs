@@ -43,7 +43,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             physSystem.SetBodyType(onGrid, BodyType.Dynamic, body: onGridBody);
             var shapeA = new PolygonShape();
             shapeA.SetAsBox(0.5f, 0.5f);
-            fixtureSystem.CreateFixture(onGrid, new Fixture(shapeA, 1, 0, false), body: onGridBody);
+            fixtureSystem.CreateFixture(onGrid, new Fixture("fix1", shapeA, 1, 0, false), body: onGridBody);
             Assert.That(fixtureSystem.GetFixtureCount(onGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(onGrid).ParentUid, Is.EqualTo(grid.Owner));
             physSystem.WakeBody(onGrid, body: onGridBody);
@@ -54,7 +54,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             physSystem.SetBodyType(offGrid, BodyType.Dynamic, body: offGridBody);
             var shapeB = new PolygonShape();
             shapeB.SetAsBox(0.5f, 0.5f);
-            fixtureSystem.CreateFixture(offGrid, new Fixture(shapeB, 0, 1, false), body: offGridBody);
+            fixtureSystem.CreateFixture(offGrid, new Fixture("fix1", shapeB, 0, 1, false), body: offGridBody);
             Assert.That(fixtureSystem.GetFixtureCount(offGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(offGrid).ParentUid, Is.Not.EqualTo((grid.Owner)));
             physSystem.WakeBody(offGrid, body: offGridBody);

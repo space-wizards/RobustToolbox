@@ -55,7 +55,7 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
             var shape = new PolygonShape();
             shape.SetAsBox(0.5f, 0.5f);
 
-            fixSystem.CreateFixture(ent2, new Fixture(shape, 0, 0, false), manager: manager2, body: body2);
+            fixSystem.CreateFixture(ent2, new Fixture("fix1", shape, 0, 0, false), manager: manager2, body: body2);
 
             joint = jointSystem.CreateDistanceJoint(ent1, ent2, id: "distance-joint");
             joint.CollideConnected = false;

@@ -36,7 +36,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 var box = entManager.AddComponent<PhysicsComponent>(boxEnt);
                 var poly = new PolygonShape();
                 poly.SetAsBox(0.5f, 0.5f);
-                fixtureSystem.CreateFixture(boxEnt, new Fixture(poly, 0, 0, false), body: box);
+                fixtureSystem.CreateFixture(boxEnt, new Fixture("fix1", poly, 0, 0, false), body: box);
                 physicsSystem.SetFixedRotation(boxEnt, false, body: box);
                 physicsSystem.SetBodyType(boxEnt, BodyType.Dynamic, body: box);
                 Assert.That(box.InvI, Is.GreaterThan(0f));

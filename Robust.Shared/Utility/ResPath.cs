@@ -8,7 +8,7 @@ namespace Robust.Shared.Utility;
 
 /// <summary>
 ///     Provides object-oriented path manipulation for resource paths.
-///     ResourcePaths are immutable.
+///     ResPath are immutable, and separator is always `/`
 /// </summary>
 [PublicAPI, Serializable, NetSerializable]
 public readonly struct ResPath : IEquatable<ResPath>
@@ -39,17 +39,17 @@ public readonly struct ResPath : IEquatable<ResPath>
     public const string SeparatorStr = "/";
 
     /// <summary>
-    ///     "." as a static. Separator used is <c>/</c>.
+    ///     "." as a static.
     /// </summary>
     public static readonly ResPath Self = new(".");
 
     /// <summary>
-    ///     "/" (root) as a static. Separator used is <c>/</c>.
+    ///     "/" (root) as a static.
     /// </summary>
     public static readonly ResPath Root = new("/");
 
     /// <summary>
-    ///     "/" (root) as a static. Separator used is <c>/</c>.
+    ///     "" (empty) as a static.
     /// </summary>
     public static readonly ResPath Empty = new("");
 
@@ -98,7 +98,7 @@ public readonly struct ResPath : IEquatable<ResPath>
                 return Self;
             }
 
-            var ind = CanonPath.Length > 1 && CanonPath[^1] == '/' 
+            var ind = CanonPath.Length > 1 && CanonPath[^1] == '/'
                 ? CanonPath[..^1].LastIndexOf('/')
                 : CanonPath.LastIndexOf('/');
             return ind != -1
@@ -469,7 +469,7 @@ public readonly struct ResPath : IEquatable<ResPath>
         {
             throw new ArgumentException("New separator can't be `.` or `NULL`");
         }
-        
+
         return newSeparator == "/"
             ? CanonPath
             : CanonPath.Replace("/", newSeparator);

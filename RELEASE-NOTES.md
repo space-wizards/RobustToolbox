@@ -39,7 +39,8 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added overrides to shuffle Span<T> and ValueList<T> in IRobustRandom.
+* Added hotkeys to close the most recent window and all windows.
 
 ### Bugfixes
 
@@ -47,7 +48,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Improved some container assert messages.
 
 ### Internal
 

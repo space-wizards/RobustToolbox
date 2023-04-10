@@ -440,7 +440,18 @@ public sealed class MapLoaderSystem : EntitySystem
                             compType,
                             new[] { protData.Mapping }, datanode, _context);
                 }
-                _context.CurrentReadingEntityComponents[value] = (IComponent) _serManager.Read(compType, datanode, _context)!;
+
+                try
+                {
+                    _context.CurrentReadingEntityComponents[value] =
+                        (IComponent)_serManager.Read(compType, datanode, _context)!;
+                }
+                // This is here because if serv3 blows up the error will be unreadable.
+                catch (InvalidOperationException exc)
+                {
+                    _logLoader.Error($"Error reading component for {ToPrettyString(uid)} on map load");
+                    throw exc;
+                }
             }
         }
 

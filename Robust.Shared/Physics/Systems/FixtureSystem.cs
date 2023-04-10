@@ -96,6 +96,11 @@ namespace Robust.Shared.Physics.Systems
                 return;
             }
 
+            if (string.IsNullOrEmpty(fixture.ID))
+            {
+                throw new InvalidOperationException($"Tried to create a fixture without an ID!");
+            }
+
             manager.Fixtures.Add(fixture.ID, fixture);
             fixture.Body = body;
 
@@ -206,8 +211,14 @@ namespace Robust.Shared.Physics.Systems
             // hence we'll just make sure its body is set and SharedBroadphaseSystem will deal with it later.
             if (Resolve(uid, ref body, false))
             {
-                foreach (var fixture in component.Fixtures.Values)
+                foreach (var (id, fixture) in component.Fixtures)
                 {
+                    if (string.IsNullOrEmpty(id))
+                    {
+                        throw new InvalidOperationException($"Tried to setup fixture on init for {ToPrettyString(uid)} with no ID!");
+                    }
+
+                    fixture.ID = id;
                     fixture.Body = body;
                 }
 
@@ -232,6 +243,13 @@ namespace Robust.Shared.Physics.Systems
             {
                 Logger.ErrorS("physics", $"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;
+            }
+
+            // State handling funnies, someday we'll remove fixture.ID and fixture.Body and it won't matter
+            foreach (var (id, fixture) in component.Fixtures)
+            {
+                fixture.ID = id;
+                fixture.Body = physics;
             }
 
             var toAddFixtures = new ValueList<Fixture>();

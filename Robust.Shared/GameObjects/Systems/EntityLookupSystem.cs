@@ -359,8 +359,6 @@ namespace Robust.Shared.GameObjects
             Transform mapTransform,
             Dictionary<FixtureProxy, Box2> moveBuffer)
         {
-            DebugTools.Assert(fixture.Body.CanCollide);
-
             // Moving
             if (fixture.ProxyCount > 0)
             {

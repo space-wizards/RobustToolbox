@@ -106,7 +106,8 @@ public sealed class AudioSystem : SharedAudioSystem
         if (stream == null)
             return;
 
-        StreamDone(stream);
+        stream.Done = true;
+        stream.Source.Dispose();
         _playingClydeStreams.Remove(stream);
     }
     #endregion
@@ -129,7 +130,16 @@ public sealed class AudioSystem : SharedAudioSystem
         }
         finally
         {
-            _playingClydeStreams.RemoveAll(p => p.Done);
+
+            for (var i = _playingClydeStreams.Count - 1; i >= 0; i--)
+            {
+                var stream = _playingClydeStreams[i];
+                if (stream.Done)
+                {
+                    stream.Source.Dispose();
+                    _playingClydeStreams.RemoveSwap(i);
+                }
+            }
         }
     }
 
@@ -140,7 +150,7 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         if (!stream.Source.IsPlaying)
         {
-            StreamDone(stream);
+            stream.Done = true;
             return;
         }
 
@@ -162,7 +172,7 @@ public sealed class AudioSystem : SharedAudioSystem
             || mapPos == MapCoordinates.Nullspace
             || mapPos.Value.MapId != listener.MapId)
         {
-            StreamDone(stream);
+            stream.Done = true;
             return;
         }
 
@@ -275,12 +285,6 @@ public sealed class AudioSystem : SharedAudioSystem
 
         mapPos = MapCoordinates.Nullspace;
         return false;
-    }
-
-    private static void StreamDone(PlayingStream stream)
-    {
-        stream.Source.Dispose();
-        stream.Done = true;
     }
 
     #region Play AudioStream

@@ -39,14 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* `IDynamicTypeFactory.CreateInstance` now has the option to not perform dependency injection.
-* Added normal blend mode for shaders
-* Added a new ResPath struct that is intended to eventually replace ResourcePath
+*None yet*
 
 ### Bugfixes
 
-* Hopefully fixed an IndexOutOfRange exception in AudioSystem
-* Fixed a potential IndexOutOfRange exception in ContainerSystem
+*None yet*
 
 ### Other
 
@@ -55,6 +52,20 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.96.7.0
+
+### New features
+
+* `IDynamicTypeFactory.CreateInstance` now has the option to not perform dependency injection.
+* Added normal blend mode for shaders
+* Added a new ResPath struct that is intended to eventually replace ResourcePath
+
+### Bugfixes
+
+* Hopefully fixed an IndexOutOfRange exception in AudioSystem
+* Fixed a potential IndexOutOfRange exception in ContainerSystem
 
 
 ## 0.96.6.0

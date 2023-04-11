@@ -16,7 +16,7 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         /// <seealso cref="IResourceManager.ContentFileRead(ResourcePath)"/>
         /// <seealso cref="IResourceManager.TryContentFileRead(ResourcePath, out Stream)"/>
-        public static Stream? ContentFileReadOrNull(this IResourceManager res, ResourcePath path)
+        public static Stream? ContentFileReadOrNull(this IResourceManager res, ResPath path)
         {
             if (res.TryContentFileRead(path, out var stream))
             {

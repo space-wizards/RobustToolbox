@@ -19,7 +19,7 @@ namespace Robust.Client.Graphics
         private readonly List<ShaderConstantDefinition> _constantsParsing = new();
         private readonly List<ShaderVaryingDefinition> _varyingsParsing = new();
         private readonly List<ShaderFunctionDefinition> _functionsParsing = new();
-        private readonly LinkedList<ResourcePath> _includes = new();
+        private readonly LinkedList<ResPath> _includes = new();
 
         public static ParsedShader Parse(TextReader reader, IResourceManager resManager)
         {

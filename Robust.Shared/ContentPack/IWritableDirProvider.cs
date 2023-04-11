@@ -21,21 +21,21 @@ namespace Robust.Shared.ContentPack
         /// Creates a directory. If the directory exists, does nothing.
         /// </summary>
         /// <param name="path">Path of directory to create.</param>
-        void CreateDir(ResourcePath path);
+        void CreateDir(ResPath path);
 
         /// <summary>
         /// Deletes a file or directory. If the file or directory
         /// does not exist, does nothing.
         /// </summary>
         /// <param name="path">Path of object to delete.</param>
-        void Delete(ResourcePath path);
+        void Delete(ResPath path);
 
         /// <summary>
         /// Tests if a file or directory exists.
         /// </summary>
         /// <param name="path">Path to test.</param>
         /// <returns>If the object exists.</returns>
-        bool Exists(ResourcePath path);
+        bool Exists(ResPath path);
 
         /// <summary>
         /// Finds all files and directories that match the expression. This will include empty directories.
@@ -43,17 +43,17 @@ namespace Robust.Shared.ContentPack
         /// <param name="pattern"></param>
         /// <param name="recursive"></param>
         /// <returns>A tuple that contains collections of files, directories that matched the expression.</returns>
-        (IEnumerable<ResourcePath> files, IEnumerable<ResourcePath> directories) Find(string pattern,
+        (IEnumerable<ResPath> files, IEnumerable<ResPath> directories) Find(string pattern,
             bool recursive = true);
 
-        IEnumerable<string> DirectoryEntries(ResourcePath path);
+        IEnumerable<string> DirectoryEntries(ResPath path);
 
         /// <summary>
         /// Tests if a path is a directory.
         /// </summary>
         /// <param name="path">Path to test.</param>
         /// <returns>True if it is a directory, false if it is a file.</returns>
-        bool IsDir(ResourcePath path);
+        bool IsDir(ResPath path);
 
         /// <summary>
         /// Attempts to open a file.
@@ -66,7 +66,7 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="FileNotFoundException">
         ///     Thrown if the file does not exist.
         /// </exception>
-        Stream Open(ResourcePath path, FileMode fileMode, FileAccess access, FileShare share);
+        Stream Open(ResPath path, FileMode fileMode, FileAccess access, FileShare share);
 
         /// <summary>
         /// Attempts to open a file.
@@ -77,7 +77,7 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="FileNotFoundException">
         ///     Thrown if the file does not exist.
         /// </exception>
-        Stream Open(ResourcePath path, FileMode fileMode)
+        Stream Open(ResPath path, FileMode fileMode)
         {
             return Open(path,
                 fileMode,
@@ -89,7 +89,7 @@ namespace Robust.Shared.ContentPack
         /// Returns a new <see cref="IWritableDirProvider"/> that points to a subdirectory.
         /// </summary>
         /// <param name="path">Path of directory to open.</param>
-        IWritableDirProvider OpenSubdirectory(ResourcePath path);
+        IWritableDirProvider OpenSubdirectory(ResPath path);
 
         /// <summary>
         /// Attempts to rename a file.
@@ -97,6 +97,6 @@ namespace Robust.Shared.ContentPack
         /// <param name="oldPath">Path of the file to rename.</param>
         /// <param name="newPath">New name of the file.</param>
         /// <returns></returns>
-        void Rename(ResourcePath oldPath, ResourcePath newPath);
+        void Rename(ResPath oldPath, ResPath newPath);
     }
 }

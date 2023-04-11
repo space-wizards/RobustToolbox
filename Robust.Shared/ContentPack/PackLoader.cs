@@ -51,7 +51,7 @@ namespace Robust.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
+            public bool TryGetFile(ResPath relPath, [NotNullWhen(true)] out Stream? stream)
             {
                 var entry = _zip.GetEntry(relPath.ToString());
 
@@ -76,7 +76,7 @@ namespace Robust.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
+            public IEnumerable<ResPath> FindFiles(ResPath path)
             {
                 var rootPath = path + "/";
                 foreach (var entry in _zip.Entries)
@@ -89,7 +89,7 @@ namespace Robust.Shared.ContentPack
 
                     if (entry.FullName.StartsWith(rootPath))
                     {
-                        yield return new ResourcePath(entry.FullName).ToRelativePath();
+                        yield return new ResPath(entry.FullName).ToRelativePath();
                     }
                 }
             }
@@ -104,7 +104,7 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    yield return new ResourcePath(entry.FullName).ToRootedPath().ToString();
+                    yield return new ResPath(entry.FullName).ToRootedPath().ToString();
                 }
             }
         }

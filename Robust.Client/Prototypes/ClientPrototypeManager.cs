@@ -29,7 +29,7 @@ namespace Robust.Client.Prototypes
         private readonly List<FileSystemWatcher> _watchers = new();
         private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
         private CancellationTokenSource _reloadToken = new();
-        private readonly HashSet<ResourcePath> _reloadQueue = new();
+        private readonly HashSet<ResPath> _reloadQueue = new();
 
         public override void Initialize()
         {

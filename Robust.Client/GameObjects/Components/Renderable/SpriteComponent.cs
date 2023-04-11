@@ -505,10 +505,10 @@ namespace Robust.Client.GameObjects
 
         public int AddLayer(string texturePath, int? newIndex = null)
         {
-            return AddLayer(new ResourcePath(texturePath), newIndex);
+            return AddLayer(new ResPath(texturePath), newIndex);
         }
 
-        public int AddLayer(ResourcePath texturePath, int? newIndex = null)
+        public int AddLayer(ResPath texturePath, int? newIndex = null)
         {
             if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
             {
@@ -555,7 +555,7 @@ namespace Robust.Client.GameObjects
 
         public int AddLayer(RSI.StateId stateId, string rsiPath, int? newIndex = null)
         {
-            return AddLayer(stateId, new ResourcePath(rsiPath), newIndex);
+            return AddLayer(stateId, new ResPath(rsiPath), newIndex);
         }
 
         public int AddLayerState(string stateId, string rsiPath, int? newIndex = null)
@@ -563,7 +563,7 @@ namespace Robust.Client.GameObjects
             return AddLayer(new RSI.StateId(stateId), rsiPath, newIndex);
         }
 
-        public int AddLayer(RSI.StateId stateId, ResourcePath rsiPath, int? newIndex = null)
+        public int AddLayer(RSI.StateId stateId, ResPath rsiPath, int? newIndex = null)
         {
             if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
             {
@@ -573,7 +573,7 @@ namespace Robust.Client.GameObjects
             return AddLayer(stateId, res?.RSI, newIndex);
         }
 
-        public int AddLayerState(string stateId, ResourcePath rsiPath, int? newIndex = null)
+        public int AddLayerState(string stateId, ResPath rsiPath, int? newIndex = null)
         {
             return AddLayer(new RSI.StateId(stateId), rsiPath, newIndex);
         }
@@ -894,15 +894,15 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetTexture(int layer, string texturePath)
         {
-            LayerSetTexture(layer, new ResourcePath(texturePath));
+            LayerSetTexture(layer, new ResPath(texturePath));
         }
 
         public void LayerSetTexture(object layerKey, string texturePath)
         {
-            LayerSetTexture(layerKey, new ResourcePath(texturePath));
+            LayerSetTexture(layerKey, new ResPath(texturePath));
         }
 
-        public void LayerSetTexture(int layer, ResourcePath texturePath)
+        public void LayerSetTexture(int layer, ResPath texturePath)
         {
             if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
             {
@@ -920,7 +920,7 @@ namespace Robust.Client.GameObjects
             LayerSetTexture(layer, texture?.Texture);
         }
 
-        public void LayerSetTexture(object layerKey, ResourcePath texturePath)
+        public void LayerSetTexture(object layerKey, ResPath texturePath)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
@@ -986,15 +986,15 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetState(int layer, RSI.StateId stateId, string rsiPath)
         {
-            LayerSetState(layer, stateId, new ResourcePath(rsiPath));
+            LayerSetState(layer, stateId, new ResPath(rsiPath));
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId, string rsiPath)
         {
-            LayerSetState(layerKey, stateId, new ResourcePath(rsiPath));
+            LayerSetState(layerKey, stateId, new ResPath(rsiPath));
         }
 
-        public void LayerSetState(int layer, RSI.StateId stateId, ResourcePath rsiPath)
+        public void LayerSetState(int layer, RSI.StateId stateId, ResPath rsiPath)
         {
             if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
             {
@@ -1004,7 +1004,7 @@ namespace Robust.Client.GameObjects
             LayerSetState(layer, stateId, res?.RSI);
         }
 
-        public void LayerSetState(object layerKey, RSI.StateId stateId, ResourcePath rsiPath)
+        public void LayerSetState(object layerKey, RSI.StateId stateId, ResPath rsiPath)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
@@ -1030,15 +1030,15 @@ namespace Robust.Client.GameObjects
 
         public void LayerSetRSI(int layer, string rsiPath)
         {
-            LayerSetRSI(layer, new ResourcePath(rsiPath));
+            LayerSetRSI(layer, new ResPath(rsiPath));
         }
 
         public void LayerSetRSI(object layerKey, string rsiPath)
         {
-            LayerSetRSI(layerKey, new ResourcePath(rsiPath));
+            LayerSetRSI(layerKey, new ResPath(rsiPath));
         }
 
-        public void LayerSetRSI(int layer, ResourcePath rsiPath)
+        public void LayerSetRSI(int layer, ResPath rsiPath)
         {
             if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
             {
@@ -1048,7 +1048,7 @@ namespace Robust.Client.GameObjects
             LayerSetRSI(layer, res?.RSI);
         }
 
-        public void LayerSetRSI(object layerKey, ResourcePath rsiPath)
+        public void LayerSetRSI(object layerKey, ResPath rsiPath)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
@@ -1673,7 +1673,7 @@ namespace Robust.Client.GameObjects
                     Shader = ShaderPrototype,
                     State = State.Name,
                     Visible = Visible,
-                    RsiPath = RSI?.Path?.ToString(),
+                    RsiPath = RSI?.Path.CanonPath,
                     //todo TexturePath = Textur
                     //todo MapKeys
                 };
@@ -1792,7 +1792,7 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        Logger.ErrorS(LogCategory, "State '{0}' does not exist in set RSI ({1}). Trace:\n{2}", State, rsi?.Path?.ToString() ?? "null",
+                        Logger.ErrorS(LogCategory, "State '{0}' does not exist in set RSI ({1}). Trace:\n{2}", State, rsi?.Path.CanonPath ?? "null",
                             Environment.StackTrace);
                         Texture = null;
                     }

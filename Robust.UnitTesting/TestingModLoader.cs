@@ -10,7 +10,7 @@ namespace Robust.UnitTesting
     {
         public Assembly[] Assemblies { get; set; } = Array.Empty<Assembly>();
 
-        public bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix)
+        public bool TryLoadModulesFrom(ResPath mountPath, string filterPrefix)
         {
             foreach (var assembly in Assemblies)
             {

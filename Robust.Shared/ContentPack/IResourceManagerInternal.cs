@@ -21,7 +21,7 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         /// <param name="stream">The stream to mount.</param>
         /// <param name="path">The path that the file will be mounted at.</param>
-        void MountStreamAt(MemoryStream stream, ResourcePath path);
+        void MountStreamAt(MemoryStream stream, ResPath path);
 
         /// <summary>
         ///     Loads the default content pack from the configuration file into the VFS.
@@ -37,9 +37,9 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="FileNotFoundException">Thrown if <paramref name="pack"/> does not exist on disk.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="pack"/> is null.</exception>
-        void MountContentPack(string pack, ResourcePath? prefix = null);
+        void MountContentPack(string pack, ResPath? prefix = null);
 
-        void MountContentPack(Stream zipStream, ResourcePath? prefix = null);
+        void MountContentPack(Stream zipStream, ResPath? prefix = null);
 
         /// <summary>
         ///     Adds a directory to search inside of to the VFS. The directory is relative to
@@ -50,7 +50,7 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="DirectoryNotFoundException">Thrown if <paramref name="path"/> does not exist on disk.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> passed is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        void MountContentDirectory(string path, ResourcePath? prefix = null);
+        void MountContentDirectory(string path, ResPath? prefix = null);
 
         /// <summary>
         ///     Attempts to get an on-disk path absolute file path for the specified resource path.
@@ -64,6 +64,6 @@ namespace Robust.Shared.ContentPack
         ///     This can be used for optimizations such as assembly loading, where an on-disk path is better.
         /// </para>
         /// </remarks>
-        bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath);
+        bool TryGetDiskFilePath(ResPath path, [NotNullWhen(true)] out string? diskPath);
     }
 }

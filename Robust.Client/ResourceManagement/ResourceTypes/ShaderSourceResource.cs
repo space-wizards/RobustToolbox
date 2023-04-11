@@ -15,7 +15,7 @@ namespace Robust.Client.ResourceManagement
         internal ClydeHandle ClydeHandle { get; private set; }
         internal ParsedShader ParsedShader { get; private set; } = default!;
 
-        public override void Load(IResourceCache cache, ResourcePath path)
+        public override void Load(IResourceCache cache, ResPath path)
         {
             using (var stream = cache.ContentFileRead(path))
             using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
@@ -27,7 +27,7 @@ namespace Robust.Client.ResourceManagement
             ClydeHandle = clyde.LoadShader(ParsedShader, path.ToString());
         }
 
-        public override void Reload(IResourceCache cache, ResourcePath path, CancellationToken ct = default)
+        public override void Reload(IResourceCache cache, ResPath path, CancellationToken ct = default)
         {
             ct = ct != default ? ct : new CancellationTokenSource(30000).Token;
 

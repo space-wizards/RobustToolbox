@@ -40,10 +40,13 @@ END TEMPLATE-->
 ### New features
 
 * `IDynamicTypeFactory.CreateInstance` now has the option to not perform dependency injection.
+* Added normal blend mode for shaders
+* Added a new ResPath struct that is intended to eventually replace ResourcePath
 
 ### Bugfixes
 
-*None yet*
+* Hopefully fixed an IndexOutOfRange exception in AudioSystem
+* Fixed a potential IndexOutOfRange exception in ContainerSystem
 
 ### Other
 
@@ -68,8 +71,16 @@ END TEMPLATE-->
 
 ## 0.96.5.0
 
+### New features
+
+* Added source generator for automatically generating component state getting & handling code. Significantly reduces boilerplate when creating networked components.
+
 
 ## 0.96.4.0
+
+### Bugfixes
+
+* Component delta states can now have an initial full state inferred by clients.
 
 
 ## 0.96.3.0

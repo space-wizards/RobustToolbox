@@ -111,7 +111,7 @@ namespace Robust.Client.Prototypes
 
                     TaskManager.RunOnMainThread(() =>
                     {
-                        var file = new ResourcePath(args.FullPath);
+                        var file = new ResPath(args.FullPath);
 
                         foreach (var root in Resources.GetContentRoots())
                         {
@@ -120,7 +120,7 @@ namespace Robust.Client.Prototypes
                                 continue;
                             }
 
-                            _reloadQueue.Add(relative);
+                            _reloadQueue.Add(relative.Value);
                         }
                     });
                 };

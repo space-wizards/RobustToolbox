@@ -6,8 +6,8 @@ namespace Robust.Shared.Utility
 {
     // >tfw you're not using Rust and you don't have easy sum types.
     // pub enum SpriteSpecifier {
-    //      Rsi { path: ResourcePath, state: String, },
-    //      Texture(ResourcePath),
+    //      Rsi { path: ResPath, state: String, },
+    //      Texture(ResPath),
     // }
     /// <summary>
     ///     Is a reference to EITHER an RSI + RSI State, OR a bare texture path.

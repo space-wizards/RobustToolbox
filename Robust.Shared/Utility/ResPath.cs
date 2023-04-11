@@ -364,8 +364,8 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
     /// <example>
     ///     <code>
-    ///     var path1 = new ResourcePath("/a/b/c");
-    ///     var path2 = new ResourcePath("/a");
+    ///     var path1 = new ResPath("/a/b/c");
+    ///     var path2 = new ResPath("/a");
     ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "b/c".
     ///     </code>
     /// </example>

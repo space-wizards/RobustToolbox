@@ -14,8 +14,8 @@ namespace Robust.Shared.ContentPack
         /// <returns>The memory stream of the file, or null if the file does not exist.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        /// <seealso cref="IResourceManager.ContentFileRead(ResourcePath)"/>
-        /// <seealso cref="IResourceManager.TryContentFileRead(ResourcePath, out Stream)"/>
+        /// <seealso cref="IResourceManager.ContentFileRead(ResPath)"/>
+        /// <seealso cref="IResourceManager.TryContentFileRead(ResPath, out Stream)"/>
         public static Stream? ContentFileReadOrNull(this IResourceManager res, ResPath path)
         {
             if (res.TryContentFileRead(path, out var stream))

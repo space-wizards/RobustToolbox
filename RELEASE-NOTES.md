@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `IDynamicTypeFactory.CreateInstance` now has the option to not perform dependency injection.
 
 ### Bugfixes
 

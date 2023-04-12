@@ -639,6 +639,7 @@ namespace Robust.Client.GameStates
             var curSpan = curState.EntityStates.Span;
 
             // Create new entities
+            // This is done BEFORE state application to ensure any new parents exist before existing children have their states applied, otherwise, we may have issues with entity transforms!
             {
                 using var _ = _prof.Group("Create uninitialized entities");
                 var count = 0;

@@ -486,7 +486,6 @@ public readonly struct ResPath : IEquatable<ResPath>
     }
 }
 
-
 public static class ResPathUtil
 {
     /// <summary>
@@ -497,7 +496,6 @@ public static class ResPathUtil
     /// </remarks>
     public static ResPath Clean(this ResPath path)
     {
-
         if (path.CanonPath == "")
         {
             return ResPath.Empty;
@@ -552,5 +550,17 @@ public static class ResPathUtil
         return sb.Length == 0
             ? ResPath.Self
             : new ResPath(sb.ToString());
+    }
+
+    /// <summary>
+    ///   Enumerates segments skipping over first element in
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    public static string[] EnumerateSegments(this ResPath path)
+    {
+        return path.IsRooted
+            ? path.CanonPath[1..].Split(ResPath.Separator)
+            : path.CanonPath.Split(ResPath.Separator);
     }
 }

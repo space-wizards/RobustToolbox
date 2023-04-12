@@ -224,7 +224,7 @@ namespace Robust.Shared.ContentPack
             }
 
             var directory = _rootDirectoryNode;
-            var segments = path.CanonPath.Split('/');
+            var segments = path.EnumerateSegments();
             for (var i = 0; i < segments.Length; i++)
             {
                 var segment = segments[i];

@@ -168,26 +168,26 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public bool TryContentFileRead(ResPath path, [NotNullWhen(true)] out Stream? fileStream)
+        public bool TryContentFileRead(ResPath? path, [NotNullWhen(true)] out Stream? fileStream)
         {
             if (path == null)
             {
                 throw new ArgumentNullException(nameof(path));
             }
 
-            if (!path.IsRooted)
+            if (!path.Value.IsRooted)
             {
                 throw new ArgumentException($"Path '{path}' must be rooted", nameof(path));
             }
 #if DEBUG
-            if (!IsPathValid(path))
+            if (!IsPathValid(path.Value))
             {
                 throw new FileNotFoundException($"Path '{path}' contains invalid characters/filenames.");
             }
 #endif
             foreach (var (prefix, root) in _contentRoots)
             {
-                if (!path.TryRelativeTo(prefix, out var relative))
+                if (!path.Value.TryRelativeTo(prefix, out var relative))
                 {
                     continue;
                 }
@@ -279,14 +279,14 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public IEnumerable<ResPath> ContentFindFiles(ResPath path)
+        public IEnumerable<ResPath> ContentFindFiles(ResPath? path)
         {
             if (path == null)
             {
                 throw new ArgumentNullException(nameof(path));
             }
 
-            if (!path.IsRooted)
+            if (!path.Value.IsRooted)
             {
                 throw new ArgumentException("Path is not rooted", nameof(path));
             }
@@ -295,7 +295,7 @@ namespace Robust.Shared.ContentPack
 
             foreach (var (prefix, root) in _contentRoots)
             {
-                if (!path.TryRelativeTo(prefix, out var relative))
+                if (!path.Value.TryRelativeTo(prefix, out var relative))
                 {
                     continue;
                 }

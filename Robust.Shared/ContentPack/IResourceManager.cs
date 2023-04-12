@@ -73,7 +73,7 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         /// <seealso cref="ResourceManagerExt.ContentFileReadOrNull"/>
-        bool TryContentFileRead(ResPath path, [NotNullWhen(true)] out Stream? fileStream);
+        bool TryContentFileRead(ResPath? path, [NotNullWhen(true)] out Stream? fileStream);
 
         /// <summary>
         ///     Try to read a file from the mounted content roots.
@@ -95,7 +95,7 @@ namespace Robust.Shared.ContentPack
         /// <returns>Enumeration of all absolute file paths of the files found.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        IEnumerable<ResPath> ContentFindFiles(ResPath path);
+        IEnumerable<ResPath> ContentFindFiles(ResPath? path);
 
         IEnumerable<ResPath> ContentFindRelativeFiles(ResPath path)
         {

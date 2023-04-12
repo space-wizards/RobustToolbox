@@ -379,7 +379,6 @@ namespace Robust.Shared.Containers
                 // failed to remove entity.
                 DebugTools.Assert(container.Contains(removed[i]));
                 removed.RemoveSwap(i);
-                i++;
             }
 
             return removed;

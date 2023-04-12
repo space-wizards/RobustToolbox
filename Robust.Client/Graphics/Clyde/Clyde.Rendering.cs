@@ -888,6 +888,12 @@ namespace Robust.Client.Graphics.Clyde
                     case ShaderBlendMode.Multiply:
                         GL.BlendFunc(BlendingFactor.DstColor, BlendingFactor.OneMinusSrcAlpha);
                         break;
+                    case ShaderBlendMode.None:
+                        GL.BlendFunc(BlendingFactor.One, BlendingFactor.Zero);
+                        break;
+                    case ShaderBlendMode.Normal:
+                        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                        break;
                 }
         }
 

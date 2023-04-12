@@ -448,8 +448,7 @@ namespace Robust.Client.GameStates
             PredictionNeedsResetting = false;
 
             using var _ = _prof.Group("ResetPredictedEntities");
-            using var __ = _timing.StartPastPredictionArea();
-            using var ___ = _timing.StartStateApplicationArea();
+            using var __ = _timing.StartStateApplicationArea();
 
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
@@ -582,7 +581,7 @@ namespace Robust.Client.GameStates
                     if (!component.NetSyncEnabled)
                         continue;
 
-                    var state = _entityManager.GetComponentState(bus, component, _players.LocalPlayer?.Session, GameTick.Zero);
+                    var state = _entityManager.GetComponentState(bus, component, null, GameTick.Zero);
                     DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
                     compData.Add(netId, state);
                 }

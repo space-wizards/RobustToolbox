@@ -54,6 +54,293 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.96.7.0
+
+### New features
+
+* `IDynamicTypeFactory.CreateInstance` now has the option to not perform dependency injection.
+* Added normal blend mode for shaders
+* Added a new ResPath struct that is intended to eventually replace ResourcePath
+
+### Bugfixes
+
+* Hopefully fixed an IndexOutOfRange exception in AudioSystem
+* Fixed a potential IndexOutOfRange exception in ContainerSystem
+
+
+## 0.96.6.0
+
+### New features
+
+* Added overrides to shuffle Span<T> and ValueList<T> in IRobustRandom.
+* Added hotkeys to close the most recent window and all windows.
+
+### Other
+
+* Improved some container assert messages.
+
+
+## 0.96.5.0
+
+### New features
+
+* Added source generator for automatically generating component state getting & handling code. Significantly reduces boilerplate when creating networked components.
+
+
+## 0.96.4.0
+
+### Bugfixes
+
+* Component delta states can now have an initial full state inferred by clients.
+
+
+## 0.96.3.0
+
+### Other
+
+* Updated server SQLitePCLRaw to 2.1.4.
+
+
+## 0.96.2.0
+
+
+## 0.96.1.0
+
+### New features
+
+* Implemented deleting a full word at a time.
+
+### Bugfixes
+
+* Fixed `ContainerSystem.EmptyContainer` sometimes failing to empty containers.
+* Fixed container state handling sometimes failing to insert or remove entities.
+* Fix content test workflow.
+* Text contents won't draw over the scrollbar for OutputPanel controls anymore.
+* Invalidate OutputPanel entries upon it entering the UI tree. This fixes some bugs where text is added while it's outside of the tree without the UI scale cvar being set causing separate sizings in entries.
+
+
+## 0.96.0.4
+
+### Bugfixes
+
+* Revert InRange entity lookup range change due to content bugs.
+* Fix implicit appearance state data.
+
+
+## 0.96.0.3
+
+### Bugfixes
+
+* Fix sprite error log to report the key not the layer.
+* Fix log length for physics contact error.
+* Fix discord null errors.
+* Adjust InRange lookups to check if the centre of body is in range.
+
+### Other
+
+* Add more audio logs.
+
+
+## 0.96.0.2
+
+### Bugfixes
+
+* Fix adding MapGridComponent to a map with pre-existing child entities.
+
+
+## 0.96.0.1
+
+### Other
+
+* Set blend function for shaders with ShaderBlendMode.None
+* Add logs around fixture lengths in contact updates.
+* Revert previous contact changes to try to make physics slightly more stable until Box2D 3.0.
+* Adjusted QueueDeleteEntity log on client to care if the entity is deleted in prediction.
+
+
+## 0.96.0.0
+
+### Breaking changes
+
+* Removed `MapId` serializer. Serialize the map's EntityUid instead.
+* Renamed `MapComponent.WorldMap` to `MapComponent.MapId`.
+
+### New features
+
+* Added showrot command as a counterpart to showpos.
+
+### Other
+
+* Added error logs when QueueDel is called on the client for networked entities.
+* Added logs around physics contact errors that have been happening.
+
+
+## 0.95.0.0
+
+### Bugfixes
+
+* Reverted making `MetaDataComponent.PauseTime` a yaml data-field, as it caused issues when saving uninitialised maps.
+
+### Internal
+
+* `TextEdit`'s `NextWordPosition` has been replaced with `EndWordPosition`
+
+
+## 0.94.0.0
+
+### Breaking changes
+
+* `IGameTiming.IsFirstTimePredicted` is now false while applying game states.
+
+### Bugfixes
+
+* `MetaDataComponent.PauseTime` is now a yaml data-field
+* The client-side `(un)pausemap` command is now disabled while connected to a server.
+
+### Internal
+
+* Use a List<Contact> for contacts instead of a shared arraypool to try to fix the contact indexing exception.
+* Moved IoC dependencies off of physics contacts.
+
+
+## 0.93.3.0
+
+### New features
+
+* Unnecessary tiles are no longer written to map file tilemaps.
+* Added the ability to enable or disable grid splitting per grid.
+
+### Other
+
+* Added additional logs around contact issue
+
+
+## 0.93.2.0
+
+### New features
+
+* Add CompletionHelpers for components and entityuids.
+
+
+## 0.93.1.0
+
+### New features
+
+* Add PlayPredicted audio method for EntityCoordinates.
+
+## 0.93.0.0
+
+### Breaking changes
+
+* Arguments of ContainerSystem's `EmptyContainer()` have changed. It now also returns removed entities.
+
+### New features
+
+* Added a TerminatingOrDeleted() helper function
+* Added a `hub_advertise_now` command.
+
+### Bugfixes
+
+* Fixed some multi-threading IoC errors in the audio system.
+* The map validator now allows entities to specify missing components.
+* Fixed a potential stack overflow in the colour slider control.
+* Fixed sprites sometimes not updating `IsInert`.
+
+### Other
+
+* `TransformComponentAttachToGridOrMap()` is now obsoleted. use the newly added system method instead.
+* Made RSI preloading more error toletant.
+* Added some new benchmarks for testing archetype ECS.
+
+
+## 0.92.2.1
+
+### Bugfixes
+
+* Revert tile bound shrinkage as it was causing erroneous test failures on content.
+
+
+## 0.92.2.0
+
+### New features
+
+* Added Box2iEdgeEnumerator for iterating its bounds.
+* Added a CompletionResult helper for MapIds
+* Added some helper methods for System.Random (useful for seeded RNG)
+
+### Bugfixes
+
+* Shrink tile bounds by 0.05. In some cases the polygon skin radius was causing overlap on other tiles and leading to erroneous lookup r
+* Use preset matrixes for certain Matrix3 angles to avoid imprecision issues with transformations.
+
+
+## 0.92.1.0
+
+### New features
+
+* Add option to SplitContainer for which split expands on parent resize
+
+### Internal
+
+* Updated Lidgren to v0.2.4.
+
+
+## 0.92.0.0
+
+### New features
+
+* Exposed more properties on `FastNoiseLite`.
+* Added fallback culture for localization.
+
+### Bugfixes
+
+* Fixed noise DD.
+
+### Other
+
+* Added new `DebugOpt` and `Tools` build configurations. These must be added to your solution file and apply to all projects importing `Robust.Properties.targets`.
+  * `DebugOpt` is "`Debug` with optimizations enabled".
+  * `Tools` has development tools (e.g. `launchauth` command) that release builds don't, while still having asserts (`DEBUG`) off and optimizations on.
+* All configurations except `Release` now define `TOOLS`.
+* `Release` is now intended to be "as close to published release as possible" with game configuration. Use `Tools` as build configuration instead for scenarios such as mapping.
+* `Robust.Properties.targets` should now be included at the end of project files. `Robust.Analyzers.targets` and `Robust.DefineConstants.targets` are now included by it automatically.
+
+### Internal
+
+* General cleanup to MSBuild files.
+
+## 0.91.0.0
+
+### Breaking changes
+
+* `ColorSelectorSliders` now uses SpinBox instead of FloatSpinBox.
+
+### New features
+
+* `IntegrationOptions` now allows changing the `ILogHandler` used by the integration test via `OverrideLogHandler`.
+
+### Bugfixes
+
+* Default integration test log output should more reliably capture `TestContext.Out` now.
+
+
+## 0.90.0.0
+
+### Breaking changes
+
+* Add tile edge rendering support.
+
+### New features
+
+* Add .AsUint() for ValueDataNode.
+
+### Bugfixes
+
+* Fix AnchorEntity replication when the coordinate doesn't change
+* Fix some PVS bugs.
+* Fix rounding in GetGridOrMapTilePosition.
+
+
 ## 0.89.1.0
 
 ### New features

@@ -60,6 +60,10 @@ Intrinsics: {GetIntrinsics()}";
         options.Add("FULL_RELEASE");
 #endif
 
+#if TOOLS
+        options.Add("TOOLS");
+#endif
+
 #if DEBUG
         options.Add("DEBUG");
 #endif

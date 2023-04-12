@@ -11,6 +11,7 @@ using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map.Components;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.GameObjects;
 
@@ -214,7 +215,7 @@ public abstract partial class SharedTransformSystem
                 // second level node, terminates recursion up the branch of the tree
                 if (entMan.TryGetComponent(uid, out MapComponent? mapComp))
                 {
-                    value = mapComp.WorldMap;
+                    value = mapComp.MapId;
                 }
                 else
                 {
@@ -319,6 +320,19 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region GridId
+
+    /// <summary>
+    /// Sets the <see cref="GridId"/> for the transformcomponent without updating its children. Does not Dirty it.
+    /// </summary>
+    internal void SetGridIdNoRecursive(TransformComponent xform, EntityUid? gridUid)
+    {
+        if (xform._gridUid == gridUid)
+            return;
+
+        DebugTools.Assert(gridUid == null || HasComp<MapGridComponent>(gridUid));
+
+        xform._gridUid = gridUid;
+    }
 
     /// <summary>
     /// Sets the <see cref="GridId"/> for the transformcomponent. Does not Dirty it.
@@ -1143,6 +1157,78 @@ public abstract partial class SharedTransformSystem
         return (pos, rot, Matrix3.CreateTransform(pos, rot), Matrix3.CreateInverseTransform(pos, rot));
     }
 
+    #endregion
+
+    #region AttachToGridOrMap
+    public void AttachToGridOrMap(EntityUid uid, TransformComponent? xform = null)
+    {
+        var query = GetEntityQuery<TransformComponent>();
+        if (query.Resolve(uid, ref xform))
+            AttachToGridOrMap(uid, xform, query);
+    }
+
+    public void AttachToGridOrMap(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> query)
+    {
+        if (!xform.ParentUid.IsValid() || xform.ParentUid == xform.GridUid)
+            return;
+
+        EntityUid newParent;
+        var oldPos = GetWorldPosition(xform, query);
+        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, query, out var mapGrid)
+            && !TerminatingOrDeleted(mapGrid.Owner))
+        {
+            newParent = mapGrid.Owner;
+        }
+        else if (_mapManager.GetMapEntityId(xform.MapID) is { Valid: true } mapEnt
+            && !TerminatingOrDeleted(mapEnt))
+        {
+            newParent = mapEnt;
+        }
+        else
+        {
+            if (!_mapManager.IsMap(uid))
+                Logger.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}).");
+
+            DetachParentToNull(uid, xform);
+            return;
+        }
+
+        if (newParent == xform.ParentUid)
+            return;
+
+        var newPos = GetInvWorldMatrix(newParent, query).Transform(oldPos);
+        SetCoordinates(uid, xform, new(newParent, newPos));
+    }
+
+    public bool TryGetMapOrGridCoordinates(EntityUid uid, [NotNullWhen(true)] out EntityCoordinates? coordinates, TransformComponent? xform = null)
+    {
+        var query = GetEntityQuery<TransformComponent>();
+        coordinates = null;
+
+        if (!query.Resolve(uid, ref xform))
+            return false;
+
+        if (!xform.ParentUid.IsValid())
+            return false;
+
+        EntityUid newParent;
+        var oldPos = GetWorldPosition(xform, query);
+        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, query, out var mapGrid))
+        {
+            newParent = mapGrid.Owner;
+        }
+        else if (_mapManager.GetMapEntityId(xform.MapID) is { Valid: true } mapEnt)
+        {
+            newParent = mapEnt;
+        }
+        else
+        {
+            return false;
+        }
+
+        coordinates = new(newParent, GetInvWorldMatrix(newParent, query).Transform(oldPos));
+        return true;
+    }
     #endregion
 
     #region State Handling

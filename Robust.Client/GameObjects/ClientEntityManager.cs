@@ -7,6 +7,7 @@ using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
@@ -61,6 +62,18 @@ namespace Robust.Client.GameObjects
             //  Client only dirties during prediction
             if (_gameTiming.InPrediction)
                 base.DirtyEntity(uid, meta);
+        }
+
+        public override void QueueDeleteEntity(EntityUid uid)
+        {
+            if (uid.IsClientSide())
+            {
+                base.QueueDeleteEntity(uid);
+                return;
+            }
+
+            // Client-side entity deletion is not supported and will cause errors.
+            Logger.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
         }
 
         /// <inheritdoc />

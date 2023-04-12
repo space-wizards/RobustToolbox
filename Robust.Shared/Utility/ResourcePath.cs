@@ -15,6 +15,7 @@ namespace Robust.Shared.Utility
     ///     ResourcePaths are immutable.
     /// </summary>
     [PublicAPI, Serializable, NetSerializable]
+    [Obsolete(@$"Use {nameof(ResPath)} instead")]
     public sealed class ResourcePath : IEquatable<ResourcePath>
     {
         /// <summary>

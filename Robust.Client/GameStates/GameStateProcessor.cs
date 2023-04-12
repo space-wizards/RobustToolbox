@@ -92,7 +92,7 @@ namespace Robust.Client.GameStates
 
                 return false;
             }
-            
+
             // Are we expecting a full state?
             if (!WaitingForFull)
             {
@@ -176,23 +176,16 @@ namespace Robust.Client.GameStates
                 {
                     compData = new Dictionary<ushort, ComponentState>();
                     _lastStateFullRep.Add(entityState.Uid, compData);
-
-#if DEBUG
-                    foreach (var comp in entityState.ComponentChanges.Span)
-                    {
-                        DebugTools.Assert(comp.State is not IComponentDeltaState delta || delta.FullState);
-                    }
-#endif
                 }
 
                 foreach (var change in entityState.ComponentChanges.Span)
                 {
                     var compState = change.State;
 
-                    if (compState is IComponentDeltaState delta && !delta.FullState)
+                    if (compState is IComponentDeltaState delta
+                        && !delta.FullState
+                        && compData.TryGetValue(change.NetID, out var old)) // May fail if relying on implicit data
                     {
-                        var old = compData[change.NetID];
-
                         DebugTools.Assert(old is IComponentDeltaState oldDelta && oldDelta.FullState, "last state is not a full state");
 
                         if (cloneDelta)
@@ -236,7 +229,7 @@ namespace Robust.Client.GameStates
             {
                 var state = _stateBuffer[i];
 
-                if (state.ToSequence < LastFullState.ToSequence) 
+                if (state.ToSequence < LastFullState.ToSequence)
                 {
                     _stateBuffer.RemoveSwap(i);
                     i--;
@@ -260,7 +253,7 @@ namespace Robust.Client.GameStates
             // waiting for buffer to fill
             if (Logging)
                 Logger.DebugS("net", $"Have FullState, filling buffer... ({_stateBuffer.Count}/{TargetBufferSize})");
-            
+
             return false;
         }
 
@@ -326,7 +319,7 @@ namespace Robust.Client.GameStates
                 }
 
                 // remove any old states we find to keep the buffer clean
-                if (state.ToSequence <= _timing.LastRealTick) 
+                if (state.ToSequence <= _timing.LastRealTick)
                 {
                     _stateBuffer.RemoveSwap(i);
                     i--;
@@ -352,18 +345,34 @@ namespace Robust.Client.GameStates
             LastFullStateRequested = _timing.LastRealTick;
         }
 
-        public void MergeImplicitData(Dictionary<EntityUid, Dictionary<ushort, ComponentState>> data)
+        public void MergeImplicitData(Dictionary<EntityUid, Dictionary<ushort, ComponentState>> implicitData)
         {
-            foreach (var (uid, compData) in data)
+            foreach (var (uid, implicitEntState) in implicitData)
             {
                 var fullRep = _lastStateFullRep[uid];
 
-                foreach (var (netId, compState) in compData)
+                foreach (var (netId, implicitCompState) in implicitEntState)
                 {
-                    if (!fullRep.ContainsKey(netId))
+                    if (!fullRep.TryGetValue(netId, out var serverState))
                     {
-                        fullRep.Add(netId, compState);
+                        fullRep.Add(netId, implicitCompState);
+                        continue;
                     }
+
+                    if (serverState is not IComponentDeltaState serverDelta || serverDelta.FullState)
+                        continue;
+
+                    // Server sent an initial delta state. This is fine as long as the client can infer an initial full
+                    // state from the entity prototype.
+                    if (implicitCompState is not IComponentDeltaState implicitDelta || !implicitDelta.FullState)
+                    {
+                        Logger.Error($"Server sent delta state and client failed to construct an implicit full state for entity {uid}");
+                        continue;
+                    }
+
+                    serverDelta.ApplyToFullState(implicitCompState);
+                    fullRep[netId] = implicitCompState;
+                    DebugTools.Assert(implicitCompState is IComponentDeltaState d && d.FullState);
                 }
             }
         }

@@ -383,9 +383,27 @@ public abstract partial class SharedPhysicsSystem
                 {
                     // Grid contact is still alive.
                     contact.Flags &= ~ContactFlags.Island;
+                    if (index >= contacts.Length)
+                    {
+                        _sawmill.Error($"Insufficient contact length at 388! Index {index} and length is {contacts.Length}. Tell Sloth");
+                    }
                     contacts[index++] = contact;
                 }
 
+                continue;
+            }
+
+            if (indexA >= fixtureA.Proxies.Length)
+            {
+                _sawmill.Error($"Found invalid contact index of {indexA} on {fixtureA.ID} / {ToPrettyString(bodyA.Owner)}, expected {fixtureA.Proxies.Length}");
+                DestroyContact(contact);
+                continue;
+            }
+
+            if (indexB >= fixtureB.Proxies.Length)
+            {
+                _sawmill.Error($"Found invalid contact index of {indexB} on {fixtureB.ID} / {ToPrettyString(bodyB.Owner)}, expected {fixtureB.Proxies.Length}");
+                DestroyContact(contact);
                 continue;
             }
 
@@ -420,6 +438,10 @@ public abstract partial class SharedPhysicsSystem
             // Contact is actually going to live for manifold generation and solving.
             // This can also short-circuit above for grid contacts.
             contact.Flags &= ~ContactFlags.Island;
+            if (index >= contacts.Length)
+            {
+                _sawmill.Error($"Insufficient contact length at 429! Index {index} and length is {contacts.Length}. Tell Sloth");
+            }
             contacts[index++] = contact;
         }
 
@@ -432,6 +454,12 @@ public abstract partial class SharedPhysicsSystem
         // Single-threaded so content doesn't need to worry about race conditions.
         for (var i = 0; i < index; i++)
         {
+            if (i >= contacts.Length)
+            {
+                _sawmill.Error($"Invalid contact length for contact events!");
+                continue;
+            }
+
             var contact = contacts[i];
 
             switch (status[i])
@@ -533,6 +561,18 @@ public abstract partial class SharedPhysicsSystem
         for (var i = start; i < end; i++)
         {
             var contact = contacts[i];
+
+            // TODO: Temporary measure. When Box2D 3.0 comes out expect a major refactor
+            // of everything
+            if (contact.FixtureA == null || contact.FixtureB == null)
+            {
+                _sawmill.Error($"Found a null contact for contact at {i}");
+                status[i] = ContactStatus.NoContact;
+                wake[i] = false;
+                DebugTools.Assert(false);
+                continue;
+            }
+
             var uidA = contact.FixtureA!.Body.Owner;
             var uidB = contact.FixtureB!.Body.Owner;
             var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA), xformQuery);

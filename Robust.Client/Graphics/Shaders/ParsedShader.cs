@@ -263,6 +263,7 @@ namespace Robust.Client.Graphics
     internal enum ShaderBlendMode : byte
     {
         None,
+        Normal,
         Mix,
         Add,
         Subtract,

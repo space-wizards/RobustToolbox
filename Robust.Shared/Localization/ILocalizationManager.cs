@@ -67,6 +67,11 @@ namespace Robust.Shared.Localization
         void LoadCulture(CultureInfo culture);
 
         /// <summary>
+        ///     Sets culture to be used in the absence of the main one.
+        /// </summary>
+        void SetFallbackCluture(CultureInfo culture);
+
+        /// <summary>
         ///     Immediately reload ALL localizations from resources.
         /// </summary>
         void ReloadLocalizations();

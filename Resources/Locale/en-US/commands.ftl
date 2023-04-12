@@ -551,3 +551,6 @@ cmd-dump_dependency_injectors-total-count = Total count: { $total }
 
 cmd-dump_netserializer_type_map-desc = Dump NetSerializer's type map and serializer hash.
 cmd-dump_netserializer_type_map-help = Usage: dump_netserializer_type_map
+
+cmd-hub_advertise_now-desc = Immediately advertise to the master hub server
+cmd-hub_advertise_now-help = Usage: hub_advertise_now

@@ -17,6 +17,7 @@ namespace Robust.Shared.GameObjects
         ///     The resource path from which all texture paths are relative to.
         /// </summary>
         public static readonly ResourcePath TextureRoot = new("/Textures");
+        public static readonly ResPath TextureRootResPath = new("/Textures");
 
         [Serializable, NetSerializable]
         protected sealed class SpriteComponentState : ComponentState

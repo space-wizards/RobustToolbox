@@ -272,6 +272,11 @@ public readonly struct ResPath : IEquatable<ResPath>
             return left;
         }
 
+        if (left == Root)
+        {
+            return new ResPath("/" + right.CanonPath);
+        }
+
         return new ResPath(left.CanonPath + "/" + right.CanonPath);
     }
 
@@ -403,7 +408,7 @@ public readonly struct ResPath : IEquatable<ResPath>
         if (CanonPath.StartsWith(basePath.CanonPath))
         {
             var x = CanonPath[basePath.CanonPath.Length..]
-                .TrimStart('/');
+                .Trim('/');
             relative = new ResPath(x);
             return true;
         }

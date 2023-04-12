@@ -97,6 +97,8 @@ public sealed class ResPathTest
     [TestCase("/a/b", "z", ExpectedResult = "/a/b/z")]
     [TestCase("/a/b", "/z", ExpectedResult = "/z")]
     [TestCase("/a/b", ".", ExpectedResult = "/a/b")]
+    [TestCase("/", "/a", ExpectedResult = "/a")]
+    [TestCase("/", "a", ExpectedResult = "/a")]
     public string CombineTest(string left, string right)
     {
         var pathDivRes = new ResPath(left) / new ResPath(right);
@@ -126,6 +128,7 @@ public sealed class ResPathTest
     [TestCase("/a/b/c", "/", ExpectedResult = "a/b/c")]
     [TestCase("/a", "/a", ExpectedResult = ".")]
     [TestCase("a/b", "a", ExpectedResult = "b")]
+    [TestCase("/bar/", "/", ExpectedResult = "bar")]
     [TestCase("/Textures/Weapons/laser.png", "/Textures/", ExpectedResult = "Weapons/laser.png")]
     public string RelativeToTest(string source, string baseDir)
     {

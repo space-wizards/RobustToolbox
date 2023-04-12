@@ -46,20 +46,6 @@ public sealed class DictPolicy<T1, T2> : PooledObjectPolicy<Dictionary<T1, T2>> 
     }
 }
 
-public sealed class SortedDictPolicy<T1, T2> : PooledObjectPolicy<SortedDictionary<T1, T2>> where T1 : notnull
-{
-    public override SortedDictionary<T1, T2> Create()
-    {
-        return new SortedDictionary<T1, T2>();
-    }
-
-    public override bool Return(SortedDictionary<T1, T2> obj)
-    {
-        obj.Clear();
-        return true;
-    }
-}
-
 public sealed class StackPolicy<T> : PooledObjectPolicy<Stack<T>>
 {
     public override Stack<T> Create()

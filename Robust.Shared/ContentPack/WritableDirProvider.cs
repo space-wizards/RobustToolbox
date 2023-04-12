@@ -130,6 +130,8 @@ namespace Robust.Shared.ContentPack
                 throw new ArgumentException("Path must be rooted.");
             }
 
+            path = path.Clean();
+
             return GetFullPath(RootDir, path);
         }
 

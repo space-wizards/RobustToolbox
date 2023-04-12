@@ -68,6 +68,7 @@ public sealed class ResPathTest
     [TestCase(@"/foo/bar/", ExpectedResult = @"/foo")]
     [TestCase(@"/foo/bar/x", ExpectedResult = @"/foo/bar")]
     [TestCase(@"/foo/bar.txt", ExpectedResult = @"/foo")]
+    [TestCase(@"/bar.txt", ExpectedResult = @"/")]
     public string DirectoryTest(string path)
     {
         var resPathDirectory = new ResPath(path).Directory.ToString();

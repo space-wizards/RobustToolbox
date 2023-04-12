@@ -36,6 +36,8 @@ namespace Robust.Shared.ContentPack
                 throw new ArgumentException("Path must be rooted", nameof(path));
             }
 
+            path = path.Clean();
+
             var directory = _rootDirectoryNode;
             foreach (var segment in path.CanonPath.Split('/'))
             {
@@ -62,6 +64,8 @@ namespace Robust.Shared.ContentPack
             {
                 throw new ArgumentException("Path must be rooted", nameof(path));
             }
+
+            path = path.Clean();
 
             var pathParent = path.Directory;
 
@@ -210,6 +214,8 @@ namespace Robust.Shared.ContentPack
             {
                 throw new ArgumentException("Path must be rooted", nameof(path));
             }
+
+            path = path.Clean();
 
             if (path == ResPath.Root)
             {

@@ -33,8 +33,10 @@ public static class CompletionHelper
 
         var resPath = new ResPath(curPath);
 
-        if (!curPath.EndsWith("/"))
+        if (!curPath.EndsWith("/")){
             resPath /= "..";
+            resPath = resPath.Clean();
+        }
 
         var options = res.ContentGetDirectoryEntries(resPath)
             .OrderBy(c => c)
@@ -63,7 +65,10 @@ public static class CompletionHelper
             return Enumerable.Empty<CompletionOption>();
 
         if (!curPath.EndsWith("/"))
+        {
             resPath /= "..";
+            resPath = resPath.Clean();
+        }
 
         var entries = provider.DirectoryEntries(resPath);
 

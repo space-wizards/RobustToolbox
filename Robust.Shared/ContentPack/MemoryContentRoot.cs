@@ -24,7 +24,7 @@ public sealed class MemoryContentRoot : IContentRoot, IDisposable
     public void AddOrUpdateFile(ResPath relPath, byte[] data)
     {
         // Just in case, we ensure it's a clean relative path.
-        relPath = relPath.ToRelativePath();
+        relPath = relPath.Clean().ToRelativePath();
 
         _lock.EnterWriteLock();
         try

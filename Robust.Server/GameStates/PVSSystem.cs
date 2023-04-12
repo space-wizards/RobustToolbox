@@ -66,9 +66,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private readonly List<IPVSCollection> _pvsCollections = new();
 
-    private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool
-        = new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
-            new DictPolicy<EntityUid, PVSEntityVisiblity>(), MaxVisPoolSize);
+    private readonly ObjectPool<SortedDictionary<EntityUid, PVSEntityVisiblity>> _sortedVisSetPool =
+        new DefaultObjectPool<SortedDictionary<EntityUid, PVSEntityVisiblity>>(
+            new SortedDictPolicy<EntityUid, PVSEntityVisiblity>(), MaxVisPoolSize);
 
     private readonly ObjectPool<Stack<EntityUid>> _stackPool
         = new DefaultObjectPool<Stack<EntityUid>>(
@@ -185,13 +185,13 @@ internal sealed partial class PVSSystem : EntitySystem
 
         if (sessionData.Overflow != null)
         {
-            _visSetPool.Return(sessionData.Overflow.Value.SentEnts);
+            _sortedVisSetPool.Return(sessionData.Overflow.Value.SentEnts);
             sessionData.Overflow = null;
         }
 
         // return last acked to pool, but only if it is not still in the OverflowDictionary.
         if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(lastAcked))
-            _visSetPool.Return(sessionData.LastAcked);
+            _sortedVisSetPool.Return(sessionData.LastAcked);
 
         sessionData.LastAcked = null;
         sessionData.RequestedFull = true;
@@ -214,18 +214,18 @@ internal sealed partial class PVSSystem : EntitySystem
 
             // Even though the acked tick is newer, we have no guarantee that the client received the cached set, so
             // we just discard it.
-            _visSetPool.Return(overflowEnts);
+            _sortedVisSetPool.Return(overflowEnts);
         }
 
         if (sessionData.SentEntities.TryGetValue(ackedTick, out var ackedData))
             ProcessAckedTick(sessionData, ackedData, ackedTick, lastAckedTick);
     }
 
-    private void ProcessAckedTick(SessionPVSData sessionData, Dictionary<EntityUid, PVSEntityVisiblity> ackedData, GameTick tick, GameTick lastAckedTick)
+    private void ProcessAckedTick(SessionPVSData sessionData, SortedDictionary<EntityUid, PVSEntityVisiblity> ackedData, GameTick tick, GameTick lastAckedTick)
     {
         // return last acked to pool, but only if it is not still in the OverflowDictionary.
         if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(lastAckedTick))
-            _visSetPool.Return(sessionData.LastAcked);
+            _sortedVisSetPool.Return(sessionData.LastAcked);
 
         sessionData.LastAcked = ackedData;
         foreach (var ent in ackedData.Keys)
@@ -414,16 +414,16 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         if (data.Overflow != null)
-            _visSetPool.Return(data.Overflow.Value.SentEnts);
+            _sortedVisSetPool.Return(data.Overflow.Value.SentEnts);
         data.Overflow = null;
 
         if (data.LastAcked != null)
-            _visSetPool.Return(data.LastAcked);
+            _sortedVisSetPool.Return(data.LastAcked);
 
         foreach (var visSet in data.SentEntities.Values)
         {
             if (visSet != data.LastAcked)
-                _visSetPool.Return(visSet);
+                _sortedVisSetPool.Return(visSet);
         }
 
         data.LastAcked = null;
@@ -737,7 +737,7 @@ internal sealed partial class PVSSystem : EntitySystem
         sessionData.SentEntities.TryGetValue(toTick - 1, out var lastSent);
         var lastAcked = sessionData.LastAcked;
         var lastSeen = sessionData.LastSeenAt;
-        var visibleEnts = _visSetPool.Get();
+        var visibleEnts = _sortedVisSetPool.Get();
 
         if (visibleEnts.Count != 0)
             throw new Exception("Encountered non-empty object inside of _visSetPool. Was the same object returned to the pool more than once?");
@@ -849,7 +849,7 @@ internal sealed partial class PVSSystem : EntitySystem
 #endif
             }
             else if (oldEntry.Value.Value != lastAcked)
-                _visSetPool.Return(oldEntry.Value.Value);
+                _sortedVisSetPool.Return(oldEntry.Value.Value);
         }
 
         if (deletions.Count == 0) deletions = default;
@@ -862,8 +862,8 @@ internal sealed partial class PVSSystem : EntitySystem
     ///     in a separate net message.
     /// </summary>
     private List<EntityUid>? ProcessLeavePVS(
-        Dictionary<EntityUid, PVSEntityVisiblity> visibleEnts,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastSent)
+        SortedDictionary<EntityUid, PVSEntityVisiblity> visibleEnts,
+        SortedDictionary<EntityUid, PVSEntityVisiblity>? lastSent)
     {
         if (lastSent == null)
             return null;
@@ -881,9 +881,9 @@ internal sealed partial class PVSSystem : EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void RecursivelyAddTreeNode(in EntityUid nodeIndex,
         RobustTree<EntityUid> tree,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastSent,
-        Dictionary<EntityUid, PVSEntityVisiblity> toSend,
+        SortedDictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
+        SortedDictionary<EntityUid, PVSEntityVisiblity>? lastSent,
+        SortedDictionary<EntityUid, PVSEntityVisiblity> toSend,
         Dictionary<EntityUid, GameTick> lastSeen,
         Dictionary<EntityUid, MetaDataComponent> metaDataCache,
         Stack<EntityUid> stack,
@@ -927,9 +927,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public bool RecursivelyAddOverride(
         in EntityUid uid,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastSent,
-        Dictionary<EntityUid, PVSEntityVisiblity> toSend,
+        SortedDictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
+        SortedDictionary<EntityUid, PVSEntityVisiblity>? lastSent,
+        SortedDictionary<EntityUid, PVSEntityVisiblity> toSend,
         Dictionary<EntityUid, GameTick> lastSeen,
         in EntityQuery<MetaDataComponent> metaQuery,
         in EntityQuery<TransformComponent> transQuery,
@@ -967,8 +967,8 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     private (bool Entered, bool ShouldAdd) ProcessEntry(in EntityUid uid,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastSent,
+        SortedDictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
+        SortedDictionary<EntityUid, PVSEntityVisiblity>? lastSent,
         Dictionary<EntityUid, GameTick> lastSeen,
         ref int newEntityCount,
         ref int enteredEntityCount,
@@ -1000,7 +1000,7 @@ internal sealed partial class PVSSystem : EntitySystem
         return (entered, true);
     }
 
-    private void AddToSendSet(in EntityUid uid, MetaDataComponent metaDataComponent, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, in bool entered, ref int entStateCount)
+    private void AddToSendSet(in EntityUid uid, MetaDataComponent metaDataComponent, SortedDictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, in bool entered, ref int entStateCount)
     {
         if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
         {
@@ -1279,12 +1279,12 @@ internal sealed partial class PVSSystem : EntitySystem
         /// <summary>
         /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="DirtyBufferSize"/> ticks.
         /// </summary>
-        public readonly OverflowDictionary<GameTick, Dictionary<EntityUid, PVSEntityVisiblity>> SentEntities = new(DirtyBufferSize);
+        public readonly OverflowDictionary<GameTick, SortedDictionary<EntityUid, PVSEntityVisiblity>> SentEntities = new(DirtyBufferSize);
 
         /// <summary>
         ///     The most recently acked entities
         /// </summary>
-        public Dictionary<EntityUid, PVSEntityVisiblity>? LastAcked = new();
+        public SortedDictionary<EntityUid, PVSEntityVisiblity>? LastAcked = new();
 
         /// <summary>
         ///     Stores the last tick at which a given entity was acked by a player. Used to avoid re-sending the whole entity
@@ -1295,7 +1295,7 @@ internal sealed partial class PVSSystem : EntitySystem
         /// <summary>
         ///     <see cref="_sentData"/> overflow in case a player's last ack is more than <see cref="DirtyBufferSize"/> ticks behind the current tick.
         /// </summary>
-        public (GameTick Tick, Dictionary<EntityUid, PVSEntityVisiblity> SentEnts)? Overflow;
+        public (GameTick Tick, SortedDictionary<EntityUid, PVSEntityVisiblity> SentEnts)? Overflow;
 
         /// <summary>
         ///     If true, the client has explicitly requested a full state. Unlike the first state, we will send them

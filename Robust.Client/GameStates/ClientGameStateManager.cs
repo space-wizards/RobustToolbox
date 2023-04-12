@@ -634,23 +634,40 @@ namespace Robust.Client.GameStates
             var enteringPvs = 0;
 
             var curSpan = curState.EntityStates.Span;
+
+            foreach (var es in curSpan)
+            {
+                if (metas.HasComponent(es.Uid))
+                    continue;
+
+                toCreate.Add(es.Uid, es);
+            }
+
+            // Create new entities
+            // This is done before applying states so we apply top - > down the transform hierarchy.
+            if (toCreate.Count > 0)
+            {
+                using var _ = _prof.Group("Create uninitialized entities");
+                _prof.WriteValue("Count", ProfData.Int32(toCreate.Count));
+
+                foreach (var (uid, es) in toCreate)
+                {
+                    var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
+                    if (metaState == null)
+                        throw new MissingMetadataException(uid);
+
+                    _entities.CreateEntity(metaState.PrototypeId, uid);
+                    toApply.Add(uid, (false, GameTick.Zero, es, null));
+
+                    var newMeta = metas.GetComponent(uid);
+                    newMeta.LastStateApplied = curState.ToSequence;
+                }
+            }
+
             foreach (var es in curSpan)
             {
                 if (!metas.TryGetComponent(es.Uid, out var meta))
-                {
-                    toCreate.Add(es.Uid, es);
-
-                    var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
-                    if (metaState == null)
-                        throw new MissingMetadataException(es.Uid);
-
-                    _entities.CreateEntity(metaState.PrototypeId, es.Uid);
-                    toApply.Add(es.Uid, (false, GameTick.Zero, es, null));
-
-                    var newMeta = metas.GetComponent(es.Uid);
-                    newMeta.LastStateApplied = curState.ToSequence;
                     continue;
-                }
 
                 bool isEnteringPvs = (meta.Flags & MetaDataFlags.Detached) != 0;
                 if (isEnteringPvs)

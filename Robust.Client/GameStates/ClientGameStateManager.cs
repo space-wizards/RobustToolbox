@@ -44,6 +44,10 @@ namespace Robust.Client.GameStates
             _pendingSystemMessages
                 = new();
 
+        // Game state dictionaries that get used every tick.
+        private readonly Dictionary<EntityUid, (bool EnteringPvs, GameTick LastApplied, EntityState? curState, EntityState?nextState)> _toApply = new();
+        private readonly Dictionary<EntityUid, EntityState> _toCreate = new();
+
         private uint _metaCompNetId;
 
         [Dependency] private readonly IComponentFactory _compFactory = default!;
@@ -629,45 +633,44 @@ namespace Robust.Client.GameStates
             var xforms = _entities.GetEntityQuery<TransformComponent>();
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
-            var toApply = new Dictionary<EntityUid, (bool EnteringPvs, GameTick LastApplied, EntityState? curState, EntityState? nextState)>();
-            var toCreate = new Dictionary<EntityUid, EntityState>();
             var enteringPvs = 0;
-
+            _toApply.Clear();
+            _toCreate.Clear();
             var curSpan = curState.EntityStates.Span;
 
-            foreach (var es in curSpan)
-            {
-                if (metas.HasComponent(es.Uid))
-                    continue;
-
-                toCreate.Add(es.Uid, es);
-            }
-
             // Create new entities
-            // This is done before applying states so we apply top - > down the transform hierarchy.
-            if (toCreate.Count > 0)
             {
                 using var _ = _prof.Group("Create uninitialized entities");
-                _prof.WriteValue("Count", ProfData.Int32(toCreate.Count));
+                var count = 0;
 
-                foreach (var (uid, es) in toCreate)
+                foreach (var es in curSpan)
                 {
+                    if (metas.HasComponent(es.Uid))
+                        continue;
+
+                    count++;
+                    var uid = es.Uid;
                     var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
                     if (metaState == null)
                         throw new MissingMetadataException(uid);
 
                     _entities.CreateEntity(metaState.PrototypeId, uid);
-                    toApply.Add(uid, (false, GameTick.Zero, es, null));
+                    _toCreate.Add(uid, es);
+                    _toApply.Add(uid, (false, GameTick.Zero, es, null));
 
                     var newMeta = metas.GetComponent(uid);
                     newMeta.LastStateApplied = curState.ToSequence;
                 }
+
+                _prof.WriteValue("Count", ProfData.Int32(count));
             }
 
             foreach (var es in curSpan)
             {
-                if (!metas.TryGetComponent(es.Uid, out var meta))
+                if (!metas.TryGetComponent(es.Uid, out var meta) || _toCreate.ContainsKey(es.Uid))
+                {
                     continue;
+                }
 
                 bool isEnteringPvs = (meta.Flags & MetaDataFlags.Detached) != 0;
                 if (isEnteringPvs)
@@ -681,7 +684,7 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                toApply.Add(es.Uid, (isEnteringPvs, meta.LastStateApplied, es, null));
+                _toApply.Add(es.Uid, (isEnteringPvs, meta.LastStateApplied, es, null));
                 meta.LastStateApplied = curState.ToSequence;
             }
 
@@ -704,10 +707,10 @@ namespace Robust.Client.GameStates
                     if (es.EntityLastModified != nextState.ToSequence)
                         continue;
 
-                    if (toApply.TryGetValue(uid, out var state))
-                        toApply[uid] = (state.EnteringPvs, state.LastApplied, state.curState, es);
+                    if (_toApply.TryGetValue(uid, out var state))
+                        _toApply[uid] = (state.EnteringPvs, state.LastApplied, state.curState, es);
                     else
-                        toApply[uid] = (false, GameTick.Zero, null, es);
+                        _toApply[uid] = (false, GameTick.Zero, null, es);
                 }
             }
 
@@ -720,7 +723,7 @@ namespace Robust.Client.GameStates
             // Apply entity states.
             using (_prof.Group("Apply States"))
             {
-                foreach (var (entity, data) in toApply)
+                foreach (var (entity, data) in _toApply)
                 {
                     HandleEntityState(entity, _entities.EventBus, data.curState,
                         data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
@@ -734,10 +737,10 @@ namespace Robust.Client.GameStates
                     var xform = xforms.GetComponent(entity);
                     DebugTools.Assert(xform.Broadphase == BroadphaseData.Invalid);
                     xform.Broadphase = null;
-                    if (!toApply.TryGetValue(xform.ParentUid, out var parent) || !parent.EnteringPvs)
+                    if (!_toApply.TryGetValue(xform.ParentUid, out var parent) || !parent.EnteringPvs)
                         queuedBroadphaseUpdates.Add((entity, xform));
                 }
-                _prof.WriteValue("Count", ProfData.Int32(toApply.Count));
+                _prof.WriteValue("Count", ProfData.Int32(_toApply.Count));
             }
 
             // Add entering entities back to broadphase.
@@ -772,13 +775,13 @@ namespace Robust.Client.GameStates
             }
 
             // Initialize and start the newly created entities.
-            if (toCreate.Count > 0)
-                InitializeAndStart(toCreate);
+            if (_toCreate.Count > 0)
+                InitializeAndStart(_toCreate);
 
             _prof.WriteValue("State Size", ProfData.Int32(curSpan.Length));
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));
 
-            return (toCreate.Keys, detached);
+            return (_toCreate.Keys, detached);
         }
 
         /// <inheritdoc />

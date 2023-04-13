@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.96.8.0
+
+### Bugfixes
+
+* Create entities before applying entity states. This fixes parenting issues in some instances, for example on a freshly split grid the client would give an exception.
+
+### Other
+
+* Entities have their paused state set before initialisation rather than after.
+
+### Internal
+
+* Added a BroadphaseNetworkingTest.
+
+
 ## 0.96.7.0
 
 ### New features

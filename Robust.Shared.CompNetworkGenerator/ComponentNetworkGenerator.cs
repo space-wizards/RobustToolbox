@@ -276,7 +276,7 @@ public partial class {componentName}
                                 "Usage",
                                 DiagnosticSeverity.Error,
                                 true),
-                            Location.None));
+                            candidateClass.Keyword.GetLocation()));
                 }
             }
 

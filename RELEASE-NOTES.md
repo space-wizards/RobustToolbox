@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.96.8.1
+
+### Bugfixes
+
+* Fix MapInit not being run on entities in some instances.
+
+
 ## 0.96.8.0
 
 ### Bugfixes

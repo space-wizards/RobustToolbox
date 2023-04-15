@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed sandboxing verifying against `Robust.` assemblies inside `Robust.Client.WebView`, causing an older assembly to be verified against.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.96.8.2
+
+### Bugfixes
+
+* Fixed sandboxing verifying against `Robust.` assemblies inside `Robust.Client.WebView`, causing an older assembly to be verified against.
 
 
 ## 0.96.8.1

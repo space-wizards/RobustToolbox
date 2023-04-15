@@ -24,6 +24,7 @@ using SharpZstd.Interop;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Players;
 using Robust.Server.Replays;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Server.GameStates
 {
@@ -218,6 +219,19 @@ namespace Robust.Server.GameStates
                         reuse[j] = _pvs.TryCalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery,
                             out var chunk);
                         chunkCache[j] = chunk;
+
+#if DEBUG
+                        if (chunk == null)
+                            continue;
+
+                        // Each root nodes should simply be a map or a grid entity.
+                        DebugTools.Assert(chunk.Value.tree.RootNodes.Count == 1,
+                            $"Root node count is {chunk.Value.tree.RootNodes.Count} instead of 1.");
+                        var ent = chunk.Value.tree.RootNodes.FirstOrDefault();
+                        DebugTools.Assert(_entityManager.EntityExists(ent), $"Root node does not exist. Node {ent}.");
+                        DebugTools.Assert(_entityManager.HasComponent<MapComponent>(ent)
+                                          || _entityManager.HasComponent<MapGridComponent>(ent));
+#endif
                     }
                 });
 

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `RobustIntegrationTest` now has a `DoGuiEvent()` method that can directly pass `GUIBoundKeyEventArgs` to a control. 
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.96.9.0
+
+### New features
+
+* `RobustIntegrationTest` now has a `DoGuiEvent()` method that can directly pass `GUIBoundKeyEventArgs` to a control. 
 
 
 ## 0.96.8.2

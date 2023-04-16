@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `RobustIntegrationTest` now has a `DoGuiEvent()` method that can directly pass `GUIBoundKeyEventArgs` to a control. 
 
 ### Bugfixes
 
@@ -55,6 +55,10 @@ END TEMPLATE-->
 
 
 ## 0.96.8.2
+
+### New features
+
+* The `LayerSetData()` function can now be used to clear a sprite layer's shader.
 
 ### Bugfixes
 

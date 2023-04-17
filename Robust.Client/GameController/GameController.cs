@@ -170,9 +170,9 @@ namespace Robust.Client
             _scriptClient.Initialize();
             _client.Initialize();
             _discord.Initialize();
-            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
             _tagManager.Initialize();
             _userInterfaceManager.PostInitialize();
+            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             if (_commandLineArgs?.Username != null)
             {

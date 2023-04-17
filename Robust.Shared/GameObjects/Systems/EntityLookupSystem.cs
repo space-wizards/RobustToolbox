@@ -691,6 +691,13 @@ namespace Robust.Shared.GameObjects
             EntityQuery<FixturesComponent> fixturesQuery,
             bool recursive = true)
         {
+            if (xform.Broadphase != null && !xform.Broadphase.Value.IsValid())
+            {
+                // This entity was explicitly removed from lookup trees, possibly because it is in a container or has
+                // been detached by the PVS system. Do nothing.
+                return;
+            }
+
             if (!physicsQuery.TryGetComponent(uid, out var body) || !body.CanCollide)
             {
                 // TOOD optimize this. This function iterates UP through parents, while we are currently iterating down.
@@ -711,6 +718,8 @@ namespace Robust.Shared.GameObjects
             if (xform.ChildCount == 0 || !recursive)
                 return;
 
+            // TODO can this be removed?
+            // AFAIK the separate container check is redundant now that we check for an invalid broadphase at the beginning of this function.
             if (!contQuery.HasComponent(xform.Owner))
             {
                 while (childEnumerator.MoveNext(out var child))

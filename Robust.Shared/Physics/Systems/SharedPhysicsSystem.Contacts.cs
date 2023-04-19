@@ -120,17 +120,20 @@ public abstract partial class SharedPhysicsSystem
 
         public bool Return(Contact obj)
         {
-            SetContact(obj, null, 0, null, 0);
+            SetContact(obj, EntityUid.Invalid, EntityUid.Invalid, null, 0, null, 0);
             return true;
         }
     }
 
-    private static void SetContact(Contact contact, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
+    private static void SetContact(Contact contact, EntityUid uidA, EntityUid uidB, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
     {
         contact.Enabled = true;
         contact.IsTouching = false;
         contact.Flags = ContactFlags.None;
         // TOIFlag = false;
+
+        contact.EntityA = uidA;
+        contact.EntityB = uidB;
 
         contact.FixtureA = fixtureA;
         contact.FixtureB = fixtureB;
@@ -174,7 +177,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private Contact CreateContact(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+    private Contact CreateContact(EntityUid uidA, EntityUid uidB, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
     {
         var type1 = fixtureA.Shape.ShapeType;
         var type2 = fixtureB.Shape.ShapeType;
@@ -188,11 +191,11 @@ public abstract partial class SharedPhysicsSystem
         // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
         if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
         {
-            SetContact(contact, fixtureA, indexA, fixtureB, indexB);
+            SetContact(contact, uidA, uidB, fixtureA, indexA, fixtureB, indexB);
         }
         else
         {
-            SetContact(contact, fixtureB, indexB, fixtureA, indexA);
+            SetContact(contact, uidB, uidA, fixtureB, indexB, fixtureA, indexA);
         }
 
         contact.Type = _registers[(int)type1, (int)type2];
@@ -203,10 +206,10 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     /// Try to create a contact between these 2 fixtures.
     /// </summary>
-    internal void AddPair(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB, ContactFlags flags = ContactFlags.None)
+    internal void AddPair(EntityUid uidA, EntityUid uidB, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB, ContactFlags flags = ContactFlags.None)
     {
-        PhysicsComponent bodyA = fixtureA.Body;
-        PhysicsComponent bodyB = fixtureB.Body;
+        var bodyA = fixtureA.Body;
+        var bodyB = fixtureB.Body;
 
         // Broadphase has already done the faster check for collision mask / layers
         // so no point duplicating
@@ -222,7 +225,7 @@ public abstract partial class SharedPhysicsSystem
             return;
 
         // Call the factory.
-        var contact = CreateContact(fixtureA, indexA, fixtureB, indexB);
+        var contact = CreateContact(uidA, uidB, fixtureA, indexA, fixtureB, indexB);
         contact.Flags = flags;
 
         // Contact creation may swap fixtures.
@@ -250,7 +253,7 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     internal void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
     {
-        AddPair(proxyA.Fixture, proxyA.ChildIndex, proxyB.Fixture, proxyB.ChildIndex);
+        AddPair(proxyA.Fixture.Body.Owner, proxyB.Fixture.Body.Owner, proxyA.Fixture, proxyA.ChildIndex, proxyB.Fixture, proxyB.ChildIndex);
     }
 
     internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
@@ -270,8 +273,8 @@ public abstract partial class SharedPhysicsSystem
 
         if (contact.IsTouching)
         {
-            var ev1 = new EndCollideEvent(fixtureA, fixtureB);
-            var ev2 = new EndCollideEvent(fixtureB, fixtureA);
+            var ev1 = new EndCollideEvent(aUid, bUid, fixtureA, fixtureB);
+            var ev2 = new EndCollideEvent(bUid, aUid, fixtureB, fixtureA);
             RaiseLocalEvent(aUid, ref ev1);
             RaiseLocalEvent(bUid, ref ev2);
         }
@@ -326,8 +329,10 @@ public abstract partial class SharedPhysicsSystem
             int indexA = contact.ChildIndexA;
             int indexB = contact.ChildIndexB;
 
-            PhysicsComponent bodyA = fixtureA.Body;
-            PhysicsComponent bodyB = fixtureB.Body;
+            var bodyA = fixtureA.Body;
+            var bodyB = fixtureB.Body;
+            var uidA = contact.EntityA;
+            var uidB = contact.EntityB;
 
             // Do not try to collide disabled bodies
             if (!bodyA.CanCollide || !bodyB.CanCollide)
@@ -360,8 +365,8 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
-            var xformA = xformQuery.GetComponent(bodyA.Owner);
-            var xformB = xformQuery.GetComponent(bodyB.Owner);
+            var xformA = xformQuery.GetComponent(uidA);
+            var xformB = xformQuery.GetComponent(uidB);
 
             if (xformA.MapUid == null || xformA.MapUid != xformB.MapUid)
             {
@@ -372,8 +377,8 @@ public abstract partial class SharedPhysicsSystem
             // Special-case grid contacts.
             if ((contact.Flags & ContactFlags.Grid) != 0x0)
             {
-                var gridABounds = fixtureA.Shape.ComputeAABB(GetPhysicsTransform(bodyA.Owner, xformA, xformQuery), 0);
-                var gridBBounds = fixtureB.Shape.ComputeAABB(GetPhysicsTransform(bodyB.Owner, xformB, xformQuery), 0);
+                var gridABounds = fixtureA.Shape.ComputeAABB(GetPhysicsTransform(uidA, xformA, xformQuery), 0);
+                var gridBBounds = fixtureB.Shape.ComputeAABB(GetPhysicsTransform(uidB, xformB, xformQuery), 0);
 
                 if (!gridABounds.Intersects(gridBBounds))
                 {
@@ -395,14 +400,14 @@ public abstract partial class SharedPhysicsSystem
 
             if (indexA >= fixtureA.Proxies.Length)
             {
-                _sawmill.Error($"Found invalid contact index of {indexA} on {fixtureA.ID} / {ToPrettyString(bodyA.Owner)}, expected {fixtureA.Proxies.Length}");
+                _sawmill.Error($"Found invalid contact index of {indexA} on {fixtureA.ID} / {ToPrettyString(uidA)}, expected {fixtureA.Proxies.Length}");
                 DestroyContact(contact);
                 continue;
             }
 
             if (indexB >= fixtureB.Proxies.Length)
             {
-                _sawmill.Error($"Found invalid contact index of {indexB} on {fixtureB.ID} / {ToPrettyString(bodyB.Owner)}, expected {fixtureB.Proxies.Length}");
+                _sawmill.Error($"Found invalid contact index of {indexB} on {fixtureB.ID} / {ToPrettyString(uidB)}, expected {fixtureB.Proxies.Length}");
                 DestroyContact(contact);
                 continue;
             }
@@ -470,15 +475,15 @@ public abstract partial class SharedPhysicsSystem
 
                     var fixtureA = contact.FixtureA!;
                     var fixtureB = contact.FixtureB!;
-                    var bodyA = fixtureA.Body;
-                    var bodyB = fixtureB.Body;
+                    var uidA = contact.EntityA;
+                    var uidB = contact.EntityB;
                     var worldPoint = worldPoints[i];
 
-                    var ev1 = new StartCollideEvent(fixtureA, fixtureB, worldPoint);
-                    var ev2 = new StartCollideEvent(fixtureB, fixtureA, worldPoint);
+                    var ev1 = new StartCollideEvent(uidA, uidB, fixtureA, fixtureB, worldPoint);
+                    var ev2 = new StartCollideEvent(uidB, uidA, fixtureB, fixtureA, worldPoint);
 
-                    RaiseLocalEvent(bodyA.Owner, ref ev1, true);
-                    RaiseLocalEvent(bodyB.Owner, ref ev2, true);
+                    RaiseLocalEvent(uidA, ref ev1, true);
+                    RaiseLocalEvent(uidB, ref ev2, true);
                     break;
                 }
                 case ContactStatus.Touching:
@@ -494,12 +499,14 @@ public abstract partial class SharedPhysicsSystem
 
                     var bodyA = fixtureA.Body;
                     var bodyB = fixtureB.Body;
+                    var uidA = contact.EntityA;
+                    var uidB = contact.EntityB;
 
-                    var ev1 = new EndCollideEvent(fixtureA, fixtureB);
-                    var ev2 = new EndCollideEvent(fixtureB, fixtureA);
+                    var ev1 = new EndCollideEvent(uidA, uidB, fixtureA, fixtureB);
+                    var ev2 = new EndCollideEvent(uidB, uidA, fixtureB, fixtureA);
 
-                    RaiseLocalEvent(bodyA.Owner, ref ev1);
-                    RaiseLocalEvent(bodyB.Owner, ref ev2);
+                    RaiseLocalEvent(uidA, ref ev1);
+                    RaiseLocalEvent(uidB, ref ev2);
                     break;
                 }
                 case ContactStatus.NoContact:
@@ -544,8 +551,8 @@ public abstract partial class SharedPhysicsSystem
             var contact = contacts[i];
             var bodyA = contact.FixtureA!.Body;
             var bodyB = contact.FixtureB!.Body;
-            var aUid = bodyA.Owner;
-            var bUid = bodyB.Owner;
+            var aUid = contact.EntityA;
+            var bUid = contact.EntityB;
 
             SetAwake(aUid, bodyA, true);
             SetAwake(bUid, bodyB, true);
@@ -573,8 +580,8 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
-            var uidA = contact.FixtureA!.Body.Owner;
-            var uidB = contact.FixtureB!.Body.Owner;
+            var uidA = contact.EntityA;
+            var uidB = contact.EntityB;
             var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA), xformQuery);
             var bodyBTransform = GetPhysicsTransform(uidB, xformQuery.GetComponent(uidB), xformQuery);
 

@@ -329,7 +329,7 @@ namespace Robust.Shared.Physics.Systems
                                             var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
 
                                             if (!fixAABB.Intersects(otherAABB)) continue;
-                                            _physicsSystem.AddPair(fixture, i, otherFixture, j, ContactFlags.Grid);
+                                            _physicsSystem.AddPair(grid.Owner, colliding.Owner, fixture, i, otherFixture, j, ContactFlags.Grid);
                                             break;
                                         }
                                     }

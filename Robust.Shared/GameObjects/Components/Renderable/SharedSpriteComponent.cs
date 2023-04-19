@@ -58,7 +58,14 @@ namespace Robust.Shared.GameObjects
         [DataDefinition]
         public sealed class PrototypeLayerData
         {
+            /// <summary>
+            /// The shader prototype to use for this layer.
+            /// </summary>
+            /// <remarks>
+            /// Null implies no shader is specified. An empty string will clear the current shader.
+            /// </remarks>
             [DataField("shader")] public string? Shader;
+
             [DataField("texture")] public string? TexturePath;
             [DataField("sprite")] public string? RsiPath;
             [DataField("state")] public string? State;

@@ -54,6 +54,60 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.96.9.0
+
+### New features
+
+* `RobustIntegrationTest` now has a `DoGuiEvent()` method that can directly pass `GUIBoundKeyEventArgs` to a control. 
+
+
+## 0.96.8.2
+
+### New features
+
+* The `LayerSetData()` function can now be used to clear a sprite layer's shader.
+
+### Bugfixes
+
+* Fixed sandboxing verifying against `Robust.` assemblies inside `Robust.Client.WebView`, causing an older assembly to be verified against.
+
+
+## 0.96.8.1
+
+### Bugfixes
+
+* Fix MapInit not being run on entities in some instances.
+
+
+## 0.96.8.0
+
+### Bugfixes
+
+* Create entities before applying entity states. This fixes parenting issues in some instances, for example on a freshly split grid the client would give an exception.
+
+### Other
+
+* Entities have their paused state set before initialisation rather than after.
+
+### Internal
+
+* Added a BroadphaseNetworkingTest.
+
+
+## 0.96.7.0
+
+### New features
+
+* `IDynamicTypeFactory.CreateInstance` now has the option to not perform dependency injection.
+* Added normal blend mode for shaders
+* Added a new ResPath struct that is intended to eventually replace ResourcePath
+
+### Bugfixes
+
+* Hopefully fixed an IndexOutOfRange exception in AudioSystem
+* Fixed a potential IndexOutOfRange exception in ContainerSystem
+
+
 ## 0.96.6.0
 
 ### New features
@@ -68,8 +122,16 @@ END TEMPLATE-->
 
 ## 0.96.5.0
 
+### New features
+
+* Added source generator for automatically generating component state getting & handling code. Significantly reduces boilerplate when creating networked components.
+
 
 ## 0.96.4.0
+
+### Bugfixes
+
+* Component delta states can now have an initial full state inferred by clients.
 
 
 ## 0.96.3.0

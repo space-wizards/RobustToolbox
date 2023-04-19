@@ -873,6 +873,12 @@ namespace Robust.Shared.ContentPack
             private PEReader? ResolveCore(string simpleName)
             {
                 var dllName = $"{simpleName}.dll";
+                var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);
+                if (extraStream != null)
+                {
+                    return ModLoader.MakePEReader(extraStream);
+                }
+
                 foreach (var diskLoadPath in _diskLoadPaths)
                 {
                     var path = Path.Combine(diskLoadPath, dllName);
@@ -883,12 +889,6 @@ namespace Robust.Shared.ContentPack
                     }
 
                     return ModLoader.MakePEReader(File.OpenRead(path));
-                }
-
-                var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);
-                if (extraStream != null)
-                {
-                    return ModLoader.MakePEReader(extraStream);
                 }
 
                 foreach (var resLoadPath in _resLoadPaths)

@@ -1187,7 +1187,7 @@ public abstract partial class SharedTransformSystem
         else
         {
             if (!_mapManager.IsMap(uid))
-                Logger.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}).");
+                _logger.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
 
             DetachParentToNull(uid, xform);
             return;

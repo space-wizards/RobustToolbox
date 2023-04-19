@@ -672,6 +672,18 @@ internal sealed partial class PVSSystem : EntitySystem
             AddToChunkSetRecursively(in uid, visMask, tree, chunkSet, transform, metadata);
         }
 
+        if (tree.RootNodes.Count == 0)
+        {
+            // This can happen if the only entity in a chunk is invisible
+            // (e.g., when a ghost moves from from a grid into empty space).
+            DebugTools.Assert(chunkSet.Count == 0);
+            _treePool.Return(tree);
+            _chunkCachePool.Return(chunkSet);
+            result = null;
+            return true;
+        }
+        DebugTools.Assert(chunkSet.Count > 0);
+
         result = (chunkSet, tree);
         return false;
     }
@@ -753,9 +765,14 @@ internal sealed partial class PVSSystem : EntitySystem
             var cache = chunkCache[i];
             if(!cache.HasValue) continue;
 
-            // This isn't actually required, but currently if this fails it is a sign that something has gone wrong
-            // somewhere, as the root nodes should always simply be a map or a grid entity.
-            DebugTools.Assert(cache.Value.tree.RootNodes.Count == 1 && Exists(cache.Value.tree.RootNodes.First()));
+#if DEBUG
+            // Each root nodes should simply be a map or a grid entity.
+            DebugTools.Assert(cache.Value.tree.RootNodes.Count == 1,
+                $"Root node count is {cache.Value.tree.RootNodes.Count} instead of 1. Session: {session}");
+            var ent = cache.Value.tree.RootNodes.FirstOrDefault();
+            DebugTools.Assert(Exists(ent), $"Root node does not exist. Node {ent}. Session: {session}");
+            DebugTools.Assert(HasComp<MapComponent>(ent) || HasComp<MapGridComponent>(ent));
+#endif
 
             foreach (var rootNode in cache.Value.tree.RootNodes)
             {

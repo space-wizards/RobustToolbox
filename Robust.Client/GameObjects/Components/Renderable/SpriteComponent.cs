@@ -751,9 +751,14 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(layerDatum.Shader))
+            if (layerDatum.Shader != null)
             {
-                if (prototypes.TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
+                if (layerDatum.Shader == string.Empty)
+                {
+                    layer.ShaderPrototype = null;
+                    layer.Shader = null;
+                }
+                else if (prototypes.TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
                 {
                     layer.ShaderPrototype = layerDatum.Shader;
                     layer.Shader = prototype.Instance();

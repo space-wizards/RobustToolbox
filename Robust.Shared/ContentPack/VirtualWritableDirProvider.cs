@@ -39,7 +39,8 @@ namespace Robust.Shared.ContentPack
             path = path.Clean();
 
             var directory = _rootDirectoryNode;
-            foreach (var segment in path.CanonPath.Split('/'))
+
+            foreach (var segment in path.EnumerateSegments())
             {
                 if (directory.Children.TryGetValue(segment, out var child))
                 {

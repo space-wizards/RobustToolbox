@@ -14,6 +14,7 @@ using NUnit.Framework;
 using Robust.Client;
 using Robust.Client.GameStates;
 using Robust.Client.Timing;
+using Robust.Client.UserInterface;
 using Robust.Server;
 using Robust.Server.Console;
 using Robust.Server.ServerStatus;
@@ -23,6 +24,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -852,6 +854,20 @@ namespace Robust.UnitTesting
                 GameLoop.RunInit();
 
                 return client;
+            }
+
+            /// <summary>
+            /// Directly pass a bound key event to a control.
+            /// </summary>
+            public async Task DoGuiEvent(Control control, GUIBoundKeyEventArgs args)
+            {
+                await WaitPost(() =>
+                {
+                    if (args.State == BoundKeyState.Down)
+                        control.KeyBindDown(args);
+                    else
+                        control.KeyBindUp(args);
+                });
             }
         }
 

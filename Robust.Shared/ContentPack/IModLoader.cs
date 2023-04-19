@@ -37,7 +37,7 @@ namespace Robust.Shared.ContentPack
         /// <param name="mountPath">The directory in which to look for assemblies.</param>
         /// <param name="filterPrefix">The prefix files need to have to be considered. e.g. <c>Content.</c></param>
         /// <returns>True if all modules loaded successfully. False if there were load errors.</returns>
-        bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix);
+        bool TryLoadModulesFrom(ResPath mountPath, string filterPrefix);
 
         /// <summary>
         ///     Loads an assembly into the current AppDomain.

@@ -26,14 +26,14 @@ namespace Robust.Shared.ContentPack
         #region File Access
 
         /// <inheritdoc />
-        public void CreateDir(ResourcePath path)
+        public void CreateDir(ResPath path)
         {
             var fullPath = GetFullPath(path);
             Directory.CreateDirectory(fullPath);
         }
 
         /// <inheritdoc />
-        public void Delete(ResourcePath path)
+        public void Delete(ResPath path)
         {
             var fullPath = GetFullPath(path);
             if (Directory.Exists(fullPath))
@@ -47,14 +47,14 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public bool Exists(ResourcePath path)
+        public bool Exists(ResPath path)
         {
             var fullPath = GetFullPath(path);
             return Directory.Exists(fullPath) || File.Exists(fullPath);
         }
 
         /// <inheritdoc />
-        public (IEnumerable<ResourcePath> files, IEnumerable<ResourcePath> directories) Find(string pattern, bool recursive = true)
+        public (IEnumerable<ResPath> files, IEnumerable<ResPath> directories) Find(string pattern, bool recursive = true)
         {
             var rootLen = RootDir.Length - 1;
             var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
@@ -62,23 +62,23 @@ namespace Robust.Shared.ContentPack
             var files = Directory.GetFiles(RootDir, pattern, option);
             var dirs = Directory.GetDirectories(RootDir, pattern, option);
 
-            var resFiles = new List<ResourcePath>(files.Length);
-            var resDirs = new List<ResourcePath>(dirs.Length);
+            var resFiles = new List<ResPath>(files.Length);
+            var resDirs = new List<ResPath>(dirs.Length);
 
             foreach (var file in files)
             {
-                resFiles.Add(new ResourcePath(file.Substring(rootLen), ResourcePath.SYSTEM_SEPARATOR).ChangeSeparator("/"));
+                resFiles.Add(new ResPath(file.Substring(rootLen)));
             }
 
             foreach (var dir in dirs)
             {
-                resDirs.Add(new ResourcePath(dir.Substring(rootLen), ResourcePath.SYSTEM_SEPARATOR).ChangeSeparator("/"));
+                resDirs.Add(new ResPath(dir.Substring(rootLen)));
             }
 
             return (resFiles, resDirs);
         }
 
-        public IEnumerable<string> DirectoryEntries(ResourcePath path)
+        public IEnumerable<string> DirectoryEntries(ResPath path)
         {
             var fullPath = GetFullPath(path);
 
@@ -92,19 +92,19 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public bool IsDir(ResourcePath path)
+        public bool IsDir(ResPath path)
         {
             return Directory.Exists(GetFullPath(path));
         }
 
         /// <inheritdoc />
-        public Stream Open(ResourcePath path, FileMode fileMode, FileAccess access, FileShare share)
+        public Stream Open(ResPath path, FileMode fileMode, FileAccess access, FileShare share)
         {
             var fullPath = GetFullPath(path);
             return File.Open(fullPath, fileMode, access, share);
         }
 
-        public IWritableDirProvider OpenSubdirectory(ResourcePath path)
+        public IWritableDirProvider OpenSubdirectory(ResPath path)
         {
             if (!IsDir(path))
                 throw new FileNotFoundException();
@@ -114,7 +114,7 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public void Rename(ResourcePath oldPath, ResourcePath newPath)
+        public void Rename(ResPath oldPath, ResPath newPath)
         {
             var fullOldPath = GetFullPath(oldPath);
             var fullNewPath = GetFullPath(newPath);
@@ -123,19 +123,21 @@ namespace Robust.Shared.ContentPack
 
         #endregion
 
-        public string GetFullPath(ResourcePath path)
+        public string GetFullPath(ResPath path)
         {
             if (!path.IsRooted)
             {
                 throw new ArgumentException("Path must be rooted.");
             }
 
+            path = path.Clean();
+
             return GetFullPath(RootDir, path);
         }
 
-        private static string GetFullPath(string root, ResourcePath path)
+        private static string GetFullPath(string root, ResPath path)
         {
-            var relPath = path.Clean().ToRelativeSystemPath();
+            var relPath = path.ToRelativeSystemPath();
             if (relPath.Contains("\\..") || relPath.Contains("/.."))
             {
                 // Hard cap on any exploit smuggling a .. in there.

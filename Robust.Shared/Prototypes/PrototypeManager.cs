@@ -192,7 +192,7 @@ namespace Robust.Shared.Prototypes
             return _kindPriorities[b].CompareTo(_kindPriorities[a]);
         }
 
-        protected void ReloadPrototypes(IEnumerable<ResourcePath> filePaths)
+        protected void ReloadPrototypes(IEnumerable<ResPath> filePaths)
         {
 #if TOOLS
             var changed = new Dictionary<Type, HashSet<string>>();

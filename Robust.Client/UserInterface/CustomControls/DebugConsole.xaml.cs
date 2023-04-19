@@ -45,7 +45,7 @@ namespace Robust.Client.UserInterface.CustomControls
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
 
-        private static readonly ResourcePath HistoryPath = new("/debug_console_history.json");
+        private static readonly ResPath HistoryPath = new("/debug_console_history.json");
 
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new();
 

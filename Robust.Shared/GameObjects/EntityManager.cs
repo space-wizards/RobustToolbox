@@ -94,6 +94,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns true if the entity's data (apart from transform) is default.
         /// </summary>
+        [Obsolete("This diff is crude at the moment and does not correctly consider component data.")]
         public bool IsDefault(EntityUid uid)
         {
             if (!TryGetComponent<MetaDataComponent>(uid, out var metadata) || metadata.EntityPrototype == null)

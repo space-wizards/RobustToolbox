@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.97.0.0
+
+### Breaking changes
+
+* Fully replace ResourcePath (class) with ResPath (struct).
+
+### Other
+
+* Add stacktrace to transform logs.
+
+
 ## 0.96.9.0
 
 ### New features

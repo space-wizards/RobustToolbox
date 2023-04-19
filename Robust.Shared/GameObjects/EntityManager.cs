@@ -91,6 +91,40 @@ namespace Robust.Shared.GameObjects
             Initialized = true;
         }
 
+        /// <summary>
+        /// Returns true if the entity's data (apart from transform) is default.
+        /// </summary>
+        public bool IsDefault(EntityUid uid)
+        {
+            if (!TryGetComponent<MetaDataComponent>(uid, out var metadata) || metadata.EntityPrototype == null)
+                return false;
+
+            var proto = metadata.EntityPrototype;
+            var xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
+
+            // Prototype may or may not have metadata / transforms
+            var comps = proto.Components.Keys.ToList();
+            comps.Remove(xformName);
+
+            if (comps.Count != ComponentCount(uid) - 2)
+                return false;
+
+            // Alright check each component by hand
+            foreach (var key in comps)
+            {
+                var comp = proto.Components[key];
+
+                if (!TryGetComponent(uid, comp.Component.GetType(), out var entComp))
+                {
+                    return false;
+                }
+
+                // TODO: Actual diff.
+            }
+
+            return true;
+        }
+
         public virtual void Startup()
         {
             if(!Initialized)

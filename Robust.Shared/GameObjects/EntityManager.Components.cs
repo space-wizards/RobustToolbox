@@ -924,6 +924,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
+        public int ComponentCount(EntityUid uid)
+        {
+            var comps = _entCompIndex[uid];
+            return comps.Count;
+        }
+
         /// <summary>
         /// Copy the components for an entity into the given span,
         /// or re-allocate the span as an array if there's not enough space.

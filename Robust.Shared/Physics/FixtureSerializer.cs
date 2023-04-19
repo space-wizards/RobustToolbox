@@ -18,7 +18,7 @@ namespace Robust.Shared.Physics;
 /// <summary>
 /// Special-case to avoid writing grid fixtures.
 /// </summary>
-public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixture>, MappingDataNode>
+public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixture>, MappingDataNode>, ITypeCopier<Dictionary<string, Fixture>>
 {
     public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)
@@ -52,10 +52,25 @@ public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixtu
             var key = (ValueDataNode)subNode.Key;
 
             var fixture = serializationManager.Read<Fixture>(subNode.Value, hookCtx, context, notNullableOverride: true);
+            fixture.ID = key.Value;
             value.Add(key.Value, fixture);
         }
 
         return value;
+    }
+
+    public void CopyTo(ISerializationManager serializationManager, Dictionary<string, Fixture> source, ref Dictionary<string, Fixture> target,
+        SerializationHookContext hookCtx, ISerializationContext? context = null)
+    {
+        target.Clear();
+
+        foreach (var (id, fixture) in source)
+        {
+            var newFixture = serializationManager.CreateCopy(fixture, hookCtx, context);
+            newFixture.ID = id;
+
+            target.Add(id, newFixture);
+        }
     }
 
     public DataNode Write(ISerializationManager serializationManager, Dictionary<string, Fixture> value, IDependencyCollection dependencies,

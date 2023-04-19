@@ -46,7 +46,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <remarks>
         /// We can also use this for networking to make cross-referencing fixtures easier.
         /// Won't call Dirty() by default
-        /// Not a DataField as the component already stores the key.
+        /// Not a DataField as the component already stores the key and we would have to double it in yaml.
         /// </remarks>
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]

@@ -218,7 +218,6 @@ namespace Robust.Shared.Physics.Systems
                         throw new InvalidOperationException($"Tried to setup fixture on init for {ToPrettyString(uid)} with no ID!");
                     }
 
-                    fixture.ID = id;
                     fixture.Body = body;
                 }
 
@@ -245,10 +244,11 @@ namespace Robust.Shared.Physics.Systems
                 return;
             }
 
-            // State handling funnies, someday we'll remove fixture.ID and fixture.Body and it won't matter
+            // State handling funnies, someday we'll remove fixture.Body and it won't matter
+            // Alternatively if this is necessary just add it to FixtureSerializer.
             foreach (var (id, fixture) in component.Fixtures)
             {
-                fixture.ID = id;
+                DebugTools.Assert(id == fixture.ID);
                 fixture.Body = physics;
             }
 

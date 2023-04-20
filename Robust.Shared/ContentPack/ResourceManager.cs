@@ -18,8 +18,8 @@ namespace Robust.Shared.ContentPack
     {
         [Dependency] private readonly IConfigurationManager _config = default!;
 
-        private (ResPath prefix, IContentRoot root)[] _contentRoots =
-            new (ResPath prefix, IContentRoot root)[0];
+        private (ResourcePath prefix, IContentRoot root)[] _contentRoots =
+            new (ResourcePath prefix, IContentRoot root)[0];
 
         private StreamSeekMode _streamSeekMode;
         private readonly object _rootMutateLock = new();
@@ -68,7 +68,7 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public void MountContentPack(string pack, ResPath? prefix = null)
+        public void MountContentPack(string pack, ResourcePath? prefix = null)
         {
             prefix = SanitizePrefix(prefix);
 
@@ -85,18 +85,18 @@ namespace Robust.Shared.ContentPack
             //create new PackLoader
 
             var loader = new PackLoader(packInfo);
-            AddRoot(prefix.Value, loader);
+            AddRoot(prefix, loader);
         }
 
-        public void MountContentPack(Stream zipStream, ResPath? prefix = null)
+        public void MountContentPack(Stream zipStream, ResourcePath? prefix = null)
         {
             prefix = SanitizePrefix(prefix);
 
             var loader = new PackLoader(zipStream);
-            AddRoot(prefix.Value, loader);
+            AddRoot(prefix, loader);
         }
 
-        public void AddRoot(ResPath prefix, IContentRoot loader)
+        public void AddRoot(ResourcePath prefix, IContentRoot loader)
         {
             lock (_rootMutateLock)
             {
@@ -112,22 +112,22 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        private static ResPath SanitizePrefix(ResPath? prefix)
+        private static ResourcePath SanitizePrefix(ResourcePath? prefix)
         {
             if (prefix == null)
             {
-                prefix = ResPath.Root;
+                prefix = ResourcePath.Root;
             }
-            else if (!prefix.Value.IsRooted)
+            else if (!prefix.IsRooted)
             {
                 throw new ArgumentException("Prefix must be rooted.", nameof(prefix));
             }
 
-            return prefix.Value;
+            return prefix;
         }
 
         /// <inheritdoc />
-        public void MountContentDirectory(string path, ResPath? prefix = null)
+        public void MountContentDirectory(string path, ResourcePath? prefix = null)
         {
             prefix = SanitizePrefix(prefix);
 
@@ -141,17 +141,17 @@ namespace Robust.Shared.ContentPack
             }
 
             var loader = new DirLoader(pathInfo, Logger.GetSawmill("res"), _config.GetCVar(CVars.ResCheckPathCasing));
-            AddRoot(prefix.Value, loader);
+            AddRoot(prefix, loader);
         }
 
         /// <inheritdoc />
         public Stream ContentFileRead(string path)
         {
-            return ContentFileRead(new ResPath(path));
+            return ContentFileRead(new ResourcePath(path));
         }
 
         /// <inheritdoc />
-        public Stream ContentFileRead(ResPath path)
+        public Stream ContentFileRead(ResourcePath path)
         {
             if (TryContentFileRead(path, out var fileStream))
             {
@@ -164,35 +164,35 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public bool TryContentFileRead(string path, [NotNullWhen(true)] out Stream? fileStream)
         {
-            return TryContentFileRead(new ResPath(path), out fileStream);
+            return TryContentFileRead(new ResourcePath(path), out fileStream);
         }
 
         /// <inheritdoc />
-        public bool TryContentFileRead(ResPath? path, [NotNullWhen(true)] out Stream? fileStream)
+        public bool TryContentFileRead(ResourcePath path, [NotNullWhen(true)] out Stream? fileStream)
         {
             if (path == null)
             {
                 throw new ArgumentNullException(nameof(path));
             }
 
-            if (!path.Value.IsRooted)
+            if (!path.IsRooted)
             {
                 throw new ArgumentException($"Path '{path}' must be rooted", nameof(path));
             }
 #if DEBUG
-            if (!IsPathValid(path.Value))
+            if (!IsPathValid(path))
             {
                 throw new FileNotFoundException($"Path '{path}' contains invalid characters/filenames.");
             }
 #endif
             foreach (var (prefix, root) in _contentRoots)
             {
-                if (!path.Value.TryRelativeTo(prefix, out var relative))
+                if (!path.TryRelativeTo(prefix, out var relative))
                 {
                     continue;
                 }
 
-                if (root.TryGetFile(relative.Value, out var stream))
+                if (root.TryGetFile(relative, out var stream))
                 {
                     fileStream = WrapStream(stream);
                     return true;
@@ -235,11 +235,11 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public bool ContentFileExists(string path)
         {
-            return ContentFileExists(new ResPath(path));
+            return ContentFileExists(new ResourcePath(path));
         }
 
         /// <inheritdoc />
-        public bool ContentFileExists(ResPath path)
+        public bool ContentFileExists(ResourcePath path)
         {
             if (TryContentFileRead(path, out var stream))
             {
@@ -251,12 +251,12 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public IEnumerable<ResPath> ContentFindFiles(string path)
+        public IEnumerable<ResourcePath> ContentFindFiles(string path)
         {
-            return ContentFindFiles(new ResPath(path));
+            return ContentFindFiles(new ResourcePath(path));
         }
 
-        public IEnumerable<string> ContentGetDirectoryEntries(ResPath path)
+        public IEnumerable<string> ContentGetDirectoryEntries(ResourcePath path)
         {
             ArgumentNullException.ThrowIfNull(path, nameof(path));
 
@@ -272,35 +272,35 @@ namespace Robust.Shared.ContentPack
                     continue;
                 }
 
-                entries.UnionWith(root.GetEntries(relative.Value));
+                entries.UnionWith(root.GetEntries(relative));
             }
 
             return entries;
         }
 
         /// <inheritdoc />
-        public IEnumerable<ResPath> ContentFindFiles(ResPath? path)
+        public IEnumerable<ResourcePath> ContentFindFiles(ResourcePath path)
         {
             if (path == null)
             {
                 throw new ArgumentNullException(nameof(path));
             }
 
-            if (!path.Value.IsRooted)
+            if (!path.IsRooted)
             {
                 throw new ArgumentException("Path is not rooted", nameof(path));
             }
 
-            var alreadyReturnedFiles = new HashSet<ResPath>();
+            var alreadyReturnedFiles = new HashSet<ResourcePath>();
 
             foreach (var (prefix, root) in _contentRoots)
             {
-                if (!path.Value.TryRelativeTo(prefix, out var relative))
+                if (!path.TryRelativeTo(prefix, out var relative))
                 {
                     continue;
                 }
 
-                foreach (var filename in root.FindFiles(relative.Value))
+                foreach (var filename in root.FindFiles(relative))
                 {
                     var newPath = prefix / filename;
                     if (!alreadyReturnedFiles.Contains(newPath))
@@ -312,7 +312,7 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        public bool TryGetDiskFilePath(ResPath path, [NotNullWhen(true)] out string? diskPath)
+        public bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath)
         {
             // loop over each root trying to get the file
             foreach (var (prefix, root) in _contentRoots)
@@ -322,7 +322,7 @@ namespace Robust.Shared.ContentPack
                     continue;
                 }
 
-                diskPath = dirLoader.GetPath(tempPath.Value);
+                diskPath = dirLoader.GetPath(tempPath);
                 if (File.Exists(diskPath))
                     return true;
             }
@@ -331,24 +331,24 @@ namespace Robust.Shared.ContentPack
             return false;
         }
 
-        public void MountStreamAt(MemoryStream stream, ResPath path)
+        public void MountStreamAt(MemoryStream stream, ResourcePath path)
         {
             var loader = new SingleStreamLoader(stream, path.ToRelativePath());
-            AddRoot(ResPath.Root, loader);
+            AddRoot(ResourcePath.Root, loader);
         }
 
-        public IEnumerable<ResPath> GetContentRoots()
+        public IEnumerable<ResourcePath> GetContentRoots()
         {
             foreach (var (_, root) in _contentRoots)
             {
                 if (root is DirLoader loader)
                 {
-                    yield return new ResPath(loader.GetPath(new ResPath(@"/")));
+                    yield return new ResourcePath(loader.GetPath(new ResourcePath(@"/")));
                 }
             }
         }
 
-        internal static bool IsPathValid(ResPath path)
+        internal static bool IsPathValid(ResourcePath path)
         {
             var asString = path.ToString();
             if (BadPathCharacterRegex.IsMatch(asString))
@@ -356,7 +356,7 @@ namespace Robust.Shared.ContentPack
                 return false;
             }
 
-            foreach (var segment in path.CanonPath.Split('/'))
+            foreach (var segment in path.EnumerateSegments())
             {
                 if (BadPathSegmentRegex.IsMatch(segment))
                 {

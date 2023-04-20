@@ -31,6 +31,17 @@ public class ResourcePathBench
         }
         return res;
     }
+    
+    [Benchmark]
+    public ResourcePath? CreateResourcePath()
 
+    {
+        ResourcePath? res = null;
+        for (var i = 0; i < N; i++)
+        {
+            res = new ResourcePath(_path);
+        }
+        return res;
+    }
 }
 #pragma warning restore CS0612

@@ -79,8 +79,8 @@ entities:
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
             protoMan.RegisterKind(typeof(EntityPrototype));
 
-            protoMan.LoadDirectory(new ("/EnginePrototypes"));
-            protoMan.LoadDirectory(new ("/Prototypes"));
+            protoMan.LoadDirectory(new ResourcePath("/EnginePrototypes"));
+            protoMan.LoadDirectory(new ResourcePath("/Prototypes"));
             protoMan.ResolveResults();
         }
 

@@ -8,16 +8,16 @@ namespace Robust.Shared.Network.Messages
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 
-        public ResPath[] Paths = default!;
+        public ResourcePath[] Paths = default!;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             var count = buffer.ReadInt32();
-            Paths = new ResPath[count];
+            Paths = new ResourcePath[count];
 
             for (var i = 0; i < count; i++)
             {
-                Paths[i] = new ResPath(buffer.ReadString());
+                Paths[i] = new ResourcePath(buffer.ReadString());
             }
         }
 

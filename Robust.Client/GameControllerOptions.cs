@@ -51,12 +51,12 @@ namespace Robust.Client
         /// <summary>
         ///     Directory to load all assemblies from.
         /// </summary>
-        public ResPath AssemblyDirectory { get; init; } = new(@"/Assemblies/");
+        public ResPath AssemblyDirectory { get; init; } = new(@"/Assemblies");
 
         /// <summary>
         ///     Directory to load all prototypes from.
         /// </summary>
-        public ResPath PrototypeDirectory { get; init; } = new(@"/Prototypes/");
+        public ResPath PrototypeDirectory { get; init; } = new(@"/Prototypes");
 
         /// <summary>
         /// Directory resource path containing window icons to load.

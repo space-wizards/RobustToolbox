@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.98.0.0
+
+### Breaking changes
+
+* Revert bulk ResPath refactor due to instability.
+
+
 ## 0.97.1.1
 
 ### Bugfixes

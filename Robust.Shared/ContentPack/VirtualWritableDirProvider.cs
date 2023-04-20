@@ -29,7 +29,7 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public string? RootDir => null;
 
-        public void CreateDir(ResPath path)
+        public void CreateDir(ResourcePath path)
         {
             if (!path.IsRooted)
             {
@@ -39,7 +39,6 @@ namespace Robust.Shared.ContentPack
             path = path.Clean();
 
             var directory = _rootDirectoryNode;
-
             foreach (var segment in path.EnumerateSegments())
             {
                 if (directory.Children.TryGetValue(segment, out var child))
@@ -59,7 +58,7 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        public void Delete(ResPath path)
+        public void Delete(ResourcePath path)
         {
             if (!path.IsRooted)
             {
@@ -78,18 +77,18 @@ namespace Robust.Shared.ContentPack
             directory.Children.Remove(path.Filename);
         }
 
-        public bool Exists(ResPath path)
+        public bool Exists(ResourcePath path)
         {
             return TryGetNodeAt(path, out _);
         }
 
-        public (IEnumerable<ResPath> files, IEnumerable<ResPath> directories) Find(string pattern,
+        public (IEnumerable<ResourcePath> files, IEnumerable<ResourcePath> directories) Find(string pattern,
             bool recursive = true)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<string> DirectoryEntries(ResPath path)
+        public IEnumerable<string> DirectoryEntries(ResourcePath path)
         {
             if (!TryGetNodeAt(path, out var dir) || dir is not DirectoryNode dirNode)
                 throw new ArgumentException("Path is not a valid directory node.");
@@ -97,17 +96,19 @@ namespace Robust.Shared.ContentPack
             return dirNode.Children.Keys;
         }
 
-        public bool IsDir(ResPath path)
+        public bool IsDir(ResourcePath path)
         {
             return TryGetNodeAt(path, out var node) && node is DirectoryNode;
         }
 
-        public Stream Open(ResPath path, FileMode fileMode, FileAccess access, FileShare share)
+        public Stream Open(ResourcePath path, FileMode fileMode, FileAccess access, FileShare share)
         {
             if (!path.IsRooted)
             {
                 throw new ArgumentException("Path must be rooted", nameof(path));
             }
+
+            path = path.Clean();
 
             var parentPath = path.Directory;
             if (!TryGetNodeAt(parentPath, out var parent) || !(parent is DirectoryNode parentDir))
@@ -204,12 +205,12 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        public void Rename(ResPath oldPath, ResPath newPath)
+        public void Rename(ResourcePath oldPath, ResourcePath newPath)
         {
             throw new NotImplementedException();
         }
 
-        private bool TryGetNodeAt(ResPath path, [NotNullWhen(true)] out INode? node)
+        private bool TryGetNodeAt(ResourcePath path, [NotNullWhen(true)] out INode? node)
         {
             if (!path.IsRooted)
             {
@@ -218,14 +219,14 @@ namespace Robust.Shared.ContentPack
 
             path = path.Clean();
 
-            if (path == ResPath.Root)
+            if (path == ResourcePath.Root)
             {
                 node = _rootDirectoryNode;
                 return true;
             }
 
             var directory = _rootDirectoryNode;
-            var segments = path.EnumerateSegments();
+            var segments = path.EnumerateSegments().ToArray();
             for (var i = 0; i < segments.Length; i++)
             {
                 var segment = segments[i];
@@ -247,7 +248,7 @@ namespace Robust.Shared.ContentPack
             throw new InvalidOperationException("Unreachable.");
         }
 
-        public IWritableDirProvider OpenSubdirectory(ResPath path)
+        public IWritableDirProvider OpenSubdirectory(ResourcePath path)
         {
             if (!TryGetNodeAt(path, out var node) || node is not DirectoryNode dirNode)
                 throw new FileNotFoundException();

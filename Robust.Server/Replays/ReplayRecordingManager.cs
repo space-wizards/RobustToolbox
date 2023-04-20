@@ -42,7 +42,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     private int _maxUncompressedSize;
     private int _tickBatchSize;
     private bool _enabled;
-    private ResPath _path;
+    private ResourcePath? _path;
     public bool Recording => _curStream != null;
     private int _index = 0;
     private MemoryStream? _curStream;
@@ -106,7 +106,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             return false;
 
         var path = directory ?? _netConf.GetCVar(CVars.ReplayDirectory);
-        _path = new ResPath(path).ToRootedPath();
+        _path = new ResourcePath(path).ToRootedPath();
         if (_resourceManager.UserData.Exists(_path))
         {
             if (overwrite)

@@ -108,7 +108,9 @@ namespace Robust.Benchmarks.Serialization.Copy
             copy.Potency = Seed.Potency;
             copy.Ligneous = Seed.Ligneous;
 
-            copy.PlantRsi = new ResPath(Seed.PlantRsi.ToString());
+            copy.PlantRsi = Seed.PlantRsi == null
+                ? null!
+                : new ResourcePath(Seed.PlantRsi.ToString(), Seed.PlantRsi.Separator);
             copy.PlantIconState = Seed.PlantIconState;
             copy.Bioluminescent = Seed.Bioluminescent;
             copy.BioluminescentColor = Seed.BioluminescentColor;

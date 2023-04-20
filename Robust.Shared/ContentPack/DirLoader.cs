@@ -43,7 +43,7 @@ namespace Robust.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public bool TryGetFile(ResPath relPath, [NotNullWhen(true)] out Stream? stream)
+            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
             {
                 var path = GetPath(relPath);
                 if (!File.Exists(path))
@@ -58,13 +58,13 @@ namespace Robust.Shared.ContentPack
                 return true;
             }
 
-            internal string GetPath(ResPath relPath)
+            internal string GetPath(ResourcePath relPath)
             {
                 return Path.GetFullPath(Path.Combine(_directory.FullName, relPath.ToRelativeSystemPath()));
             }
 
             /// <inheritdoc />
-            public IEnumerable<ResPath> FindFiles(ResPath path)
+            public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
             {
                 var fullPath = GetPath(path);
                 if (!Directory.Exists(fullPath))
@@ -78,11 +78,11 @@ namespace Robust.Shared.ContentPack
                 foreach (var filePath in paths)
                 {
                     var relPath = filePath.Substring(_directory.FullName.Length);
-                    yield return ResPath.FromRelativeSystemPath(relPath);
+                    yield return ResourcePath.FromRelativeSystemPath(relPath);
                 }
             }
 
-            public IEnumerable<string> GetEntries(ResPath path)
+            public IEnumerable<string> GetEntries(ResourcePath path)
             {
                 var fullPath = GetPath(path);
                 if (!Directory.Exists(fullPath))
@@ -100,7 +100,7 @@ namespace Robust.Shared.ContentPack
             }
 
             [Conditional("DEBUG")]
-            private void CheckPathCasing(ResPath path)
+            private void CheckPathCasing(ResourcePath path)
             {
                 if (!_checkCasing)
                     return;
@@ -108,10 +108,10 @@ namespace Robust.Shared.ContentPack
                 // Run this inside the thread pool due to overhead.
                 Task.Run(() =>
                 {
-                    var prevPath = GetPath(ResPath.Root);
-                    var diskPath = ResPath.Root;
+                    var prevPath = GetPath(ResourcePath.Root);
+                    var diskPath = ResourcePath.Root;
                     var mismatch = false;
-                    foreach (var segment in path.CanonPath.Split('/'))
+                    foreach (var segment in path.EnumerateSegments())
                     {
                         var prevDir = new DirectoryInfo(prevPath);
                         var found = false;
@@ -166,7 +166,7 @@ namespace Robust.Shared.ContentPack
 
                     var filePath = file.FullName;
                     var relPath = filePath.Substring(_directory.FullName.Length);
-                    yield return ResPath.FromRelativeSystemPath(relPath).ToRootedPath().ToString();
+                    yield return ResourcePath.FromRelativeSystemPath(relPath).ToRootedPath().ToString();
                 }
 
                 foreach (var subDir in dir.EnumerateDirectories())

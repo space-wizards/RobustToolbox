@@ -19,7 +19,7 @@ public partial class PrototypeManager
     public event Action<DataNodeDocument>? LoadedData;
 
     /// <inheritdoc />
-    public void LoadDirectory(ResPath path, bool overwrite = false,
+    public void LoadDirectory(ResourcePath path, bool overwrite = false,
         Dictionary<Type, HashSet<string>>? changed = null)
     {
         _hasEverBeenReloaded = true;
@@ -33,7 +33,7 @@ public partial class PrototypeManager
         var sawmill = _logManager.GetSawmill("eng");
 
         var results = streams.AsParallel()
-            .Select<ResPath, (ResPath, IEnumerable<ExtractedMappingData>)>(file =>
+            .Select<ResourcePath, (ResourcePath, IEnumerable<ExtractedMappingData>)>(file =>
             {
                 try
                 {
@@ -81,7 +81,7 @@ public partial class PrototypeManager
         }
     }
 
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path)
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
     {
         var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
@@ -130,7 +130,7 @@ public partial class PrototypeManager
         return dict;
     }
 
-    private StreamReader? ReadFile(ResPath file, bool @throw = true)
+    private StreamReader? ReadFile(ResourcePath file, bool @throw = true)
     {
         var retries = 0;
 
@@ -161,7 +161,7 @@ public partial class PrototypeManager
         }
     }
 
-    public void LoadFile(ResPath file, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
+    public void LoadFile(ResourcePath file, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
     {
         try
         {

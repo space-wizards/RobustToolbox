@@ -14,5 +14,5 @@ public sealed class SoundCollectionPrototype : IPrototype
     public string ID { get; } = default!;
 
     [DataField("files")]
-    public List<ResPath> PickFiles { get; } = new();
+    public List<ResourcePath> PickFiles { get; } = new();
 }

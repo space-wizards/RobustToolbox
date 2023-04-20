@@ -12,7 +12,7 @@ namespace Robust.Client.ResourceManagement
         /// <summary>
         ///     Fallback resource path if this one does not exist.
         /// </summary>
-        public virtual ResPath Fallback => default;
+        public virtual ResourcePath? Fallback => null;
 
         /// <summary>
         ///     Disposes this resource.
@@ -26,9 +26,9 @@ namespace Robust.Client.ResourceManagement
         /// </summary>
         /// <param name="cache">ResourceCache this resource is being loaded into.</param>
         /// <param name="path">Path of the resource requested on the VFS.</param>
-        public abstract void Load(IResourceCache cache, ResPath path);
+        public abstract void Load(IResourceCache cache, ResourcePath path);
 
-        public virtual void Reload(IResourceCache cache, ResPath path, CancellationToken ct = default)
+        public virtual void Reload(IResourceCache cache, ResourcePath path, CancellationToken ct = default)
         {
 
         }

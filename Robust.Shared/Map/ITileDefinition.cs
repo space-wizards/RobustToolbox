@@ -27,12 +27,12 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     The path of the sprite to draw.
         /// </summary>
-        ResPath? Sprite { get; }
+        ResourcePath? Sprite { get; }
 
         /// <summary>
         /// Possible sprites to use if we're neighboring another tile.
         /// </summary>
-        Dictionary<Direction, ResPath> EdgeSprites { get; }
+        Dictionary<Direction, ResourcePath> EdgeSprites { get; }
 
         /// <summary>
         ///     Physics objects that are interacting on this tile are slowed down by this float.

@@ -103,7 +103,7 @@ internal sealed partial class MidiManager : IMidiManager
 
     private const string ContentCustomSoundfontDirectory = "/Audio/MidiCustom/";
 
-    private static ResPath CustomSoundfontDirectory = new("/soundfonts/");
+    private static ResourcePath CustomSoundfontDirectory = new ResourcePath("/soundfonts/");
 
     private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks;
 
@@ -476,7 +476,7 @@ internal sealed partial class MidiManager : IMidiManager
 
             Stream? stream;
             var resourceCache = _parent._resourceManager;
-            var resourcePath = new ResPath(filename);
+            var resourcePath = new ResourcePath(filename);
 
             if (resourcePath.IsRooted)
             {

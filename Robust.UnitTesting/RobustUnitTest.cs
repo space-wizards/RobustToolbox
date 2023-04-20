@@ -215,7 +215,7 @@ namespace Robust.UnitTesting
 
             var modLoader = deps.Resolve<TestingModLoader>();
             modLoader.Assemblies = contentAssemblies;
-            modLoader.TryLoadModulesFrom(ResPath.Root, "");
+            modLoader.TryLoadModulesFrom(ResourcePath.Root, "");
 
             entMan.Startup();
             mapMan.Startup();

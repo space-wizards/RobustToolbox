@@ -89,7 +89,7 @@ namespace Robust.Shared.ContentPack
             return new Resolver(
                 this,
                 loadDirs.ToArray(),
-                new[] {new ResPath("/Assemblies/")}
+                new[] {new ResourcePath("/Assemblies/")}
             );
         }
 
@@ -861,9 +861,9 @@ namespace Robust.Shared.ContentPack
             private readonly ConcurrentDictionary<string, PEReader?> _dictionary = new();
             private readonly AssemblyTypeChecker _parent;
             private readonly string[] _diskLoadPaths;
-            private readonly ResPath[] _resLoadPaths;
+            private readonly ResourcePath[] _resLoadPaths;
 
-            public Resolver(AssemblyTypeChecker parent, string[] diskLoadPaths, ResPath[] resLoadPaths)
+            public Resolver(AssemblyTypeChecker parent, string[] diskLoadPaths, ResourcePath[] resLoadPaths)
             {
                 _parent = parent;
                 _diskLoadPaths = diskLoadPaths;

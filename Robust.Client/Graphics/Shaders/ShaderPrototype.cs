@@ -102,7 +102,7 @@ namespace Robust.Client.Graphics
         }
 
         [DataField("kind", readOnly: true, required: true)] private string _rawKind = default!;
-        [DataField("path", readOnly: true)] private ResPath path;
+        [DataField("path", readOnly: true)] private ResourcePath? path;
         [DataField("params", readOnly: true)] private Dictionary<string, string>? paramMapping;
         [DataField("light_mode", readOnly: true)] private string? rawMode;
         [DataField("blend_mode", readOnly: true)] private string? rawBlendMode;

@@ -192,7 +192,7 @@ namespace Robust.Server.GameObjects
             return Layers.Count - 1;
         }
 
-        public int AddLayerWithTexture(ResPath texture)
+        public int AddLayerWithTexture(ResourcePath texture)
         {
             return AddLayerWithTexture(texture.ToString());
         }
@@ -216,7 +216,7 @@ namespace Robust.Server.GameObjects
             return Layers.Count - 1;
         }
 
-        public int AddLayerWithState(string stateId, ResPath rsiPath)
+        public int AddLayerWithState(string stateId, ResourcePath rsiPath)
         {
             return AddLayerWithState(stateId, rsiPath.ToString());
         }
@@ -296,7 +296,7 @@ namespace Robust.Server.GameObjects
             Dirty();
         }
 
-        public void LayerSetTexture(int layer, ResPath texturePath)
+        public void LayerSetTexture(int layer, ResourcePath texturePath)
         {
             LayerSetTexture(layer, texturePath.ToString());
         }
@@ -335,7 +335,7 @@ namespace Robust.Server.GameObjects
             Dirty();
         }
 
-        public void LayerSetState(int layer, string stateId, ResPath rsiPath)
+        public void LayerSetState(int layer, string stateId, ResourcePath rsiPath)
         {
             LayerSetState(layer, stateId, rsiPath.ToString());
         }
@@ -355,7 +355,7 @@ namespace Robust.Server.GameObjects
             Dirty();
         }
 
-        public void LayerSetRSI(int layer, ResPath rsiPath)
+        public void LayerSetRSI(int layer, ResourcePath rsiPath)
         {
             LayerSetRSI(layer, rsiPath.ToString());
         }

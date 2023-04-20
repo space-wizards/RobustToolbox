@@ -164,7 +164,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             var lastAck = _firstTick ? GameTick.Zero : _timing.CurTick - 1;
             _firstTick = false;
 
-            var (entStates, deletions, _, __) = _pvs.GetAllEntityStates(null, lastAck, _timing.CurTick);
+            var (entStates, deletions, _) = _pvs.GetAllEntityStates(null, lastAck, _timing.CurTick);
             var playerStates = _playerMan.GetPlayerStates(lastAck);
             var state = new GameState(lastAck, _timing.CurTick, 0, entStates, playerStates, deletions);
 

@@ -22,8 +22,8 @@ namespace Robust.Server.GameStates
 
         ushort TransformNetId { get; set; }
 
-        Action<ICommonSession, GameTick, GameTick>? ClientAck { get; set; }
+        Action<ICommonSession, GameTick>? ClientAck { get; set; }
 
-        Action<ICommonSession, GameTick, GameTick, EntityUid?>? ClientRequestFull { get; set; }
+        Action<ICommonSession, GameTick, EntityUid?>? ClientRequestFull { get; set; }
     }
 }

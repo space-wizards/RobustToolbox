@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.97.1.1
+
+### Bugfixes
+
+* Fixed assembly paths being used having double //
+
+
 ## 0.97.1.0
 
 ### New features

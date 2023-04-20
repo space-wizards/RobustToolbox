@@ -22,7 +22,7 @@ public sealed class ResPathTest
     public string ExtensionTest(string input)
     {
         var resPathExt = new ResPath(input).Extension;
-        var resourceExt = new ResourcePath(input).Extension;
+        var resourceExt = new ResPath(input).Extension;
         Assert.That(resPathExt, Is.EqualTo(resourceExt),
             message: "Found discrepancy between ResPath and ResourcePath Extension");
         return resPathExt;
@@ -42,9 +42,6 @@ public sealed class ResPathTest
     public string FilenameTest(string input)
     {
         var resPathFilename = new ResPath(input).Filename;
-        var resourceFilename = new ResourcePath(input).Filename;
-        Assert.That(resPathFilename, Is.EqualTo(resourceFilename),
-            message: "Found discrepancy between ResPath and ResourcePath Extension");
         return resPathFilename;
     }
 
@@ -61,10 +58,7 @@ public sealed class ResPathTest
     public string FilenameWithoutExtension(string input)
     {
         var resPathFileNoExt = new ResPath(input).FilenameWithoutExtension;
-        var resourceFileNoExt = new ResourcePath(input).FilenameWithoutExtension;
-        Assert.That(resPathFileNoExt, Is.EqualTo(resourceFileNoExt),
-            message: "Found discrepancy between ResPath and ResourcePath FilenameWithoutExtension methods");
-        return resourceFileNoExt;
+        return resPathFileNoExt;
     }
 
     [Test]
@@ -74,12 +68,10 @@ public sealed class ResPathTest
     [TestCase(@"/foo/bar/", ExpectedResult = @"/foo")]
     [TestCase(@"/foo/bar/x", ExpectedResult = @"/foo/bar")]
     [TestCase(@"/foo/bar.txt", ExpectedResult = @"/foo")]
+    [TestCase(@"/bar.txt", ExpectedResult = @"/")]
     public string DirectoryTest(string path)
     {
         var resPathDirectory = new ResPath(path).Directory.ToString();
-        var resourceDirectory = new ResourcePath(path).Directory.ToString();
-        Assert.That(resPathDirectory, Is.EqualTo(resourceDirectory),
-            message: "Found discrepancy between ResPath and ResourcePath Directory methods");
         return resPathDirectory;
     }
 
@@ -105,6 +97,8 @@ public sealed class ResPathTest
     [TestCase("/a/b", "z", ExpectedResult = "/a/b/z")]
     [TestCase("/a/b", "/z", ExpectedResult = "/z")]
     [TestCase("/a/b", ".", ExpectedResult = "/a/b")]
+    [TestCase("/", "/a", ExpectedResult = "/a")]
+    [TestCase("/", "a", ExpectedResult = "/a")]
     public string CombineTest(string left, string right)
     {
         var pathDivRes = new ResPath(left) / new ResPath(right);
@@ -134,6 +128,7 @@ public sealed class ResPathTest
     [TestCase("/a/b/c", "/", ExpectedResult = "a/b/c")]
     [TestCase("/a", "/a", ExpectedResult = ".")]
     [TestCase("a/b", "a", ExpectedResult = "b")]
+    [TestCase("/bar/", "/", ExpectedResult = "bar")]
     [TestCase("/Textures/Weapons/laser.png", "/Textures/", ExpectedResult = "Weapons/laser.png")]
     public string RelativeToTest(string source, string baseDir)
     {

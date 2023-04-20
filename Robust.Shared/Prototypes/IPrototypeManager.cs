@@ -196,9 +196,9 @@ public interface IPrototypeManager
     /// <summary>
     /// Load prototypes from files in a directory, recursively.
     /// </summary>
-    void LoadDirectory(ResourcePath path, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
+    void LoadDirectory(ResPath path, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 
-    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path);
+    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path);
 
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 

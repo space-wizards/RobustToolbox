@@ -18,7 +18,7 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="FileNotFoundException">
         ///     Thrown if the file does not exist.
         /// </exception>
-        public static Stream OpenRead(this IWritableDirProvider provider, ResourcePath path)
+        public static Stream OpenRead(this IWritableDirProvider provider, ResPath path)
         {
             return provider.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
@@ -32,7 +32,7 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="FileNotFoundException">
         ///     Thrown if the file does not exist.
         /// </exception>
-        public static StreamReader OpenText(this IWritableDirProvider provider, ResourcePath path)
+        public static StreamReader OpenText(this IWritableDirProvider provider, ResPath path)
         {
             var stream = OpenRead(provider, path);
             return new StreamReader(stream, EncodingHelpers.UTF8);
@@ -44,7 +44,7 @@ namespace Robust.Shared.ContentPack
         /// <param name="provider">The writable directory provider</param>
         /// <param name="path">The path of the file to open.</param>
         /// <returns>A valid file stream.</returns>
-        public static Stream OpenWrite(this IWritableDirProvider provider, ResourcePath path)
+        public static Stream OpenWrite(this IWritableDirProvider provider, ResPath path)
         {
             return provider.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
         }
@@ -55,7 +55,7 @@ namespace Robust.Shared.ContentPack
         /// <param name="provider">The writable directory provider</param>
         /// <param name="path">The path of the file to open.</param>
         /// <returns>A valid file stream writer.</returns>
-        public static StreamWriter OpenWriteText(this IWritableDirProvider provider, ResourcePath path)
+        public static StreamWriter OpenWriteText(this IWritableDirProvider provider, ResPath path)
         {
             var stream = OpenWrite(provider, path);
             return new StreamWriter(stream, EncodingHelpers.UTF8);
@@ -68,7 +68,7 @@ namespace Robust.Shared.ContentPack
         /// <param name="provider">The writable directory provider</param>
         /// <param name="path">Path of file to append to.</param>
         /// <param name="content">String to append.</param>
-        public static void AppendAllText(this IWritableDirProvider provider, ResourcePath path, ReadOnlySpan<char> content)
+        public static void AppendAllText(this IWritableDirProvider provider, ResPath path, ReadOnlySpan<char> content)
         {
             using var stream = provider.Open(path, FileMode.Append, FileAccess.Write, FileShare.Read);
             using var writer = new StreamWriter(stream, EncodingHelpers.UTF8);
@@ -82,7 +82,7 @@ namespace Robust.Shared.ContentPack
         /// <param name="provider"></param>
         /// <param name="path">File to read.</param>
         /// <returns>String of the file contents</returns>
-        public static string ReadAllText(this IWritableDirProvider provider, ResourcePath path)
+        public static string ReadAllText(this IWritableDirProvider provider, ResPath path)
         {
             using var reader = provider.OpenText(path);
 
@@ -96,7 +96,7 @@ namespace Robust.Shared.ContentPack
         /// <param name="path">The path to read the contents from.</param>
         /// <param name="text">The content read from the path, or null if the path did not exist.</param>
         /// <returns>true if path was successfully read; otherwise, false.</returns>
-        public static bool TryReadAllText(this IWritableDirProvider provider, ResourcePath path, [NotNullWhen(true)] out string? text)
+        public static bool TryReadAllText(this IWritableDirProvider provider, ResPath path, [NotNullWhen(true)] out string? text)
         {
             try
             {
@@ -116,7 +116,7 @@ namespace Robust.Shared.ContentPack
         /// <param name="provider">The writable directory to look for the path in.</param>
         /// <param name="path">The path to read the contents from.</param>
         /// <returns>The contents of the path as a byte array.</returns>
-        public static byte[] ReadAllBytes(this IWritableDirProvider provider, ResourcePath path)
+        public static byte[] ReadAllBytes(this IWritableDirProvider provider, ResPath path)
         {
             using var stream = provider.OpenRead(path);
             using var memoryStream = new MemoryStream((int) stream.Length);
@@ -131,7 +131,7 @@ namespace Robust.Shared.ContentPack
         /// <param name="provider">The writable directory provider</param>
         /// <param name="path">Path of the file to write to.</param>
         /// <param name="content">String contents of the file.</param>
-        public static void WriteAllText(this IWritableDirProvider provider, ResourcePath path, ReadOnlySpan<char> content)
+        public static void WriteAllText(this IWritableDirProvider provider, ResPath path, ReadOnlySpan<char> content)
         {
             using var writer = provider.OpenWriteText(path);
 
@@ -145,7 +145,7 @@ namespace Robust.Shared.ContentPack
         /// <param name="provider">The writable directory provider</param>
         /// <param name="path">Path of the file to write to.</param>
         /// <param name="content">Bytes to write to the file.</param>
-        public static void WriteAllBytes(this IWritableDirProvider provider, ResourcePath path, ReadOnlySpan<byte> content)
+        public static void WriteAllBytes(this IWritableDirProvider provider, ResPath path, ReadOnlySpan<byte> content)
         {
             using var stream = provider.OpenWrite(path);
 

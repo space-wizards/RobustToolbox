@@ -23,14 +23,14 @@ namespace Robust.Shared.ContentPack
         /// <param name="relPath">Relative path from the root directory.</param>
         /// <param name="stream"></param>
         /// <returns>A stream of the file loaded into memory.</returns>
-        bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream);
+        bool TryGetFile(ResPath relPath, [NotNullWhen(true)] out Stream? stream);
 
         /// <summary>
         ///     Recursively finds all files in a directory and all sub directories.
         /// </summary>
         /// <param name="path">Directory to search inside of.</param>
         /// <returns>Enumeration of all relative file paths of the files found.</returns>
-        IEnumerable<ResourcePath> FindFiles(ResourcePath path);
+        IEnumerable<ResPath> FindFiles(ResPath path);
 
         /// <summary>
         ///     Recursively returns relative paths to resource files.
@@ -38,14 +38,15 @@ namespace Robust.Shared.ContentPack
         /// <returns>Enumeration of all relative file paths.</returns>
         IEnumerable<string> GetRelativeFilePaths();
 
-        IEnumerable<string> GetEntries(ResourcePath path)
+        IEnumerable<string> GetEntries(ResPath path)
         {
-            var countDirs = path == ResourcePath.Self ? 0 : path.EnumerateSegments().Count();
+            var countDirs = path == ResPath.Self ? 0 : path.CanonPath.Split('/').Count();
 
             var options = FindFiles(path).Select(c =>
             {
-                var segCount = c.EnumerateSegments().Count();
-                var newPath = c.EnumerateSegments().Skip(countDirs).First();
+                var segment = path.CanonPath.Split('/');
+                var segCount = segment.Count();
+                var newPath = segment.Skip(countDirs).First();
                 if (segCount > countDirs + 1)
                     newPath += "/";
 

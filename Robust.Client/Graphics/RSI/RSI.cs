@@ -27,7 +27,7 @@ namespace Robust.Client.Graphics
         ///     The original path of this RSI or null.
         /// </summary>
         [ViewVariables]
-        public ResourcePath? Path { get; }
+        public ResPath Path { get; }
 
         public State this[StateId key] => States[key];
 
@@ -46,7 +46,7 @@ namespace Robust.Client.Graphics
             return States.TryGetValue(stateId, out state);
         }
 
-        public RSI(Vector2i size, ResourcePath? path = null, int capacity = 0)
+        public RSI(Vector2i size, ResPath path = default, int capacity = 0)
         {
             Size = size;
             Path = path;

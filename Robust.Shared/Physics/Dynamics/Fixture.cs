@@ -73,6 +73,7 @@ namespace Robust.Shared.Physics.Dynamics
         [DataField("shape")]
         public IPhysShape Shape { get; private set; } = new PhysShapeAabb();
 
+        [Obsolete("Use other means to obtain the PhysicsComponent for the fixture.")]
         [ViewVariables]
         [field:NonSerialized]
         public PhysicsComponent Body { get; internal set; } = default!;

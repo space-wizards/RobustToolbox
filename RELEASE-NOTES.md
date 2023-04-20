@@ -54,6 +54,19 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.97.1.0
+
+### New features
+
+* FastNoiseLite is now netserializable.
+* PVS ack processing is now parallel and also improved grafana metrics for PVS.
+
+### Other
+
+* Add invalid broadphase check to EntityLookupSystem.
+* Made NetGraph logarithmic.
+
+
 ## 0.97.0.0
 
 ### Breaking changes

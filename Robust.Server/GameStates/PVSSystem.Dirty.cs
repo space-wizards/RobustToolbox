@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
@@ -41,7 +42,7 @@ namespace Robust.Server.GameStates
         private void OnEntityAdd(EntityUid e)
         {
             DebugTools.Assert(_currentIndex == _gameTiming.CurTick.Value % DirtyBufferSize ||
-                _gameTiming.GetType().Name == "IGameTimingProxy");// Look I have NFI how best to excuse this assert if the game timing isn't real (a Mock<IGameTiming>). 
+                _gameTiming.GetType().Name == "IGameTimingProxy");// Look I have NFI how best to excuse this assert if the game timing isn't real (a Mock<IGameTiming>).
             _addEntities[_currentIndex].Add(e);
         }
 
@@ -65,6 +66,38 @@ namespace Robust.Server.GameStates
             addEntities = _addEntities[index];
             dirtyEntities = _dirtyEntities[index];
             return true;
+        }
+
+        public void CleanupDirty(IEnumerable<IPlayerSession> sessions)
+        {
+            if (!CullingEnabled)
+            {
+                _seenAllEnts.Clear();
+                foreach (var player in sessions)
+                {
+                    _seenAllEnts.Add(player);
+                }
+            }
+
+            _currentIndex = ((int)_gameTiming.CurTick.Value + 1) % DirtyBufferSize;
+            _addEntities[_currentIndex].Clear();
+            _dirtyEntities[_currentIndex].Clear();
+
+            foreach (var collection in _pvsCollections)
+            {
+                collection.ClearDirty();
+            }
+        }
+
+        /// <summary>
+        ///     Marks an entity's current chunk as dirty.
+        /// </summary>
+        internal void MarkDirty(EntityUid uid)
+        {
+            var query = GetEntityQuery<TransformComponent>();
+            var xform = query.GetComponent(uid);
+            var coordinates = _transform.GetMoverCoordinates(xform, query);
+            _entityPvsCollection.MarkDirty(_entityPvsCollection.GetChunkIndex(coordinates));
         }
     }
 }

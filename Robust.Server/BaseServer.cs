@@ -658,6 +658,7 @@ namespace Robust.Server
 
         private void Input(FrameEventArgs args)
         {
+            using var _ = TickUsage.WithLabels("Inputs").NewTimer();
             _systemConsole.UpdateInput();
 
             _network.ProcessPackets();

@@ -55,9 +55,11 @@ namespace Robust.Shared.Containers
             if (!_containerList.Contains(contained))
                 return false;
 
-            var flags = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(contained).Flags;
-            DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0);
-
+#if DEBUG
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var flags = entMan.GetComponent<MetaDataComponent>(contained).Flags;
+            DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0, $"Entity has bad container flags. Ent: {entMan.ToPrettyString(contained)}. Container: {ID}, Owner: {entMan.ToPrettyString(Owner)}");
+#endif
             return true;
         }
 

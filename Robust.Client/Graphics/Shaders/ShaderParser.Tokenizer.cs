@@ -156,7 +156,7 @@ namespace Robust.Client.Graphics
             _currentParser.Take(); // Quote.
 
             var pathString = new string(pathParsing.ToArray());
-            var path = new ResourcePath(pathString);
+            var path = new ResPath(pathString);
             _includes.AddLast(path);
             using var stream = _resManager.ContentFileRead(path);
             using var reader = new StreamReader(stream, EncodingHelpers.UTF8);

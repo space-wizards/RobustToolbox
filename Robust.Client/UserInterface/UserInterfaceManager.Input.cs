@@ -107,6 +107,8 @@ internal partial class UserInterfaceManager
         {
             args.Handle();
         }
+
+        OnKeyBindDown?.Invoke(control);
     }
 
     public void KeyBindUp(BoundKeyEventArgs args)

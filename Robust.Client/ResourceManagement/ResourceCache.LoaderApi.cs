@@ -24,7 +24,7 @@ namespace Robust.Client.ResourceManagement
             {
             }
 
-            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
+            public bool TryGetFile(ResPath relPath, [NotNullWhen(true)] out Stream? stream)
             {
                 if (_api.TryOpen($"{_prefix}{relPath}", out stream))
                 {
@@ -35,14 +35,14 @@ namespace Robust.Client.ResourceManagement
                 return false;
             }
 
-            public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
+            public IEnumerable<ResPath> FindFiles(ResPath path)
             {
                 foreach (var relPath in _api.AllFiles)
                 {
                     if (!relPath.StartsWith(_prefix))
                         continue;
 
-                    var resP = new ResourcePath(relPath[_prefix.Length..]);
+                    var resP = new ResPath(relPath[_prefix.Length..]);
                     if (resP.TryRelativeTo(path, out _))
                     {
                         yield return resP;

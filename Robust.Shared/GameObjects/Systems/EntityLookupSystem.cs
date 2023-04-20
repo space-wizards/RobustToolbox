@@ -142,9 +142,9 @@ namespace Robust.Shared.GameObjects
                 if (childXform.Broadphase.Value.CanCollide && fixtureQuery.TryGetComponent(child.Value, out var fixtures))
                 {
                     if (map == null)
-                        physicsMapQuery.TryGetComponent(childXform.Broadphase.Value.MapUid, out map);
+                        physicsMapQuery.TryGetComponent(childXform.Broadphase.Value.PhysicsMap, out map);
 
-                    DebugTools.Assert(map == null || childXform.Broadphase.Value.MapUid == map.Owner);
+                    DebugTools.Assert(map == null || childXform.Broadphase.Value.PhysicsMap == map.Owner);
                     var tree = childXform.Broadphase.Value.Static ? component.StaticTree : component.DynamicTree;
                     foreach (var fixture in fixtures.Fixtures.Values)
                     {
@@ -285,7 +285,7 @@ namespace Robust.Shared.GameObjects
             var fixtures = Comp<FixturesComponent>(uid);
             if (old.CanCollide)
             {
-                TryComp(old.MapUid, out PhysicsMapComponent? physicsMap);
+                TryComp(old.PhysicsMap, out PhysicsMapComponent? physicsMap);
                 RemoveBroadTree(broadphase, fixtures, old.Static, physicsMap);
             }
             else
@@ -491,8 +491,8 @@ namespace Robust.Shared.GameObjects
             if (xform.Broadphase == null || !xform.Broadphase.Value.CanCollide)
                 return;
 
-            DebugTools.Assert(_netMan.IsClient || !xform.Broadphase.Value.MapUid.IsValid() || xform.Broadphase.Value.MapUid == oldMap);
-            xform.Broadphase = xform.Broadphase.Value with { MapUid = newMap };
+            DebugTools.Assert(_netMan.IsClient || !xform.Broadphase.Value.PhysicsMap.IsValid() || xform.Broadphase.Value.PhysicsMap == oldMap);
+            xform.Broadphase = xform.Broadphase.Value with { PhysicsMap = newMap };
 
             if (!fixturesQuery.TryGetComponent(uid, out var fixtures))
                 return;
@@ -535,7 +535,7 @@ namespace Robust.Shared.GameObjects
                 if (!xform.Broadphase.Value.IsValid())
                     return; // Entity is intentionally not on a broadphase (deferred updating?).
 
-                TryComp(xform.Broadphase.Value.MapUid, out oldPhysMap);
+                TryComp(xform.Broadphase.Value.PhysicsMap, out oldPhysMap);
 
                 if (!broadQuery.TryGetComponent(xform.Broadphase.Value.Uid, out oldBroadphase))
                 {
@@ -704,6 +704,13 @@ namespace Robust.Shared.GameObjects
             EntityQuery<FixturesComponent> fixturesQuery,
             bool recursive = true)
         {
+            if (xform.Broadphase != null && !xform.Broadphase.Value.IsValid())
+            {
+                // This entity was explicitly removed from lookup trees, possibly because it is in a container or has
+                // been detached by the PVS system. Do nothing.
+                return;
+            }
+
             if (!physicsQuery.TryGetComponent(uid, out var body) || !body.CanCollide)
             {
                 // TOOD optimize this. This function iterates UP through parents, while we are currently iterating down.
@@ -724,6 +731,8 @@ namespace Robust.Shared.GameObjects
             if (xform.ChildCount == 0 || !recursive)
                 return;
 
+            // TODO can this be removed?
+            // AFAIK the separate container check is redundant now that we check for an invalid broadphase at the beginning of this function.
             if (!contQuery.HasComponent(xform.Owner))
             {
                 while (childEnumerator.MoveNext(out var child))
@@ -756,7 +765,7 @@ namespace Robust.Shared.GameObjects
             var fixturesQuery = GetEntityQuery<FixturesComponent>();
 
             PhysicsMapComponent? physMap = null;
-            if (xform.Broadphase!.Value.MapUid is { Valid: true } map && !TryComp(map, out physMap))
+            if (xform.Broadphase!.Value.PhysicsMap is { Valid: true } map && !TryComp(map, out physMap))
             {
                 throw new InvalidOperationException(
                     $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
@@ -794,15 +803,15 @@ namespace Robust.Shared.GameObjects
                 broadUid = old.Uid;
             }
 
-            if (old.MapUid.IsValid() && physicsMap?.Owner != old.MapUid)
+            if (old.PhysicsMap.IsValid() && physicsMap?.Owner != old.PhysicsMap)
             {
-                if (!TryComp(old.MapUid, out physicsMap))
+                if (!TryComp(old.PhysicsMap, out physicsMap))
                     Logger.Error($"Entity {ToPrettyString(uid)} has missing physics map?");
             }
 
             if (old.CanCollide)
             {
-                DebugTools.Assert(old.MapUid == (physicsMap?.Owner ?? default));
+                DebugTools.Assert(old.PhysicsMap == (physicsMap?.Owner ?? default));
                 RemoveBroadTree(broadphase, fixturesQuery.GetComponent(uid), old.Static, physicsMap);
             }
             else if (old.Static)

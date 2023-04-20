@@ -744,13 +744,13 @@ namespace Robust.Shared.GameObjects
     /// <remarks>
     ///     A null value means that this entity is simply not on a broadphase (e.g., in null-space or in a container).
     ///     An invalid entity UID indicates that this entity has intentionally been removed from broadphases and should
-    ///     not automatically be re-added by movement events..
+    ///     not automatically be re-added by movement events.
     /// </remarks>
-    internal record struct BroadphaseData(EntityUid Uid, EntityUid MapUid, bool CanCollide, bool Static)
+    internal record struct BroadphaseData(EntityUid Uid, EntityUid PhysicsMap, bool CanCollide, bool Static)
     {
         public bool IsValid() => Uid.IsValid();
         public bool Valid => IsValid();
-        public readonly static BroadphaseData Invalid = default;
+        public static readonly BroadphaseData Invalid = default;
 
         // TODO include MapId if ever grids are allowed to enter null-space (leave PVS).
     }

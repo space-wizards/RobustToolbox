@@ -129,7 +129,7 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         options ??= DefaultLoadOptions;
 
-        var resPath = new ResourcePath(path).ToRootedPath();
+        var resPath = new ResPath(path).ToRootedPath();
 
         if (!TryGetReader(resPath, out var reader))
         {
@@ -199,7 +199,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
         var document = new YamlDocument(GetSaveData(uid).ToYaml());
 
-        var resPath = new ResourcePath(ymlPath).ToRootedPath();
+        var resPath = new ResPath(ymlPath).ToRootedPath();
         _resourceManager.UserData.CreateDir(resPath.Directory);
 
         using var writer = _resourceManager.UserData.OpenWriteText(resPath);
@@ -226,7 +226,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
     #region Loading
 
-    private bool TryGetReader(ResourcePath resPath, [NotNullWhen(true)] out TextReader? reader)
+    private bool TryGetReader(ResPath resPath, [NotNullWhen(true)] out TextReader? reader)
     {
         // try user
         if (!_resourceManager.UserData.Exists(resPath))
@@ -743,10 +743,22 @@ public sealed class MapLoaderSystem : EntitySystem
     private void StartupEntity(EntityUid uid, MetaDataComponent metadata, MapData data)
     {
         ResetNetTicks(uid, metadata, data.EntitiesToDeserialize[uid]);
+
+        var isPaused = data is { MapIsPaused: true, MapIsPostInit: false };
+        _meta.SetEntityPaused(uid, isPaused, metadata);
+
         // TODO: Apply map transforms if root node.
         _serverEntityManager.FinishEntityInitialization(uid, metadata);
         _serverEntityManager.FinishEntityStartup(uid);
-        MapInit(uid, metadata, data);
+
+        if (data.MapIsPostInit)
+        {
+            metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
+        }
+        else if (_mapManager.IsMapInitialized(data.TargetMap))
+        {
+            _serverEntityManager.RunMapInit(uid, metadata);
+        }
     }
 
     private void ResetNetTicks(EntityUid entity, MetaDataComponent metadata, MappingDataNode data)
@@ -780,28 +792,6 @@ public sealed class MapLoaderSystem : EntitySystem
             // This component is not modified by the map file,
             // so the client will have the same data after instantiating it from prototype ID.
             component.ClearTicks();
-        }
-    }
-
-    private void MapInit(EntityUid uid, MetaDataComponent metadata, MapData data)
-    {
-        var isPaused = data.MapIsPaused;
-
-        if (data.MapIsPostInit)
-        {
-            metadata.EntityLifeStage = EntityLifeStage.MapInitialized;
-        }
-        else if (_mapManager.IsMapInitialized(data.TargetMap))
-        {
-            EntityManager.RunMapInit(uid, metadata);
-
-            if (isPaused)
-                _meta.SetEntityPaused(uid, true, metadata);
-
-        }
-        else if (isPaused)
-        {
-            _meta.SetEntityPaused(uid, true, metadata);
         }
     }
 

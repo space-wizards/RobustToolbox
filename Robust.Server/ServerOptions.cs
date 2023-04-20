@@ -29,12 +29,12 @@ namespace Robust.Server
         /// <summary>
         ///     Directory to load all assemblies from.
         /// </summary>
-        public ResourcePath AssemblyDirectory { get; init; } = new(@"/Assemblies/");
+        public ResPath AssemblyDirectory { get; init; } = new(@"/Assemblies");
 
         /// <summary>
         ///     Directory to load all prototypes from.
         /// </summary>
-        public ResourcePath PrototypeDirectory { get; init; } = new(@"/Prototypes/");
+        public ResPath PrototypeDirectory { get; init; } = new(@"/Prototypes");
 
         /// <summary>
         ///     Whether to disable mounting the "Resources/" folder on FULL_RELEASE.

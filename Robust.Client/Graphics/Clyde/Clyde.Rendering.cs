@@ -891,6 +891,9 @@ namespace Robust.Client.Graphics.Clyde
                     case ShaderBlendMode.None:
                         GL.BlendFunc(BlendingFactor.One, BlendingFactor.Zero);
                         break;
+                    case ShaderBlendMode.Normal:
+                        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                        break;
                 }
         }
 

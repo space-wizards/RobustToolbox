@@ -24,6 +24,7 @@
 // VERSION: 1.0.1
 // https://github.com/Auburn/FastNoise
 
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Noise;
@@ -35,7 +36,7 @@ using System.Runtime.CompilerServices;
 using FNLfloat = System.Single;
 //using FNLfloat = System.Double;
 
-[DataDefinition]
+[DataDefinition, Serializable, NetSerializable]
 public sealed class FastNoiseLite
 {
     private const short INLINE = 256; // MethodImplOptions.AggressiveInlining;

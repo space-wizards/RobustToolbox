@@ -468,7 +468,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            using var writer = _res.UserData.OpenWriteText(new ResourcePath("/guidump.txt"));
+            using var writer = _res.UserData.OpenWriteText(new ResPath("/guidump.txt"));
 
             foreach (var root in _ui.AllRoots)
             {
@@ -674,7 +674,7 @@ namespace Robust.Client.Console.Commands
                         ? StringComparer.Ordinal
                         : StringComparer.OrdinalIgnoreCase;
 
-                    var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResourcePath>>(stringComparer);
+                    var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResPath>>(stringComparer);
 
                     var taskManager = _taskManager;
 
@@ -688,7 +688,7 @@ namespace Robust.Client.Console.Commands
                             throw new NotImplementedException();
                         }
 
-                        reversePathResolution.GetOrAdd(fullPath, _ => new HashSet<ResourcePath>()).Add(path);
+                        reversePathResolution.GetOrAdd(fullPath, _ => new HashSet<ResPath>()).Add(path);
 
                         var dir = Path.GetDirectoryName(fullPath)!;
                         var fileName = Path.GetFileName(fullPath);
@@ -702,7 +702,7 @@ namespace Robust.Client.Console.Commands
                                 throw new NotImplementedException();
                             }
 
-                            reversePathResolution.GetOrAdd(incFullPath, _ => new HashSet<ResourcePath>()).Add(path);
+                            reversePathResolution.GetOrAdd(incFullPath, _ => new HashSet<ResPath>()).Add(path);
 
                             var incDir = Path.GetDirectoryName(incFullPath)!;
                             var incFileName = Path.GetFileName(incFullPath);

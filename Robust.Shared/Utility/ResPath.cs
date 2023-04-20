@@ -277,6 +277,12 @@ public readonly struct ResPath : IEquatable<ResPath>
             return new ResPath("/" + right.CanonPath);
         }
 
+        // Avoid double separators
+        if (left.CanonPath.EndsWith("/"))
+        {
+            return new ResPath(left.CanonPath + right.CanonPath);
+        }
+
         return new ResPath(left.CanonPath + "/" + right.CanonPath);
     }
 

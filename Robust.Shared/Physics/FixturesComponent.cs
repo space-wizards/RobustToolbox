@@ -40,22 +40,5 @@ namespace Robust.Shared.Physics
         }
 
         internal List<Fixture>? SerializedFixtureData;
-
-        public Box2 GetAABB(Transform transform)
-        {
-            var bounds = new Box2(transform.Position, transform.Position);
-            // TODO cache this to speed up entity lookups & tree updating
-            foreach (var fixture in Fixtures.Values)
-            {
-                for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                {
-                    // TODO don't transform each fixture, just transform the final AABB
-                    var boundy = fixture.Shape.ComputeAABB(transform, i);
-                    bounds = bounds.Union(boundy);
-                }
-            }
-
-            return bounds;
-        }
     }
 }

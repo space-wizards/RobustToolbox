@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `ILookupWorldBox2Component` has been removed. If an entity does not have fixtures/physics a `WorldAABBEvent` will now be raised.
 
 ### New features
 
@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixes a concurrent hashset modification exception in PVS
 
 ### Other
 

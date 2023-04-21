@@ -23,7 +23,7 @@ internal sealed partial class PVSSystem
             return;
 
         sessionData.LastReceivedAck = ackedTick;
-        _pendingAcks.Add(session);
+        PendingAcks.Add(session);
     }
 
     /// <summary>
@@ -32,8 +32,8 @@ internal sealed partial class PVSSystem
     internal void ProcessQueuedAcks()
     {
         var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelManager.ParallelProcessCount};
-        Parallel.ForEach(_pendingAcks, opts, ProcessQueuedAck);
-        _pendingAcks.Clear();
+        Parallel.ForEach(PendingAcks, opts, ProcessQueuedAck);
+        PendingAcks.Clear();
     }
 
     /// <summary>

@@ -100,7 +100,7 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
     private readonly List<(uint, IChunkIndexLocation)> _chunkList = new(64);
-    private readonly HashSet<ICommonSession> _pendingAcks = new();
+    internal readonly HashSet<ICommonSession> PendingAcks = new();
 
     private ISawmill _sawmill = default!;
 

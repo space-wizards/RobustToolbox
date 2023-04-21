@@ -721,7 +721,7 @@ namespace Robust.Client.Placement
             }
             else
             {
-                sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
+                sc.AddLayer(new ResPath("/Textures/UserInterface/tilebuildoverlay.png"));
             }
             sc.NoRotation = noRot;
 
@@ -735,7 +735,7 @@ namespace Robust.Client.Placement
         private void PreparePlacementTile()
         {
             var sc = SetupPlacementOverlayEntity();
-            sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
+            sc.AddLayer(new ResPath("/Textures/UserInterface/tilebuildoverlay.png"));
 
             IsActive = true;
         }

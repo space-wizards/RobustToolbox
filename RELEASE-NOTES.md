@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.99.0.0
+
+### Breaking changes
+
+* Revert the reversion of the ResPath removal from 0.98.0.0
+
+### New features
+
+* StartCollideEvent, EndCollideEvent, and physics contacts now have the relevant EntityUids.
+
+### Bugfixes
+
+* Remove initialization code that forced transform and physics components first.
+
+
 ## 0.98.0.0
 
 ### Breaking changes

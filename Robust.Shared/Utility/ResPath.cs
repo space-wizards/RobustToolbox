@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using JetBrains.Annotations;
+using Robust.Shared.Collections;
 using Robust.Shared.Serialization;
 using ArgumentException = System.ArgumentException;
 
@@ -101,9 +103,12 @@ public readonly struct ResPath : IEquatable<ResPath>
             var ind = CanonPath.Length > 1 && CanonPath[^1] == '/'
                 ? CanonPath[..^1].LastIndexOf('/')
                 : CanonPath.LastIndexOf('/');
-            return ind != -1
-                ? new ResPath(CanonPath[..ind])
-                : Self;
+            return ind switch
+            {
+                -1 => Self,
+                0 => new ResPath(CanonPath[..1]),
+                _ => new ResPath(CanonPath[..ind])
+            };
         }
     }
 
@@ -267,6 +272,17 @@ public readonly struct ResPath : IEquatable<ResPath>
             return left;
         }
 
+        if (left == Root)
+        {
+            return new ResPath("/" + right.CanonPath);
+        }
+
+        // Avoid double separators
+        if (left.CanonPath.EndsWith("/"))
+        {
+            return new ResPath(left.CanonPath + right.CanonPath);
+        }
+
         return new ResPath(left.CanonPath + "/" + right.CanonPath);
     }
 
@@ -348,7 +364,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
     /// <seealso cref="IsRelative" />
     /// <seealso cref="ToRootedPath"/>
-    public bool IsRooted => CanonPath[0] == '/';
+    public bool IsRooted => CanonPath.Length > 0 && CanonPath[0] == '/';
 
     /// <summary>
     ///     Returns true if the path is not rooted.
@@ -364,8 +380,8 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
     /// <example>
     ///     <code>
-    ///     var path1 = new ResourcePath("/a/b/c");
-    ///     var path2 = new ResourcePath("/a");
+    ///     var path1 = new ResPath("/a/b/c");
+    ///     var path2 = new ResPath("/a");
     ///     Console.WriteLine(path1.RelativeTo(path2)); // prints "b/c".
     ///     </code>
     /// </example>
@@ -398,7 +414,7 @@ public readonly struct ResPath : IEquatable<ResPath>
         if (CanonPath.StartsWith(basePath.CanonPath))
         {
             var x = CanonPath[basePath.CanonPath.Length..]
-                .TrimStart('/');
+                .Trim('/');
             relative = new ResPath(x);
             return true;
         }
@@ -473,5 +489,84 @@ public readonly struct ResPath : IEquatable<ResPath>
         return newSeparator == "/"
             ? CanonPath
             : CanonPath.Replace("/", newSeparator);
+    }
+}
+
+public static class ResPathUtil
+{
+    /// <summary>
+    ///     Returns cleaned version of the resource path, removing <c>..</c>.
+    /// </summary>
+    /// <remarks>
+    ///     If <c>..</c> appears at the base of a path, it is left alone. If it appears at root level (like <c>/..</c>) it is removed entirely.
+    /// </remarks>
+    public static ResPath Clean(this ResPath path)
+    {
+        if (path.CanonPath == "")
+        {
+            return ResPath.Empty;
+        }
+
+        var segments = new ValueList<string>();
+        if (path.IsRooted)
+        {
+            segments.Add("/");
+        }
+
+        foreach (var segment in path.CanonPath.Split(ResPath.Separator))
+        {
+            // Skip pointless segments
+            if (segment == "." || segment == "")
+            {
+                continue;
+            }
+
+            // If you have ".." cleaning that up doesn't remove that.
+            if (segment == ".." && segments.Count > 0)
+            {
+                if (segments is ["/"])
+                {
+                    continue;
+                }
+
+                var pos = segments.Count - 1;
+                if (segments[pos] != "..")
+                {
+                    segments.RemoveAt(pos);
+                    continue;
+                }
+            }
+
+            segments.Add(segment);
+        }
+
+        // Build Canon path from segments with StringBuilder
+        var sb = new StringBuilder(path.CanonPath.Length);
+        var start = path.IsRooted && segments.Count > 1 ? 1 : 0;
+        for (var i = 0; i < segments.Count; i++)
+        {
+            if (i > start)
+            {
+                sb.Append('/');
+            }
+
+            sb.Append(segments[i]);
+        }
+
+        return sb.Length == 0
+            ? ResPath.Self
+            : new ResPath(sb.ToString());
+    }
+
+    /// <summary>
+    ///   Enumerates segments skipping over first element in
+    /// </summary>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    public static string[] EnumerateSegments(this ResPath path)
+    {
+        return path.IsRooted
+            ? path.CanonPath[1..].Split(ResPath.Separator)
+            : path.CanonPath.Split(ResPath.Separator);
     }
 }

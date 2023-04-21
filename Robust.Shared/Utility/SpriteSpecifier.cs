@@ -6,8 +6,8 @@ namespace Robust.Shared.Utility
 {
     // >tfw you're not using Rust and you don't have easy sum types.
     // pub enum SpriteSpecifier {
-    //      Rsi { path: ResourcePath, state: String, },
-    //      Texture(ResourcePath),
+    //      Rsi { path: ResPath, state: String, },
+    //      Texture(ResPath),
     // }
     /// <summary>
     ///     Is a reference to EITHER an RSI + RSI State, OR a bare texture path.
@@ -15,7 +15,7 @@ namespace Robust.Shared.Utility
     [Serializable, NetSerializable]
     public abstract class SpriteSpecifier
     {
-        public static readonly SpriteSpecifier Invalid = new Texture(new ResourcePath("."));
+        public static readonly SpriteSpecifier Invalid = new Texture(ResPath.Self);
 
         public static SpriteSpecifier FromYaml(YamlNode node)
         {
@@ -33,7 +33,7 @@ namespace Robust.Shared.Utility
         [Serializable, NetSerializable]
         public sealed class Rsi : SpriteSpecifier
         {
-            public ResourcePath RsiPath { get; internal set; }
+            public ResPath RsiPath { get; internal set; }
             public string RsiState { get; internal set; }
 
             // For serialization
@@ -43,7 +43,7 @@ namespace Robust.Shared.Utility
                 RsiState = default!;
             }
 
-            public Rsi(ResourcePath rsiPath, string rsiState)
+            public Rsi(ResPath rsiPath, string rsiState)
             {
                 RsiPath = rsiPath;
                 RsiState = rsiState;
@@ -63,7 +63,7 @@ namespace Robust.Shared.Utility
         [Serializable, NetSerializable]
         public sealed class Texture : SpriteSpecifier
         {
-            public ResourcePath TexturePath { get; internal set; }
+            public ResPath TexturePath { get; internal set; }
 
             // For serialization
             private Texture()
@@ -71,7 +71,7 @@ namespace Robust.Shared.Utility
                 TexturePath = default!;
             }
 
-            public Texture(ResourcePath texturePath)
+            public Texture(ResPath texturePath)
             {
                 TexturePath = texturePath;
             }

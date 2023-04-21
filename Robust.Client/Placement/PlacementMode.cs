@@ -196,12 +196,12 @@ namespace Robust.Client.Placement
 
         public TextureResource GetSprite(string key)
         {
-            return pManager.ResourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/") / key);
+            return pManager.ResourceCache.GetResource<TextureResource>(new ResPath("/Textures/") / key);
         }
 
         public bool TryGetSprite(string key, [NotNullWhen(true)] out TextureResource? sprite)
         {
-            return pManager.ResourceCache.TryGetResource(new ResourcePath(@"/Textures/") / key, out sprite);
+            return pManager.ResourceCache.TryGetResource(new ResPath(@"/Textures/") / key, out sprite);
         }
 
         /// <summary>

@@ -113,7 +113,7 @@ namespace Robust.Client.Input
 
             Contexts.ContextChanged += OnContextChanged;
 
-            var path = new ResourcePath(KeybindsPath);
+            var path = new ResPath(KeybindsPath);
             if (_resourceMan.UserData.Exists(path))
             {
                 LoadKeyFile(path, true);
@@ -154,7 +154,7 @@ namespace Robust.Client.Input
             mapping.Add("binds", _serialization.WriteValue(modifiedBindings, notNullableOverride: true));
             mapping.Add("leaveEmpty", _serialization.WriteValue(leaveEmpty, notNullableOverride: true));
 
-            var path = new ResourcePath(KeybindsPath);
+            var path = new ResPath(KeybindsPath);
             using var writer = _resourceMan.UserData.OpenWriteText(path);
             var stream = new YamlStream {new(mapping.ToYaml())};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
@@ -474,7 +474,7 @@ namespace Robust.Client.Input
             return true;
         }
 
-        private void LoadKeyFile(ResourcePath file, bool userData)
+        private void LoadKeyFile(ResPath file, bool userData)
         {
             TextReader reader;
             if (userData)

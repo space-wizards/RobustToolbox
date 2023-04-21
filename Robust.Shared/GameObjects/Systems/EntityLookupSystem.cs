@@ -1,4 +1,6 @@
-using Robust.Shared.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -13,9 +15,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.GameObjects
 {
@@ -52,6 +51,20 @@ namespace Robust.Shared.GameObjects
         Uncontained = Dynamic | Static | Sundries,
 
         StaticSundries = Static | Sundries,
+    }
+
+    /// <summary>
+    /// Raised on entities to try to get its WorldAABB.
+    /// </summary>
+    [ByRefEvent]
+    public record struct WorldAABBEvent
+    {
+        /// <summary>
+        /// If the event is not handled then <see cref="FixturesComponent"/> will be used.
+        /// </summary>
+        public bool Handled;
+
+        public Box2 AABB;
     }
 
     public sealed partial class EntityLookupSystem : EntitySystem
@@ -706,7 +719,7 @@ namespace Robust.Shared.GameObjects
                 // TODO BROADPHASE PARENTING this just assumes local = world
                 var relativeRotation = rotation - broadphaseXform.LocalRotation;
 
-                var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation);
+                var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation, fixturesQuery);
                 AddOrUpdateSundriesTree(broadUid, broadphase, uid, xform, body?.BodyType == BodyType.Static, aabb);
             }
             else
@@ -919,15 +932,39 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle)
         {
-            if (TryComp<ILookupWorldBox2Component>(uid, out var worldLookup))
+            return GetAABBNoContainer(uid, position, angle, GetEntityQuery<FixturesComponent>());
+        }
+
+        /// <summary>
+        /// Get the AABB of an entity with the supplied position and angle without considering containers.
+        /// </summary>
+        public Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle, EntityQuery<FixturesComponent> fixturesQuery)
+        {
+            var ev = new WorldAABBEvent()
+            {
+                AABB = new Box2(position, position),
+            };
+
+            if (!ev.Handled && fixturesQuery.TryGetComponent(uid, out var fixtures))
             {
                 var transform = new Transform(position, angle);
-                return worldLookup.GetAABB(transform);
+
+                var bounds = new Box2(transform.Position, transform.Position);
+                // TODO cache this to speed up entity lookups & tree updating
+                foreach (var fixture in fixtures.Fixtures.Values)
+                {
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        // TODO don't transform each fixture, just transform the final AABB
+                        var boundy = fixture.Shape.ComputeAABB(transform, i);
+                        bounds = bounds.Union(boundy);
+                    }
+                }
+
+                return bounds;
             }
-            else
-            {
-                return new Box2(position, position);
-            }
+
+            return ev.AABB;
         }
 
         public Box2 GetWorldAABB(EntityUid uid, TransformComponent? xform = null)

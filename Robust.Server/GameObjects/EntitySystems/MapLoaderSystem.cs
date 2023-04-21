@@ -129,7 +129,7 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         options ??= DefaultLoadOptions;
 
-        var resPath = new ResourcePath(path).ToRootedPath();
+        var resPath = new ResPath(path).ToRootedPath();
 
         if (!TryGetReader(resPath, out var reader))
         {
@@ -199,7 +199,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
         var document = new YamlDocument(GetSaveData(uid).ToYaml());
 
-        var resPath = new ResourcePath(ymlPath).ToRootedPath();
+        var resPath = new ResPath(ymlPath).ToRootedPath();
         _resourceManager.UserData.CreateDir(resPath.Directory);
 
         using var writer = _resourceManager.UserData.OpenWriteText(resPath);
@@ -226,7 +226,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
     #region Loading
 
-    private bool TryGetReader(ResourcePath resPath, [NotNullWhen(true)] out TextReader? reader)
+    private bool TryGetReader(ResPath resPath, [NotNullWhen(true)] out TextReader? reader)
     {
         // try user
         if (!_resourceManager.UserData.Exists(resPath))

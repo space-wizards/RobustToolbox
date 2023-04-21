@@ -940,12 +940,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle, EntityQuery<FixturesComponent> fixturesQuery)
         {
-            var ev = new WorldAABBEvent()
-            {
-                AABB = new Box2(position, position),
-            };
-
-            if (!ev.Handled && fixturesQuery.TryGetComponent(uid, out var fixtures))
+            if (fixturesQuery.TryGetComponent(uid, out var fixtures))
             {
                 var transform = new Transform(position, angle);
 
@@ -964,6 +959,12 @@ namespace Robust.Shared.GameObjects
                 return bounds;
             }
 
+            var ev = new WorldAABBEvent()
+            {
+                AABB = new Box2(position, position),
+            };
+
+            RaiseLocalEvent(uid, ref ev);
             return ev.AABB;
         }
 

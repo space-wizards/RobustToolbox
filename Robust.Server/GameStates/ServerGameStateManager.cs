@@ -357,7 +357,13 @@ namespace Robust.Server.GameStates
             // large that it (or part of it) consistently gets dropped. When we send reliably, we immediately update the
             // ack so that the next state will not also be huge.
             if (stateUpdateMessage.ShouldSendReliably())
-                ClientAck?.Invoke(session, _gameTiming.CurTick);
+            {
+                sessionData.LastReceivedAck = _gameTiming.CurTick;
+                lock (_pvs.PendingAcks)
+                {
+                    _pvs.PendingAcks.Add(session);
+                }
+            }
 
             // Send PVS detach / left-view messages separately and reliably. This is not resistant to packet loss, but
             // unlike game state it doesn't really matter. This also significantly reduces the size of game state

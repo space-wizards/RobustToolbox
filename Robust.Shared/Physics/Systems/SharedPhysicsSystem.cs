@@ -79,7 +79,7 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<PhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
-            SubscribeLocalEvent<PhysicsComponent, ComponentRemove>(OnPhysicsRemove);
+            SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
             InitializeIsland();
@@ -90,10 +90,13 @@ namespace Robust.Shared.Physics.Systems
             _configManager.OnValueChanged(CVars.TargetMinimumTickrate, UpdateSubsteps, true);
         }
 
-        private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
+        private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
         {
             SetCanCollide(uid, false, false, body: component);
             DebugTools.Assert(!component.Awake);
+
+            if (LifeStage(uid) <= EntityLifeStage.MapInitialized)
+                RemComp<FixturesComponent>(uid);
         }
 
         private void OnCollisionChange(ref CollisionChangeEvent ev)

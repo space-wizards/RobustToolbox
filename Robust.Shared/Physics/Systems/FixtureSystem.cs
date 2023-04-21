@@ -29,8 +29,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<FixturesComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
-
-            SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
         }
 
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
@@ -194,12 +192,6 @@ namespace Robust.Shared.Physics.Systems
         }
 
         #endregion
-
-        private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
-        {
-            if (MetaData(uid).EntityLifeStage > EntityLifeStage.MapInitialized) return;
-            EntityManager.RemoveComponent<FixturesComponent>(uid);
-        }
 
         internal void OnPhysicsInit(EntityUid uid, FixturesComponent component, PhysicsComponent? body = null)
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -21,7 +22,7 @@ namespace Robust.UnitTesting.Shared.Physics
             verts[2] = new Vector2(-1f, 1f);
             verts[3] = new Vector2(-1f, -1f);
 
-            poly.SetVertices(verts);
+            poly.Set(verts, 4);
 
             Assert.That(poly.Normals.Length, Is.EqualTo(4));
 

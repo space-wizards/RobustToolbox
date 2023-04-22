@@ -193,7 +193,7 @@ namespace Robust.Shared.Physics.Systems
                     //
                     // The rest of the derivation is handled by computer algebra.
 
-                    var count = poly.Vertices.Length;
+                    var count = poly.VertexCount;
                     DebugTools.Assert(count >= 3);
 
                     Vector2 center = new(0.0f, 0.0f);

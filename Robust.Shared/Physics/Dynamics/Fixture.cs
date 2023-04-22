@@ -145,9 +145,8 @@ namespace Robust.Shared.Physics.Dynamics
                 verts[1] = bounds.BottomRight;
                 verts[2] = bounds.TopRight;
                 verts[3] = bounds.TopLeft;
-                poly.SetVertices(verts);
+                poly.Set(verts, 4);
                 Shape = poly;
-                DebugTools.Assert(Vertices.IsCounterClockwise(poly.Vertices));
             }
         }
 

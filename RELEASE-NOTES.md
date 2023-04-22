@@ -54,6 +54,19 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.101.0.0
+
+### Breaking changes
+
+* Port Quickhull from Box2D and replace GiftWrapping.
+* Removed a lot of unused physics code.
+
+### Bugfixes
+
+* Fix damping for mouse joint.
+* Fix Distance outputs for overlapping circles.
+
+
 ## 0.100.0.0
 
 ### Breaking changes

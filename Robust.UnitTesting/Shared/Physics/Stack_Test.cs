@@ -100,7 +100,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
 
                     physSystem.SetBodyType(boxUid, BodyType.Dynamic, manager: manager, body: box);
                     var poly = new PolygonShape(0.001f);
-                    poly.SetVertices(new List<Vector2>()
+                    poly.Set(new List<Vector2>()
                     {
                         new(0.5f, -0.5f),
                         new(0.5f, 0.5f),

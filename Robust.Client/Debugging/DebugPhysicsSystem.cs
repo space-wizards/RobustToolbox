@@ -467,7 +467,7 @@ namespace Robust.Client.Debugging
 
                     break;
                 case PolygonShape poly:
-                    Span<Vector2> verts = stackalloc Vector2[poly.Vertices.Length];
+                    Span<Vector2> verts = stackalloc Vector2[poly.VertexCount];
 
                     for (var i = 0; i < verts.Length; i++)
                     {

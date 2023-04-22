@@ -23,148 +23,147 @@
 using System;
 using Robust.Shared.Maths;
 
-namespace Robust.Shared.Physics.Collision
+namespace Robust.Shared.Physics.Collision;
+
+/// <summary>
+///     Handles several collision features: Generating contact manifolds, testing shape overlap,
+/// </summary>
+internal sealed partial class CollisionManager : IManifoldManager
 {
+    /*
+     * Farseer had this as a static class with a ThreadStatic DistanceInput
+     */
+
     /// <summary>
-    ///     Handles several collision features: Generating contact manifolds, testing shape overlap,
+    ///     Used for debugging contact points.
     /// </summary>
-    internal sealed partial class CollisionManager : IManifoldManager
+    /// <param name="state1"></param>
+    /// <param name="state2"></param>
+    /// <param name="manifold1"></param>
+    /// <param name="manifold2"></param>
+    public static void GetPointStates(ref PointState[] state1, ref PointState[] state2, in Manifold manifold1,
+        in Manifold manifold2)
     {
-        /*
-         * Farseer had this as a static class with a ThreadStatic DistanceInput
-         */
-
-        /// <summary>
-        ///     Used for debugging contact points.
-        /// </summary>
-        /// <param name="state1"></param>
-        /// <param name="state2"></param>
-        /// <param name="manifold1"></param>
-        /// <param name="manifold2"></param>
-        public static void GetPointStates(ref PointState[] state1, ref PointState[] state2, in Manifold manifold1,
-            in Manifold manifold2)
+        // Detect persists and removes.
+        for (int i = 0; i < manifold1.PointCount; ++i)
         {
-            // Detect persists and removes.
-            for (int i = 0; i < manifold1.PointCount; ++i)
+            ContactID id = manifold1.Points[i].Id;
+
+            state1[i] = PointState.Remove;
+
+            for (int j = 0; j < manifold2.PointCount; ++j)
             {
-                ContactID id = manifold1.Points[i].Id;
-
-                state1[i] = PointState.Remove;
-
-                for (int j = 0; j < manifold2.PointCount; ++j)
+                if (manifold2.Points[j].Id.Key == id.Key)
                 {
-                    if (manifold2.Points[j].Id.Key == id.Key)
-                    {
-                        state1[i] = PointState.Persist;
-                        break;
-                    }
-                }
-            }
-
-            // Detect persists and adds.
-            for (int i = 0; i < manifold2.PointCount; ++i)
-            {
-                ContactID id = manifold2.Points[i].Id;
-
-                state2[i] = PointState.Add;
-
-                for (int j = 0; j < manifold1.PointCount; ++j)
-                {
-                    if (manifold1.Points[j].Id.Key == id.Key)
-                    {
-                        state2[i] = PointState.Persist;
-                        break;
-                    }
+                    state1[i] = PointState.Persist;
+                    break;
                 }
             }
         }
 
-        /// <summary>
-        ///     Clipping for contact manifolds.
-        /// </summary>
-        /// <param name="vOut">The v out.</param>
-        /// <param name="vIn">The v in.</param>
-        /// <param name="normal">The normal.</param>
-        /// <param name="offset">The offset.</param>
-        /// <param name="vertexIndexA">The vertex index A.</param>
-        /// <returns></returns>
-        private static int ClipSegmentToLine(Span<ClipVertex> vOut, Span<ClipVertex> vIn, Vector2 normal,
-            float offset, int vertexIndexA)
+        // Detect persists and adds.
+        for (int i = 0; i < manifold2.PointCount; ++i)
         {
-            ClipVertex v0 = vIn[0];
-            ClipVertex v1 = vIn[1];
+            ContactID id = manifold2.Points[i].Id;
 
-            // Start with no output points
-            int numOut = 0;
+            state2[i] = PointState.Add;
 
-            // Calculate the distance of end points to the line
-            float distance0 = normal.X * v0.V.X + normal.Y * v0.V.Y - offset;
-            float distance1 = normal.X * v1.V.X + normal.Y * v1.V.Y - offset;
-
-            // If the points are behind the plane
-            if (distance0 <= 0.0f)
-                vOut[numOut++] = v0;
-
-            if (distance1 <= 0.0f)
-                vOut[numOut++] = v1;
-
-            // If the points are on different sides of the plane
-            if (distance0 * distance1 < 0.0f)
+            for (int j = 0; j < manifold1.PointCount; ++j)
             {
-                // Find intersection point of edge and plane
-                var interp = distance0 / (distance0 - distance1);
-
-                ref var cv = ref vOut[numOut];
-
-                cv.V.X = v0.V.X + interp * (v1.V.X - v0.V.X);
-                cv.V.Y = v0.V.Y + interp * (v1.V.Y - v0.V.Y);
-
-                // VertexA is hitting edgeB.
-                cv.ID.Features.IndexA = (byte) vertexIndexA;
-                cv.ID.Features.IndexB = v0.ID.Features.IndexB;
-                cv.ID.Features.TypeA = (byte) ContactFeatureType.Vertex;
-                cv.ID.Features.TypeB = (byte) ContactFeatureType.Face;
-
-                ++numOut;
+                if (manifold1.Points[j].Id.Key == id.Key)
+                {
+                    state2[i] = PointState.Persist;
+                    break;
+                }
             }
-
-            return numOut;
         }
     }
 
     /// <summary>
-    /// This structure is used to keep track of the best separating axis.
+    ///     Clipping for contact manifolds.
     /// </summary>
-    public struct EPAxis
+    /// <param name="vOut">The v out.</param>
+    /// <param name="vIn">The v in.</param>
+    /// <param name="normal">The normal.</param>
+    /// <param name="offset">The offset.</param>
+    /// <param name="vertexIndexA">The vertex index A.</param>
+    /// <returns></returns>
+    private static int ClipSegmentToLine(Span<ClipVertex> vOut, Span<ClipVertex> vIn, Vector2 normal,
+        float offset, int vertexIndexA)
     {
-        public int Index;
-        public float Separation;
-        public EPAxisType Type;
-        public Vector2 Normal;
+        ClipVertex v0 = vIn[0];
+        ClipVertex v1 = vIn[1];
+
+        // Start with no output points
+        int numOut = 0;
+
+        // Calculate the distance of end points to the line
+        float distance0 = normal.X * v0.V.X + normal.Y * v0.V.Y - offset;
+        float distance1 = normal.X * v1.V.X + normal.Y * v1.V.Y - offset;
+
+        // If the points are behind the plane
+        if (distance0 <= 0.0f)
+            vOut[numOut++] = v0;
+
+        if (distance1 <= 0.0f)
+            vOut[numOut++] = v1;
+
+        // If the points are on different sides of the plane
+        if (distance0 * distance1 < 0.0f)
+        {
+            // Find intersection point of edge and plane
+            var interp = distance0 / (distance0 - distance1);
+
+            ref var cv = ref vOut[numOut];
+
+            cv.V.X = v0.V.X + interp * (v1.V.X - v0.V.X);
+            cv.V.Y = v0.V.Y + interp * (v1.V.Y - v0.V.Y);
+
+            // VertexA is hitting edgeB.
+            cv.ID.Features.IndexA = (byte) vertexIndexA;
+            cv.ID.Features.IndexB = v0.ID.Features.IndexB;
+            cv.ID.Features.TypeA = (byte) ContactFeatureType.Vertex;
+            cv.ID.Features.TypeB = (byte) ContactFeatureType.Face;
+
+            ++numOut;
+        }
+
+        return numOut;
     }
+}
 
-    /// <summary>
-    /// Reference face used for clipping
-    /// </summary>
-    public struct ReferenceFace
-    {
-        public int i1, i2;
+/// <summary>
+/// This structure is used to keep track of the best separating axis.
+/// </summary>
+public struct EPAxis
+{
+    public int Index;
+    public float Separation;
+    public EPAxisType Type;
+    public Vector2 Normal;
+}
 
-        public Vector2 v1, v2;
+/// <summary>
+/// Reference face used for clipping
+/// </summary>
+public struct ReferenceFace
+{
+    public int i1, i2;
 
-        public Vector2 normal;
+    public Vector2 v1, v2;
 
-        public Vector2 sideNormal1;
-        public float sideOffset1;
+    public Vector2 normal;
 
-        public Vector2 sideNormal2;
-        public float sideOffset2;
-    }
+    public Vector2 sideNormal1;
+    public float sideOffset1;
 
-    public enum EPAxisType : byte
-    {
-        Unknown,
-        EdgeA,
-        EdgeB,
-    }
+    public Vector2 sideNormal2;
+    public float sideOffset2;
+}
+
+public enum EPAxisType : byte
+{
+    Unknown,
+    EdgeA,
+    EdgeB,
 }

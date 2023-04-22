@@ -25,245 +25,244 @@ using System.Runtime.InteropServices;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 
-namespace Robust.Shared.Physics.Collision
+namespace Robust.Shared.Physics.Collision;
+
+public enum ManifoldType : byte
 {
-    public enum ManifoldType : byte
-    {
-        Invalid = 0,
-        Circles,
-        FaceA,
-        FaceB,
-    }
+    Invalid = 0,
+    Circles,
+    FaceA,
+    FaceB,
+}
 
-    internal enum ContactFeatureType : byte
-    {
-        Vertex = 0,
-        Face = 1,
-    }
+internal enum ContactFeatureType : byte
+{
+    Vertex = 0,
+    Face = 1,
+}
 
+/// <summary>
+/// The features that intersect to form the contact point
+/// This must be 4 bytes or less.
+/// </summary>
+public struct ContactFeature
+{
+    /// <summary>
+    /// Feature index on ShapeA
+    /// </summary>
+    public byte IndexA;
+
+    /// <summary>
+    /// Feature index on ShapeB
+    /// </summary>
+    public byte IndexB;
+
+    /// <summary>
+    /// The feature type on ShapeA
+    /// </summary>
+    public byte TypeA;
+
+    /// <summary>
+    /// The feature type on ShapeB
+    /// </summary>
+    public byte TypeB;
+}
+
+/// <summary>
+/// Contact ids to facilitate warm starting.
+/// </summary>
+[StructLayout(LayoutKind.Explicit)]
+public struct ContactID
+{
     /// <summary>
     /// The features that intersect to form the contact point
-    /// This must be 4 bytes or less.
     /// </summary>
-    public struct ContactFeature
-    {
-        /// <summary>
-        /// Feature index on ShapeA
-        /// </summary>
-        public byte IndexA;
-
-        /// <summary>
-        /// Feature index on ShapeB
-        /// </summary>
-        public byte IndexB;
-
-        /// <summary>
-        /// The feature type on ShapeA
-        /// </summary>
-        public byte TypeA;
-
-        /// <summary>
-        /// The feature type on ShapeB
-        /// </summary>
-        public byte TypeB;
-    }
+    [FieldOffset(0)]
+    public ContactFeature Features;
 
     /// <summary>
-    /// Contact ids to facilitate warm starting.
+    /// Used to quickly compare contact ids.
     /// </summary>
-    [StructLayout(LayoutKind.Explicit)]
-    public struct ContactID
+    [FieldOffset(0)]
+    public uint Key;
+
+    public static bool operator ==(ContactID id, ContactID other)
     {
-        /// <summary>
-        /// The features that intersect to form the contact point
-        /// </summary>
-        [FieldOffset(0)]
-        public ContactFeature Features;
-
-        /// <summary>
-        /// Used to quickly compare contact ids.
-        /// </summary>
-        [FieldOffset(0)]
-        public uint Key;
-
-        public static bool operator ==(ContactID id, ContactID other)
-        {
-            return id.Key == other.Key;
-        }
-
-        public static bool operator !=(ContactID id, ContactID other)
-        {
-            return !(id == other);
-        }
-
-        public override bool Equals(object? obj)
-        {
-            if (obj is not ContactID otherID) return false;
-            return Key == otherID.Key;
-        }
-
-        public bool Equals(ContactID other)
-        {
-            return Key == other.Key;
-        }
-
-        public override int GetHashCode()
-        {
-            return Key.GetHashCode();
-        }
+        return id.Key == other.Key;
     }
+
+    public static bool operator !=(ContactID id, ContactID other)
+    {
+        return !(id == other);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is not ContactID otherID) return false;
+        return Key == otherID.Key;
+    }
+
+    public bool Equals(ContactID other)
+    {
+        return Key == other.Key;
+    }
+
+    public override int GetHashCode()
+    {
+        return Key.GetHashCode();
+    }
+}
+
+/// <summary>
+/// A manifold for two touching convex Shapes.
+/// Box2D supports multiple types of contact:
+/// - Clip point versus plane with radius
+/// - Point versus point with radius (circles)
+/// The local point usage depends on the manifold type:
+/// - ShapeType.Circles: the local center of circleA
+/// - SeparationFunction.FaceA: the center of faceA
+/// - SeparationFunction.FaceB: the center of faceB
+/// Similarly the local normal usage:
+/// - ShapeType.Circles: not used
+/// - SeparationFunction.FaceA: the normal on polygonA
+/// - SeparationFunction.FaceB: the normal on polygonB
+/// We store contacts in this way so that position correction can
+/// account for movement, which is critical for continuous physics.
+/// All contact scenarios must be expressed in one of these types.
+/// This structure is stored across time steps, so we keep it small.
+/// </summary>
+public struct Manifold : IEquatable<Manifold>, IApproxEquatable<Manifold>
+{
+    public Vector2 LocalNormal;
 
     /// <summary>
-    /// A manifold for two touching convex Shapes.
-    /// Box2D supports multiple types of contact:
-    /// - Clip point versus plane with radius
-    /// - Point versus point with radius (circles)
-    /// The local point usage depends on the manifold type:
-    /// - ShapeType.Circles: the local center of circleA
-    /// - SeparationFunction.FaceA: the center of faceA
-    /// - SeparationFunction.FaceB: the center of faceB
-    /// Similarly the local normal usage:
-    /// - ShapeType.Circles: not used
-    /// - SeparationFunction.FaceA: the normal on polygonA
-    /// - SeparationFunction.FaceB: the normal on polygonB
-    /// We store contacts in this way so that position correction can
-    /// account for movement, which is critical for continuous physics.
-    /// All contact scenarios must be expressed in one of these types.
-    /// This structure is stored across time steps, so we keep it small.
+    ///     Usage depends on manifold type.
     /// </summary>
-    public struct Manifold : IEquatable<Manifold>, IApproxEquatable<Manifold>
+    public Vector2 LocalPoint;
+
+    public int PointCount;
+
+    /// <summary>
+    ///     Points of contact, can only be 0 -> 2.
+    /// </summary>
+    internal ManifoldPoint[] Points;
+
+    public ManifoldType Type;
+
+    public bool Equals(Manifold other)
     {
-        public Vector2 LocalNormal;
+        if (!(PointCount == other.PointCount &&
+              Type == other.Type &&
+              LocalNormal.Equals(other.LocalNormal) &&
+              LocalPoint.Equals(other.LocalPoint))) return false;
 
-        /// <summary>
-        ///     Usage depends on manifold type.
-        /// </summary>
-        public Vector2 LocalPoint;
-
-        public int PointCount;
-
-        /// <summary>
-        ///     Points of contact, can only be 0 -> 2.
-        /// </summary>
-        internal ManifoldPoint[] Points;
-
-        public ManifoldType Type;
-
-        public bool Equals(Manifold other)
+        for (var i = 0; i < PointCount; i++)
         {
-            if (!(PointCount == other.PointCount &&
-                       Type == other.Type &&
-                       LocalNormal.Equals(other.LocalNormal) &&
-                       LocalPoint.Equals(other.LocalPoint))) return false;
-
-            for (var i = 0; i < PointCount; i++)
-            {
-                if (!Points[i].Equals(other.Points[i])) return false;
-            }
-
-            return true;
+            if (!Points[i].Equals(other.Points[i])) return false;
         }
 
-        public bool EqualsApprox(Manifold other)
-        {
-            if (!(PointCount == other.PointCount &&
-                  Type == other.Type &&
-                  LocalNormal.EqualsApprox(other.LocalNormal) &&
-                  LocalPoint.EqualsApprox(other.LocalPoint))) return false;
-
-            for (var i = 0; i < PointCount; i++)
-            {
-                if (!Points[i].EqualsApprox(other.Points[i])) return false;
-            }
-
-            return true;
-        }
-
-        public bool EqualsApprox(Manifold other, double tolerance)
-        {
-            if (!(PointCount == other.PointCount &&
-                  Type == other.Type &&
-                  LocalNormal.EqualsApprox(other.LocalNormal, tolerance) &&
-                  LocalPoint.EqualsApprox(other.LocalPoint, tolerance))) return false;
-
-            for (var i = 0; i < PointCount; i++)
-            {
-                if (!Points[i].EqualsApprox(other.Points[i], tolerance)) return false;
-            }
-
-            return true;
-        }
+        return true;
     }
 
-    public struct ManifoldPoint : IEquatable<ManifoldPoint>, IApproxEquatable<ManifoldPoint>
+    public bool EqualsApprox(Manifold other)
     {
-        /// <summary>
-        ///     Unique identifier for the contact point between 2 shapes.
-        /// </summary>
-        public ContactID Id;
+        if (!(PointCount == other.PointCount &&
+              Type == other.Type &&
+              LocalNormal.EqualsApprox(other.LocalNormal) &&
+              LocalPoint.EqualsApprox(other.LocalPoint))) return false;
 
-        /// <summary>
-        ///     Usage depends on manifold type.
-        /// </summary>
-        public Vector2 LocalPoint;
-
-        /// <summary>
-        ///     The non-penetration impulse.
-        /// </summary>
-        public float NormalImpulse;
-
-        /// <summary>
-        ///     Friction impulse.
-        /// </summary>
-        public float TangentImpulse;
-
-        public static bool operator ==(ManifoldPoint point, ManifoldPoint other)
+        for (var i = 0; i < PointCount; i++)
         {
-            return point.Id == other.Id &&
-                   point.LocalPoint.Equals(other.LocalPoint) &&
-                   point.NormalImpulse.Equals(other.NormalImpulse) &&
-                   point.TangentImpulse.Equals(other.TangentImpulse);
+            if (!Points[i].EqualsApprox(other.Points[i])) return false;
         }
 
-        public static bool operator !=(ManifoldPoint point, ManifoldPoint other)
+        return true;
+    }
+
+    public bool EqualsApprox(Manifold other, double tolerance)
+    {
+        if (!(PointCount == other.PointCount &&
+              Type == other.Type &&
+              LocalNormal.EqualsApprox(other.LocalNormal, tolerance) &&
+              LocalPoint.EqualsApprox(other.LocalPoint, tolerance))) return false;
+
+        for (var i = 0; i < PointCount; i++)
         {
-            return !(point == other);
+            if (!Points[i].EqualsApprox(other.Points[i], tolerance)) return false;
         }
 
-        public override bool Equals(object? obj)
-        {
-            if (obj is not ManifoldPoint otherManifold) return false;
-            return this == otherManifold;
-        }
+        return true;
+    }
+}
 
-        public bool Equals(ManifoldPoint other)
-        {
-            return this == other;
-        }
+public struct ManifoldPoint : IEquatable<ManifoldPoint>, IApproxEquatable<ManifoldPoint>
+{
+    /// <summary>
+    ///     Unique identifier for the contact point between 2 shapes.
+    /// </summary>
+    public ContactID Id;
 
-        public override int GetHashCode()
-        {
-            var hashcode = Id.GetHashCode();
-            hashcode = (hashcode * 397) ^ LocalPoint.GetHashCode();
-            hashcode = (hashcode * 397) ^ NormalImpulse.GetHashCode();
-            hashcode = (hashcode * 397) ^ TangentImpulse.GetHashCode();
-            return hashcode;
-        }
+    /// <summary>
+    ///     Usage depends on manifold type.
+    /// </summary>
+    public Vector2 LocalPoint;
 
-        public bool EqualsApprox(ManifoldPoint other)
-        {
-            return Id == other.Id &&
-                   LocalPoint.EqualsApprox(other.LocalPoint) &&
-                   MathHelper.CloseToPercent(NormalImpulse, other.NormalImpulse) &&
-                   MathHelper.CloseToPercent(TangentImpulse, other.TangentImpulse);
-        }
+    /// <summary>
+    ///     The non-penetration impulse.
+    /// </summary>
+    public float NormalImpulse;
 
-        public bool EqualsApprox(ManifoldPoint other, double tolerance)
-        {
-            return Id == other.Id &&
-                   LocalPoint.EqualsApprox(other.LocalPoint, tolerance) &&
-                   MathHelper.CloseToPercent(NormalImpulse, other.NormalImpulse, tolerance) &&
-                   MathHelper.CloseToPercent(TangentImpulse, other.TangentImpulse, tolerance);
-        }
+    /// <summary>
+    ///     Friction impulse.
+    /// </summary>
+    public float TangentImpulse;
+
+    public static bool operator ==(ManifoldPoint point, ManifoldPoint other)
+    {
+        return point.Id == other.Id &&
+               point.LocalPoint.Equals(other.LocalPoint) &&
+               point.NormalImpulse.Equals(other.NormalImpulse) &&
+               point.TangentImpulse.Equals(other.TangentImpulse);
+    }
+
+    public static bool operator !=(ManifoldPoint point, ManifoldPoint other)
+    {
+        return !(point == other);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is not ManifoldPoint otherManifold) return false;
+        return this == otherManifold;
+    }
+
+    public bool Equals(ManifoldPoint other)
+    {
+        return this == other;
+    }
+
+    public override int GetHashCode()
+    {
+        var hashcode = Id.GetHashCode();
+        hashcode = (hashcode * 397) ^ LocalPoint.GetHashCode();
+        hashcode = (hashcode * 397) ^ NormalImpulse.GetHashCode();
+        hashcode = (hashcode * 397) ^ TangentImpulse.GetHashCode();
+        return hashcode;
+    }
+
+    public bool EqualsApprox(ManifoldPoint other)
+    {
+        return Id == other.Id &&
+               LocalPoint.EqualsApprox(other.LocalPoint) &&
+               MathHelper.CloseToPercent(NormalImpulse, other.NormalImpulse) &&
+               MathHelper.CloseToPercent(TangentImpulse, other.TangentImpulse);
+    }
+
+    public bool EqualsApprox(ManifoldPoint other, double tolerance)
+    {
+        return Id == other.Id &&
+               LocalPoint.EqualsApprox(other.LocalPoint, tolerance) &&
+               MathHelper.CloseToPercent(NormalImpulse, other.NormalImpulse, tolerance) &&
+               MathHelper.CloseToPercent(TangentImpulse, other.TangentImpulse, tolerance);
     }
 }

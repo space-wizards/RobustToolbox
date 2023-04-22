@@ -71,7 +71,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return Set(verts, vertices.Count);
         }
 
-        public bool Set(Span<Vector2> vertices, int count)
+        public bool Set(ReadOnlySpan<Vector2> vertices, int count)
         {
             DebugTools.Assert(count is >= 3 and <= PhysicsConstants.MaxPolygonVertices);
 

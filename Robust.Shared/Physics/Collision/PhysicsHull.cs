@@ -87,12 +87,9 @@ public record struct PhysicsHull()
     // - merges vertices based on b2_linearSlop
     // - removes collinear points using b2_linearSlop
     // - returns an empty hull if it fails
-    public static PhysicsHull ComputeHull(Span<Vector2> points, int count)
+    public static PhysicsHull ComputeHull(ReadOnlySpan<Vector2> points, int count)
     {
-        PhysicsHull hull = new()
-        {
-            Count = 0
-        };
+        PhysicsHull hull = new();
 
         if (count is < 3 or > PhysicsConstants.MaxPolygonVertices)
 	    {

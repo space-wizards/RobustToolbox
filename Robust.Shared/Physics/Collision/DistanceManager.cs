@@ -33,6 +33,9 @@ internal static class DistanceManager
     {
         cache = new SimplexCache();
 
+        var proxyA = input.ProxyA;
+        var proxyB = input.ProxyB;
+
         /*
         if (Settings.EnableDiagnostics) //FPE: We only gather diagnostics when enabled
             ++GJKCalls;
@@ -40,7 +43,7 @@ internal static class DistanceManager
 
         // Initialize the simplex.
         Simplex simplex = new Simplex();
-        simplex.ReadCache(ref cache, input.ProxyA, in input.TransformA, input.ProxyB, in input.TransformB);
+        simplex.ReadCache(ref cache, proxyA, in input.TransformA, proxyB, in input.TransformB);
 
         // These store the vertices of the last simplex so that we
         // can check for duplicates and prevent cycling.
@@ -114,11 +117,11 @@ internal static class DistanceManager
 
             // Compute a tentative new simplex vertex using support points.
             SimplexVertex vertex = vSpan[simplex.Count];
-            vertex.IndexA = input.ProxyA.GetSupport(Transform.MulT(input.TransformA.Quaternion2D, -d));
-            vertex.WA = Transform.Mul(input.TransformA, input.ProxyA.Vertices[vertex.IndexA]);
+            vertex.IndexA = proxyA.GetSupport(Transform.MulT(input.TransformA.Quaternion2D, -d));
+            vertex.WA = Transform.Mul(input.TransformA, proxyA.Vertices[vertex.IndexA]);
 
-            vertex.IndexB = input.ProxyB.GetSupport(Transform.MulT(input.TransformB.Quaternion2D, d));
-            vertex.WB = Transform.Mul(input.TransformB, input.ProxyB.Vertices[vertex.IndexB]);
+            vertex.IndexB = proxyB.GetSupport(Transform.MulT(input.TransformB.Quaternion2D, d));
+            vertex.WB = Transform.Mul(input.TransformB, proxyB.Vertices[vertex.IndexB]);
             vertex.W = vertex.WB - vertex.WA;
             vSpan[simplex.Count] = vertex;
 
@@ -162,27 +165,25 @@ internal static class DistanceManager
         // Apply radii if requested.
         if (input.UseRadii)
         {
-            float rA = input.ProxyA.Radius;
-            float rB = input.ProxyB.Radius;
-
-            if (output.Distance > rA + rB && output.Distance > float.Epsilon)
+            if (output.Distance < float.Epsilon)
             {
-                // Shapes are still no overlapped.
-                // Move the witness points to the outer surface.
-                output.Distance -= rA + rB;
-                Vector2 normal = output.PointB - output.PointA;
-                normal = normal.Normalized;
-                output.PointA += normal * rA;
-                output.PointB -= normal * rB;
+                // Shapes are too close to safely compute normal
+                var p = (output.PointA + output.PointB) * 0.5f;
+                output.PointA = p;
+                output.PointB = p;
+                output.Distance = 0f;
             }
             else
             {
-                // Shapes are overlapped when radii are considered.
-                // Move the witness points to the middle.
-                Vector2 p = (output.PointA + output.PointB) * 0.5f;
-                output.PointA = p;
-                output.PointB = p;
-                output.Distance = 0.0f;
+                // Keep closest points on perimeter even if overlapped, this way
+                // the points move smoothly.
+                float rA = proxyA.Radius;
+                float rB = proxyB.Radius;
+                var normal = output.PointB - output.PointA;
+                normal.Normalize();
+                output.Distance = MathF.Max(0.0f, output.Distance - rA - rB);
+                output.PointA += normal * rA;
+                output.PointB -= normal * rB;
             }
         }
     }

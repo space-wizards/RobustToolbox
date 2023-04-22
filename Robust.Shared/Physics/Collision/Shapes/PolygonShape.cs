@@ -62,6 +62,12 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public bool Set(List<Vector2> vertices)
         {
             Span<Vector2> verts = stackalloc Vector2[vertices.Count];
+
+            for (var i = 0; i < vertices.Count; i++)
+            {
+                verts[i] = vertices[i];
+            }
+
             return Set(verts, vertices.Count);
         }
 
@@ -225,7 +231,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             if (other is not PolygonShape poly) return false;
             if (VertexCount != poly.VertexCount) return false;
-            for (var i = 0; i < Vertices.Length; i++)
+            for (var i = 0; i < VertexCount; i++)
             {
                 var vert = Vertices[i];
                 if (!vert.Equals(poly.Vertices[i])) return false;
@@ -243,7 +249,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             if (VertexCount != other.VertexCount || !MathHelper.CloseTo(Radius, other.Radius, tolerance)) return false;
 
-            for (var i = 0; i < Vertices.Length; i++)
+            for (var i = 0; i < VertexCount; i++)
             {
                 if (!Vertices[i].EqualsApprox(other.Vertices[i], tolerance)) return false;
             }
@@ -257,7 +263,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             var lower = Transform.Mul(transform, Vertices[0]);
             var upper = lower;
 
-            for (var i = 1; i < Vertices.Length; ++i)
+            for (var i = 1; i < VertexCount; ++i)
             {
                 var v = Transform.Mul(transform, Vertices[i]);
                 lower = Vector2.ComponentMin(lower, v);

@@ -166,6 +166,7 @@ namespace Robust.Shared.Physics.Systems
                     break;
                 case PhysShapeAabb aabb:
                     var polygon = (PolygonShape) aabb;
+                    polygon.VertexCount = 4;
                     GetMassData(polygon, ref data, density);
                     break;
                 case PolygonShape poly:

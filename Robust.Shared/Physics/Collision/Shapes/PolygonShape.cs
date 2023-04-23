@@ -37,16 +37,20 @@ namespace Robust.Shared.Physics.Collision.Shapes
     [DataDefinition]
     public sealed class PolygonShape : IPhysShape, ISerializationHooks, IEquatable<PolygonShape>, IApproxEquatable<PolygonShape>
     {
-        [DataField("vertexCount")]
-        public int VertexCount;
+        // TODO: Serialize this someday. This probably needs a dedicated shapeserializer that derives vertexcount
+        // from the yml nodes just for convenience.
+        [ViewVariables]
+        public int VertexCount => Vertices.Length;
 
         [DataField("vertices"),
          Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
              Other = AccessPermissions.Read)]
-        public Vector2[] Vertices = new Vector2[PhysicsConstants.MaxPolygonVertices];
+        public Vector2[] Vertices = Array.Empty<Vector2>();
 
-        [ViewVariables, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
-        public Vector2[] Normals = new Vector2[PhysicsConstants.MaxPolygonVertices];
+        [ViewVariables,
+         Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+             Other = AccessPermissions.Read)]
+        public Vector2[] Normals = Array.Empty<Vector2>();
 
         [ViewVariables, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         internal Vector2 Centroid { get; set; } = Vector2.Zero;
@@ -89,7 +93,9 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public void Set(PhysicsHull hull)
         {
             DebugTools.Assert(hull.Count >= 3);
-            var vertexCount = VertexCount = hull.Count;
+            var vertexCount = hull.Count;
+            Array.Resize(ref Vertices, vertexCount);
+            Array.Resize(ref Normals, vertexCount);
 
             for (var i = 0; i < vertexCount; i++)
             {
@@ -178,13 +184,13 @@ namespace Robust.Shared.Physics.Collision.Shapes
         void ISerializationHooks.AfterDeserialization()
         {
             // TODO: Someday don't need this.
-            var span = Vertices.AsSpan();
-            Set(span, span.Length);
+            Set(Vertices.AsSpan(), VertexCount);
         }
 
         public void SetAsBox(float halfWidth, float halfHeight)
         {
-            VertexCount = 4;
+            Array.Resize(ref Vertices, 4);
+            Array.Resize(ref Normals, 4);
 
             Vertices[0] = new Vector2(-halfWidth, -halfHeight);
             Vertices[1] = new Vector2(halfWidth, -halfHeight);
@@ -201,7 +207,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public void SetAsBox(float halfWidth, float halfHeight, Vector2 center, float angle)
         {
-            VertexCount = 4;
+            Array.Resize(ref Vertices, 4);
+            Array.Resize(ref Normals, 4);
 
             Vertices[0] = new Vector2(-halfWidth, -halfHeight);
             Vertices[1] = new Vector2(halfWidth, -halfHeight);

@@ -86,6 +86,8 @@ namespace Robust.Client.Placement
         /// </summary>
         public bool Eraser { get; private set; }
 
+        public bool Replacement { get; set; } = true;
+
         /// <summary>
         /// Holds the selection rectangle for the eraser
         /// </summary>
@@ -770,11 +772,13 @@ namespace Robust.Client.Placement
                 _pendingTileChanges.Add(tuple);
             }
 
-            var message = new MsgPlacement();
-            message.PlaceType = PlacementManagerMessage.RequestPlacement;
-
-            message.Align = CurrentMode.ModeName;
-            message.IsTile = CurrentPermission.IsTile;
+            var message = new MsgPlacement
+            {
+                PlaceType = PlacementManagerMessage.RequestPlacement,
+                Align = CurrentMode.ModeName,
+                IsTile = CurrentPermission.IsTile,
+                Replacement = Replacement
+            };
 
             if (CurrentPermission.IsTile)
                 message.TileType = CurrentPermission.TileType;

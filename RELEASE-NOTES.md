@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.101.1.0
+
+### New features
+
+* Added a mode to entity placement to allow replacing any existing entities on a tile.
+
+### Other
+
+* Re-order initialization so BroadcastRunLevel is run after userinterfacemanager PostInitialize.
+
+
 ## 0.101.0.0
 
 ### Breaking changes

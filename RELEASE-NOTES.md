@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.101.1.1
+
+### Bugfixes
+
+* Fix polygon deserialization leading to the last vert being 0,0.
+
+
 ## 0.101.1.0
 
 ### New features

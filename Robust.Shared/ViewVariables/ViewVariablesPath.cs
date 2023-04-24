@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Reflection;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.ViewVariables;
 
@@ -53,6 +54,12 @@ public abstract class ViewVariablesPath
     /// </summary>
     public virtual Type InvokeReturnType { get; } = typeof(void);
 
+    /// <summary>
+    ///     Points to nearest parent component path. Will be null if none of the parent/base paths correspond to
+    ///     components.
+    /// </summary>
+    public ViewVariablesComponentPath? ParentComponent;
+
     #region Static helper methods
 
     /// <summary>
@@ -92,13 +99,16 @@ public abstract class ViewVariablesPath
 
 internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
 {
-    internal ViewVariablesFieldOrPropertyPath(object? obj, MemberInfo member)
+    private readonly IEntityManager _entMan;
+
+    internal ViewVariablesFieldOrPropertyPath(object? obj, MemberInfo member, IEntityManager entMan)
     {
         if (member is not (FieldInfo or PropertyInfo))
             throw new ArgumentException("Member must be either a field or a property!", nameof(member));
 
         _object = obj;
         _member = member;
+        _entMan = entMan;
         ViewVariablesUtility.TryGetViewVariablesAccess(member, out _access);
     }
 
@@ -131,6 +141,15 @@ internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
 
         if (_object != null)
             _member.SetValue(_object, value);
+
+        if (ParentComponent == null)
+        {
+            DebugTools.Assert(_object is not Component);
+            return;
+        }
+
+        DebugTools.Assert(_object is not Component || ReferenceEquals(ParentComponent.Component, _object));
+        _entMan.Dirty(ParentComponent.Component);
     }
 
     public override object? Invoke(object?[]? parameters) => null;
@@ -244,11 +263,11 @@ public sealed class ViewVariablesInstancePath : ViewVariablesPath
 
 public sealed class ViewVariablesComponentPath : ViewVariablesPath
 {
-    public readonly object? Component;
+    public readonly Component Component;
     public readonly EntityUid Owner;
     public override Type Type => Component?.GetType() ?? typeof(void);
 
-    public ViewVariablesComponentPath(object? component, EntityUid owner)
+    public ViewVariablesComponentPath(Component component, EntityUid owner)
     {
         Component = component;
         Owner = owner;

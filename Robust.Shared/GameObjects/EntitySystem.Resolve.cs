@@ -29,7 +29,7 @@ namespace Robust.Shared.GameObjects
             var found = EntityManager.TryGetComponent(uid, out component);
 
             if(logMissing && !found)
-                Logger.ErrorS("resolve", $"Can't resolve \"{typeof(TComp)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+                Logger.ErrorS("resolve", $"Can't resolve \"{typeof(TComp)}\" on entity {ToPrettyString(uid)}!\n{new StackTrace(1, true)}");
 
             return found;
         }

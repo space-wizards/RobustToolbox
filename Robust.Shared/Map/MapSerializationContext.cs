@@ -95,7 +95,7 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         if (!_entityUidMap.TryGetValue(value, out var entityUidMapped))
         {
             // Terrible hack to mute this error on the grids themselves when serializing blueprints.
-            if (value.IsValid() || CurrentWritingComponent != "Transform")
+            if (!value.IsValid() && CurrentWritingComponent != "Transform")
             {
                 Logger.ErrorS("map", "Encountered an invalid entityUid '{0}' while serializing a map.", value);
             }

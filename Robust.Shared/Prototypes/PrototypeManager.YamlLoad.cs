@@ -125,7 +125,7 @@ public partial class PrototypeManager
 
                     if (!before.Add(id!))
                     {
-                        throw new PrototypeLoadException($"Found duplicate prototype definition {id}");
+                        throw new PrototypeLoadException($"Found duplicate prototype definition {id} for type {type}");
                     }
 
                     mapping.Remove("type");

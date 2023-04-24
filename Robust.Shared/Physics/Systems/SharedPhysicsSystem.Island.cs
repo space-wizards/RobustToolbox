@@ -674,7 +674,7 @@ public abstract partial class SharedPhysicsSystem
                 else
                     linearVelocity += (gravity + body.Force * body.InvMass) * data.FrameTime;
 
-                angularVelocity += data.FrameTime * body.InvI * body.Torque;
+                angularVelocity += body.InvI * body.Torque * data.FrameTime;
 
                 linearVelocity *= Math.Clamp(1.0f - data.FrameTime * body.LinearDamping, 0.0f, 1.0f);
                 angularVelocity *= Math.Clamp(1.0f - data.FrameTime * body.AngularDamping, 0.0f, 1.0f);

@@ -87,6 +87,9 @@ public partial class PrototypeManager
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
 
         var dict = new Dictionary<string, HashSet<ErrorNode>>();
+        // Prototypes we've seen before to catch duplicates.
+        var seen = new Dictionary<string, HashSet<string>>();
+
         foreach (var resourcePath in streams)
         {
             using var reader = ReadFile(resourcePath);
@@ -115,14 +118,27 @@ public partial class PrototypeManager
                         throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
                     }
 
+                    var before = seen.GetOrNew(type);
+
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
+                    var id = mapping["id"].ToString();
+
+                    if (!before.Add(id!))
+                    {
+                        throw new PrototypeLoadException($"Found duplicate prototype definition {id}");
+                    }
+
                     mapping.Remove("type");
                     var errorNodes = _serializationManager.ValidateNode(_kindNames[type], mapping).GetErrors()
                         .ToHashSet();
                     if (errorNodes.Count == 0) continue;
                     if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
-                        dict[resourcePath.ToString()] = new HashSet<ErrorNode>();
-                    dict[resourcePath.ToString()].UnionWith(errorNodes);
+                    {
+                        hashSet = new HashSet<ErrorNode>();
+                        dict[resourcePath.ToString()] = hashSet;
+                    }
+
+                    hashSet.UnionWith(errorNodes);
                 }
             }
         }

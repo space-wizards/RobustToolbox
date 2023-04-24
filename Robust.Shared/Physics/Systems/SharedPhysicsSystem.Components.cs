@@ -137,6 +137,7 @@ public partial class SharedPhysicsSystem
 
         body.Force += force;
         body.Torque += Vector2.Cross(point - body._localCenter, force);
+        Dirty(body);
     }
 
     public void ApplyForce(EntityUid uid, Vector2 force, FixturesComponent? manager = null, PhysicsComponent? body = null)

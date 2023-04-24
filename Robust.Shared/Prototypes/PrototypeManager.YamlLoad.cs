@@ -123,21 +123,20 @@ public partial class PrototypeManager
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
                     var id = mapping["id"].ToString();
 
+                    HashSet<ErrorNode> hashSet;
+
                     if (!before.Add(id!))
                     {
-                        throw new PrototypeLoadException($"Found duplicate prototype definition {id} for type {type}");
+                        hashSet = dict.GetOrNew(resourcePath.ToString());
+                        hashSet.Add(new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}"));
+                        continue;
                     }
 
                     mapping.Remove("type");
                     var errorNodes = _serializationManager.ValidateNode(_kindNames[type], mapping).GetErrors()
                         .ToHashSet();
                     if (errorNodes.Count == 0) continue;
-                    if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
-                    {
-                        hashSet = new HashSet<ErrorNode>();
-                        dict[resourcePath.ToString()] = hashSet;
-                    }
-
+                    hashSet = dict.GetOrNew(resourcePath.ToString());
                     hashSet.UnionWith(errorNodes);
                 }
             }

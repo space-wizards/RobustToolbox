@@ -24,7 +24,7 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     public Dictionary<ushort, string>? TileMap;
     public readonly Dictionary<string, IComponent> CurrentReadingEntityComponents = new();
     public HashSet<string> CurrentlyIgnoredComponents = new();
-    public string? CurrentWritingComponent;
+    public string? CurrentComponent;
     public EntityUid? CurrentWritingEntity;
 
     private Dictionary<int, EntityUid> _uidEntityMap = new();
@@ -51,7 +51,7 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     {
         CurrentReadingEntityComponents.Clear();
         CurrentlyIgnoredComponents.Clear();
-        CurrentWritingComponent = null;
+        CurrentComponent = null;
         CurrentWritingEntity = null;
         PauseTime = TimeSpan.Zero;
     }
@@ -95,7 +95,7 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         if (!_entityUidMap.TryGetValue(value, out var entityUidMapped))
         {
             // Terrible hack to mute this error on the grids themselves when serializing blueprints.
-            if (value.IsValid() || CurrentWritingComponent != "Transform")
+            if (value.IsValid() || CurrentComponent != "Transform")
             {
                 Logger.ErrorS("map", "Encountered an invalid entityUid '{0}' while serializing a map.", value);
             }
@@ -112,22 +112,23 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         SerializationHookContext hookCtx,
         ISerializationContext? context, ISerializationManager.InstantiationDelegate<EntityUid>? _)
     {
-        if (node.Value == "invalid")
+        int val = node.Value == "invalid" ? 0 : int.Parse(node.Value);
+
+        if (val == 0)
         {
+            if (CurrentComponent != "Transform")
+                Logger.ErrorS("map", "Error in map file: encountered an invalid entity uid", val);
+
             return EntityUid.Invalid;
         }
-
-        var val = int.Parse(node.Value);
 
         if (!_uidEntityMap.TryGetValue(val, out var entity))
         {
             Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
             return EntityUid.Invalid;
         }
-        else
-        {
-            return entity;
-        }
+
+        return entity;
     }
 
     [MustUseReturnValue]

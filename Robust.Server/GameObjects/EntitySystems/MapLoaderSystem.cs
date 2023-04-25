@@ -440,7 +440,10 @@ public sealed class MapLoaderSystem : EntitySystem
                             compType,
                             new[] { protData.Mapping }, datanode, _context);
                 }
+
+                _context.CurrentComponent = value;
                 _context.CurrentReadingEntityComponents[value] = (IComponent) _serManager.Read(compType, datanode, _context)!;
+                _context.CurrentComponent = null;
             }
         }
 
@@ -958,9 +961,9 @@ public sealed class MapLoaderSystem : EntitySystem
 
         var emptyMetaNode = _serManager.WriteValueAs<MappingDataNode>(typeof(MetaDataComponent), new MetaDataComponent(), alwaysWrite: true, context: _context);
 
-        _context.CurrentWritingComponent = _factory.GetComponentName(typeof(TransformComponent));
+        _context.CurrentComponent = _factory.GetComponentName(typeof(TransformComponent));
         var emptyXformNode = _serManager.WriteValueAs<MappingDataNode>(typeof(TransformComponent), new TransformComponent(), alwaysWrite: true, context: _context);
-        _context.CurrentWritingComponent = null;
+        _context.CurrentComponent = null;
 
         foreach (var (saveId, entityUid) in uidEntityMap.OrderBy( e=> e.Key))
         {
@@ -984,11 +987,11 @@ public sealed class MapLoaderSystem : EntitySystem
 
                     foreach (var (compType, comp) in prototype.Components)
                     {
-                        _context.CurrentWritingComponent = compType;
+                        _context.CurrentComponent = compType;
                         cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component, alwaysWrite: true, context: _context));
                     }
 
-                    _context.CurrentWritingComponent = null;
+                    _context.CurrentComponent = null;
                     cache.TryAdd("MetaData", emptyMetaNode);
                     cache.TryAdd("Transform", emptyXformNode);
                 }
@@ -1010,7 +1013,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 var compType = component.GetType();
                 var compName = _factory.GetComponentName(compType);
-                _context.CurrentWritingComponent = compName;
+                _context.CurrentComponent = compName;
                 MappingDataNode? compMapping;
                 MappingDataNode? protMapping = null;
                 if (cache != null && cache.TryGetValue(compName, out protMapping))

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -244,7 +245,15 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
+            if (context is not MapSerializationContext map)
+            {
+                serManager.CopyTo(data, ref component, context, notNullableOverride: true);
+                return;
+            }
+
+            map.CurrentComponent = compName;
             serManager.CopyTo(data, ref component, context, notNullableOverride: true);
+            map.CurrentComponent = null;
         }
 
         public override string ToString()

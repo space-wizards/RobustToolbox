@@ -811,6 +811,10 @@ public sealed class MapLoaderSystem : EntitySystem
         var uidEntityMap = new Dictionary<int, EntityUid>();
         var entities = new List<EntityUid>();
 
+        var rootXform = _serverEntityManager.GetComponent<TransformComponent>(uid);
+        if (rootXform.ParentUid.IsValid())
+            uidEntityMap.Add(0, rootXform.ParentUid);
+
         _stopwatch.Restart();
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
         WriteTileMapSection(data, entities);

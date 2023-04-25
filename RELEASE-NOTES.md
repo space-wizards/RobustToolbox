@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.102.0.0
+
+### Breaking changes
+
 * Loading  maps with invalid entity UIDs should now log errors.
 
 ### New features
@@ -48,10 +71,6 @@ END TEMPLATE-->
 ### Other
 
 * EntityUid indexing should now start at 1 when saving maps.
-
-### Internal
-
-*None yet*
 
 
 ## 0.101.1.1

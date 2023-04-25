@@ -609,6 +609,13 @@ internal sealed partial class PVSSystem : EntitySystem
         foreach (var uid in chunk)
         {
             AddToChunkSetRecursively(in uid, visMask, tree, chunkSet, transform, metadata);
+#if DEBUG
+            var xform = transform.GetComponent(uid);
+            if (chunkLocation is MapChunkLocation)
+                DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid);
+            else if (chunkLocation is GridChunkLocation)
+                DebugTools.Assert(xform.ParentUid != xform.MapUid || xform.GridUid == xform.MapUid);
+#endif
         }
 
         if (tree.RootNodes.Count == 0)

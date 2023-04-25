@@ -441,6 +441,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             oldGrid.ChunkIndices == chunkIndices &&
             oldGrid.GridId == gridId)
         {
+            _locationChangeBuffer.Remove(index);
+
             if (forceDirty)
                 _dirtyChunks.Add(oldGrid);
             return;
@@ -467,6 +469,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             oldMap.ChunkIndices == chunkIndices &&
             oldMap.MapId == mapId)
         {
+            _locationChangeBuffer.Remove(index);
+
             if (forceDirty)
                 _dirtyChunks.Add(oldMap);
             return;

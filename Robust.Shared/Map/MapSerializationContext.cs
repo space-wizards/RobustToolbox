@@ -119,7 +119,7 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
 
         if (CurrentComponent != "Transform" || val != 0)
             Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
-        
+
         return EntityUid.Invalid;
 
     }

@@ -614,7 +614,7 @@ internal sealed partial class PVSSystem : EntitySystem
             if (chunkLocation is MapChunkLocation)
                 DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid);
             else if (chunkLocation is GridChunkLocation)
-                DebugTools.Assert(xform.GridUid != null && xform.ParentUid != xform.MapUid);
+                DebugTools.Assert(xform.ParentUid != xform.MapUid || xform.GridUid == xform.MapUid);
 #endif
         }
 

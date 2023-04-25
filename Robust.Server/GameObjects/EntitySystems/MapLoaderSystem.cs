@@ -368,7 +368,7 @@ public sealed class MapLoaderSystem : EntitySystem
         var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
         var mapUid = _mapManager.GetMapEntityId(data.TargetMap);
         var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
-        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), pauseTime);
+        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), pauseTime, null);
         data.Entities.EnsureCapacity(entities.Count);
         data.UidEntityMap.EnsureCapacity(entities.Count);
         data.EntitiesToDeserialize.EnsureCapacity(entities.Count);
@@ -804,17 +804,15 @@ public sealed class MapLoaderSystem : EntitySystem
         var uidEntityMap = new Dictionary<int, EntityUid>();
         var entities = new List<EntityUid>();
 
-        var rootXform = _serverEntityManager.GetComponent<TransformComponent>(uid);
-        if (rootXform.ParentUid.IsValid())
-            uidEntityMap.Add(0, rootXform.ParentUid);
-
         _stopwatch.Restart();
         PopulateEntityList(uid, entities, uidEntityMap, entityUidMap);
         WriteTileMapSection(data, entities);
 
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
         var pauseTime = _meta.GetPauseTime(uid);
-        _context.Set(uidEntityMap, entityUidMap, pauseTime);
+
+        var rootXform = _serverEntityManager.GetComponent<TransformComponent>(uid);
+        _context.Set(uidEntityMap, entityUidMap, pauseTime, rootXform.ParentUid);
 
         _stopwatch.Restart();
         WriteEntitySection(data, uidEntityMap, entityUidMap);

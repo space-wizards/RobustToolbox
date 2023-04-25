@@ -35,19 +35,19 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Loading  maps with invalid entity UIDs should now log errors.
 
 ### New features
 
-*None yet*
+* The yaml linter should now error on duplicate entity prototypes
 
 ### Bugfixes
 
-*None yet*
+* Fix a PVS bug that could put one entity into two different PVS chunks.
 
 ### Other
 
-*None yet*
+* EntityUid indexing should now start at 1 when saving maps.
 
 ### Internal
 

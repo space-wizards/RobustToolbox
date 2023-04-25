@@ -929,8 +929,9 @@ public sealed class MapLoaderSystem : EntitySystem
         entities.Add(uid);
 
         // TODO: Given there's some structure to this now we can probably omit the parent / child a bit.
-        if (!saveCompQuery.TryGetComponent(uid, out var mapSaveComp) ||
-            !uidEntityMap.TryAdd(mapSaveComp.Uid, uid))
+        if (!saveCompQuery.TryGetComponent(uid, out var mapSaveComp)
+            || mapSaveComp.Uid == 0
+            || !uidEntityMap.TryAdd(mapSaveComp.Uid, uid))
         {
             // If the id was already saved before, or has no save component we need to find a new id for this entity
             withoutUid.Add(uid);

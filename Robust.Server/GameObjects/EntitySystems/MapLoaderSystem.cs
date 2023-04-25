@@ -886,7 +886,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
         RecursivePopulate(uid, entities, uidEntityMap, withoutUid, metaCompQuery, transformCompQuery, saveCompQuery);
 
-        var uidCounter = 0;
+        var uidCounter = 1;
         foreach (var entity in withoutUid)
         {
             while (uidEntityMap.ContainsKey(uidCounter))

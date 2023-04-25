@@ -114,21 +114,14 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     {
         int val = node.Value == "invalid" ? 0 : int.Parse(node.Value);
 
-        if (val == 0)
-        {
-            if (CurrentComponent != "Transform")
-                Logger.ErrorS("map", "Error in map file: encountered an invalid entity uid", val);
+        if (_uidEntityMap.TryGetValue(val, out var entity))
+            return entity;
 
-            return EntityUid.Invalid;
-        }
-
-        if (!_uidEntityMap.TryGetValue(val, out var entity))
-        {
+        if (CurrentComponent != "Transform" || val != 0)
             Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
-            return EntityUid.Invalid;
-        }
+        
+        return EntityUid.Invalid;
 
-        return entity;
     }
 
     [MustUseReturnValue]

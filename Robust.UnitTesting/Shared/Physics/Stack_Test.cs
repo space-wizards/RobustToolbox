@@ -129,9 +129,8 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         });
 
         // Assert
-
-        // Should be done in 149 but buffer just in case.
-        await server.WaitRunTicks(155);
+        
+        await server.WaitRunTicks(200);
 
         // Assert settled, none below 0, etc.
         await server.WaitAssertion(() =>

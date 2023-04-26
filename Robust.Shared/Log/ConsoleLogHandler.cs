@@ -56,10 +56,17 @@ namespace Robust.Shared.Log
             if (WriteAnsiColors && OperatingSystem.IsWindows())
             {
                 WriteAnsiColors = WindowsConsole.TryEnableVirtualTerminalProcessing();
+            }
 
-                // Try to set console output on Windows to UTF-8, because .NET doesn't do it built-in.
-                // Otherwise we can't print anything that isn't just your default Windows code page.
-                _ = WindowsConsole.NativeMethods.SetConsoleOutputCP(WindowsConsole.NativeMethods.CodePageUtf8);
+            // Set console output on Windows to UTF-8, because .NET doesn't do it built-in.
+            // Otherwise we can't print anything that isn't just your default Windows code page.
+            try
+            {
+                System.Console.OutputEncoding = Encoding.UTF8;
+            }
+            catch
+            {
+                // If this doesn't work, RIP.
             }
         }
 
@@ -249,10 +256,6 @@ namespace Robust.Shared.Log
 
             [DllImport("kernel32", SetLastError = true)]
             internal static extern IntPtr GetConsoleWindow();
-
-            [DllImport("kernel32", SetLastError = true)]
-            internal static extern int SetConsoleOutputCP(uint wCodePageID);
-
         }
 
     }

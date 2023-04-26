@@ -47,8 +47,6 @@ namespace Robust.Shared.Log
 
         private readonly Timer _timer = new(0.1);
 
-        private readonly bool _isUtf16Out = System.Console.OutputEncoding.CodePage == Encoding.Unicode.CodePage;
-
         private bool _disposed;
 
         static ConsoleLogHandler()
@@ -58,6 +56,10 @@ namespace Robust.Shared.Log
             if (WriteAnsiColors && OperatingSystem.IsWindows())
             {
                 WriteAnsiColors = WindowsConsole.TryEnableVirtualTerminalProcessing();
+
+                // Try to set console output on Windows to UTF-8, because .NET doesn't do it built-in.
+                // Otherwise we can't print anything that isn't just your default Windows code page.
+                _ = WindowsConsole.NativeMethods.SetConsoleOutputCP(WindowsConsole.NativeMethods.CodePageUtf8);
             }
         }
 
@@ -106,9 +108,9 @@ namespace Robust.Shared.Log
                     _line.AppendLine(message.Exception.ToString());
                 }
 
-                // ReSharper disable once SuggestVarOrType_Elsewhere
-                if (!_isUtf16Out)
+                if (System.Console.OutputEncoding.CodePage == WindowsConsole.NativeMethods.CodePageUtf8)
                 {
+                    // Fast path: if we can output as UTF-8, do it.
                     Span<byte> buf = stackalloc byte[1024];
                     var totalChars = _line.Length;
                     foreach (var chunk in _line.GetChunks())
@@ -134,10 +136,8 @@ namespace Robust.Shared.Log
                 }
                 else
                 {
-                    foreach (var chunk in _line.GetChunks())
-                    {
-                        _stream.Write(MemoryMarshal.AsBytes(chunk.Span));
-                    }
+                    // Fallback path: just let .NET handle it.
+                    System.Console.Write(_line.ToString());
                 }
 
                 // ReSharper disable once InvertIf
@@ -233,6 +233,7 @@ namespace Robust.Shared.Log
 
         internal static class NativeMethods
         {
+            public const int CodePageUtf8 = 65001;
 
             [DllImport("kernel32", SetLastError = true)]
             internal static extern bool SetConsoleMode(IntPtr hConsoleHandle, int mode);
@@ -248,6 +249,9 @@ namespace Robust.Shared.Log
 
             [DllImport("kernel32", SetLastError = true)]
             internal static extern IntPtr GetConsoleWindow();
+
+            [DllImport("kernel32", SetLastError = true)]
+            internal static extern int SetConsoleOutputCP(uint wCodePageID);
 
         }
 

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `echo` console command to echo things.
 
 ### Bugfixes
 
@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Set console code page to UTF-8 explicitly on Windows to fix output of non-ASCII characters.
 
 ### Internal
 
@@ -172,7 +172,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `RobustIntegrationTest` now has a `DoGuiEvent()` method that can directly pass `GUIBoundKeyEventArgs` to a control. 
+* `RobustIntegrationTest` now has a `DoGuiEvent()` method that can directly pass `GUIBoundKeyEventArgs` to a control.
 
 
 ## 0.96.8.2

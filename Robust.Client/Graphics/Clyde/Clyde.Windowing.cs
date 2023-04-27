@@ -33,7 +33,7 @@ namespace Robust.Client.Graphics.Clyde
         private Renderer _chosenRenderer;
 #pragma warning restore 414
 
-        private ResPath _windowIconPath;
+        private ResPath? _windowIconPath;
         private Thread? _windowingThread;
         private bool _vSync;
         private WindowMode _windowMode;

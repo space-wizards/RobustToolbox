@@ -30,7 +30,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Should the sprite's offset be applied to the control.
         /// </summary>
-        public bool SpriteOffset = true;
+        public bool SpriteOffset { get; set; } = true;
 
         /// <summary>
         ///     Overrides the direction used to render the sprite.

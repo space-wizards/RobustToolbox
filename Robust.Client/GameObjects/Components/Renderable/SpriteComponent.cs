@@ -258,6 +258,10 @@ namespace Robust.Client.GameObjects
 
         private Box2 _bounds;
 
+        /// <summary>
+        ///     The bounds of the sprite. This does factor in the sprite's <see cref="Scale"/> but not the
+        ///     <see cref="Rotation"/> and <see cref="Offset"/>
+        /// </summary>
         public Box2 Bounds => _bounds;
 
         [ViewVariables(VVAccess.ReadWrite)] internal bool _inertUpdateQueued;

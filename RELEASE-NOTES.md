@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.102.1.0
+
+### New features
+
 * `echo` console command to echo things.
 * Add some public methods to physics system for applying force/torque.
 
@@ -49,10 +68,6 @@ END TEMPLATE-->
 ### Other
 
 * Set console code page to UTF-8 explicitly on Windows to fix output of non-ASCII characters.
-
-### Internal
-
-*None yet*
 
 
 ## 0.102.0.0

@@ -40,10 +40,11 @@ END TEMPLATE-->
 ### New features
 
 * `echo` console command to echo things.
+* Add some public methods to physics system for applying force/torque.
 
 ### Bugfixes
 
-*None yet*
+* Fix a NRE when no window icon is specified.
 
 ### Other
 

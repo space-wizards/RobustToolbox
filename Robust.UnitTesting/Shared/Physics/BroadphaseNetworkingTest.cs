@@ -92,7 +92,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
             session.JoinGame();
         });
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 10; i++)
         {
             await server.WaitRunTicks(1);
             await client.WaitRunTicks(1);

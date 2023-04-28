@@ -54,6 +54,41 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.102.1.0
+
+### New features
+
+* `echo` console command to echo things.
+* Add some public methods to physics system for applying force/torque.
+
+### Bugfixes
+
+* Fix a NRE when no window icon is specified.
+
+### Other
+
+* Set console code page to UTF-8 explicitly on Windows to fix output of non-ASCII characters.
+
+
+## 0.102.0.0
+
+### Breaking changes
+
+* Loading  maps with invalid entity UIDs should now log errors.
+
+### New features
+
+* The yaml linter should now error on duplicate entity prototypes
+
+### Bugfixes
+
+* Fix a PVS bug that could put one entity into two different PVS chunks.
+
+### Other
+
+* EntityUid indexing should now start at 1 when saving maps.
+
+
 ## 0.101.1.1
 
 ### Bugfixes
@@ -153,7 +188,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `RobustIntegrationTest` now has a `DoGuiEvent()` method that can directly pass `GUIBoundKeyEventArgs` to a control. 
+* `RobustIntegrationTest` now has a `DoGuiEvent()` method that can directly pass `GUIBoundKeyEventArgs` to a control.
 
 
 ## 0.96.8.2

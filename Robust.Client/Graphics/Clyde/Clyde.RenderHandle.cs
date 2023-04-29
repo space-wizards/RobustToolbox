@@ -175,13 +175,13 @@ namespace Robust.Client.Graphics.Clyde
 
                     var ofsX = position.X - _clyde._currentRenderTarget.Size.X / 2f;
                     var ofsY = position.Y - _clyde._currentRenderTarget.Size.Y / 2f;
+                    ofsX /= EyeManager.PixelsPerMeter;
+                    ofsY /= -EyeManager.PixelsPerMeter;
 
-                    var view = Matrix3.Identity;
-                    view.R0C0 = scale.X;
-                    view.R1C1 = scale.Y;
-                    view.R0C2 = ofsX / EyeManager.PixelsPerMeter;
-                    view.R1C2 = -ofsY / EyeManager.PixelsPerMeter;
+                    // Maaaaybe this is meant to have a minus sign.
+                    var rot = -(float) eyeRot.Theta;
 
+                    var view = Matrix3.CreateTransform(ofsX, ofsY, rot, scale.X, scale.Y);
                     SetProjView(proj, view);
                 }
 

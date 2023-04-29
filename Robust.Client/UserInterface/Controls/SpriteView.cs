@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -12,9 +13,9 @@ namespace Robust.Client.UserInterface.Controls
     public class SpriteView : Control
     {
         private SpriteSystem? _spriteSystem;
-        private SharedTransformSystem? _transformSystem;
         IEntityManager _entMan;
 
+        [ViewVariables]
         private SpriteComponent? _sprite;
         public SpriteComponent? Sprite
         {
@@ -23,6 +24,8 @@ namespace Robust.Client.UserInterface.Controls
             set => SetEntity(value?.Owner);
         }
 
+
+        [ViewVariables]
         public EntityUid? Entity { get; private set; }
 
         /// <summary>
@@ -59,28 +62,9 @@ namespace Robust.Client.UserInterface.Controls
 
         #region Transform
 
-        private Vector2 _offset = Vector2.Zero;
         private Vector2 _scale = Vector2.One;
         private Angle _eyeRotation = Angle.Zero;
         private Angle? _worldRotation = Angle.Zero;
-
-        /// <summary>
-        /// If true, the offset scale and rotations are also applied when calculating the control's desired size.
-        /// </summary>
-        public bool TransformMeasure = true;
-
-        /// <summary>
-        /// Offset to apply when rendering the sprite, in virtual pixels. This is separate from the sprite's offset.
-        /// </summary>
-        public Vector2 Offset
-        {
-            get => _offset;
-            set
-            {
-                _offset = value;
-                InvalidateMeasure();
-            }
-        }
 
         public Angle EyeRotation
         {
@@ -147,6 +131,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
+            // TODO Make this get called when sprite bounds/properties update?
             UpdateSize();
             return _spriteSize;
         }
@@ -159,10 +144,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            // Size does not auto-update with world rotation
-            var wRot = _worldRotation ?? Angle.Zero;
-
-            var spriteBox = _sprite.CalculateRotatedBoundingBox(default, wRot, _eyeRotation)
+            var spriteBox = _sprite.CalculateRotatedBoundingBox(default,  _worldRotation ?? Angle.Zero, _eyeRotation)
                 .CalcBoundingBox();
 
             if (!SpriteOffset)
@@ -171,21 +153,34 @@ namespace Robust.Client.UserInterface.Controls
                 spriteBox = spriteBox.Translated(-spriteBox.Center);
             }
 
-            if (!TransformMeasure)
+            // Scale the box (including any offset);
+            var scale = _scale * EyeManager.PixelsPerMeter;
+            var bl = spriteBox.BottomLeft * scale;
+            var tr = spriteBox.TopRight * scale;
+
+            // This view will be centered on (0,0). If the sprite was shifted by (1,2) the actual size of the control
+            // would need to be at least (2,4).
+            tr = Vector2.ComponentMax(tr, Vector2.Zero);
+            bl = Vector2.ComponentMin(bl, Vector2.Zero);
+            tr = Vector2.ComponentMax(tr, -bl);
+            bl = Vector2.ComponentMin(bl, -tr);
+            var box = new Box2(bl, tr);
+
+            DebugTools.Assert(box.Contains(Vector2.Zero));
+            DebugTools.Assert(box.TopLeft.EqualsApprox(-box.BottomRight));
+
+            if (_worldRotation != null)
             {
-                _spriteSize = spriteBox.Size * EyeManager.PixelsPerMeter;
+                _spriteSize = box.Size;
                 return;
             }
 
-            spriteBox = spriteBox.Scale(_scale * EyeManager.PixelsPerMeter).Translated(_offset);
-
-            // This view will be centered on (0,0). If the sprite was shifted by (1,2) the actual size of the control
-            // would need to be at least (2,4). This is easiest to do by just negating the box and taking the union.
-            var negated = new Box2(-spriteBox.TopRight, -spriteBox.BottomLeft);
-            var box = spriteBox.Union(negated);
-            DebugTools.Assert(box.Contains(Vector2.Zero));
-            DebugTools.Assert(box.TopLeft.EqualsApprox(-box.BottomRight));
-            _spriteSize = box.Size;
+            // Size does not auto-update with world rotation. So if it is not fixed by _worldRotation we will just take
+            // the maximum possible size.
+            var size = box.Size;
+            var longestSide = MathF.Max(size.X, size.Y);
+            var longestRotatedSide = Math.Max(longestSide, (size.X + size.Y) / MathF.Sqrt(2));
+            _spriteSize = new Vector2(longestRotatedSide, longestRotatedSide);
         }
 
         internal override void DrawInternal(IRenderHandle renderHandle)
@@ -210,7 +205,7 @@ namespace Robust.Client.UserInterface.Controls
                 _ => Vector2.One,
             };
 
-            var offset = SpriteOffset ? _offset : _offset - _sprite.Offset * (1, -1) * EyeManager.PixelsPerMeter;
+            var offset = SpriteOffset ? Vector2.Zero : - _sprite.Offset * (1, -1) * EyeManager.PixelsPerMeter;
             var position = PixelSize / 2 + offset * stretch * UIScale;
             var scale = Scale * UIScale * stretch;
             renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, _sprite);

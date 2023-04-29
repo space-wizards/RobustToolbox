@@ -19,6 +19,7 @@ internal sealed partial class UITestControl
         private const string EntityId = "debugRotation4";
 
         private readonly IEntityManager _entMan;
+        private readonly IGameTiming _timing;
         private readonly BoxContainer _box;
 
         private record Entry(EntityUid Uid, SpriteComponent Sprite, TransformComponent Transform,
@@ -30,7 +31,7 @@ internal sealed partial class UITestControl
 
         public TabSpriteView()
         {
-            IoCManager.Resolve(ref _entMan);
+            IoCManager.Resolve(ref _entMan, ref _timing);
             SetValue(TabContainer.TabTitleProperty, nameof(SpriteView));
             _box = new BoxContainer
             {
@@ -51,20 +52,26 @@ internal sealed partial class UITestControl
 
             _box.AddChild(new Label
             {
-                Text = "============================\n" +
-                       "Default SpriteView arguments\n" +// override sprite offset, world rotation, fit to control
-                       "============================"
+                Text = "This control contains a bunch of sprite views with different transform (rotation) and sprite\n"+
+                       "based transformations applied. Except for the fixed-size no-stretch view, the sprites should never leave the boxes.\n"
+            });
+
+            _box.AddChild(new Label
+            {
+                Text = "=============================\n" +
+                       "Default SpriteView. Ignore sprite offset and world rotation\n" +
+                       "============================="
             });
             AddEntries();
 
             _box.AddChild(new Label
             {
                 Text = "============================\n" +
-                       " Respect entity properties  \n" +// no overrides for offset, rotation, but still fit to control.
-                       "============================"
+                       "No overrides (Show entity rotation & offset)\n" +
+                       "============================="
             });
-            var added = AddEntries();
-            foreach (var e in added)
+
+            foreach (var e in AddEntries())
             {
                 e.View.SpriteOffset = true;
                 e.View.WorldRotation = null;
@@ -72,68 +79,83 @@ internal sealed partial class UITestControl
 
             _box.AddChild(new Label
             {
-                Text = "============================\n" +
-                       "   Transformed SpriteView   \n" +// Default + view transform
-                       "============================"
+                Text = "=============================\n" +
+                       "No override + Transformed view\n" +
+                       "============================="
             });
-            added = AddEntries();
-            foreach (var e in added)
+
+            foreach (var e in AddEntries())
             {
-                e.View.Scale = (1,2);
+                e.View.Scale = (1, 0.75f);
                 e.View.EyeRotation = Angle.FromDegrees(45);
-                e.View.Offset = (40, 10);
+                e.View.SpriteOffset = true;
                 e.View.WorldRotation = null;
             }
 
             _box.AddChild(new Label
             {
                 Text = "============================\n" +
-                       "   64 x 64   - No Stretch   \n" +// as above, but with a fixed UI size & different stretch modes.
-                       "==========================="
+                       "No override + Transform + Fixed Size + No Stretch.\n" +
+                       "============================"
             });
-            added = AddEntries();
-            foreach (var e in added)
+
+            foreach (var e in AddEntries())
             {
                 e.View.SetSize = (64, 64);
                 e.View.Stretch = SpriteView.StretchMode.None;
-                e.View.Scale = (1,2);
+                e.View.Scale = (1, 0.75f);
                 e.View.EyeRotation = Angle.FromDegrees(45);
-                e.View.Offset = (40, 10);
+                e.View.SpriteOffset = true;
                 e.View.WorldRotation = null;
             }
 
             _box.AddChild(new Label
             {
                 Text = "============================\n" +
-                       "  32 x 32   -  Fit to view  \n" +
-                       "==========================="
+                       "No override + Transform + Fixed Size + Shrink to view\n" +
+                       "============================"
             });
-            added = AddEntries();
-            foreach (var e in added)
+
+            foreach (var e in AddEntries())
             {
-                e.View.SetSize = (32, 32);
+                e.View.SetSize = (64, 64);
                 e.View.Stretch = SpriteView.StretchMode.Fit;
-                e.View.Scale = (1,2);
+                e.View.Scale = (1, 0.75f);
                 e.View.EyeRotation = Angle.FromDegrees(45);
-                e.View.Offset = (40, 10);
+                e.View.SpriteOffset = true;
                 e.View.WorldRotation = null;
             }
 
             _box.AddChild(new Label
             {
                 Text = "============================\n" +
-                       "  128 x 128   -   Fill view \n" +
-                       "==========================="
+                       "No override + Transform + Fixed Size + Scale to fill view\n" +
+                       "============================"
             });
-            added = AddEntries();
-            foreach (var e in added)
+
+            foreach (var e in AddEntries())
             {
-                e.View.SetSize = (96, 96);
+                e.View.SetSize = (300, 300);
                 e.View.Stretch = SpriteView.StretchMode.Fill;
-                e.View.Scale = (1,2);
+                e.View.Scale = (1, 0.75f);
                 e.View.EyeRotation = Angle.FromDegrees(45);
-                e.View.Offset = (40, 10);
+                e.View.SpriteOffset = true;
                 e.View.WorldRotation = null;
+            }
+
+            _box.AddChild(new Label
+            {
+                Text = "============================\n" +
+                       "With override + Transform + Fixed Size + Scale to fill view\n" +
+                       "============================"
+            });
+
+            foreach (var e in AddEntries())
+            {
+                e.View.SetSize = (300, 300);
+                e.View.Stretch = SpriteView.StretchMode.Fill;
+                e.View.Scale = (1, 0.75f);
+                e.View.EyeRotation = Angle.FromDegrees(45);
             }
         }
 
@@ -152,14 +174,14 @@ internal sealed partial class UITestControl
             var entry = AddEntry("Default", null);
             added.Add(entry);
 
-            entry = AddEntry("World Rotated", (e, time) =>
+            entry = AddEntry("Local Rotation", (e, time) =>
             {
-                e.Transform.LocalRotation += time;
+                e.Transform.LocalRotation = Angle.FromDegrees(time * _degreesPerSecond);
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);
 
-            entry = AddEntry("World Rotated (NoRot)", (e, time) =>
+            entry = AddEntry("Local Rotation (NoRot)", (e, time) =>
             {
                 e.Transform.LocalRotation = Angle.FromDegrees(time * _degreesPerSecond);
                 e.View.InvalidateMeasure();
@@ -169,7 +191,7 @@ internal sealed partial class UITestControl
 
             entry = AddEntry("Offset", (e, time) =>
             {
-                e.Sprite.Offset = Angle.FromDegrees(time * _degreesPerSecond).RotateVec(Vector2.One);
+                e.Sprite.Offset = (MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);
@@ -177,12 +199,12 @@ internal sealed partial class UITestControl
             entry = AddEntry("Scaled", (e, time) =>
             {
                 var theta = (float) Angle.FromDegrees(_degreesPerSecond * time).Theta;
-                e.Sprite.Scale = Vector2.One * 1.5f + (MathF.Sin(theta), MathF.Cos(theta));
+                e.Sprite.Scale = Vector2.One + (0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);
 
-            entry = AddEntry("Rotated", (e, time) =>
+            entry = AddEntry("Sprite Rotation", (e, time) =>
             {
                 e.Sprite.Rotation = Angle.FromDegrees(time * _degreesPerSecond);
             });
@@ -191,8 +213,8 @@ internal sealed partial class UITestControl
             entry = AddEntry("Combination", (e, time) =>
             {
                 var theta = (float) Angle.FromDegrees(_degreesPerSecond * time * 2).Theta;
-                e.Sprite.Scale = Vector2.One * 1.5f + (MathF.Sin(theta), MathF.Cos(theta));
-                e.Sprite.Offset = Angle.FromDegrees(time * _degreesPerSecond).RotateVec(Vector2.One);
+                e.Sprite.Scale = Vector2.One + (0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
+                e.Sprite.Offset = (MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
                 e.Sprite.Rotation = Angle.FromDegrees(0.5 * time * _degreesPerSecond);
                 e.Transform.LocalRotation = Angle.FromDegrees(0.25 * time * _degreesPerSecond);
                 e.View.InvalidateMeasure();
@@ -205,24 +227,20 @@ internal sealed partial class UITestControl
         protected override void FrameUpdate(FrameEventArgs args)
         {
             base.FrameUpdate(args);
+            var time = (float) _timing.CurTime.TotalSeconds;
             foreach (var entry in _entries)
             {
-                entry.Update?.Invoke(entry, args.DeltaSeconds);
+                entry.Update?.Invoke(entry, time);
             }
         }
 
         private Entry AddEntry(string text, Action<Entry, float>? onUpdate)
         {
-            var box = new BoxContainer
-            {
-                Orientation = BoxContainer.LayoutOrientation.Horizontal,
-                Margin = new Thickness(10)
-            };
-
-            var label = new Label()
+            var label = new Label
             {
                 MinWidth = 200,
-                Text = text
+                Text = text,
+                VerticalAlignment = VAlignment.Center
             };
 
             var ent = _entMan.SpawnEntity(EntityId, MapCoordinates.Nullspace);
@@ -231,6 +249,7 @@ internal sealed partial class UITestControl
 
             var viewBox = new PanelContainer()
             {
+                VerticalAlignment = VAlignment.Center,
                 Children = { view },
                 PanelOverride = new StyleBoxFlat
                 {
@@ -240,10 +259,14 @@ internal sealed partial class UITestControl
                 }
             };
 
-            box.AddChild(label);
-            box.AddChild(viewBox);
-            box.Name = text;
-            _box.AddChild(box);
+            _box.AddChild(new BoxContainer
+            {
+                Orientation = BoxContainer.LayoutOrientation.Horizontal,
+                Margin = new Thickness(10),
+                MinHeight = 150,
+                Children = { label, viewBox},
+                Name = text,
+            });
 
             var sprite = _entMan.GetComponent<SpriteComponent>(ent);
             var xform = _entMan.GetComponent<TransformComponent>(ent);

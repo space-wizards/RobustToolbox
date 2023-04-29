@@ -77,7 +77,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
-        /// used to override the entity's world rotation. Note that the desired size of the control will not
+        /// Used to override the entity's world rotation. Note that the desired size of the control will not
         /// automatically get updated as the entity's world rotation changes.
         /// </summary>
         public Angle? WorldRotation

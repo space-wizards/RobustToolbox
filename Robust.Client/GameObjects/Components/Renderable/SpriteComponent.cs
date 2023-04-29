@@ -463,6 +463,7 @@ namespace Robust.Client.GameObjects
         }
 
         public bool LayerExists(int layer, bool logError = true) => TryGetLayer(layer, out _, logError);
+        public bool LayerExists(object key, bool logError = false) => LayerMapTryGet(key, out _, logError);
 
         private void _layerMapEnsurePrivate()
         {

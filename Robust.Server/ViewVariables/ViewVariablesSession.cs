@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -13,6 +14,7 @@ namespace Robust.Server.ViewVariables
         private readonly List<ViewVariablesTrait> _traits = new();
         public IServerViewVariablesInternal Host { get; }
         public IRobustSerializer RobustSerializer { get; }
+        public IEntityManager EntityManager { get; }
         public NetUserId PlayerUser { get; }
         public object Object { get; }
         public uint SessionId { get; }
@@ -25,7 +27,7 @@ namespace Robust.Server.ViewVariables
         /// </param>
         /// <param name="host">The view variables host owning this session.</param>
         public ViewVariablesSession(NetUserId playerUser, object o, uint sessionId, IServerViewVariablesInternal host,
-            IRobustSerializer robustSerializer)
+            IRobustSerializer robustSerializer, IEntityManager entMan)
         {
             PlayerUser = playerUser;
             Object = o;
@@ -33,6 +35,7 @@ namespace Robust.Server.ViewVariables
             ObjectType = o.GetType();
             Host = host;
             RobustSerializer = robustSerializer;
+            EntityManager = entMan;
 
             var traitIds = Host.TraitIdsFor(ObjectType);
             if (traitIds.Contains(ViewVariablesTraits.Members))
@@ -88,6 +91,11 @@ namespace Robust.Server.ViewVariables
                     break;
                 }
             }
+
+            // Auto-dirty component. Only works when modifying a field that is directly on a component,
+            // Does not work for nested objects.
+            if (Object is Component comp)
+                EntityManager.Dirty(comp);
         }
 
         public bool TryGetRelativeObject(object[] propertyIndex, out object? value)

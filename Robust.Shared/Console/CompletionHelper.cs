@@ -45,7 +45,7 @@ public static class CompletionHelper
                 var opt = (resPath / c).ToString();
 
                 if (c.EndsWith("/"))
-                    return new CompletionOption(opt + "/", Flags: CompletionOptionFlags.PartialCompletion);
+                    return new CompletionOption(opt, Flags: CompletionOptionFlags.PartialCompletion);
 
                 return new CompletionOption(opt);
             });
@@ -77,7 +77,7 @@ public static class CompletionHelper
             {
                 var full = resPath / c;
                 if (provider.IsDir(full))
-                    return new CompletionOption($"{full}/", Flags: CompletionOptionFlags.PartialCompletion);
+                    return new CompletionOption($"{full}", Flags: CompletionOptionFlags.PartialCompletion);
 
                 return new CompletionOption(full.ToString());
             })

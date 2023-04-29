@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.104.0.0
+
+### Breaking changes
+
+* API Changes to SpriteView control to generalize it.
+
+
 ## 0.103.0.0
 
 ### Breaking changes

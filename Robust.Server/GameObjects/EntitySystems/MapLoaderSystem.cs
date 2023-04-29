@@ -390,7 +390,7 @@ public sealed class MapLoaderSystem : EntitySystem
         _stopwatch.Restart();
         var mapUid = _mapManager.GetMapEntityId(data.TargetMap);
         var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
-        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), pauseTime);
+        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), pauseTime, null);
 
         if (data.Version >= 4)
         {
@@ -1078,11 +1078,11 @@ public sealed class MapLoaderSystem : EntitySystem
 
                         foreach (var (compType, comp) in prototype.Components)
                         {
-                            _context.CurrentWritingComponent = compType;
+                            _context.CurrentComponent = compType;
                             cache.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component, alwaysWrite: true, context: _context));
                         }
 
-                        _context.CurrentWritingComponent = null;
+                        _context.CurrentComponent = null;
                         cache.TryAdd(metaName, emptyMetaNode);
                         cache.TryAdd(xformName, emptyXformNode);
                     }
@@ -1104,7 +1104,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                     var compType = component.GetType();
                     var compName = _factory.GetComponentName(compType);
-                    _context.CurrentWritingComponent = compName;
+                    _context.CurrentComponent = compName;
                     MappingDataNode? compMapping;
                     MappingDataNode? protMapping = null;
                     if (cache != null && cache.TryGetValue(compName, out protMapping))

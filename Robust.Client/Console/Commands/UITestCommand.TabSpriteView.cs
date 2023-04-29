@@ -52,8 +52,9 @@ internal sealed partial class UITestControl
 
             _box.AddChild(new Label
             {
-                Text = "This control contains a bunch of sprite views with different transform (rotation) and sprite\n"+
-                       "based transformations applied. Except for the fixed-size no-stretch view, the sprites should never leave the boxes.\n"
+                Text = "This control contains a bunch of sprite views. They are grouped based on SpriteView properties.\n" +
+                       "Each group has views with different rotation and sprite transformations applied.\n" +
+                       "Except for the fixed-size no-stretch view, the sprites should never leave the boxes.\n"
             });
 
             _box.AddChild(new Label

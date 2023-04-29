@@ -160,14 +160,14 @@ public sealed class PhysicsComponent : Component
     /// <summary>
     /// Inverse moment of inertia (1 / I).
     /// </summary>
-    [ViewVariables,
+    [ViewVariables(VVAccess.ReadWrite),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public float InvI;
 
     /// <summary>
     ///     Is the body allowed to have angular velocity.
     /// </summary>
-    [DataField("fixedRotation"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("fixedRotation"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public bool FixedRotation = true;
 
@@ -188,7 +188,7 @@ public sealed class PhysicsComponent : Component
     /// The force is applied to the center of mass.
     /// https://en.wikipedia.org/wiki/Force
     /// </remarks>
-    [DataField("force"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("force"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public Vector2 Force;
 
@@ -199,7 +199,7 @@ public sealed class PhysicsComponent : Component
     /// The torque rotates around the Z axis on the object.
     /// https://en.wikipedia.org/wiki/Torque
     /// </remarks>
-    [DataField("torque"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("torque"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public float Torque;
 
@@ -215,7 +215,7 @@ public sealed class PhysicsComponent : Component
     ///     This is a set amount that the body's linear velocity is reduced by every tick.
     ///     Combined with the tile friction.
     /// </summary>
-    [DataField("linearDamping"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("linearDamping"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public float LinearDamping = 0.2f;
@@ -225,7 +225,7 @@ public sealed class PhysicsComponent : Component
     ///     Combined with the tile friction.
     /// </summary>
     /// <returns></returns>
-    [DataField("angularDamping"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("angularDamping"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public float AngularDamping = 0.2f;
@@ -239,15 +239,15 @@ public sealed class PhysicsComponent : Component
     ///     entity's parents are all stationary, this is the rate of change of this entity's world position (not
     ///     local position).
     /// </remarks>
-    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+    [ViewVariables(VVAccess.ReadWrite), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
         Other = AccessPermissions.ReadExecute)]
     public Vector2 LinearVelocity;
 
     /// <summary>
     ///     Current angular velocity of the entity in radians per sec.
     /// </summary>
-    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
-        Other = AccessPermissions.ReadExecute)]
+    [ViewVariables(VVAccess.ReadWrite), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+         Other = AccessPermissions.ReadExecute)]
     public float AngularVelocity;
 
     /// <summary>

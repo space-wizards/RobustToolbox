@@ -74,11 +74,11 @@ namespace Robust.Shared.ContentPack
             _engineModuleDirectories.Add(dir);
         }
 
-        public bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix)
+        public bool TryLoadModulesFrom(ResPath mountPath, string filterPrefix)
         {
             var sw = Stopwatch.StartNew();
             Logger.DebugS("res.mod", "LOADING modules");
-            var files = new Dictionary<string, (ResourcePath Path, string[] references)>();
+            var files = new Dictionary<string, (ResPath Path, string[] references)>();
 
             // Find all modules we want to load.
             foreach (var filePath in _res.ContentFindRelativeFiles(mountPath)
@@ -246,7 +246,7 @@ namespace Robust.Shared.ContentPack
 
         public bool TryLoadAssembly(string assemblyName)
         {
-            var dllPath = new ResourcePath($@"/Assemblies/{assemblyName}.dll");
+            var dllPath = new ResPath($@"/Assemblies/{assemblyName}.dll");
             // To prevent breaking debugging on Rider, try to load from disk if possible.
             if (_res.TryGetDiskFilePath(dllPath, out var path))
             {
@@ -270,7 +270,7 @@ namespace Robust.Shared.ContentPack
                     Logger.DebugS("srv", $"Loading {assemblyName} DLL");
 
                     // see if debug info is present
-                    if (_res.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb"),
+                    if (_res.TryContentFileRead(new ResPath($@"/Assemblies/{assemblyName}.pdb"),
                         out var gamePdb))
                     {
                         using (gamePdb)

@@ -42,7 +42,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     private int _maxUncompressedSize;
     private int _tickBatchSize;
     private bool _enabled;
-    private ResourcePath? _path;
+    private ResPath _path;
     public bool Recording => _curStream != null;
     private int _index = 0;
     private MemoryStream? _curStream;
@@ -106,7 +106,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             return false;
 
         var path = directory ?? _netConf.GetCVar(CVars.ReplayDirectory);
-        _path = new ResourcePath(path).ToRootedPath();
+        _path = new ResPath(path).ToRootedPath();
         if (_resourceManager.UserData.Exists(_path))
         {
             if (overwrite)
@@ -164,7 +164,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             var lastAck = _firstTick ? GameTick.Zero : _timing.CurTick - 1;
             _firstTick = false;
 
-            var (entStates, deletions, _, __) = _pvs.GetAllEntityStates(null, lastAck, _timing.CurTick);
+            var (entStates, deletions, _) = _pvs.GetAllEntityStates(null, lastAck, _timing.CurTick);
             var playerStates = _playerMan.GetPlayerStates(lastAck);
             var state = new GameState(lastAck, _timing.CurTick, 0, entStates, playerStates, deletions);
 

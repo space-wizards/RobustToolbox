@@ -75,7 +75,7 @@ public sealed class ScaleCommand : LocalizedCommands
                     case PolygonShape poly:
                         var verts = poly.Vertices;
 
-                        for (var i = 0; i < verts.Length; i++)
+                        for (var i = 0; i < poly.VertexCount; i++)
                         {
                             verts[i] *= scale;
                         }

@@ -60,7 +60,7 @@ namespace Robust.Client.WebView.Cef
 
             var cachePath = "";
             if (_resourceManager.UserData is WritableDirProvider userData)
-                cachePath = userData.GetFullPath(new ResourcePath("/cef_cache"));
+                cachePath = userData.GetFullPath(new ResPath("/cef_cache"));
 
             var settings = new CefSettings()
             {
@@ -171,10 +171,10 @@ namespace Robust.Client.WebView.Cef
 
                 _sawmill.Debug($"HANDLING: {request.Url}");
 
-                var resourcePath = new ResourcePath(uri.AbsolutePath);
-                if (_resourceManager.TryContentFileRead(resourcePath, out var stream))
+                var resPath = new ResPath(uri.AbsolutePath);
+                if (_resourceManager.TryContentFileRead(resPath, out var stream))
                 {
-                    if (!_parent.TryGetResourceMimeType(resourcePath.Extension, out var mime))
+                    if (!_parent.TryGetResourceMimeType(resPath.Extension, out var mime))
                         mime = "application/octet-stream";
 
                     return new RequestResultStream(stream, mime, HttpStatusCode.OK).MakeHandler();

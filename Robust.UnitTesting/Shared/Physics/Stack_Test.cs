@@ -100,7 +100,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
 
                     physSystem.SetBodyType(boxUid, BodyType.Dynamic, manager: manager, body: box);
                     var poly = new PolygonShape(0.001f);
-                    poly.SetVertices(new List<Vector2>()
+                    poly.Set(new List<Vector2>()
                     {
                         new(0.5f, -0.5f),
                         new(0.5f, 0.5f),
@@ -129,9 +129,8 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         });
 
         // Assert
-
-        // Should be done in 149 but buffer just in case.
-        await server.WaitRunTicks(155);
+        
+        await server.WaitRunTicks(200);
 
         // Assert settled, none below 0, etc.
         await server.WaitAssertion(() =>

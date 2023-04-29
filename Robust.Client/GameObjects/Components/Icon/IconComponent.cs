@@ -18,7 +18,7 @@ namespace Robust.Client.GameObjects
         public IDirectionalTextureProvider? Icon { get; private set; }
 
         [DataField("sprite")]
-        private ResourcePath? rsi;
+        private ResPath rsi;
         [DataField("state")]
         private string? stateID;
 

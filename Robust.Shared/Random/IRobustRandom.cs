@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Random;
@@ -46,6 +47,28 @@ public interface IRobustRandom
     public Vector2 NextVector2Box(float maxAbsX = 1, float maxAbsY = 1) => NextVector2Box(-maxAbsX, -maxAbsY, maxAbsX, maxAbsY);
 
     void Shuffle<T>(IList<T> list)
+    {
+        var n = list.Count;
+        while (n > 1)
+        {
+            n -= 1;
+            var k = Next(n + 1);
+            (list[k], list[n]) = (list[n], list[k]);
+        }
+    }
+
+    void Shuffle<T>(Span<T> list)
+    {
+        var n = list.Length;
+        while (n > 1)
+        {
+            n -= 1;
+            var k = Next(n + 1);
+            (list[k], list[n]) = (list[n], list[k]);
+        }
+    }
+
+    void Shuffle<T>(ValueList<T> list)
     {
         var n = list.Count;
         while (n > 1)

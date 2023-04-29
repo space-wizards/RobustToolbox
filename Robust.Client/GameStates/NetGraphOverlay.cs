@@ -11,6 +11,8 @@ using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Client.Player;
+using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates
 {
@@ -24,10 +26,11 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
-        private const int HistorySize = 60 * 3; // number of ticks to keep in history.
+        private const int HistorySize = 60 * 5; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
-        private const int MidrangePayloadBps = 33600 / 8; // mid-range line
-        private const int BytesPerPixel = 2; // If you are running the game on a DSL connection, you can scale the graph to fit your absurd bandwidth.
+        private const int ExtremePayloadBps = 256000 / 8; // I know this is somewhat extreme, but I'm gonna make the graph go up to 256kbs. That's a whopping 32 KILO bytes per second.
+        private const int MidrangePayloadBps = 19200 / 8; // mid-range line
+        private const int BaselineBps = 8192 / 8; // mid-range line
         private const int LowerGraphOffset = 100; // Offset on the Y axis in pixels of the lower lag/interp graph.
         private const int LeftMargin = 500; // X offset, to avoid interfering with the f3 menu.
         private const int MsPerPixel = 4; // Latency Milliseconds per pixel, for scaling the graph.
@@ -36,12 +39,12 @@ namespace Robust.Client.GameStates
         public override OverlaySpace Space => OverlaySpace.ScreenSpace;
 
         private readonly Font _font;
-        private int _warningPayloadSize;
-        private int _midrangePayloadSize;
 
-        private readonly List<(GameTick Tick, int Payload, int lag, int interp)> _history = new(HistorySize+10);
+        private readonly List<(GameTick Tick, int Payload, int lag, int Buffer)> _history = new(HistorySize+10);
 
-        private int _totalHistoryPayload; // sum of all data point sizes in bytes
+        // sum of all data point sizes in bytes
+        private int _totalHistoryPayload;
+        private int _totalUncompressed;
 
         public EntityUid WatchEntId { get; set; }
 
@@ -59,18 +62,14 @@ namespace Robust.Client.GameStates
             var toSeq = args.AppliedState.ToSequence;
             var sz = args.AppliedState.PayloadSize;
 
-            // calc payload size
-            _warningPayloadSize = TargetPayloadBps / _gameTiming.TickRate;
-            _midrangePayloadSize = MidrangePayloadBps / _gameTiming.TickRate;
-
             // calc lag
             var lag = _netManager.ServerChannel!.Ping;
 
             // calc interp info
-            var interpBuff = _gameStateManager.CurrentBufferSize - _gameStateManager.MinBufferSize;
+            var buffer = _gameStateManager.CurrentBufferSize;
 
             _totalHistoryPayload += sz;
-            _history.Add((toSeq, sz, lag, interpBuff));
+            _history.Add((toSeq, sz, lag, buffer));
 
             // not watching an ent
             if(!WatchEntId.IsValid() || WatchEntId.IsClientSide())
@@ -163,13 +162,24 @@ namespace Robust.Client.GameStates
             _history.RemoveRange(0, over);
         }
 
+        private static int BytesToPixels(int bytes)
+        {
+            // the minimum size seems to be about 10 bytes.
+            // 10 bytes = 15 pixel, then doubling every 15 more pixels.
+            bytes = Math.Max(bytes - 10, 1);
+            return (int) Math.Round((1 + Math.Log2(bytes)) * 15);
+        }
+
         protected internal override void Draw(in OverlayDrawArgs args)
         {
             // remember, 0,0 is top left of ui with +X right and +Y down
 
+            var highPayload = BytesToPixels(ExtremePayloadBps / _gameTiming.TickRate);
+            var targetPayload = BytesToPixels(TargetPayloadBps / _gameTiming.TickRate);
+            var midPayload = BytesToPixels(MidrangePayloadBps / _gameTiming.TickRate);
+            var minPayload = BytesToPixels(BaselineBps / _gameTiming.TickRate);
             var width = HistorySize;
             var height = 500;
-            var drawSizeThreshold = Math.Min(_totalHistoryPayload / HistorySize, 300);
             var handle = args.ScreenHandle;
 
             // bottom payload line
@@ -185,19 +195,13 @@ namespace Robust.Client.GameStates
             {
                 var state = _history[i];
 
-                // draw the payload size
+                // draw the uncompressed size
                 var xOff = LeftMargin + i;
-                var yoff = height - state.Payload / BytesPerPixel;
-                handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, yoff), Color.LightGreen.WithAlpha(0.8f));
-
-                // Draw size if above average
-                if (drawSizeThreshold * 1.5 < state.Payload)
-                {
-                    handle.DrawString(_font, new Vector2(xOff, yoff - _font.GetLineHeight(1)), state.Payload.ToString());
-                }
+                var yoff = height - BytesToPixels(state.Payload);
+                handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, yoff), Color.LimeGreen.WithAlpha(0.8f));
 
                 // second tick marks
-                if (state.Tick.Value % _gameTiming.TickRate == 0)
+                if (state.Tick.Value % (_gameTiming.TickRate/5) == 0)
                 {
                     handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, height+2), Color.LightGray);
                 }
@@ -210,36 +214,51 @@ namespace Robust.Client.GameStates
 
                 // interp data
                 Color interpColor;
-                if(state.interp < 0)
+                if(state.Buffer < _gameStateManager.MinBufferSize)
                     interpColor = Color.Red;
-                else if(state.interp < _gameStateManager.TargetBufferSize - _gameStateManager.MinBufferSize)
+                else if(state.Buffer < _gameStateManager.TargetBufferSize)
                     interpColor = Color.Yellow;
                 else
                     interpColor = Color.Green;
 
-                handle.DrawLine(new Vector2(xOff, height + LowerGraphOffset), new Vector2(xOff, height + LowerGraphOffset + state.interp * 6), interpColor.WithAlpha(0.8f));
+                var delta = (state.Buffer - _gameStateManager.MinBufferSize);
+                handle.DrawLine(new Vector2(xOff, height + LowerGraphOffset), new Vector2(xOff, height + LowerGraphOffset +  delta * 6), interpColor.WithAlpha(0.8f));
             }
 
             // average payload line
-            var avgyoff = height - drawSizeThreshold / BytesPerPixel;
-            handle.DrawLine(new Vector2(LeftMargin, avgyoff), new Vector2(LeftMargin + width, avgyoff), Color.DarkGray.WithAlpha(0.8f));
+            var avg = height - BytesToPixels(_totalHistoryPayload/HistorySize);
+            var avgEnd = new Vector2(LeftMargin + width, avg)+ (70,0);
+            handle.DrawLine(new Vector2(LeftMargin, avg), avgEnd, Color.DarkGray.WithAlpha(0.8f));
 
             // top payload warning line
-            var warnYoff = height - _warningPayloadSize / BytesPerPixel;
+            var warnYoff = height - targetPayload;
+            handle.DrawLine(new Vector2(LeftMargin, warnYoff), new Vector2(LeftMargin + width, warnYoff), Color.DarkGray.WithAlpha(0.8f));
+
+            // Extreme payload hazard line -- their modem will probably explode at this point.
+            var extremeYoff = height - highPayload;
             handle.DrawLine(new Vector2(LeftMargin, warnYoff), new Vector2(LeftMargin + width, warnYoff), Color.DarkGray.WithAlpha(0.8f));
 
             // mid payload line
-            var midYoff = height - _midrangePayloadSize / BytesPerPixel;
+            var midYoff = height - midPayload;
             handle.DrawLine(new Vector2(LeftMargin, midYoff), new Vector2(LeftMargin + width, midYoff), Color.DarkGray.WithAlpha(0.8f));
 
-            // payload text
-            handle.DrawString(_font, new Vector2(LeftMargin + width, warnYoff), "56K");
-            handle.DrawString(_font, new Vector2(LeftMargin + width, midYoff), "33.6K");
+            var minYoff = height - minPayload;
+            handle.DrawLine(new Vector2(LeftMargin, minYoff), new Vector2(LeftMargin + width, minYoff), Color.DarkGray.WithAlpha(0.8f));
 
-            // interp text info
+            // payload text
+            handle.DrawString(_font, new Vector2(LeftMargin + width, extremeYoff), "128Kbit/s");
+            handle.DrawString(_font, new Vector2(LeftMargin + width, warnYoff), "56Kbit/s");
+            handle.DrawString(_font, new Vector2(LeftMargin + width, midYoff), "33.6Kbit/s");
+            handle.DrawString(_font, new Vector2(LeftMargin + width, minYoff), "8.19Kbit/s");
+
+            // avg text
+            handle.DrawString(_font, avgEnd - _font.GetLineHeight(1)/2f, "average");
+
+            // lag text info
             if(lastLagY != -1)
                 handle.DrawString(_font, new Vector2(LeftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
 
+            // buffer text
             handle.DrawString(_font, new Vector2(LeftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
+using Robust.Shared.Collections;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -12,14 +13,17 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Server.Placement
 {
     public sealed class PlacementManager : IPlacementManager
     {
+        [Dependency] private readonly IComponentFactory _factory = default!;
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IPrototypeManager _prototype = default!;
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -120,6 +124,37 @@ namespace Robust.Server.Placement
             */
             if (!isTile)
             {
+                // Replace existing entities if relevant.
+                if (msg.Replacement && _prototype.Index<EntityPrototype>(entityTemplateName).Components.TryGetValue(
+                        _factory.GetComponentName(typeof(PlacementReplacementComponent)), out var compRegistry))
+                {
+                    var key = ((PlacementReplacementComponent)compRegistry.Component).Key;
+                    var gridUid = coordinates.GetGridUid(_entityManager);
+
+                    if (_entityManager.TryGetComponent<MapGridComponent>(gridUid, out var grid))
+                    {
+                        var replacementQuery = _entityManager.GetEntityQuery<PlacementReplacementComponent>();
+                        var anc = grid.GetAnchoredEntitiesEnumerator(grid.LocalToTile(coordinates));
+                        var toDelete = new ValueList<EntityUid>();
+
+                        while (anc.MoveNext(out var ent))
+                        {
+                            if (!replacementQuery.TryGetComponent(ent, out var repl) ||
+                                repl.Key != key)
+                            {
+                                continue;
+                            }
+
+                            toDelete.Add(ent.Value);
+                        }
+
+                        foreach (var ent in toDelete)
+                        {
+                            _entityManager.DeleteEntity(ent);
+                        }
+                    }
+                }
+
                 var created = _entityManager.SpawnEntity(entityTemplateName, coordinates);
 
                 _entityManager.GetComponent<TransformComponent>(created).LocalRotation = dirRcv.ToAngle();

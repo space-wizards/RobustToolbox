@@ -513,6 +513,11 @@ public abstract partial class SharedTransformSystem
             return;
 
         var newPosition = xform._parent.IsValid() ? new EntityCoordinates(xform._parent, xform._localPosition) : default;
+#if DEBUG
+        // If an entity is parented to the map, its grid uid should be null (unless it is itself a grid or we have a map-grid)
+        if (xform.ParentUid == xform.MapUid)
+            DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid || xform.GridUid == xform.MapUid);
+#endif
         var moveEvent = new MoveEvent(uid, oldPosition, newPosition, oldRotation, xform._localRotation, xform, _gameTiming.ApplyingState);
         RaiseLocalEvent(uid, ref moveEvent, true);
     }
@@ -1187,7 +1192,7 @@ public abstract partial class SharedTransformSystem
         else
         {
             if (!_mapManager.IsMap(uid))
-                Logger.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}).");
+                _logger.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
 
             DetachParentToNull(uid, xform);
             return;

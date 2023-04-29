@@ -23,15 +23,7 @@ namespace Robust.Shared.Physics
         /// Minimum buffer distance for angles.
         /// </summary>
         public const float AngularSlop = 2.0f / 180.0f * MathF.PI;
-
-        /// <summary>
-        /// If true, it will run a GiftWrap convex hull on all polygon inputs.
-        /// This makes for a more stable engine when given random input,
-        /// but if speed of the creation of polygons are more important,
-        /// you might want to set this to false.
-        /// </summary>
-        public const bool ConvexHulls = true;
-
+        
         public const byte MaxPolygonVertices = 8;
 
         public const float DefaultContactFriction = 0.4f;

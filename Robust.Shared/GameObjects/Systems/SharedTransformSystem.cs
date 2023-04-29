@@ -98,7 +98,7 @@ namespace Robust.Shared.GameObjects
                 if (EntityManager.IsQueuedForDeletion(entity))
                     DetachParentToNull(entity, xform, xformQuery, metaQuery, gridXform);
                 else
-                    SetParent(entity, xform, mapTransform.Owner, parentXform: mapTransform);
+                    SetParent(entity, xform, gridXform.MapUid.Value, xformQuery, mapTransform);
             }
         }
 

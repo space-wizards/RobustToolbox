@@ -89,6 +89,8 @@ namespace Robust.Client.UserInterface
 
         private ISawmill _sawmillUI = default!;
 
+        public event Action<Control>? OnKeyBindDown;
+
         public void Initialize()
         {
             _dependencies = new DependencyCollection(_rootDependencies);

@@ -38,6 +38,17 @@ public sealed class EntitySpawningUIController : UIController
     // This is inclusive, so end is the index of the last prototype, not right after it.
     private (int start, int end) _lastEntityIndices;
 
+    private void OnEntityReplaceToggled(ButtonToggledEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        if (args.Pressed)
+            _placement.Replacement ^= true;
+
+        args.Button.Pressed = args.Pressed;
+    }
+
     private void OnEntityEraseToggled(ButtonToggledEventArgs args)
     {
         if (_window == null || _window.Disposed)
@@ -76,6 +87,8 @@ public sealed class EntitySpawningUIController : UIController
         _window = UIManager.CreateWindow<EntitySpawnWindow>();
         LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
         _window.OnClose += WindowClosed;
+        _window.ReplaceButton.Pressed = _placement.Replacement;
+        _window.ReplaceButton.OnToggled += OnEntityReplaceToggled;
         _window.EraseButton.Pressed = _placement.Eraser;
         _window.EraseButton.OnToggled += OnEntityEraseToggled;
         _window.OverrideMenu.OnItemSelected += OnEntityOverrideSelected;

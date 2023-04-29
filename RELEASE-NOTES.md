@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.104.1.0
+
+### New features
+
+* VV now automatically dirties components.
+
+### Bugfixes
+
+* Fix CompletionHelper paths having double // on the end.
+
+
 ## 0.104.0.0
 
 ### Breaking changes

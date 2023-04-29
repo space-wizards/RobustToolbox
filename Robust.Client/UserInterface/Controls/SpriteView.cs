@@ -169,7 +169,8 @@ namespace Robust.Client.UserInterface.Controls
             DebugTools.Assert(box.Contains(Vector2.Zero));
             DebugTools.Assert(box.TopLeft.EqualsApprox(-box.BottomRight));
 
-            if (_worldRotation != null)
+            if (_worldRotation != null
+                && _eyeRotation == Angle.Zero) // TODO This shouldn't need to be here, but I just give up at this point I am going fucking insane looking at rotating blobs of pixels. I doubt anyone will ever even use rotated sprite views.?
             {
                 _spriteSize = box.Size;
                 return;
@@ -205,7 +206,10 @@ namespace Robust.Client.UserInterface.Controls
                 _ => Vector2.One,
             };
 
-            var offset = SpriteOffset ? Vector2.Zero : - _sprite.Offset * (1, -1) * EyeManager.PixelsPerMeter;
+            var offset = SpriteOffset
+                ? Vector2.Zero
+                : - (-_eyeRotation).RotateVec(_sprite.Offset) * (1, -1) * EyeManager.PixelsPerMeter;
+
             var position = PixelSize / 2 + offset * stretch * UIScale;
             var scale = Scale * UIScale * stretch;
             renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, _sprite);

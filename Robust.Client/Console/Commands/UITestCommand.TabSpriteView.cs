@@ -95,7 +95,7 @@ internal sealed partial class UITestControl
             _box.AddChild(new Label
             {
                 Text = "============================\n" +
-                       "No override + Transform + Fixed Size + No Stretch.\n" +
+                       "No override + Transform + Fixed Size + No Stretch (sprites can leave).\n" +
                        "============================"
             });
 

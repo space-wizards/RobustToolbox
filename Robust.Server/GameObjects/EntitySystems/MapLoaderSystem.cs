@@ -408,14 +408,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 foreach (var entityDef in entities.Cast<MappingDataNode>())
                 {
-                    // TODO Fix this. If the entities are ever defined out of order, and if one of them does not have a
-                    // "uid" node, then defaulting to Entities.Count will error.
-                    var uid = data.Entities.Count;
-
-                    if (entityDef.TryGet<ValueDataNode>("uid", out var uidNode))
-                    {
-                        uid = uidNode.AsInt();
-                    }
+                    var uid = entityDef.Get<ValueDataNode>("uid").AsInt();
 
                     var entity = _serverEntityManager.AllocEntity(type);
                     data.Entities.Add(entity);
@@ -443,11 +436,6 @@ public sealed class MapLoaderSystem : EntitySystem
                 }
 
                 var uid = entityDef.Get<ValueDataNode>("uid").AsInt();
-
-                if (entityDef.TryGet<ValueDataNode>("uid", out var uidNode))
-                {
-                    uid = uidNode.AsInt();
-                }
 
                 var entity = _serverEntityManager.AllocEntity(type);
                 data.Entities.Add(entity);

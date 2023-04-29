@@ -25,8 +25,6 @@ namespace Robust.UnitTesting.Shared.Prototypes
             var factory = IoCManager.Resolve<IComponentFactory>();
             factory.RegisterClass<TestBasicPrototypeComponent>();
             factory.RegisterClass<PointLightComponent>();
-            // I'm so sorry
-            factory.RegisterClass<SpriteComponent>();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();

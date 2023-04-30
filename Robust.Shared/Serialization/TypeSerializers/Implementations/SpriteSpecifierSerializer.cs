@@ -25,6 +25,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         ITypeCopier<Rsi>,
         ITypeCopier<Texture>
     {
+        // Should probably be in SpriteComponent, but is needed for server to validate paths.
+        // So I guess it might as well go here?
+        public static readonly ResPath TextureRoot = new("/Textures");
+
         Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
@@ -108,7 +112,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            return serializationManager.ValidateNode<ResPath>(new ValueDataNode($"{SharedSpriteComponent.TextureRoot / node.Value}"), context);
+            return serializationManager.ValidateNode<ResPath>(new ValueDataNode($"{TextureRoot / node.Value}"), context);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, MappingDataNode>.Validate(

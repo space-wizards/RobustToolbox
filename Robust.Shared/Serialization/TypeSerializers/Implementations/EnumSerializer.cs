@@ -10,8 +10,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations;
 
 /// <summary>
-///     Attempts to resolve a string into an enum. If it fails, it simply reads the string. Useful for both both sprite
-///     layer and appearance data keys, which both simultaneously support enums and strings.
+///     Attempts to resolve a string into an enum.
 /// </summary>
 [TypeSerializer]
 public sealed class EnumSerializer : ITypeSerializer<Enum, ValueDataNode>

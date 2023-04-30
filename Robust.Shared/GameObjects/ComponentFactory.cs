@@ -362,6 +362,8 @@ namespace Robust.Shared.GameObjects
 
         public ComponentRegistration GetRegistration(CompIdx idx) => _array[idx.Value];
 
+        public bool IsIgnored(string componentName) => IgnoredComponentNames.Contains(componentName);
+
         public bool TryGetRegistration(string componentName, [NotNullWhen(true)] out ComponentRegistration? registration, bool ignoreCase = false)
         {
             if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))

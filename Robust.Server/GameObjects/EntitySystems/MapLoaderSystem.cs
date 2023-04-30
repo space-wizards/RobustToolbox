@@ -1065,6 +1065,7 @@ public sealed class MapLoaderSystem : EntitySystem
                     if (!prototypeCompCache.TryGetValue(prototype.ID, out cache))
                     {
                         prototypeCompCache[prototype.ID] = cache = new Dictionary<string, MappingDataNode>(prototype.Components.Count);
+                        _context.WritingReadingPrototypes = true;
 
                         foreach (var (compType, comp) in prototype.Components)
                         {
@@ -1073,6 +1074,7 @@ public sealed class MapLoaderSystem : EntitySystem
                         }
 
                         _context.CurrentComponent = null;
+                        _context.WritingReadingPrototypes = false;
                         cache.TryAdd(metaName, emptyMetaNode);
                         cache.TryAdd(xformName, emptyXformNode);
                     }

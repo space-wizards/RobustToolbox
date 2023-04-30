@@ -31,6 +31,11 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     private Dictionary<EntityUid, int> _entityUidMap = new();
 
     /// <summary>
+    /// Are we currently iterating prototypes or entities for writing.
+    /// </summary>
+    public bool WritingReadingPrototypes { get; set; }
+
+    /// <summary>
     /// Whether the map has been MapInitialized or not.
     /// </summary>
     public bool MapInitialized;

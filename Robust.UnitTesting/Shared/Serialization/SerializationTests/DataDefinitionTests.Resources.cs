@@ -92,8 +92,8 @@ public sealed partial class DataDefinitionTests
             target = SerializerReturnInt;
         }
 
-        public int CreateCopy(ISerializationManager serializationManager, int source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public int CreateCopy(ISerializationManager serializationManager, int source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return SerializerReturnInt;
         }
@@ -104,8 +104,8 @@ public sealed partial class DataDefinitionTests
             target = SerializerReturnStruct;
         }
 
-        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return SerializerReturnStruct;
         }
@@ -116,8 +116,8 @@ public sealed partial class DataDefinitionTests
             target = SerializerReturnClass;
         }
 
-        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return SerializerReturnClass;
         }
@@ -194,8 +194,8 @@ public sealed partial class DataDefinitionTests
             target = SerializerReturnInt;
         }
 
-        public int CreateCopy(ISerializationManager serializationManager, int source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public int CreateCopy(ISerializationManager serializationManager, int source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return SerializerReturnInt;
         }
@@ -206,8 +206,8 @@ public sealed partial class DataDefinitionTests
             target = SerializerReturnStruct;
         }
 
-        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return SerializerReturnStruct;
         }
@@ -220,8 +220,8 @@ public sealed partial class DataDefinitionTests
             target = SerializerReturnClass;
         }
 
-        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return SerializerReturnClass;
         }
@@ -297,8 +297,8 @@ public sealed partial class DataDefinitionTests
             target = SerializerReturnInt;
         }
 
-        public int CreateCopy(ISerializationManager serializationManager, int source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public int CreateCopy(ISerializationManager serializationManager, int source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return SerializerReturnInt;
         }
@@ -309,8 +309,8 @@ public sealed partial class DataDefinitionTests
             target = SerializerReturnStruct;
         }
 
-        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public DataDummyStruct CreateCopy(ISerializationManager serializationManager, DataDummyStruct source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return SerializerReturnStruct;
         }
@@ -323,8 +323,8 @@ public sealed partial class DataDefinitionTests
             target = SerializerReturnClass;
         }
 
-        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public DataDummyClass CreateCopy(ISerializationManager serializationManager, DataDummyClass source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return SerializerReturnClass;
         }

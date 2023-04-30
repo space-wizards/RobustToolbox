@@ -21,6 +21,7 @@ public sealed partial class ManagerTests : ISerializationContext
     private static ValueDataNode SerializerRanCustomDataNode => new ("SerializerRanCustom");
 
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
+    public bool WritingReadingPrototypes { get; }
 
     [OneTimeSetUp]
     public void SetupSerializerProvider()
@@ -68,8 +69,8 @@ public sealed partial class ManagerTests : ISerializationContext
             target.TwoValue = source.TwoValue;
         }
 
-        public SerializerStruct CreateCopy(ISerializationManager serializationManager, SerializerStruct source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public SerializerStruct CreateCopy(ISerializationManager serializationManager, SerializerStruct source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new SerializerStruct(source.OneValue, source.TwoValue);
         }
@@ -103,8 +104,8 @@ public sealed partial class ManagerTests : ISerializationContext
             target.TwoValue = source.TwoValue;
         }
 
-        public SerializerStruct CreateCopy(ISerializationManager serializationManager, SerializerStruct source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public SerializerStruct CreateCopy(ISerializationManager serializationManager, SerializerStruct source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new SerializerStruct(source.OneValue, source.TwoValue);
         }
@@ -144,8 +145,8 @@ public sealed partial class ManagerTests : ISerializationContext
             return SerializerRanDataNode;
         }
 
-        public SerializerClass CreateCopy(ISerializationManager serializationManager, SerializerClass source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public SerializerClass CreateCopy(ISerializationManager serializationManager, SerializerClass source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new SerializerClass(source.OneValue, source.TwoValue);
         }
@@ -172,8 +173,8 @@ public sealed partial class ManagerTests : ISerializationContext
             return SerializerRanCustomDataNode;
         }
 
-        public SerializerClass CreateCopy(ISerializationManager serializationManager, SerializerClass source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public SerializerClass CreateCopy(ISerializationManager serializationManager, SerializerClass source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new SerializerClass(source.OneValue, source.TwoValue);
         }

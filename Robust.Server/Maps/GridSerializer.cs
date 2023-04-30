@@ -129,10 +129,10 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         return Convert.ToBase64String(barr);
     }
 
-    public MapChunk CreateCopy(ISerializationManager serializationManager, MapChunk source, SerializationHookContext hookCtx,
-        ISerializationContext? context = null)
+    public MapChunk CreateCopy(ISerializationManager serializationManager, MapChunk source,
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
-        var mapManager = ((SerializationManager)serializationManager).DependencyCollection.Resolve<IMapManager>();
+        var mapManager = dependencies.Resolve<IMapManager>();
         mapManager.SuppressOnTileChanged = true;
         var chunk = new MapChunk(source.X, source.Y, source.ChunkSize)
         {

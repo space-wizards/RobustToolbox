@@ -179,8 +179,8 @@ public sealed class DictionarySerializer<TKey, TValue> :
         }
     }
 
-    public IReadOnlyDictionary<TKey, TValue> CreateCopy(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> source, SerializationHookContext hookCtx,
-        ISerializationContext? context = null)
+    public IReadOnlyDictionary<TKey, TValue> CreateCopy(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> source,
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
         var target = new Dictionary<TKey, TValue>();
         target.EnsureCapacity(source.Count);

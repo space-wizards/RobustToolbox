@@ -542,7 +542,7 @@ public sealed partial class SerializationManager
             return default!;
         }
 
-        var res = copyCreator.CreateCopy(this, source, hookCtx, context);
+        var res = copyCreator.CreateCopy(this, source, DependencyCollection, hookCtx, context);
         RunAfterHook(res, hookCtx);
 
         return res;

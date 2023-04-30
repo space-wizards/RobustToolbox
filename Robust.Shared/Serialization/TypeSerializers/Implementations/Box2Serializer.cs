@@ -78,8 +78,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public Box2 CreateCopy(ISerializationManager serializationManager, Box2 source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new Box2(source.Left, source.Bottom, source.Right, source.Top);
         }
@@ -138,8 +137,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 : new ErrorNode(node, "Failed parsing values of Box2i.");
         }
 
-        public Box2i CreateCopy(ISerializationManager serializationManager, Box2i source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public Box2i CreateCopy(ISerializationManager serializationManager, Box2i source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new Box2i(source.Left, source.Bottom, source.Right, source.Top);
         }

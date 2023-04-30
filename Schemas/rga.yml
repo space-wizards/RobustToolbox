@@ -1,10 +1,10 @@
 list(include('attribution'), min=1)
 ---
 attribution:
-  files: list(str())
+  files: list(str(), min=1)
   license: license()
   copyright: str()
-  source: url()
+  source: any(url(), list(url()), required=False)
 
 # Example
 # - files: ["deprecated.png"]

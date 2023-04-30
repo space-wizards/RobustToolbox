@@ -480,7 +480,14 @@ public sealed class MapLoaderSystem : EntitySystem
                 var datanode = compData.Copy();
                 datanode.Remove("type");
                 var value = ((ValueDataNode)compData["type"]).Value;
-                var compType = _factory.GetRegistration(value).Type;
+                if (!_factory.TryGetRegistration(value, out var reg))
+                {
+                    if (!_factory.IsIgnored(value))
+                        _logLoader.Error($"Encountered unregistered component ({value}) while loading entity {ToPrettyString(uid)}");
+                    continue;
+                }
+
+                var compType = reg.Type;
                 if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protData))
                 {
                     datanode =

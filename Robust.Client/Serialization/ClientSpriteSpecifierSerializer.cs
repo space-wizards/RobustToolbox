@@ -29,7 +29,7 @@ public sealed class ClientSpriteSpecifierSerializer : SpriteSpecifierSerializer
         }
 
         var res = dependencies.Resolve<IResourceCache>();
-        var rsiPath = SharedSpriteComponent.TextureRoot / valuePathNode.Value;
+        var rsiPath = SpriteSpecifierSerializer.TextureRoot / valuePathNode.Value;
         if (!res.TryGetResource(rsiPath, out RSIResource? resource))
         {
             return new ErrorNode(node, "Failed to load RSI");

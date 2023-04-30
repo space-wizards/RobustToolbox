@@ -208,6 +208,11 @@ namespace Robust.Shared.GameObjects
         ComponentRegistration GetRegistration(CompIdx idx);
 
         /// <summary>
+        ///     Returns true if the given component name has been registered as ignored.
+        /// </summary>
+        bool IsIgnored(string componentName);
+
+        /// <summary>
         ///     Tries to get the registration belonging to a component.
         /// </summary>
         /// <param name="componentName">The name of the component.</param>

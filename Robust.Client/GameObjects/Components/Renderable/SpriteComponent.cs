@@ -26,12 +26,12 @@ using Robust.Shared.ViewVariables;
 using static Robust.Client.ComponentTrees.SpriteTreeSystem;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using RSIDirection = Robust.Client.Graphics.RSI.State.Direction;
+using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 
 namespace Robust.Client.GameObjects
 {
-    [ComponentReference(typeof(SharedSpriteComponent))]
     [RegisterComponent]
-    public sealed class SpriteComponent : SharedSpriteComponent, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
+    public sealed class SpriteComponent : Component, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
@@ -52,7 +52,7 @@ namespace Robust.Client.GameObjects
         private Dictionary<object, Layer> _mappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public override bool Visible
+        public bool Visible
         {
             get => _visible;
             set
@@ -258,6 +258,10 @@ namespace Robust.Client.GameObjects
 
         private Box2 _bounds;
 
+        /// <summary>
+        ///     The bounds of the sprite. This does factor in the sprite's <see cref="Scale"/> but not the
+        ///     <see cref="Rotation"/> and <see cref="Offset"/>
+        /// </summary>
         public Box2 Bounds => _bounds;
 
         [ViewVariables(VVAccess.ReadWrite)] internal bool _inertUpdateQueued;
@@ -459,6 +463,7 @@ namespace Robust.Client.GameObjects
         }
 
         public bool LayerExists(int layer, bool logError = true) => TryGetLayer(layer, out _, logError);
+        public bool LayerExists(object key, bool logError = false) => LayerMapTryGet(key, out _, logError);
 
         private void _layerMapEnsurePrivate()
         {
@@ -1305,40 +1310,6 @@ namespace Robust.Client.GameObjects
                 RSI.State.DirectionType.Dir8 => 8,
                 _ => throw new ArgumentOutOfRangeException()
             };
-        }
-
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            if (curState is not SpriteComponentState thestate)
-                return;
-
-            Visible = thestate.Visible;
-            DrawDepth = thestate.DrawDepth;
-            scale = thestate.Scale;
-            rotation = thestate.Rotation;
-            offset = thestate.Offset;
-            UpdateLocalMatrix();
-            Color = thestate.Color;
-            RenderOrder = thestate.RenderOrder;
-
-
-            if (thestate.BaseRsiPath != null && BaseRSI != null)
-            {
-                if (resourceCache.TryGetResource<RSIResource>(TextureRoot / thestate.BaseRsiPath, out var res))
-                {
-                    if (BaseRSI != res.RSI)
-                    {
-                        BaseRSI = res.RSI;
-                    }
-                }
-                else
-                {
-                    Logger.ErrorS(LogCategory, "Hey server, RSI '{0}' doesn't exist.", thestate.BaseRsiPath);
-                }
-            }
-
-            // Maybe optimize this to NOT fully clear the layers. (see LayerDatums setter function)
-            LayerDatums = thestate.Layers;
         }
 
         private void QueueUpdateRenderTree()

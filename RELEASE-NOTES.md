@@ -54,6 +54,60 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.105.0.0
+
+### Breaking changes
+
+* Removed server and shared sprite components.
+
+### New features
+
+* Add LayerExists to sprites for object keys (previously it was only integer keys).
+
+### Bugfixes
+
+* Fix placement overlay error and add exception tolerance to it.
+
+
+## 0.104.1.0
+
+### New features
+
+* VV now automatically dirties components.
+
+### Bugfixes
+
+* Fix CompletionHelper paths having double // on the end.
+
+
+## 0.104.0.0
+
+### Breaking changes
+
+* API Changes to SpriteView control to generalize it.
+
+
+## 0.103.0.0
+
+### Breaking changes
+
+* Maps are now saved by prototype -> entities rather than as just entities. Maps are currently backwards compatible but this is liable to change.
+
+### New features
+
+* RobustServerSimulation is public and usable by content for tests or benchmarking.
+* Add sf3 extension support to midis.
+
+### Bugfixes
+
+* Fix random.Prob inequality.
+
+### Other
+
+* Adjust centerpoint for spriteview sprites.
+* Mark ComponentReference as obsolete.
+
+
 ## 0.102.1.0
 
 ### New features

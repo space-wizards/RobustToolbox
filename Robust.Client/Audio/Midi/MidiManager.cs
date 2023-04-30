@@ -279,7 +279,7 @@ internal sealed partial class MidiManager : IMidiManager
             _midiSawmill.Debug($"Loading soundfonts from {ContentCustomSoundfontDirectory}");
             foreach (var file in _resourceManager.ContentFindFiles(ContentCustomSoundfontDirectory))
             {
-                if (file.Extension != "sf2" && file.Extension != "dls") continue;
+                if (file.Extension != "sf2" && file.Extension != "dls" && file.Extension != "sf3") continue;
                 _midiSawmill.Debug($"Loading soundfont {file}");
                 renderer.LoadSoundfont(file.ToString());
             }
@@ -289,7 +289,7 @@ internal sealed partial class MidiManager : IMidiManager
             var enumerator = _resourceManager.UserData.Find($"{CustomSoundfontDirectory.ToRelativePath()}/*").Item1;
             foreach (var file in enumerator)
             {
-                if (file.Extension != "sf2" && file.Extension != "dls") continue;
+                if (file.Extension != "sf2" && file.Extension != "dls" && file.Extension != "sf3") continue;
                 _midiSawmill.Debug($"Loading soundfont {{USERDATA}} {file}");
                 renderer.LoadSoundfont(file.ToString());
             }

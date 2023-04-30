@@ -25,8 +25,6 @@ namespace Robust.UnitTesting.Shared.Prototypes
             var factory = IoCManager.Resolve<IComponentFactory>();
             factory.RegisterClass<TestBasicPrototypeComponent>();
             factory.RegisterClass<PointLightComponent>();
-            // I'm so sorry
-            factory.RegisterClass<SpriteComponent>();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
@@ -55,7 +53,6 @@ namespace Robust.UnitTesting.Shared.Prototypes
                 Assert.That(prototype.Name, Is.EqualTo("Wall Light"));
                 Assert.That(prototype.ID, Is.EqualTo(id));
                 Assert.That(prototype.Components, Contains.Key("Transform"));
-                Assert.That(prototype.Components, Contains.Key("Sprite"));
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 

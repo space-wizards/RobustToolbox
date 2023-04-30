@@ -34,7 +34,7 @@ public sealed class ServerSpriteSpecifierSerializer : SpriteSpecifierSerializer
         }
 
         var path = serializationManager.ValidateNode<ResPath>(
-            new ValueDataNode($"{SharedSpriteComponent.TextureRoot / valuePathNode.Value}"), context);
+            new ValueDataNode($"{SpriteSpecifierSerializer.TextureRoot / valuePathNode.Value}"), context);
 
         if (path is ErrorNode) return path;
 
@@ -44,7 +44,7 @@ public sealed class ServerSpriteSpecifierSerializer : SpriteSpecifierSerializer
         // meta.json
 
         var statePath = serializationManager.ValidateNode<ResPath>(
-            new ValueDataNode($"{SharedSpriteComponent.TextureRoot / valuePathNode.Value / valueStateNode.Value}.png"),
+            new ValueDataNode($"{SpriteSpecifierSerializer.TextureRoot / valuePathNode.Value / valueStateNode.Value}.png"),
             context);
 
         if (statePath is ErrorNode) return statePath;

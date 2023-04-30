@@ -2,7 +2,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager.Attributes;
 using System;
 using System.Collections.Generic;
-using static Robust.Shared.GameObjects.SharedSpriteComponent;
 
 namespace Robust.Client.GameObjects;
 

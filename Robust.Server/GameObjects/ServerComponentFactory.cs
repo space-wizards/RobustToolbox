@@ -11,5 +11,6 @@ internal sealed class ServerComponentFactory : ComponentFactory
         RegisterIgnore("Input");
         RegisterIgnore("AnimationPlayer");
         RegisterIgnore("GenericVisualizer");
+        RegisterIgnore("Sprite"); // Fucking finally
     }
 }

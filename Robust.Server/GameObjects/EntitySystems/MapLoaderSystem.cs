@@ -315,6 +315,8 @@ public sealed class MapLoaderSystem : EntitySystem
                 continue;
 
             var type = typeNode.Value;
+            if (string.IsNullOrWhiteSpace(type))
+                continue;
 
             if (ev.RenamedPrototypes.TryGetValue(type, out var newType))
                 type = newType;
@@ -406,8 +408,10 @@ public sealed class MapLoaderSystem : EntitySystem
             {
                 string? type = null;
                 var deletedPrototype = false;
-                if (metaDef.TryGet<ValueDataNode>("proto", out var typeNode))
+                if (metaDef.TryGet<ValueDataNode>("proto", out var typeNode)
+                    && !string.IsNullOrWhiteSpace(typeNode.Value))
                 {
+
                     if (ev.DeletedPrototypes.Contains(typeNode.Value))
                         deletedPrototype = true;
                     else if (ev.RenamedPrototypes.TryGetValue(typeNode.Value, out var newType))

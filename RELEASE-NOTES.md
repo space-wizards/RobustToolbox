@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.105.0.0
+
+### Breaking changes
+
+* Removed server and shared sprite components.
+
+### New features
+
+* Add LayerExists to sprites for object keys (previously it was only integer keys).
+
+### Bugfixes
+
+* Fix placement overlay error and add exception tolerance to it.
+
+
 ## 0.104.1.0
 
 ### New features

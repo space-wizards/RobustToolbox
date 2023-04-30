@@ -266,7 +266,7 @@ public sealed partial class SerializationManager
             context.SerializerProvider.TryGetTypeSerializer<ITypeCopier<TCommon>, TCommon>(out var copier))
         {
             var commonTarget = target;
-            copier.CopyTo(this, source, ref commonTarget, hookCtx, context);
+            copier.CopyTo(this, source, ref commonTarget, DependencyCollection, hookCtx, context);
         }
 
         if (ShouldReturnSource(typeof(TCommon))) //todo paul can be precomputed
@@ -448,7 +448,7 @@ public sealed partial class SerializationManager
 
         target ??= GetOrCreateInstantiator<T>(false)();
 
-        copier.CopyTo(this, source, ref target, hookCtx, context);
+        copier.CopyTo(this, source, ref target, DependencyCollection, hookCtx, context);
 
         RunAfterHook(target, hookCtx);
     }

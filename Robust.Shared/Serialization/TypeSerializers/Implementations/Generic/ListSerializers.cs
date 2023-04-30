@@ -178,7 +178,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return list.ToImmutable();
         }
 
-        public void CopyTo(ISerializationManager serializationManager, List<T> source, ref List<T> target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, List<T> source, ref List<T> target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.Clear();

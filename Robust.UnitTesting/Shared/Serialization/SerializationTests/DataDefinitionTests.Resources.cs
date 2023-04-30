@@ -84,7 +84,9 @@ public sealed partial class DataDefinitionTests
             return SerializerValueDataNode;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, int source, ref int target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, int source, ref int target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnInt;
@@ -97,7 +99,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public void CopyTo(ISerializationManager serializationManager, DataDummyStruct source, ref DataDummyStruct target,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target = SerializerReturnStruct;
         }
@@ -108,8 +110,8 @@ public sealed partial class DataDefinitionTests
             return SerializerReturnStruct;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target = SerializerReturnClass;
         }
@@ -184,7 +186,9 @@ public sealed partial class DataDefinitionTests
             return SerializerSequenceDataNode;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, int source, ref int target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, int source, ref int target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnInt;
@@ -197,7 +201,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public void CopyTo(ISerializationManager serializationManager, DataDummyStruct source, ref DataDummyStruct target,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target = SerializerReturnStruct;
         }
@@ -208,7 +212,9 @@ public sealed partial class DataDefinitionTests
             return SerializerReturnStruct;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnClass;
@@ -283,7 +289,9 @@ public sealed partial class DataDefinitionTests
             return SerializerMappingDataNode;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, int source, ref int target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, int source, ref int target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnInt;
@@ -296,7 +304,7 @@ public sealed partial class DataDefinitionTests
         }
 
         public void CopyTo(ISerializationManager serializationManager, DataDummyStruct source, ref DataDummyStruct target,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target = SerializerReturnStruct;
         }
@@ -307,7 +315,9 @@ public sealed partial class DataDefinitionTests
             return SerializerReturnStruct;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, DataDummyClass source, ref DataDummyClass target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target = SerializerReturnClass;

@@ -1,7 +1,5 @@
 using System;
 using System.Globalization;
-using JetBrains.Annotations;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Serialization.Manager;
@@ -16,7 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 /// <summary>
 /// Offsets the timespan by the CurTime.
 /// </summary>
-public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNode>
+public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNode>, ITypeCopier<TimeSpan>
 {
     public TimeSpan Read(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies,
@@ -25,9 +23,7 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
     {
         var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
-        var curTime = dependencies.Resolve<IGameTiming>().CurTime;
-
-        return curTime + TimeSpan.FromSeconds(seconds);
+        return TimeSpan.FromSeconds(seconds);
     }
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
@@ -50,5 +46,13 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         }
 
         return new ValueDataNode((value - curTime).TotalSeconds.ToString(CultureInfo.InvariantCulture));
+    }
+
+    public void CopyTo(ISerializationManager serializationManager, TimeSpan source, ref TimeSpan target, IDependencyCollection dependencies,
+        SerializationHookContext hookCtx, ISerializationContext? context = null)
+    {
+        var curTime = dependencies.Resolve<IGameTiming>().CurTime;
+        var serializedTime = curTime + source;
+        target = serializedTime;
     }
 }

@@ -90,7 +90,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new PrototypeFlags<T>(source);
         }
 
-        public void CopyTo(ISerializationManager serializationManager, PrototypeFlags<T> source, ref PrototypeFlags<T> target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, PrototypeFlags<T> source, ref PrototypeFlags<T> target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.Clear();

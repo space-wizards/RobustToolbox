@@ -222,14 +222,18 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             };
         }
 
-        public void CopyTo(ISerializationManager serializationManager, Rsi source, ref Rsi target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, Rsi source, ref Rsi target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.RsiPath = source.RsiPath;
             target.RsiState = source.RsiState;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, Texture source, ref Texture target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, Texture source, ref Texture target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.TexturePath = source.TexturePath;

@@ -62,7 +62,7 @@ public sealed partial class ManagerTests : ISerializationContext
         }
 
         public void CopyTo(ISerializationManager serializationManager, SerializerStruct source, ref SerializerStruct target,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target.OneValue = source.OneValue;
             target.TwoValue = source.TwoValue;
@@ -97,7 +97,7 @@ public sealed partial class ManagerTests : ISerializationContext
         }
 
         public void CopyTo(ISerializationManager serializationManager, SerializerStruct source, ref SerializerStruct target,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target.OneValue = source.OneValue;
             target.TwoValue = source.TwoValue;

@@ -31,6 +31,11 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     private Dictionary<EntityUid, int> _entityUidMap = new();
 
     /// <summary>
+    /// Whether the map has been MapInitialized or not.
+    /// </summary>
+    public bool MapInitialized;
+
+    /// <summary>
     /// How long the target map has been paused. Used for time offsets.
     /// </summary>
     public TimeSpan PauseTime;
@@ -45,11 +50,16 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         SerializerProvider.RegisterSerializer(this);
     }
 
-    public void Set(Dictionary<int, EntityUid> uidEntityMap, Dictionary<EntityUid, int> entityUidMap,
-        TimeSpan pauseTime, EntityUid? parentUid)
+    public void Set(
+        Dictionary<int, EntityUid> uidEntityMap,
+        Dictionary<EntityUid, int> entityUidMap,
+        bool mapPreInit,
+        TimeSpan pauseTime,
+        EntityUid? parentUid)
     {
         _uidEntityMap = uidEntityMap;
         _entityUidMap = entityUidMap;
+        MapInitialized = mapPreInit;
         PauseTime = pauseTime;
         if (parentUid != null && parentUid.Value.IsValid())
             _parentUid = parentUid;

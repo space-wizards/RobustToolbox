@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -41,13 +42,12 @@ public sealed class TimeOffsetSerializerTest : RobustIntegrationTest
         await sim.WaitRunTicks(10);
 
         var curTime = sim.ResolveDependency<IGameTiming>().CurTime;
+        var serializer = new TimeOffsetSerializer();
 
         var node = new ValueDataNode("2");
-        var deserialized = serialization.Read<TimeSpan, ValueDataNode, TimeOffsetSerializer>(node);
-
-        Assert.That(deserialized, Is.Not.EqualTo(null));
-        var time = (TimeSpan) deserialized!;
-
+        var time = TimeSpan.Zero;
+        var basic = serialization.Read<TimeSpan, ValueDataNode, TimeOffsetSerializer>(node);
+        serialization.CopyTo(serializer, basic, ref time);
         Assert.That(time, Is.EqualTo(curTime + TimeSpan.FromSeconds(2)));
     }
 }

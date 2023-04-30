@@ -104,6 +104,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public void CopyTo(ISerializationManager serializationManager, HashSet<T> source, ref HashSet<T> target,
+            IDependencyCollection dependencies,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {

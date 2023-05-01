@@ -18,7 +18,7 @@ namespace Robust.Client.ResourceManagement
     /// </summary>
     public sealed class RSIResource : BaseResource
     {
-        public override ResPath Fallback => new("/Textures/error.rsi");
+        public override ResPath? Fallback => new("/Textures/error.rsi");
 
         public RSI RSI { get; private set; } = default!;
 

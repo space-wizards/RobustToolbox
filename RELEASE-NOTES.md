@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.105.1.0
+
+### New features
+
+* Add CompOrNull to the EntityQuery struct.
+* Add basic maploader support for entity renaming.
+
+
 ## 0.105.0.0
 
 ### Breaking changes

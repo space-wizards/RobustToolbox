@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* `GameShared` no longer has a finalizer that triggers in some cases like tests.
 
 ### Internal
 

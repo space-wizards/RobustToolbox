@@ -472,6 +472,21 @@ public abstract partial class SharedTransformSystem
                     QueueDel(uid);
                     throw new InvalidOperationException($"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(uid)}, new parent: {ToPrettyString(value.EntityId)}");
                 }
+
+                // TODO maybe don't wrap this in DEBUG check once querying components is faster.
+                #if DEBUG
+                if (xform.MapUid == newParent.MapUid)
+                {
+                    var recursiveXform = newParent;
+                    while (recursiveXform.ParentUid.IsValid())
+                    {
+                        if (recursiveXform.ParentUid == uid)
+                            throw new InvalidOperationException($"Attempted to parent an entity to one of its descendants! {ToPrettyString(uid)}");
+
+                        recursiveXform = xformQuery.GetComponent(recursiveXform.ParentUid);
+                    }
+                }
+                #endif
             }
 
             if (xform._parent.IsValid())

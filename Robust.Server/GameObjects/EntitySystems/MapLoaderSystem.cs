@@ -47,7 +47,7 @@ public sealed class MapLoaderSystem : EntitySystem
     private ISawmill _logLoader = default!;
 
     private static readonly MapLoadOptions DefaultLoadOptions = new();
-    private const int MapFormatVersion = 4;
+    private const int MapFormatVersion = 5;
     private const int BackwardsVersion = 2;
 
     private MapSerializationContext _context = default!;
@@ -924,9 +924,6 @@ public sealed class MapLoaderSystem : EntitySystem
         var meta = new MappingDataNode();
         rootNode.Add("meta", meta);
         meta.Add("format", MapFormatVersion.ToString(CultureInfo.InvariantCulture));
-        // TODO: Make these values configurable.
-        meta.Add("name", "DemoStation");
-        meta.Add("author", "Space-Wizards");
 
         var xform = Transform(uid);
         var isPostInit = _mapManager.IsMapInitialized(xform.MapID);

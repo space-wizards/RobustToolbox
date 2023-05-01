@@ -56,15 +56,13 @@ namespace Robust.Client.Player
         ///     Attaches a client to an entity.
         /// </summary>
         /// <param name="entity">Entity to attach the client to.</param>
-        public void AttachEntity(EntityUid entity)
+        public void AttachEntity(EntityUid entity, IEntityManager entMan, IBaseClient client)
         {
             if (ControlledEntity == entity)
                 return;
 
             // Detach and cleanup first
             DetachEntity();
-
-            var entMan = IoCManager.Resolve<IEntityManager>();
 
             if (!entMan.EntityExists(entity))
             {
@@ -80,7 +78,7 @@ namespace Robust.Client.Player
             {
                 eye = entMan.AddComponent<EyeComponent>(entity);
 
-                if (IoCManager.Resolve<IBaseClient>().RunLevel != ClientRunLevel.SinglePlayerGame)
+                if (client.RunLevel != ClientRunLevel.SinglePlayerGame)
                 {
                     Logger.Warning($"Attaching local player to an entity {entMan.ToPrettyString(entity)} without an eye. This eye will not be netsynced and may cause issues.");
                 }

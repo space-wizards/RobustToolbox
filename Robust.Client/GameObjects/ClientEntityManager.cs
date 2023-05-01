@@ -72,8 +72,12 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
+            if (ShuttingDown)
+                return;
+
             // Client-side entity deletion is not supported and will cause errors.
-            Logger.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
+            if (_client.RunLevel == ClientRunLevel.Connected || _client.RunLevel == ClientRunLevel.InGame)
+                Logger.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
         }
 
         /// <inheritdoc />

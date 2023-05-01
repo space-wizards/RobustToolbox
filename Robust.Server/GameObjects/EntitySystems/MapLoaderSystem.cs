@@ -629,6 +629,7 @@ public sealed class MapLoaderSystem : EntitySystem
                     }
 
                     _mapManager.SetMapEntity(data.TargetMap, rootNode);
+                    EnsureComp<LoadedMapComponent>(rootNode);
                 }
                 // Otherwise just ignore the map in the file.
                 else
@@ -665,6 +666,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 }
 
                 _mapManager.SetMapEntity(data.TargetMap, rootNode);
+                EnsureComp<LoadedMapComponent>(rootNode);
 
                 // Nothing should have invalid uid except for the root node.
             }

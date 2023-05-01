@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Input;
+using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -30,7 +31,7 @@ namespace Robust.Client.Graphics.Clyde
         private readonly List<IClydeWindow> _windows = new();
         private int _nextWindowId = 2;
 
-        public ShaderInstance InstanceShader(ClydeHandle handle)
+        public ShaderInstance InstanceShader(ShaderSourceResource handle, bool? light = null, ShaderBlendMode? blend = null)
         {
             return new DummyShaderInstance();
         }
@@ -480,27 +481,11 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
-            private protected override void SetStencilOpImpl(StencilOp op)
+            private protected override void SetStencilImpl(StencilParameters value)
             {
             }
 
-            private protected override void SetStencilFuncImpl(StencilFunc func)
-            {
-            }
-
-            private protected override void SetStencilTestEnabledImpl(bool enabled)
-            {
-            }
-
-            private protected override void SetStencilRefImpl(int @ref)
-            {
-            }
-
-            private protected override void SetStencilWriteMaskImpl(int mask)
-            {
-            }
-
-            private protected override void SetStencilReadMaskRefImpl(int mask)
+            public override void Dispose()
             {
             }
         }

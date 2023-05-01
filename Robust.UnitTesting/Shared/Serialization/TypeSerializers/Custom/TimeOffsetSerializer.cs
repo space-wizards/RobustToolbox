@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.Serialization;
@@ -28,7 +29,7 @@ public sealed class TimeOffsetSerializerTest : RobustIntegrationTest
 
         var dataTime = curTime + TimeSpan.FromSeconds(2);
         var node = serialization.WriteValue<TimeSpan, TimeOffsetSerializer>(dataTime);
-        Assert.That(((ValueDataNode) node).Value, Is.EqualTo("2"));
+        Assert.That(((ValueDataNode) node).Value, Is.EqualTo(dataTime.TotalSeconds.ToString(CultureInfo.InvariantCulture)));
     }
 
     [Test]

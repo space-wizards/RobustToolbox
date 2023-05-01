@@ -397,7 +397,7 @@ public sealed class MapLoaderSystem : EntitySystem
         _stopwatch.Restart();
         var mapUid = _mapManager.GetMapEntityId(data.TargetMap);
         var pauseTime = mapUid.IsValid() ? _meta.GetPauseTime(mapUid) : TimeSpan.Zero;
-        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), pauseTime, null);
+        _context.Set(data.UidEntityMap, new Dictionary<EntityUid, int>(), data.MapIsPostInit, pauseTime, null);
         HashSet<EntityUid> deletedPrototypeUids = new();
 
         if (data.Version >= 4)
@@ -906,10 +906,12 @@ public sealed class MapLoaderSystem : EntitySystem
         WriteTileMapSection(data, entities);
 
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
-        var pauseTime = _meta.GetPauseTime(uid);
+        var metadata = Comp<MetaDataComponent>(uid);
+        var pauseTime = _meta.GetPauseTime(uid, metadata);
+        var postInit = metadata.EntityLifeStage >= EntityLifeStage.MapInitialized;
 
         var rootXform = _serverEntityManager.GetComponent<TransformComponent>(uid);
-        _context.Set(uidEntityMap, entityUidMap, pauseTime, rootXform.ParentUid);
+        _context.Set(uidEntityMap, entityUidMap, postInit, pauseTime, rootXform.ParentUid);
 
         _stopwatch.Restart();
         WriteEntitySection(data, uidEntityMap, entityUidMap);
@@ -1105,6 +1107,7 @@ public sealed class MapLoaderSystem : EntitySystem
                     if (!prototypeCompCache.TryGetValue(prototype.ID, out cache))
                     {
                         prototypeCompCache[prototype.ID] = cache = new Dictionary<string, MappingDataNode>(prototype.Components.Count);
+                        _context.WritingReadingPrototypes = true;
 
                         foreach (var (compType, comp) in prototype.Components)
                         {
@@ -1113,6 +1116,7 @@ public sealed class MapLoaderSystem : EntitySystem
                         }
 
                         _context.CurrentComponent = null;
+                        _context.WritingReadingPrototypes = false;
                         cache.TryAdd(metaName, emptyMetaNode);
                         cache.TryAdd(xformName, emptyXformNode);
                     }

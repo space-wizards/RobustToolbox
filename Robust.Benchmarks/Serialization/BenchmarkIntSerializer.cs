@@ -33,8 +33,8 @@ namespace Robust.Benchmarks.Serialization
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public int CreateCopy(ISerializationManager serializationManager, int source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public int CreateCopy(ISerializationManager serializationManager, int source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return source;
         }

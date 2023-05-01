@@ -72,8 +72,7 @@ public sealed class ResPathSerializer : ITypeSerializer<ResPath, ValueDataNode>,
     }
 
     public ResPath CreateCopy(ISerializationManager serializationManager, ResPath source,
-        SerializationHookContext hookCtx,
-        ISerializationContext? context = null)
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
         return new ResPath(source.ToString());
     }

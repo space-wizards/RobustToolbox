@@ -171,20 +171,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return mapping;
         }
 
-        public Texture CreateCopy(ISerializationManager serializationManager, Texture source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public Texture CreateCopy(ISerializationManager serializationManager, Texture source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.TexturePath);
         }
 
         public EntityPrototype CreateCopy(ISerializationManager serializationManager, EntityPrototype source,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.EntityPrototypeId);
         }
 
-        public Rsi CreateCopy(ISerializationManager serializationManager, Rsi source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public Rsi CreateCopy(ISerializationManager serializationManager, Rsi source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.RsiPath, source.RsiState);
         }
@@ -209,31 +209,35 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public SpriteSpecifier CreateCopy(ISerializationManager serializationManager, SpriteSpecifier source,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return source switch
             {
                 Rsi rsi
-                    => CreateCopy(serializationManager, rsi, hookCtx, context),
+                    => CreateCopy(serializationManager, rsi, dependencies, hookCtx, context),
 
                 Texture texture
-                    => CreateCopy(serializationManager, texture, hookCtx, context),
+                    => CreateCopy(serializationManager, texture, dependencies, hookCtx, context),
 
                 EntityPrototype entityPrototype
-                    => CreateCopy(serializationManager, entityPrototype, hookCtx, context),
+                    => CreateCopy(serializationManager, entityPrototype, dependencies, hookCtx, context),
 
                 _ => throw new InvalidOperationException("Invalid SpriteSpecifier specified!")
             };
         }
 
-        public void CopyTo(ISerializationManager serializationManager, Rsi source, ref Rsi target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, Rsi source, ref Rsi target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.RsiPath = source.RsiPath;
             target.RsiState = source.RsiState;
         }
 
-        public void CopyTo(ISerializationManager serializationManager, Texture source, ref Texture target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, Texture source, ref Texture target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.TexturePath = source.TexturePath;

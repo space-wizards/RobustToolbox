@@ -54,6 +54,23 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.106.0.0
+
+### Breaking changes
+
+* Update map file schema validator for new format.
+* TimeOffsetSerializer fixes to use serv3 copying.
+
+### Bugfixes
+
+* Fix ResPath null errors.
+* Fix queued deletion error log on entitymanager shutdown.
+
+### Other
+
+* Added transform recursion check in debug.
+
+
 ## 0.105.1.0
 
 ### New features

@@ -26,8 +26,9 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde = clyde;
                 _entities = entities;
 
-                DrawingHandleScreen = new DrawingHandleScreenImpl(this);
-                DrawingHandleWorld = new DrawingHandleWorldImpl(this);
+                var white = _clyde.GetStockTexture(ClydeStockTexture.White);
+                DrawingHandleScreen = new DrawingHandleScreenImpl(white, this);
+                DrawingHandleWorld = new DrawingHandleWorldImpl(white, this);
             }
 
             public void SetModelTransform(in Matrix3 matrix)
@@ -272,7 +273,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 private readonly RenderHandle _renderHandle;
 
-                public DrawingHandleScreenImpl(RenderHandle renderHandle)
+                public DrawingHandleScreenImpl(Texture white, RenderHandle renderHandle) : base(white)
                 {
                     _renderHandle = renderHandle;
                 }
@@ -313,7 +314,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (filled)
                     {
-                        DrawTextureRect(Texture.White, rect, color);
+                        DrawTextureRect(White, rect, color);
                     }
                     else
                     {
@@ -367,7 +368,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 private readonly RenderHandle _renderHandle;
 
-                public DrawingHandleWorldImpl(RenderHandle renderHandle)
+                public DrawingHandleWorldImpl(Texture white, RenderHandle renderHandle) : base(white)
                 {
                     _renderHandle = renderHandle;
                 }
@@ -413,7 +414,7 @@ namespace Robust.Client.Graphics.Clyde
                             filledTriangle[1] = new DrawVertexUV2DColor(endPos + position, colorReal);
                             filledTriangle[2] = new DrawVertexUV2DColor(position, colorReal);
 
-                            _renderHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, Texture.White, filledTriangle);
+                            _renderHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, White, filledTriangle);
                         }
                     }
                 }
@@ -432,7 +433,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (filled)
                     {
-                        DrawTextureRect(Texture.White, rect, color);
+                        DrawTextureRect(White, rect, color);
                     }
                     else
                     {
@@ -447,7 +448,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (filled)
                     {
-                        DrawTextureRect(Texture.White, rect, color);
+                        DrawTextureRect(White, rect, color);
                     }
                     else
                     {

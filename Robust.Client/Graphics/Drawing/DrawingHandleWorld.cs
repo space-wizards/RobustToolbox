@@ -4,6 +4,10 @@ namespace Robust.Client.Graphics
 {
     public abstract class DrawingHandleWorld : DrawingHandleBase
     {
+        protected DrawingHandleWorld(Texture white) : base(white)
+        {
+        }
+
         private const int Ppm = EyeManager.PixelsPerMeter;
 
         /// <summary>

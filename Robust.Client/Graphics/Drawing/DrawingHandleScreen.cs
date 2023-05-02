@@ -8,6 +8,10 @@ namespace Robust.Client.Graphics
 {
     public abstract class DrawingHandleScreen : DrawingHandleBase
     {
+        protected DrawingHandleScreen(Texture white) : base(white)
+        {
+        }
+
         public abstract void DrawRect(UIBox2 rect, Color color, bool filled = true);
 
         public abstract void DrawTextureRectRegion(Texture texture, UIBox2 rect, UIBox2? subRegion = null, Color? modulate = null);

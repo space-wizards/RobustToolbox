@@ -178,6 +178,18 @@ namespace Robust.Client.Graphics.Clyde
             {
                 try
                 {
+                    if (!overlay.BeforeDraw(args))
+                        return;
+
+                    if (overlay.RequestScreenTexture)
+                    {
+                        FlushRenderQueue();
+                        overlay.ScreenTexture = CopyScreenTexture(vp.RenderTarget);
+                    }
+
+                    if (overlay.OverwriteTargetFrameBuffer)
+                        ClearFramebuffer(default);
+
                     overlay.Draw(args);
                 }
                 catch (Exception e)

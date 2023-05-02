@@ -426,9 +426,6 @@ namespace Robust.Client.Graphics.Clyde
             var lastSoftness = float.NaN;
             Texture? lastMask = null;
 
-            // Gotta love them hidden IoC resolves
-            var white = Texture.White;
-
             using (_prof.Group("Draw Lights"))
             {
                 for (var i = 0; i < count; i++)
@@ -448,7 +445,7 @@ namespace Robust.Client.Graphics.Clyde
                         }
                     }
 
-                    var maskTexture = mask ?? white;
+                    var maskTexture = mask ?? _stockTextureWhite;
                     if (lastMask != maskTexture)
                     {
                         SetTexture(TextureUnit.Texture0, maskTexture);

@@ -47,11 +47,24 @@ END TEMPLATE-->
 
 ### Other
 
-* `GameShared` no longer has a finalizer that triggers in some cases like tests.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 0.106.1.0
+
+### New features
+
+* Screen-space overlays now use call `BeforeDraw()` and can use the `RequestScreenTexture` and `OverwriteTargetFrameBuffer` options.
+* Added the `LoadedMapComponent`. It can be used to identify maps created by loading them from a yml file.
+
+
+### Other
+
+* `GameShared` no longer has a finalizer that triggers in some cases like tests.
 
 
 ## 0.106.0.0

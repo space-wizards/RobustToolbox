@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.107.0.0
+
+### Breaking changes
+
+* Pass in dependencies to LocalPlayer AttachEntity (was anyone even using this method?)
+
+### Internal
+
+* Light query changes for some optimisation.
+* Remove Texture.White IoC resolves in a lot of rendering areas.
+
+
 ## 0.106.1.0
 
 ### New features

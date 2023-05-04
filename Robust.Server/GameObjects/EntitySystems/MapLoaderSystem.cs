@@ -329,12 +329,11 @@ public sealed class MapLoaderSystem : EntitySystem
 
             if (ev.DeletedPrototypes.Contains(type))
             {
-                _logLoader.Warning("map",
-                    $"Map contains an obsolete/removed prototype: {type}. This may cause unexpected errors.");
+                _logLoader.Warning("Map contains an obsolete/removed prototype: {0}. This may cause unexpected errors.", type);
                 continue;
             }
 
-            _logLoader.Error("map", "Missing prototype for map: {0}", type);
+            _logLoader.Error("Missing prototype for map: {0}", type);
             fail = true;
             reportedError.Add(type);
         }

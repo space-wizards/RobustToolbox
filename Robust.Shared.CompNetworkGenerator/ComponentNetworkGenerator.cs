@@ -45,7 +45,7 @@ namespace Robust.Shared.CompNetworkGenerator
                     {
                         if (prop.SetMethod == null || prop.SetMethod.DeclaredAccessibility != Accessibility.Public)
                         {
-                            var msg = "Property is marked with [AutoNetworkField], but has no accessible setter method.";
+                            var msg = "Property is marked with [AutoNetworkedField], but has no accessible setter method.";
                             context.ReportDiagnostic(
                                 Diagnostic.Create(
                                     new DiagnosticDescriptor(
@@ -61,7 +61,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         if (prop.GetMethod == null || prop.GetMethod.DeclaredAccessibility != Accessibility.Public)
                         {
-                            var msg = "Property is marked with [AutoNetworkField], but has no accessible getter method.";
+                            var msg = "Property is marked with [AutoNetworkedField], but has no accessible getter method.";
                             context.ReportDiagnostic(
                                 Diagnostic.Create(
                                     new DiagnosticDescriptor(
@@ -83,7 +83,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
             if (fields.Count == 0)
             {
-                var msg = "Component is marked with [AutoGenerateComponentState], but has no valid members marked with [AutoNetworkField].";
+                var msg = "Component is marked with [AutoGenerateComponentState], but has no valid members marked with [AutoNetworkedField].";
                 context.ReportDiagnostic(
                     Diagnostic.Create(
                         new DiagnosticDescriptor(

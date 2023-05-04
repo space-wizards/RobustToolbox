@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.107.0.1
+
+### Bugfixes
+
+* Fix bad logs on maploader not listing out bad prototypes.
+
+
 ## 0.107.0.0
 
 ### Breaking changes

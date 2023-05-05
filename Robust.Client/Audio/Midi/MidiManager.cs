@@ -24,6 +24,8 @@ namespace Robust.Client.Audio.Midi;
 
 internal sealed partial class MidiManager : IMidiManager
 {
+    public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
+
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCacheInternal _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -87,10 +89,12 @@ internal sealed partial class MidiManager : IMidiManager
         "/usr/share/soundfonts/default.sf2",
         "/usr/share/soundfonts/default.dls",
         "/usr/share/soundfonts/FluidR3_GM.sf2",
+        "/usr/share/soundfonts/FluidR3_GM2-2.sf2",
         "/usr/share/soundfonts/freepats-general-midi.sf2",
         "/usr/share/sounds/sf2/default.sf2",
         "/usr/share/sounds/sf2/default.dls",
         "/usr/share/sounds/sf2/FluidR3_GM.sf2",
+        "/usr/share/sounds/sf2/FluidR3_GM2-2.sf2",
         "/usr/share/sounds/sf2/TimGM6mb.sf2",
     };
 
@@ -238,6 +242,7 @@ internal sealed partial class MidiManager : IMidiManager
             // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
             renderer.LoadSoundfont(FallbackSoundfont);
 
+            // Load system-specific soundfonts.
             if (OperatingSystem.IsLinux())
             {
                 foreach (var filepath in LinuxSoundfonts)
@@ -275,7 +280,18 @@ internal sealed partial class MidiManager : IMidiManager
                 }
             }
 
-            // Load content-specific custom soundfonts, which could override the system/fallback soundfont.
+            // Maybe load soundfont specified in environment variable.
+            // Load it here so it can override system soundfonts but not content or user data soundfonts.
+            if (Environment.GetEnvironmentVariable(SoundfontEnvironmentVariable) is {} soundfontOverride)
+            {
+                if (File.Exists(soundfontOverride) && SoundFont.IsSoundFont(soundfontOverride))
+                {
+                    _midiSawmill.Debug($"Loading soundfont {soundfontOverride} from environment variable.");
+                    renderer.LoadSoundfont(soundfontOverride);
+                }
+            }
+
+            // Load content-specific custom soundfonts, which should override the system/fallback soundfont.
             _midiSawmill.Debug($"Loading soundfonts from {ContentCustomSoundfontDirectory}");
             foreach (var file in _resourceManager.ContentFindFiles(ContentCustomSoundfontDirectory))
             {

@@ -6,17 +6,12 @@ using System.Data;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
-using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
-using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
-using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
-using PT = OpenToolkit.Graphics.OpenGL4.PixelType;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -44,7 +39,7 @@ namespace Robust.Client.Graphics.Clyde
         public OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
-            DebugTools.Assert(_gameThread == Thread.CurrentThread);
+            /*DebugTools.Assert(_gameThread == Thread.CurrentThread);
 
             var actualParams = loadParams ?? TextureLoadParameters.Default;
             var pixelType = typeof(T);
@@ -86,7 +81,8 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            return texture;
+            return texture;*/
+            return new DummyTexture((image.Width, image.Height));
         }
 
         public unsafe OwnedTexture CreateBlankTexture<T>(
@@ -95,7 +91,7 @@ namespace Robust.Client.Graphics.Clyde
             in TextureLoadParameters? loadParams = null)
             where T : unmanaged, IPixel<T>
         {
-            var actualParams = loadParams ?? TextureLoadParameters.Default;
+            /*var actualParams = loadParams ?? TextureLoadParameters.Default;
             if (!_hasGLTextureSwizzle)
             {
                 // Actually create RGBA32 texture if missing texture swizzle.
@@ -114,9 +110,11 @@ namespace Robust.Client.Graphics.Clyde
             // Texture still bound, run glTexImage2D with null data param to specify bounds.
             DoTexUpload<T>(size.X, size.Y, actualParams.Srgb, null);
 
-            return texture;
+            return texture;*/
+            return new DummyTexture(size);
         }
 
+        /*
         private unsafe void DoTexUpload<T>(int width, int height, bool srgb, T* ptr) where T : unmanaged, IPixel<T>
         {
             if (sizeof(T) < 4)
@@ -253,7 +251,9 @@ namespace Robust.Client.Graphics.Clyde
 
             CheckGlError();
         }
+        */
 
+        /*
         private (PIF pif, PF pf, PT pt) PixelEnums<T>(bool srgb)
             where T : unmanaged, IPixel<T>
         {
@@ -276,7 +276,9 @@ namespace Robust.Client.Graphics.Clyde
                 _ => throw new NotSupportedException("Unsupported pixel type."),
             };
         }
+        */
 
+        /*
         private ClydeTexture GenTexture(
             GLHandle glHandle,
             Vector2i size,
@@ -311,7 +313,9 @@ namespace Robust.Client.Graphics.Clyde
 
             return instance;
         }
+        */
 
+        /*
         private void DeleteTexture(ClydeHandle textureHandle)
         {
             if (!_loadedTextures.TryGetValue(textureHandle, out var loadedTexture))
@@ -325,7 +329,9 @@ namespace Robust.Client.Graphics.Clyde
             _loadedTextures.Remove(textureHandle);
             //GC.RemoveMemoryPressure(loadedTexture.MemoryPressure);
         }
+        */
 
+        /*
         private unsafe void SetSubImage<T>(
             ClydeTexture texture,
             Vector2i dstTl,
@@ -358,8 +364,9 @@ namespace Robust.Client.Graphics.Clyde
             if (pooled != null)
                 ArrayPool<T>.Shared.Return(pooled);
         }
+        */
 
-        private unsafe void SetSubImage<T>(
+        /*private unsafe void SetSubImage<T>(
             ClydeTexture texture,
             Vector2i dstTl,
             Vector2i size,
@@ -378,8 +385,9 @@ namespace Robust.Client.Graphics.Clyde
 
             if (pooled != null)
                 ArrayPool<T>.Shared.Return(pooled);
-        }
+        }*/
 
+        /*
         private unsafe void SetSubImageImpl<T>(
             ClydeTexture texture,
             Vector2i dstTl,
@@ -447,6 +455,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGlError();
             }
         }
+        */
 
         private static TexturePixelType GetTexturePixelType<T>() where T : unmanaged, IPixel<T>
         {
@@ -570,7 +579,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class LoadedTexture
         {
-            public GLHandle OpenGLObject;
+            // public GLHandle OpenGLObject;
             public int Width;
             public int Height;
             public bool IsSrgb;
@@ -592,10 +601,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private void FlushTextureDispose()
         {
-            while (_textureDisposeQueue.TryDequeue(out var handle))
+            /*while (_textureDisposeQueue.TryDequeue(out var handle))
             {
                 DeleteTexture(handle);
-            }
+            }*/
         }
 
         private sealed class ClydeTexture : OwnedTexture
@@ -607,17 +616,19 @@ namespace Robust.Client.Graphics.Clyde
 
             public override void SetSubImage<T>(Vector2i topLeft, Image<T> sourceImage, in UIBox2i sourceRegion)
             {
+                /*
                 _clyde.SetSubImage(this, topLeft, sourceImage, sourceRegion);
+            */
             }
 
             public override void SetSubImage<T>(Vector2i topLeft, Vector2i size, ReadOnlySpan<T> buffer)
             {
-                _clyde.SetSubImage(this, topLeft, size, buffer);
+                /*_clyde.SetSubImage(this, topLeft, size, buffer);*/
             }
 
             protected override void Dispose(bool disposing)
             {
-                if (_clyde.IsMainThread())
+                /*if (_clyde.IsMainThread())
                 {
                     // Main thread, do direct GL deletion.
                     _clyde.DeleteTexture(TextureId);
@@ -626,7 +637,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // Finalizer thread
                     _clyde._textureDisposeQueue.Enqueue(TextureId);
-                }
+                }*/
             }
 
             internal ClydeTexture(ClydeHandle id, Vector2i size, bool srgb, Clyde clyde) : base(size)
@@ -645,26 +656,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 return $"ClydeTexture: ({TextureId})";
             }
-
-            public override Color GetPixel(int x, int y)
-            {
-                if (!_clyde._loadedTextures.TryGetValue(TextureId, out var loaded))
-                {
-                    throw new DataException("Texture not found");
-                }
-
-                Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
-                unsafe
-                {
-                    fixed (byte* p = rgba)
-                    {
-
-                        GL.GetTextureImage(loaded.OpenGLObject.Handle, 0, PF.Rgba, PT.UnsignedByte, 4*this.Size.X*this.Size.Y, (IntPtr) p);
-                    }
-                }
-                int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
-                return new Color(rgba[pixelPos+0], rgba[pixelPos+1], rgba[pixelPos+2], rgba[pixelPos+3]);
-            }
         }
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
@@ -676,6 +667,21 @@ namespace Robust.Client.Graphics.Clyde
                 ClydeStockTexture.Black => _stockTextureBlack,
                 _ => throw new ArgumentException(nameof(stockTexture))
             };
+        }
+
+        private sealed class DummyTexture : OwnedTexture
+        {
+            public DummyTexture(Vector2i size) : base(size)
+            {
+            }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Image<T> sourceImage, in UIBox2i sourceRegion)
+            {
+            }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Vector2i size, ReadOnlySpan<T> buffer)
+            {
+            }
         }
     }
 }

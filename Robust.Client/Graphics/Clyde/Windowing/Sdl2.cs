@@ -105,29 +105,6 @@ internal partial class Clyde
             // Not currently used
         }
 
-        public void GLMakeContextCurrent(WindowReg? reg)
-        {
-            int res;
-            if (reg is Sdl2WindowReg sdlReg)
-                res = SDL_GL_MakeCurrent(sdlReg.Sdl2Window, sdlReg.GlContext);
-            else
-                res = SDL_GL_MakeCurrent(IntPtr.Zero, IntPtr.Zero);
-
-            if (res < 0)
-                _sawmill.Error("SDL_GL_MakeCurrent failed: {error}", SDL_GetError());
-        }
-
-        public void GLSwapInterval(WindowReg reg, int interval)
-        {
-            ((Sdl2WindowReg)reg).SwapInterval = interval;
-            SDL_GL_SetSwapInterval(interval);
-        }
-
-        public unsafe void* GLGetProcAddress(string procName)
-        {
-            return (void*) SDL_GL_GetProcAddress(procName);
-        }
-
         public string GetDescription()
         {
             SDL_GetVersion(out var version);
@@ -164,7 +141,7 @@ internal partial class Clyde
             {
                 obj._sawmillSdl2.Info(Environment.StackTrace);
             }
-            
+
             var categoryName = SdlLogCategoryName(category);
             obj._sawmillSdl2.Log(level, $"[{categoryName}] {msg}");
         }

@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -10,31 +9,27 @@ using SixLabors.ImageSharp.PixelFormats;
 
 // ReSharper disable once IdentifierTypo
 using RTCF = Robust.Client.Graphics.RenderTargetColorFormat;
-using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
-using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
-using PT = OpenToolkit.Graphics.OpenGL4.PixelType;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
+        /*
         private readonly Dictionary<ClydeHandle, LoadedRenderTarget> _renderTargets =
             new();
 
         private readonly ConcurrentQueue<ClydeHandle> _renderTargetDisposeQueue
             = new();
-
-        // This is always kept up-to-date, except in CreateRenderTarget (because it restores the old value)
-        // It is used for SRGB emulation.
-        // It, like _mainWindowRenderTarget, is initialized in Clyde's constructor
-        private LoadedRenderTarget _currentBoundRenderTarget;
+            */
 
         IRenderTexture IClyde.CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters, string? name)
         {
-            return CreateRenderTarget(size, format, sampleParameters, name);
+            throw new NotImplementedException();
+            // return CreateRenderTarget(size, format, sampleParameters, name);
         }
 
+        /*
         private RenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string? name = null)
         {
@@ -404,5 +399,6 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
         }
+    */
     }
 }

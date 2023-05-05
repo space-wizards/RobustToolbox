@@ -212,10 +212,7 @@ internal partial class Clyde
         private sealed record CmdTerminate : CmdBase;
 
         private sealed record CmdWinCreate(
-            GLContextSpec? GLSpec,
             WindowCreateParameters Parameters,
-            nint ShareWindow,
-            nint ShareContext,
             nint OwnerWindow,
             TaskCompletionSource<Sdl2WindowCreateResult> Tcs
         ) : CmdBase;

@@ -14,7 +14,6 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using TerraFX.Interop.Windows;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
-using GL = OpenToolkit.Graphics.OpenGL4.GL;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -38,8 +37,6 @@ namespace Robust.Client.Graphics.Clyde
         private bool _vSync;
         private WindowMode _windowMode;
         private WindowReg? _currentHoveredWindow;
-        private bool _threadWindowBlit;
-        private bool EffectiveThreadWindowBlit => _threadWindowBlit && !_isGLES;
 
         public event Action<TextEnteredEventArgs>? TextEntered;
         public event Action<TextEditingEventArgs>? TextEditing;
@@ -89,11 +86,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool InitWindowing()
         {
-            if (OperatingSystem.IsWindows() && _cfg.GetCVar(CVars.DisplayAngleEs3On10_0))
-            {
-                Environment.SetEnvironmentVariable("ANGLE_FEATURE_OVERRIDES_ENABLED", "allowES3OnFL10_0");
-            }
-
             var iconPath = _cfg.GetCVar(CVars.DisplayWindowIconSet);
             if (!string.IsNullOrWhiteSpace(iconPath))
                 _windowIconPath = new ResPath(iconPath);
@@ -121,10 +113,8 @@ namespace Robust.Client.Graphics.Clyde
             return _windowing.Init();
         }
 
-        private bool TryInitMainWindow(GLContextSpec? glSpec, [NotNullWhen(false)] out string? error)
+        private bool TryInitMainWindow([NotNullWhen(false)] out string? error)
         {
-            DebugTools.AssertNotNull(_glContext);
-
             var width = _cfg.GetCVar(CVars.DisplayWidth);
             var height = _cfg.GetCVar(CVars.DisplayHeight);
             var prevWidth = width;
@@ -149,7 +139,7 @@ namespace Robust.Client.Graphics.Clyde
                 Fullscreen = fullscreen
             };
 
-            var (reg, err) = SharedWindowCreate(glSpec, parameters, null, isMain: true);
+            var (reg, err) = SharedWindowCreate(parameters, isMain: true);
 
             if (reg == null)
             {
@@ -172,42 +162,19 @@ namespace Robust.Client.Graphics.Clyde
         private unsafe bool InitMainWindowAndRenderer()
         {
             DebugTools.AssertNotNull(_windowing);
-            DebugTools.AssertNotNull(_glContext);
 
             _chosenRenderer = Renderer.OpenGL;
 
             var succeeded = false;
             string? lastError = null;
 
-            if (_glContext!.RequireWindowGL)
-            {
-                var specs = _glContext!.SpecsToTry;
-
-                foreach (var glSpec in specs)
-                {
-                    if (!TryInitMainWindow(glSpec, out lastError))
-                    {
-                        Logger.DebugS("clyde.win", $"OpenGL {glSpec.OpenGLVersion} unsupported: {lastError}");
-                        continue;
-                    }
-
-                    succeeded = true;
-                    break;
-                }
-            }
+            if (!TryInitMainWindow(out lastError))
+                Logger.DebugS("clyde.win", $"Failed to create window: {lastError}");
             else
-            {
-                if (!TryInitMainWindow(null, out lastError))
-                    Logger.DebugS("clyde.win", $"Failed to create window: {lastError}");
-                else
-                    succeeded = true;
-            }
+                succeeded = true;
 
             // We should have a main window now.
             DebugTools.AssertNotNull(_mainWindow);
-
-            // _openGLVersion must be set by _glContext.
-            DebugTools.Assert(_openGLVersion != RendererOpenGLVersion.Auto);
 
             if (!succeeded)
             {
@@ -236,14 +203,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 return false;
             }
-
-            if (!_earlyGLInit)
-                InitOpenGL();
-
-            _sawmillOgl.Debug("Setting viewport and rendering splash...");
-
-            GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
-            CheckGlError();
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
             Render();
@@ -303,17 +262,10 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeWindow CreateWindow(WindowCreateParameters parameters)
         {
             DebugTools.AssertNotNull(_windowing);
-            DebugTools.AssertNotNull(_glContext);
             DebugTools.AssertNotNull(_mainWindow);
 
-            var glSpec = _glContext!.GetNewWindowSpec();
-
-            _glContext.BeforeSharedWindowCreateUnbind();
-
             var (reg, error) = SharedWindowCreate(
-                glSpec,
                 parameters,
-                glSpec == null ? null : _mainWindow,
                 isMain: false);
 
             // Rebinding is handed by WindowCreated in the GL context.
@@ -324,17 +276,13 @@ namespace Robust.Client.Graphics.Clyde
             return reg!.Handle;
         }
 
-        private (WindowReg?, string? error) SharedWindowCreate(
-            GLContextSpec? glSpec,
-            WindowCreateParameters parameters,
-            WindowReg? share,
-            bool isMain)
+        private (WindowReg?, string? error) SharedWindowCreate(WindowCreateParameters parameters, bool isMain)
         {
             WindowReg? owner = null;
             if (parameters.Owner != null)
                 owner = ((WindowHandle)parameters.Owner).Reg;
 
-            var (reg, error) = _windowing!.WindowCreate(glSpec, parameters, share, owner);
+            var (reg, error) = _windowing!.WindowCreate(parameters, owner);
 
             if (reg != null)
             {
@@ -347,6 +295,7 @@ namespace Robust.Client.Graphics.Clyde
                 _windowHandles.Add(reg.Handle);
 
                 var rtId = AllocRid();
+                /*
                 _renderTargets.Add(rtId, new LoadedRenderTarget
                 {
                     Size = reg.FramebufferSize,
@@ -354,10 +303,11 @@ namespace Robust.Client.Graphics.Clyde
                     WindowId = reg.Id,
                     IsSrgb = true
                 });
+                */
 
-                reg.RenderTarget = new RenderWindow(this, rtId);
+                // reg.RenderTarget = new RenderWindow(this, rtId);
 
-                _glContext!.WindowCreated(glSpec, reg);
+                // _glContext!.WindowCreated(glSpec, reg);
             }
 
             // Pass through result whether successful or not, caller handles it.
@@ -374,7 +324,6 @@ namespace Robust.Client.Graphics.Clyde
 
             reg.IsDisposed = true;
 
-            _glContext!.WindowDestroyed(reg);
             _windowing!.WindowDestroy(reg);
 
             _windows.Remove(reg);
@@ -393,13 +342,11 @@ namespace Robust.Client.Graphics.Clyde
 
         private void SwapAllBuffers()
         {
-            _glContext?.SwapAllBuffers();
         }
 
         private void VSyncChanged(bool newValue)
         {
             _vSync = newValue;
-            _glContext?.UpdateVSync();
         }
 
         private void WindowModeChanged(int mode)
@@ -503,7 +450,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public bool IsMainWindow;
             public WindowHandle Handle = default!;
-            public RenderWindow RenderTarget = default!;
+            // public RenderWindow RenderTarget = default!;
             public Action<WindowRequestClosedEventArgs>? RequestClosed;
             public Action<WindowDestroyedEventArgs>? Closed;
             public Action<WindowResizedEventArgs>? Resized;
@@ -535,7 +482,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public Vector2i Size => Reg.FramebufferSize;
 
-            public IRenderTarget RenderTarget => Reg.RenderTarget;
+            public IRenderTarget RenderTarget => throw new NotImplementedException();
 
             public string Title
             {

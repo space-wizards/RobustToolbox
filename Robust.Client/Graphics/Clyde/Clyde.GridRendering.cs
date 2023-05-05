@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -13,7 +12,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        /*
 
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
             new();
@@ -231,5 +230,6 @@ namespace Robust.Client.Graphics.Clyde
                 EBO = ebo;
             }
         }
+    */
     }
 }

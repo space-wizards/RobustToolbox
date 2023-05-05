@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -36,7 +35,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class LoadedShader
         {
-            public GLShaderProgram Program = default!;
+            // public GLShaderProgram Program = default!;
             public bool HasLighting = true;
             public ShaderBlendMode BlendMode;
             public string? Name;
@@ -56,7 +55,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null)
         {
-            var (vertBody, fragBody) = GetShaderCode(shader);
+            /*var (vertBody, fragBody) = GetShaderCode(shader);
 
             var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, name, defines: defines);
 
@@ -75,12 +74,13 @@ namespace Robust.Client.Graphics.Clyde
             };
             var handle = AllocRid();
             _loadedShaders.Add(handle, loaded);
-            return handle;
+            return handle;*/
+            return default;
         }
 
         public void ReloadShader(ClydeHandle handle, ParsedShader newShader)
         {
-            var loaded = _loadedShaders[handle];
+            /*var loaded = _loadedShaders[handle];
 
             loaded.HasLighting = newShader.LightMode != ShaderLightMode.Unshaded;
             loaded.BlendMode = newShader.BlendMode;
@@ -97,7 +97,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 program.BindBlock(UniProjViewMatrices, BindingIndexProjView);
                 program.BindBlock(UniUniformConstants, BindingIndexUniformConstants);
-            }
+            }*/
         }
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
@@ -112,6 +112,7 @@ namespace Robust.Client.Graphics.Clyde
             return instance;
         }
 
+        /*
         private void LoadStockShaders()
         {
             _shaderLibrary = ReadEmbeddedShader("z-library.glsl");
@@ -132,6 +133,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _queuedShader = _defaultShader.Handle;
         }
+        */
 
         private string ReadEmbeddedShader(string fileName)
         {
@@ -142,6 +144,7 @@ namespace Robust.Client.Graphics.Clyde
             return reader.ReadToEnd();
         }
 
+        /*
         private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource,
             (string, uint)[] attribLocations, string? name = null, bool includeLib=true, Dictionary<string,string>? defines=null)
         {
@@ -249,6 +252,7 @@ namespace Robust.Client.Graphics.Clyde
                 fragmentShader?.Delete();
             }
         }
+        */
 
         private (string vertBody, string fragBody) GetShaderCode(ParsedShader shader)
         {

@@ -24,7 +24,7 @@ internal sealed partial class UserInterfaceManager
 
             if (control is WindowRoot root)
             {
-                control.Measure(root.Window.RenderTarget.Size / root.UIScale);
+                control.Measure(root.Window.Size / root.UIScale);
             }
             else if (control.PreviousMeasure.HasValue)
             {
@@ -44,7 +44,7 @@ internal sealed partial class UserInterfaceManager
 
             if (control is WindowRoot root)
             {
-                control.Arrange(UIBox2.FromDimensions(Vector2.Zero, root.Window.RenderTarget.Size / root.UIScale));
+                control.Arrange(UIBox2.FromDimensions(Vector2.Zero, root.Window.Size / root.UIScale));
             }
             else if (control.PreviousArrange.HasValue)
             {

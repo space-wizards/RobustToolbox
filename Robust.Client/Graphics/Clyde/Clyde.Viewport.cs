@@ -19,13 +19,13 @@ namespace Robust.Client.Graphics.Clyde
             var viewport = new Viewport(handle, name, this)
             {
                 Size = size,
-                RenderTarget = CreateRenderTarget(size,
+                /*RenderTarget = CreateRenderTarget(size,
                     new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                     sampleParameters: sampleParameters,
-                    name: $"{name}-MainRenderTarget")
+                    name: $"{name}-MainRenderTarget")*/
             };
 
-            RegenLightRts(viewport);
+            // RegenLightRts(viewport);
 
             _viewports.Add(handle, new WeakReference<Viewport>(viewport));
 
@@ -84,6 +84,7 @@ namespace Robust.Client.Graphics.Clyde
             private readonly ClydeHandle _handle;
             private readonly Clyde _clyde;
 
+            /*
             // Primary render target.
             public RenderTexture RenderTarget = default!;
 
@@ -101,6 +102,7 @@ namespace Robust.Client.Graphics.Clyde
             // We need two of them because efficient blur works in two stages and also we're doing multiple iterations.
             public RenderTexture WallBleedIntermediateRenderTarget1 = default!;
             public RenderTexture WallBleedIntermediateRenderTarget2 = default!;
+            */
 
             public string? Name { get; }
 
@@ -118,7 +120,7 @@ namespace Robust.Client.Graphics.Clyde
 
             void IClydeViewport.Render()
             {
-                _clyde.RenderViewport(this);
+                // _clyde.RenderViewport(this);
             }
 
             public MapCoordinates LocalToWorld(Vector2 point)
@@ -173,7 +175,7 @@ namespace Robust.Client.Graphics.Clyde
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
-                _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpaceBelowWorld, viewportBounds);
+                // _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpaceBelowWorld, viewportBounds);
             }
 
             public void RenderScreenOverlaysAbove(
@@ -181,21 +183,23 @@ namespace Robust.Client.Graphics.Clyde
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
-                _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpace, viewportBounds);
+                // _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpace, viewportBounds);
             }
 
             public void Dispose()
             {
+                /*
                 RenderTarget.Dispose();
                 LightRenderTarget.Dispose();
                 WallMaskRenderTarget.Dispose();
                 WallBleedIntermediateRenderTarget1.Dispose();
                 WallBleedIntermediateRenderTarget2.Dispose();
+                */
 
                 _clyde._viewports.Remove(_handle);
             }
 
-            IRenderTexture IClydeViewport.RenderTarget => RenderTarget;
+            IRenderTexture IClydeViewport.RenderTarget => throw new NotImplementedException();
             public IEye? Eye { get; set; }
         }
     }

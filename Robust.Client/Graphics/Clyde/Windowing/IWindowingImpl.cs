@@ -31,9 +31,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Window API.
             (WindowReg?, string? error) WindowCreate(
-                GLContextSpec? spec,
                 WindowCreateParameters parameters,
-                WindowReg? share,
                 WindowReg? owner);
 
             void WindowDestroy(WindowReg reg);
@@ -54,12 +52,6 @@ namespace Robust.Client.Graphics.Clyde
             void ClipboardSetText(WindowReg mainWindow, string text);
 
             void UpdateMainWindowMode();
-
-            // OpenGL-related stuff.
-            // Note: you should probably go through GLContextBase instead, which calls these functions.
-            void GLMakeContextCurrent(WindowReg? reg);
-            void GLSwapInterval(WindowReg reg, int interval);
-            unsafe void* GLGetProcAddress(string procName);
 
             // Misc
             void RunOnWindowThread(Action a);

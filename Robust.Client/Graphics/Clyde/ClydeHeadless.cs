@@ -414,11 +414,6 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Just do nothing on mutate.
             }
-
-            public override Color GetPixel(int x, int y)
-            {
-                return Color.Black;
-            }
         }
 
         private sealed class DummyShaderInstance : ShaderInstance

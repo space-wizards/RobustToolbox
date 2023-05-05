@@ -6,7 +6,6 @@ using Robust.Shared.Log;
 #endif
 
 using System.Collections.Generic;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
 
@@ -109,10 +108,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private void SendWindowResized(WindowReg reg, Vector2i oldSize)
         {
-            var loaded = RtToLoaded(reg.RenderTarget);
-            loaded.Size = reg.FramebufferSize;
+            // var loaded = RtToLoaded(reg.RenderTarget);
+            // loaded.Size = reg.FramebufferSize;
 
-            _glContext!.WindowResized(reg, oldSize);
+            // _glContext!.WindowResized(reg, oldSize);
 
             var eventArgs = new WindowResizedEventArgs(
                 oldSize,

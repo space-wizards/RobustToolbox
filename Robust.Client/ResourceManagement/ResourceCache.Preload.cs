@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
@@ -154,7 +153,7 @@ namespace Robust.Client.ResourceManagement
             // Each RSI sub atlas has a different size.
             // Even if we iterate through them once to estimate total area, I have NFI how to sanely estimate an optimal square-texture size.
             // So fuck it, just default to letting it be as large as it needs to and crop it as needed?
-            var maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
+            var maxSize = _configurationManager.GetCVar(CVars.ResRSIAtlasSize);
             var sheet = new Image<Rgba32>(maxSize, maxSize);
 
             var deltaY = 0;

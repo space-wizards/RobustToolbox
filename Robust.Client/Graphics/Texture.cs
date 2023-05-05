@@ -32,8 +32,6 @@ namespace Robust.Client.Graphics
         /// </summary>
         public Vector2i Size { get; /*protected set;*/ }
 
-        public Color this[int x, int y] => this.GetPixel(x, y);
-
         protected Texture(Vector2i size)
         {
             Size = size;
@@ -107,8 +105,6 @@ namespace Robust.Client.Graphics
 
             return this;
         }
-
-        public abstract Color GetPixel(int x, int y);
     }
 
     /// <summary>

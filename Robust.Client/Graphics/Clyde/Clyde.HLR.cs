@@ -2,7 +2,6 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Threading;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
@@ -32,7 +31,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Render()
         {
-            CheckTransferringScreenshots();
+            /*CheckTransferringScreenshots();
 
             var allMinimized = true;
             foreach (var windowReg in _windows)
@@ -114,10 +113,10 @@ namespace Robust.Client.Graphics.Clyde
                 _prof.WriteValue("Lights", ProfData.Int32(_debugStats.TotalLights));
                 _prof.WriteValue("Shadow Lights", ProfData.Int32(_debugStats.ShadowLights));
                 _prof.WriteValue("Occluders", ProfData.Int32(_debugStats.Occluders));
-            }
+            }*/
         }
 
-        private void RenderSingleWorldOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
+        /*private void RenderSingleWorldOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
             DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
 
@@ -578,6 +577,6 @@ namespace Robust.Client.Graphics.Clyde
                 var zY = y?.ZIndex ?? 0;
                 return zX.CompareTo(zY);
             }
-        }
+        }*/
     }
 }

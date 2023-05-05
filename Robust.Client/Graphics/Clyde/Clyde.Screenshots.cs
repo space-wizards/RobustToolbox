@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Utility;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
-using PT = OpenToolkit.Graphics.OpenGL4.PixelType;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -27,17 +24,19 @@ namespace Robust.Client.Graphics.Clyde
         //
         // For CopyPixels on render targets, the copy and transfer is started immediately when the function is called.
 
+        /*
         private readonly List<QueuedScreenshot> _queuedScreenshots = new();
         private readonly List<TransferringPixelCopy> _transferringPixelCopies = new();
+        */
 
         public void Screenshot(ScreenshotType type, CopyPixelsDelegate<Rgb24> callback, UIBox2i? subRegion = null)
         {
-            _queuedScreenshots.Add(new QueuedScreenshot(type, callback, subRegion));
+            // _queuedScreenshots.Add(new QueuedScreenshot(type, callback, subRegion));
         }
 
         private void TakeScreenshot(ScreenshotType type)
         {
-            if (_queuedScreenshots.Count == 0)
+            /*if (_queuedScreenshots.Count == 0)
             {
                 return;
             }
@@ -53,10 +52,10 @@ namespace Robust.Client.Graphics.Clyde
 
                 DoCopyPixels(ScreenSize, subRegion, callback);
                 _queuedScreenshots.RemoveSwap(i--);
-            }
+            }*/
         }
 
-        private void CopyRenderTargetPixels<T>(
+        /*private void CopyRenderTargetPixels<T>(
             ClydeHandle renderTarget,
             UIBox2i? subRegion,
             CopyPixelsDelegate<T> callback)
@@ -218,6 +217,6 @@ namespace Robust.Client.Graphics.Clyde
             Vector2i Size,
             // Funny callback dance to handle the generics.
             Action<TransferringPixelCopy> TransferContinue,
-            Delegate Callback);
+            Delegate Callback);*/
     }
 }

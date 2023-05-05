@@ -102,7 +102,7 @@ internal partial class UserInterfaceManager
             //Grab the OS UIScale or the value set through CVAR debug
             var osScale = _configurationManager.GetCVar(CVars.DisplayUIScale);
             osScale = osScale == 0f ? root.Window.ContentScale.X : osScale;
-            var windowSize = root.Window.RenderTarget.Size;
+            var windowSize = root.Window.Size;
             //Only run autoscale if it is enabled, otherwise default to just use OS UIScale
             if (!_autoScaleEnabled && (windowSize.X <= 0 || windowSize.Y <= 0)) return osScale;
             var maxScaleRes = _resolutionAutoScaleUpper;

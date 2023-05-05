@@ -25,25 +25,13 @@ internal partial class Clyde
     {
         private int _nextWindowId = 1;
 
-        public (WindowReg?, string? error) WindowCreate(
-            GLContextSpec? spec,
-            WindowCreateParameters parameters,
-            WindowReg? share,
-            WindowReg? owner)
+        public (WindowReg?, string? error) WindowCreate(WindowCreateParameters parameters, WindowReg? owner)
         {
-            nint shareWindow = 0;
-            nint shareContext = 0;
-            if (share is Sdl2WindowReg shareReg)
-            {
-                shareWindow = shareReg.Sdl2Window;
-                shareContext = shareReg.GlContext;
-            }
-
             nint ownerPtr = 0;
             if (owner is Sdl2WindowReg ownerReg)
                 ownerPtr = ownerReg.Sdl2Window;
 
-            var task = SharedWindowCreate(spec, parameters, shareWindow, shareContext, ownerPtr);
+            var task = SharedWindowCreate(parameters, ownerPtr);
 
             // Block the main thread (to avoid stuff like texture uploads being problematic).
             WaitWindowCreate(task);
@@ -70,12 +58,7 @@ internal partial class Clyde
             }
         }
 
-        private Task<Sdl2WindowCreateResult> SharedWindowCreate(
-            GLContextSpec? glSpec,
-            WindowCreateParameters parameters,
-            nint shareWindow,
-            nint shareContext,
-            nint owner)
+        private Task<Sdl2WindowCreateResult> SharedWindowCreate(WindowCreateParameters parameters, nint owner)
         {
             //
             // IF YOU'RE WONDERING WHY THIS IS TASK-BASED:
@@ -94,7 +77,7 @@ internal partial class Clyde
 
             // Yes we ping-pong this TCS through the window thread and back, deal with it.
             var tcs = new TaskCompletionSource<Sdl2WindowCreateResult>();
-            SendCmd(new CmdWinCreate(glSpec, parameters, shareWindow, shareContext, owner, tcs));
+            SendCmd(new CmdWinCreate(parameters, owner, tcs));
             return tcs.Task;
         }
 
@@ -107,9 +90,9 @@ internal partial class Clyde
 
         private void WinThreadWinCreate(CmdWinCreate cmd)
         {
-            var (glSpec, parameters, shareWindow, shareContext, owner, tcs) = cmd;
+            var (parameters, owner, tcs) = cmd;
 
-            var (window, context) = CreateSdl2WindowForRenderer(glSpec, parameters, shareWindow, shareContext, owner);
+            var window = CreateSdl2WindowForRenderer(parameters, owner);
 
             if (window == 0)
             {
@@ -125,7 +108,7 @@ internal partial class Clyde
             // * it'd not be synchronized to other incoming window events correctly which might be icky.
             // So we send the TCS back to the game thread
             // which processes events in the correct order and has better control of stuff during init.
-            var reg = WinThreadSetupWindow(window, context);
+            var reg = WinThreadSetupWindow(window);
 
             SendEvent(new EventWindowCreate(new Sdl2WindowCreateResult(reg, null), tcs));
         }
@@ -154,61 +137,11 @@ internal partial class Clyde
             SDL_DestroyWindow(cmd.Window);
         }
 
-        private (nint window, nint context) CreateSdl2WindowForRenderer(
-            GLContextSpec? spec,
+        private nint CreateSdl2WindowForRenderer(
             WindowCreateParameters parameters,
-            nint shareWindow,
-            nint shareContext,
             nint ownerWindow)
         {
             var windowFlags = SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE;
-
-            if (spec is { } s)
-            {
-                windowFlags |= SDL_WINDOW_OPENGL;
-
-                SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-                SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-                SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-                SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-                SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-                SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, s.Profile == GLContextProfile.Es ? 0 : 1);
-                SDL_GLcontext ctxFlags = 0;
-#if DEBUG
-                ctxFlags |= SDL_GL_CONTEXT_DEBUG_FLAG;
-#endif
-                if (s.Profile == GLContextProfile.Core)
-                    ctxFlags |= SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
-
-                SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, (int)ctxFlags);
-
-                if (shareContext != 0)
-                {
-                    SDL_GL_MakeCurrent(shareWindow, shareContext);
-                    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-                }
-                else
-                {
-                    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 0);
-                }
-
-                var profile = s.Profile switch
-                {
-                    GLContextProfile.Compatibility => SDL_GL_CONTEXT_PROFILE_COMPATIBILITY,
-                    GLContextProfile.Core => SDL_GL_CONTEXT_PROFILE_CORE,
-                    GLContextProfile.Es => SDL_GL_CONTEXT_PROFILE_ES,
-                    _ => SDL_GL_CONTEXT_PROFILE_COMPATIBILITY,
-                };
-
-                SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, profile);
-                SDL_SetHint("SDL_OPENGL_ES_DRIVER", s.CreationApi == GLContextCreationApi.Egl ? "1" : "0");
-
-                SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, s.Major);
-                SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, s.Minor);
-
-                if (s.CreationApi == GLContextCreationApi.Egl)
-                    WsiShared.EnsureEglAvailable();
-            }
 
             if (OperatingSystem.IsMacOS())
             {
@@ -229,13 +162,6 @@ internal partial class Clyde
             if (window == 0)
                 return default;
 
-            nint glContext = SDL_GL_CreateContext(window);
-            if (glContext == 0)
-            {
-                SDL_DestroyWindow(window);
-                return default;
-            }
-
             // TODO: Monitors, window maximize.
             // TODO: a bunch of win32 calls for funny window properties I still haven't ported to other platforms.
 
@@ -254,15 +180,14 @@ internal partial class Clyde
             if (parameters.Visible)
                 SDL_ShowWindow(window);
 
-            return (window, glContext);
+            return window;
         }
 
-        private unsafe Sdl2WindowReg WinThreadSetupWindow(nint window, nint context)
+        private unsafe Sdl2WindowReg WinThreadSetupWindow(nint window)
         {
             var reg = new Sdl2WindowReg
             {
                 Sdl2Window = window,
-                GlContext = context,
                 WindowId = SDL_GetWindowID(window),
                 Id = new WindowId(_nextWindowId++)
             };
@@ -362,6 +287,7 @@ internal partial class Clyde
 
         public unsafe void WindowSwapBuffers(WindowReg window)
         {
+            /*
             var reg = (Sdl2WindowReg)window;
             var windowPtr = WinPtr(reg);
 
@@ -396,9 +322,11 @@ internal partial class Clyde
                     swapInterval = reg.SwapInterval;
                 }
             }
+            */
 
-            SDL_GL_SwapWindow(windowPtr);
+            // SDL_GL_SwapWindow(windowPtr);
 
+            /*
             if (dwmFlush)
             {
                 var i = swapInterval;
@@ -408,7 +336,7 @@ internal partial class Clyde
                 }
 
                 SDL_GL_SetSwapInterval(swapInterval);
-            }
+            }*/
         }
 
         public uint? WindowGetX11Id(WindowReg window)
@@ -559,7 +487,6 @@ internal partial class Clyde
         {
             public nint Sdl2Window;
             public uint WindowId;
-            public nint GlContext;
             public SDL_SysWMinfo SysWMinfo;
 #pragma warning disable CS0649
             public bool Fullscreen;

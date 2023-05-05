@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
-using OpenToolkit.Graphics.OpenGL4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -33,12 +32,12 @@ namespace Robust.Client.Graphics.Clyde
 
             public void SetModelTransform(in Matrix3 matrix)
             {
-                _clyde.DrawSetModelTransform(matrix);
+                // _clyde.DrawSetModelTransform(matrix);
             }
 
             public void SetProjView(in Matrix3 proj, in Matrix3 view)
             {
-                _clyde.DrawSetProjViewTransform(proj, view);
+                // _clyde.DrawSetProjViewTransform(proj, view);
             }
 
             /// <summary>
@@ -61,7 +60,7 @@ namespace Robust.Client.Graphics.Clyde
                 var (w, h) = clydeTexture.Size;
                 var sr = new Box2(csr.Left / w, (h - csr.Top) / h, csr.Right / w, (h - csr.Bottom) / h);
 
-                _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, in modulate, in sr);
+                // _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, in modulate, in sr);
             }
 
             /// <summary>
@@ -84,7 +83,7 @@ namespace Robust.Client.Graphics.Clyde
                 var (w, h) = clydeTexture.Size;
                 var sr = new Box2(csr.Left / w, (h - csr.Bottom) / h, csr.Right / w, (h - csr.Top) / h);
 
-                _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, in modulate, in sr);
+                // _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, in modulate, in sr);
             }
 
             /// <summary>
@@ -118,12 +117,12 @@ namespace Robust.Client.Graphics.Clyde
 
             public void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor)
             {
-                _clyde.RenderInRenderTarget((RenderTargetBase) target, a, clearColor);
+                // _clyde.RenderInRenderTarget((RenderTargetBase) target, a, clearColor);
             }
 
             public void SetScissor(UIBox2i? scissorBox)
             {
-                _clyde.DrawSetScissor(scissorBox);
+                // _clyde.DrawSetScissor(scissorBox);
             }
 
             /// <summary>
@@ -153,6 +152,7 @@ namespace Robust.Client.Graphics.Clyde
                 TransformComponent? xform = null,
                 SharedTransformSystem? xformSystem = null)
             {
+                /*
                 if (_entities.Deleted(entity))
                 {
                     throw new ArgumentException("Tried to draw an entity has been deleted.", nameof(entity));
@@ -204,11 +204,12 @@ namespace Robust.Client.Graphics.Clyde
                 // Reset to screen space
                 SetProjView(oldProj, oldView);
                 SetModelTransform(oldModel);
+            */
             }
 
             public void DrawLine(Vector2 a, Vector2 b, Color color)
             {
-                _clyde.DrawLine(a, b, color);
+                // _clyde.DrawLine(a, b, color);
             }
 
             public void UseShader(ShaderInstance? shader)
@@ -220,29 +221,32 @@ namespace Robust.Client.Graphics.Clyde
 
                 var clydeShader = (ClydeShaderInstance?) shader;
 
-                _clyde.DrawUseShader(clydeShader?.Handle ?? _clyde._defaultShader.Handle);
+                // _clyde.DrawUseShader(clydeShader?.Handle ?? _clyde._defaultShader.Handle);
             }
 
             public void Viewport(Box2i viewport)
             {
-                _clyde.DrawViewport(viewport);
+                // _clyde.DrawViewport(viewport);
             }
 
             public void UseRenderTarget(IRenderTarget? renderTarget)
             {
-                var target = (RenderTexture?) renderTarget;
+                /*var target = (RenderTexture?) renderTarget;
 
-                _clyde.DrawRenderTarget(target?.Handle ?? default);
+                _clyde.DrawRenderTarget(target?.Handle ?? default);*/
             }
 
+            /*
             public void Clear(Color color, int stencil = 0, ClearBufferMask mask = ClearBufferMask.ColorBufferBit)
             {
                 _clyde.DrawClear(color, stencil, mask);
             }
+            */
 
             public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
                 ReadOnlySpan<DrawVertexUV2DColor> vertices)
             {
+                /*
                 if (!(texture is ClydeTexture clydeTexture))
                 {
                     throw new ArgumentException("Texture must be a basic texture.");
@@ -251,20 +255,21 @@ namespace Robust.Client.Graphics.Clyde
                 var castSpan = MemoryMarshal.Cast<DrawVertexUV2DColor, Vertex2D>(vertices);
 
                 _clyde.DrawPrimitives(primitiveTopology, clydeTexture.TextureId, castSpan);
+            */
             }
 
             public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
                 ReadOnlySpan<ushort> indices,
                 ReadOnlySpan<DrawVertexUV2DColor> vertices)
             {
-                if (!(texture is ClydeTexture clydeTexture))
+                /*if (!(texture is ClydeTexture clydeTexture))
                 {
                     throw new ArgumentException("Texture must be a basic texture.");
                 }
 
                 var castSpan = MemoryMarshal.Cast<DrawVertexUV2DColor, Vertex2D>(vertices);
 
-                _clyde.DrawPrimitives(primitiveTopology, clydeTexture.TextureId, indices, castSpan);
+                _clyde.DrawPrimitives(primitiveTopology, clydeTexture.TextureId, indices, castSpan);*/
             }
 
             // ---- (end) ----

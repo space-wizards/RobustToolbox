@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Robust.Shared.GameObjects;
 
@@ -26,4 +28,14 @@ public sealed class PrototypeLayerData
     [DataField("visible")] public bool? Visible;
     [DataField("color")] public Color? Color;
     [DataField("map")] public HashSet<string>? MapKeys;
+    [DataField("renderingStrategy")] public LayerRenderingStrategy? RenderingStrategy;
+}
+
+[Serializable, NetSerializable]
+public enum LayerRenderingStrategy
+{
+    Default,
+    SnapToCardinals,
+    NoRotation,
+    UseSpriteStrategy
 }

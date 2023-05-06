@@ -125,21 +125,6 @@ namespace Robust.Shared.GameObjects
             var comps = compsFixed.AsSpan;
             CopyComponentsInto(ref comps, uid);
 
-            // TODO: please for the love of god remove these initialization order hacks.
-
-            // Init transform first, we always have it.
-            var transform = GetComponent<TransformComponent>(uid);
-            if (transform.LifeStage < ComponentLifeStage.Initialized)
-                transform.LifeInitialize(this, CompIdx.Index<TransformComponent>());
-
-            // Init physics second if it exists.
-            if (TryGetComponent<PhysicsComponent>(uid, out var phys)
-                && phys.LifeStage < ComponentLifeStage.Initialized)
-            {
-                phys.LifeInitialize(this, CompIdx.Index<PhysicsComponent>());
-            }
-
-            // Do rest of components.
             foreach (var comp in comps)
             {
                 if (comp is { LifeStage: < ComponentLifeStage.Initialized })
@@ -1362,8 +1347,8 @@ namespace Robust.Shared.GameObjects
                 component = default;
                 return false;
             }
-            else
-                return TryGetComponent(uid.Value, out component);
+
+            return TryGetComponent(uid.Value, out component);
         }
 
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
@@ -1402,6 +1387,14 @@ namespace Robust.Shared.GameObjects
                 Logger.ErrorS("resolve", $"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
 
             return false;
+        }
+
+        public TComp1? CompOrNull(EntityUid uid)
+        {
+            if (TryGetComponent(uid, out var comp))
+                return comp;
+
+            return null;
         }
     }
 

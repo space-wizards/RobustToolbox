@@ -106,7 +106,8 @@ public sealed class AudioSystem : SharedAudioSystem
         if (stream == null)
             return;
 
-        StreamDone(stream);
+        stream.Done = true;
+        stream.Source.Dispose();
         _playingClydeStreams.Remove(stream);
     }
     #endregion
@@ -129,7 +130,16 @@ public sealed class AudioSystem : SharedAudioSystem
         }
         finally
         {
-            _playingClydeStreams.RemoveAll(p => p.Done);
+
+            for (var i = _playingClydeStreams.Count - 1; i >= 0; i--)
+            {
+                var stream = _playingClydeStreams[i];
+                if (stream.Done)
+                {
+                    stream.Source.Dispose();
+                    _playingClydeStreams.RemoveSwap(i);
+                }
+            }
         }
     }
 
@@ -140,7 +150,7 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         if (!stream.Source.IsPlaying)
         {
-            StreamDone(stream);
+            stream.Done = true;
             return;
         }
 
@@ -162,7 +172,7 @@ public sealed class AudioSystem : SharedAudioSystem
             || mapPos == MapCoordinates.Nullspace
             || mapPos.Value.MapId != listener.MapId)
         {
-            StreamDone(stream);
+            stream.Done = true;
             return;
         }
 
@@ -277,16 +287,10 @@ public sealed class AudioSystem : SharedAudioSystem
         return false;
     }
 
-    private static void StreamDone(PlayingStream stream)
-    {
-        stream.Source.Dispose();
-        stream.Done = true;
-    }
-
     #region Play AudioStream
     private bool TryGetAudio(string filename, [NotNullWhen(true)] out AudioResource? audio)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out audio))
+        if (_resourceCache.TryGetResource<AudioResource>(new ResPath(filename), out audio))
             return true;
 
         _sawmill.Error($"Server tried to play audio file {filename} which does not exist.");
@@ -520,7 +524,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid entity, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
+        if (_resourceCache.TryGetResource<AudioResource>(new ResPath(filename), out var audio))
         {
             return Play(audio, entity, null, audioParams);
         }
@@ -551,7 +555,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override IPlayingAudioStream? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
+        if (_resourceCache.TryGetResource<AudioResource>(new ResPath(filename), out var audio))
         {
             return Play(audio, uid, null, audioParams);
         }
@@ -561,7 +565,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override IPlayingAudioStream? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
+        if (_resourceCache.TryGetResource<AudioResource>(new ResPath(filename), out var audio))
         {
             return Play(audio, uid, null, audioParams);
         }

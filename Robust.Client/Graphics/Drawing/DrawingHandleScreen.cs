@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
@@ -7,6 +8,10 @@ namespace Robust.Client.Graphics
 {
     public abstract class DrawingHandleScreen : DrawingHandleBase
     {
+        protected DrawingHandleScreen(Texture white) : base(white)
+        {
+        }
+
         public abstract void DrawRect(UIBox2 rect, Color color, bool filled = true);
 
         public abstract void DrawTextureRectRegion(Texture texture, UIBox2 rect, UIBox2? subRegion = null, Color? modulate = null);
@@ -126,6 +131,31 @@ namespace Robust.Client.Graphics
             return advanceTotal;
         }
 
-        public abstract void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection);
+        /// <summary>
+        /// Draws an entity.
+        /// </summary>
+        /// <param name="entity">The entity to draw</param>
+        /// <param name="position">The local pixel position where the entity should be drawn.</param>
+        /// <param name="scale">Scales the drawn entity</param>
+        /// <param name="worldRot">The world rotation to use when drawing the entity.
+        /// This impacts the sprites RSI direction. Null will retrieve the entity's actual rotation.
+        /// </param>
+        /// <param name="eyeRotation">The effective "eye" angle.
+        /// This will cause the entity to be rotated, and may also affect the RSI directions.
+        /// Draws the entity at some given angle.</param>
+        /// <param name="overrideDirection">RSI direction override.</param>
+        /// <param name="sprite">The entity's sprite component</param>
+        /// <param name="xform">The entity's transform component.
+        /// Only required if <see cref="overrideDirection"/> is null.</param>
+        /// <param name="xformSystem">The transform system</param>
+        public abstract void DrawEntity(EntityUid entity,
+            Vector2 position,
+            Vector2 scale,
+            Angle? worldRot,
+            Angle eyeRotation = default,
+            Direction? overrideDirection = null,
+            SpriteComponent? sprite = null,
+            TransformComponent? xform = null,
+            SharedTransformSystem? xformSystem = null);
     }
 }

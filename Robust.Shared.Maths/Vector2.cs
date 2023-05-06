@@ -80,6 +80,24 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        /// Normalizes this vector if its length > 0, otherwise sets it to 0.
+        /// </summary>
+        public float Normalize()
+        {
+            var length = Length;
+
+            if (length < float.Epsilon)
+            {
+                return 0f;
+            }
+
+            var invLength = 1f / length;
+            X *= invLength;
+            Y *= invLength;
+            return length;
+        }
+
+        /// <summary>
         ///     Returns a new, normalized, vector.
         /// </summary>
         /// <returns></returns>

@@ -157,7 +157,7 @@ namespace Robust.Client
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
             _prototypeManager.Initialize();
-            _prototypeManager.LoadDirectory(new ResourcePath("/EnginePrototypes/"));
+            _prototypeManager.LoadDirectory(new("/EnginePrototypes/"));
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             _prototypeManager.ResolveResults();
             _userInterfaceManager.Initialize();
@@ -170,9 +170,9 @@ namespace Robust.Client
             _scriptClient.Initialize();
             _client.Initialize();
             _discord.Initialize();
-            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
             _tagManager.Initialize();
             _userInterfaceManager.PostInitialize();
+            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             if (_commandLineArgs?.Username != null)
             {
@@ -387,7 +387,7 @@ namespace Robust.Client
                 {
                     foreach (var (api, prefix) in mounts)
                     {
-                        _resourceCache.MountLoaderApi(api, "", new ResourcePath(prefix));
+                        _resourceCache.MountLoaderApi(api, "", new(prefix));
                     }
                 }
 

@@ -7,12 +7,13 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using StencilOp = Robust.Client.Graphics.StencilOp;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
+        [ViewVariables]
         private ClydeShaderInstance _defaultShader = default!;
 
         private string _shaderLibrary = default!;
@@ -26,9 +27,11 @@ namespace Robust.Client.Graphics.Clyde
         private string _winBlitShaderVert = default!;
         private string _winBlitShaderFrag = default!;
 
+        [ViewVariables]
         private readonly Dictionary<ClydeHandle, LoadedShader> _loadedShaders =
             new();
 
+        [ViewVariables]
         private readonly Dictionary<ClydeHandle, LoadedShaderInstance> _shaderInstances =
             new();
 
@@ -36,22 +39,46 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class LoadedShader
         {
+            [ViewVariables]
             public GLShaderProgram Program = default!;
-            public bool HasLighting = true;
-            public ShaderBlendMode BlendMode;
+
+            [ViewVariables]
             public string? Name;
         }
 
         private sealed class LoadedShaderInstance
         {
+            [ViewVariables]
             public ClydeHandle ShaderHandle;
 
+            [ViewVariables]
+            public bool HasLighting;
+
+            [ViewVariables]
+            public ShaderBlendMode BlendMode;
+
+            [ViewVariables]
             public bool ParametersDirty = true;
 
             // TODO(perf): Maybe store these parameters not boxed with a tagged union.
+            [ViewVariables]
             public readonly Dictionary<string, object> Parameters = new();
 
-            public StencilParameters Stencil = StencilParameters.Default;
+            [ViewVariables]
+            public StencilParameters Stencil;
+
+            public LoadedShaderInstance()
+            {
+            }
+
+            public LoadedShaderInstance(LoadedShaderInstance toClone)
+            {
+                ShaderHandle = toClone.ShaderHandle;
+                HasLighting = toClone.HasLighting;
+                BlendMode = toClone.BlendMode;
+                Stencil = toClone.Stencil;
+                Parameters = toClone.Parameters.ShallowClone();
+            }
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null)
@@ -69,8 +96,6 @@ namespace Robust.Client.Graphics.Clyde
             var loaded = new LoadedShader
             {
                 Program = program,
-                HasLighting = shader.LightMode != ShaderLightMode.Unshaded,
-                BlendMode = shader.BlendMode,
                 Name = name
             };
             var handle = AllocRid();
@@ -81,9 +106,6 @@ namespace Robust.Client.Graphics.Clyde
         public void ReloadShader(ClydeHandle handle, ParsedShader newShader)
         {
             var loaded = _loadedShaders[handle];
-
-            loaded.HasLighting = newShader.LightMode != ShaderLightMode.Unshaded;
-            loaded.BlendMode = newShader.BlendMode;
 
             var (vertBody, fragBody) = GetShaderCode(newShader);
 
@@ -100,12 +122,14 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public ShaderInstance InstanceShader(ClydeHandle handle)
+        public ShaderInstance InstanceShader(ShaderSourceResource source, bool? lighting = null, ShaderBlendMode? mode = null)
         {
             var newHandle = AllocRid();
             var loaded = new LoadedShaderInstance
             {
-                ShaderHandle = handle
+                ShaderHandle = source.ClydeHandle,
+                HasLighting = lighting ?? source.ParsedShader.LightMode != ShaderLightMode.Unshaded,
+                BlendMode = mode ?? source.ParsedShader.BlendMode
             };
             var instance = new ClydeShaderInstance(newHandle, this);
             _shaderInstances.Add(newHandle, loaded);
@@ -126,7 +150,7 @@ namespace Robust.Client.Graphics.Clyde
             _winBlitShaderFrag = ReadEmbeddedShader("winblit.frag");
 
             var defaultLoadedShader = _resourceCache
-                .GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl").ClydeHandle;
+                .GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl");
 
             _defaultShader = (ClydeShaderInstance) InstanceShader(defaultLoadedShader);
 
@@ -376,18 +400,7 @@ namespace Robust.Client.Graphics.Clyde
             private protected override ShaderInstance DuplicateImpl()
             {
                 var instanceData = Parent._shaderInstances[Handle];
-                var newData = new LoadedShaderInstance
-                {
-                    ShaderHandle = instanceData.ShaderHandle
-                };
-
-                foreach (var (name, value) in instanceData.Parameters)
-                {
-                    newData.Parameters.Add(name, value);
-                }
-
-                newData.Stencil = instanceData.Stencil;
-
+                var newData = new LoadedShaderInstance(instanceData);
                 var newHandle = Parent.AllocRid();
                 Parent._shaderInstances.Add(newHandle, newData);
                 return new ClydeShaderInstance(newHandle, Parent);
@@ -406,6 +419,10 @@ namespace Robust.Client.Graphics.Clyde
 
             private void Dispose(bool disposing)
             {
+                if (Disposed)
+                    return;
+
+                Disposed = true;
                 Parent._deadShaderInstances.Enqueue(Handle);
             }
 
@@ -502,61 +519,11 @@ namespace Robust.Client.Graphics.Clyde
                 data.Parameters[name] = value;
             }
 
-            private protected override void SetStencilOpImpl(StencilOp op)
+            private protected override void SetStencilImpl(StencilParameters value)
             {
                 var data = Parent._shaderInstances[Handle];
-                data.Stencil.Op = op;
+                data.Stencil = value;
             }
-
-            private protected override void SetStencilFuncImpl(StencilFunc func)
-            {
-                var data = Parent._shaderInstances[Handle];
-                data.Stencil.Func = func;
-            }
-
-            private protected override void SetStencilTestEnabledImpl(bool enabled)
-            {
-                var data = Parent._shaderInstances[Handle];
-                data.Stencil.Enabled = enabled;
-            }
-
-            private protected override void SetStencilRefImpl(int @ref)
-            {
-                var data = Parent._shaderInstances[Handle];
-                data.Stencil.Ref = @ref;
-            }
-
-            private protected override void SetStencilWriteMaskImpl(int mask)
-            {
-                var data = Parent._shaderInstances[Handle];
-                data.Stencil.WriteMask = mask;
-            }
-
-            private protected override void SetStencilReadMaskRefImpl(int mask)
-            {
-                var data = Parent._shaderInstances[Handle];
-                data.Stencil.ReadMask = mask;
-            }
-        }
-
-        private struct StencilParameters
-        {
-            public static readonly StencilParameters Default = new()
-            {
-                Enabled = false,
-                Ref = 0,
-                Op = StencilOp.Keep,
-                Func = StencilFunc.Always,
-                ReadMask = unchecked((int)uint.MaxValue),
-                WriteMask = unchecked((int)uint.MaxValue),
-            };
-
-            public bool Enabled;
-            public int Ref;
-            public int WriteMask;
-            public int ReadMask;
-            public StencilOp Op;
-            public StencilFunc Func;
         }
     }
 }

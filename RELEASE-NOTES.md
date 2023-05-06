@@ -54,6 +54,301 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.107.0.1
+
+### Bugfixes
+
+* Fix bad logs on maploader not listing out bad prototypes.
+
+
+## 0.107.0.0
+
+### Breaking changes
+
+* Pass in dependencies to LocalPlayer AttachEntity (was anyone even using this method?)
+
+### Internal
+
+* Light query changes for some optimisation.
+* Remove Texture.White IoC resolves in a lot of rendering areas.
+
+
+## 0.106.1.0
+
+### New features
+
+* Screen-space overlays now use call `BeforeDraw()` and can use the `RequestScreenTexture` and `OverwriteTargetFrameBuffer` options.
+* Added the `LoadedMapComponent`. It can be used to identify maps created by loading them from a yml file.
+
+
+### Other
+
+* `GameShared` no longer has a finalizer that triggers in some cases like tests.
+
+
+## 0.106.0.0
+
+### Breaking changes
+
+* Update map file schema validator for new format.
+* TimeOffsetSerializer fixes to use serv3 copying.
+
+### Bugfixes
+
+* Fix ResPath null errors.
+* Fix queued deletion error log on entitymanager shutdown.
+
+### Other
+
+* Added transform recursion check in debug.
+
+
+## 0.105.1.0
+
+### New features
+
+* Add CompOrNull to the EntityQuery struct.
+* Add basic maploader support for entity renaming.
+
+
+## 0.105.0.0
+
+### Breaking changes
+
+* Removed server and shared sprite components.
+
+### New features
+
+* Add LayerExists to sprites for object keys (previously it was only integer keys).
+
+### Bugfixes
+
+* Fix placement overlay error and add exception tolerance to it.
+
+
+## 0.104.1.0
+
+### New features
+
+* VV now automatically dirties components.
+
+### Bugfixes
+
+* Fix CompletionHelper paths having double // on the end.
+
+
+## 0.104.0.0
+
+### Breaking changes
+
+* API Changes to SpriteView control to generalize it.
+
+
+## 0.103.0.0
+
+### Breaking changes
+
+* Maps are now saved by prototype -> entities rather than as just entities. Maps are currently backwards compatible but this is liable to change.
+
+### New features
+
+* RobustServerSimulation is public and usable by content for tests or benchmarking.
+* Add sf3 extension support to midis.
+
+### Bugfixes
+
+* Fix random.Prob inequality.
+
+### Other
+
+* Adjust centerpoint for spriteview sprites.
+* Mark ComponentReference as obsolete.
+
+
+## 0.102.1.0
+
+### New features
+
+* `echo` console command to echo things.
+* Add some public methods to physics system for applying force/torque.
+
+### Bugfixes
+
+* Fix a NRE when no window icon is specified.
+
+### Other
+
+* Set console code page to UTF-8 explicitly on Windows to fix output of non-ASCII characters.
+
+
+## 0.102.0.0
+
+### Breaking changes
+
+* Loading  maps with invalid entity UIDs should now log errors.
+
+### New features
+
+* The yaml linter should now error on duplicate entity prototypes
+
+### Bugfixes
+
+* Fix a PVS bug that could put one entity into two different PVS chunks.
+
+### Other
+
+* EntityUid indexing should now start at 1 when saving maps.
+
+
+## 0.101.1.1
+
+### Bugfixes
+
+* Fix polygon deserialization leading to the last vert being 0,0.
+
+
+## 0.101.1.0
+
+### New features
+
+* Added a mode to entity placement to allow replacing any existing entities on a tile.
+
+### Other
+
+* Re-order initialization so BroadcastRunLevel is run after userinterfacemanager PostInitialize.
+
+
+## 0.101.0.0
+
+### Breaking changes
+
+* Port Quickhull from Box2D and replace GiftWrapping.
+* Removed a lot of unused physics code.
+
+### Bugfixes
+
+* Fix damping for mouse joint.
+* Fix Distance outputs for overlapping circles.
+
+
+## 0.100.0.0
+
+### Breaking changes
+
+* `ILookupWorldBox2Component` has been removed. If an entity does not have fixtures/physics a `WorldAABBEvent` will now be raised.
+
+### Bugfixes
+
+* Fixes a concurrent hashset modification exception in PVS
+
+
+## 0.99.0.0
+
+### Breaking changes
+
+* Revert the reversion of the ResPath removal from 0.98.0.0
+
+### New features
+
+* StartCollideEvent, EndCollideEvent, and physics contacts now have the relevant EntityUids.
+
+### Bugfixes
+
+* Remove initialization code that forced transform and physics components first.
+
+
+## 0.98.0.0
+
+### Breaking changes
+
+* Revert bulk ResPath refactor due to instability.
+
+
+## 0.97.1.1
+
+### Bugfixes
+
+* Fixed assembly paths being used having double //
+
+
+## 0.97.1.0
+
+### New features
+
+* FastNoiseLite is now netserializable.
+* PVS ack processing is now parallel and also improved grafana metrics for PVS.
+
+### Other
+
+* Add invalid broadphase check to EntityLookupSystem.
+* Made NetGraph logarithmic.
+
+
+## 0.97.0.0
+
+### Breaking changes
+
+* Fully replace ResourcePath (class) with ResPath (struct).
+
+### Other
+
+* Add stacktrace to transform logs.
+
+
+## 0.96.9.0
+
+### New features
+
+* `RobustIntegrationTest` now has a `DoGuiEvent()` method that can directly pass `GUIBoundKeyEventArgs` to a control.
+
+
+## 0.96.8.2
+
+### New features
+
+* The `LayerSetData()` function can now be used to clear a sprite layer's shader.
+
+### Bugfixes
+
+* Fixed sandboxing verifying against `Robust.` assemblies inside `Robust.Client.WebView`, causing an older assembly to be verified against.
+
+
+## 0.96.8.1
+
+### Bugfixes
+
+* Fix MapInit not being run on entities in some instances.
+
+
+## 0.96.8.0
+
+### Bugfixes
+
+* Create entities before applying entity states. This fixes parenting issues in some instances, for example on a freshly split grid the client would give an exception.
+
+### Other
+
+* Entities have their paused state set before initialisation rather than after.
+
+### Internal
+
+* Added a BroadphaseNetworkingTest.
+
+
+## 0.96.7.0
+
+### New features
+
+* `IDynamicTypeFactory.CreateInstance` now has the option to not perform dependency injection.
+* Added normal blend mode for shaders
+* Added a new ResPath struct that is intended to eventually replace ResourcePath
+
+### Bugfixes
+
+* Hopefully fixed an IndexOutOfRange exception in AudioSystem
+* Fixed a potential IndexOutOfRange exception in ContainerSystem
+
+
 ## 0.96.6.0
 
 ### New features
@@ -68,8 +363,16 @@ END TEMPLATE-->
 
 ## 0.96.5.0
 
+### New features
+
+* Added source generator for automatically generating component state getting & handling code. Significantly reduces boilerplate when creating networked components.
+
 
 ## 0.96.4.0
+
+### Bugfixes
+
+* Component delta states can now have an initial full state inferred by clients.
 
 
 ## 0.96.3.0

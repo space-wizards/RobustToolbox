@@ -132,7 +132,7 @@ namespace Robust.Shared.GameObjects
                 vertices[2] = bounds.TopRight;
                 vertices[3] = bounds.TopLeft;
 
-                poly.SetVertices(vertices, PhysicsConstants.ConvexHulls);
+                poly.Set(vertices, 4);
 
                 var newFixture = new Fixture(
                     $"grid_chunk-{bounds.Left}-{bounds.Bottom}",

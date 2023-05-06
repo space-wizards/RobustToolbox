@@ -18,8 +18,8 @@ namespace Robust.Client.GameStates
         ///     Minimum number of states needed in the buffer for everything to work.
         /// </summary>
         /// <remarks>
-        ///     With interpolation enabled minimum is 3 states in buffer for the system to work (last, cur, next).
-        ///     Without interpolation enabled minimum is 2 states in buffer for the system to work (last, cur).
+        ///     With interpolation enabled the minimum is 2 states (current & next tick). Without interpolation the
+        ///     minimum is just 1.
         /// </remarks>
         int MinBufferSize { get; }
 

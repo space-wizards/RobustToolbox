@@ -12,7 +12,7 @@ namespace Robust.Shared.ContentPack;
 /// </summary>
 public sealed class MemoryContentRoot : IContentRoot, IDisposable
 {
-    private readonly Dictionary<ResourcePath, byte[]> _files = new();
+    private readonly Dictionary<ResPath, byte[]> _files = new();
 
     private readonly ReaderWriterLockSlim _lock = new();
 
@@ -21,7 +21,7 @@ public sealed class MemoryContentRoot : IContentRoot, IDisposable
     /// </summary>
     /// <param name="relPath">The relative path of the file.</param>
     /// <param name="data">The data byte array to store in the content root. Stored as is, without being copied or cloned.</param>
-    public void AddOrUpdateFile(ResourcePath relPath, byte[] data)
+    public void AddOrUpdateFile(ResPath relPath, byte[] data)
     {
         // Just in case, we ensure it's a clean relative path.
         relPath = relPath.Clean().ToRelativePath();
@@ -42,7 +42,7 @@ public sealed class MemoryContentRoot : IContentRoot, IDisposable
     /// </summary>
     /// <param name="relPath">The relative path to the file.</param>
     /// <returns></returns>
-    public bool RemoveFile(ResourcePath relPath)
+    public bool RemoveFile(ResPath relPath)
     {
         _lock.EnterWriteLock();
         try
@@ -56,7 +56,7 @@ public sealed class MemoryContentRoot : IContentRoot, IDisposable
     }
 
     /// <inheritdoc />
-    public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
+    public bool TryGetFile(ResPath relPath, [NotNullWhen(true)] out Stream? stream)
     {
         _lock.EnterReadLock();
         try
@@ -78,7 +78,7 @@ public sealed class MemoryContentRoot : IContentRoot, IDisposable
     }
 
     /// <inheritdoc />
-    public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
+    public IEnumerable<ResPath> FindFiles(ResPath path)
     {
         _lock.EnterReadLock();
         try
@@ -116,7 +116,7 @@ public sealed class MemoryContentRoot : IContentRoot, IDisposable
     ///     Enumerates all files and their resource paths on this content root.
     /// </summary>
     /// <remarks>Do not modify or keep around the returned byte array, it's meant to be read-only.</remarks>
-    public IEnumerable<(ResourcePath relPath, byte[] data)> GetAllFiles()
+    public IEnumerable<(ResPath relPath, byte[] data)> GetAllFiles()
     {
         _lock.EnterReadLock();
         try

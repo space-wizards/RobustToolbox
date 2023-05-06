@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Console.Commands;
 
-internal sealed class UITestControl : Control
+internal sealed partial class UITestControl : Control
 {
     private const string Lipsum = @"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sed interdum diam. Duis erat risus, tincidunt at pulvinar non, accumsan non dui. Morbi feugiat nisi in odio consectetur, ac suscipit nulla mollis. Nulla consequat neque sit amet neque venenatis feugiat. Proin placerat eget mauris sit amet tincidunt. Sed pulvinar purus sed ex varius, et lobortis risus efficitur. Integer blandit eu neque quis elementum. Vivamus lacinia sem non lacinia eleifend. Integer sit amet est ac risus tempus iaculis sed quis leo. Proin eu dui tincidunt orci ornare elementum. Curabitur molestie enim scelerisque, porttitor ipsum vitae, posuere libero. Donec finibus placerat accumsan. Nam et arcu lacus.
 
@@ -26,6 +26,7 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
 
 
     private readonly TabContainer _tabContainer;
+    private readonly TabSpriteView _sprite;
 
     public UITestControl()
     {
@@ -150,6 +151,14 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
 
         _tabContainer.AddChild(TabTextEdit());
         _tabContainer.AddChild(TabRichText());
+
+        _sprite = new TabSpriteView();
+        _tabContainer.AddChild(_sprite);
+    }
+
+    public void OnClosed()
+    {
+        _sprite.OnClosed();
     }
 
     private Control TabTextEdit()
@@ -216,6 +225,7 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
         Untitled4 = 5,
         TextEdit = 6,
         RichText = 7,
+        SpriteView = 8,
     }
 }
 
@@ -225,8 +235,10 @@ internal sealed class UITestCommand : LocalizedCommands
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        var window = new DefaultWindow { MinSize = (500, 400) };
-        window.Contents.AddChild(new UITestControl());
+        var window = new DefaultWindow { MinSize = (800, 600) };
+        var control = new UITestControl();
+        window.OnClose += control.OnClosed;
+        window.Contents.AddChild(control);
 
         window.OpenCentered();
     }
@@ -267,7 +279,7 @@ internal sealed class UITest2Command : LocalizedCommands
 
         var root = _uiMgr.CreateWindowRoot(window);
         window.DisposeOnClose = true;
-
+        window.RequestClosed += _ => control.OnClosed();
         root.AddChild(control);
     }
 

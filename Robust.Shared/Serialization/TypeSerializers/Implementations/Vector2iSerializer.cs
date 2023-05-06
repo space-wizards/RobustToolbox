@@ -54,8 +54,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public Vector2i CreateCopy(ISerializationManager serializationManager, Vector2i source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.X, source.Y);
         }

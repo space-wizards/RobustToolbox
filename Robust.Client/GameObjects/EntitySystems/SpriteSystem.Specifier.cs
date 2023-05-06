@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects;
@@ -102,7 +103,7 @@ public sealed partial class SpriteSystem
     public RSI.State GetState(SpriteSpecifier.Rsi rsiSpecifier)
     {
         if (_resourceCache.TryGetResource<RSIResource>(
-                SharedSpriteComponent.TextureRoot / rsiSpecifier.RsiPath,
+                SpriteSpecifierSerializer.TextureRoot / rsiSpecifier.RsiPath,
                 out var theRsi) &&
             theRsi.RSI.TryGetState(rsiSpecifier.RsiState, out var state))
         {

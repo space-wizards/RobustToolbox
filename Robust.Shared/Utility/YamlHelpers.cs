@@ -165,7 +165,7 @@ namespace Robust.Shared.Utility
         }
 
         [Pure]
-        public static ResourcePath AsResourcePath(this YamlNode node)
+        public static ResPath AsResourcePath(this YamlNode node)
         {
             return new(node.ToString());
         }

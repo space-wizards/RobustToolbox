@@ -55,7 +55,7 @@ public sealed class QueueSerializer<T> : ITypeSerializer<Queue<T>, SequenceDataN
         return sequence;
     }
 
-    public void CopyTo(ISerializationManager serializationManager, Queue<T> source, ref Queue<T> target, SerializationHookContext hookCtx, ISerializationContext? context = null)
+    public void CopyTo(ISerializationManager serializationManager, Queue<T> source, ref Queue<T> target, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
         target.Clear();
         target.EnsureCapacity(source.Count);

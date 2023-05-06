@@ -128,6 +128,18 @@ public partial class SharedPhysicsSystem
         SetAngularVelocity(uid, body.AngularVelocity + impulse * body.InvI, body: body);
     }
 
+    public void ApplyForce(EntityUid uid, Vector2 force, Vector2 point, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    {
+        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        {
+            return;
+        }
+
+        body.Force += force;
+        body.Torque += Vector2.Cross(point - body._localCenter, force);
+        Dirty(body);
+    }
+
     public void ApplyForce(EntityUid uid, Vector2 force, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
@@ -136,6 +148,18 @@ public partial class SharedPhysicsSystem
         }
 
         body.Force += force;
+        Dirty(body);
+    }
+
+    public void ApplyTorque(EntityUid uid, float torque, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    {
+        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        {
+            return;
+        }
+
+        body.Torque += torque;
+        Dirty(body);
     }
 
     public void ApplyLinearImpulse(EntityUid uid, Vector2 impulse, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -322,7 +346,7 @@ public partial class SharedPhysicsSystem
                 return;
         }
 
-        if (body.LinearVelocity.EqualsApprox(velocity, 0.0001f))
+        if (body.LinearVelocity.EqualsApprox(velocity, 0.0000001f))
             return;
 
         body.LinearVelocity = velocity;

@@ -87,10 +87,12 @@ namespace Robust.Client.Placement
 
         public virtual void Render(DrawingHandleWorld handle)
         {
-            var sce = pManager.CurrentPlacementOverlayEntity;
-            if (sce is not {} scent || pManager.EntityManager.Deleted(scent))
+            var uid = pManager.CurrentPlacementOverlayEntity;
+            if (!pManager.EntityManager.TryGetComponent(uid, out SpriteComponent? sprite) || !sprite.Visible)
+            {
+                // TODO draw something for placement of invisible & sprite-less entities.
                 return;
-            var sc = pManager.EntityManager.GetComponent<SpriteComponent>(sce!.Value);
+            }
 
             IEnumerable<EntityCoordinates> locationcollection;
             switch (pManager.PlacementType)
@@ -118,8 +120,8 @@ namespace Robust.Client.Placement
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
                 var worldRot = pManager.EntityManager.GetComponent<TransformComponent>(coordinate.EntityId).WorldRotation + dirAng;
 
-                sc.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
-                spriteSys.Render(sce.Value, sc, handle, pManager.EyeManager.CurrentEye.Rotation, worldRot, worldPos);
+                sprite.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
+                spriteSys.Render(uid.Value, sprite, handle, pManager.EyeManager.CurrentEye.Rotation, worldRot, worldPos);
             }
         }
 
@@ -196,12 +198,12 @@ namespace Robust.Client.Placement
 
         public TextureResource GetSprite(string key)
         {
-            return pManager.ResourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/") / key);
+            return pManager.ResourceCache.GetResource<TextureResource>(new ResPath("/Textures/") / key);
         }
 
         public bool TryGetSprite(string key, [NotNullWhen(true)] out TextureResource? sprite)
         {
-            return pManager.ResourceCache.TryGetResource(new ResourcePath(@"/Textures/") / key, out sprite);
+            return pManager.ResourceCache.TryGetResource(new ResPath(@"/Textures/") / key, out sprite);
         }
 
         /// <summary>

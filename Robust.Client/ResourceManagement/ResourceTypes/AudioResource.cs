@@ -11,7 +11,7 @@ namespace Robust.Client.ResourceManagement
     {
         public AudioStream AudioStream { get; private set; } = default!;
 
-        public override void Load(IResourceCache cache, ResourcePath path)
+        public override void Load(IResourceCache cache, ResPath path)
         {
             if (!cache.ContentFileExists(path))
             {

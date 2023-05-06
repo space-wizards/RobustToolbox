@@ -23,6 +23,7 @@ namespace Robust.Client.Player
     {
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
+        [Dependency] private readonly IEntityManager _entManager = default!;
 
         /// <summary>
         ///     Active sessions of connected clients to the server.
@@ -153,7 +154,7 @@ namespace Robust.Client.Player
                 return;
             }
 
-            LocalPlayer.AttachEntity(entity.Value);
+            LocalPlayer.AttachEntity(entity.Value, _entManager, _client);
         }
 
         /// <summary>

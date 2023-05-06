@@ -84,16 +84,18 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         var parentIsMap = xform.GridUid == null && maps.HasComponent(xform.ParentUid);
         if (!parentIsMap && !grids.HasComponent(xform.ParentUid))
             return;
-        var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
+        var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager, _transform);
 
         // Change parent if necessary
         if (_mapManager.TryFindGridAt(xform.MapID, mapPos, out var grid))
         {
+            var gridUid = grid.Owner;
+
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
-            if (grid.Owner != xform.GridUid)
+            if (gridUid != xform.GridUid)
             {
-                _transform.SetParent(entity, xform, grid.Owner);
-                var ev = new ChangedGridEvent(entity, xform.GridUid, grid.Owner);
+                _transform.SetParent(entity, xform, gridUid, xforms);
+                var ev = new ChangedGridEvent(entity, xform.GridUid, gridUid);
                 RaiseLocalEvent(entity, ref ev, true);
             }
         }

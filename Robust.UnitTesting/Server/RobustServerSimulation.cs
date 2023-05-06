@@ -48,7 +48,7 @@ using Robust.Shared.Timing;
 namespace Robust.UnitTesting.Server
 {
     [PublicAPI]
-    internal interface ISimulationFactory
+    public interface ISimulationFactory
     {
         ISimulationFactory RegisterComponents(CompRegistrationDelegate factory);
         ISimulationFactory RegisterDependencies(DiContainerDelegate factory);
@@ -58,7 +58,7 @@ namespace Robust.UnitTesting.Server
     }
 
     [PublicAPI]
-    internal interface ISimulation
+    public interface ISimulation
     {
         IDependencyCollection Collection { get; }
 
@@ -76,15 +76,15 @@ namespace Robust.UnitTesting.Server
         EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates);
     }
 
-    internal delegate void DiContainerDelegate(IDependencyCollection diContainer);
+    public delegate void DiContainerDelegate(IDependencyCollection diContainer);
 
-    internal delegate void CompRegistrationDelegate(IComponentFactory factory);
+    public delegate void CompRegistrationDelegate(IComponentFactory factory);
 
-    internal delegate void EntitySystemRegistrationDelegate(IEntitySystemManager systemMan);
+    public delegate void EntitySystemRegistrationDelegate(IEntitySystemManager systemMan);
 
-    internal delegate void PrototypeRegistrationDelegate(IPrototypeManager protoMan);
+    public delegate void PrototypeRegistrationDelegate(IPrototypeManager protoMan);
 
-    internal sealed class RobustServerSimulation : ISimulation, ISimulationFactory
+    public sealed class RobustServerSimulation : ISimulation, ISimulationFactory
     {
         private DiContainerDelegate? _diFactory;
         private CompRegistrationDelegate? _regDelegate;

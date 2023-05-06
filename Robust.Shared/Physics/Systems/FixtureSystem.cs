@@ -29,8 +29,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<FixturesComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
-
-            SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
         }
 
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
@@ -193,17 +191,16 @@ namespace Robust.Shared.Physics.Systems
                 _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
             }
 
+
+
             if (updates)
-                FixtureUpdate(uid, manager: manager, body: body);
+            {
+                var resetMass = fixture.Density > 0f;
+                FixtureUpdate(uid, resetMass: resetMass, manager: manager, body: body);
+            }
         }
 
         #endregion
-
-        private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
-        {
-            if (MetaData(uid).EntityLifeStage > EntityLifeStage.MapInitialized) return;
-            EntityManager.RemoveComponent<FixturesComponent>(uid);
-        }
 
         internal void OnPhysicsInit(EntityUid uid, FixturesComponent component, PhysicsComponent? body = null)
         {
@@ -222,7 +219,7 @@ namespace Robust.Shared.Physics.Systems
                 }
 
                 // Make sure all the right stuff is set on the body
-                FixtureUpdate(uid, false, component, body);
+                FixtureUpdate(uid, dirty: false, manager: component, body: body);
             }
         }
 
@@ -334,7 +331,7 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Updates all of the cached physics information on the body derived from fixtures.
         /// </summary>
-        public void FixtureUpdate(EntityUid uid, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
+        public void FixtureUpdate(EntityUid uid, bool dirty = true, bool resetMass = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
         {
             if (!Resolve(uid, ref body, ref manager))
                 return;
@@ -350,7 +347,8 @@ namespace Robust.Shared.Physics.Systems
                 hard |= fixture.Hard;
             }
 
-            _physics.ResetMassData(uid, manager, body);
+            if (resetMass)
+                _physics.ResetMassData(uid, manager, body);
 
             // Normally this method is called when fixtures need to be dirtied anyway so no point in returning early I think
             body.CollisionMask = mask;

@@ -10,9 +10,9 @@ namespace Robust.Shared.ContentPack
         private sealed class SingleStreamLoader : IContentRoot
         {
             private readonly MemoryStream _stream;
-            private readonly ResourcePath _resourcePath;
+            private readonly ResPath _resourcePath;
 
-            public SingleStreamLoader(MemoryStream stream, ResourcePath resourcePath)
+            public SingleStreamLoader(MemoryStream stream, ResPath resourcePath)
             {
                 _stream = stream;
                 _resourcePath = resourcePath;
@@ -23,7 +23,7 @@ namespace Robust.Shared.ContentPack
                 // Nothing to do here I'm pretty sure.
             }
 
-            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
+            public bool TryGetFile(ResPath relPath, [NotNullWhen(true)] out Stream? stream)
             {
                 if (relPath == _resourcePath)
                 {
@@ -40,7 +40,7 @@ namespace Robust.Shared.ContentPack
                 return false;
             }
 
-            public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
+            public IEnumerable<ResPath> FindFiles(ResPath path)
             {
                 if (_resourcePath.TryRelativeTo(path, out var relative))
                 {

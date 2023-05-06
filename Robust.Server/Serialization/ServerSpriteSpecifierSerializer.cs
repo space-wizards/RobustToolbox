@@ -33,8 +33,8 @@ public sealed class ServerSpriteSpecifierSerializer : SpriteSpecifierSerializer
             return new ErrorNode(node, "Sprite specifier has missing/invalid state node");
         }
 
-        var path = serializationManager.ValidateNode<ResourcePath>(
-            new ValueDataNode($"{SharedSpriteComponent.TextureRoot / valuePathNode.Value}"), context);
+        var path = serializationManager.ValidateNode<ResPath>(
+            new ValueDataNode($"{SpriteSpecifierSerializer.TextureRoot / valuePathNode.Value}"), context);
 
         if (path is ErrorNode) return path;
 
@@ -43,8 +43,8 @@ public sealed class ServerSpriteSpecifierSerializer : SpriteSpecifierSerializer
         // the state exists. So lets just check if the state .png exists, without properly validating the RSI's
         // meta.json
 
-        var statePath = serializationManager.ValidateNode<ResourcePath>(
-            new ValueDataNode($"{SharedSpriteComponent.TextureRoot / valuePathNode.Value / valueStateNode.Value}.png"),
+        var statePath = serializationManager.ValidateNode<ResPath>(
+            new ValueDataNode($"{SpriteSpecifierSerializer.TextureRoot / valuePathNode.Value / valueStateNode.Value}.png"),
             context);
 
         if (statePath is ErrorNode) return statePath;

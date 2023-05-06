@@ -26,19 +26,9 @@ namespace Robust.Shared.Physics
         [ViewVariables]
         public int FixtureCount => Fixtures.Count;
 
-        [ViewVariables]
-        [Access(typeof(FixtureSystem), Other = AccessPermissions.ReadExecute)] // FIXME Friends
-        public readonly Dictionary<string, Fixture> Fixtures = new();
-
         [DataField("fixtures", customTypeSerializer:typeof(FixtureSerializer))]
         [NeverPushInheritance]
         [Access(typeof(FixtureSystem), Other = AccessPermissions.ReadExecute)] // FIXME Friends
-        internal List<Fixture> SerializedFixtures
-        {
-            get => SerializedFixtureData ?? Fixtures.Values.ToList();
-            set => SerializedFixtureData = value;
-        }
-
-        internal List<Fixture>? SerializedFixtureData;
+        public readonly Dictionary<string, Fixture> Fixtures = new();
     }
 }

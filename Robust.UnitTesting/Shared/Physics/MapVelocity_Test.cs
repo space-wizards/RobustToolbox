@@ -22,9 +22,10 @@ namespace Robust.UnitTesting.Shared.Physics
     bodyType: Dynamic
   - type: Fixtures
     fixtures:
-    - shape:
-        !type:PhysShapeCircle
-        radius: 0.35
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
 ";
         [Test]
         public async Task TestMapVelocities()

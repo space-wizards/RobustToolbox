@@ -354,9 +354,8 @@ internal sealed class MidiRenderer : IMidiRenderer
         }
     }
 
-    public void ClearEvents()
+    public void ClearAllEvents()
     {
-        // I have no idea what I am doing. Please forgive me vera.
         _sequencer.RemoveEvents(SequencerClientId.Wildcard, SequencerClientId.Wildcard, -1);
     }
 

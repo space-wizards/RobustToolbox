@@ -123,7 +123,7 @@ public interface IMidiRenderer : IDisposable
     /// <summary>
     /// Clears all scheduled events.
     /// </summary>
-    void ClearEvents();
+    void ClearAllEvents();
 
     /// <summary>
     ///     Render and play MIDI to the audio source.

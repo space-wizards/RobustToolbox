@@ -12,6 +12,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -895,6 +896,9 @@ public sealed class MapLoaderSystem : EntitySystem
 
     private MappingDataNode GetSaveData(EntityUid uid)
     {
+        var ev = new BeforeSaveEvent(uid, Transform(uid).MapUid);
+        RaiseLocalEvent(ev);
+
         var data = new MappingDataNode();
         WriteMetaSection(data, uid);
 

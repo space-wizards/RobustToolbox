@@ -14,6 +14,8 @@ public readonly struct EndCollideEvent
 
     public EndCollideEvent(EntityUid ourEntity, EntityUid otherEntity, Fixture ourFixture, Fixture otherFixture)
     {
+        OurEntity = ourEntity;
+        OtherEntity = otherEntity;
         OurFixture = ourFixture;
         OtherFixture = otherFixture;
     }

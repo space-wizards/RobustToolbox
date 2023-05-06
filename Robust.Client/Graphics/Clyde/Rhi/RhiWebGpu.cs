@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Silk.NET.WebGPU;
 using Silk.NET.WebGPU.Extensions.WGPU;
@@ -58,7 +59,7 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
             var attachment = new RenderPassColorAttachment
             {
                 View = tv,
-                ClearValue = WgpuColor(RColor.Pink),
+                ClearValue = WgpuColor(RColor.HotPink),
                 LoadOp = LoadOp.Clear,
                 StoreOp = StoreOp.Store
             };
@@ -173,6 +174,11 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         };
 
         self._apiLogSawmill.Log(robustLevel, messageString);
+    }
+
+    public override void Shutdown()
+    {
+
     }
 
     private record struct WgpuRequestAdapterResult(RequestAdapterStatus Status, Ptr<Adapter> Adapter, string Message);

@@ -862,6 +862,28 @@ namespace Robust.Shared
         public static readonly CVarDef<string> DisplayGraphicsApi =
             CVarDef.Create("display.graphics_api", "webGpu", CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Try to use the display adapter with this name, if the current renderer supports selecting it.
+        /// </summary>
+        public static readonly CVarDef<string> DisplayAdapter =
+            CVarDef.Create("display.adapter", "", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// What type of GPU to prefer when creating a graphics context, for things such as hybrid GPU laptops.
+        /// </summary>
+        /// <remarks>
+        /// This setting is not always respect depending on platform and rendering API used.
+        /// Values are:
+        /// 0 = unspecified (DXGI_GPU_PREFERENCE_UNSPECIFIED)
+        /// 1 = minimum power (DXGI_GPU_PREFERENCE_MINIMUM_POWER)
+        /// 2 = high performance (DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE)
+        /// </remarks>
+        public static readonly CVarDef<int> DisplayGpuPreference =
+            CVarDef.Create("display.gpu_power_preference", 2, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<bool> DisplayD3D11DebugDevice =
+            CVarDef.Create("display.d3d11_debug_device", false, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */

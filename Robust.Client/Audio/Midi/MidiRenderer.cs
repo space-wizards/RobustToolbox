@@ -354,6 +354,12 @@ internal sealed class MidiRenderer : IMidiRenderer
         }
     }
 
+    public void ClearEvents()
+    {
+        // I have no idea what I am doing. Please forgive me vera.
+        _sequencer.RemoveEvents(SequencerClientId.Wildcard, SequencerClientId.Wildcard, -1);
+    }
+
     public void LoadSoundfont(string filename, bool resetPresets = true)
     {
         lock (_playerStateLock)

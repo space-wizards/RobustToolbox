@@ -54,6 +54,24 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.109.0.0
+
+### Breaking changes
+
+* `BeforeSaveEvent` has been moved from `Robust.Server.Maps` to `Robust.Shared.Map.Events`
+
+### New features
+
+* Added `IMidiRenderer.ClearAllEvents()`, a new method that clears all scheduled midi events.
+* Added a new event (`BeforeSaveEvent`) which gets raised before a map/entity gets serialized to yaml.
+* Added a new `ROBUST_SOUNDFONT_OVERRIDE` environmental variable that can be used to override system soundfonts.
+
+### Bugfixes
+
+* Fixed `EndCollideEvent` not setting the EntityUid fields.
+* Fixed a bug that would cause screen-space overlays to sometimes not be drawn.
+
+
 ## 0.108.0.0
 
 ### Breaking changes

@@ -222,20 +222,25 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public nint? WindowGetWin32Window(WindowReg window)
+            public HWND WindowGetWin32Window(WindowReg window)
             {
                 if (!OperatingSystem.IsWindows())
-                    return null;
+                    return default;
 
                 var reg = (GlfwWindowReg) window;
                 try
                 {
-                    return GLFW.GetWin32Window(reg.GlfwWindow);
+                    return (HWND) GLFW.GetWin32Window(reg.GlfwWindow);
                 }
                 catch (EntryPointNotFoundException)
                 {
-                    return null;
+                    return default;
                 }
+            }
+
+            public HINSTANCE WindowGetWin32Instance(WindowReg window)
+            {
+                throw new NotImplementedException();
             }
 
             public (WindowReg?, string? error) WindowCreate(

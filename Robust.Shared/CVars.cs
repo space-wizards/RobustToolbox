@@ -859,6 +859,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayThreadWindowApi =
             CVarDef.Create("display.thread_window_api", false, CVar.CLIENTONLY);
 
+        public static readonly CVarDef<string> DisplayGraphicsApi =
+            CVarDef.Create("display.graphics_api", "webGpu", CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */

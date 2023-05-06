@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared;
@@ -24,13 +25,9 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Dictionary<int, MonitorHandle> _monitorHandles = new();
 
         private int _primaryMonitorId;
-        private WindowReg? _mainWindow;
+        internal WindowReg? _mainWindow;
 
-        private IWindowingImpl? _windowing;
-#pragma warning disable 414
-        // Keeping this for if/when we ever get a new renderer.
-        private Renderer _chosenRenderer;
-#pragma warning restore 414
+        internal IWindowingImpl? _windowing;
 
         private ResPath? _windowIconPath;
         private Thread? _windowingThread;
@@ -163,8 +160,6 @@ namespace Robust.Client.Graphics.Clyde
         {
             DebugTools.AssertNotNull(_windowing);
 
-            _chosenRenderer = Renderer.OpenGL;
-
             var succeeded = false;
             string? lastError = null;
 
@@ -203,6 +198,8 @@ namespace Robust.Client.Graphics.Clyde
 
                 return false;
             }
+
+            InitRhi();
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
             Render();
@@ -427,7 +424,7 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.TextInputStop();
         }
 
-        private abstract class WindowReg
+        internal abstract class WindowReg
         {
             public bool IsDisposed;
 
@@ -446,6 +443,9 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsVisible;
             public IClydeWindow? Owner;
 
+            public RhiWebGpu.WindowData? RhiWebGpuData;
+            public RhiD3D11.WindowData? RhiD3D11Data;
+
             public bool DisposeOnClose;
 
             public bool IsMainWindow;
@@ -456,7 +456,7 @@ namespace Robust.Client.Graphics.Clyde
             public Action<WindowResizedEventArgs>? Resized;
         }
 
-        private sealed class WindowHandle : IClydeWindowInternal
+        internal sealed class WindowHandle : IClydeWindowInternal
         {
             // So funny story
             // When this class was a record, the C# compiler on .NET 5 stack overflowed

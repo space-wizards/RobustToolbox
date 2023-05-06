@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using TerraFX.Interop.Windows;
 using static SDL2.SDL;
 using static SDL2.SDL.SDL_bool;
 using static SDL2.SDL.SDL_FlashOperation;
@@ -363,16 +364,28 @@ internal partial class Clyde
             return reg.SysWMinfo.info.x11.display;
         }
 
-        public nint? WindowGetWin32Window(WindowReg window)
+        public HWND WindowGetWin32Window(WindowReg window)
         {
             CheckWindowDisposed(window);
 
             var reg = (Sdl2WindowReg) window;
 
             if (reg.SysWMinfo.subsystem != SDL_SYSWM_WINDOWS)
-                return null;
+                return default;
 
-            return reg.SysWMinfo.info.win.window;
+            return (HWND) reg.SysWMinfo.info.win.window;
+        }
+
+        public HINSTANCE WindowGetWin32Instance(WindowReg window)
+        {
+            CheckWindowDisposed(window);
+
+            var reg = (Sdl2WindowReg) window;
+
+            if (reg.SysWMinfo.subsystem != SDL_SYSWM_WINDOWS)
+                return default;
+
+            return (HINSTANCE) reg.SysWMinfo.info.win.window;
         }
 
         public void RunOnWindowThread(Action a)

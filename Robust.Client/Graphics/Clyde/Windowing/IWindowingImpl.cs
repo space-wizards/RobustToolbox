@@ -4,12 +4,13 @@ using Robust.Client.Input;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Client.Graphics.Clyde
 {
     partial class Clyde
     {
-        private interface IWindowingImpl
+        internal interface IWindowingImpl
         {
             // Lifecycle stuff
             bool Init();
@@ -42,7 +43,8 @@ namespace Robust.Client.Graphics.Clyde
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
             nint? WindowGetX11Display(WindowReg window);
-            nint? WindowGetWin32Window(WindowReg window);
+            HWND WindowGetWin32Window(WindowReg window);
+            HINSTANCE WindowGetWin32Instance(WindowReg window);
 
             // Keyboard
             string? KeyGetName(Keyboard.Key key);

@@ -23,7 +23,7 @@
     <PackageReference Include="OpenTK.OpenAL" Version="4.7.5" />
     <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
     <PackageReference Include="Robust.Natives" Version="0.1.1" />
-    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.20348-rc2" />
+    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.22621.1" />
     <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" Version="1.2.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">

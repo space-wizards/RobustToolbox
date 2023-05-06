@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.108.0.0
+
+### Breaking changes
+
+* Physics fixtures are now serialized by id, fixture rather than as a list with ids attached.
+
+
 ## 0.107.0.1
 
 ### Bugfixes

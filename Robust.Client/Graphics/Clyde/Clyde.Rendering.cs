@@ -406,7 +406,7 @@ namespace Robust.Client.Graphics.Clyde
             return Color.FromSrgb(color);
         }
 
-        private (GLShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
+        private (GLShaderProgram, LoadedShaderInstance) ActivateShaderInstance(ClydeHandle handle)
         {
             var instance = _shaderInstances[handle];
             var shader = _loadedShaders[instance.ShaderHandle];
@@ -439,7 +439,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             if (!instance.ParametersDirty)
-                return (program, shader);
+                return (program, instance);
 
             instance.ParametersDirty = false;
 
@@ -505,7 +505,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            return (program, shader);
+            return (program, instance);
         }
 
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]

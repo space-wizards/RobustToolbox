@@ -60,7 +60,7 @@ public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixtu
     }
 
     public void CopyTo(ISerializationManager serializationManager, Dictionary<string, Fixture> source, ref Dictionary<string, Fixture> target,
-        SerializationHookContext hookCtx, ISerializationContext? context = null)
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
         target.Clear();
 

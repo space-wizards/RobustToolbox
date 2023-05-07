@@ -11,6 +11,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.Physics;
+using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Shared.GameObjects
 {
@@ -51,6 +53,8 @@ namespace Robust.Shared.GameObjects
         protected readonly Queue<EntityUid> QueuedDeletions = new();
         protected readonly HashSet<EntityUid> QueuedDeletionsSet = new();
 
+        private EntityDiffContext _context = new();
+
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
@@ -68,6 +72,9 @@ namespace Robust.Shared.GameObjects
         public event Action<EntityUid>? EntityStarted;
         public event Action<EntityUid>? EntityDeleted;
         public event Action<EntityUid>? EntityDirtied; // only raised after initialization
+
+        private string _xformName = string.Empty;
+        private string _metaName = string.Empty;
 
         public bool Started { get; protected set; }
 
@@ -90,8 +97,111 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeComponents();
+            _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
+            _metaName = _componentFactory.GetComponentName(typeof(MetaDataComponent));
 
             Initialized = true;
+        }
+
+        /// <summary>
+        /// Returns true if the entity's data (apart from transform) is default.
+        /// </summary>
+        public bool IsDefault(EntityUid uid)
+        {
+            if (!TryGetComponent<MetaDataComponent>(uid, out var metadata) || metadata.EntityPrototype == null)
+                return false;
+
+            var prototype = metadata.EntityPrototype;
+
+            // Prototype may or may not have metadata / transforms
+            var protoComps = prototype.Components.Keys.ToList();
+
+            protoComps.Remove(_xformName);
+
+            // Fast check if the component counts match.
+            if (protoComps.Count != ComponentCount(uid) - 2)
+                return false;
+
+            // Check if entity name / description match
+            if (metadata.EntityName != prototype.Name ||
+                metadata.EntityDescription != prototype.Description)
+            {
+                return false;
+            }
+
+            // Get default prototype data
+            Dictionary<string, MappingDataNode> protoData = new();
+            try
+            {
+                _context.WritingReadingPrototypes = true;
+
+                foreach (var compType in protoComps)
+                {
+                    if (compType == _xformName)
+                        continue;
+
+                    var comp = prototype.Components[compType];
+                    protoData.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component, alwaysWrite: true, context: _context));
+                }
+
+                _context.WritingReadingPrototypes = false;
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"Failed to convert prototype {prototype.ID} into yaml. Exception: {e.Message}");
+                return false;
+            }
+
+            var comps = new HashSet<IComponent>(GetComponents(uid));
+            var compNames = new HashSet<string>(protoComps.Count);
+            foreach (var component in comps)
+            {
+                var compType = component.GetType();
+                var compName = _componentFactory.GetComponentName(compType);
+
+                if (compType == typeof(MetaDataComponent) || compType == typeof(TransformComponent))
+                    continue;
+
+                compNames.Add(compName);
+
+                // If the component isn't on the prototype then it's custom.
+                if (!protoComps.Contains(compName))
+                    return false;
+
+                MappingDataNode compMapping;
+                try
+                {
+                    compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true, context: _context);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
+                    return false;
+                }
+
+                if (protoData.TryGetValue(compName, out var protoMapping))
+                {
+                    var diff = compMapping.Except(protoMapping);
+
+                    if (diff != null && diff.Children.Count != 0)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            // An entity may also remove components on init -> check no components are missing.
+            foreach (var compType in protoComps)
+            {
+                if (!compNames.Contains(compType))
+                    return false;
+            }
+
+            return true;
         }
 
         public virtual void Startup()
@@ -670,6 +780,18 @@ namespace Robust.Shared.GameObjects
         protected virtual EntityUid GenerateEntityUid()
         {
             return new(NextEntityUid++);
+        }
+
+        private sealed class EntityDiffContext : ISerializationContext
+        {
+            public SerializationManager.SerializerProvider SerializerProvider { get; }
+            public bool WritingReadingPrototypes { get; set; }
+
+            public EntityDiffContext()
+            {
+                SerializerProvider = new();
+                SerializerProvider.RegisterSerializer(this);
+            }
         }
     }
 

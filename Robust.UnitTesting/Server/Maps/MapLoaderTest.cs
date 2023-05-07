@@ -79,8 +79,8 @@ entities:
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
             protoMan.RegisterKind(typeof(EntityPrototype));
 
-            protoMan.LoadDirectory(new ResourcePath("/EnginePrototypes"));
-            protoMan.LoadDirectory(new ResourcePath("/Prototypes"));
+            protoMan.LoadDirectory(new ("/EnginePrototypes"));
+            protoMan.LoadDirectory(new ("/Prototypes"));
             protoMan.ResolveResults();
         }
 
@@ -99,11 +99,14 @@ entities:
             entMan.EnsureComponent<BroadphaseComponent>(mapUid);
 
             var mapLoad = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
-            var geid = mapLoad.LoadGrid(mapId, "/TestMap.yml");
+            if (!mapLoad.TryLoad(mapId, "/TestMap.yml", out var root)
+                || root.FirstOrDefault() is not { Valid:true } geid)
+            {
+                Assert.Fail();
+                return;
+            }
 
-            Assert.That(geid, NUnit.Framework.Is.Not.Null);
-
-            var entity = entMan.GetComponent<TransformComponent>(geid!.Value).Children.Single().Owner;
+            var entity = entMan.GetComponent<TransformComponent>(geid).Children.Single().Owner;
             var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
 
             Assert.That(c.Bar, Is.EqualTo(2));

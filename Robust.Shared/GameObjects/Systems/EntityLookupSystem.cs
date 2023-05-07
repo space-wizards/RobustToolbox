@@ -1,4 +1,6 @@
-using Robust.Shared.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -13,9 +15,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.GameObjects
 {
@@ -52,6 +51,20 @@ namespace Robust.Shared.GameObjects
         Uncontained = Dynamic | Static | Sundries,
 
         StaticSundries = Static | Sundries,
+    }
+
+    /// <summary>
+    /// Raised on entities to try to get its WorldAABB.
+    /// </summary>
+    [ByRefEvent]
+    public record struct WorldAABBEvent
+    {
+        /// <summary>
+        /// If the event is not handled then <see cref="FixturesComponent"/> will be used.
+        /// </summary>
+        public bool Handled;
+
+        public Box2 AABB;
     }
 
     public sealed partial class EntityLookupSystem : EntitySystem
@@ -359,8 +372,6 @@ namespace Robust.Shared.GameObjects
             Transform mapTransform,
             Dictionary<FixtureProxy, Box2> moveBuffer)
         {
-            DebugTools.Assert(fixture.Body.CanCollide);
-
             // Moving
             if (fixture.ProxyCount > 0)
             {
@@ -691,6 +702,13 @@ namespace Robust.Shared.GameObjects
             EntityQuery<FixturesComponent> fixturesQuery,
             bool recursive = true)
         {
+            if (xform.Broadphase != null && !xform.Broadphase.Value.IsValid())
+            {
+                // This entity was explicitly removed from lookup trees, possibly because it is in a container or has
+                // been detached by the PVS system. Do nothing.
+                return;
+            }
+
             if (!physicsQuery.TryGetComponent(uid, out var body) || !body.CanCollide)
             {
                 // TOOD optimize this. This function iterates UP through parents, while we are currently iterating down.
@@ -699,7 +717,7 @@ namespace Robust.Shared.GameObjects
                 // TODO BROADPHASE PARENTING this just assumes local = world
                 var relativeRotation = rotation - broadphaseXform.LocalRotation;
 
-                var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation);
+                var aabb = GetAABBNoContainer(uid, coordinates.Position, relativeRotation, fixturesQuery);
                 AddOrUpdateSundriesTree(broadUid, broadphase, uid, xform, body?.BodyType == BodyType.Static, aabb);
             }
             else
@@ -711,6 +729,8 @@ namespace Robust.Shared.GameObjects
             if (xform.ChildCount == 0 || !recursive)
                 return;
 
+            // TODO can this be removed?
+            // AFAIK the separate container check is redundant now that we check for an invalid broadphase at the beginning of this function.
             if (!contQuery.HasComponent(xform.Owner))
             {
                 while (childEnumerator.MoveNext(out var child))
@@ -910,15 +930,40 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle)
         {
-            if (TryComp<ILookupWorldBox2Component>(uid, out var worldLookup))
+            return GetAABBNoContainer(uid, position, angle, GetEntityQuery<FixturesComponent>());
+        }
+
+        /// <summary>
+        /// Get the AABB of an entity with the supplied position and angle without considering containers.
+        /// </summary>
+        public Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle, EntityQuery<FixturesComponent> fixturesQuery)
+        {
+            if (fixturesQuery.TryGetComponent(uid, out var fixtures))
             {
                 var transform = new Transform(position, angle);
-                return worldLookup.GetAABB(transform);
+
+                var bounds = new Box2(transform.Position, transform.Position);
+                // TODO cache this to speed up entity lookups & tree updating
+                foreach (var fixture in fixtures.Fixtures.Values)
+                {
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        // TODO don't transform each fixture, just transform the final AABB
+                        var boundy = fixture.Shape.ComputeAABB(transform, i);
+                        bounds = bounds.Union(boundy);
+                    }
+                }
+
+                return bounds;
             }
-            else
+
+            var ev = new WorldAABBEvent()
             {
-                return new Box2(position, position);
-            }
+                AABB = new Box2(position, position),
+            };
+
+            RaiseLocalEvent(uid, ref ev);
+            return ev.AABB;
         }
 
         public Box2 GetWorldAABB(EntityUid uid, TransformComponent? xform = null)

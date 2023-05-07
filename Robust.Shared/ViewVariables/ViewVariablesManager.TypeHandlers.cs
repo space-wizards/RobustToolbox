@@ -34,7 +34,7 @@ internal abstract partial class ViewVariablesManager
             || !_entMan.TryGetComponent(uid, registration.Idx, out var component))
             return null;
 
-        return new ViewVariablesComponentPath(component, uid);
+        return new ViewVariablesComponentPath((Component) component, uid);
     }
 
     private IEnumerable<string> EntityComponentList(EntityUid uid)

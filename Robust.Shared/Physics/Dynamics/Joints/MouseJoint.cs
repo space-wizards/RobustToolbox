@@ -219,7 +219,7 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         _C *= _beta;
 
         // Cheat with some damping
-        wB *= 0.98f;
+        wB*= MathF.Max(0.0f, 1.0f - 0.02f * (60.0f * data.FrameTime));
 
         if (data.WarmStarting)
         {

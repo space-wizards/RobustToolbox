@@ -70,6 +70,9 @@ namespace Robust.Shared.GameObjects
         public event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
         public bool Started { get; protected set; }
+
+        public bool ShuttingDown { get; protected set; }
+
         public bool Initialized { get; protected set; }
 
         /// <summary>
@@ -142,10 +145,12 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Shutdown()
         {
+            ShuttingDown = true;
             FlushEntities();
             _eventBus.ClearEventTables();
             _entitySystemManager.Shutdown();
             ClearComponents();
+            ShuttingDown = false;
             Started = false;
         }
 
@@ -153,12 +158,14 @@ namespace Robust.Shared.GameObjects
         {
             _componentFactory.ComponentAdded -= OnComponentAdded;
             _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
+            ShuttingDown = true;
             FlushEntities();
             _entitySystemManager.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
             ClearComponents();
 
+            ShuttingDown = false;
             Initialized = false;
             Started = false;
         }

@@ -17,6 +17,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -30,6 +31,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
     [Shared.IoC.Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
+    [Shared.IoC.Dependency] private readonly IParallelManager _parallelManager = default!;
 
     public const float ChunkSize = 8;
 
@@ -57,9 +59,9 @@ internal sealed partial class PVSSystem : EntitySystem
     /// If PVS disabled then we'll track if we've dumped all entities on the player.
     /// This way any future ticks can be orders of magnitude faster as we only send what changes.
     /// </summary>
-    public HashSet<ICommonSession> SeenAllEnts = new();
+    private HashSet<ICommonSession> _seenAllEnts = new();
 
-    private readonly Dictionary<ICommonSession, SessionPVSData> _playerVisibleSets = new();
+    internal readonly Dictionary<ICommonSession, SessionPVSData> PlayerData = new();
 
     private PVSCollection<EntityUid> _entityPvsCollection = default!;
     public PVSCollection<EntityUid> EntityPVSCollection => _entityPvsCollection;
@@ -98,6 +100,7 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
     private readonly List<(uint, IChunkIndexLocation)> _chunkList = new(64);
+    internal readonly HashSet<ICommonSession> PendingAcks = new();
 
     private ISawmill _sawmill = default!;
 
@@ -134,17 +137,6 @@ internal sealed partial class PVSSystem : EntitySystem
         InitializeDirty();
     }
 
-    /// <summary>
-    ///     Marks an entity's current chunk as dirty.
-    /// </summary>
-    internal void MarkDirty(EntityUid uid)
-    {
-        var query = GetEntityQuery<TransformComponent>();
-        var xform = query.GetComponent(uid);
-        var coordinates = _transform.GetMoverCoordinates(xform, query);
-        _entityPvsCollection.MarkDirty(_entityPvsCollection.GetChunkIndex(coordinates));
-    }
-
     public override void Shutdown()
     {
         base.Shutdown();
@@ -163,10 +155,14 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     // TODO rate limit this?
-    private void OnClientRequestFull(ICommonSession session, GameTick tick, GameTick lastAcked, EntityUid? missingEntity)
+    private void OnClientRequestFull(ICommonSession session, GameTick tick, EntityUid? missingEntity)
     {
-        if (!_playerVisibleSets.TryGetValue(session, out var sessionData))
+        if (!PlayerData.TryGetValue(session, out var sessionData))
             return;
+
+        // Update acked tick so that OnClientAck doesn't get invoked by any late acks.
+        var lastAcked = sessionData.LastReceivedAck;
+        sessionData.LastReceivedAck = _gameTiming.CurTick;
 
         var sb = new StringBuilder();
         sb.Append($"Client {session} requested full state on tick {tick}. Last Acked: {lastAcked}.");
@@ -190,51 +186,14 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         // return last acked to pool, but only if it is not still in the OverflowDictionary.
-        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(lastAcked))
-            _visSetPool.Return(sessionData.LastAcked);
+        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(sessionData.LastAcked.Value.Tick))
+        {
+            DebugTools.Assert(sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
+            _visSetPool.Return(sessionData.LastAcked.Value.Data);
+        }
 
         sessionData.LastAcked = null;
         sessionData.RequestedFull = true;
-    }
-
-    private void OnClientAck(ICommonSession session, GameTick ackedTick, GameTick lastAckedTick)
-    {
-        if (!_playerVisibleSets.TryGetValue(session, out var sessionData))
-            return;
-
-        if (sessionData.Overflow != null && sessionData.Overflow.Value.Tick < ackedTick)
-        {
-            var (overflowTick, overflowEnts) = sessionData.Overflow.Value;
-            sessionData.Overflow = null;
-            if (overflowTick == ackedTick)
-            {
-                ProcessAckedTick(sessionData, overflowEnts, ackedTick, lastAckedTick);
-                return;
-            }
-
-            // Even though the acked tick is newer, we have no guarantee that the client received the cached set, so
-            // we just discard it.
-            _visSetPool.Return(overflowEnts);
-        }
-
-        if (sessionData.SentEntities.TryGetValue(ackedTick, out var ackedData))
-            ProcessAckedTick(sessionData, ackedData, ackedTick, lastAckedTick);
-    }
-
-    private void ProcessAckedTick(SessionPVSData sessionData, Dictionary<EntityUid, PVSEntityVisiblity> ackedData, GameTick tick, GameTick lastAckedTick)
-    {
-        // return last acked to pool, but only if it is not still in the OverflowDictionary.
-        if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(lastAckedTick))
-            _visSetPool.Return(sessionData.LastAcked);
-
-        sessionData.LastAcked = ackedData;
-        foreach (var ent in ackedData.Keys)
-        {
-            sessionData.LastSeenAt[ent] = tick;
-        }
-
-        // The client acked a tick. If they requested a full state, this ack happened some time after that, so we can safely set this to false
-        sessionData.RequestedFull = false;
     }
 
     private void OnViewsizeChanged(float obj)
@@ -244,7 +203,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void SetPvs(bool value)
     {
-        SeenAllEnts.Clear();
+        _seenAllEnts.Clear();
         CullingEnabled = value;
     }
 
@@ -253,27 +212,6 @@ internal sealed partial class PVSSystem : EntitySystem
         foreach (var collection in _pvsCollections)
         {
             collection.Process();
-        }
-    }
-
-    public void CleanupDirty(IEnumerable<IPlayerSession> sessions)
-    {
-        if (!CullingEnabled)
-        {
-            SeenAllEnts.Clear();
-            foreach (var player in sessions)
-            {
-                SeenAllEnts.Add(player);
-            }
-        }
-
-        _currentIndex = ((int)_gameTiming.CurTick.Value + 1) % DirtyBufferSize;
-        _addEntities[_currentIndex].Clear();
-        _dirtyEntities[_currentIndex].Clear();
-
-        foreach (var collection in _pvsCollections)
-        {
-            collection.ClearDirty();
         }
     }
 
@@ -304,7 +242,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var previousTick = _gameTiming.CurTick - 1;
 
-        foreach (var sessionData in _playerVisibleSets.Values)
+        foreach (var sessionData in PlayerData.Values)
         {
             sessionData.LastSeenAt.Remove(e);
             if (sessionData.SentEntities.TryGetValue(previousTick, out var ents))
@@ -390,7 +328,7 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         if (e.NewStatus == SessionStatus.InGame)
         {
-            if (!_playerVisibleSets.TryAdd(e.Session, new()))
+            if (!PlayerData.TryAdd(e.Session, new()))
                 _sawmill.Error($"Attempted to add player to _playerVisibleSets, but they were already present? Session:{e.Session}");
 
             foreach (var pvsCollection in _pvsCollections)
@@ -404,7 +342,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (e.NewStatus != SessionStatus.Disconnected)
             return;
 
-        if (!_playerVisibleSets.Remove(e.Session, out var data))
+        if (!PlayerData.Remove(e.Session, out var data))
             return;
 
         foreach (var pvsCollection in _pvsCollections)
@@ -417,12 +355,13 @@ internal sealed partial class PVSSystem : EntitySystem
             _visSetPool.Return(data.Overflow.Value.SentEnts);
         data.Overflow = null;
 
-        if (data.LastAcked != null)
-            _visSetPool.Return(data.LastAcked);
+        var acked = data.LastAcked?.Data;
+        if (acked != null)
+            _visSetPool.Return(acked);
 
         foreach (var visSet in data.SentEntities.Values)
         {
-            if (visSet != data.LastAcked)
+            if (visSet != acked)
                 _visSetPool.Return(visSet);
         }
 
@@ -670,6 +609,13 @@ internal sealed partial class PVSSystem : EntitySystem
         foreach (var uid in chunk)
         {
             AddToChunkSetRecursively(in uid, visMask, tree, chunkSet, transform, metadata);
+#if DEBUG
+            var xform = transform.GetComponent(uid);
+            if (chunkLocation is MapChunkLocation)
+                DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid);
+            else if (chunkLocation is GridChunkLocation)
+                DebugTools.Assert(xform.ParentUid != xform.MapUid || xform.GridUid == xform.MapUid);
+#endif
         }
 
         if (tree.RootNodes.Count == 0)
@@ -734,20 +680,24 @@ internal sealed partial class PVSSystem : EntitySystem
         return true;
     }
 
-    public (List<EntityState>? updates, List<EntityUid>? deletions, List<EntityUid>? leftPvs, GameTick fromTick) CalculateEntityStates(IPlayerSession session,
-        GameTick fromTick, GameTick toTick,
-        (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] chunkCache,
-        HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityQuery<TransformComponent> tQuery,
-        EntityUid[] viewerEntities)
+    internal (List<EntityState>? updates, List<EntityUid>? deletions, List<EntityUid>? leftPvs, GameTick fromTick)
+        CalculateEntityStates(IPlayerSession session,
+            GameTick fromTick,
+            GameTick toTick,
+            EntityQuery<MetaDataComponent> mQuery,
+            EntityQuery<TransformComponent> tQuery,
+            (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] chunks,
+            HashSet<int> visibleChunks,
+            EntityUid[] viewers)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
         var newEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityBudget);
         var enteredEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityEnterBudget);
         var newEntityCount = 0;
         var enteredEntityCount = 0;
-        var sessionData = _playerVisibleSets[session];
+        var sessionData = PlayerData[session];
         sessionData.SentEntities.TryGetValue(toTick - 1, out var lastSent);
-        var lastAcked = sessionData.LastAcked;
+        var lastAcked = sessionData.LastAcked?.Data;
         var lastSeen = sessionData.LastSeenAt;
         var visibleEnts = _visSetPool.Get();
 
@@ -760,9 +710,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var stack = _stackPool.Get();
         // TODO reorder chunks to prioritize those that are closest to the viewer? Helps make pop-in less visible.
-        foreach (var i in chunkIndices)
+        foreach (var i in visibleChunks)
         {
-            var cache = chunkCache[i];
+            var cache = chunks[i];
             if(!cache.HasValue) continue;
 
 #if DEBUG
@@ -800,7 +750,7 @@ internal sealed partial class PVSSystem : EntitySystem
         }
         localEnumerator.Dispose();
 
-        foreach (var viewerEntity in viewerEntities)
+        foreach (var viewerEntity in viewers)
         {
             RecursivelyAddOverride(in viewerEntity, lastAcked, lastSent, visibleEnts, lastSeen, in mQuery, in tQuery, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
@@ -1048,7 +998,7 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     ///     Gets all entity states that have been modified after and including the provided tick.
     /// </summary>
-    public (List<EntityState>?, List<EntityUid>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
+    public (List<EntityState>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
     {
         List<EntityState>? stateEntities;
         var toSend = _uidSetPool.Get();
@@ -1059,7 +1009,7 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             enumerateAll = fromTick == GameTick.Zero;
         }
-        else if (!SeenAllEnts.Contains(player))
+        else if (!_seenAllEnts.Contains(player))
         {
             enumerateAll = true;
             fromTick = GameTick.Zero;
@@ -1129,7 +1079,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (stateEntities.Count == 0)
             stateEntities = null;
 
-        return (stateEntities, deletions, null, fromTick);
+        return (stateEntities, deletions, fromTick);
     }
 
     /// <summary>
@@ -1289,9 +1239,9 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     /// <summary>
-    ///     Session data class used to avoid having to lock session dictionaries.
+    ///     Class used to store per-session data in order to avoid having to lock dictionaries.
     /// </summary>
-    private sealed class SessionPVSData
+    internal sealed class SessionPVSData
     {
         /// <summary>
         /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="DirtyBufferSize"/> ticks.
@@ -1301,7 +1251,7 @@ internal sealed partial class PVSSystem : EntitySystem
         /// <summary>
         ///     The most recently acked entities
         /// </summary>
-        public Dictionary<EntityUid, PVSEntityVisiblity>? LastAcked = new();
+        public (GameTick Tick, Dictionary<EntityUid, PVSEntityVisiblity> Data)? LastAcked;
 
         /// <summary>
         ///     Stores the last tick at which a given entity was acked by a player. Used to avoid re-sending the whole entity
@@ -1310,7 +1260,7 @@ internal sealed partial class PVSSystem : EntitySystem
         public readonly Dictionary<EntityUid, GameTick> LastSeenAt = new();
 
         /// <summary>
-        ///     <see cref="_sentData"/> overflow in case a player's last ack is more than <see cref="DirtyBufferSize"/> ticks behind the current tick.
+        ///     <see cref="SentEntities"/> overflow in case a player's last ack is more than <see cref="DirtyBufferSize"/> ticks behind the current tick.
         /// </summary>
         public (GameTick Tick, Dictionary<EntityUid, PVSEntityVisiblity> SentEnts)? Overflow;
 
@@ -1319,6 +1269,14 @@ internal sealed partial class PVSSystem : EntitySystem
         ///     all data, not just data that cannot be implicitly inferred from entity prototypes.
         /// </summary>
         public bool RequestedFull = false;
+
+        /// <summary>
+        ///     The tick of the most recently received client Ack. Will be used to update <see cref="LastAcked"/>
+        /// </summary>
+        /// <remarks>
+        ///     As the server delays processing acks, this might not currently be the same as <see cref="LastAcked"/>
+        /// </remarks>
+        public GameTick LastReceivedAck;
     }
 }
 

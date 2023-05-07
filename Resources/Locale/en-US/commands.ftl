@@ -554,3 +554,6 @@ cmd-dump_netserializer_type_map-help = Usage: dump_netserializer_type_map
 
 cmd-hub_advertise_now-desc = Immediately advertise to the master hub server
 cmd-hub_advertise_now-help = Usage: hub_advertise_now
+
+cmd-echo-desc = Echo arguments back to the console
+cmd-echo-help = Usage: echo "<message>"

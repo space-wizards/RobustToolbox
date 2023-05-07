@@ -228,7 +228,7 @@ namespace Robust.Server.ViewVariables
 
             var sessionId = _nextSessionId++;
             var session = new ViewVariablesSession(message.MsgChannel.UserId, theObject, sessionId, this,
-                _robustSerializer);
+                _robustSerializer, _entityManager);
 
             _sessions.Add(sessionId, session);
 

@@ -91,8 +91,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             return flags;
         }
 
-        public int CreateCopy(ISerializationManager serializationManager, int source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public int CreateCopy(ISerializationManager serializationManager, int source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return source;
         }

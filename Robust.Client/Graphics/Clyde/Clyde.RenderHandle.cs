@@ -26,8 +26,9 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde = clyde;
                 _entities = entities;
 
-                DrawingHandleScreen = new DrawingHandleScreenImpl(this);
-                DrawingHandleWorld = new DrawingHandleWorldImpl(this);
+                var white = _clyde.GetStockTexture(ClydeStockTexture.White);
+                DrawingHandleScreen = new DrawingHandleScreenImpl(white, this);
+                DrawingHandleWorld = new DrawingHandleWorldImpl(white, this);
             }
 
             public void SetModelTransform(in Matrix3 matrix)
@@ -125,14 +126,39 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawSetScissor(scissorBox);
             }
 
-            public void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
+            /// <summary>
+            /// Draws an entity.
+            /// </summary>
+            /// <param name="entity">The entity to draw</param>
+            /// <param name="position">The local pixel position where the entity should be drawn.</param>
+            /// <param name="scale">Scales the drawn entity</param>
+            /// <param name="worldRot">The world rotation to use when drawing the entity.
+            /// This impacts the sprites RSI direction. Null will retrieve the entity's actual rotation.
+            /// </param>
+            /// <param name="eyeRot">The effective "eye" angle.
+            /// This will cause the entity to be rotated, and may also affect the RSI directions.
+            /// Draws the entity at some given angle.</param>
+            /// <param name="overrideDirection">RSI direction override.</param>
+            /// <param name="sprite">The entity's sprite component</param>
+            /// <param name="xform">The entity's transform component.
+            /// Only required if <see cref="overrideDirection"/> is null.</param>
+            /// <param name="xformSystem">The transform system</param>
+            public void DrawEntity(EntityUid entity,
+                Vector2 position,
+                Vector2 scale,
+                Angle? worldRot,
+                Angle eyeRot = default,
+                Direction? overrideDirection = null,
+                SpriteComponent? sprite = null,
+                TransformComponent? xform = null,
+                SharedTransformSystem? xformSystem = null)
             {
                 if (_entities.Deleted(entity))
                 {
                     throw new ArgumentException("Tried to draw an entity has been deleted.", nameof(entity));
                 }
 
-                var sprite = _entities.GetComponent<SpriteComponent>(entity);
+                sprite ??= _entities.GetComponent<SpriteComponent>(entity);
 
                 var oldProj = _clyde._currentMatrixProj;
                 var oldView = _clyde._currentMatrixView;
@@ -150,23 +176,29 @@ namespace Robust.Client.Graphics.Clyde
 
                     var ofsX = position.X - _clyde._currentRenderTarget.Size.X / 2f;
                     var ofsY = position.Y - _clyde._currentRenderTarget.Size.Y / 2f;
+                    ofsX /= EyeManager.PixelsPerMeter;
+                    ofsY /= -EyeManager.PixelsPerMeter;
 
-                    var view = Matrix3.Identity;
-                    view.R0C0 = scale.X;
-                    view.R1C1 = scale.Y;
-                    view.R0C2 = ofsX / EyeManager.PixelsPerMeter;
-                    view.R1C2 = -ofsY / EyeManager.PixelsPerMeter;
+                    // Maaaaybe this is meant to have a minus sign.
+                    var rot = -(float) eyeRot.Theta;
 
+                    var view = Matrix3.CreateTransform(ofsX, ofsY, rot, scale.X, scale.Y);
                     SetProjView(proj, view);
+                }
+
+                if (worldRot == null)
+                {
+                    xformSystem ??= _entities.System<SharedTransformSystem>();
+                    var query = _entities.GetEntityQuery<TransformComponent>();
+                    xform ??= query.GetComponent(entity);
+                    worldRot = xformSystem.GetWorldRotation(xform, query);
                 }
 
                 // Draw the entity.
                 sprite.Render(
                     DrawingHandleWorld,
-                    Angle.Zero,
-                    overrideDirection == null
-                        ? _entities.GetComponent<TransformComponent>(entity).WorldRotation
-                        : Angle.Zero,
+                    eyeRot,
+                    worldRot.Value,
                     overrideDirection);
 
                 // Reset to screen space
@@ -241,7 +273,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 private readonly RenderHandle _renderHandle;
 
-                public DrawingHandleScreenImpl(RenderHandle renderHandle)
+                public DrawingHandleScreenImpl(Texture white, RenderHandle renderHandle) : base(white)
                 {
                     _renderHandle = renderHandle;
                 }
@@ -282,7 +314,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (filled)
                     {
-                        DrawTextureRect(Texture.White, rect, color);
+                        DrawTextureRect(White, rect, color);
                     }
                     else
                     {
@@ -301,9 +333,34 @@ namespace Robust.Client.Graphics.Clyde
                         rect.BottomLeft, rect.BottomRight, color, subRegion);
                 }
 
-                public override void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
+                /// <summary>
+                /// Draws an entity.
+                /// </summary>
+                /// <param name="entity">The entity to draw</param>
+                /// <param name="position">The local pixel position where the entity should be drawn.</param>
+                /// <param name="scale">Scales the drawn entity</param>
+                /// <param name="worldRot">The world rotation to use when drawing the entity.
+                /// This impacts the sprites RSI direction. Null will retrieve the entity's actual rotation.
+                /// </param>
+                /// <param name="eyeRot">The effective "eye" angle.
+                /// This will cause the entity to be rotated, and may also affect the RSI directions.
+                /// Draws the entity at some given angle.</param>
+                /// <param name="overrideDirection">RSI direction override.</param>
+                /// <param name="sprite">The entity's sprite component</param>
+                /// <param name="xform">The entity's transform component.
+                /// Only required if <see cref="overrideDirection"/> is null.</param>
+                /// <param name="xformSystem">The transform system</param>
+                public override void DrawEntity(EntityUid entity,
+                    Vector2 position,
+                    Vector2 scale,
+                    Angle? worldRot,
+                    Angle eyeRot = default,
+                    Direction? overrideDirection = null,
+                    SpriteComponent? sprite = null,
+                    TransformComponent? xform = null,
+                    SharedTransformSystem? xformSystem = null)
                 {
-                    _renderHandle.DrawEntity(entity, position, scale, overrideDirection);
+                    _renderHandle.DrawEntity(entity, position, scale, worldRot, eyeRot, overrideDirection, sprite, xform, xformSystem);
                 }
             }
 
@@ -311,7 +368,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 private readonly RenderHandle _renderHandle;
 
-                public DrawingHandleWorldImpl(RenderHandle renderHandle)
+                public DrawingHandleWorldImpl(Texture white, RenderHandle renderHandle) : base(white)
                 {
                     _renderHandle = renderHandle;
                 }
@@ -357,7 +414,7 @@ namespace Robust.Client.Graphics.Clyde
                             filledTriangle[1] = new DrawVertexUV2DColor(endPos + position, colorReal);
                             filledTriangle[2] = new DrawVertexUV2DColor(position, colorReal);
 
-                            _renderHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, Texture.White, filledTriangle);
+                            _renderHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, White, filledTriangle);
                         }
                     }
                 }
@@ -376,7 +433,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (filled)
                     {
-                        DrawTextureRect(Texture.White, rect, color);
+                        DrawTextureRect(White, rect, color);
                     }
                     else
                     {
@@ -391,7 +448,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (filled)
                     {
-                        DrawTextureRect(Texture.White, rect, color);
+                        DrawTextureRect(White, rect, color);
                     }
                     else
                     {

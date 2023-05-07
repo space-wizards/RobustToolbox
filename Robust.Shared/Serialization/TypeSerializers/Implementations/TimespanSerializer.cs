@@ -42,8 +42,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public TimeSpan CreateCopy(ISerializationManager serializationManager, TimeSpan source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return source;
         }

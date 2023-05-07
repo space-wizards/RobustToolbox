@@ -23,11 +23,11 @@ public sealed class UITheme : IPrototype
     public string ID { get; } = default!;
 
     [DataField("path")]
-    private ResourcePath? _path;
+    private ResPath _path;
 
     [DataField("colors", readOnly: true)]
     public Dictionary<string, Color>? Colors { get; }
-    public ResourcePath Path => _path == null ? new ResourcePath(DefaultPath+"/"+ID) : _path;
+    public ResPath Path => _path == default ? new ResPath(DefaultPath+"/"+ID) : _path;
 
     private void ValidateFilePath(IResourceCache resourceCache)
     {
@@ -41,7 +41,7 @@ public sealed class UITheme : IPrototype
     }
     public Texture ResolveTexture(IResourceCache cache, string texturePath)
     {
-        return cache.TryGetResource<TextureResource>( new ResourcePath($"{Path}/{texturePath}.png"), out var texture) ? texture :
+        return cache.TryGetResource<TextureResource>( new ResPath($"{Path}/{texturePath}.png"), out var texture) ? texture :
             cache.GetResource<TextureResource>($"{DefaultPath}/{DefaultName}/{texturePath}.png");
     }
 

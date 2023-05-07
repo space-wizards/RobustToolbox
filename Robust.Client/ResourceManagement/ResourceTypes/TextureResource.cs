@@ -14,11 +14,11 @@ namespace Robust.Client.ResourceManagement
     public sealed class TextureResource : BaseResource
     {
         private OwnedTexture _texture = default!;
-        public override ResourcePath Fallback => new("/Textures/noSprite.png");
+        public override ResPath? Fallback => new("/Textures/noSprite.png");
 
         public Texture Texture => _texture;
 
-        public override void Load(IResourceCache cache, ResourcePath path)
+        public override void Load(IResourceCache cache, ResPath path)
         {
             var clyde = IoCManager.Resolve<IClyde>();
 
@@ -64,7 +64,7 @@ namespace Robust.Client.ResourceManagement
             data.Image.Dispose();
         }
 
-        private static TextureLoadParameters? TryLoadTextureParameters(IResourceCache cache, ResourcePath path)
+        private static TextureLoadParameters? TryLoadTextureParameters(IResourceCache cache, ResPath path)
         {
             var metaPath = path.WithName(path.Filename + ".yml");
             if (cache.TryContentFileRead(metaPath, out var stream))
@@ -91,7 +91,7 @@ namespace Robust.Client.ResourceManagement
             return null;
         }
 
-        public override void Reload(IResourceCache cache, ResourcePath path, CancellationToken ct = default)
+        public override void Reload(IResourceCache cache, ResPath path, CancellationToken ct = default)
         {
             var clyde = IoCManager.Resolve<IClyde>();
 
@@ -116,7 +116,7 @@ namespace Robust.Client.ResourceManagement
 
         internal sealed class LoadStepData
         {
-            public ResourcePath Path = default!;
+            public ResPath Path = default!;
             public Image<Rgba32> Image = default!;
             public TextureLoadParameters LoadParameters;
             public OwnedTexture Texture = default!;

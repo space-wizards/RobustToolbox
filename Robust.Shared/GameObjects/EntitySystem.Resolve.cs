@@ -23,7 +23,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(component == null || uid == component.Owner, "Specified Entity is not the component's Owner!");
 
-            if (component != null)
+            if (component != null && !component.Deleted)
                 return true;
 
             var found = EntityManager.TryGetComponent(uid, out component);

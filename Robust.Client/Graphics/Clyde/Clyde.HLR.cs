@@ -135,7 +135,14 @@ namespace Robust.Client.Graphics.Clyde
             if (overlay.OverwriteTargetFrameBuffer)
                 ClearFramebuffer(default);
 
-            overlay.Draw(args);
+            try
+            {
+                overlay.Draw(args);
+            }
+            catch (Exception e)
+            {
+                _logManager.GetSawmill("clyde.overlay").Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+            }
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
@@ -169,7 +176,26 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var overlay in list)
             {
-                overlay.Draw(args);
+                try
+                {
+                    if (!overlay.BeforeDraw(args))
+                        continue;
+
+                    if (overlay.RequestScreenTexture)
+                    {
+                        FlushRenderQueue();
+                        overlay.ScreenTexture = CopyScreenTexture(vp.RenderTarget);
+                    }
+
+                    if (overlay.OverwriteTargetFrameBuffer)
+                        ClearFramebuffer(default);
+
+                    overlay.Draw(args);
+                }
+                catch (Exception e)
+                {
+                    _logManager.GetSawmill("clyde.overlay").Error($"Caught exception while drawing overlay {overlay.GetType()}. Exception: {e}");
+                }
             }
         }
 

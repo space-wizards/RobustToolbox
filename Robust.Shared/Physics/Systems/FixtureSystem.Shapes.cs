@@ -28,7 +28,7 @@ namespace Robust.Shared.Physics.Systems
                 case PolygonShape poly:
                     var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
 
-                    for (var i = 0; i < poly.Vertices.Length; i++)
+                    for (var i = 0; i < poly.VertexCount; i++)
                     {
                         var dot = Vector2.Dot(poly.Normals[i], pLocal - poly.Vertices[i]);
                         if (dot > 0f) return false;
@@ -89,7 +89,7 @@ namespace Robust.Shared.Physics.Systems
                     //
                     // The rest of the derivation is handled by computer algebra.
 
-                    var count = poly.Vertices.Length;
+                    var count = poly.VertexCount;
                     DebugTools.Assert(count >= 3);
 
                     Vector2 center = new(0.0f, 0.0f);
@@ -193,7 +193,7 @@ namespace Robust.Shared.Physics.Systems
                     //
                     // The rest of the derivation is handled by computer algebra.
 
-                    var count = poly.Vertices.Length;
+                    var count = poly.VertexCount;
                     DebugTools.Assert(count >= 3);
 
                     Vector2 center = new(0.0f, 0.0f);

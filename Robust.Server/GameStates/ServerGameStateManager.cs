@@ -2,7 +2,6 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
@@ -22,6 +21,7 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using SharpZstd.Interop;
 using Microsoft.Extensions.ObjectPool;
+using Prometheus;
 using Robust.Shared.Players;
 using Robust.Server.Replays;
 using Robust.Shared.Map.Components;
@@ -33,7 +33,6 @@ namespace Robust.Server.GameStates
     public sealed class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
         // Mapping of net UID of clients -> last known acked state.
-        private readonly Dictionary<long, GameTick> _ackedStates = new();
         private GameTick _lastOldestAck = GameTick.Zero;
 
         private PVSSystem _pvs = default!;
@@ -49,14 +48,21 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IParallelManager _parallelMgr = default!;
 
+        private static readonly Histogram _usageHistogram = Metrics.CreateHistogram("robust_game_state_update_usage",
+            "Amount of time spent processing different parts of the game state update", new HistogramConfiguration
+            {
+                LabelNames = new[] {"area"},
+                Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
+            });
+
         private ISawmill _logger = default!;
 
         private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
 
         public ushort TransformNetId { get; set; }
 
-        public Action<ICommonSession, GameTick, GameTick>? ClientAck { get; set; }
-        public Action<ICommonSession, GameTick, GameTick, EntityUid?>? ClientRequestFull { get; set; }
+        public Action<ICommonSession, GameTick>? ClientAck { get; set; }
+        public Action<ICommonSession, GameTick, EntityUid?>? ClientRequestFull { get; set; }
 
         public void PostInject()
         {
@@ -70,9 +76,6 @@ namespace Robust.Server.GameStates
             _networkManager.RegisterNetMessage<MsgStateLeavePvs>();
             _networkManager.RegisterNetMessage<MsgStateAck>(HandleStateAck);
             _networkManager.RegisterNetMessage<MsgStateRequestFull>(HandleFullStateRequest);
-
-            _networkManager.Connected += HandleClientConnected;
-            _networkManager.Disconnect += HandleClientDisconnect;
 
             _pvs = _entityManager.System<PVSSystem>();
 
@@ -125,42 +128,19 @@ namespace Robust.Server.GameStates
             }
         }
 
-        private void HandleClientConnected(object? sender, NetChannelArgs e)
-        {
-            _ackedStates[e.Channel.ConnectionId] = GameTick.Zero;
-        }
-
-        private void HandleClientDisconnect(object? sender, NetChannelArgs e)
-        {
-            _ackedStates.Remove(e.Channel.ConnectionId);
-        }
-
         private void HandleFullStateRequest(MsgStateRequestFull msg)
         {
-            if (!_playerManager.TryGetSessionById(msg.MsgChannel.UserId, out var session) ||
-                !_ackedStates.TryGetValue(msg.MsgChannel.ConnectionId, out var lastAcked))
+            if (!_playerManager.TryGetSessionById(msg.MsgChannel.UserId, out var session))
                 return;
 
             EntityUid? ent = msg.MissingEntity.IsValid() ? msg.MissingEntity : null;
-            ClientRequestFull?.Invoke(session, msg.Tick, lastAcked, ent);
-
-            // Update acked tick so that OnClientAck doesn't get invoked by any late acks.
-            _ackedStates[msg.MsgChannel.ConnectionId] = _gameTiming.CurTick;
+            ClientRequestFull?.Invoke(session, msg.Tick, ent);
         }
 
         private void HandleStateAck(MsgStateAck msg)
         {
             if (_playerManager.TryGetSessionById(msg.MsgChannel.UserId, out var session))
-                Ack(msg.MsgChannel.ConnectionId, msg.Sequence, session);
-        }
-
-        private void Ack(long uniqueIdentifier, GameTick stateAcked, IPlayerSession playerSession)
-        {
-            if (!_ackedStates.TryGetValue(uniqueIdentifier, out var lastAck) || stateAcked <= lastAck)
-                return;
-
-            ClientAck?.Invoke(playerSession, stateAcked, lastAck);
-            _ackedStates[uniqueIdentifier] = stateAcked;
+                ClientAck?.Invoke(session, msg.Sequence);
         }
 
         /// <inheritdoc />
@@ -175,38 +155,108 @@ namespace Robust.Server.GameStates
                 return;
             }
 
-            var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
-
-            var oldestAckValue = GameTick.MaxValue.Value;
-
-            _pvs.ProcessCollections();
-
-            // people not in the game don't get states
             var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
-            //todo paul oh my god make this less shit
-            EntityQuery<MetaDataComponent> metadataQuery = default!;
-            EntityQuery<TransformComponent> transformQuery = default!;
-            HashSet<int>[] playerChunks = default!;
-            EntityUid[][] viewerEntities = default!;
-            (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] chunkCache = default!;
+            // Update entity positions in PVS chunks/collections
+            // TODO disable processing if culling is disabled? Need to check if toggling PVS breaks anything.
+            // TODO parallelize?
+            using (_usageHistogram.WithLabels("Update Collections").NewTimer())
+            {
+                _pvs.ProcessCollections();
+            }
 
+            // Figure out what chunks players can see and cache some chunk data.
+            PvsData? pvsData = null;
             if (_pvs.CullingEnabled)
             {
-                List<(uint, IChunkIndexLocation)> chunks;
-                (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
-                const int ChunkBatchSize = 2;
-                var chunksCount = chunks.Count;
-                var chunkBatches = (int)MathF.Ceiling((float)chunksCount / ChunkBatchSize);
-                chunkCache =
-                    new (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[chunksCount];
+                using var _ = _usageHistogram.WithLabels("Get Chunks").NewTimer();
+                pvsData = GetPVSData(players);
+            }
 
-                // Update the reused trees sequentially to avoid having to lock the dictionary per chunk.
-                var reuse = ArrayPool<bool>.Shared.Rent(chunksCount);
+            // Update client acks, which is used to figure out what data needs to be sent to clients
+            using (_usageHistogram.WithLabels("Process Acks").NewTimer())
+            {
+                _pvs.ProcessQueuedAcks();
+            }
 
-                transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-                metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
-                Parallel.For(0, chunkBatches,
+            // Construct & send the game state to each player.
+            GameTick oldestAck;
+            using (_usageHistogram.WithLabels("Send States").NewTimer())
+            {
+                oldestAck = SendStates(players, pvsData);
+            }
+
+            if (pvsData != null)
+                _pvs.ReturnToPool(pvsData.Value.PlayerChunks);
+
+            using (_usageHistogram.WithLabels("Clean Dirty").NewTimer())
+            {
+                _pvs.CleanupDirty(_playerManager.ServerSessions);
+            }
+
+            // keep the deletion history buffers clean
+            if (oldestAck > _lastOldestAck)
+            {
+                using var _ = _usageHistogram.WithLabels("Cull History").NewTimer();
+                _lastOldestAck = oldestAck;
+                _pvs.CullDeletionHistory(oldestAck);
+                _mapManager.CullDeletionHistory(oldestAck);
+            }
+        }
+
+        private GameTick SendStates(IPlayerSession[] players, PvsData? pvsData)
+        {
+            var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
+            var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
+            var oldestAckValue = GameTick.MaxValue.Value;
+            var tQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var mQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+
+            // Replays process game states in parallel with players
+            var start = _replay.Recording ? -1 : 0;
+            Parallel.For(start, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
+
+            PvsThreadResources SendPlayer(int i, ParallelLoopState state, PvsThreadResources resource)
+            {
+                try
+                {
+                    if (i >= 0)
+                        SendStateUpdate(i, resource, inputSystem, players[i], pvsData, mQuery, tQuery, ref oldestAckValue);
+                    else
+                        _replay.SaveReplayData(resource);
+                }
+                catch (Exception e) // Catch EVERY exception
+                {
+                    _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
+                }
+                return resource;
+            }
+
+            return new GameTick(oldestAckValue);
+        }
+
+        private struct PvsData
+        {
+            public HashSet<int>[] PlayerChunks;
+            public EntityUid[][] ViewerEntities;
+            public (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] ChunkCache;
+        }
+
+        private PvsData? GetPVSData(IPlayerSession[] players)
+        {
+            var (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
+            const int ChunkBatchSize = 2;
+            var chunksCount = chunks.Count;
+            var chunkBatches = (int)MathF.Ceiling((float)chunksCount / ChunkBatchSize);
+            var chunkCache =
+                new (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[chunksCount];
+
+            // Update the reused trees sequentially to avoid having to lock the dictionary per chunk.
+            var reuse = ArrayPool<bool>.Shared.Rent(chunksCount);
+
+            var transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+            Parallel.For(0, chunkBatches,
                 new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
                 i =>
                 {
@@ -235,104 +285,93 @@ namespace Robust.Server.GameStates
                     }
                 });
 
-                _pvs.RegisterNewPreviousChunkTrees(chunks, chunkCache, reuse);
-                ArrayPool<bool>.Shared.Return(reuse);
-            }
-
-            Parallel.For(
-                _replay.Recording ? -1 : 0, players.Length,
-                new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
-                _threadResourcesPool.Get,
-                (i, _, resource) =>
-                {
-                    if (i == -1)
-                    {
-                        _replay.SaveReplayData(resource);
-                        return resource;
-                    }
-
-                    try
-                    {
-                        SendStateUpdate(i, resource);
-                    }
-                    catch (Exception e) // Catch EVERY exception
-                    {
-                        _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
-                    }
-                    return resource;
-                },
-                _threadResourcesPool.Return
-            );
-
-            void SendStateUpdate(int sessionIndex, PvsThreadResources resources)
+            _pvs.RegisterNewPreviousChunkTrees(chunks, chunkCache, reuse);
+            ArrayPool<bool>.Shared.Return(reuse);
+            return new PvsData()
             {
-                var session = players[sessionIndex];
+                PlayerChunks = playerChunks,
+                ViewerEntities = viewerEntities,
+                ChunkCache = chunkCache,
+            };
+        }
 
-                var channel = session.ConnectedClient;
+        private void SendStateUpdate(int i,
+            PvsThreadResources resources,
+            InputSystem inputSystem,
+            IPlayerSession session,
+            PvsData? pvsData,
+            EntityQuery<MetaDataComponent> mQuery,
+            EntityQuery<TransformComponent> tQuery,
+            ref uint oldestAckValue)
+        {
+            var channel = session.ConnectedClient;
+            var sessionData = _pvs.PlayerData[session];
+            var lastAck = sessionData.LastReceivedAck;
+            List<EntityUid>? leftPvs = null;
+            List<EntityState>? entStates;
+            List<EntityUid>? deletions;
+            GameTick fromTick;
 
-                if (!_ackedStates.TryGetValue(channel.ConnectionId, out var lastAck))
-                {
-                    DebugTools.Assert("Why does this channel not have an entry?");
-                }
-
-                var (entStates, deletions, leftPvs, fromTick) = _pvs.CullingEnabled
-                    ? _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkCache,
-                        playerChunks[sessionIndex], metadataQuery, transformQuery, viewerEntities[sessionIndex])
-                    : _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
-                var playerStates = _playerManager.GetPlayerStates(lastAck);
-
-                // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
-                var lastInputCommand = inputSystem.GetLastInputCommand(session);
-                var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
-
-                var state = new GameState(
-                    fromTick,
+            DebugTools.Assert(_pvs.CullingEnabled == (pvsData != null));
+            if (pvsData != null)
+            {
+                (entStates, deletions, leftPvs, fromTick) = _pvs.CalculateEntityStates(
+                    session,
+                    lastAck,
                     _gameTiming.CurTick,
-                    Math.Max(lastInputCommand, lastSystemMessage),
-                    entStates,
-                    playerStates,
-                    deletions);
-
-                InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
-
-                // actually send the state
-                var stateUpdateMessage = new MsgState();
-                stateUpdateMessage.State = state;
-                stateUpdateMessage.CompressionContext = resources.CompressionContext;
-
-                _networkManager.ServerSendMessage(stateUpdateMessage, channel);
-
-                // If the state is too big we let Lidgren send it reliably.
-                // This is to avoid a situation where a state is so large that it consistently gets dropped
-                // (or, well, part of it).
-                // When we send them reliably, we immediately update the ack so that the next state will not be huge.
-                if (stateUpdateMessage.ShouldSendReliably())
-                {
-                    // TODO: remove this lock by having a single state object per session that contains all per-session state needed.
-                    lock (_ackedStates)
-                    {
-                        Ack(channel.ConnectionId, _gameTiming.CurTick, session);
-                    }
-                }
-
-                // separately, we send PVS detach / left-view messages reliably. This is not resistant to packet loss,
-                // but unlike game state it doesn't really matter. This also significantly reduces the size of game
-                // state messages PVS chunks move out of view.
-                if (leftPvs != null && leftPvs.Count > 0)
-                    _networkManager.ServerSendMessage(new MsgStateLeavePvs() { Entities = leftPvs, Tick = _gameTiming.CurTick }, channel);
+                    mQuery,
+                    tQuery,
+                    pvsData.Value.ChunkCache,
+                    pvsData.Value.PlayerChunks[i],
+                    pvsData.Value.ViewerEntities[i]);
+            }
+            else
+            {
+                (entStates, deletions, fromTick) = _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
             }
 
-            if (_pvs.CullingEnabled)
-                _pvs.ReturnToPool(playerChunks);
-            _pvs.CleanupDirty(_playerManager.ServerSessions);
-            var oldestAck = new GameTick(oldestAckValue);
+            var playerStates = _playerManager.GetPlayerStates(lastAck);
 
-            // keep the deletion history buffers clean
-            if (oldestAck > _lastOldestAck)
+            // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
+            var lastInputCommand = inputSystem.GetLastInputCommand(session);
+            var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
+
+            var state = new GameState(
+                fromTick,
+                _gameTiming.CurTick,
+                Math.Max(lastInputCommand, lastSystemMessage),
+                entStates,
+                playerStates,
+                deletions);
+
+            InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
+
+            // actually send the state
+            var stateUpdateMessage = new MsgState();
+            stateUpdateMessage.State = state;
+            stateUpdateMessage.CompressionContext = resources.CompressionContext;
+
+            _networkManager.ServerSendMessage(stateUpdateMessage, channel);
+
+            // If the state is too big we let Lidgren send it reliably. This is to avoid a situation where a state is so
+            // large that it (or part of it) consistently gets dropped. When we send reliably, we immediately update the
+            // ack so that the next state will not also be huge.
+            if (stateUpdateMessage.ShouldSendReliably())
             {
-                _lastOldestAck = oldestAck;
-                _pvs.CullDeletionHistory(oldestAck);
-                _mapManager.CullDeletionHistory(oldestAck);
+                sessionData.LastReceivedAck = _gameTiming.CurTick;
+                lock (_pvs.PendingAcks)
+                {
+                    _pvs.PendingAcks.Add(session);
+                }
+            }
+
+            // Send PVS detach / left-view messages separately and reliably. This is not resistant to packet loss, but
+            // unlike game state it doesn't really matter. This also significantly reduces the size of game state
+            // messages as PVS chunks get moved out of view.
+            if (leftPvs != null && leftPvs.Count > 0)
+            {
+                var pvsMessage = new MsgStateLeavePvs {Entities = leftPvs, Tick = _gameTiming.CurTick};
+                _networkManager.ServerSendMessage(pvsMessage, channel);
             }
         }
     }

@@ -80,7 +80,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
             var xform = sEntMan.GetComponent<TransformComponent>(player);
             var shape = new PolygonShape();
             shape.SetAsBox(0.5f, 0.5f);
-            var fixture = new Fixture(shape, 0, 0, true);
+            var fixture = new Fixture("fix1", shape, 0, 0, true);
             fixturesSystem.CreateFixture(player, fixture, body: physics, xform: xform);
             physicsSystem.SetCanCollide(player, true, body: physics);
             physicsSystem.SetBodyType(player, BodyType.Dynamic);
@@ -92,7 +92,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
             session.JoinGame();
         });
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 10; i++)
         {
             await server.WaitRunTicks(1);
             await client.WaitRunTicks(1);

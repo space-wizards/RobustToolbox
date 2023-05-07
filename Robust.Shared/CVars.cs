@@ -1053,7 +1053,7 @@ namespace Robust.Shared
             CVarDef.Create("physics.angsleeptol", 0.3f / 180.0f * MathF.PI);
 
         public static readonly CVarDef<float> LinearSleepTolerance =
-            CVarDef.Create("physics.linsleeptol", 0.1f);
+            CVarDef.Create("physics.linsleeptol", 0.01f);
 
         public static readonly CVarDef<bool> SleepAllowed =
             CVarDef.Create("physics.sleepallowed", true);

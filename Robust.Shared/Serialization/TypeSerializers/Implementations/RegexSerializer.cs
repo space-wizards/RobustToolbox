@@ -48,8 +48,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public Regex CreateCopy(ISerializationManager serializationManager, Regex source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.ToString(), source.Options, source.MatchTimeout);
         }

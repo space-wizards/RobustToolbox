@@ -86,6 +86,8 @@ namespace Robust.Client.Placement
         /// </summary>
         public bool Eraser { get; private set; }
 
+        public bool Replacement { get; set; } = true;
+
         /// <summary>
         /// Holds the selection rectangle for the eraser
         /// </summary>
@@ -721,7 +723,7 @@ namespace Robust.Client.Placement
             }
             else
             {
-                sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
+                sc.AddLayer(new ResPath("/Textures/UserInterface/tilebuildoverlay.png"));
             }
             sc.NoRotation = noRot;
 
@@ -735,7 +737,7 @@ namespace Robust.Client.Placement
         private void PreparePlacementTile()
         {
             var sc = SetupPlacementOverlayEntity();
-            sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
+            sc.AddLayer(new ResPath("/Textures/UserInterface/tilebuildoverlay.png"));
 
             IsActive = true;
         }
@@ -770,11 +772,13 @@ namespace Robust.Client.Placement
                 _pendingTileChanges.Add(tuple);
             }
 
-            var message = new MsgPlacement();
-            message.PlaceType = PlacementManagerMessage.RequestPlacement;
-
-            message.Align = CurrentMode.ModeName;
-            message.IsTile = CurrentPermission.IsTile;
+            var message = new MsgPlacement
+            {
+                PlaceType = PlacementManagerMessage.RequestPlacement,
+                Align = CurrentMode.ModeName,
+                IsTile = CurrentPermission.IsTile,
+                Replacement = Replacement
+            };
 
             if (CurrentPermission.IsTile)
                 message.TileType = CurrentPermission.TileType;

@@ -47,10 +47,5 @@ namespace Robust.Shared.ContentPack
         protected virtual void Dispose(bool disposing)
         {
         }
-
-        ~GameShared()
-        {
-            Dispose(false);
-        }
     }
 }

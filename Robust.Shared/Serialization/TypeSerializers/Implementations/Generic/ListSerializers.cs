@@ -178,7 +178,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return list.ToImmutable();
         }
 
-        public void CopyTo(ISerializationManager serializationManager, List<T> source, ref List<T> target, SerializationHookContext hookCtx,
+        public void CopyTo(ISerializationManager serializationManager, List<T> source, ref List<T> target,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
             target.Clear();
@@ -193,8 +195,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public IReadOnlyList<T> CreateCopy(ISerializationManager serializationManager, IReadOnlyList<T> source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             var target = new List<T>(source.Count);
 
@@ -206,8 +207,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return target;
         }
 
-        public IReadOnlyCollection<T> CreateCopy(ISerializationManager serializationManager, IReadOnlyCollection<T> source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public IReadOnlyCollection<T> CreateCopy(ISerializationManager serializationManager, IReadOnlyCollection<T> source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             var target = new List<T>(source.Count);
 
@@ -219,8 +220,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return target;
         }
 
-        public ImmutableList<T> CreateCopy(ISerializationManager serializationManager, ImmutableList<T> source, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+        public ImmutableList<T> CreateCopy(ISerializationManager serializationManager, ImmutableList<T> source,
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             var target = new List<T>(source.Count);
 

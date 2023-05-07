@@ -65,7 +65,7 @@ public sealed class Collision_Test
         vertices[3] = new Vector2(center.X + hx, center.Y + hy);
 
         PolygonShape polygon2 = new();
-        polygon2.SetVertices(vertices, true);
+        polygon2.Set(vertices, 4);
 
         Assert.That(Math.Abs(polygon2.Centroid.X - center.X), Is.LessThan(absTol + relTol * Math.Abs(center.X)));
         Assert.That(Math.Abs(polygon2.Centroid.Y - center.Y), Is.LessThan(absTol + relTol * Math.Abs(center.Y)));
@@ -112,8 +112,8 @@ public sealed class Collision_Test
         var body2 = entManager.AddComponent<PhysicsComponent>(ent2);
         physics.SetBodyType(ent2, BodyType.Dynamic, body: body2);
 
-        fixtures.CreateFixture(ent1, new Fixture(new PhysShapeCircle(1f), 1, 0, true), body: body1);
-        fixtures.CreateFixture(ent2, new Fixture(new PhysShapeCircle(1f), 0, 1, true), body: body2);
+        fixtures.CreateFixture(ent1, new Fixture("fix1", new PhysShapeCircle(1f), 1, 0, true), body: body1);
+        fixtures.CreateFixture(ent2, new Fixture("fix1", new PhysShapeCircle(1f), 0, 1, true), body: body2);
 
         physics.WakeBody(ent1, body: body1);
         physics.WakeBody(ent2, body: body2);

@@ -104,8 +104,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public void CopyTo(ISerializationManager serializationManager, HashSet<T> source, ref HashSet<T> target,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);
@@ -117,8 +116,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public ImmutableHashSet<T> CreateCopy(ISerializationManager serializationManager, ImmutableHashSet<T> source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             var target = new HashSet<T>();
             target.EnsureCapacity(source.Count);

@@ -19,7 +19,7 @@ public partial class PrototypeManager
     public event Action<DataNodeDocument>? LoadedData;
 
     /// <inheritdoc />
-    public void LoadDirectory(ResourcePath path, bool overwrite = false,
+    public void LoadDirectory(ResPath path, bool overwrite = false,
         Dictionary<Type, HashSet<string>>? changed = null)
     {
         _hasEverBeenReloaded = true;
@@ -33,7 +33,7 @@ public partial class PrototypeManager
         var sawmill = _logManager.GetSawmill("eng");
 
         var results = streams.AsParallel()
-            .Select<ResourcePath, (ResourcePath, IEnumerable<ExtractedMappingData>)>(file =>
+            .Select<ResPath, (ResPath, IEnumerable<ExtractedMappingData>)>(file =>
             {
                 try
                 {
@@ -81,12 +81,15 @@ public partial class PrototypeManager
         }
     }
 
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path)
     {
         var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
 
         var dict = new Dictionary<string, HashSet<ErrorNode>>();
+        // Prototypes we've seen before to catch duplicates.
+        var seen = new Dictionary<string, HashSet<string>>();
+
         foreach (var resourcePath in streams)
         {
             using var reader = ReadFile(resourcePath);
@@ -115,14 +118,26 @@ public partial class PrototypeManager
                         throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
                     }
 
+                    var before = seen.GetOrNew(type);
+
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
+                    var id = mapping["id"].ToString();
+
+                    HashSet<ErrorNode> hashSet;
+
+                    if (!before.Add(id!))
+                    {
+                        hashSet = dict.GetOrNew(resourcePath.ToString());
+                        hashSet.Add(new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}"));
+                        continue;
+                    }
+
                     mapping.Remove("type");
                     var errorNodes = _serializationManager.ValidateNode(_kindNames[type], mapping).GetErrors()
                         .ToHashSet();
                     if (errorNodes.Count == 0) continue;
-                    if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
-                        dict[resourcePath.ToString()] = new HashSet<ErrorNode>();
-                    dict[resourcePath.ToString()].UnionWith(errorNodes);
+                    hashSet = dict.GetOrNew(resourcePath.ToString());
+                    hashSet.UnionWith(errorNodes);
                 }
             }
         }
@@ -130,7 +145,7 @@ public partial class PrototypeManager
         return dict;
     }
 
-    private StreamReader? ReadFile(ResourcePath file, bool @throw = true)
+    private StreamReader? ReadFile(ResPath file, bool @throw = true)
     {
         var retries = 0;
 
@@ -161,7 +176,7 @@ public partial class PrototypeManager
         }
     }
 
-    public void LoadFile(ResourcePath file, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
+    public void LoadFile(ResPath file, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
     {
         try
         {

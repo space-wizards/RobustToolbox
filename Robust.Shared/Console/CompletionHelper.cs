@@ -31,10 +31,12 @@ public static class CompletionHelper
         if (!curPath.StartsWith("/"))
             curPath = "/";
 
-        var resPath = new ResourcePath(curPath);
+        var resPath = new ResPath(curPath);
 
-        if (!curPath.EndsWith("/"))
-            resPath = (resPath / "..").Clean();
+        if (!curPath.EndsWith("/")){
+            resPath /= "..";
+            resPath = resPath.Clean();
+        }
 
         var options = res.ContentGetDirectoryEntries(resPath)
             .OrderBy(c => c)
@@ -43,7 +45,7 @@ public static class CompletionHelper
                 var opt = (resPath / c).ToString();
 
                 if (c.EndsWith("/"))
-                    return new CompletionOption(opt + "/", Flags: CompletionOptionFlags.PartialCompletion);
+                    return new CompletionOption(opt, Flags: CompletionOptionFlags.PartialCompletion);
 
                 return new CompletionOption(opt);
             });
@@ -57,13 +59,16 @@ public static class CompletionHelper
         if (curPath == "")
             curPath = "/";
 
-        var resPath = new ResourcePath(curPath);
+        var resPath = new ResPath(curPath);
 
         if (!resPath.IsRooted)
             return Enumerable.Empty<CompletionOption>();
 
         if (!curPath.EndsWith("/"))
-            resPath = (resPath / "..").Clean();
+        {
+            resPath /= "..";
+            resPath = resPath.Clean();
+        }
 
         var entries = provider.DirectoryEntries(resPath);
 
@@ -72,7 +77,7 @@ public static class CompletionHelper
             {
                 var full = resPath / c;
                 if (provider.IsDir(full))
-                    return new CompletionOption($"{full}/", Flags: CompletionOptionFlags.PartialCompletion);
+                    return new CompletionOption($"{full}", Flags: CompletionOptionFlags.PartialCompletion);
 
                 return new CompletionOption(full.ToString());
             })

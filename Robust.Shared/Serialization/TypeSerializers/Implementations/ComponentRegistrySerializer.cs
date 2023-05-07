@@ -171,7 +171,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public void CopyTo(ISerializationManager serializationManager, ComponentRegistry source, ref ComponentRegistry target,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);

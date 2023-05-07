@@ -65,6 +65,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public readonly LinkedListNode<Contact> BodyBNode;
 
+        public EntityUid EntityA;
+        public EntityUid EntityB;
+
         public Fixture? FixtureA;
         public Fixture? FixtureB;
 

@@ -17,7 +17,6 @@ internal sealed partial class Clyde
 
         RhiBase rhiBase = graphicsApi switch
         {
-            "d3d11" => new RhiD3D11(this, _deps),
             "webGpu" => new RhiWebGpu(this, _deps),
             _ => throw new Exception($"Unknown graphics API: {graphicsApi}")
         };

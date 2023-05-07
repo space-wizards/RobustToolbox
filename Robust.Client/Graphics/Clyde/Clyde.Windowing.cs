@@ -444,7 +444,6 @@ namespace Robust.Client.Graphics.Clyde
             public IClydeWindow? Owner;
 
             public RhiWebGpu.WindowData? RhiWebGpuData;
-            public RhiD3D11.WindowData? RhiD3D11Data;
 
             public bool DisposeOnClose;
 

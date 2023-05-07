@@ -57,7 +57,10 @@ namespace Robust.Shared.Serialization
 
         public void Initialize()
         {
-            var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>().ToList();
+            var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>()
+                .OrderBy(x => x.FullName, StringComparer.InvariantCulture)
+                .ToList();
+
 #if DEBUG
             // confirm only shared types are marked for serialization, no client & server only types
             foreach (var type in types)

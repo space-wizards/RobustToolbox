@@ -17,6 +17,40 @@ namespace Robust.Client.Graphics.Clyde.Rhi;
 
 internal sealed unsafe partial class RhiWebGpu : RhiBase
 {
+    private static ReadOnlySpan<byte> Shader => """
+struct VertexOutput {
+    @builtin(position) position: vec4f,
+
+    @location(0) color: vec3f,
+}
+
+@vertex
+fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
+    var p = vec2f(0.0, 0.0);
+    var c = vec3f(0.0, 0.0, 0.0);
+    if (in_vertex_index == 0u) {
+        p = vec2f(-0.5, -0.5);
+        c = vec3f(1.0, 0.0, 0.0);
+    } else if (in_vertex_index == 1u) {
+        p = vec2f(0.5, -0.5);
+        c = vec3f(0.0, 1.0, 0.0);
+    } else {
+        p = vec2f(0.0, 0.5);
+        c = vec3f(0.0, 0.0, 1.0);
+    }
+
+    var out: VertexOutput;
+    out.position = vec4f(p, 0.0, 1.0);
+    out.color = c; // forward to the fragment shader
+    return out;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4f {
+    return vec4f(in.color, 1.0);
+}
+"""u8;
+
     private readonly Clyde _clyde;
 
     private readonly ISawmill _sawmill;
@@ -53,13 +87,69 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         CreateSwapChainForWindow(_clyde._mainWindow!);
 
         {
+            ShaderModule* shaderModule;
+            fixed (byte* pShader = Shader)
+            {
+                var shaderModuleWgslDesc = new ShaderModuleWGSLDescriptor
+                {
+                    Chain =
+                    {
+                        SType = SType.ShaderModuleWgsldescriptor
+                    },
+                    Code = pShader
+                };
+                var shaderModuleDesc = new ShaderModuleDescriptor((ChainedStruct*)&shaderModuleWgslDesc);
+                shaderModule = _webGpu.DeviceCreateShaderModule(_wgpuDevice, &shaderModuleDesc);
+            }
+
+            RenderPipeline* pipeline;
+            fixed (byte* vertexEntrypoint = "vs_main"u8)
+            fixed (byte* fragmentEntrypoint = "fs_main"u8)
+            {
+                var pipelineDesc = new RenderPipelineDescriptor();
+
+                pipelineDesc.Vertex.Module = shaderModule;
+                pipelineDesc.Vertex.EntryPoint = vertexEntrypoint;
+
+                pipelineDesc.Multisample.Count = 1;
+                pipelineDesc.Multisample.Mask = 0xFFFFFFFFu;
+
+                pipelineDesc.Primitive.Topology = PrimitiveTopology.TriangleList;
+
+                var fragment = new FragmentState();
+                pipelineDesc.Fragment = &fragment;
+
+                fragment.Module = shaderModule;
+                fragment.EntryPoint = fragmentEntrypoint;
+
+                var fragmentTarget = new ColorTargetState();
+                fragmentTarget.Format = TextureFormat.Bgra8UnormSrgb;
+                fragmentTarget.WriteMask = ColorWriteMask.All;
+
+                fragment.Targets = &fragmentTarget;
+                fragment.TargetCount = 1;
+
+                var blend = new BlendState();
+                blend.Color.SrcFactor = BlendFactor.SrcAlpha;
+                blend.Color.DstFactor = BlendFactor.OneMinusSrcAlpha;
+                blend.Color.Operation = BlendOperation.Add;
+
+                blend.Alpha.SrcFactor = BlendFactor.Zero;
+                blend.Alpha.DstFactor = BlendFactor.One;
+                blend.Alpha.Operation = BlendOperation.Add;
+
+                fragmentTarget.Blend = &blend;
+
+                pipeline = _webGpu.DeviceCreateRenderPipeline(_wgpuDevice, &pipelineDesc);
+            }
+
             var tv = _webGpu.SwapChainGetCurrentTextureView(_clyde._mainWindow!.RhiWebGpuData.SwapChain);
             var encoder = _webGpu.DeviceCreateCommandEncoder(_wgpuDevice, new CommandEncoderDescriptor());
 
             var attachment = new RenderPassColorAttachment
             {
                 View = tv,
-                ClearValue = WgpuColor(RColor.HotPink),
+                ClearValue = WgpuColor(RColor.FromSrgb(RColor.CornflowerBlue)),
                 LoadOp = LoadOp.Clear,
                 StoreOp = StoreOp.Store
             };
@@ -70,6 +160,10 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
             };
 
             var passEncoder = _webGpu.CommandEncoderBeginRenderPass(encoder, &passDesc);
+
+            _webGpu.RenderPassEncoderSetPipeline(passEncoder, pipeline);
+
+            _webGpu.RenderPassEncoderDraw(passEncoder, 3, 1, 0, 0);
 
             _webGpu.RenderPassEncoderEnd(passEncoder);
             var buffer = _webGpu.CommandEncoderFinish(encoder, new CommandBufferDescriptor());
@@ -145,6 +239,8 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
 
         _wgpuDevice = deviceResult.Device;
         _wgpuQueue = _webGpu.DeviceGetQueue(_wgpuDevice);
+
+        InitErrorCallback();
     }
 
 
@@ -157,6 +253,16 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         _wgpu.SetLogLevel(LogLevel.Trace);
     }
 
+    private void InitErrorCallback()
+    {
+        // TODO: clear this.
+        var gcHandle = GCHandle.Alloc(this);
+
+        _webGpu.DeviceSetUncapturedErrorCallback(
+            _wgpuDevice,
+            new PfnErrorCallback(&UncapturedErrorCallback),
+            (void*) GCHandle.ToIntPtr(gcHandle));
+    }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static void LogCallback(LogLevel level, byte* message, void* userdata)
@@ -176,9 +282,17 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         self._apiLogSawmill.Log(robustLevel, messageString);
     }
 
+    [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+    private static void UncapturedErrorCallback(ErrorType level, byte* message, void* userdata)
+    {
+        var self = (RhiWebGpu)GCHandle.FromIntPtr((nint)userdata).Target!;
+        var messageString = Marshal.PtrToStringUTF8((nint)message)!;
+
+        self._apiLogSawmill.Error(messageString);
+    }
+
     public override void Shutdown()
     {
-
     }
 
     private record struct WgpuRequestAdapterResult(RequestAdapterStatus Status, Ptr<Adapter> Adapter, string Message);

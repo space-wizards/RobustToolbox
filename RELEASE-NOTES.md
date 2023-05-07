@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.109.1.0
+
+### New features
+
+* Add "IsDefault" to EntityManager for basic checks on whether an entity has default prototype data.
+
+
 ## 0.109.0.0
 
 ### Breaking changes

@@ -188,7 +188,8 @@ namespace Robust.Client.Graphics
                 info.Texture = atlasTexture;
 
                 scaled.CurSheetMaxY = Math.Max(scaled.CurSheetMaxY, scaled.CurSheetY + bitmap.Rows);
-                scaled.CurSheetX += bitmap.Width;
+                // Add a pixel of horizontal padding, to avoid artifacts when aliasing
+                scaled.CurSheetX += bitmap.Width + 1;
             }
 
             scaled.GlyphInfos.Add(glyph, info);

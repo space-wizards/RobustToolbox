@@ -458,6 +458,9 @@ namespace Robust.Shared.Physics.Systems
                 contact.Flags |= ContactFlags.Filter;
             }
 
+            if (fixture.Body == null)
+                return;
+
             if (!Resolve(fixture.Body.Owner, ref xform))
                 return;
 

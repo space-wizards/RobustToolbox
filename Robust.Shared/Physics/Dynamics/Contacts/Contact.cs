@@ -71,6 +71,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public Fixture? FixtureA;
         public Fixture? FixtureB;
 
+        public PhysicsComponent? BodyA;
+        public PhysicsComponent? BodyB;
+
         public Manifold Manifold;
 
         internal ContactType Type;
@@ -315,7 +318,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public override int GetHashCode()
         {
             // TODO: Need to suss this out
-            return HashCode.Combine((FixtureA != null ? FixtureA.Body.Owner : EntityUid.Invalid), (FixtureB != null ? FixtureB.Body.Owner : EntityUid.Invalid));
+            return HashCode.Combine(EntityA, EntityB);
         }
     }
 

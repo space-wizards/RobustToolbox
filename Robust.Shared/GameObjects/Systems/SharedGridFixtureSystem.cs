@@ -95,8 +95,8 @@ namespace Robust.Shared.GameObjects
                 fixtures.AddRange(chunk.Fixtures);
             }
 
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
             EntityManager.EventBus.RaiseLocalEvent(uid,new GridFixtureChangeEvent {NewFixtures = fixtures}, true);
+            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
 
             CheckSplit(uid, mapChunks, removedChunks);
         }
@@ -202,6 +202,10 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    /// <summary>
+    /// Event raised after a grids fixtures have changed, but before <see cref="FixtureSystem.FixtureUpdate"/> is called.
+    /// Allows content to modify some fixture properties, like density.
+    /// </summary>
     public sealed class GridFixtureChangeEvent : EntityEventArgs
     {
         public List<Fixture> NewFixtures { get; init; } = default!;

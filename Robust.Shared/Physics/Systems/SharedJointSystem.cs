@@ -531,7 +531,7 @@ public abstract class SharedJointSystem : EntitySystem
 
     internal void FilterContactsForJoint(Joint joint, PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
     {
-        if (!Resolve(joint.BodyAUid, ref bodyA) || !Resolve(joint.BodyBUid, ref bodyB))
+        if (!Resolve(joint.BodyBUid, ref bodyB))
             return;
 
         var node = bodyB.Contacts.First;
@@ -541,8 +541,8 @@ public abstract class SharedJointSystem : EntitySystem
             var contact = node.Value;
             node = node.Next;
 
-            if (contact.FixtureA?.Body == bodyA ||
-                contact.FixtureB?.Body == bodyA)
+            if (contact.EntityA == joint.BodyAUid ||
+                contact.EntityB == joint.BodyAUid)
             {
                 // Flag the contact for filtering at the next time step (where either
                 // body is awake).

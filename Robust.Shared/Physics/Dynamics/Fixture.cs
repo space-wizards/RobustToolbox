@@ -66,7 +66,7 @@ namespace Robust.Shared.Physics.Dynamics
         [Obsolete("Use other means to obtain the PhysicsComponent for the fixture.")]
         [ViewVariables]
         [field:NonSerialized]
-        public PhysicsComponent Body { get; internal set; } = default!;
+        internal PhysicsComponent Body { get; set; } = default!;
 
         /// <summary>
         /// All of the other fixtures this fixture has a contact with.

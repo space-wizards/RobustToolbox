@@ -30,7 +30,7 @@ public sealed partial class EntityLookupSystem
         {
             lookup.DynamicTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
             {
-                if (!tuple.query.TryGetComponent(value.Fixture.Body.Owner, out var comp))
+                if (!tuple.query.TryGetComponent(value.Entity, out var comp))
                     return true;
 
                 tuple.intersecting.Add(comp);
@@ -42,7 +42,7 @@ public sealed partial class EntityLookupSystem
         {
             lookup.StaticTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
             {
-                if (!tuple.query.TryGetComponent(value.Fixture.Body.Owner, out var comp))
+                if (!tuple.query.TryGetComponent(value.Entity, out var comp))
                     return true;
 
                 tuple.intersecting.Add(comp);

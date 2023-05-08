@@ -96,10 +96,10 @@ namespace Robust.Shared.Physics.Systems
                         (ref (PhysicsComponent body, HashSet<EntityUid> entities) state,
                             in FixtureProxy other) =>
                         {
-                            if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
+                            if (other.Body.Deleted || other.Body == body) return true;
                             if ((collisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
 
-                            state.entities.Add(other.Fixture.Body.Owner);
+                            state.entities.Add(other.Entity);
                             return true;
                         }, proxy.AABB, approximate);
 
@@ -107,10 +107,10 @@ namespace Robust.Shared.Physics.Systems
                         (ref (PhysicsComponent body, HashSet<EntityUid> entities) state,
                             in FixtureProxy other) =>
                         {
-                            if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
+                            if (other.Body.Deleted || other.Body == body) return true;
                             if ((collisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
 
-                            state.entities.Add(other.Fixture.Body.Owner);
+                            state.entities.Add(other.Entity);
                             return true;
                         }, proxy.AABB, approximate);
                 }
@@ -134,12 +134,12 @@ namespace Robust.Shared.Physics.Systems
 
                 foreach (var proxy in broadphase.StaticTree.QueryAabb(gridAABB, false))
                 {
-                    bodies.Add(proxy.Fixture.Body);
+                    bodies.Add(proxy.Body);
                 }
 
                 foreach (var proxy in broadphase.DynamicTree.QueryAabb(gridAABB, false))
                 {
-                    bodies.Add(proxy.Fixture.Body);
+                    bodies.Add(proxy.Body);
                 }
             }
 
@@ -161,22 +161,33 @@ namespace Robust.Shared.Physics.Systems
 
                 foreach (var proxy in broadphase.StaticTree.QueryAabb(gridAABB, false))
                 {
-                    bodies.Add(proxy.Fixture.Body);
+                    bodies.Add(proxy.Body);
                 }
 
                 foreach (var proxy in broadphase.DynamicTree.QueryAabb(gridAABB, false))
                 {
-                    bodies.Add(proxy.Fixture.Body);
+                    bodies.Add(proxy.Body);
                 }
             }
 
             return bodies;
         }
 
-        public HashSet<PhysicsComponent> GetContactingEntities(PhysicsComponent body, bool approximate = false)
+
+        [Obsolete("Use override that takes in a entity Uid")]
+        public HashSet<EntityUid> GetContactingEntities(PhysicsComponent body, bool approximate = false)
+        {
+            return GetContactingEntities(body.Owner, body);
+        }
+
+        public HashSet<EntityUid> GetContactingEntities(EntityUid uid, PhysicsComponent? body = null, bool approximate = false)
         {
             // HashSet to ensure that we only return each entity once, instead of once per colliding fixture.
-            var result = new HashSet<PhysicsComponent>();
+            var result = new HashSet<EntityUid>();
+
+            if (!Resolve(uid, ref body))
+                return result;
+
             var node = body.Contacts.First;
 
             while (node != null)
@@ -187,10 +198,7 @@ namespace Robust.Shared.Physics.Systems
                 if (!approximate && !contact.IsTouching)
                     continue;
 
-                var bodyA = contact.FixtureA!.Body;
-                var bodyB = contact.FixtureB!.Body;
-
-                result.Add(body == bodyA ? bodyB : bodyA);
+                result.Add(uid == contact.EntityA ? contact.EntityB : contact.EntityA);
             }
 
             return result;
@@ -278,16 +286,16 @@ namespace Robust.Shared.Physics.Systems
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (!proxy.Fixture.Body.Hard)
+                    if (!proxy.Body.Hard)
                         return true;
 
-                    if (predicate.Invoke(proxy.Fixture.Body.Owner, state) == true)
+                    if (predicate.Invoke(proxy.Entity, state) == true)
                         return true;
 
                     // TODO: Shape raycast here
 
                     // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Fixture.Body.Owner);
+                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
                     results.Add(result);
                     _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
                     return true;
@@ -304,16 +312,16 @@ namespace Robust.Shared.Physics.Systems
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (!proxy.Fixture.Body.Hard)
+                    if (!proxy.Body.Hard)
                         return true;
 
-                    if (predicate.Invoke(proxy.Fixture.Body.Owner, state) == true)
+                    if (predicate.Invoke(proxy.Entity, state) == true)
                         return true;
 
                     // TODO: Shape raycast here
 
                     // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Fixture.Body.Owner);
+                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
                     results.Add(result);
                     _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
                     return true;
@@ -374,7 +382,7 @@ namespace Robust.Shared.Physics.Systems
 
                 broadphase.StaticTree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
-                    if (distFromOrigin > maxLength || proxy.Fixture.Body.Owner == ignoredEnt)
+                    if (distFromOrigin > maxLength || proxy.Entity == ignoredEnt)
                         return true;
 
                     if (!proxy.Fixture.Hard)
@@ -393,7 +401,7 @@ namespace Robust.Shared.Physics.Systems
 
                 broadphase.DynamicTree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
-                    if (distFromOrigin > maxLength || proxy.Fixture.Body.Owner == ignoredEnt)
+                    if (distFromOrigin > maxLength || proxy.Entity == ignoredEnt)
                         return true;
 
                     if (!proxy.Fixture.Hard)

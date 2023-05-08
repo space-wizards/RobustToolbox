@@ -81,13 +81,13 @@ public sealed class EntityLookupOverlay : Overlay
 
             lookup.DynamicTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in FixtureProxy value) =>
             {
-                state.Add(value.Fixture.Body.Owner);
+                state.Add(value.Entity);
                 return true;
             }, lookupAABB);
 
             lookup.StaticTree.QueryAabb(ref ents, static (ref List<EntityUid> state, in FixtureProxy value) =>
             {
-                state.Add(value.Fixture.Body.Owner);
+                state.Add(value.Entity);
                 return true;
             }, lookupAABB);
 

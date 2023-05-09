@@ -54,6 +54,23 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.110.0.0
+
+### Breaking changes
+
+* Remove name + authors from map files as these were unused and overwritten on every mapfile write.
+
+### Bugfixes
+
+* Fix Omnisharp failing to analyze the client by default.
+* Fix EntityLookup not properly adding nested container entities.
+
+### Other
+
+* Sort NetSerializable types.
+* Remove obsolete Fixture.Body references.
+
+
 ## 0.109.1.0
 
 ### New features

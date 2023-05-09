@@ -258,14 +258,14 @@ public sealed partial class EntityLookupSystem
         return state.found;
     }
 
-    private void RecursiveAdd(EntityUid uid, ValueList<EntityUid> toAdd, EntityQuery<TransformComponent> xformQuery)
+    private void RecursiveAdd(EntityUid uid, ref ValueList<EntityUid> toAdd, EntityQuery<TransformComponent> xformQuery)
     {
         var childEnumerator = xformQuery.GetComponent(uid).ChildEnumerator;
 
         while (childEnumerator.MoveNext(out var child))
         {
             toAdd.Add(child.Value);
-            RecursiveAdd(child.Value, toAdd, xformQuery);
+            RecursiveAdd(child.Value, ref toAdd, xformQuery);
         }
     }
 
@@ -286,7 +286,7 @@ public sealed partial class EntityLookupSystem
                 foreach (var contained in con.ContainedEntities)
                 {
                     toAdd.Add(contained);
-                    RecursiveAdd(contained, toAdd, xformQuery);
+                    RecursiveAdd(contained, ref toAdd, xformQuery);
                 }
             }
         }

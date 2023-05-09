@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -75,7 +76,7 @@ public sealed partial class EntityLookupSystem
         }
     }
 
-    private void RecursiveAdd<T>(EntityUid uid, List<T> toAdd, EntityQuery<TransformComponent> xformQuery, EntityQuery<T> query) where T : Component
+    private void RecursiveAdd<T>(EntityUid uid, ref ValueList<T> toAdd, EntityQuery<TransformComponent> xformQuery, EntityQuery<T> query) where T : Component
     {
         var childEnumerator = xformQuery.GetComponent(uid).ChildEnumerator;
 
@@ -86,7 +87,7 @@ public sealed partial class EntityLookupSystem
                 toAdd.Add(compies);
             }
 
-            RecursiveAdd(child.Value, toAdd, xformQuery, query);
+            RecursiveAdd(child.Value, ref toAdd, xformQuery, query);
         }
     }
 
@@ -95,7 +96,7 @@ public sealed partial class EntityLookupSystem
         if ((flags & LookupFlags.Contained) == 0x0) return;
 
         var conQuery = GetEntityQuery<ContainerManagerComponent>();
-        var toAdd = new List<T>();
+        var toAdd = new ValueList<T>();
 
         foreach (var comp in intersecting)
         {
@@ -110,7 +111,7 @@ public sealed partial class EntityLookupSystem
                         toAdd.Add(compies);
                     }
 
-                    RecursiveAdd(contained, toAdd, xformQuery, query);
+                    RecursiveAdd(contained, ref toAdd, xformQuery, query);
                 }
             }
         }

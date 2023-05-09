@@ -104,7 +104,7 @@ namespace Robust.Shared.Physics.Systems
 
             if (body.CanCollide && Resolve(uid, ref xform))
             {
-                _lookup.CreateProxies(xform, fixture);
+                _lookup.CreateProxies(uid, xform, fixture, body);
             }
 
             // Supposed to be wrapped in density but eh
@@ -170,12 +170,11 @@ namespace Robust.Shared.Physics.Systems
             }
 
             // TODO: Assert world locked
-            DebugTools.Assert(fixture.Body == body);
             DebugTools.Assert(manager.FixtureCount > 0);
 
             if (!manager.Fixtures.Remove(fixture.ID))
             {
-                Logger.ErrorS("fixtures", $"Tried to remove fixture from {body.Owner} that was already removed.");
+                Logger.ErrorS("fixtures", $"Tried to remove fixture from {ToPrettyString(uid)} that was already removed.");
                 return;
             }
 
@@ -188,7 +187,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 var map = Transform(broadphase.Owner).MapUid;
                 TryComp<PhysicsMapComponent>(map, out var physicsMap);
-                _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
+                _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
             }
 
 

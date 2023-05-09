@@ -128,8 +128,8 @@ namespace Robust.Client.Debugging
                 CollisionManager.GetPointStates(ref state1, ref state2, oldManifold, manifold);
 
                 Span<Vector2> points = stackalloc Vector2[2];
-                var transformA = _physics.GetPhysicsTransform(fixtureA.Body.Owner);
-                var transformB = _physics.GetPhysicsTransform(fixtureB.Body.Owner);
+                var transformA = _physics.GetPhysicsTransform(contact.EntityA);
+                var transformB = _physics.GetPhysicsTransform(contact.EntityB);
                 contact.GetWorldManifold(transformA, transformB, out var normal, points);
 
                 ContactPoint cp = Points[PointCount];

@@ -53,8 +53,8 @@ public abstract partial class SharedPhysicsSystem
             var shapeB = fixtureB.Shape;
             float radiusA = shapeA.Radius;
             float radiusB = shapeB.Radius;
-            var bodyA = fixtureA.Body;
-            var bodyB = fixtureB.Body;
+            var bodyA = contact.BodyA!;
+            var bodyB = contact.BodyB!;
             var manifold = contact.Manifold;
 
             int pointCount = manifold.PointCount;

@@ -108,7 +108,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 moveBuffer[proxy] = worldAABB;
                 // If something is in our AABB then try grid traversal for it
-                _traversal.CheckTraverse(proxy.Fixture.Body.Owner, xformQuery.GetComponent(proxy.Fixture.Body.Owner));
+                _traversal.CheckTraverse(proxy.Entity, xformQuery.GetComponent(proxy.Entity));
             }
         }
 
@@ -205,7 +205,7 @@ namespace Robust.Shared.Physics.Systems
                     var (proxy, worldAABB) = pMoveBuffer[j];
                     var buffer = contactBuffer[j];
 
-                    var proxyBody = proxy.Fixture.Body;
+                    var proxyBody = proxy.Body;
                     DebugTools.Assert(!proxyBody.Deleted);
 
                     var state = (this, proxy, worldAABB, buffer, xformQuery, broadphaseQuery);
@@ -235,12 +235,12 @@ namespace Robust.Shared.Physics.Systems
             {
                 var proxyA = pMoveBuffer[i].Proxy;
                 var proxies = contactBuffer[i];
-                var proxyABody = proxyA.Fixture.Body;
+                var proxyABody = proxyA.Body;
                 FixturesComponent? manager = null;
 
                 foreach (var other in proxies)
                 {
-                    var otherBody = other.Fixture.Body;
+                    var otherBody = other.Body;
 
                     // Because we may be colliding with something asleep (due to the way grid movement works) need
                     // to make sure the contact doesn't fail.
@@ -249,8 +249,8 @@ namespace Robust.Shared.Physics.Systems
                     if (proxyA.Fixture.Hard && other.Fixture.Hard &&
                         (gridMoveBuffer.ContainsKey(proxyA) || gridMoveBuffer.ContainsKey(other)))
                     {
-                        _physicsSystem.WakeBody(proxyABody.Owner, force: true, manager: manager, body: proxyABody);
-                        _physicsSystem.WakeBody(otherBody.Owner, force: true, body: otherBody);
+                        _physicsSystem.WakeBody(proxyA.Entity, force: true, manager: manager, body: proxyABody);
+                        _physicsSystem.WakeBody(other.Entity, force: true, body: otherBody);
                     }
 
                     _physicsSystem.AddPair(proxyA, other);
@@ -351,9 +351,9 @@ namespace Robust.Shared.Physics.Systems
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<BroadphaseComponent> broadphaseQuery)
         {
-            DebugTools.Assert(proxy.Fixture.Body.CanCollide);
+            DebugTools.Assert(proxy.Body.CanCollide);
 
-            var proxyBody = proxy.Fixture.Body;
+            var proxyBody = proxy.Body;
 
             // Broadphase can't intersect with entities on itself so skip.
             if (proxyBody.Owner == broadphase || !xformQuery.TryGetComponent(proxyBody.Owner, out var xform))
@@ -361,12 +361,12 @@ namespace Robust.Shared.Physics.Systems
                 return;
             }
 
-            // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
+            // Logger.DebugS("physics", $"Checking proxy for {proxy.Entity} on {broadphase.Owner}");
             Box2 aabb;
             DebugTools.AssertNotNull(xform.Broadphase);
             if (!_lookup.TryGetCurrentBroadphase(xform, out var proxyBroad))
             {
-                _logger.Error($"Found null broadphase for {ToPrettyString(proxy.Fixture.Body.Owner)}");
+                _logger.Error($"Found null broadphase for {ToPrettyString(proxy.Entity)}");
                 DebugTools.Assert(false);
                 return;
             }
@@ -387,7 +387,7 @@ namespace Robust.Shared.Physics.Systems
 
             QueryBroadphase(broadphaseComp.DynamicTree, state, aabb);
 
-            if ((proxy.Fixture.Body.BodyType & BodyType.Static) != 0x0)
+            if ((proxy.Body.BodyType & BodyType.Static) != 0x0)
                 return;
 
             QueryBroadphase(broadphaseComp.StaticTree, state, aabb);
@@ -399,12 +399,12 @@ namespace Robust.Shared.Physics.Systems
                 ref (List<FixtureProxy> pairBuffer, FixtureProxy proxy) tuple,
                 in FixtureProxy other) =>
             {
-                DebugTools.Assert(other.Fixture.Body.CanCollide);
-                // Logger.DebugS("physics", $"Checking {proxy.Fixture.Body.Owner} against {other.Fixture.Body.Owner} at {aabb}");
+                DebugTools.Assert(other.Body.CanCollide);
+                // Logger.DebugS("physics", $"Checking {proxy.Entity} against {other.Fixture.Body.Owner} at {aabb}");
 
                 if (tuple.proxy == other ||
                     !SharedPhysicsSystem.ShouldCollide(tuple.proxy.Fixture, other.Fixture) ||
-                    tuple.proxy.Fixture.Body == other.Fixture.Body)
+                    tuple.proxy.Entity == other.Entity)
                 {
                     return true;
                 }
@@ -446,19 +446,19 @@ namespace Robust.Shared.Physics.Systems
             if (!TryComp<PhysicsMapComponent>(_mapManager.GetMapEntityId(mapId), out var physicsMap))
                 return;
 
-            DebugTools.Assert(proxy.Fixture.Body.CanCollide);
+            DebugTools.Assert(proxy.Body.CanCollide);
 
             physicsMap.MoveBuffer[proxy] = aabb;
         }
 
-        public void Refilter(Fixture fixture, TransformComponent? xform = null)
+        public void Refilter(EntityUid uid, Fixture fixture, TransformComponent? xform = null)
         {
             foreach (var contact in fixture.Contacts.Values)
             {
                 contact.Flags |= ContactFlags.Filter;
             }
 
-            if (!Resolve(fixture.Body.Owner, ref xform))
+            if (!Resolve(uid, ref xform))
                 return;
 
             if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))

@@ -385,8 +385,8 @@ public abstract partial class SharedPhysicsSystem
 
                     contacts.Add(contact);
                     contact.Flags |= ContactFlags.Island;
-                    var bodyA = contact.FixtureA!.Body;
-                    var bodyB = contact.FixtureB!.Body;
+                    var bodyA = contact.BodyA!;
+                    var bodyB = contact.BodyB!;
 
                     var other = bodyA == body ? bodyB : bodyA;
 

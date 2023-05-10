@@ -54,27 +54,27 @@ public sealed partial class PhysicsSystem
 
     private void OnJointAdded(EntityUid uid, PredictedPhysicsComponent component, JointAddedEvent args)
     {
-        UpateIsPredicted(args.Joint.BodyAUid);
-        UpateIsPredicted(args.Joint.BodyBUid);
+        UpdateIsPredicted(args.Joint.BodyAUid);
+        UpdateIsPredicted(args.Joint.BodyBUid);
     }
 
     private void OnJointRemoved(EntityUid uid, PredictedPhysicsComponent component, JointRemovedEvent args)
     {
-        UpateIsPredicted(args.Joint.BodyAUid);
-        UpateIsPredicted(args.Joint.BodyBUid);
+        UpdateIsPredicted(args.Joint.BodyAUid);
+        UpdateIsPredicted(args.Joint.BodyBUid);
     }
 
     private void OnAttach(PlayerAttachedEvent ev)
     {
-        UpateIsPredicted(ev.Entity);
+        UpdateIsPredicted(ev.Entity);
     }
 
     private void OnDetach(PlayerDetachedEvent ev)
     {
-        UpateIsPredicted(ev.Entity);
+        UpdateIsPredicted(ev.Entity);
     }
 
-    public override void UpateIsPredicted(EntityUid? uid, PhysicsComponent? physics = null)
+    public override void UpdateIsPredicted(EntityUid? uid, PhysicsComponent? physics = null)
     {
         if (uid != null)
             _toUpdate.Add(uid.Value);

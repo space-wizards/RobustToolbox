@@ -690,7 +690,7 @@ public partial class SharedPhysicsSystem
         return (layer, mask);
     }
 
-    public virtual void UpateIsPredicted(EntityUid? uid, PhysicsComponent? physics = null)
+    public virtual void UpdateIsPredicted(EntityUid? uid, PhysicsComponent? physics = null)
     {
         // See client-side system
     }

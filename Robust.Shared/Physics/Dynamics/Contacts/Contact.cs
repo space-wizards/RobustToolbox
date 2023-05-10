@@ -238,6 +238,19 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         }
 
         /// <summary>
+        ///     Trimmed down version of <see cref="Update"/> that only checks if two shapes overlap.
+        /// </summary>
+        internal void UpdateIsTouching(Transform bodyATransform, Transform bodyBTransform)
+        {
+            var shapeA = FixtureA!.Shape;
+            var shapeB = FixtureB!.Shape;
+
+            // TODO is this sufficient? or do hard/non-sensor contacts need a more in depth check?
+            // I.e., if a non-sensor contact is "touching", is it guaranteed that the sensor overlap test always returns true?
+            IsTouching = _manifoldManager.TestOverlap(shapeA,  ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
+        }
+
+        /// <summary>
         ///     Evaluate this contact with your own manifold and transforms.
         /// </summary>
         /// <param name="manifold">The manifold.</param>

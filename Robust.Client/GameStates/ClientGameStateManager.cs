@@ -7,6 +7,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
+using Robust.Client.Physics;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
@@ -556,6 +557,7 @@ namespace Robust.Client.GameStates
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
             }
 
+            _entityManager.System<PhysicsSystem>().ResetContacts();
             system.Reset();
 
             _prof.WriteValue("Reset count", ProfData.Int32(countReset));

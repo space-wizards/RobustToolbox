@@ -262,12 +262,6 @@ public sealed class PhysicsComponent : Component
     [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public BodyStatus BodyStatus { get; set; }
 
-    [ViewVariables(VVAccess.ReadWrite)]
-    public bool Predict
-    {
-        get => _predict;
-        set => _predict = value;
-    }
-
-    private bool _predict;
+    [ViewVariables, Access(typeof(SharedPhysicsSystem))]
+    public bool Predict;
 }

@@ -170,7 +170,14 @@ public sealed class DefaultStylesheet
             Element<ContainerButton>().Class(ContainerButton.StyleClassButton).Pseudo(ContainerButton.StylePseudoClassDisabled)
                 .Prop(ContainerButton.StylePropertyStyleBox, new StyleBoxFlat
                 {
-                    BackgroundColor = Color.FromHex("#FAFAFA"), BorderThickness = new Thickness(1), BorderColor = Color.FromHex("#707070"), ContentMarginLeftOverride = 3, ContentMarginTopOverride = 3
+                    BackgroundColor = theme.ResolveColorOrSpecified("buttonBackgroundDisabled", Color.FromHex("#333333")),
+                    BorderThickness = new Thickness(1),
+                    BorderColor = theme.ResolveColorOrSpecified("buttonBorderDisabled", Color.FromHex("#222222")),
+                    Padding = new Thickness(3),
+                    ContentMarginBottomOverride = 3,
+                    ContentMarginLeftOverride = 5,
+                    ContentMarginRightOverride = 5,
+                    ContentMarginTopOverride = 3,
                 }),
 
             /*

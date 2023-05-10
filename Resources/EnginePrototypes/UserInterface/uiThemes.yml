@@ -26,6 +26,8 @@
     buttonBorder: "#444444"
     buttonBorderHovered: "#444444"
     buttonBorderPressed: "#447044"
+    buttonBackgroundDisabled: "#333333"
+    buttonBorderDisabled: "#222222"
 
     # LineEdit
     lineEditUneditableText: "#444444"

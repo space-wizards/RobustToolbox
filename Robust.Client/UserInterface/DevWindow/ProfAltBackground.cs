@@ -7,7 +7,7 @@ internal sealed class ProfAltBackground : Control
 {
     public bool IsAltBackground { get; set; }
     public Color Color = DefaultColor;
-    public static readonly Color DefaultColor = new (255, 255, 255, 16);
+    public static readonly Color DefaultColor = Color.FromHex("#222222");
 
     protected override void StylePropertiesChanged()
     {

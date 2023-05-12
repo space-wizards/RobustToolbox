@@ -54,7 +54,27 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.112.0.0
+
+### Breaking changes
+
+* Move default theme directory to /Interface/ from /UserInterface/
+* Try to fix contact mispredicts with PredictedPhysicsComponent.
+
+### Bugfixes
+
+* Fix JSON Serialization of ResPath.
+
+### Other
+
+* Change prof tree style & add basic stylesheet support.
+
+
 ## 0.111.0.0
+
+### Breaking changes
+
+* Add default stylesheet for engine + debug connect screen.
 
 
 ## 0.110.0.0

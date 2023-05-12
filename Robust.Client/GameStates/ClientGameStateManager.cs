@@ -558,6 +558,10 @@ namespace Robust.Client.GameStates
             }
 
             _entityManager.System<PhysicsSystem>().ResetContacts();
+
+            // TODO maybe reset more of physics?
+            // E.g., warm impulses for warm starting?
+
             system.Reset();
 
             _prof.WriteValue("Reset count", ProfData.Int32(countReset));

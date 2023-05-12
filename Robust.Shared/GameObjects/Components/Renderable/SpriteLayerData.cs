@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Robust.Shared.GameObjects;
 

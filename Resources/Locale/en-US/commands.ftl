@@ -379,6 +379,8 @@ cmd-tp-help = tp <x> <y> [<mapID>]
 
 cmd-tpto-desc = Teleports the current player or the specified players/entities to the location of last player/entity specified.d.
 cmd-tpto-help = tpto <username|uid> [username|uid]...
+cmd-tpto-destination-hint = destination (uid or username)
+cmd-tpto-victim-hint = entity to teleport (uid or username)
 
 cmd-listplayers-desc = Lists all players currently connected.
 cmd-listplayers-help = listplayers

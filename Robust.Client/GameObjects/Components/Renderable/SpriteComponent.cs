@@ -1340,7 +1340,7 @@ namespace Robust.Client.GameObjects
                             layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
                             break;
                         default:
-                            Logger.Error($"Tried to render a layer with unknown rendering stragegy : {layer.RenderingStrategy}");
+                            Logger.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
                             break;
                     }
                 }

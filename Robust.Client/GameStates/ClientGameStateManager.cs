@@ -7,6 +7,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
+using Robust.Client.Physics;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
@@ -555,6 +556,11 @@ namespace Robust.Client.GameStates
                 DebugTools.Assert(meta.EntityLastModifiedTick > _timing.LastRealTick);
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
             }
+
+            _entityManager.System<PhysicsSystem>().ResetContacts();
+
+            // TODO maybe reset more of physics?
+            // E.g., warm impulses for warm starting?
 
             system.Reset();
 

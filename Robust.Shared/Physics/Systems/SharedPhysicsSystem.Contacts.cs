@@ -430,6 +430,10 @@ public abstract partial class SharedPhysicsSystem
                 }
                 else
                 {
+                    // TODO maybe change this? Needs benchmarking.
+                    // Instead of transforming both boxes (which enlarges both aabbs), maybe just transform one box.
+                    // I.e. use (matrixA * invMatrixB).TransformBox(). Or (invMatrixB * matrixA), whichever is correct.
+                    // Alternatively, maybe just directly construct the relative transform matrix?
                     var proxyAWorldAABB = _transform.GetWorldMatrix(xformQuery.GetComponent(broadphaseA.Value), xformQuery).TransformBox(proxyA.AABB);
                     var proxyBWorldAABB = _transform.GetWorldMatrix(xformQuery.GetComponent(broadphaseB.Value), xformQuery).TransformBox(proxyB.AABB);
                     overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
@@ -603,7 +607,7 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Used to prevent bodies from colliding; may lie depending on joints.
     /// </summary>
-    private bool ShouldCollide(PhysicsComponent body, PhysicsComponent other, Fixture fixture, Fixture otherFixture)
+    protected bool ShouldCollide(PhysicsComponent body, PhysicsComponent other, Fixture fixture, Fixture otherFixture)
     {
         if (((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
             (other.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||

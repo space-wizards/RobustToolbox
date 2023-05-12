@@ -106,7 +106,6 @@ public partial class SharedPhysicsSystem
         SetFriction(component, newState.Friction);
         SetLinearDamping(component, newState.LinearDamping);
         SetAngularDamping(component, newState.AngularDamping);
-        component.Predict = false;
     }
 
     #endregion
@@ -689,5 +688,10 @@ public partial class SharedPhysicsSystem
         }
 
         return (layer, mask);
+    }
+
+    public virtual void UpdateIsPredicted(EntityUid? uid, PhysicsComponent? physics = null)
+    {
+        // See client-side system
     }
 }

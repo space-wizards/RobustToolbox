@@ -13,6 +13,7 @@ namespace Robust.Client.Graphics
         TriangleFan,
         TriangleStrip,
         LineList,
-        LineStrip
+        LineStrip,
+        LineLoop
     }
 }

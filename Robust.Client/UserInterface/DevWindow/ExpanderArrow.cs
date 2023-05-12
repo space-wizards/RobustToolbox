@@ -8,6 +8,10 @@ internal sealed class ExpanderArrow : Control
 {
     public bool Rotated { get; set; }
 
+    public Color Color = Color.White;
+
+    public Color? OutlineColor;
+
     protected internal override void Draw(DrawingHandleScreen handle)
     {
         Span<Vector2> triangle = stackalloc Vector2[3];
@@ -27,6 +31,8 @@ internal sealed class ExpanderArrow : Control
             t *= PixelSize;
         }
 
-        handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, triangle, Color.White);
+        handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, triangle, Color);
+        if (OutlineColor != null)
+            handle.DrawPrimitives(DrawPrimitiveTopology.LineLoop, triangle, OutlineColor.Value);
     }
 }

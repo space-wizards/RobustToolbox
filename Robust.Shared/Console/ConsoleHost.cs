@@ -45,7 +45,7 @@ namespace Robust.Shared.Console
         protected ConsoleHost(bool isServer)
         {
             IsServer = isServer;
-            LocalShell = new ConsoleShell(this, null);
+            LocalShell = new ConsoleShell(this, null, true);
         }
 
         /// <inheritdoc />
@@ -190,7 +190,7 @@ namespace Robust.Shared.Console
             if (session.Status >= SessionStatus.Disconnected)
                 throw new InvalidOperationException("Tried to get the session shell of a disconnected peer.");
 
-            return new ConsoleShell(this, session);
+            return new ConsoleShell(this, session, false);
         }
 
         /// <inheritdoc />

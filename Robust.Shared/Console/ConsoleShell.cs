@@ -9,12 +9,13 @@ namespace Robust.Shared.Console
         /// Constructs a new instance of <see cref="ConsoleShell"/>.
         /// </summary>
         /// <param name="host">Console Host that owns this shell.</param>
-        /// <param name="session">Player Session that this shell represents. If this is null, then
-        /// the shell is representing the local console.</param>
-        public ConsoleShell(IConsoleHost host, ICommonSession? session)
+        /// <param name="session">Player Session that this shell represents. May be null if this is a local server-side shell.</param>
+        /// <param name="isLocal">Whether this is a local or remote shell.</param>
+        public ConsoleShell(IConsoleHost host, ICommonSession? session, bool isLocal)
         {
             ConsoleHost = host;
             Player = session;
+            IsLocal = isLocal;
         }
 
         /// <inheritdoc />
@@ -25,6 +26,9 @@ namespace Robust.Shared.Console
 
         /// <inheritdoc />
         public ICommonSession? Player { get; }
+
+        /// <inheritdoc />
+        public bool IsLocal { get; }
 
         /// <inheritdoc />
         public void ExecuteCommand(string command)

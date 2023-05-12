@@ -11,6 +11,7 @@ cmd-parse-failure-uid = {$arg} is not a valid entity UID.
 cmd-parse-failure-mapid = {$arg} is not a valid MapId.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 
+cmd-failure-no-attached-entity = There is no entity attached to this shell.
 
 ## 'help' command
 cmd-help-desc = Display general help or help text for a specific command
@@ -381,6 +382,7 @@ cmd-tpto-desc = Teleports the current player or the specified players/entities t
 cmd-tpto-help = tpto <username|uid> [username|uid]...
 cmd-tpto-destination-hint = destination (uid or username)
 cmd-tpto-victim-hint = entity to teleport (uid or username)
+cmd-tpto-parse-error = Cant resolve entity or player: {$str}
 
 cmd-listplayers-desc = Lists all players currently connected.
 cmd-listplayers-help = listplayers

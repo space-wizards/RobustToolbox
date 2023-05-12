@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
+using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.UserInterface.CustomControls.DebugMonitorControls;
+using Robust.Client.UserInterface.Stylesheets;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Exceptions;
@@ -34,6 +36,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IClientGameTiming _gameTiming = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IStateManager _stateManager = default!;
@@ -122,6 +125,8 @@ namespace Robust.Client.UserInterface
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
             _initThemes();
+
+            _stylesheet = new DefaultStylesheet(_resourceCache, this).Stylesheet;
         }
 
         public void PostInitialize()

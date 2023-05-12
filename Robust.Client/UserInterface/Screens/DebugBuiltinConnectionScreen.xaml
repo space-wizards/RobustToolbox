@@ -1,0 +1,9 @@
+﻿<screens:DebugBuiltinConnectionScreen
+    xmlns="https://spacestation14.io"
+    xmlns:screens="clr-namespace:Robust.Client.UserInterface.Screens">
+    <BoxContainer Name="ConnectionBox" Orientation="Vertical">
+        <LineEdit Name="UsernameEdit"  Margin="2" MinWidth="200"/>
+        <LineEdit Name="ConnectionAddress" Text="localhost:1212" Margin="2" MinWidth="200"/>
+        <Button Name="ConnectButton" Text="Direct Connect" Margin="2"/>
+    </BoxContainer>
+</screens:DebugBuiltinConnectionScreen>

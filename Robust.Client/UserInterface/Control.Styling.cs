@@ -248,9 +248,9 @@ namespace Robust.Client.UserInterface
 
         public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
         {
-            if (_styleProperties.TryGetValue(param, out var val))
+            if (_styleProperties.TryGetValue(param, out var val) && val is T cast)
             {
-                value = (T) val;
+                value = cast;
                 return true;
             }
 

@@ -273,6 +273,7 @@ namespace Robust.Client.Graphics.Clyde
                 BatchPrimitiveType.TriangleStrip => PrimitiveType.TriangleStrip,
                 BatchPrimitiveType.LineList => PrimitiveType.Lines,
                 BatchPrimitiveType.LineStrip => PrimitiveType.LineStrip,
+                BatchPrimitiveType.LineLoop => PrimitiveType.LineLoop,
                 BatchPrimitiveType.PointList => PrimitiveType.Points,
                 _ => PrimitiveType.Triangles
             };
@@ -649,6 +650,7 @@ namespace Robust.Client.Graphics.Clyde
                 DrawPrimitiveTopology.TriangleStrip => BatchPrimitiveType.TriangleStrip,
                 DrawPrimitiveTopology.LineList => BatchPrimitiveType.LineList,
                 DrawPrimitiveTopology.LineStrip => BatchPrimitiveType.LineStrip,
+                DrawPrimitiveTopology.LineLoop => BatchPrimitiveType.LineLoop,
                 DrawPrimitiveTopology.PointList => BatchPrimitiveType.PointList,
                 _ => BatchPrimitiveType.TriangleList
             };
@@ -1033,6 +1035,7 @@ namespace Robust.Client.Graphics.Clyde
             TriangleStrip,
             LineList,
             LineStrip,
+            LineLoop,
             PointList,
         }
 

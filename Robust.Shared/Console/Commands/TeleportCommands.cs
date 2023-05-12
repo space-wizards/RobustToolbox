@@ -81,7 +81,7 @@ public sealed class TeleportToCommand : LocalizedCommands
         if (args.Length == 0)
             return;
 
-        var target = args[^1];
+        var target = args[0];
 
         if (!TryGetTransformFromUidOrUsername(target, shell, _entities, _players, out _, out var targetTransform))
             return;

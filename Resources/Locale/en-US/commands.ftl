@@ -378,7 +378,7 @@ cmd-netaudit-help = netaudit
 cmd-tp-desc = Teleports a player to any location in the round.
 cmd-tp-help = tp <x> <y> [<mapID>]
 
-cmd-tpto-desc = Teleports the current player or the specified players/entities to the location of last player/entity specified.d.
+cmd-tpto-desc = Teleports the current player or the specified players/entities to the location of the first player/entity.
 cmd-tpto-help = tpto <username|uid> [username|uid]...
 cmd-tpto-destination-hint = destination (uid or username)
 cmd-tpto-victim-hint = entity to teleport (uid or username)

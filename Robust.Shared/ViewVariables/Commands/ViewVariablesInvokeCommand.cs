@@ -5,7 +5,8 @@ namespace Robust.Shared.ViewVariables.Commands;
 
 public sealed class ViewVariablesInvokeCommand : ViewVariablesBaseCommand
 {
-    public override string Command => "vvinvoke";
+    public const string Comm = "vvinvoke";
+    public override string Command => Comm;
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {

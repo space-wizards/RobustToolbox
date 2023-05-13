@@ -54,6 +54,9 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.112.0.1
+
+
 ## 0.112.0.0
 
 ### Breaking changes

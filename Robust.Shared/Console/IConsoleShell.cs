@@ -19,9 +19,9 @@ namespace Robust.Shared.Console
         bool IsClient => !IsServer;
 
         /// <summary>
-        /// Is the shell running in a local context (no remote peer session)? If true, <see cref="Player" /> will be null.
+        /// Is the shell running in a local context (no remote peer session)?.
         /// </summary>
-        bool IsLocal => Player is not null;
+        bool IsLocal { get; }
 
         /// <summary>
         /// Is the shell running on the server?
@@ -29,7 +29,7 @@ namespace Robust.Shared.Console
         bool IsServer { get; }
 
         /// <summary>
-        /// The remote peer that owns this shell. This is null if the shell is running local (<see cref="IsLocal" /> is true.).
+        /// The remote peer that owns this shell, or the local player if this is a client-side local shell (<see cref="IsLocal" /> is true and <see cref="IsClient"/> is true).
         /// </summary>
         ICommonSession? Player { get; }
 

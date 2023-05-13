@@ -260,6 +260,7 @@ namespace Robust.Shared.GameObjects
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit) where T : Component
         {
+            // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
                 GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Terminating,
                 $"Attempted to add a {component.GetType().Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");

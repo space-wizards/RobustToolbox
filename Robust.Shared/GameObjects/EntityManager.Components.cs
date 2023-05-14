@@ -1,17 +1,15 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.GameStates;
-using Robust.Shared.Physics;
-using Robust.Shared.Players;
-using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
+using Robust.Shared.GameStates;
 using Robust.Shared.Log;
-using System.Diagnostics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Players;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -262,9 +260,10 @@ namespace Robust.Shared.GameObjects
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit) where T : Component
         {
+            // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
                 GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Terminating,
-                $"Attempted to add a {typeof(T).Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
+                $"Attempted to add a {component.GetType().Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
 
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
@@ -278,7 +277,7 @@ namespace Robust.Shared.GameObjects
 
                 if (!overwrite && !duplicate.Deleted)
                     throw new InvalidOperationException(
-                        $"Component reference type {type} already occupied by {duplicate}");
+                        $"Component reference type {component.GetType().Name} already occupied by {duplicate}");
 
                 RemoveComponentImmediate(duplicate, uid, false);
             }

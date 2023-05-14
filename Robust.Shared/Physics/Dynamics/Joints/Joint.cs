@@ -292,7 +292,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             if (MathF.Abs(jointErrorSquared) <= _breakpointSquared)
                 return 0.0f;
 
-            Logger.DebugS("physics", $"Broke joint {ID}; force was {MathF.Sqrt(jointErrorSquared)}");
             Enabled = false;
             return jointErrorSquared;
         }

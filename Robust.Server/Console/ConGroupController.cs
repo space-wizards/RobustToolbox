@@ -11,11 +11,6 @@ namespace Robust.Server.Console
             return Implementation?.CanCommand(session, cmdName) ?? false;
         }
 
-        public bool CanViewVar(IPlayerSession session)
-        {
-            return Implementation?.CanViewVar(session) ?? false;
-        }
-
         public bool CanAdminPlace(IPlayerSession session)
         {
             return Implementation?.CanAdminPlace(session) ?? false;

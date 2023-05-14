@@ -1926,7 +1926,8 @@ namespace Robust.Client.GameObjects
                 {
                     size = new Vector2(longestRotatedSide, longestRotatedSide);
                 }
-                else if (_parent.SnapCardinals)
+                else if (_parent.SnapCardinals && (!_parent.GranularLayersRendering || RenderingStrategy == LayerRenderingStrategy.UseSpriteStrategy)
+                         || _parent.GranularLayersRendering && RenderingStrategy == LayerRenderingStrategy.SnapToCardinals)
                 {
                     DebugTools.Assert(_actualState == null || _actualState.Directions == RSI.State.DirectionType.Dir1);
                     size = new Vector2(longestSide, longestSide);

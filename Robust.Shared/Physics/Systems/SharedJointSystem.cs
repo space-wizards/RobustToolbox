@@ -439,6 +439,17 @@ public abstract class SharedJointSystem : EntitySystem
         ClearJoints(joint.Owner, joint);
     }
 
+    public void RemoveJoint(EntityUid uid, string id)
+    {
+        if (!TryComp<JointComponent>(uid, out var jointComp))
+            return;
+
+        if (!jointComp.Joints.TryGetValue(id, out var joint))
+            return;
+
+        RemoveJoint(joint);
+    }
+
     public void RemoveJoint(Joint joint)
     {
         var bodyAUid = joint.BodyAUid;

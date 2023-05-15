@@ -22,8 +22,8 @@ public sealed partial class PhysicsSystem
         base.Initialize();
         SubscribeLocalEvent<PlayerAttachedEvent>(OnAttach);
         SubscribeLocalEvent<PlayerDetachedEvent>(OnDetach);
-        SubscribeLocalEvent<PredictedPhysicsComponent, JointAddedEvent>(OnJointAdded);
-        SubscribeLocalEvent<PredictedPhysicsComponent, JointRemovedEvent>(OnJointRemoved);
+        SubscribeLocalEvent<PhysicsComponent, JointAddedEvent>(OnJointAdded);
+        SubscribeLocalEvent<PhysicsComponent, JointRemovedEvent>(OnJointRemoved);
     }
 
     private void UpdateIsPredicted()
@@ -52,13 +52,13 @@ public sealed partial class PhysicsSystem
         _toUpdate.Clear();
     }
 
-    private void OnJointAdded(EntityUid uid, PredictedPhysicsComponent component, JointAddedEvent args)
+    private void OnJointAdded(EntityUid uid, PhysicsComponent component, JointAddedEvent args)
     {
         UpdateIsPredicted(args.Joint.BodyAUid);
         UpdateIsPredicted(args.Joint.BodyBUid);
     }
 
-    private void OnJointRemoved(EntityUid uid, PredictedPhysicsComponent component, JointRemovedEvent args)
+    private void OnJointRemoved(EntityUid uid, PhysicsComponent component, JointRemovedEvent args)
     {
         UpdateIsPredicted(args.Joint.BodyAUid);
         UpdateIsPredicted(args.Joint.BodyBUid);

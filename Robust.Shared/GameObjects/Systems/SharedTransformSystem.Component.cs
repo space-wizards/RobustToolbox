@@ -266,7 +266,6 @@ public abstract partial class SharedTransformSystem
         if (!component._anchored)
             return;
 
-        DebugTools.Assert(component.ParentUid == component.GridUid && component.ParentUid.IsValid());
         MapGridComponent? grid;
 
         // First try find grid via parent:

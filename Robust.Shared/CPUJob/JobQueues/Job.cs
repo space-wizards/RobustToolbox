@@ -30,7 +30,7 @@ namespace Robust.Shared.CPUJob.JobQueues
         protected CancellationToken Cancellation { get; }
 
         public double DebugTime { get; private set; }
-        private readonly double _maxTime;
+        public double MaxTime;
         protected readonly IStopwatch StopWatch;
 
         // TCS for the Task property.
@@ -47,7 +47,7 @@ namespace Robust.Shared.CPUJob.JobQueues
 
         protected Job(double maxTime, IStopwatch stopwatch, CancellationToken cancellation = default)
         {
-            _maxTime = maxTime;
+            MaxTime = maxTime;
             StopWatch = stopwatch;
             Cancellation = cancellation;
 
@@ -77,7 +77,7 @@ namespace Robust.Shared.CPUJob.JobQueues
             DebugTools.AssertNull(_resume);
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
-            if (StopWatch.Elapsed.TotalSeconds <= _maxTime || _maxTime == 0.0)
+            if (StopWatch.Elapsed.TotalSeconds <= MaxTime || MaxTime == 0.0)
             {
                 return new ValueTask();
             }

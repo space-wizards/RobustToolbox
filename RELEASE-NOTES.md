@@ -54,6 +54,33 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.113.0.0
+
+### Breaking changes
+
+* Move JobQueue<T> from content to engine.
+
+### New features
+
+* Make InitializeEntity and StartEntity public. InitializeAndStartEntity was already public.
+
+### Bugfixes
+
+* Add padding to font glyphs in the atlas.
+* Fix log for duplicate component references.
+* Make Map-Grids set GridUid earlier.
+* Fix hidden action numbers when updating UI theme.
+* Fix joint change events subscribing to predictedphysics instead of just physics.
+
+### Other
+
+* Remove joint log as it's never been read and caused threading issues.
+* Decouple vvwrite / vvread / vvinvoke perms slightly from vv so vv no longer implicitly grants the others.
+* Add start line to duplicate prototype yaml error.
+* Fix debug sprite assert.
+* Fix some joint bugs
+
+
 ## 0.112.0.1
 
 

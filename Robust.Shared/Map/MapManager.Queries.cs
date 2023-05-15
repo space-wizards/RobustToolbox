@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -16,6 +14,7 @@ internal partial class MapManager
 {
     public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated bounds, bool approx = false)
     {
+        DebugTools.Assert(mapId != MapId.Nullspace);
         var aabb = bounds.CalcBoundingBox();
         // TODO: We can do slower GJK checks to check if 2 bounds actually intersect, but WYCI.
         return FindGridsIntersecting(mapId, aabb, approx);
@@ -23,6 +22,7 @@ internal partial class MapManager
 
     public void FindGridsIntersectingApprox(MapId mapId, Box2 worldAABB, GridCallback callback)
     {
+        DebugTools.Assert(mapId != MapId.Nullspace);
         if (!_gridTrees.TryGetValue(mapId, out var gridTree))
             return;
 
@@ -46,6 +46,7 @@ internal partial class MapManager
 
     public void FindGridsIntersectingApprox<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback)
     {
+        DebugTools.Assert(mapId != MapId.Nullspace);
         if (!_gridTrees.TryGetValue(mapId, out var gridTree))
             return;
 
@@ -71,6 +72,7 @@ internal partial class MapManager
 
     public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false)
     {
+        DebugTools.Assert(mapId != MapId.Nullspace);
         if (!_gridTrees.ContainsKey(mapId)) return Enumerable.Empty<MapGridComponent>();
 
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
@@ -89,6 +91,7 @@ internal partial class MapManager
         EntityQuery<PhysicsComponent> physicsQuery,
         bool approx = false)
     {
+        DebugTools.Assert(mapId != MapId.Nullspace);
         if (!_gridTrees.TryGetValue(mapId, out var gridTree)) return Enumerable.Empty<MapGridComponent>();
 
         DebugTools.Assert(grids.Count == 0);
@@ -161,6 +164,7 @@ internal partial class MapManager
         EntityQuery<TransformComponent> xformQuery,
         [NotNullWhen(true)] out MapGridComponent? grid)
     {
+        DebugTools.Assert(mapId != MapId.Nullspace);
         // Need to enlarge the AABB by at least the grid shrinkage size.
         var aabb = new Box2(worldPos - 0.2f, worldPos + 0.2f);
 

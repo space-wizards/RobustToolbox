@@ -36,6 +36,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnCompStartup);
             SubscribeLocalEvent<TransformComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<TransformComponent, ComponentHandleState>(OnHandleState);
+            SubscribeLocalEvent<TransformComponent, GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
         }
 
@@ -145,8 +146,8 @@ namespace Robust.Shared.GameObjects
                 return xform.Coordinates;
 
             // GriddUid is only set after init.
-            if (xform.LifeStage < ComponentLifeStage.Initialized && xform.GridUid == null)
-                SetGridId(xform, xform.FindGridEntityId(xformQuery));
+            if (!xform._gridInitialized)
+                InitializeGridUid(xform.Owner, xform, xformQuery, GetEntityQuery<MapGridComponent>());
 
             // Is the entity directly parented to the grid?
             if (xform.GridUid == xform.ParentUid)
@@ -176,8 +177,8 @@ namespace Robust.Shared.GameObjects
             var parentXform = xformQuery.GetComponent(parentUid);
 
             // GriddUid is only set after init.
-            if (parentXform.LifeStage < ComponentLifeStage.Initialized && parentXform.GridUid == null)
-                SetGridId(parentXform, parentXform.FindGridEntityId(xformQuery));
+            if (!parentXform._gridInitialized)
+                InitializeGridUid(parentUid, parentXform, xformQuery, GetEntityQuery<MapGridComponent>());
 
             // Is the entity directly parented to the grid?
             if (parentXform.GridUid == parentUid)
@@ -208,8 +209,8 @@ namespace Robust.Shared.GameObjects
                 return (xform.Coordinates, xform.LocalRotation);
 
             // GriddUid is only set after init.
-            if (xform.LifeStage < ComponentLifeStage.Initialized && xform.GridUid == null)
-                SetGridId(xform, xform.FindGridEntityId(xformQuery));
+            if (!xform._gridInitialized)
+                InitializeGridUid(xform.Owner, xform, xformQuery, GetEntityQuery<MapGridComponent>());
 
             // Is the entity directly parented to the grid?
             if (xform.GridUid == xform.ParentUid)

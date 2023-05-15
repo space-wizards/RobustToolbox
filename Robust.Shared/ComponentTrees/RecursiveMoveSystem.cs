@@ -43,6 +43,8 @@ internal sealed class RecursiveMoveSystem : EntitySystem
         TransformComponent xform,
         EntityQuery<TransformComponent> xformQuery)
     {
+        // TODO maybe use a c# event? This event gets raised a lot.
+        // Would probably help with server performance and is also the main bottleneck for replay scrubbing.
         var ev = new TreeRecursiveMoveEvent(xform);
         RaiseLocalEvent(uid, ref ev);
 

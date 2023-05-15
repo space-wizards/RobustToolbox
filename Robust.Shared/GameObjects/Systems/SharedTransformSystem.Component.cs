@@ -46,7 +46,7 @@ public abstract partial class SharedTransformSystem
         xform._parent = newGridUid;
         xform._anchored = true;
 
-        SetGridId(xform, newGridUid, xformQuery);
+        SetGridId(uid, xform, newGridUid, xformQuery);
         var reParent = new EntParentChangedMessage(uid, oldGridUid, xform.MapID, xform);
         RaiseLocalEvent(uid, ref reParent, true);
         // TODO: Ideally shouldn't need to call the moveevent
@@ -241,7 +241,7 @@ public abstract partial class SharedTransformSystem
         // Has to be done if _parent is set from ExposeData.
         if (component.ParentUid.IsValid())
         {
-            // Note that _children is a SortedSet<EntityUid>,
+            // Note that _children is a HashSet<EntityUid>,
             // so duplicate additions (which will happen) don't matter.
 
             var parentXform = xformQuery.GetComponent(component.ParentUid);
@@ -259,14 +259,14 @@ public abstract partial class SharedTransformSystem
             parentXform._children.Add(uid);
         }
 
-        if (component.GridUid == null)
-            SetGridId(component, component.FindGridEntityId(xformQuery));
-
+        InitializeGridUid(uid, component, xformQuery, GetEntityQuery<MapGridComponent>());
         component.MatricesDirty = true;
 
+        DebugTools.Assert(component._gridUid == uid || !HasComp<MapGridComponent>(uid));
         if (!component._anchored)
             return;
 
+        DebugTools.Assert(component.ParentUid == component.GridUid && component.ParentUid.IsValid());
         MapGridComponent? grid;
 
         // First try find grid via parent:
@@ -290,6 +290,32 @@ public abstract partial class SharedTransformSystem
 
         if (!AnchorEntity(uid, component, grid))
             component._anchored = false;
+    }
+
+    internal void InitializeGridUid(
+        EntityUid uid,
+        TransformComponent xform,
+        EntityQuery<TransformComponent> xformQuery,
+        EntityQuery<MapGridComponent> gridQuery)
+    {
+        // Dont set pre-init, as the map grid component might not have been added yet.
+        if (xform._gridInitialized || xform.LifeStage < ComponentLifeStage.Initializing)
+            return;
+
+        xform._gridInitialized = true;
+        DebugTools.Assert(xform.GridUid == null);
+        if (gridQuery.HasComponent(uid))
+        {
+            xform._gridUid = uid;
+            return;
+        }
+
+        if (!xform._parent.IsValid())
+            return;
+
+        var parentXform = xformQuery.GetComponent(xform._parent);
+        InitializeGridUid(xform._parent, parentXform, xformQuery, gridQuery);
+        xform._gridUid = parentXform._gridUid;
     }
 
     private void OnCompStartup(EntityUid uid, TransformComponent xform, ComponentStartup args)
@@ -324,38 +350,43 @@ public abstract partial class SharedTransformSystem
     /// <summary>
     /// Sets the <see cref="GridId"/> for the transformcomponent without updating its children. Does not Dirty it.
     /// </summary>
-    internal void SetGridIdNoRecursive(TransformComponent xform, EntityUid? gridUid)
+    internal void SetGridIdNoRecursive(EntityUid uid, TransformComponent xform, EntityUid? gridUid)
     {
+        DebugTools.Assert(gridUid == uid || !HasComp<MapGridComponent>(uid));
         if (xform._gridUid == gridUid)
             return;
 
         DebugTools.Assert(gridUid == null || HasComp<MapGridComponent>(gridUid));
-
         xform._gridUid = gridUid;
     }
 
     /// <summary>
     /// Sets the <see cref="GridId"/> for the transformcomponent. Does not Dirty it.
     /// </summary>
-    public void SetGridId(TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
+    public void SetGridId(EntityUid uid, TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
     {
-        if (xform._gridUid == gridId)
+        if (!xform._gridInitialized || xform._gridUid == gridId || xform.GridUid == uid)
             return;
 
+        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
         DebugTools.Assert(gridId == null || HasComp<MapGridComponent>(gridId));
 
         xformQuery ??= GetEntityQuery<TransformComponent>();
-        SetGridIdRecursive(xform, gridId, xformQuery.Value);
+        SetGridIdRecursive(uid, xform, gridId, xformQuery.Value);
     }
 
-    private static void SetGridIdRecursive(TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent> xformQuery)
+    private void SetGridIdRecursive(EntityUid uid, TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent> xformQuery)
     {
+        if (!xform._gridInitialized || xform._gridUid == gridId || xform.GridUid == uid)
+            return;
+
+        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
         xform._gridUid = gridId;
         var childEnumerator = xform.ChildEnumerator;
 
         while (childEnumerator.MoveNext(out var child))
         {
-            SetGridIdRecursive(xformQuery.GetComponent(child.Value), gridId, xformQuery);
+            SetGridIdRecursive(child.Value, xformQuery.GetComponent(child.Value), gridId, xformQuery);
         }
     }
 
@@ -473,6 +504,7 @@ public abstract partial class SharedTransformSystem
                     throw new InvalidOperationException($"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(uid)}, new parent: {ToPrettyString(value.EntityId)}");
                 }
 
+                // Check for recursive/circular transform hierarchies.
                 if (xform.MapUid == newParent.MapUid)
                 {
                     var recursiveUid = value.EntityId;
@@ -511,14 +543,23 @@ public abstract partial class SharedTransformSystem
             if (newParent != null)
             {
                 xform.ChangeMapId(newParent.MapID, xformQuery);
-                if (xform.GridUid != uid)
-                    SetGridId(xform, xform.FindGridEntityId(xformQuery), xformQuery);
+
+                if (!xform._gridInitialized)
+                    InitializeGridUid(uid, xform, xformQuery, GetEntityQuery<MapGridComponent>());
+                else
+                {
+                    if (!newParent._gridInitialized)
+                        InitializeGridUid(value.EntityId, newParent, xformQuery, GetEntityQuery<MapGridComponent>());
+                    SetGridId(uid, xform, newParent.GridUid);
+                }
             }
             else
             {
                 xform.ChangeMapId(MapId.Nullspace, xformQuery);
-                if (xform.GridUid != uid)
-                    SetGridId(xform, null, xformQuery);
+                if (!xform._gridInitialized)
+                    InitializeGridUid(uid, xform, xformQuery, GetEntityQuery<MapGridComponent>());
+                else
+                    SetGridId(uid, xform, null, xformQuery);
             }
 
             if (xform.Initialized)
@@ -1303,4 +1344,11 @@ public abstract partial class SharedTransformSystem
         DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0);
     }
     #endregion
+
+    private void OnGridAdd(EntityUid uid, TransformComponent component, GridAddEvent args)
+    {
+        component._gridInitialized = true;
+        component._gridUid = uid;
+        DebugTools.Assert(LifeStage(uid) < EntityLifeStage.Initialized || component.ChildCount == 0);
+    }
 }

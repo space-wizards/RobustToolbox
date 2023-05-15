@@ -25,7 +25,7 @@ public abstract class SharedJointSystem : EntitySystem
     // we can delete the component.
     private readonly HashSet<JointComponent> _dirtyJoints = new();
     protected readonly HashSet<Joint> AddedJoints = new();
-    protected readonly List<Joint> _toRemove = new();
+    protected readonly List<Joint> ToRemove = new();
 
     private ISawmill _sawmill = default!;
 
@@ -436,10 +436,10 @@ public abstract class SharedJointSystem : EntitySystem
         foreach (var j in AddedJoints)
         {
             if (j.BodyAUid == uid || j.BodyBUid == uid)
-                _toRemove.Add(j);
+                ToRemove.Add(j);
         }
-        AddedJoints.ExceptWith(_toRemove);
-        _toRemove.Clear();
+        AddedJoints.ExceptWith(ToRemove);
+        ToRemove.Clear();
 
         if(_gameTiming.IsFirstTimePredicted)
         {

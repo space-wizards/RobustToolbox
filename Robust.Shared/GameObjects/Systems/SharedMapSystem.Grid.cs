@@ -289,7 +289,6 @@ public abstract partial class SharedMapSystem
 
     private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
     {
-        // GridID is not set yet so we don't include it.
         var msg = new GridAddEvent(uid);
         RaiseLocalEvent(uid, msg, true);
     }
@@ -298,9 +297,6 @@ public abstract partial class SharedMapSystem
     {
         var xformQuery = GetEntityQuery<TransformComponent>();
         var xform = xformQuery.GetComponent(uid);
-
-        // Adding grids to existing entities is not currently supported.
-        DebugTools.Assert(LifeStage(uid) == EntityLifeStage.Initializing || xform.ChildCount == 0);
 
         // Force networkedmapmanager to send it due to non-ECS legacy code.
         var curTick = _timing.CurTick;

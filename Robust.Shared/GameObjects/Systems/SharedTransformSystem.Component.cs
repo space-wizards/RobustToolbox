@@ -1347,8 +1347,12 @@ public abstract partial class SharedTransformSystem
 
     private void OnGridAdd(EntityUid uid, TransformComponent component, GridAddEvent args)
     {
+        if (LifeStage(uid) > EntityLifeStage.Initialized)
+        {
+            SetGridId(uid, component, uid, GetEntityQuery<TransformComponent>());
+            return;
+        }
         component._gridInitialized = true;
         component._gridUid = uid;
-        DebugTools.Assert(LifeStage(uid) < EntityLifeStage.Initialized || component.ChildCount == 0);
     }
 }

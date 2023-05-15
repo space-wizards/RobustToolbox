@@ -259,6 +259,7 @@ namespace Robust.Shared.GameObjects
             // ensure that the cached broadphase is correct.
             DebugTools.Assert(_timing.ApplyingState
                 || xform.Broadphase == null
+                || ev.Body.LifeStage <= ComponentLifeStage.Initializing
                 || !xform.Broadphase.Value.IsValid()
                 || ((xform.Broadphase.Value.CanCollide == ev.Body.CanCollide)
                 && (xform.Broadphase.Value.Static == (ev.Body.BodyType == BodyType.Static))));

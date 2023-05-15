@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.113.0.2
+
+### Bugfixes
+
+* Removed or fixed some erroneous debug asserts
+* Fixed entity-deletion not being properly sent to clients
+
+
 ## 0.113.0.1
 
 ### Bugfixes

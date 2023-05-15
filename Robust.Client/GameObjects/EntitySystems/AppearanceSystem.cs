@@ -17,6 +17,7 @@ namespace Robust.Client.GameObjects
             base.Initialize();
 
             SubscribeLocalEvent<ClientAppearanceComponent, ComponentInit>(OnAppearanceInit);
+            SubscribeLocalEvent<ClientAppearanceComponent, ComponentStartup>(OnAppearanceStartup);
             SubscribeLocalEvent<ClientAppearanceComponent, ComponentHandleState>(OnAppearanceHandleState);
         }
 
@@ -32,7 +33,10 @@ namespace Robust.Client.GameObjects
             {
                 visual.InitializeEntity(uid);
             }
+        }
 
+        private void OnAppearanceStartup(EntityUid uid, ClientAppearanceComponent component, ComponentStartup args)
+        {
             MarkDirty(component);
         }
 
@@ -103,10 +107,9 @@ namespace Robust.Client.GameObjects
             var metaQuery = GetEntityQuery<MetaDataComponent>();
             while (_queuedUpdates.TryDequeue(out var appearance))
             {
-                if (appearance.Deleted)
-                    continue;
-
                 appearance.AppearanceDirty = false;
+                if (!appearance.Running)
+                    continue;
 
                 // If the entity is no longer within the clients PVS, don't bother updating.
                 if ((metaQuery.GetComponent(appearance.Owner).Flags & MetaDataFlags.Detached) != 0 && !appearance.UpdateDetached)

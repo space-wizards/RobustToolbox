@@ -47,15 +47,15 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override void OnThemeUpdated()
         {
-            if (_texturePath != null) TextureNormal = Theme.ResolveTexture(_texturePath);
             base.OnThemeUpdated();
+            if (_texturePath != null) TextureNormal = Theme.ResolveTexture(_texturePath);
         }
         public string TexturePath
         {
             set
             {
-                TextureNormal = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
                 _texturePath = value;
+                if (_texturePath != null) TextureNormal = Theme.ResolveTexture(_texturePath);
             }
         }
 

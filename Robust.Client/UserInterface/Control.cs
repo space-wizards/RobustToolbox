@@ -75,18 +75,9 @@ namespace Robust.Client.UserInterface
 
         public UITheme Theme { get; set; }
 
-        protected virtual void OnThemeUpdated(){}
-        internal void ThemeUpdateRecursive()
+        protected virtual void OnThemeUpdated()
         {
-            var curTheme = UserInterfaceManager.CurrentTheme;
-            if (Theme == curTheme) return; //don't update themes if the themes are up to date
-            Theme = curTheme;
-            OnThemeUpdated();
-            foreach (var child in Children)
-            {
-                // Don't descent into children that have a style sheet since those aren't affected.
-                child.ThemeUpdateRecursive();
-            }
+            Theme = UserInterfaceManager.CurrentTheme;
         }
 
         public NameScope? FindNameScope()
@@ -507,6 +498,8 @@ namespace Robust.Client.UserInterface
             Children = new OrderedChildCollection(this);
             Theme = UserInterfaceManagerInternal.CurrentTheme;
             XamlChildren = Children;
+
+            UserInterfaceManager.ThemeUpdated += OnThemeUpdated;
         }
 
         /// <summary>
@@ -563,6 +556,8 @@ namespace Robust.Client.UserInterface
             }
 
             UserInterfaceManagerInternal.HideTooltipFor(this);
+
+            UserInterfaceManager.ThemeUpdated -= OnThemeUpdated;
 
             DisposeAllChildren();
             Parent?.RemoveChild(this);

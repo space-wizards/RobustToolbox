@@ -32,6 +32,14 @@ namespace Robust.Client.Physics
                 return;
             }
 
+            foreach (var j in AddedJoints)
+            {
+                if ((j.BodyAUid == uid || j.BodyBUid == uid) && !jointState.Joints.ContainsKey(j.ID))
+                    ToRemove.Add(j);
+            }
+            AddedJoints.ExceptWith(ToRemove);
+            ToRemove.Clear();
+
             var removed = new List<Joint>();
             foreach (var (existing, j) in component.Joints)
             {

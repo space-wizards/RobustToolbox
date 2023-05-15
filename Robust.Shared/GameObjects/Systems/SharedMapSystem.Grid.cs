@@ -289,7 +289,6 @@ public abstract partial class SharedMapSystem
 
     private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
     {
-        // GridID is not set yet so we don't include it.
         var msg = new GridAddEvent(uid);
         RaiseLocalEvent(uid, msg, true);
     }
@@ -310,23 +309,8 @@ public abstract partial class SharedMapSystem
 
         component.LastTileModifiedTick = curTick;
 
-        var mapId = xform.MapID;
-
-        if (MapManager.HasMapEntity(mapId))
-        {
-            var mapUid = MapManager.GetMapEntityIdOrThrow(mapId);
-
-            // Mapgrid moment
-            if (mapUid != uid)
-                _transform.SetParent(uid, xform, MapManager.GetMapEntityIdOrThrow(mapId), xformQuery);
-
-            _transform.SetGridIdNoRecursive(xform, uid);
-        }
-        else
-        {
-            // Just in case.
-            _transform.SetGridId(xform, uid, xformQuery);
-        }
+        if (xform.MapUid != null && xform.MapUid != uid)
+            _transform.SetParent(uid, xform, xform.MapUid.Value, xformQuery);
 
         var msg = new GridInitializeEvent(uid);
         RaiseLocalEvent(uid, msg, true);

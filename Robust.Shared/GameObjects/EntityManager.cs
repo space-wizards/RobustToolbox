@@ -724,13 +724,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null)
+        public void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null)
         {
             InitializeComponents(entity, meta);
             EntityInitialized?.Invoke(entity);
         }
 
-        protected void StartEntity(EntityUid entity)
+        public void StartEntity(EntityUid entity)
         {
             StartComponents(entity);
             EntityStarted?.Invoke(entity);

@@ -92,9 +92,15 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MoveEvent>(OnMove);
 
             SubscribeLocalEvent<TransformComponent, PhysicsBodyTypeChangedEvent>(OnBodyTypeChange);
+            SubscribeLocalEvent<PhysicsComponent, ComponentStartup>(OnBodyStartup);
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             EntityManager.EntityInitialized += OnEntityInit;
+        }
+
+        private void OnBodyStartup(EntityUid uid, PhysicsComponent component, ComponentStartup args)
+        {
+            UpdatePhysicsBroadphase(uid, Transform(uid), component);
         }
 
         public override void Shutdown()
@@ -253,6 +259,7 @@ namespace Robust.Shared.GameObjects
             // ensure that the cached broadphase is correct.
             DebugTools.Assert(_timing.ApplyingState
                 || xform.Broadphase == null
+                || ev.Body.LifeStage <= ComponentLifeStage.Initializing
                 || !xform.Broadphase.Value.IsValid()
                 || ((xform.Broadphase.Value.CanCollide == ev.Body.CanCollide)
                 && (xform.Broadphase.Value.Static == (ev.Body.BodyType == BodyType.Static))));
@@ -269,6 +276,9 @@ namespace Robust.Shared.GameObjects
 
         private void UpdatePhysicsBroadphase(EntityUid uid, TransformComponent xform, PhysicsComponent body)
         {
+            if (body.LifeStage <= ComponentLifeStage.Initializing)
+                return;
+
             if (xform.GridUid == uid)
                 return;
             DebugTools.Assert(!_mapManager.IsGrid(uid));

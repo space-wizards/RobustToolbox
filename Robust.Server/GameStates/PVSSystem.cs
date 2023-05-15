@@ -16,6 +16,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -253,8 +254,8 @@ internal sealed partial class PVSSystem : EntitySystem
     private void OnEntityMove(ref MoveEvent ev)
     {
         // GriddUid is only set after init.
-        if (ev.Component.LifeStage < ComponentLifeStage.Initialized && ev.Component.GridUid == null)
-            _transform.SetGridId(ev.Component, ev.Component.FindGridEntityId(GetEntityQuery<TransformComponent>()));
+        if (!ev.Component._gridInitialized)
+            _transform.InitializeGridUid(ev.Sender, ev.Component, GetEntityQuery<TransformComponent>(), GetEntityQuery<MapGridComponent>());
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
         if (ev.Component.GridUid == ev.Sender)

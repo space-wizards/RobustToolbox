@@ -25,6 +25,7 @@ public abstract class SharedJointSystem : EntitySystem
     // we can delete the component.
     private readonly HashSet<JointComponent> _dirtyJoints = new();
     protected readonly HashSet<Joint> AddedJoints = new();
+    protected readonly List<Joint> ToRemove = new();
 
     private ISawmill _sawmill = default!;
 
@@ -404,6 +405,11 @@ public abstract class SharedJointSystem : EntitySystem
         }
 
         // Need to defer this for prediction reasons, yay!
+        // This can also break prediction for reasons, yay!
+        // Whenever a joint is added or removed, you need to check if its queued for adding.
+        // The client can apply multiple game states in a row without running a tick update,
+        // which can lead to things like cross-map joints.
+        // TODO is this actually needed. Its bad for performance coin.
         AddedJoints.Add(joint);
 
         if (_gameTiming.IsFirstTimePredicted)
@@ -427,6 +433,14 @@ public abstract class SharedJointSystem : EntitySystem
             RemoveJoint(a);
         }
 
+        foreach (var j in AddedJoints)
+        {
+            if (j.BodyAUid == uid || j.BodyBUid == uid)
+                ToRemove.Add(j);
+        }
+        AddedJoints.ExceptWith(ToRemove);
+        ToRemove.Clear();
+
         if(_gameTiming.IsFirstTimePredicted)
         {
             _sawmill.Debug($"Removed all joints from entity {ToPrettyString(uid)}");
@@ -441,6 +455,7 @@ public abstract class SharedJointSystem : EntitySystem
 
     public void RemoveJoint(Joint joint)
     {
+        AddedJoints.Remove(joint);
         var bodyAUid = joint.BodyAUid;
         var bodyBUid = joint.BodyBUid;
 

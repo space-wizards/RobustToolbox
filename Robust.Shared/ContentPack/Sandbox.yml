@@ -960,6 +960,7 @@ Types:
     NullReferenceException: { All: True }
     Object: { All: True }
     ObsoleteAttribute: { All: True }
+    OperationCanceledException: { All: True }
     ParamArrayAttribute: { All: True }
     Predicate`1: { All: True } # Delegate
     Random: { All: True }

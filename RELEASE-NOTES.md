@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.113.0.1
+
+### Bugfixes
+
+* Use ThemeResolve for TextureButton texture normals.
+
+
 ## 0.113.0.0
 
 ### Breaking changes

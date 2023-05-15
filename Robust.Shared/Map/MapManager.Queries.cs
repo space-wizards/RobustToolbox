@@ -159,7 +159,6 @@ internal partial class MapManager
         EntityQuery<TransformComponent> xformQuery,
         [NotNullWhen(true)] out MapGridComponent? grid)
     {
-        DebugTools.Assert(mapId != MapId.Nullspace);
         // Need to enlarge the AABB by at least the grid shrinkage size.
         var aabb = new Box2(worldPos - 0.2f, worldPos + 0.2f);
 

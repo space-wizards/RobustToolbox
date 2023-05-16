@@ -45,7 +45,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
 
-        protected override void OnThemeUpdated()
+        protected internal override void OnThemeUpdated()
         {
             base.OnThemeUpdated();
             if (_texturePath != null) TextureNormal = Theme.ResolveTexture(_texturePath);

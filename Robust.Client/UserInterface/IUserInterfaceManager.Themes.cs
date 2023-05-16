@@ -11,5 +11,4 @@ public partial interface IUserInterfaceManager
     public void SetActiveTheme(string themeName);
     public UITheme DefaultTheme { get; }
     public void SetDefaultTheme(string themeId);
-    public event Action? ThemeUpdated;
 }

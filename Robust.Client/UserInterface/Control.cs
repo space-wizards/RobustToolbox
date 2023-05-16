@@ -75,7 +75,7 @@ namespace Robust.Client.UserInterface
 
         public UITheme Theme { get; set; }
 
-        protected virtual void OnThemeUpdated()
+        protected internal virtual void OnThemeUpdated()
         {
             Theme = UserInterfaceManager.CurrentTheme;
         }
@@ -498,8 +498,6 @@ namespace Robust.Client.UserInterface
             Children = new OrderedChildCollection(this);
             Theme = UserInterfaceManagerInternal.CurrentTheme;
             XamlChildren = Children;
-
-            UserInterfaceManager.ThemeUpdated += OnThemeUpdated;
         }
 
         /// <summary>
@@ -556,8 +554,6 @@ namespace Robust.Client.UserInterface
             }
 
             UserInterfaceManagerInternal.HideTooltipFor(this);
-
-            UserInterfaceManager.ThemeUpdated -= OnThemeUpdated;
 
             DisposeAllChildren();
             Parent?.RemoveChild(this);

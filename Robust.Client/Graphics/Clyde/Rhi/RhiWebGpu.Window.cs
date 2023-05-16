@@ -18,6 +18,7 @@ internal sealed unsafe partial class RhiWebGpu
 
         SurfaceDescriptor surfaceDesc = default;
         SurfaceDescriptorFromWindowsHWND surfaceDescHwnd;
+        SurfaceDescriptorFromXlibWindow surfaceDescX11;
 
         if (OperatingSystem.IsWindows())
         {
@@ -38,7 +39,27 @@ internal sealed unsafe partial class RhiWebGpu
         }
         else
         {
-            throw new NotImplementedException();
+            var xDisplay = _clyde._windowing.WindowGetX11Display(window);
+            var xWindow = _clyde._windowing.WindowGetX11Id(window);
+
+            if (xDisplay != null && xWindow != null)
+            {
+                surfaceDescX11 = new SurfaceDescriptorFromXlibWindow
+                {
+                    Chain =
+                    {
+                        SType = SType.SurfaceDescriptorFromXlibWindow
+                    },
+                    Display = ((IntPtr) xDisplay.Value).ToPointer(),
+                    Window = xWindow.Value
+                };
+
+                surfaceDesc.NextInChain = (ChainedStruct*) (&surfaceDescX11);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         var surface = _webGpu.InstanceCreateSurface(_wgpuInstance, &surfaceDesc);

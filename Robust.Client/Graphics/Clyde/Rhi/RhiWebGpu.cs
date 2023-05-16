@@ -56,7 +56,7 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
 
     private void InitInstance()
     {
-        var context = WebGPU.CreateDefaultContext(new[] { "wgpu_native.dll" });
+        var context = WebGPU.CreateDefaultContext(new[] { "wgpu_native.dll", "libwgpu_native.so", "libwgpu_native.dylib" });
         _webGpu = new WebGPU(context);
         _wgpu = new Wgpu(context);
 

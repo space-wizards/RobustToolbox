@@ -225,7 +225,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private PVSCollection<TIndex> RegisterPVSCollection<TIndex>() where TIndex : IComparable<TIndex>, IEquatable<TIndex>
     {
-        var collection = new PVSCollection<TIndex>(EntityManager, _transform);
+        var collection = new PVSCollection<TIndex>(_sawmill, EntityManager, _transform);
         _pvsCollections.Add(collection);
         return collection;
     }

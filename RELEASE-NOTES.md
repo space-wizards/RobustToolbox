@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.113.0.3
+
+### Bugfixes
+
+* Fix PVS error log threading issue.
+
+
 ## 0.113.0.2
 
 ### Bugfixes

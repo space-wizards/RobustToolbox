@@ -7,6 +7,8 @@ namespace Robust.Client.Graphics.Clyde;
 
 internal sealed partial class Clyde
 {
+    public RhiBase Rhi { get; private set; } = default!;
+
     private void InitRhi()
     {
         DebugTools.Assert(_windowing != null);
@@ -15,12 +17,12 @@ internal sealed partial class Clyde
         var graphicsApi = _cfg.GetCVar(CVars.DisplayGraphicsApi);
         _logManager.GetSawmill("clyde.rhi").Debug("Initializing graphics API {GraphicsApiName}", graphicsApi);
 
-        RhiBase rhiBase = graphicsApi switch
+        Rhi = graphicsApi switch
         {
             "webGpu" => new RhiWebGpu(this, _deps),
             _ => throw new Exception($"Unknown graphics API: {graphicsApi}")
         };
 
-        rhiBase.Init();
+        Rhi.Init();
     }
 }

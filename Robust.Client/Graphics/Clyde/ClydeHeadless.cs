@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
+using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Client.Input;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Map;
@@ -21,6 +22,8 @@ namespace Robust.Client.Graphics.Clyde
     [UsedImplicitly]
     internal sealed class ClydeHeadless : IClydeInternal
     {
+        public RhiBase Rhi => throw new NotImplementedException();
+
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
         public IClydeWindow MainWindow { get; }
         public Vector2i ScreenSize => (1280, 720);

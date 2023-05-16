@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Threading;
 using Robust.Client.GameObjects;
+using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
@@ -10,6 +11,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
@@ -29,8 +31,135 @@ namespace Robust.Client.Graphics.Clyde
 
         private List<Overlay> _overlays = new();
 
+        private static string Shader => """
+@group(0) @binding(0)
+var myTexture: texture_2d<f32>;
+@group(0) @binding(1)
+var mySampler: sampler;
+
+struct VertexOutput {
+    @builtin(position) position: vec4f,
+
+    @location(0) color: vec3f,
+}
+
+@vertex
+fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> VertexOutput {
+    var p = vec2f(0.0, 0.0);
+    var c = vec3f(0.0, 0.0, 0.0);
+    if (in_vertex_index == 0u) {
+        p = vec2f(-0.5, -0.5);
+        c = vec3f(1.0, 0.0, 0.0);
+    } else if (in_vertex_index == 1u) {
+        p = vec2f(0.5, -0.5);
+        c = vec3f(0.0, 1.0, 0.0);
+    } else {
+        p = vec2f(0.0, 0.5);
+        c = vec3f(0.0, 0.0, 1.0);
+    }
+
+    var out: VertexOutput;
+    out.position = vec4f(p, 0.0, 1.0);
+    out.color = c; // forward to the fragment shader
+    return out;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4f {
+    return vec4f(in.color, 1.0) * textureSample(myTexture, mySampler, vec2f(0.0, 0.0));
+}
+""";
+
+        private RhiRenderPipeline? _splashPipeline;
+        private RhiBindGroupLayout? _bindGroupLayout;
+        private RhiTexture? _testTexture;
+        private RhiTextureView? _testTextureView;
+        private RhiSampler? _testSampler;
+        private RStopwatch _stopwatch;
+        private int _frames;
+        private long _alloc;
+
+        private SpriteBatch? _spriteBatch;
+
+        private void SetupSplash()
+        {
+            var shaderModule = Rhi.CreateShaderModule(new RhiShaderModuleDescriptor(Shader, "splash"));
+
+            _bindGroupLayout = Rhi.CreateBindGroupLayout(new RhiBindGroupLayoutDescriptor(
+                new[]
+                {
+                    new RhiBindGroupLayoutEntry(0, RhiShaderStage.Fragment, new RhiTextureBindingLayout()),
+                    new RhiBindGroupLayoutEntry(1, RhiShaderStage.Fragment, new RhiSamplerBindingLayout()),
+                }));
+
+            var layout = Rhi.CreatePipelineLayout(new RhiPipelineLayoutDescriptor
+            {
+                BindGroupLayouts = new[] { _bindGroupLayout }
+            });
+
+            var pipelineDesc = new RhiRenderPipelineDescriptor(
+                layout,
+                new RhiVertexState(new RhiProgrammableStage(shaderModule, "vs_main")),
+                new RhiPrimitiveState(),
+                null,
+                new RhiMultisampleState(),
+                new RhiFragmentState(
+                    new RhiProgrammableStage(shaderModule, "fs_main"),
+                    new[] { new RhiColorTargetState(RhiTextureFormat.BGRA8UnormSrgb, new RhiBlendState()) }),
+                "splash"
+            );
+
+            _splashPipeline = Rhi.CreateRenderPipeline(pipelineDesc);
+            shaderModule.Dispose();
+
+            _testTexture = Rhi.CreateTexture(
+                new RhiTextureDescriptor(
+                    new RhiExtent3D(256, 256),
+                    RhiTextureFormat.BGRA8UnormSrgb,
+                    RhiTextureUsage.TextureBinding | RhiTextureUsage.CopyDst
+                )
+            );
+
+            _testSampler = Rhi.CreateSampler(new RhiSamplerDescriptor());
+            _testTextureView = _testTexture.CreateView(new RhiTextureViewDescriptor(RhiTextureFormat.BGRA8UnormSrgb,
+                RhiTextureViewDimension.Dim2D, RhiTextureAspect.All, 0, 1, 0, 1, null));
+
+            _stopwatch.Start();
+
+            _spriteBatch = new SpriteBatch(this, Rhi);
+        }
+
+        private void DrawSplash()
+        {
+            var backbuffer = Rhi.CreateTextureViewForWindow(_mainWindow!);
+
+            _spriteBatch!.Start(backbuffer);
+
+            var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
+            if (string.IsNullOrEmpty(splashTex))
+                return;
+
+            var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
+
+            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero, Color.White);
+
+            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (0.5f, 0.5f), Color.FromSrgb(Color.Pink));
+
+            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (-0.5f, 0.5f), Color.FromSrgb(Color.LightBlue));
+
+            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (0.5f, -0.5f), Color.FromSrgb(Color.LightBlue));
+
+            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (-0.5f, -0.5f), Color.FromSrgb(Color.Pink));
+
+            _spriteBatch.Finish();
+
+            Rhi.WindowPresent(_mainWindow!);
+        }
+
         public void Render()
         {
+            DrawSplash();
+
             /*CheckTransferringScreenshots();
 
             var allMinimized = true;

@@ -202,6 +202,8 @@ namespace Robust.Client.Graphics.Clyde
             InitRhi();
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
+
+            SetupSplash();
             Render();
 
             return true;

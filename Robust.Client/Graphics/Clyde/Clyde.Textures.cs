@@ -6,6 +6,7 @@ using System.Data;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -25,7 +26,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly ConcurrentQueue<ClydeHandle> _textureDisposeQueue = new();
 
-        public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
+        public OwnedTexture LoadTextureFromPNGStream(
+            Stream stream,
+            string? name = null,
             TextureLoadParameters? loadParams = null)
         {
             DebugTools.Assert(_gameThread == Thread.CurrentThread);
@@ -36,82 +39,124 @@ namespace Robust.Client.Graphics.Clyde
             return LoadTextureFromImage(image, name, loadParams);
         }
 
-        public OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
-            TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
+        public OwnedTexture LoadTextureFromImage<T>(
+            Image<T> image,
+            string? name = null,
+            TextureLoadParameters? loadParams = null)
+            where T : unmanaged, IPixel<T>
         {
-            /*DebugTools.Assert(_gameThread == Thread.CurrentThread);
+            DebugTools.Assert(_gameThread == Thread.CurrentThread);
 
-            var actualParams = loadParams ?? TextureLoadParameters.Default;
-            var pixelType = typeof(T);
-
-            if (!_hasGLTextureSwizzle)
-            {
-                // If texture swizzle isn't available we have to pre-process the images to apply it ourselves
-                // and then upload as RGBA8.
-                // Yes this is inefficient but the alternative is modifying the shaders,
-                // which I CBA to do.
-                // Even 8 year old iGPUs support texture swizzle.
-                if (pixelType == typeof(A8))
-                {
-                    // Disable sRGB so stuff doesn't get interpreter wrong.
-                    actualParams.Srgb = false;
-                    using var img = ApplyA8Swizzle((Image<A8>) (object) image);
-                    return LoadTextureFromImage(img, name, loadParams);
-                }
-
-                if (pixelType == typeof(L8) && !actualParams.Srgb)
-                {
-                    using var img = ApplyL8Swizzle((Image<L8>) (object) image);
-                    return LoadTextureFromImage(img, name, loadParams);
-                }
-            }
+            var (instance, loaded) = CreateBlankTextureCore<T>((image.Width, image.Height), name, loadParams);
 
             // Flip image because OpenGL reads images upside down.
             using var copy = FlipClone(image);
 
-            var texture = CreateBaseTextureInternal<T>(image.Width, image.Height, actualParams, name);
-
             unsafe
             {
                 var span = copy.GetPixelSpan();
-                fixed (T* ptr = span)
-                {
-                    // Still bound.
-                    DoTexUpload(copy.Width, copy.Height, actualParams.Srgb, ptr);
-                }
+                Rhi.Queue.WriteTexture(
+                    new RhiImageCopyTexture
+                    {
+                        Texture = loaded.RhiTexture,
+                        Aspect = RhiTextureAspect.All,
+                        Origin = new RhiOrigin3D(),
+                        MipLevel = 0
+                    },
+                    MemoryMarshal.Cast<T, byte>(span),
+                    new RhiImageDataLayout(0, (uint) (sizeof(T) * image.Width), (uint) image.Height),
+                    new RhiExtent3D(image.Width, image.Height)
+                );
             }
 
-            return texture;*/
-            return new DummyTexture((image.Width, image.Height));
+            return instance;
         }
 
-        public unsafe OwnedTexture CreateBlankTexture<T>(
+        public OwnedTexture CreateBlankTexture<T>(
             Vector2i size,
             string? name = null,
             in TextureLoadParameters? loadParams = null)
             where T : unmanaged, IPixel<T>
         {
-            /*var actualParams = loadParams ?? TextureLoadParameters.Default;
-            if (!_hasGLTextureSwizzle)
+            var (instance, _) = CreateBlankTextureCore<T>(size, name, loadParams);
+            return instance;
+        }
+
+        private (ClydeTexture, LoadedTexture) CreateBlankTextureCore<T>(
+            Vector2i size,
+            string? name = null,
+            in TextureLoadParameters? loadParams = null)
+            where T : unmanaged, IPixel<T>
+        {
+            DebugTools.Assert(_gameThread == Thread.CurrentThread);
+
+            var actualParams = loadParams ?? TextureLoadParameters.Default;
+            var srgb = actualParams.Srgb;
+
+            var format = default(T) switch
             {
-                // Actually create RGBA32 texture if missing texture swizzle.
-                // This is fine (TexturePixelType that's stored) because all other APIs do the same.
-                if (typeof(T) == typeof(A8) || typeof(T) == typeof(L8))
-                {
-                    return CreateBlankTexture<Rgba32>(size, name, loadParams);
-                }
-            }
+                Rgba32 => srgb ? RhiTextureFormat.RGBA8UnormSrgb : RhiTextureFormat.RGBA8Unorm,
+                // TODO REMOVE THIS WILL NEVER WORK
+                A8 => RhiTextureFormat.R8Unorm,
+                _ => throw new ArgumentException("Unsupported pixel format")
+            };
 
-            var texture = CreateBaseTextureInternal<T>(
-                size.X, size.Y,
-                actualParams,
-                name);
+            var rhiTexture = Rhi.CreateTexture(new RhiTextureDescriptor(
+                new RhiExtent3D(size.X, size.Y),
+                format,
+                RhiTextureUsage.TextureBinding | RhiTextureUsage.CopySrc | RhiTextureUsage.CopyDst,
+                Label: name
+            ));
 
-            // Texture still bound, run glTexImage2D with null data param to specify bounds.
-            DoTexUpload<T>(size.X, size.Y, actualParams.Srgb, null);
+            var rhiTextureView = rhiTexture.CreateView(new RhiTextureViewDescriptor
+            {
+                Aspect = RhiTextureAspect.All,
+                Dimension = RhiTextureViewDimension.Dim2D,
+                Format = format,
+                Label = name,
+                MipLevelCount = 1,
+                ArrayLayerCount = 1,
+                BaseArrayLayer = 0,
+                BaseMipLevel = 0
+            });
 
-            return texture;*/
-            return new DummyTexture(size);
+            var addressMode = actualParams.SampleParameters.WrapMode switch
+            {
+                TextureWrapMode.None => RhiAddressMode.ClampToEdge,
+                TextureWrapMode.Repeat => RhiAddressMode.Repeat,
+                TextureWrapMode.MirroredRepeat => RhiAddressMode.MirrorRepeat,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            var filter = actualParams.SampleParameters.Filter ? RhiFilterMode.Linear : RhiFilterMode.Nearest;
+
+            // TODO: Cache samplers somewhere, we can't actually make infinite of these and they're simple enough.
+            var rhiSampler = Rhi.CreateSampler(new RhiSamplerDescriptor(
+                AddressModeU: addressMode,
+                AddressModeV: addressMode,
+                MagFilter: filter,
+                MinFilter: filter,
+                Label: name
+            ));
+
+            var (width, height) = size;
+
+            var id = AllocRid();
+            var instance = new ClydeTexture(id, size, srgb, this);
+            var loaded = new LoadedTexture
+            {
+                RhiTexture = rhiTexture,
+                DefaultRhiView = rhiTextureView,
+                RhiSampler = rhiSampler,
+                Width = width,
+                Height = height,
+                IsSrgb = srgb,
+                Name = name,
+            };
+
+            _loadedTextures.Add(id, loaded);
+
+            return (instance, loaded);
         }
 
         /*
@@ -457,30 +502,19 @@ namespace Robust.Client.Graphics.Clyde
         }
         */
 
-        private static TexturePixelType GetTexturePixelType<T>() where T : unmanaged, IPixel<T>
-        {
-            return default(T) switch
-            {
-                Rgba32 => TexturePixelType.Rgba32,
-                L8 => TexturePixelType.L8,
-                A8 => TexturePixelType.A8,
-                _ => throw new NotSupportedException("Unsupported pixel type."),
-            };
-        }
-
         private void LoadStockTextures()
         {
             var white = new Image<Rgba32>(1, 1);
             white[0, 0] = new Rgba32(255, 255, 255, 255);
-            _stockTextureWhite = (ClydeTexture) Texture.LoadFromImage(white);
+            _stockTextureWhite = (ClydeTexture)Texture.LoadFromImage(white);
 
             var black = new Image<Rgba32>(1, 1);
             black[0, 0] = new Rgba32(0, 0, 0, 255);
-            _stockTextureBlack = (ClydeTexture) Texture.LoadFromImage(black);
+            _stockTextureBlack = (ClydeTexture)Texture.LoadFromImage(black);
 
             var blank = new Image<Rgba32>(1, 1);
             blank[0, 0] = new Rgba32(0, 0, 0, 0);
-            _stockTextureTransparent = (ClydeTexture) Texture.LoadFromImage(blank);
+            _stockTextureTransparent = (ClydeTexture)Texture.LoadFromImage(blank);
         }
 
         /// <summary>
@@ -579,24 +613,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class LoadedTexture
         {
-            // public GLHandle OpenGLObject;
+            public RhiTexture RhiTexture = default!;
+            public RhiTextureView DefaultRhiView = default!;
+            public RhiSampler RhiSampler = default!;
+
             public int Width;
             public int Height;
             public bool IsSrgb;
             public string? Name;
-            public long MemoryPressure;
-            public TexturePixelType TexturePixelType;
-
-            public Vector2i Size => (Width, Height);
-            // public WeakReference<ClydeTexture> TextureInstance;
-        }
-
-        private enum TexturePixelType : byte
-        {
-            RenderTarget = 0,
-            Rgba32,
-            A8,
-            L8,
         }
 
         private void FlushTextureDispose()

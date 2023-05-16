@@ -17,6 +17,7 @@ using SharpZstd.Interop;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using YamlDotNet.Core;
@@ -42,7 +43,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     private int _maxUncompressedSize;
     private int _tickBatchSize;
     private bool _enabled;
-    private ResPath _path;
+    private ResPath? _path;
     public bool Recording => _curStream != null;
     private int _index = 0;
     private MemoryStream? _curStream;
@@ -100,33 +101,35 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     }
 
     /// <inheritdoc/>
-    public bool TryStartRecording(string? directory = null, bool overwrite = false, TimeSpan? duration = null)
+    public bool TryStartRecording(string? replayName = null, bool overwrite = false, TimeSpan? duration = null)
     {
         if (!_enabled || _curStream != null)
             return false;
 
-        var path = directory ?? _netConf.GetCVar(CVars.ReplayDirectory);
-        _path = new ResPath(path).ToRootedPath();
-        if (_resourceManager.UserData.Exists(_path))
+        replayName ??= DateTime.UtcNow.ToString("s");
+
+        var dir = _netConf.GetCVar(CVars.ReplayDirectory);
+        _path = new ResPath($"{dir}/{replayName}").ToRootedPath();
+        if (_resourceManager.UserData.Exists(_path.Value))
         {
             if (overwrite)
             {
-                _sawmill.Info($"File {path} already exists. Overwriting.");
-                _resourceManager.UserData.Delete(_path);
+                _sawmill.Info($"File {dir} already exists. Overwriting.");
+                _resourceManager.UserData.Delete(_path.Value);
             }
             else
             {
-                _sawmill.Info($"File {path} already exists. Aborting.");
+                _sawmill.Info($"File {dir} already exists. Aborting recording.");
                 return false;
             }
         }
-        _resourceManager.UserData.CreateDir(_path);
+        _resourceManager.UserData.CreateDir(_path.Value);
 
         _curStream = new(_tickBatchSize * 2);
         _index = 0;
         _firstTick = true;
         _recordingStart = (_timing.CurTick, _timing.CurTime);
-        WriteInitialMetadata();
+        WriteInitialMetadata(replayName);
         if (duration != null)
             _recordingEnd = _timing.CurTime + duration.Value;
 
@@ -192,7 +195,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             return;
 
         _curStream.Position = 0;
-        var filePath = _path / $"{_index++}.dat";
+        var filePath = _path.Value / $"{_index++}.dat";
         using var file = _resourceManager.UserData.OpenWrite(filePath);
 
         var buf = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int)_curStream.Length));
@@ -227,7 +230,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     /// <summary>
     ///     Write general replay data required to read the rest of the replay. We write this at the beginning rather than at the end on the off-chance that something goes wrong along the way and the recording is incomplete.
     /// </summary>
-    private void WriteInitialMetadata()
+    private void WriteInitialMetadata(string name)
     {
         if (_path == null)
             return;
@@ -238,6 +241,9 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         // Saving YAML data
         {
             _yamlMetadata = new MappingDataNode();
+
+            _yamlMetadata["name"] = new ValueDataNode(name);
+            _yamlMetadata["time"] = new ValueDataNode(DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
 
             // version info
             _yamlMetadata["engineVersion"] = new ValueDataNode(_netConf.GetCVar(CVars.BuildEngineVersion));
@@ -253,12 +259,12 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             _yamlMetadata["startTick"] = new ValueDataNode(_recordingStart.Tick.Value.ToString());
             _yamlMetadata["timeBaseTick"] = new ValueDataNode(timeBase.Item2.Value.ToString());
             _yamlMetadata["timeBaseTimespan"] = new ValueDataNode(timeBase.Item1.Ticks.ToString());
-            _yamlMetadata["recordingStartTime"] = new ValueDataNode(_recordingStart.Time.ToString());
+            _yamlMetadata["serverStartTime"] = new ValueDataNode(_recordingStart.Time.ToString());
 
             OnRecordingStarted?.Invoke((_yamlMetadata, extraData));
 
             var document = new YamlDocument(_yamlMetadata.ToYaml());
-            using var ymlFile = _resourceManager.UserData.OpenWriteText(_path / "replay.yml");
+            using var ymlFile = _resourceManager.UserData.OpenWriteText(_path.Value / "replay.yml");
             var stream = new YamlStream { document };
             stream.Save(new YamlMappingFix(new Emitter(ymlFile)), false);
         }
@@ -266,16 +272,16 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         // Saving misc extra data like networked messages that typically get sent to newly connecting clients.
         if (extraData.Count > 0)
         {
-            using var initDataFile = _resourceManager.UserData.OpenWrite(_path / "init.dat");
+            using var initDataFile = _resourceManager.UserData.OpenWrite(_path.Value / "init.dat");
             _seri.SerializeDirect(initDataFile, new ReplayMessage() { Messages = extraData });
         }
 
         // save data required for IRobustMappedStringSerializer
-        using var stringFile = _resourceManager.UserData.OpenWrite(_path / "strings.dat");
+        using var stringFile = _resourceManager.UserData.OpenWrite(_path.Value / "strings.dat");
         stringFile.Write(stringData);
 
         // Save replicated cvars.
-        using var cvarsFile = _resourceManager.UserData.OpenWrite(_path / "cvars.toml");
+        using var cvarsFile = _resourceManager.UserData.OpenWrite(_path.Value / "cvars.toml");
         _netConf.SaveToTomlStream(cvarsFile, _netConf.GetReplicatedVars().Select(x => x.name));
     }
 
@@ -291,11 +297,11 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         _yamlMetadata["fileCount"] = new ValueDataNode(_index.ToString());
         _yamlMetadata["size"] = new ValueDataNode(_currentCompressedSize.ToString());
         _yamlMetadata["uncompressedSize"] = new ValueDataNode(_currentUncompressedSize.ToString());
-        _yamlMetadata["recordingEndTime"] = new ValueDataNode(_timing.CurTime.ToString());
+        _yamlMetadata["serverEndTime"] = new ValueDataNode(_timing.CurTime.ToString());
 
         // this just overwrites the previous yml with additional data.
         var document = new YamlDocument(_yamlMetadata.ToYaml());
-        using var ymlFile = _resourceManager.UserData.OpenWriteText(_path / "replay.yml");
+        using var ymlFile = _resourceManager.UserData.OpenWriteText(_path.Value / "replay.yml");
         var stream = new YamlStream { document };
         stream.Save(new YamlMappingFix(new Emitter(ymlFile)), false);
     }

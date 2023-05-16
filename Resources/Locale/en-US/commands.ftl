@@ -535,7 +535,7 @@ cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
 cmd-vvinvoke-help = Usage: vvinvoke <path> [arguments...]
 
 cmd-replaystart-desc = Starts a replay recording, optionally with some time limit.
-cmd-replaystart-help = Usage: replaystart [minutes] [directory] [overwrite bool]
+cmd-replaystart-help = Usage: replaystart [minutes] [name/directory] [overwrite bool]
 cmd-replaystart-success = Started recording a replay.
 cmd-replaystart-already-recording = Already recording a replay.
 cmd-replaystart-error = An error occurred while trying to start the recording.

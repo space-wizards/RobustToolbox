@@ -1,12 +1,29 @@
 using Robust.Shared.Replays;
 using System;
+using Robust.Shared;
 
 namespace Robust.Server.Replays;
 
 public interface IServerReplayRecordingManager : IReplayRecordingManager
 {
     void ToggleRecording();
-    bool TryStartRecording(string? directory = null, bool overwrite = false, TimeSpan? duration = null);
+
+    /// <summary>
+    ///     Starts recording a replay.
+    /// </summary>
+    /// <param name="replayName">
+    /// The name of the replay. This determines the name of the <see cref="CVars.ReplayDirectory"/> subfolder where the
+    /// data will be saved. If not provided, will default to using the current time.
+    /// </param>
+    /// <param name="overwrite">
+    /// Whether to overwrite the folder, if it already exists.
+    /// </param>
+    /// <param name="duration">
+    /// Optional time limit for the recording.
+    /// </param>
+    /// <returns>Returns true if the recording was successfully started.</returns>
+    bool TryStartRecording(string? replayName = null, bool overwrite = false, TimeSpan? duration = null);
+
     void StopRecording();
 
     /// <summary>

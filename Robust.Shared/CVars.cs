@@ -1413,10 +1413,9 @@ namespace Robust.Shared
          */
 
         /// <summary>
-        /// The folder within the server data directory where a replay will be recorded. Note that existing files in
-        /// this directory will be removed when starting a new recording.
+        /// A relative path pointing to a folder within the server data directory where all replays will be stored.
         /// </summary>
-        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replay", CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replays", CVar.SERVERONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.

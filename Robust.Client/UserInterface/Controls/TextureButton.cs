@@ -17,7 +17,16 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassDisabled = "disabled";
         public const string StylePseudoClassPressed = "pressed";
+
+        /// <summary>
+        /// Path specified from root of resources.
+        /// </summary>
         private string? _texturePath;
+
+        /// <summary>
+        /// Path specified relative to current theme.
+        /// </summary>
+        private string? _textureThemePath;
 
 
         public TextureButton()
@@ -39,8 +48,9 @@ namespace Robust.Client.UserInterface.Controls
         public string TextureThemePath
         {
             set {
-                TextureNormal = Theme.ResolveTexture(value);
-                _texturePath = value;
+                _textureThemePath = value;
+                _texturePath = null;
+                ApplyTexture();
             }
         }
 
@@ -48,15 +58,29 @@ namespace Robust.Client.UserInterface.Controls
         protected override void OnThemeUpdated()
         {
             base.OnThemeUpdated();
-            if (_texturePath != null) TextureNormal = Theme.ResolveTexture(_texturePath);
+            ApplyTexture();
         }
         public string TexturePath
         {
             set
             {
                 _texturePath = value;
-                if (_texturePath != null) TextureNormal = Theme.ResolveTexture(_texturePath);
+                _textureThemePath = null;
+                ApplyTexture();
             }
+        }
+
+        /// <summary>
+        /// Attempt to set TextureNormal based on _textureThemePath and _texturePath.
+        /// </summary>
+        private void ApplyTexture()
+        {
+            if (_textureThemePath != null)
+                TextureNormal = Theme.ResolveTexture(_textureThemePath);
+            else if (_texturePath != null)
+                TextureNormal = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(_texturePath);
+            else
+                TextureNormal = null;
         }
 
         public Vector2 Scale

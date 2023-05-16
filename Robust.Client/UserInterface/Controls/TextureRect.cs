@@ -40,15 +40,23 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        /// Path specified from root of resources.
+        /// </summary>
         private string? _texturePath;
+
+        /// <summary>
+        /// Path specified relative to current theme.
+        /// </summary>
+        private string? _textureThemePath;
 
         // TODO HUD REFACTOR BEFORE MERGE use or cleanup
         public string TextureThemePath
         {
-            set
-            {
-                Texture = Theme.ResolveTexture(value);
-                _texturePath = value;
+            set {
+                _textureThemePath = value;
+                _texturePath = null;
+                ApplyTexture();
             }
         }
 
@@ -57,10 +65,23 @@ namespace Robust.Client.UserInterface.Controls
         {
             set
             {
-                Texture = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
                 _texturePath = value;
+                _textureThemePath = null;
+                ApplyTexture();
             }
+        }
 
+        /// <summary>
+        /// Attempt to set TextureNormal based on _textureThemePath and _texturePath.
+        /// </summary>
+        private void ApplyTexture()
+        {
+            if (_textureThemePath != null)
+                Texture = Theme.ResolveTexture(_textureThemePath);
+            else if (_texturePath != null)
+                Texture = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(_texturePath);
+            else
+                Texture = null;
         }
 
         protected override void OnThemeUpdated()

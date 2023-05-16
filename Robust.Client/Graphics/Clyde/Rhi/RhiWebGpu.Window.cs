@@ -19,6 +19,7 @@ internal sealed unsafe partial class RhiWebGpu
         SurfaceDescriptor surfaceDesc = default;
         SurfaceDescriptorFromWindowsHWND surfaceDescHwnd;
         SurfaceDescriptorFromXlibWindow surfaceDescX11;
+        SurfaceDescriptorFromMetalLayer surfaceDescMetal;
 
         if (OperatingSystem.IsWindows())
         {
@@ -58,7 +59,25 @@ internal sealed unsafe partial class RhiWebGpu
             }
             else
             {
-                throw new NotImplementedException();
+                var metalLayer = _clyde._windowing.WindowGetMetalLayer(window);
+
+                if (metalLayer != null)
+                {
+                    surfaceDescMetal = new SurfaceDescriptorFromMetalLayer
+                    {
+                        Chain =
+                        {
+                            SType = SType.SurfaceDescriptorFromMetalLayer
+                        },
+                        Layer = ((IntPtr) metalLayer.Value).ToPointer()
+                    };
+
+                    surfaceDesc.NextInChain = (ChainedStruct*) (&surfaceDescMetal);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
             }
         }
 

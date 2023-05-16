@@ -135,6 +135,9 @@ internal partial class Clyde
                 }
             }
 
+            if (cmd.MetalView != 0)
+                SDL_Metal_DestroyView(cmd.MetalView);
+
             SDL_DestroyWindow(cmd.Window);
         }
 
@@ -200,6 +203,9 @@ internal partial class Clyde
             if (res == SDL_FALSE)
                 _sawmill.Error("Failed to get window WM info: {error}", SDL_GetError());
 
+            if (OperatingSystem.IsMacOS())
+                reg.MetalView = SDL_Metal_CreateView(window);
+
             // LoadWindowIcon(window);
 
             SDL_GetWindowSizeInPixels(window, out var fbW, out var fbH);
@@ -221,7 +227,7 @@ internal partial class Clyde
         public void WindowDestroy(WindowReg window)
         {
             var reg = (Sdl2WindowReg) window;
-            SendCmd(new CmdWinDestroy(reg.Sdl2Window, window.Owner != null));
+            SendCmd(new CmdWinDestroy(reg.Sdl2Window, reg.MetalView, window.Owner != null));
         }
 
         public void UpdateMainWindowMode()
@@ -362,6 +368,18 @@ internal partial class Clyde
                 return null;
 
             return reg.SysWMinfo.info.x11.display;
+        }
+
+        public nint? WindowGetMetalLayer(WindowReg window)
+        {
+            CheckWindowDisposed(window);
+
+            var reg = (Sdl2WindowReg) window;
+
+            if (reg.MetalView == 0)
+                return null;
+
+            return SDL_Metal_GetLayer(reg.MetalView);
         }
 
         public HWND WindowGetWin32Window(WindowReg window)
@@ -508,6 +526,13 @@ internal partial class Clyde
 
             // Kept around to avoid it being GCd.
             public CursorImpl? Cursor;
+
+            // On MacOS this is used to hold the result of SDL_Metal_CreateView.
+            // This must be disposed of neatly.
+            // This is stored as "0 means null" so that SDL2 errors are handled
+            //  gracefully-ish, while we still return a nullable value to
+            //  callers as with other native handles.
+            public nint MetalView;
         }
 
     }

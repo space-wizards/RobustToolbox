@@ -222,6 +222,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            // GLFW doesn't have the Metal view/layer API that SDL2 does.
+            // It might be possible though.
+            public nint? WindowGetMetalLayer(WindowReg window) => null;
+
             public HWND WindowGetWin32Window(WindowReg window)
             {
                 if (!OperatingSystem.IsWindows())

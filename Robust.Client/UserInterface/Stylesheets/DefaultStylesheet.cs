@@ -101,7 +101,7 @@ public sealed class DefaultStylesheet
 
             Element().Class(DefaultWindow.StyleClassWindowCloseButton)
                 // Button texture
-                .Prop(TextureButton.StylePropertyTexture, theme.ResolveTexture(res, "cross"))
+                .Prop(TextureButton.StylePropertyTexture, theme.ResolveTexture("cross"))
                 // Normal button color
                 .Prop(Control.StylePropertyModulateSelf, theme.ResolveColorOrSpecified("windowCloseButton", Color.FromHex("#FFFFFF"))),
 

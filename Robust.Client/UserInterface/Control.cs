@@ -73,18 +73,22 @@ namespace Robust.Client.UserInterface
         //    _nameScope = nameScope;
         //}
 
-        public UITheme Theme { get; set; }
+        public UITheme Theme { get; internal set; }
 
-        protected virtual void OnThemeUpdated(){}
-        internal void ThemeUpdateRecursive()
+        protected virtual void OnThemeUpdated()
+        {
+        }
+
+        public void ThemeUpdateRecursive()
         {
             var curTheme = UserInterfaceManager.CurrentTheme;
-            if (Theme == curTheme) return; //don't update themes if the themes are up to date
+            if (Theme == curTheme)
+                return;
+
             Theme = curTheme;
             OnThemeUpdated();
             foreach (var child in Children)
             {
-                // Don't descent into children that have a style sheet since those aren't affected.
                 child.ThemeUpdateRecursive();
             }
         }

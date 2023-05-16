@@ -53,7 +53,8 @@ internal partial class UserInterfaceManager
 
     private void UpdateTheme(UITheme newTheme)
     {
-        if (newTheme == CurrentTheme) return; //do not update if the theme is unchanged
+        if (newTheme == CurrentTheme)
+            return;
         CurrentTheme = newTheme;
         _userInterfaceManager.RootControl.ThemeUpdateRecursive();
     }

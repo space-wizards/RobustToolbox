@@ -177,6 +177,21 @@ namespace Robust.Client.UserInterface
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
             RootControl.AddChild(PopupRoot);
+
+            MainViewport.OnChildAdded += OnRootChildAdded;
+            StateRoot.OnChildAdded += OnRootChildAdded;
+            WindowRoot.OnChildAdded += OnRootChildAdded;
+            ModalRoot.OnChildAdded += OnRootChildAdded;
+            PopupRoot.OnChildAdded += OnRootChildAdded;
+            RootControl.OnChildAdded += OnRootChildAdded;
+        }
+
+        private void OnRootChildAdded(Control ctrl)
+        {
+            // Ensure themes are up to date. Required to ensure that the theme is updated for things like windows that
+            // were closed during the last theme change. Other orphaned controls need to be updated by whatever
+            // system/controller is in charge of them.
+            ctrl.ThemeUpdateRecursive();
         }
 
         public void InitializeTesting()

@@ -68,7 +68,10 @@ public sealed class UITheme : IPrototype
             return false;
         }
 
-        var resPath = new ResPath($"{texturePath}.png");
+        if (!texturePath.EndsWith(".png"))
+            texturePath = $"{texturePath}.png";
+        
+        var resPath = new ResPath(texturePath);
         if (resPath.IsRelative)
         {
             if (_cache.TryGetResource( Path / resPath, out texture))

@@ -349,8 +349,11 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     private GameTick _largestCulled;
 
-    public List<TIndex> GetDeletedIndices(GameTick fromTick)
+    public List<TIndex>? GetDeletedIndices(GameTick fromTick)
     {
+        if (fromTick == GameTick.Zero)
+            return null;
+
         // I'm 99% sure this can never happen, but it is hard to test real laggy/lossy networks with many players.
         if (_largestCulled > fromTick)
         {
@@ -365,7 +368,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 list.Add(id);
         }
 
-        return list;
+        return list.Count > 0 ? list : null;
     }
 
     #endregion

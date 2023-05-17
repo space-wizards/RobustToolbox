@@ -1338,6 +1338,7 @@ namespace Robust.Shared.GameObjects
             _traitDict = traitDict;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TComp1 GetComponent(EntityUid uid)
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
@@ -1346,6 +1347,7 @@ namespace Robust.Shared.GameObjects
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
         {
             if (uid == null)
@@ -1357,6 +1359,7 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(uid.Value, out component);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
@@ -1369,6 +1372,7 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid)
         {
             return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
@@ -1395,6 +1399,7 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TComp1? CompOrNull(EntityUid uid)
         {
             if (TryGetComponent(uid, out var comp))

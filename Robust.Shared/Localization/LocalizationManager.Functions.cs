@@ -26,6 +26,7 @@ namespace Robust.Shared.Localization
             AddCtxFunction(bundle, "POSS-ADJ", FuncPossAdj);
             AddCtxFunction(bundle, "POSS-PRONOUN", FuncPossPronoun);
             AddCtxFunction(bundle, "REFLEXIVE", FuncReflexive);
+            AddCtxFunction(bundle, "COUNTER", FuncCounter);
 
             // Conjugation
             AddCtxFunction(bundle, "CONJUGATE-BE", FuncConjugateBe);
@@ -225,6 +226,27 @@ namespace Robust.Shared.Localization
         private ILocValue FuncReflexive(LocArgs args)
         {
             return new LocValueString(GetString("zzzz-reflexive-pronoun", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the counter or measure word for the entity. Not used in English, common in East Asian languages.
+        /// </summary>
+        private ILocValue FuncCounter(LocArgs args)
+        {
+            if (args.Args.Count < 1) return new LocValueString(GetString("zzzz-counter-default"));
+
+            ILocValue entity0 = args.Args[0];
+            if (entity0.Value != null)
+            {
+                EntityUid entity = (EntityUid)entity0.Value;
+
+                if (TryGetEntityLocAttrib(entity, "counter", out var counter))
+                {
+                    return new LocValueString(counter);
+                }
+            }
+
+            return new LocValueString(GetString("zzzz-counter-default"));
         }
 
         /// <summary>

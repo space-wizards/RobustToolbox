@@ -450,7 +450,7 @@ namespace Robust.Shared.GameObjects
                 }
                 catch (Exception)
                 {
-                    Logger.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
+                    _sawmill.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
                 }
             }
 
@@ -490,7 +490,7 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception while queuing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _sawmill.Error($"Caught exception while queuing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
                 _runtimeLog.LogException(e, nameof(RemoveComponentDeferred));
             }
 #endif
@@ -500,7 +500,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component.Deleted)
             {
-                Logger.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {_componentFactory.GetComponentName(component.GetType())}.");
+                _sawmill.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {_componentFactory.GetComponentName(component.GetType())}.");
                 return;
             }
 
@@ -525,7 +525,7 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception during immediate component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _sawmill.Error($"Caught exception during immediate component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
                 _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
@@ -552,7 +552,7 @@ namespace Robust.Shared.GameObjects
                 if (component.Running)
                 {
                     // TODO add options to cancel deferred deletion?
-                    Logger.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(uid)}, type={component.GetType()}");
+                    _sawmill.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(uid)}, type={component.GetType()}");
                     component.LifeShutdown(this);
                 }
 
@@ -563,7 +563,7 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception  while processing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _sawmill.Error($"Caught exception  while processing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
@@ -886,14 +886,14 @@ namespace Robust.Shared.GameObjects
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
-            return new EntityQuery<TComp1>(comps!);
+            return new EntityQuery<TComp1>(comps!, _resolveSawmill);
         }
 
         public EntityQuery<Component> GetEntityQuery(Type type)
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex(type)];
             DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
-            return new EntityQuery<Component>(comps!);
+            return new EntityQuery<Component>(comps!, _resolveSawmill);
         }
 
         /// <inheritdoc />
@@ -1332,10 +1332,12 @@ namespace Robust.Shared.GameObjects
     public readonly struct EntityQuery<TComp1> where TComp1 : Component
     {
         private readonly Dictionary<EntityUid, Component> _traitDict;
+        private readonly ISawmill _sawmill;
 
-        public EntityQuery(Dictionary<EntityUid, Component> traitDict)
+        public EntityQuery(Dictionary<EntityUid, Component> traitDict, ISawmill sawmill)
         {
             _traitDict = traitDict;
+            _sawmill = sawmill;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1394,7 +1396,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-                Logger.ErrorS("resolve", $"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
 
             return false;
         }

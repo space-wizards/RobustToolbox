@@ -76,6 +76,9 @@ namespace Robust.Shared.GameObjects
         private string _xformName = string.Empty;
         private string _metaName = string.Empty;
 
+        private ISawmill _sawmill = default!;
+        private ISawmill _resolveSawmill = default!;
+
         public bool Started { get; protected set; }
 
         public bool ShuttingDown { get; protected set; }
@@ -99,6 +102,8 @@ namespace Robust.Shared.GameObjects
             InitializeComponents();
             _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
             _metaName = _componentFactory.GetComponentName(typeof(MetaDataComponent));
+            _sawmill = Logger.GetSawmill("entity");
+            _resolveSawmill = Logger.GetSawmill("resolve");
 
             Initialized = true;
         }
@@ -148,7 +153,7 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Failed to convert prototype {prototype.ID} into yaml. Exception: {e.Message}");
+                _sawmill.Error($"Failed to convert prototype {prototype.ID} into yaml. Exception: {e.Message}");
                 return false;
             }
 
@@ -175,7 +180,7 @@ namespace Robust.Shared.GameObjects
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
+                    _sawmill.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
                     return false;
                 }
 
@@ -442,7 +447,7 @@ namespace Robust.Shared.GameObjects
 #if !EXCEPTION_TOLERANCE
                 throw new InvalidOperationException(msg);
 #else
-                Logger.Error($"{msg}. Trace: {Environment.StackTrace}");
+                _sawmill.Error($"{msg}. Trace: {Environment.StackTrace}");
 #endif
             }
 
@@ -469,14 +474,14 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception while raising event {nameof(EntityTerminatingEvent)} on entity {ToPrettyString(uid, metadata)}\n{e}");
+                _sawmill.Error($"Caught exception while raising event {nameof(EntityTerminatingEvent)} on entity {ToPrettyString(uid, metadata)}\n{e}");
             }
 
             foreach (var child in transform._children)
             {
                 if (!metaQuery.TryGetComponent(child, out var childMeta) || childMeta.EntityDeleted)
                 {
-                    Logger.Error($"A deleted entity was still the transform child of another entity. Parent: {ToPrettyString(uid, metadata)}.");
+                    _sawmill.Error($"A deleted entity was still the transform child of another entity. Parent: {ToPrettyString(uid, metadata)}.");
                     transform._children.Remove(child);
                     continue;
                 }
@@ -506,7 +511,7 @@ namespace Robust.Shared.GameObjects
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Caught exception while trying to detach parent of entity '{ToPrettyString(uid, metadata)}' to null.\n{e}");
+                    _sawmill.Error($"Caught exception while trying to detach parent of entity '{ToPrettyString(uid, metadata)}' to null.\n{e}");
                 }
             }
 
@@ -518,12 +523,12 @@ namespace Robust.Shared.GameObjects
                 }
                 catch(Exception e)
                 {
-                    Logger.Error($"Caught exception while trying to recursively delete child entity '{ToPrettyString(child)}' of '{ToPrettyString(uid, metadata)}'\n{e}");
+                    _sawmill.Error($"Caught exception while trying to recursively delete child entity '{ToPrettyString(child)}' of '{ToPrettyString(uid, metadata)}'\n{e}");
                 }
             }
 
             if (transform._children.Count != 0)
-                Logger.Error($"Failed to delete all children of entity: {ToPrettyString(uid)}");
+                _sawmill.Error($"Failed to delete all children of entity: {ToPrettyString(uid)}");
 
             // Shut down all components.
             foreach (var component in InSafeOrder(_entCompIndex[uid]))
@@ -536,7 +541,7 @@ namespace Robust.Shared.GameObjects
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"Caught exception while trying to call shutdown on component of entity '{ToPrettyString(uid, metadata)}'\n{e}");
+                        _sawmill.Error($"Caught exception while trying to call shutdown on component of entity '{ToPrettyString(uid, metadata)}'\n{e}");
                     }
                 }
             }
@@ -551,7 +556,7 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception while invoking event {nameof(EntityDeleted)} on '{ToPrettyString(uid, metadata)}'\n{e}");
+                _sawmill.Error($"Caught exception while invoking event {nameof(EntityDeleted)} on '{ToPrettyString(uid, metadata)}'\n{e}");
             }
 
             _eventBus.OnEntityDeleted(uid);
@@ -566,7 +571,7 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception while raising {nameof(EntityDeletedMessage)} on '{ToPrettyString(uid, metadata)}'\n{e}");
+                _sawmill.Error($"Caught exception while raising {nameof(EntityDeletedMessage)} on '{ToPrettyString(uid, metadata)}'\n{e}");
             }
 
             Entities.Remove(uid);
@@ -613,7 +618,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (Entities.Count != 0)
-                Logger.Error("Entities were spawned while flushing entities.");
+                _sawmill.Error("Entities were spawned while flushing entities.");
         }
 
         /// <summary>

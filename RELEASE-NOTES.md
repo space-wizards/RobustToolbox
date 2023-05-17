@@ -54,6 +54,23 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.114.0.0
+
+### Breaking changes
+
+* The way that UI themes resolve textures has changed. Absolute texture paths will simply be read directly, while relative paths will attempt to find a theme specific texture before falling back to simply trying to read the given file path.
+* The signature of public UI theme methods have changed, and some new methods have been added.
+
+### New features
+
+* Added non-generic versions of various component/entity lookup queries.
+
+### Bugfixes
+
+* Fixed an erroneous error that would get logged when clients reconnect to a server.
+* Fixed a UI bug that was preventing some controls from being disposed and was causing the UI to become laggy.
+
+
 ## 0.113.0.3
 
 ### Bugfixes

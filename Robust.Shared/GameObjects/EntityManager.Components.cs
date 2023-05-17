@@ -454,9 +454,8 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            // DisposeComponents means the entity is getting deleted.
-            // Safe to wipe the entity out of the index.
             _entCompIndex.Remove(uid);
+            _netComponents.Remove(uid);
         }
 
         private void RemoveComponentDeferred(Component component, EntityUid uid, bool terminating)
@@ -533,7 +532,7 @@ namespace Robust.Shared.GameObjects
             var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), terminating);
             ComponentRemoved?.Invoke(eventArgs);
             _eventBus.OnComponentRemoved(eventArgs);
-            DeleteComponent(component, terminating);
+            DeleteComponent(uid, component, terminating);
         }
 
         /// <inheritdoc />
@@ -543,6 +542,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (component.Deleted)
                     continue;
+                var uid = component.Owner;
 
 #if EXCEPTION_TOLERANCE
             try
@@ -552,7 +552,7 @@ namespace Robust.Shared.GameObjects
                 if (component.Running)
                 {
                     // TODO add options to cancel deferred deletion?
-                    Logger.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                    Logger.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(uid)}, type={component.GetType()}");
                     component.LifeShutdown(this);
                 }
 
@@ -567,31 +567,28 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
-                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, component.Owner), false);
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), false);
                 ComponentRemoved?.Invoke(eventArgs);
                 _eventBus.OnComponentRemoved(eventArgs);
 
-                DeleteComponent(component, false);
+                DeleteComponent(uid, component, false);
             }
 
             _deleteSet.Clear();
         }
 
-        private void DeleteComponent(Component component, bool terminating)
+        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating)
         {
             var reg = _componentFactory.GetRegistration(component.GetType());
 
-            var entityUid = component.Owner;
-
-            // ReSharper disable once InvertIf
-            if (reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
+            if (!terminating && reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
             {
                 if (netSet.Count == 1)
                     _netComponents.Remove(entityUid);
                 else
                     netSet.Remove(reg.NetID.Value);
 
-                if (!terminating && component.NetSyncEnabled)
+                if (component.NetSyncEnabled)
                     DirtyEntity(entityUid);
             }
 
@@ -600,7 +597,10 @@ namespace Robust.Shared.GameObjects
                 _entTraitArray[refType.Value].Remove(entityUid);
             }
 
+            // TODO if terminating the entity, maybe defer this?
+            // _entCompIndex.Remove(uid) gets called later on anyways.
             _entCompIndex.Remove(entityUid, component);
+
             ComponentDeleted?.Invoke(new DeletedComponentEventArgs(new ComponentEventArgs(component, entityUid), terminating));
         }
 

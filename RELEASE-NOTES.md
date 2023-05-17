@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.114.1.0
+
+### New features
+
+* Add a new method for physics joint removal.
+
+### Other
+
+* Slightly speedup entity deletion.
+
+### Internal
+
+* Remove static logs from EntityManager.
+
+
 ## 0.114.0.0
 
 ### Breaking changes

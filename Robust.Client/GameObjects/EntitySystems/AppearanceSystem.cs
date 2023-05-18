@@ -16,7 +16,6 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<ClientAppearanceComponent, ComponentInit>(OnAppearanceInit);
             SubscribeLocalEvent<ClientAppearanceComponent, ComponentStartup>(OnAppearanceStartup);
             SubscribeLocalEvent<ClientAppearanceComponent, ComponentHandleState>(OnAppearanceHandleState);
         }
@@ -25,14 +24,6 @@ namespace Robust.Client.GameObjects
         {
             var clone = CloneAppearanceData(component.AppearanceData);
             args.State = new AppearanceComponentState(clone);
-        }
-
-        private void OnAppearanceInit(EntityUid uid, ClientAppearanceComponent component, ComponentInit args)
-        {
-            foreach (var visual in component.Visualizers)
-            {
-                visual.InitializeEntity(uid);
-            }
         }
 
         private void OnAppearanceStartup(EntityUid uid, ClientAppearanceComponent component, ComponentStartup args)
@@ -136,12 +127,6 @@ namespace Robust.Client.GameObjects
 
             // Give it AppearanceData so we can still keep the friend attribute on the component.
             EntityManager.EventBus.RaiseLocalEvent(uid, ref ev);
-
-            // Eventually visualizers would be nuked and we'd just make them components instead.
-            foreach (var visualizer in appearanceComponent.Visualizers)
-            {
-                visualizer.OnChangeData(appearanceComponent);
-            }
         }
     }
 

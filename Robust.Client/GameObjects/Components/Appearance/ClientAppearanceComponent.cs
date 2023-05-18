@@ -11,9 +11,6 @@ namespace Robust.Client.GameObjects;
 [ComponentReference(typeof(AppearanceComponent)), Access(typeof(AppearanceSystem))]
 public sealed class ClientAppearanceComponent : AppearanceComponent
 {
-    [DataField("visuals")]
-    internal List<AppearanceVisualizer> Visualizers = new();
-
     /// <summary>
     ///     If true, then this entity's visuals will get updated in the next frame update regardless of whether or not
     ///     this entity is currently inside of PVS range.

@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.115.0.0
+
+### Breaking changes
+
+* The signature and behaviour of `IClientGameStateManager.PartialStateReset()` has changed. By default it will no longer delete client-side entities, unless they are parented to a networked entity that is being deleted during the reset.
+
+
 ## 0.114.1.0
 
 ### New features

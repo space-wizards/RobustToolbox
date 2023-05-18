@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -379,7 +380,7 @@ namespace Robust.Shared.Prototypes
         }*/
     }
 
-    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext
+    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext, ISerializationContext
     {
         public ComponentRegistry()
         {
@@ -406,5 +407,8 @@ namespace Robust.Shared.Prototypes
         {
             return false; //Registries cannot represent the "remove this component" state.
         }
+
+        public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
+        public bool WritingReadingPrototypes { get; } = true;
     }
 }

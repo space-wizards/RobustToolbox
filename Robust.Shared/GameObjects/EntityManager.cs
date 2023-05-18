@@ -289,21 +289,21 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
-        public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid)
+        public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, euid);
+            return CreateEntity(prototypeName, euid, overrides);
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName);
+            return CreateEntity(prototypeName, default, overrides);
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName);
+            var newEntity = CreateEntity(prototypeName, default, overrides);
 
             if (coordinates.IsValid(this))
             {
@@ -314,9 +314,9 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName);
+            var newEntity = CreateEntity(prototypeName, default, overrides);
             var transform = GetComponent<TransformComponent>(newEntity);
 
             if (coordinates.MapId == MapId.Nullspace)
@@ -360,7 +360,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var entity = CreateEntityUninitialized(protoName, coordinates);
+            var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
             InitializeAndStartEntity(entity, coordinates.MapId);
             return entity;
         }
@@ -680,7 +680,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, EntityUid uid = default)
+        private protected virtual EntityUid CreateEntity(string? prototypeName, EntityUid uid = default, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
                 return AllocEntity(out _, uid);
@@ -688,7 +688,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototypeName, out var metadata, uid);
             try
             {
-                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, null);
+                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, context);
                 return entity;
             }
             catch (Exception e)

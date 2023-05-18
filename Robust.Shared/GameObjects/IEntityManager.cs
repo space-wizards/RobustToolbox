@@ -57,13 +57,13 @@ namespace Robust.Shared.GameObjects
         event Action<EntityUid>? EntityDeleted;
         event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid);
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName);
+        EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
+        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
 
         void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null);
 

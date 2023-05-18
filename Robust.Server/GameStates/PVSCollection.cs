@@ -120,8 +120,11 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// </summary>
     private HashSet<IChunkIndexLocation> _dirtyChunks = new();
 
-    public PVSCollection(IEntityManager entityManager, SharedTransformSystem transformSystem)
+    private ISawmill _sawmill;
+
+    public PVSCollection(ISawmill sawmill, IEntityManager entityManager, SharedTransformSystem transformSystem)
     {
+        _sawmill = sawmill;
         _entityManager = entityManager;
         _transformSystem = transformSystem;
     }
@@ -346,12 +349,15 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     private GameTick _largestCulled;
 
-    public List<TIndex> GetDeletedIndices(GameTick fromTick)
+    public List<TIndex>? GetDeletedIndices(GameTick fromTick)
     {
+        if (fromTick == GameTick.Zero)
+            return null;
+
         // I'm 99% sure this can never happen, but it is hard to test real laggy/lossy networks with many players.
         if (_largestCulled > fromTick)
         {
-            Logger.Error($"Culled required deletion history! culled: {_largestCulled}. requested: > {fromTick}");
+            _sawmill.Error($"Culled required deletion history! culled: {_largestCulled}. requested: > {fromTick}");
             _largestCulled = GameTick.Zero;
         }
 
@@ -362,7 +368,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 list.Add(id);
         }
 
-        return list;
+        return list.Count > 0 ? list : null;
     }
 
     #endregion

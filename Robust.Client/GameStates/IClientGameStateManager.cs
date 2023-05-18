@@ -103,15 +103,36 @@ namespace Robust.Client.GameStates
         void UpdateFullRep(GameState state, bool cloneDelta = false);
 
         /// <summary>
-        ///     This will perform some setup in order to reset the game to an earlier state by deleting entities and
-        ///     marking ensuring component states will get applied properly. <see cref="ApplyGameState(GameState,
-        ///     GameState?)"/> Still needs to be called separately after this is run.
+        /// This will perform some setup in order to reset the game to an earlier state. To fully reset the state
+        /// <see cref="ApplyGameState()"/> still needs to be called separately.
         /// </summary>
-        /// <param name="state">The state to reset to.</param>
-        /// <param name="resetAllEnts">Whether to apply component states to all entities, or only those that have been
-        /// modified some time after the state's to-sequence</param>
-        /// <param name="deleteClientSideEnts">Whether to delete all client-side entities (which are never part of the
-        /// networked game state).</param>
-        void PartialStateReset(GameState state, bool resetAllEnts, bool deleteClientSideEnts);
+        /// <remarks>
+        /// This function will delete any networked entities that are not present in the given game state. Any child
+        /// entities that are in the state will simply be sent to null-space. This will also reset
+        /// <see cref="MetaDataComponent.LastStateApplied"/> to zero, so that <see cref="ApplyGameState()"/> will
+        /// actually apply the state.
+        /// </remarks>
+        /// <param name="state">
+        /// The state to reset to.
+        /// </param>
+        /// <param name="resetAllEntities">
+        /// Whether or not to reset <see cref="MetaDataComponent.LastStateApplied"/> for all entities, or only those
+        /// that have been modified some after the states <see cref="GameState.ToSequence"/>. This effectively
+        /// determines whether we should do a full-state reset, or only reset recently modified entities.
+        /// </param>
+        /// <param name="deleteClientEntities">
+        /// Whether to delete all client-side entities (which are never part of the networked game state).
+        /// </param>
+        /// <param name="deleteClientChildren">
+        /// Whether to delete client-side entities that are parented to networked that are about to be deleted during
+        /// the partial reset. E.g., if this is true, then a client-side muzzle flash effect entity that is parented to
+        /// a networked gun entity will get deleted if that gun is about to be deleted. If false, the entity will
+        /// simply be detached to nullspace. This option has no effect if <see cref="deleteClientEntities"/> is true.
+        /// </param>
+        void PartialStateReset(
+            GameState state,
+            bool resetAllEntities,
+            bool deleteClientEntities = false,
+            bool deleteClientChildren = true);
     }
 }

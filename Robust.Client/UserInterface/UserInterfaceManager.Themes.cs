@@ -2,13 +2,11 @@
 using Robust.Client.UserInterface.Themes;
 using Robust.Shared;
 using Robust.Shared.Log;
-using System;
 
 namespace Robust.Client.UserInterface;
 
 internal partial class UserInterfaceManager
 {
-    public event Action? ThemeUpdated;
     private readonly Dictionary<string, UITheme> _themes = new();
 
     public UITheme CurrentTheme { get; private set; } = default!;
@@ -55,10 +53,11 @@ internal partial class UserInterfaceManager
 
     private void UpdateTheme(UITheme newTheme)
     {
-        if (newTheme == CurrentTheme) return; //do not update if the theme is unchanged
+        if (newTheme == CurrentTheme)
+            return;
+
         CurrentTheme = newTheme;
-        if (ThemeUpdated != null)
-            ThemeUpdated();
+        _userInterfaceManager.RootControl.ThemeUpdateRecursive(CurrentTheme);
     }
 
     //Try to set the current theme, if the theme is not found leave the previous theme

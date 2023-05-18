@@ -73,11 +73,38 @@ namespace Robust.Client.UserInterface
         //    _nameScope = nameScope;
         //}
 
-        public UITheme Theme { get; set; }
+        public UITheme Theme { get; internal set; }
 
+        private UITheme? _themeOverride;
+
+        public UITheme? ThemeOverride
+        {
+            get => _themeOverride;
+            set
+            {
+                if (_themeOverride == value)
+                    return;
+                _themeOverride = value;
+                ThemeUpdateRecursive(Parent?.Theme ?? UserInterfaceManager.CurrentTheme);
+            }
+        }
+        
         protected virtual void OnThemeUpdated()
         {
-            Theme = UserInterfaceManager.CurrentTheme;
+        }
+
+        public void ThemeUpdateRecursive(UITheme theme)
+        {
+            theme = _themeOverride ?? theme;
+            if (Theme == theme)
+                return;
+
+            Theme = theme;
+            OnThemeUpdated();
+            foreach (var child in Children)
+            {
+                child.ThemeUpdateRecursive(Theme);
+            }
         }
 
         public NameScope? FindNameScope()
@@ -498,8 +525,6 @@ namespace Robust.Client.UserInterface
             Children = new OrderedChildCollection(this);
             Theme = UserInterfaceManagerInternal.CurrentTheme;
             XamlChildren = Children;
-
-            UserInterfaceManager.ThemeUpdated += OnThemeUpdated;
         }
 
         /// <summary>
@@ -556,8 +581,6 @@ namespace Robust.Client.UserInterface
             }
 
             UserInterfaceManagerInternal.HideTooltipFor(this);
-
-            UserInterfaceManager.ThemeUpdated -= OnThemeUpdated;
 
             DisposeAllChildren();
             Parent?.RemoveChild(this);
@@ -663,6 +686,7 @@ namespace Robust.Client.UserInterface
         protected virtual void ChildAdded(Control newChild)
         {
             OnChildAdded?.Invoke(newChild);
+            newChild.ThemeUpdateRecursive(Theme);
             InvalidateMeasure();
         }
 

@@ -225,7 +225,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private PVSCollection<TIndex> RegisterPVSCollection<TIndex>() where TIndex : IComparable<TIndex>, IEquatable<TIndex>
     {
-        var collection = new PVSCollection<TIndex>(EntityManager, _transform);
+        var collection = new PVSCollection<TIndex>(_sawmill, EntityManager, _transform);
         _pvsCollections.Add(collection);
         return collection;
     }
@@ -820,7 +820,6 @@ internal sealed partial class PVSSystem : EntitySystem
                 _visSetPool.Return(oldEntry.Value.Value);
         }
 
-        if (deletions.Count == 0) deletions = default;
         if (entityStates.Count == 0) entityStates = default;
         return (entityStates, deletions, leftView, sessionData.RequestedFull ? GameTick.Zero : fromTick);
     }
@@ -1072,10 +1071,7 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         _uidSetPool.Return(toSend);
-        List<EntityUid>? deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-
-        if (deletions.Count == 0)
-            deletions = null;
+        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         if (stateEntities.Count == 0)
             stateEntities = null;

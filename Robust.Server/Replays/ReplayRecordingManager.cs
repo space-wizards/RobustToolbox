@@ -117,12 +117,12 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         }
         else
         {
-            subDir = new ResPath(path);
-            if (subDir == ResPath.Root)
+            subDir = new ResPath(path).Clean();
+            if (subDir == ResPath.Root || subDir == ResPath.Empty || subDir == ResPath.Self)
                 subDir = new ResPath(DateTime.UtcNow.ToString(DefaultReplayNameFormat));
         }
 
-        subDir = subDir.Clean().ToRootedPath();
+        subDir = subDir.ToRootedPath();
 
         // apparently OpenSubdirectory is the only way to prevent escaping a directory with ".."???
         var basePath = new ResPath(_netConf.GetCVar(CVars.ReplayDirectory)).ToRootedPath();

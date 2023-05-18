@@ -1,53 +1,29 @@
-using System;
 using Robust.Client.Graphics;
-using Robust.Client.ResourceManagement;
-using Robust.Client.Utility;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
-namespace Robust.Client.GameObjects
+namespace Robust.Client.GameObjects;
+
+/// <summary>
+/// This component can be used to give an entity a simple texture which can be used for displaying the entity in some
+/// UI elements. The texture must be specified as an RSI state, and will correspond to the first frame of the
+/// south-direction. To actually access the icon, you need to use <see cref="SpriteSystem.GetIcon"/>
+/// </summary>
+/// <remarks>
+/// This is texture is useful displaying entities that have non-trivial sprites that require some sort of set up in
+/// order to display. E.g., entities that randomize their colour by modulating a simple base sprite will look odd if
+/// shown directly, and spawning a client-side entity would lead to the colour being randomized each time the UI is
+/// updated.
+/// </remarks>
+[RegisterComponent]
+public sealed class IconComponent : Component
 {
-    [RegisterComponent]
-    public sealed class IconComponent : Component, ISerializationHooks
-    {
-        public IDirectionalTextureProvider? Icon { get; private set; }
+    [IncludeDataField]
+    public readonly SpriteSpecifier.Rsi IconSpec = default!;
 
-        [DataField("sprite")]
-        private ResPath rsi;
-        [DataField("state")]
-        private string? stateID;
-
-        void ISerializationHooks.AfterDeserialization()
-        {
-            if (rsi != null && stateID != null)
-            {
-                Icon = new SpriteSpecifier.Rsi(rsi, stateID).Frame0();
-            }
-        }
-
-        public const string LogCategory = "go.comp.icon";
-        const string SerializationCache = "icon";
-
-        [Obsolete("Use SpriteSystem instead.")]
-        private static IRsiStateLike TextureForConfig(IconComponent compData, IResourceCache resourceCache)
-        {
-            return compData.Icon?.Default ?? resourceCache.GetFallback<TextureResource>().Texture;
-        }
-
-        [Obsolete("Use SpriteSystem instead.")]
-        public static IRsiStateLike? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
-        {
-            if (!prototype.Components.TryGetValue("Icon", out var compData))
-            {
-                return null;
-            }
-
-            return TextureForConfig((IconComponent)compData.Component, resourceCache);
-        }
-    }
+    [ViewVariables]
+    [Access(typeof(SpriteSystem), Other = AccessPermissions.None)] // Use Use SpriteSystem.GetIcon();
+    internal Texture? Icon;
 }

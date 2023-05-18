@@ -11,18 +11,18 @@ public interface IServerReplayRecordingManager : IReplayRecordingManager
     /// <summary>
     ///     Starts recording a replay.
     /// </summary>
-    /// <param name="replayName">
-    /// The name of the replay. This determines the name of the <see cref="CVars.ReplayDirectory"/> subfolder where the
-    /// data will be saved. If not provided, will default to using the current time.
+    /// <param name="path">
+    /// The folder where the replay will be stored. This will be some folder within  <see cref="CVars.ReplayDirectory"/>.
+    /// If not provided, will default to using the current time.
     /// </param>
     /// <param name="overwrite">
-    /// Whether to overwrite the folder, if it already exists.
+    /// Whether to overwrite the specified path if a folder already exists.
     /// </param>
     /// <param name="duration">
     /// Optional time limit for the recording.
     /// </param>
     /// <returns>Returns true if the recording was successfully started.</returns>
-    bool TryStartRecording(string? replayName = null, bool overwrite = false, TimeSpan? duration = null);
+    bool TryStartRecording(string? path = null, bool overwrite = false, TimeSpan? duration = null);
 
     void StopRecording();
 

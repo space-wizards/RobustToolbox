@@ -47,6 +47,20 @@ internal sealed class ReplayStartCommand : LocalizedCommands
         else
             shell.WriteLine(Loc.GetString("cmd-replaystart-error"));
     }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length == 1)
+            return CompletionResult.FromHint(Loc.GetString("cmd-replaystart-hint-time"));
+
+        if (args.Length == 2)
+            return CompletionResult.FromHint(Loc.GetString("cmd-replaystart-hint-name"));
+
+        if (args.Length == 3)
+            return CompletionResult.FromHint(Loc.GetString("cmd-replaystart-hint-overwrite"));
+
+        return CompletionResult.Empty;
+    }
 }
 
 internal sealed class ReplayStopCommand : LocalizedCommands

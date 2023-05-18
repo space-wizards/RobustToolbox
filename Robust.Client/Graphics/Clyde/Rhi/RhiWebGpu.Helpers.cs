@@ -122,6 +122,14 @@ internal sealed unsafe partial class RhiWebGpu
         return compareFunction;
     }
 
+    private static PowerPreference ValidatePowerPreference(RhiPowerPreference powerPreference)
+    {
+        if (powerPreference >= RhiPowerPreference.Final)
+            throw new ArgumentException($"Invalid {nameof(RhiPowerPreference)}");
+
+        return (PowerPreference) powerPreference;
+    }
+
     private static string MarshalFromString(byte* str)
     {
         return Marshal.PtrToStringUTF8((nint)str)!;

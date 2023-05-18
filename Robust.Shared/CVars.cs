@@ -859,8 +859,17 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayThreadWindowApi =
             CVarDef.Create("display.thread_window_api", false, CVar.CLIENTONLY);
 
-        public static readonly CVarDef<string> DisplayGraphicsApi =
-            CVarDef.Create("display.graphics_api", "webGpu", CVar.CLIENTONLY);
+        public static readonly CVarDef<string> DisplayRhi =
+            CVarDef.Create("display.rhi", "webGpu", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Comma-separated list of backends to try to use, if using WebGPU RHI with wgpu.
+        /// </summary>
+        /// <remarks>
+        /// If set to "all", all backends will be tried.
+        /// </remarks>
+        public static readonly CVarDef<string> DisplayWgpuBackends =
+            CVarDef.Create("display.wgpu_backends", "all", CVar.CLIENTONLY);
 
         /// <summary>
         /// Try to use the display adapter with this name, if the current renderer supports selecting it.
@@ -874,15 +883,12 @@ namespace Robust.Shared
         /// <remarks>
         /// This setting is not always respect depending on platform and rendering API used.
         /// Values are:
-        /// 0 = unspecified (DXGI_GPU_PREFERENCE_UNSPECIFIED)
-        /// 1 = minimum power (DXGI_GPU_PREFERENCE_MINIMUM_POWER)
-        /// 2 = high performance (DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE)
+        /// 0 = unspecified
+        /// 1 = low power
+        /// 2 = high performance
         /// </remarks>
-        public static readonly CVarDef<int> DisplayGpuPreference =
+        public static readonly CVarDef<int> DisplayGpuPowerPreference =
             CVarDef.Create("display.gpu_power_preference", 2, CVar.CLIENTONLY);
-
-        public static readonly CVarDef<bool> DisplayD3D11DebugDevice =
-            CVarDef.Create("display.d3d11_debug_device", false, CVar.CLIENTONLY);
 
         /*
          * AUDIO

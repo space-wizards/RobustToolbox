@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Silk.NET.WebGPU;
 using Silk.NET.WebGPU.Extensions.WGPU;
@@ -17,6 +20,7 @@ namespace Robust.Client.Graphics.Clyde.Rhi;
 internal sealed unsafe partial class RhiWebGpu : RhiBase
 {
     private readonly Clyde _clyde;
+    private readonly IConfigurationManager _cfg;
 
     private readonly ISawmill _sawmill;
     private readonly ISawmill _apiLogSawmill;
@@ -31,6 +35,7 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
     public RhiWebGpu(Clyde clyde, IDependencyCollection dependencies)
     {
         var logMgr = dependencies.Resolve<ILogManager>();
+        _cfg = dependencies.Resolve<IConfigurationManager>();
 
         _clyde = clyde;
         _sawmill = logMgr.GetSawmill("clyde.rhi.webGpu");
@@ -64,18 +69,54 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
 
         InitLogging();
 
-        var instanceDescriptor = new InstanceDescriptor();
-        _wgpuInstance = _webGpu.CreateInstance(&instanceDescriptor);
+        Span<byte> buffer = stackalloc byte[128];
+        var pInstanceDescriptor = BumpAllocate<InstanceDescriptor>(ref buffer);
+
+        // Specify instance extras for wgpu-native.
+        var pInstanceExtras = BumpAllocate<InstanceExtras>(ref buffer);
+        pInstanceDescriptor->NextInChain = (ChainedStruct*) pInstanceExtras;
+        pInstanceExtras->Chain.SType = (SType)NativeSType.STypeInstanceExtras;
+        pInstanceExtras->Backends = (uint) GetInstanceBackendCfg();
+
+        _wgpuInstance = _webGpu.CreateInstance(pInstanceDescriptor);
 
         _sawmill.Debug("WebGPU instance created!");
     }
 
+    private InstanceBackend GetInstanceBackendCfg()
+    {
+        var configured = _cfg.GetCVar(CVars.DisplayWgpuBackends);
+        if (configured == "all")
+            return InstanceBackend.Primary | InstanceBackend.Secondary;
+
+        var backends = InstanceBackend.None;
+        foreach (var opt in configured.Split(","))
+        {
+            backends |= opt switch
+            {
+                "vulkan" => InstanceBackend.Vulkan,
+                "gl" => InstanceBackend.GL,
+                "metal" => InstanceBackend.Metal,
+                "dx12" => InstanceBackend.DX12,
+                "dx11" => InstanceBackend.DX11,
+                "browser" => InstanceBackend.BrowserWebGpu,
+                _ => throw new ArgumentException($"Unknown wgpu backend: '{opt}'")
+            };
+        }
+
+        return backends;
+    }
+
     private void InitAdapterAndDevice(Surface* forSurface)
     {
+        var powerPreference = ValidatePowerPreference(
+            (RhiPowerPreference) _cfg.GetCVar(CVars.DisplayGpuPowerPreference)
+        );
+
         var requestAdapterOptions = new RequestAdapterOptions
         {
             CompatibleSurface = forSurface,
-            PowerPreference = PowerPreference.HighPerformance
+            PowerPreference = powerPreference
         };
 
         WgpuRequestAdapterResult result;
@@ -86,7 +127,7 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
             &result);
 
         if (result.Status != RequestAdapterStatus.Success)
-            throw new Exception($"Adapter request failed: {result.Message}");
+            throw new RhiException($"Adapter request failed: {result.Message}");
 
         _sawmill.Debug("WebGPU adapter created!");
 

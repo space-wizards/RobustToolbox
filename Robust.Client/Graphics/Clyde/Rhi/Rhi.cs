@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared;
 using Robust.Shared.Maths;
 
 // ReSharper disable InconsistentNaming
@@ -53,6 +54,17 @@ public abstract partial class RhiBase
     public abstract RhiBindGroup CreateBindGroup(in RhiBindGroupDescriptor descriptor);
 
     public abstract RhiBuffer CreateBuffer(in RhiBufferDescriptor descriptor);
+}
+
+/// <summary>
+/// Values for <see cref="CVars.DisplayGpuPowerPreference"/>.
+/// </summary>
+public enum RhiPowerPreference : byte
+{
+    Undefined = 0,
+    LowPower = 1,
+    HighPerformance = 2,
+    Final
 }
 
 public record struct RhiBufferDescriptor(

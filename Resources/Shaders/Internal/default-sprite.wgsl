@@ -6,11 +6,11 @@ struct UniformConstants {
 @group(0) @binding(0) var<uniform> Constants: UniformConstants;
 
 // Group 1: parameters that change infrequently in a draw pass.
-struct UniformPass {
+struct UniformView {
     projViewMatrix: mat3x2f
 }
 
-@group(1) @binding(0) var<uniform> Pass: UniformPass;
+@group(1) @binding(0) var<uniform> View: UniformView;
 
 
 // Group 2: per-draw parameters.
@@ -37,7 +37,7 @@ fn vs_main(input: VertexInput) -> VertexOutput {
     // TODO: Pixel snapping?
 
     var out: VertexOutput;
-    out.position = vec4(Pass.projViewMatrix * vec3(input.position, 1.0), 0.0, 1.0);
+    out.position = vec4(View.projViewMatrix * vec3(input.position, 1.0), 0.0, 1.0);
     out.texCoord = input.texCoord;
     out.color    = input.color;
     return out;

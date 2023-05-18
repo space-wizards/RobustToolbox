@@ -40,8 +40,7 @@ public sealed partial class SpriteSystem
 
     public Texture GetIcon(IconComponent icon)
     {
-        icon.Icon ??= GetState(icon.IconSpec).Frame0;
-        return icon.Icon;
+        return GetState(icon.Icon).Frame0;
     }
 
     /// <summary>

@@ -347,7 +347,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates)
+        public virtual EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
             if (!coordinates.IsValid(this))
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
@@ -358,7 +358,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates)
+        public virtual EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity(entity, coordinates.MapId);

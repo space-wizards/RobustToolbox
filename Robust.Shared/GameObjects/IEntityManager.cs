@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -76,7 +77,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates);
+        EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -84,7 +85,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="protoName"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates);
+        EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
 
         /// <summary>
         /// How many entities are currently active.

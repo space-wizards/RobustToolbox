@@ -133,7 +133,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4f {
         {
             var backbuffer = Rhi.CreateTextureViewForWindow(_mainWindow!);
 
-            _spriteBatch!.Start(backbuffer);
+            _spriteBatch!.Start(_mainWindow!.FramebufferSize, backbuffer);
 
             var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
             if (string.IsNullOrEmpty(splashTex))
@@ -141,15 +141,15 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4f {
 
             var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
 
-            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero, Color.White);
+            // _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero, Color.White);
 
-            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (0.5f, 0.5f), Color.FromSrgb(Color.Pink));
+            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (200f, 200f), Color.FromSrgb(Color.Pink));
 
-            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (-0.5f, 0.5f), Color.FromSrgb(Color.LightBlue));
+            // _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (-0.5f, 0.5f), Color.FromSrgb(Color.LightBlue));
 
-            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (0.5f, -0.5f), Color.FromSrgb(Color.LightBlue));
+            // _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (0.5f, -0.5f), Color.FromSrgb(Color.LightBlue));
 
-            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (-0.5f, -0.5f), Color.FromSrgb(Color.Pink));
+            // _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (-0.5f, -0.5f), Color.FromSrgb(Color.Pink));
 
             _spriteBatch.Finish();
 

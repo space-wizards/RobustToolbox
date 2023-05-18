@@ -627,7 +627,7 @@ public enum RhiStencilOperation : byte
 public record struct RhiMultisampleState(
     uint Count = 1,
     uint Mask = 0xFFFFFFFF,
-    bool AlphaToCoverageEnabled = true
+    bool AlphaToCoverageEnabled = false
 )
 {
     public RhiMultisampleState() : this(1)

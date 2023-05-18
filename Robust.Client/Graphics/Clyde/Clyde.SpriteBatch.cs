@@ -65,7 +65,7 @@ internal partial class Clyde
             ));
 
             _uniformPassBuffer = _rhi.CreateBuffer(new RhiBufferDescriptor(
-                24, RhiBufferUsageFlags.Uniform, MappedAtCreation: true, Label: "_uniformPassBuffer"
+                24, RhiBufferUsageFlags.Uniform | RhiBufferUsageFlags.CopyDst, MappedAtCreation: true, Label: "_uniformPassBuffer"
             ));
 
             var mapped = _uniformPassBuffer.GetMappedRange(0, 24);
@@ -154,7 +154,7 @@ internal partial class Clyde
                                     RhiBlendFactor.SrcAlpha,
                                     RhiBlendFactor.OneMinusSrcAlpha
                                 ),
-                                new RhiBlendComponent()
+                                new RhiBlendComponent(RhiBlendOperation.Add, RhiBlendFactor.One, RhiBlendFactor.One)
                             )
                         )
                     }
@@ -163,11 +163,24 @@ internal partial class Clyde
             ));
         }
 
-        public void Start(RhiTextureView targetTexture)
+        public void Start(Vector2i size, RhiTextureView targetTexture)
         {
+            var projMatrix = default(Matrix3x2);
+            projMatrix.M11 = 2f / size.X;
+            projMatrix.M22 = 2f / size.Y;
+            projMatrix.M31 = -1;
+            projMatrix.M32 = -1;
+
+            var viewMatrix = Matrix3x2.Identity;
+            var projView = viewMatrix * projMatrix;
+
+            _rhi.Queue.WriteBuffer(_uniformPassBuffer, 0, new ReadOnlySpan<ShaderMat3x2F>(
+                ShaderMat3x2F.Transpose(projView)
+            ));
+
             _commandEncoder = _rhi.CreateCommandEncoder(new RhiCommandEncoderDescriptor());
             _passEncoder = _commandEncoder.BeginRenderPass(new RhiRenderPassDescriptor(
-                new[] { new RhiRenderPassColorAttachment(targetTexture, RhiLoadOp.Clear, RhiStoreOp.Store) }
+                new[] { new RhiRenderPassColorAttachment(targetTexture, RhiLoadOp.Clear, RhiStoreOp.Store, ClearValue: new RhiColor(0, 0, 0, 1)) }
             ));
 
             _passEncoder.SetPipeline(_pipeline);
@@ -230,12 +243,13 @@ internal partial class Clyde
                 _currentTexture = textureHandle;
             }
 
-            var size = 0.1f;
+            var width = texture.Width;
+            var height = texture.Height;
 
             var bl = position;
-            var br = position + (size, 0);
-            var tr = position + (size, size);
-            var tl = position + (0, size);
+            var br = position + (width, 0);
+            var tr = position + (width, height);
+            var tl = position + (0, height);
 
             var asColor = Unsafe.As<Color, Vector4>(ref color);
 

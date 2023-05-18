@@ -62,7 +62,7 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
 
         _sawmill.Debug($"wgpu-native loaded, version: {WgpuVersionToString(_wgpu.GetVersion())}");
 
-        // InitLogging();
+        InitLogging();
 
         var instanceDescriptor = new InstanceDescriptor();
         _wgpuInstance = _webGpu.CreateInstance(&instanceDescriptor);
@@ -128,7 +128,7 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         var gcHandle = GCHandle.Alloc(this);
 
         _wgpu.SetLogCallback(new PfnLogCallback(&LogCallback), (void*)GCHandle.ToIntPtr(gcHandle));
-        _wgpu.SetLogLevel(LogLevel.Trace);
+        _wgpu.SetLogLevel(LogLevel.Warn);
     }
 
     private void InitErrorCallback()

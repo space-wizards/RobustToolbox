@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects;
 ///     It does this with a "data" system. Basically, code writes data to the component, and the component will use
 ///     prototype-based configuration to change the actual visuals.
 ///     The data works using a simple key/value system. It is recommended to use enum keys to prevent errors.
-///     Visualization works client side with overrides of the <c>AppearanceVisualizer</c> class.
+///     Visualization works client side with derivatives of the <see cref="Robust.Client.GameObjects.VisualizerSystem">VisualizerSystem</see> class and corresponding components.
 /// </summary>
 [NetworkedComponent]
 public abstract class AppearanceComponent : Component

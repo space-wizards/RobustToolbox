@@ -39,6 +39,9 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     private PVSSystem _pvs = default!;
     private List<object> _queuedMessages = new();
 
+    // date format for default replay names. Like the sortable template, but without colons.
+    private const string DefaultReplayNameFormat = "yyyy-MM-dd_HH-mm-ss";
+
     private int _maxCompressedSize;
     private int _maxUncompressedSize;
     private int _tickBatchSize;
@@ -106,7 +109,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         if (!_enabled || _curStream != null)
             return false;
 
-        replayName ??= DateTime.UtcNow.ToString("s");
+        replayName ??= DateTime.UtcNow.ToString(DefaultReplayNameFormat);
 
         var dir = _netConf.GetCVar(CVars.ReplayDirectory);
         _path = new ResPath($"{dir}/{replayName}").ToRootedPath();

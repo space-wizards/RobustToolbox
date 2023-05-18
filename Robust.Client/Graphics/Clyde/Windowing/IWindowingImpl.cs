@@ -43,6 +43,7 @@ namespace Robust.Client.Graphics.Clyde
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
             nint? WindowGetX11Display(WindowReg window);
+            nint? WindowGetMetalLayer(WindowReg window);
             HWND WindowGetWin32Window(WindowReg window);
             HINSTANCE WindowGetWin32Instance(WindowReg window);
 

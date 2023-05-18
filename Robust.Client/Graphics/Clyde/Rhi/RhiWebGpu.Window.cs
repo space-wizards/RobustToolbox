@@ -18,6 +18,8 @@ internal sealed unsafe partial class RhiWebGpu
 
         SurfaceDescriptor surfaceDesc = default;
         SurfaceDescriptorFromWindowsHWND surfaceDescHwnd;
+        SurfaceDescriptorFromXlibWindow surfaceDescX11;
+        SurfaceDescriptorFromMetalLayer surfaceDescMetal;
 
         if (OperatingSystem.IsWindows())
         {
@@ -38,7 +40,45 @@ internal sealed unsafe partial class RhiWebGpu
         }
         else
         {
-            throw new NotImplementedException();
+            var xDisplay = _clyde._windowing.WindowGetX11Display(window);
+            var xWindow = _clyde._windowing.WindowGetX11Id(window);
+
+            if (xDisplay != null && xWindow != null)
+            {
+                surfaceDescX11 = new SurfaceDescriptorFromXlibWindow
+                {
+                    Chain =
+                    {
+                        SType = SType.SurfaceDescriptorFromXlibWindow
+                    },
+                    Display = ((IntPtr) xDisplay.Value).ToPointer(),
+                    Window = xWindow.Value
+                };
+
+                surfaceDesc.NextInChain = (ChainedStruct*) (&surfaceDescX11);
+            }
+            else
+            {
+                var metalLayer = _clyde._windowing.WindowGetMetalLayer(window);
+
+                if (metalLayer != null)
+                {
+                    surfaceDescMetal = new SurfaceDescriptorFromMetalLayer
+                    {
+                        Chain =
+                        {
+                            SType = SType.SurfaceDescriptorFromMetalLayer
+                        },
+                        Layer = ((IntPtr) metalLayer.Value).ToPointer()
+                    };
+
+                    surfaceDesc.NextInChain = (ChainedStruct*) (&surfaceDescMetal);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
         }
 
         var surface = _webGpu.InstanceCreateSurface(_wgpuInstance, &surfaceDesc);

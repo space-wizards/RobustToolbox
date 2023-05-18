@@ -219,6 +219,7 @@ internal partial class Clyde
 
         private sealed record CmdWinDestroy(
             nint Window,
+            nint MetalView,
             bool HadOwner
         ) : CmdBase;
 

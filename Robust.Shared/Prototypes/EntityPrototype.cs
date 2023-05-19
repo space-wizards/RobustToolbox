@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -227,7 +228,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(EntityUid entity,
+        public static void EnsureCompExistsAndDeserialize(EntityUid entity,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
@@ -259,17 +260,6 @@ namespace Robust.Shared.Prototypes
         public override string ToString()
         {
             return $"EntityPrototype({ID})";
-        }
-
-        public sealed class ComponentRegistry : Dictionary<string, ComponentRegistryEntry>
-        {
-            public ComponentRegistry()
-            {
-            }
-
-            public ComponentRegistry(Dictionary<string, ComponentRegistryEntry> components) : base(components)
-            {
-            }
         }
 
         [DataRecord]
@@ -388,5 +378,37 @@ namespace Robust.Shared.Prototypes
                 return prototype.DataCache.TryGetValue(field, out value);
             }
         }*/
+    }
+
+    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext, ISerializationContext
+    {
+        public ComponentRegistry()
+        {
+        }
+
+        public ComponentRegistry(Dictionary<string, EntityPrototype.ComponentRegistryEntry> components) : base(components)
+        {
+        }
+
+        public bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
+        {
+            var success = TryGetValue(componentName, out var comp);
+            component = comp?.Component;
+
+            return success;
+        }
+
+        public IEnumerable<string> GetExtraComponentTypes()
+        {
+            return Keys;
+        }
+
+        public bool ShouldSkipComponent(string compName)
+        {
+            return false; //Registries cannot represent the "remove this component" state.
+        }
+
+        public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
+        public bool WritingReadingPrototypes { get; } = true;
     }
 }

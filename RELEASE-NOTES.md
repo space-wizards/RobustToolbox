@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.116.0.0
+
+### Breaking changes
+
+* Removed AppearanceVisualizers.
+* Modify replay record directory selection.
+
+
 ## 0.115.0.0
 
 ### Breaking changes

@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.117.0.0
+
+### Breaking changes
+
+* Deprecate some sprite methods and cleanup IconComponent.
+* YAML Linter supports inheritance.
+
+
 ## 0.116.0.0
 
 ### Breaking changes

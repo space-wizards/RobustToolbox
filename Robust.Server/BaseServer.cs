@@ -15,6 +15,7 @@ using Robust.Server.Replays;
 using Robust.Server.Scripting;
 using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
+using Robust.Server.Upload;
 using Robust.Server.Utility;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
@@ -35,6 +36,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
@@ -98,6 +100,8 @@ namespace Robust.Server
         [Dependency] private readonly IStatusHost _statusHost = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
         [Dependency] private readonly IInternalReplayRecordingManager _replay = default!;
+        [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
+        [Dependency] private readonly NetworkResourceManager _netResMan = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -377,6 +381,8 @@ namespace Robust.Server
             _stateManager.TransformNetId = reg.NetID.Value;
 
             _scriptHost.Initialize();
+            _protoLoadMan.Initialize();
+            _netResMan.Initialize();
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 

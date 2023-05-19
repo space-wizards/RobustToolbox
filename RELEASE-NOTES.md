@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.118.0.0
+
+### Breaking changes
+
+ComponentRegistry has been re-namespaced.
+
+### New features
+
+You can now provide a ComponentRegistry to SpawnEntity to override some components from the prototype.
+
+
 ## 0.117.0.0
 
 ### Breaking changes

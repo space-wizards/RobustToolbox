@@ -58,6 +58,12 @@ namespace Robust.Shared.ContentPack
                 return true;
             }
 
+            public bool FileExists(ResPath relPath)
+            {
+                var path = GetPath(relPath);
+                return File.Exists(path);
+            }
+
             internal string GetPath(ResPath relPath)
             {
                 return Path.GetFullPath(Path.Combine(_directory.FullName, relPath.ToRelativeSystemPath()));

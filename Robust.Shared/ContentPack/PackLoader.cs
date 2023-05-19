@@ -75,6 +75,11 @@ namespace Robust.Shared.ContentPack
                 return true;
             }
 
+            public bool FileExists(ResPath relPath)
+            {
+                return _zip.GetEntry(relPath.ToString()) != null;
+            }
+
             /// <inheritdoc />
             public IEnumerable<ResPath> FindFiles(ResPath path)
             {

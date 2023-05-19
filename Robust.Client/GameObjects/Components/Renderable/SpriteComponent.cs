@@ -38,6 +38,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEntityManager entities = default!;
         [Dependency] private readonly IReflectionManager reflection = default!;
         [Dependency] private readonly IEyeManager eyeManager = default!;
+        [Dependency] private readonly IComponentFactory factory = default!;
 
         /// <summary>
         ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
@@ -2155,10 +2156,12 @@ namespace Robust.Client.GameObjects
         {
             var results = new List<IDirectionalTextureProvider>();
             noRot = false;
-            var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
-            if (icon != null)
+
+            // TODO when moving to a non-static method in a system, pass in IComponentFactory
+            if (prototype.TryGetComponent(out IconComponent? icon))
             {
-                results.Add(icon);
+                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
+                results.Add(sys.GetIcon(icon));
                 return results;
             }
 
@@ -2206,8 +2209,12 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use SpriteSystem")]
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
-            var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
-            if (icon != null) return icon;
+            // TODO when moving to a non-static method in a system, pass in IComponentFactory
+            if (prototype.TryGetComponent(out IconComponent? icon))
+            {
+                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
+                return sys.GetIcon(icon);
+            }
 
             if (!prototype.Components.ContainsKey("Sprite"))
             {

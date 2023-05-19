@@ -40,6 +40,6 @@ public sealed class ClientSpriteSpecifierSerializer : SpriteSpecifierSerializer
             return new ErrorNode(node, "Invalid RSI state");
         }
 
-        return new ValidatedValueNode(node);
+        return new ValidatedMappingNode(new());
     }
 }

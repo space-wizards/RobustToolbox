@@ -31,7 +31,7 @@ public sealed class SoundPathSpecifier : SoundSpecifier
     public ResPath Path { get; }
 
     [UsedImplicitly]
-    public SoundPathSpecifier()
+    private SoundPathSpecifier()
     {
     }
 
@@ -49,7 +49,7 @@ public sealed class SoundPathSpecifier : SoundSpecifier
     [Obsolete("Use SharedAudioSystem.GetSound(), or just pass sound specifier directly into SharedAudioSystem.")]
     public override string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null)
     {
-        return Path == null ? string.Empty : Path.ToString();
+        return Path.ToString();
     }
 }
 

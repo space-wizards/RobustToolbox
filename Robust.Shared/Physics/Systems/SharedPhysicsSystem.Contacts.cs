@@ -612,8 +612,8 @@ public abstract partial class SharedPhysicsSystem
         if (((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
             (other.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||
             // Kinematic controllers can't collide.
-            (body.BodyType == BodyType.KinematicController &&
-             other.BodyType == BodyType.KinematicController))
+            (fixture.Hard && body.BodyType == BodyType.KinematicController &&
+             otherFixture.Hard && other.BodyType == BodyType.KinematicController))
         {
             return false;
         }

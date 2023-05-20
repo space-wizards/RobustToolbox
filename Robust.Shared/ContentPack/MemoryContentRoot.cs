@@ -55,6 +55,19 @@ public sealed class MemoryContentRoot : IContentRoot, IDisposable
         }
     }
 
+    public bool FileExists(ResPath relPath)
+    {
+        _lock.EnterReadLock();
+        try
+        {
+            return _files.ContainsKey(relPath);
+        }
+        finally
+        {
+            _lock.ExitReadLock();
+        }
+    }
+
     /// <inheritdoc />
     public bool TryGetFile(ResPath relPath, [NotNullWhen(true)] out Stream? stream)
     {

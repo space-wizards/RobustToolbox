@@ -35,6 +35,11 @@ namespace Robust.Client.ResourceManagement
                 return false;
             }
 
+            public bool FileExists(ResPath relPath)
+            {
+                return _api.TryOpen($"{_prefix}{relPath}", out _);
+            }
+
             public IEnumerable<ResPath> FindFiles(ResPath path)
             {
                 foreach (var relPath in _api.AllFiles)

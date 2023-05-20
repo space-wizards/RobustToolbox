@@ -39,19 +39,22 @@ public sealed class UploadFolderCommand : IConsoleCommand
             shell.WriteLine( Loc.GetString("uploadfolder-command-help"));
             return;
         }
-        var folderPath = new ResPath(BaseUploadFolderPath + $"/{args[0]}");
 
-        if (!_resourceManager.UserData.Exists(folderPath.ToRootedPath()))
+        var folder = new ResPath(args[0]).ToRelativePath();
+        var folderPath = BaseUploadFolderPath / folder;
+
+        if (!_resourceManager.UserData.Exists(folderPath))
         {
             shell.WriteError( Loc.GetString("uploadfolder-command-folder-not-found",("folder", folderPath)));
             return; // bomb out if the folder doesnt exist in /UploadFolder
         }
 
-        //Grab all files in specified folder and upload them
-        foreach (var filepath in _resourceManager.UserData.Find($"{folderPath.ToRelativePath()}/").files )
-        {
+        var dir = _resourceManager.UserData.OpenSubdirectory(folderPath);
 
-            await using var filestream = _resourceManager.UserData.Open(filepath,FileMode.Open);
+        //Grab all files in specified folder and upload them
+        foreach (var filepath in dir.Find("*").files)
+        {
+            await using var filestream = dir.Open(filepath,FileMode.Open);
             {
                 var sizeLimit = _configManager.GetCVar(CVars.ResourceUploadingLimitMb);
                 if (sizeLimit > 0f && filestream.Length * SharedNetworkResourceManager.BytesToMegabytes > sizeLimit)
@@ -64,8 +67,7 @@ public sealed class UploadFolderCommand : IConsoleCommand
 
                 var netManager = IoCManager.Resolve<INetManager>();
                 var msg = netManager.CreateNetMessage<NetworkResourceUploadMessage>();
-
-                msg.RelativePath = new ResPath($"{filepath.ToString().Remove(0,14)}"); //removes /UploadFolder/ from path
+                msg.RelativePath = folder / filepath.ToRelativePath();
                 msg.Data = data;
 
                 netManager.ClientSendMessage(msg);

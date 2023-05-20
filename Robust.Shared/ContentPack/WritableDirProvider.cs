@@ -67,12 +67,12 @@ namespace Robust.Shared.ContentPack
 
             foreach (var file in files)
             {
-                resFiles.Add(new ResPath(file.Substring(rootLen)));
+                resFiles.Add(ResPath.FromRelativeSystemPath(file.Substring(rootLen)));
             }
 
             foreach (var dir in dirs)
             {
-                resDirs.Add(new ResPath(dir.Substring(rootLen)));
+                resDirs.Add(ResPath.FromRelativeSystemPath(dir.Substring(rootLen)));
             }
 
             return (resFiles, resDirs);
@@ -127,7 +127,7 @@ namespace Robust.Shared.ContentPack
         {
             if (!path.IsRooted)
             {
-                throw new ArgumentException("Path must be rooted.");
+                throw new ArgumentException($"Path must be rooted. Path: {path}");
             }
 
             path = path.Clean();
@@ -142,7 +142,7 @@ namespace Robust.Shared.ContentPack
             {
                 // Hard cap on any exploit smuggling a .. in there.
                 // Since that could allow leaving sandbox.
-                throw new InvalidOperationException("This branch should never be reached.");
+                throw new InvalidOperationException($"This branch should never be reached. Path: {path}");
             }
 
             return Path.GetFullPath(Path.Combine(root, relPath));

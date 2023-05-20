@@ -20,6 +20,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.Serialization;
 using Robust.Client.State;
 using Robust.Client.Timing;
+using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
 using Robust.Client.UserInterface.Themes;
@@ -40,6 +41,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.Shared.Upload;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client
@@ -90,6 +92,8 @@ namespace Robust.Client
             deps.Register<IMidiManager, MidiManager>();
             deps.Register<IAuthManager, AuthManager>();
             deps.Register<ProfViewManager>();
+            deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
+            deps.Register<NetworkResourceManager>();
 
             switch (mode)
             {

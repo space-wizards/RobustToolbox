@@ -12,6 +12,7 @@ using Robust.Client.Input;
 using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
+using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
 using Robust.Client.UserInterface.Themes;
@@ -34,6 +35,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -75,6 +77,9 @@ namespace Robust.Client
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
+        [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
+        [Dependency] private readonly NetworkResourceManager _netResMan = default!;
+
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -171,6 +176,8 @@ namespace Robust.Client
             _client.Initialize();
             _discord.Initialize();
             _tagManager.Initialize();
+            _protoLoadMan.Initialize();
+            _netResMan.Initialize();
             _userInterfaceManager.PostInitialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 

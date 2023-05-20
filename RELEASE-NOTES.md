@@ -54,15 +54,26 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.119.0.0
+
+### Breaking changes
+
+* Move prototype upload commands to the engine.
+
+### New features
+
+* Add IContentRoot.FileExists(ResPath).
+
+
 ## 0.118.0.0
 
 ### Breaking changes
 
-ComponentRegistry has been re-namespaced.
+* ComponentRegistry has been re-namespaced.
 
 ### New features
 
-You can now provide a ComponentRegistry to SpawnEntity to override some components from the prototype.
+* You can now provide a ComponentRegistry to SpawnEntity to override some components from the prototype.
 
 
 ## 0.117.0.0

@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.119.0.1
+
+### Bugfixes
+
+* Fix non-hard kinematiccontroller fixtures not colliding.
+
+
 ## 0.119.0.0
 
 ### Breaking changes

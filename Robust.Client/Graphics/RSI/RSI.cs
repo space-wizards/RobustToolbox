@@ -24,7 +24,7 @@ namespace Robust.Client.Graphics
         private Dictionary<StateId, State> States;
 
         /// <summary>
-        ///     The original path of this RSI or null.
+        ///     The original path of this RSI.
         /// </summary>
         [ViewVariables]
         public ResPath Path { get; }
@@ -46,7 +46,7 @@ namespace Robust.Client.Graphics
             return States.TryGetValue(stateId, out state);
         }
 
-        public RSI(Vector2i size, ResPath path = default, int capacity = 0)
+        public RSI(Vector2i size, ResPath path, int capacity = 0)
         {
             Size = size;
             Path = path;

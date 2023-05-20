@@ -4,9 +4,6 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
@@ -41,6 +38,11 @@ public sealed partial class SpriteSystem
         }
     }
 
+    public Texture GetIcon(IconComponent icon)
+    {
+        return GetState(icon.Icon).Frame0;
+    }
+
     /// <summary>
     ///     Returns an icon for a given <see cref="EntityPrototype"/> ID, or a fallback in case of an error.
     ///     This method caches the result based on the prototype identifier.
@@ -54,7 +56,7 @@ public sealed partial class SpriteSystem
         if (!_proto.TryIndex<EntityPrototype>(prototype, out var entityPrototype))
         {
             // The specified prototype doesn't exist, return the fallback "error" sprite.
-            Logger.Error("Failed to load PrototypeIcon {0}", prototype);
+            _sawmill.Error("Failed to load PrototypeIcon {0}", prototype);
             return GetFallbackState();
         }
 
@@ -73,9 +75,9 @@ public sealed partial class SpriteSystem
     {
         // IconComponent takes precedence. If it has a valid icon, return that. Otherwise, continue as normal.
         if (prototype.Components.TryGetValue("Icon", out var compData)
-            && compData.Component is IconComponent {Icon: {} icon})
+            && compData.Component is IconComponent icon)
         {
-            return icon.Default;
+            return GetIcon(icon);
         }
 
         // If the prototype doesn't have a SpriteComponent, then there's nothing we can do but return the fallback.
@@ -110,7 +112,7 @@ public sealed partial class SpriteSystem
             return state;
         }
 
-        Logger.Error("Failed to load RSI {0}", rsiSpecifier.RsiPath);
+        _sawmill.Error("Failed to load RSI {0}", rsiSpecifier.RsiPath);
         return GetFallbackState();
     }
 

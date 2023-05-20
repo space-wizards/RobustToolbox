@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Utility
@@ -31,9 +32,13 @@ namespace Robust.Shared.Utility
         }
 
         [Serializable, NetSerializable]
+        [DataDefinition] // uses custom serializer, but required for [IncludeDataField]
         public sealed class Rsi : SpriteSpecifier
         {
+            [DataField("sprite")]
             public ResPath RsiPath { get; internal set; }
+
+            [DataField("state")]
             public string RsiState { get; internal set; }
 
             // For serialization

@@ -75,9 +75,9 @@ namespace Robust.Server.GameObjects
             StartEntity(entity);
         }
 
-        private protected override EntityUid CreateEntity(string? prototypeName, EntityUid uid = default)
+        private protected override EntityUid CreateEntity(string? prototypeName, EntityUid uid = default, IEntityLoadContext? context = null)
         {
-            var entity = base.CreateEntity(prototypeName, uid);
+            var entity = base.CreateEntity(prototypeName, uid, context);
 
             if (!string.IsNullOrWhiteSpace(prototypeName))
             {

@@ -23,11 +23,15 @@ using System.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 using static Robust.Server.GameStates.ServerGameStateManager;
+using static Robust.Shared.Replays.IReplayRecordingManager;
 
 namespace Robust.Server.Replays;
 
 internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
 {
+    // date format for default replay names. Like the sortable template, but without colons.
+    public const string DefaultReplayNameFormat = "yyyy-MM-dd_HH-mm-ss";
+
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IRobustSerializer _seri = default!;
     [Dependency] private readonly IPlayerManager _playerMan = default!;
@@ -38,9 +42,6 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     private ISawmill _sawmill = default!;
     private PVSSystem _pvs = default!;
     private List<object> _queuedMessages = new();
-
-    // date format for default replay names. Like the sortable template, but without colons.
-    private const string DefaultReplayNameFormat = "yyyy-MM-dd_HH-mm-ss";
 
     private int _maxCompressedSize;
     private int _maxUncompressedSize;
@@ -229,7 +230,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             return;
 
         _curStream.Position = 0;
-        var filePath = new ResPath($"/{_index++}.dat");
+        var filePath = new ResPath($"/{_index++}.{Ext}");
         using var file = _directory.OpenWrite(filePath);
 
         var buf = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int)_curStream.Length));
@@ -276,45 +277,46 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         // Saving YAML data. This gets overwritten later anyways, this is mostly in case something goes wrong.
         {
             _yamlMetadata = new MappingDataNode();
-            _yamlMetadata["time"] = new ValueDataNode(DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
+            _yamlMetadata[Time] = new ValueDataNode(DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
 
             // version info
-            _yamlMetadata["engineVersion"] = new ValueDataNode(_netConf.GetCVar(CVars.BuildEngineVersion));
-            _yamlMetadata["buildForkId"] = new ValueDataNode(_netConf.GetCVar(CVars.BuildForkId));
-            _yamlMetadata["buildVersion"] = new ValueDataNode(_netConf.GetCVar(CVars.BuildVersion));
+            _yamlMetadata[Engine] = new ValueDataNode(_netConf.GetCVar(CVars.BuildEngineVersion));
+            _yamlMetadata[Fork] = new ValueDataNode(_netConf.GetCVar(CVars.BuildForkId));
+            _yamlMetadata[IReplayRecordingManager.Version] = new ValueDataNode(_netConf.GetCVar(CVars.BuildVersion));
 
             // Hash data
-            _yamlMetadata["typeHash"] = new ValueDataNode(Convert.ToHexString(_seri.GetSerializableTypesHash()));
-            _yamlMetadata["stringHash"] = new ValueDataNode(Convert.ToHexString(stringHash));
+            _yamlMetadata[Hash] = new ValueDataNode(Convert.ToHexString(_seri.GetSerializableTypesHash()));
+            _yamlMetadata[Strings] = new ValueDataNode(Convert.ToHexString(stringHash));
 
             // Time data
             var timeBase = _timing.TimeBase;
-            _yamlMetadata["startTick"] = new ValueDataNode(_recordingStart.Tick.Value.ToString());
-            _yamlMetadata["timeBaseTick"] = new ValueDataNode(timeBase.Item2.Value.ToString());
-            _yamlMetadata["timeBaseTimespan"] = new ValueDataNode(timeBase.Item1.Ticks.ToString());
-            _yamlMetadata["serverStartTime"] = new ValueDataNode(_recordingStart.Time.ToString());
+            _yamlMetadata[Tick] = new ValueDataNode(_recordingStart.Tick.Value.ToString());
+            _yamlMetadata[BaseTick] = new ValueDataNode(timeBase.Item2.Value.ToString());
+            _yamlMetadata[BaseTime] = new ValueDataNode(timeBase.Item1.Ticks.ToString());
+            _yamlMetadata[ServerTime] = new ValueDataNode(_recordingStart.Time.ToString());
 
             OnRecordingStarted?.Invoke((_yamlMetadata, extraData));
 
             var document = new YamlDocument(_yamlMetadata.ToYaml());
-            using var ymlFile = _directory.OpenWriteText(new ResPath("/replay.yml"));
+            using var ymlFile = _directory.OpenWriteText(MetaFile);
             var stream = new YamlStream { document };
             stream.Save(new YamlMappingFix(new Emitter(ymlFile)), false);
         }
 
         // Saving misc extra data like networked messages that typically get sent to newly connecting clients.
+        // TODO compression
         if (extraData.Count > 0)
         {
-            using var initDataFile = _directory.OpenWrite(new ResPath("/init.dat"));
+            using var initDataFile = _directory.OpenWrite(InitFile);
             _seri.SerializeDirect(initDataFile, new ReplayMessage() { Messages = extraData });
         }
 
         // save data required for IRobustMappedStringSerializer
-        using var stringFile = _directory.OpenWrite(new ResPath("/strings.dat"));
+        using var stringFile = _directory.OpenWrite(StringsFile);
         stringFile.Write(stringData);
 
         // Save replicated cvars.
-        using var cvarsFile = _directory.OpenWrite(new ResPath("/cvars.toml"));
+        using var cvarsFile = _directory.OpenWrite(CvarFile);
         _netConf.SaveToTomlStream(cvarsFile, _netConf.GetReplicatedVars().Select(x => x.name));
     }
 
@@ -325,16 +327,16 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
 
         OnRecordingStopped?.Invoke(_yamlMetadata);
         var time = _timing.CurTime - _recordingStart.Time;
-        _yamlMetadata["endTick"] = new ValueDataNode(_timing.CurTick.Value.ToString());
-        _yamlMetadata["duration"] = new ValueDataNode(time.ToString());
-        _yamlMetadata["fileCount"] = new ValueDataNode(_index.ToString());
-        _yamlMetadata["size"] = new ValueDataNode(_currentCompressedSize.ToString());
-        _yamlMetadata["uncompressedSize"] = new ValueDataNode(_currentUncompressedSize.ToString());
-        _yamlMetadata["serverEndTime"] = new ValueDataNode(_timing.CurTime.ToString());
+        _yamlMetadata[EndTick] = new ValueDataNode(_timing.CurTick.Value.ToString());
+        _yamlMetadata[Duration] = new ValueDataNode(time.ToString());
+        _yamlMetadata[FileCount] = new ValueDataNode(_index.ToString());
+        _yamlMetadata[Compressed] = new ValueDataNode(_currentCompressedSize.ToString());
+        _yamlMetadata[Uncompressed] = new ValueDataNode(_currentUncompressedSize.ToString());
+        _yamlMetadata[EndTime] = new ValueDataNode(_timing.CurTime.ToString());
 
         // this just overwrites the previous yml with additional data.
         var document = new YamlDocument(_yamlMetadata.ToYaml());
-        using var ymlFile = _directory.OpenWriteText( new ResPath("/replay.yml"));
+        using var ymlFile = _directory.OpenWriteText(MetaFile);
         var stream = new YamlStream { document };
         stream.Save(new YamlMappingFix(new Emitter(ymlFile)), false);
     }

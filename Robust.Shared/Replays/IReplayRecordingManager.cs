@@ -2,6 +2,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Replays;
 
@@ -35,4 +36,39 @@ public interface IReplayRecordingManager
     ///     This gets invoked whenever a replay recording ends. Subscribers can use this to add extra yaml metadata data to the recording.
     /// </summary>
     event Action<MappingDataNode>? OnRecordingStopped;
+
+
+    // Define misc constants both for writing and reading replays.
+    # region Constants
+
+    /// <summary>
+    ///     File extension for data files that have to be deserialized and decompressed.
+    /// </summary>
+    public const string Ext = "dat";
+
+    // filenames
+    public static readonly ResPath MetaFile = new($"/replay.yml");
+    public static readonly ResPath CvarFile = new($"/cvars.toml");
+    public static readonly ResPath StringsFile = new($"/strings.{Ext}");
+    public static readonly ResPath InitFile = new($"/init.{Ext}");
+
+    // Yaml keys
+    public const string Hash = "typeHash";
+    public const string Strings = "stringHash";
+    public const string Time = "time";
+    public const string Tick = "serverStartTime";
+    public const string ServerTime = "startTick";
+    public const string BaseTick = "timeBaseTick";
+    public const string BaseTime = "timeBaseTimespan";
+    public const string Duration = "duration";
+    public const string Engine = "engineVersion";
+    public const string Fork = "buildForkId";
+    public const string Version = "buildVersion";
+    public const string FileCount = "fileCount";
+    public const string Compressed = "size";
+    public const string Uncompressed = "uncompressedSize";
+    public const string EndTick = "endTick";
+    public const string EndTime = "serverEndTime";
+
+    #endregion
 }

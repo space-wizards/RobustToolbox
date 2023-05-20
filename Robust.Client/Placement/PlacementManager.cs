@@ -499,9 +499,9 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            if (PlayerManager.LocalPlayer?.ControlledEntity is {Valid: true} ent)
+            if (EntityManager.TryGetComponent(PlayerManager.LocalPlayer?.ControlledEntity, out TransformComponent? xform))
             {
-                map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
+                map = xform.MapID;
             }
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)

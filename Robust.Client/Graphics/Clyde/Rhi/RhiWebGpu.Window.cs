@@ -103,7 +103,6 @@ internal sealed unsafe partial class RhiWebGpu
             Width = (uint)window.FramebufferSize.X,
             Usage = TextureUsage.RenderAttachment,
             PresentMode = PresentMode.Fifo
-
         };
 
         var swapChain = _webGpu.DeviceCreateSwapChain(_wgpuDevice, rhiData.Surface, &swapChainDesc);
@@ -126,6 +125,15 @@ internal sealed unsafe partial class RhiWebGpu
         _wgpu.SurfaceDrop(rhiData.Surface);
 
         reg.RhiWebGpuData = null;
+    }
+
+    internal override void WindowRecreateSwapchain(Clyde.WindowReg reg)
+    {
+        var rhiData = reg.RhiWebGpuData!;
+
+        _wgpu.SwapChainDrop(rhiData.SwapChain);
+
+        CreateSwapChainForWindow(reg);
     }
 
     internal override void WindowPresent(Clyde.WindowReg reg)

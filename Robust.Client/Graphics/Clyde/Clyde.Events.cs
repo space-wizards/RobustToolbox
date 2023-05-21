@@ -111,7 +111,7 @@ namespace Robust.Client.Graphics.Clyde
             // var loaded = RtToLoaded(reg.RenderTarget);
             // loaded.Size = reg.FramebufferSize;
 
-            // _glContext!.WindowResized(reg, oldSize);
+            Rhi.WindowRecreateSwapchain(reg);
 
             var eventArgs = new WindowResizedEventArgs(
                 oldSize,

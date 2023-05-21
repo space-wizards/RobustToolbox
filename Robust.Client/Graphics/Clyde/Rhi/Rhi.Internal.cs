@@ -25,6 +25,11 @@ public abstract partial class RhiBase
     /// </summary>
     internal abstract void WindowDestroy(Clyde.WindowReg reg);
 
+    /// <summary>
+    /// Recreate the native swap chain, in case it has become suboptimal (e.g. due to window resizing).
+    /// </summary>
+    internal abstract void WindowRecreateSwapchain(Clyde.WindowReg reg);
+
     internal abstract RhiTextureView CreateTextureViewForWindow(Clyde.WindowReg reg);
     internal abstract void WindowPresent(Clyde.WindowReg reg);
 

@@ -21,6 +21,7 @@ public sealed class UploadFolderCommand : IConsoleCommand
 
     [Dependency] private IResourceManager _resourceManager = default!;
     [Dependency] private IConfigurationManager _configManager = default!;
+    [Dependency] private INetManager _netMan = default!;
 
     public async void Execute(IConsoleShell shell, string argStr, string[] args)
     {
@@ -40,8 +41,7 @@ public sealed class UploadFolderCommand : IConsoleCommand
             return;
         }
 
-        var folder = new ResPath(args[0]).ToRelativePath();
-        var folderPath = BaseUploadFolderPath / folder;
+        var folderPath = BaseUploadFolderPath / args[0];
 
         if (!_resourceManager.UserData.Exists(folderPath))
         {
@@ -49,12 +49,10 @@ public sealed class UploadFolderCommand : IConsoleCommand
             return; // bomb out if the folder doesnt exist in /UploadFolder
         }
 
-        var dir = _resourceManager.UserData.OpenSubdirectory(folderPath);
-
         //Grab all files in specified folder and upload them
-        foreach (var filepath in dir.Find("*").files)
+        foreach (var filepath in _resourceManager.UserData.Find($"{folderPath.ToRelativePath()}/").files)
         {
-            await using var filestream = dir.Open(filepath,FileMode.Open);
+            await using var filestream = _resourceManager.UserData.Open(filepath,FileMode.Open);
             {
                 var sizeLimit = _configManager.GetCVar(CVars.ResourceUploadingLimitMb);
                 if (sizeLimit > 0f && filestream.Length * SharedNetworkResourceManager.BytesToMegabytes > sizeLimit)
@@ -65,12 +63,11 @@ public sealed class UploadFolderCommand : IConsoleCommand
 
                 var data = filestream.CopyToArray();
 
-                var netManager = IoCManager.Resolve<INetManager>();
-                var msg = netManager.CreateNetMessage<NetworkResourceUploadMessage>();
-                msg.RelativePath = folder / filepath.ToRelativePath();
+                var msg = _netMan.CreateNetMessage<NetworkResourceUploadMessage>();
+                msg.RelativePath = filepath.RelativeTo(BaseUploadFolderPath);
                 msg.Data = data;
 
-                netManager.ClientSendMessage(msg);
+                _netMan.ClientSendMessage(msg);
                 fileCount++;
             }
         }

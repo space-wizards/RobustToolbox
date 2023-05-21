@@ -67,12 +67,18 @@ namespace Robust.Shared.ContentPack
 
             foreach (var file in files)
             {
-                resFiles.Add(ResPath.FromRelativeSystemPath(file.Substring(rootLen)));
+                if (file.Contains("\\..") || file.Contains("/.."))
+                    continue;
+
+                resFiles.Add(ResPath.FromRelativeSystemPath(file.Substring(rootLen)).ToRootedPath());
             }
 
             foreach (var dir in dirs)
             {
-                resDirs.Add(ResPath.FromRelativeSystemPath(dir.Substring(rootLen)));
+                if (dir.Contains("\\..") || dir.Contains("/.."))
+                    continue;
+
+                resDirs.Add(ResPath.FromRelativeSystemPath(dir.Substring(rootLen)).ToRootedPath());
             }
 
             return (resFiles, resDirs);

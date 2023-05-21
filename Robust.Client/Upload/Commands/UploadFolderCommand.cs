@@ -52,7 +52,7 @@ public sealed class UploadFolderCommand : IConsoleCommand
         //Grab all files in specified folder and upload them
         foreach (var filepath in _resourceManager.UserData.Find($"{folderPath.ToRelativePath()}/").files )
         {
-            
+
             await using var filestream = _resourceManager.UserData.Open(filepath,FileMode.Open);
             {
                 var sizeLimit = _configManager.GetCVar(CVars.ResourceUploadingLimitMb);

@@ -56,6 +56,9 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public (IEnumerable<ResPath> files, IEnumerable<ResPath> directories) Find(string pattern, bool recursive = true)
         {
+            if (pattern.Contains(".."))
+                throw new InvalidOperationException($"Pattern may not contain '..'. Pattern: {pattern}.");
+            
             var rootLen = RootDir.Length - 1;
             var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 

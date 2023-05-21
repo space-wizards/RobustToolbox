@@ -47,10 +47,10 @@ public interface IReplayRecordingManager
     public const string Ext = "dat";
 
     // filenames
-    public static readonly ResPath MetaFile = new($"/replay.yml");
-    public static readonly ResPath CvarFile = new($"/cvars.toml");
-    public static readonly ResPath StringsFile = new($"/strings.{Ext}");
-    public static readonly ResPath InitFile = new($"/init.{Ext}");
+    public static readonly ResPath MetaFile = new($"replay.yml");
+    public static readonly ResPath CvarFile = new($"cvars.toml");
+    public static readonly ResPath StringsFile = new($"strings.{Ext}");
+    public static readonly ResPath InitFile = new($"init.{Ext}");
 
     // Yaml keys
     public const string Hash = "typeHash";
@@ -63,7 +63,7 @@ public interface IReplayRecordingManager
     public const string Duration = "duration";
     public const string Engine = "engineVersion";
     public const string Fork = "buildForkId";
-    public const string Version = "buildVersion";
+    public const string ForkVersion = "buildVersion";
     public const string FileCount = "fileCount";
     public const string Compressed = "size";
     public const string Uncompressed = "uncompressedSize";

@@ -2,6 +2,7 @@ using Robust.Shared.ContentPack;
 using System.Threading.Tasks;
 using Robust.Shared.CPUJob.JobQueues;
 using Robust.Shared.Replays;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Replays.Loading;
 
@@ -13,21 +14,24 @@ namespace Robust.Client.Replays.Loading;
 public class LoadReplayJob : Job<ReplayData>
 {
     private readonly IWritableDirProvider _dir;
+    private readonly ResPath _path;
     private readonly IReplayLoadManager _loadMan;
 
     public LoadReplayJob(
         float maxTime,
         IWritableDirProvider dir,
+        ResPath path,
         IReplayLoadManager loadMan)
         : base(maxTime)
     {
         _dir = dir;
+        _path = path;
         _loadMan = loadMan;
     }
 
     protected override async Task<ReplayData?> Process()
     {
-        return await _loadMan.LoadAndStartReplayAsync(_dir, Yield);
+        return await _loadMan.LoadAndStartReplayAsync(_dir, _path, Yield);
     }
 
     protected virtual async Task Yield(float value, float maxValue, LoadingState state, bool force)

@@ -12,10 +12,13 @@ namespace Robust.Client.Replays.Loading;
 
 public sealed partial class ReplayLoadManager
 {
-    public async Task<ReplayData> LoadAndStartReplayAsync(IWritableDirProvider dir, LoadReplayCallback? callback = null)
+    public async Task<ReplayData> LoadAndStartReplayAsync(
+        IWritableDirProvider dir,
+        ResPath path,
+        LoadReplayCallback? callback = null)
     {
         callback ??= (_, _, _, _) => Task.CompletedTask;
-        var data = await LoadReplayAsync(dir, callback);
+        var data = await LoadReplayAsync(dir, path, callback);
         await StartReplayAsync(data, callback);
         return data;
     }

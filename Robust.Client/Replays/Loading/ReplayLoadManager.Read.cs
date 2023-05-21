@@ -20,24 +20,24 @@ namespace Robust.Client.Replays.Loading;
 public sealed partial class ReplayLoadManager
 {
     [SuppressMessage("ReSharper", "UseAwaitUsing")]
-    public async Task<ReplayData> LoadReplayAsync(IWritableDirProvider dir, LoadReplayCallback callback)
+    public async Task<ReplayData> LoadReplayAsync(IWritableDirProvider dir, ResPath path, LoadReplayCallback callback)
     {
         List<GameState> states = new();
         List<ReplayMessage> messages = new();
 
         var compressionContext = new ZStdCompressionContext();
-        var metaData = LoadMetadata(dir);
+        var metaData = LoadMetadata(dir, path);
 
-        var total = dir.Find($"*.{Ext}").files.Count();
+        var total = dir.Find($"{path.ToRelativePath()}/*.{Ext}").files.Count();
 
         // Exclude string & init event files from the total.
         total--;
-        if (dir.Exists(InitFile))
+        if (dir.Exists(path / InitFile))
             total--;
 
         var i = 0;
         var intBuf = new byte[4];
-        var name = new ResPath($"/{i++}.{Ext}");
+        var name = path / $"{i++}.{Ext}";
         while (dir.Exists(name))
         {
             await callback(i+1, total, LoadingState.ReadingFiles, false);
@@ -60,43 +60,47 @@ public sealed partial class ReplayLoadManager
                 messages.Add(msg);
             }
 
-            name = new ResPath($"/{i++}.{Ext}");
+            name = path / $"{i++}.{Ext}";
         }
         DebugTools.Assert(i - 1 == total);
         await callback(total, total, LoadingState.ReadingFiles, false);
 
-        var initData = LoadInitFile(dir, compressionContext);
+        var initData = LoadInitFile(dir, path, compressionContext);
         compressionContext.Dispose();
 
         var checkpoints = await GenerateCheckpointsAsync(initData, metaData.CVars, states, messages, callback);
         return new(states, messages, states[0].ToSequence, metaData.StartTime, metaData.Duration, checkpoints, initData);
     }
 
-    private ReplayMessage? LoadInitFile(IWritableDirProvider dir, ZStdCompressionContext compressionContext)
+    private ReplayMessage? LoadInitFile(
+        IWritableDirProvider dir,
+        ResPath path,
+        ZStdCompressionContext compressionContext)
     {
-        if (!dir.Exists(InitFile))
+        if (!dir.Exists(path / InitFile))
             return null;
 
         // TODO compress init messages, then decompress them here.
-        using var fileStream = dir.OpenRead(InitFile);
+        using var fileStream = dir.OpenRead(path / InitFile);
         _serializer.DeserializeDirect(fileStream, out ReplayMessage initData);
         return initData;
     }
 
-    public MappingDataNode? LoadYamlMetadata(IWritableDirProvider directory)
+    public MappingDataNode? LoadYamlMetadata(IWritableDirProvider directory, ResPath resPath)
     {
-        if (!directory.Exists(MetaFile))
+        if (!directory.Exists(resPath / MetaFile))
             return null;
 
-        using var file = directory.OpenRead(MetaFile);
+        using var file = directory.OpenRead(resPath / MetaFile);
         var parsed = DataNodeParser.ParseYamlStream(new StreamReader(file));
         return parsed.FirstOrDefault()?.Root as MappingDataNode;
     }
 
-    public (HashSet<string> CVars, TimeSpan Duration, TimeSpan StartTime) LoadMetadata(IWritableDirProvider directory)
+    private (HashSet<string> CVars, TimeSpan Duration, TimeSpan StartTime)
+        LoadMetadata(IWritableDirProvider directory, ResPath path)
     {
         _sawmill.Info($"Reading replay metadata");
-        var data = LoadYamlMetadata(directory);
+        var data = LoadYamlMetadata(directory, path);
         if (data == null)
             throw new Exception("Failed to parse yaml metadata");
 
@@ -110,12 +114,12 @@ public sealed partial class ReplayLoadManager
         if (!typeHash.SequenceEqual(_serializer.GetSerializableTypesHash()))
             throw new Exception($"{nameof(IRobustSerializer)} hashes do not match. Loading replays using a bad replay-client version?");
 
-        using var stringFile = directory.OpenRead(StringsFile);
+        using var stringFile = directory.OpenRead(path / StringsFile);
         var stringData = new byte[stringFile.Length];
         stringFile.Read(stringData);
         _serializer.SetStringSerializerPackage(stringHash, stringData);
 
-        using var cvarsFile = directory.OpenRead(CvarFile);
+        using var cvarsFile = directory.OpenRead(path / CvarFile);
         // Note, this does not invoke the received-initial-cvars event. But at least currently, that doesn't matter
         var cvars = _confMan.LoadFromTomlStream(cvarsFile);
 

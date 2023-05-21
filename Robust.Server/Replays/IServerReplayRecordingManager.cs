@@ -1,13 +1,12 @@
 using Robust.Shared.Replays;
 using System;
 using Robust.Shared;
+using Robust.Shared.ContentPack;
 
 namespace Robust.Server.Replays;
 
 public interface IServerReplayRecordingManager : IReplayRecordingManager
 {
-    void ToggleRecording();
-
     /// <summary>
     ///     Starts recording a replay.
     /// </summary>
@@ -22,7 +21,7 @@ public interface IServerReplayRecordingManager : IReplayRecordingManager
     /// Optional time limit for the recording.
     /// </param>
     /// <returns>Returns true if the recording was successfully started.</returns>
-    bool TryStartRecording(string? path = null, bool overwrite = false, TimeSpan? duration = null);
+    bool TryStartRecording(IWritableDirProvider directory, string? path = null, bool overwrite = false, TimeSpan? duration = null);
 
     void StopRecording();
 

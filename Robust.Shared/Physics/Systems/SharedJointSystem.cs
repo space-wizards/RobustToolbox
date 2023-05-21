@@ -15,7 +15,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
 
-public abstract class SharedJointSystem : EntitySystem
+public abstract partial class SharedJointSystem : EntitySystem
 {
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
@@ -39,6 +39,8 @@ public abstract class SharedJointSystem : EntitySystem
         UpdatesBefore.Add(typeof(SharedPhysicsSystem));
         SubscribeLocalEvent<JointComponent, ComponentShutdown>(OnJointShutdown);
         SubscribeLocalEvent<JointComponent, ComponentInit>(OnJointInit);
+
+        InitializeRelay();
     }
 
     #region Lifetime

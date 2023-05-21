@@ -1,6 +1,5 @@
 using System;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -360,6 +359,15 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             angles[_indexB] = aB;
 
             return positionError <= PhysicsConstants.LinearSlop && angularError <= PhysicsConstants.AngularSlop;
+        }
+
+        public override Joint Clone(EntityUid uidA, EntityUid uidB)
+        {
+            var weld = new WeldJoint(uidA, uidB, LocalAnchorA, LocalAnchorB, ReferenceAngle);
+            weld.Bias = Bias;
+            weld.Damping = Damping;
+            weld.Stiffness = Stiffness;
+            return weld;
         }
 
         public bool Equals(WeldJoint? other)

@@ -24,7 +24,6 @@ using System;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -117,10 +116,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public abstract JointType JointType { get; }
 
         [DataField("bodyA")]
-        public EntityUid BodyAUid { get; init; }
+        public EntityUid BodyAUid { get; private set; }
 
         [DataField("bodyB")]
-        public EntityUid BodyBUid { get; init; }
+        public EntityUid BodyBUid { get; private set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LocalAnchorA
@@ -332,6 +331,13 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             hashcode = hashcode * 397 ^ BodyBUid.GetHashCode();
             hashcode = hashcode * 397 ^ JointType.GetHashCode();
             return hashcode;
+        }
+
+        public abstract Joint Clone(EntityUid uidA, EntityUid uidB);
+
+        public Joint Clone()
+        {
+            return Clone(BodyAUid, BodyBUid);
         }
     }
 

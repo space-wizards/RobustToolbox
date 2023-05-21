@@ -178,7 +178,9 @@ namespace Robust.Shared.Containers
                 physicsSys.SetCanCollide(uid, false, false, body: physics);
 
                 if (jointQuery.TryGetComponent(uid, out var joint))
-                    jointSys.ClearJoints(uid, joint);
+                {
+                    jointSys.RefreshRelay(uid, joint);
+                }
             }
 
             var enumerator = xform.ChildEnumerator;

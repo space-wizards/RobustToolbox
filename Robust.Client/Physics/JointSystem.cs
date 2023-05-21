@@ -18,7 +18,9 @@ namespace Robust.Client.Physics
 
         private void HandleComponentState(EntityUid uid, JointComponent component, ref ComponentHandleState args)
         {
-            if (args.Current is not JointComponent.JointComponentState jointState) return;
+            if (args.Current is not JointComponentState jointState) return;
+
+            component.Relay = jointState.Relay;
 
             // Initial state gets applied before the entity (& entity's transform) have been initialized.
             // So just let joint init code handle that.

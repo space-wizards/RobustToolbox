@@ -295,6 +295,14 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return true;
         }
 
+        public override Joint Clone(EntityUid uidA, EntityUid uidB)
+        {
+            var friction = new FrictionJoint(uidA, uidB, LocalAnchorA, LocalAnchorB);
+            friction.MaxTorque = MaxTorque;
+            friction.MaxTorque = MaxForce;
+            return friction;
+        }
+
         public bool Equals(FrictionJoint? other)
         {
             if (ReferenceEquals(null, other)) return false;

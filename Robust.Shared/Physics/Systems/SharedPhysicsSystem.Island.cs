@@ -459,7 +459,10 @@ public abstract partial class SharedPhysicsSystem
                             if (!other.CanCollide) continue;
 
                             // Copy the joint and use a dummy one.
-                            var jointCopy = joint.Clone(bodyUid, otherUid);
+                            var uidA = otherUid == joint.BodyAUid ? otherUid : bodyUid;
+                            var uidB = otherUid == joint.BodyBUid ? otherUid : bodyUid;
+
+                            var jointCopy = joint.Clone(uidA, uidB);
 
                             joints.Add((joint, jointCopy));
                             // We set the flag on the original joint, not the dummy one.

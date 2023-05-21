@@ -452,9 +452,11 @@ public readonly struct ResPath : IEquatable<ResPath>
             return this;
         }
 
-        return this == Root
-            ? Self
-            : new ResPath(CanonPath[1..]);
+        if (this == Root)
+            return Self;
+
+        var newPath = new ResPath(CanonPath[1..]);
+        return newPath.IsRelative ? newPath : newPath.ToRelativePath();
     }
 
     /// <summary>

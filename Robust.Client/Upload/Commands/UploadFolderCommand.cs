@@ -21,6 +21,7 @@ public sealed class UploadFolderCommand : IConsoleCommand
 
     [Dependency] private IResourceManager _resourceManager = default!;
     [Dependency] private IConfigurationManager _configManager = default!;
+    [Dependency] private INetManager _netMan = default!;
 
     public async void Execute(IConsoleShell shell, string argStr, string[] args)
     {
@@ -39,9 +40,10 @@ public sealed class UploadFolderCommand : IConsoleCommand
             shell.WriteLine( Loc.GetString("uploadfolder-command-help"));
             return;
         }
-        var folderPath = new ResPath(BaseUploadFolderPath + $"/{args[0]}");
 
-        if (!_resourceManager.UserData.Exists(folderPath.ToRootedPath()))
+        var folderPath = BaseUploadFolderPath / args[0];
+
+        if (!_resourceManager.UserData.Exists(folderPath))
         {
             shell.WriteError( Loc.GetString("uploadfolder-command-folder-not-found",("folder", folderPath)));
             return; // bomb out if the folder doesnt exist in /UploadFolder
@@ -62,13 +64,11 @@ public sealed class UploadFolderCommand : IConsoleCommand
 
                 var data = filestream.CopyToArray();
 
-                var netManager = IoCManager.Resolve<INetManager>();
-                var msg = netManager.CreateNetMessage<NetworkResourceUploadMessage>();
-
-                msg.RelativePath = new ResPath($"{filepath.ToString().Remove(0,14)}"); //removes /UploadFolder/ from path
+                var msg = _netMan.CreateNetMessage<NetworkResourceUploadMessage>();
+                msg.RelativePath = filepath.RelativeTo(BaseUploadFolderPath);
                 msg.Data = data;
 
-                netManager.ClientSendMessage(msg);
+                _netMan.ClientSendMessage(msg);
                 fileCount++;
             }
         }

@@ -56,6 +56,9 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public (IEnumerable<ResPath> files, IEnumerable<ResPath> directories) Find(string pattern, bool recursive = true)
         {
+            if (pattern.Contains(".."))
+                throw new InvalidOperationException($"Pattern may not contain '..'. Pattern: {pattern}.");
+
             var rootLen = RootDir.Length - 1;
             var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 
@@ -67,12 +70,18 @@ namespace Robust.Shared.ContentPack
 
             foreach (var file in files)
             {
-                resFiles.Add(new ResPath(file.Substring(rootLen)));
+                if (file.Contains("\\..") || file.Contains("/.."))
+                    continue;
+
+                resFiles.Add(ResPath.FromRelativeSystemPath(file.Substring(rootLen)).ToRootedPath());
             }
 
             foreach (var dir in dirs)
             {
-                resDirs.Add(new ResPath(dir.Substring(rootLen)));
+                if (dir.Contains("\\..") || dir.Contains("/.."))
+                    continue;
+
+                resDirs.Add(ResPath.FromRelativeSystemPath(dir.Substring(rootLen)).ToRootedPath());
             }
 
             return (resFiles, resDirs);
@@ -127,7 +136,7 @@ namespace Robust.Shared.ContentPack
         {
             if (!path.IsRooted)
             {
-                throw new ArgumentException("Path must be rooted.");
+                throw new ArgumentException($"Path must be rooted. Path: {path}");
             }
 
             path = path.Clean();
@@ -142,7 +151,7 @@ namespace Robust.Shared.ContentPack
             {
                 // Hard cap on any exploit smuggling a .. in there.
                 // Since that could allow leaving sandbox.
-                throw new InvalidOperationException("This branch should never be reached.");
+                throw new InvalidOperationException($"This branch should never be reached. Path: {path}");
             }
 
             return Path.GetFullPath(Path.Combine(root, relPath));

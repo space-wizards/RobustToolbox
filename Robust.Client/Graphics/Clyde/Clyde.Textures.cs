@@ -93,13 +93,7 @@ namespace Robust.Client.Graphics.Clyde
             var actualParams = loadParams ?? TextureLoadParameters.Default;
             var srgb = actualParams.Srgb;
 
-            var format = default(T) switch
-            {
-                Rgba32 => srgb ? RhiTextureFormat.RGBA8UnormSrgb : RhiTextureFormat.RGBA8Unorm,
-                // TODO REMOVE THIS WILL NEVER WORK
-                A8 => RhiTextureFormat.R8Unorm,
-                _ => throw new ArgumentException("Unsupported pixel format")
-            };
+            var format = GetPixelTextureFormat<T>(srgb);
 
             var rhiTexture = Rhi.CreateTexture(new RhiTextureDescriptor(
                 new RhiExtent3D(size.X, size.Y),
@@ -150,13 +144,122 @@ namespace Robust.Client.Graphics.Clyde
                 RhiSampler = rhiSampler,
                 Width = width,
                 Height = height,
-                IsSrgb = srgb,
+                Format = format,
                 Name = name,
             };
 
             _loadedTextures.Add(id, loaded);
 
             return (instance, loaded);
+        }
+
+        private static RhiTextureFormat GetPixelTextureFormat<T>(bool srgb) where T : unmanaged, IPixel<T>
+        {
+            return default(T) switch
+            {
+                Rgba32 => srgb ? RhiTextureFormat.RGBA8UnormSrgb : RhiTextureFormat.RGBA8Unorm,
+                _ => throw new ArgumentException("Unsupported pixel format")
+            };
+        }
+
+        private void TextureSetSubImage<T>(
+            ClydeTexture clydeTexture,
+            Vector2i topLeft,
+            Image<T> sourceImage,
+            in UIBox2i sourceRegion)
+            where T : unmanaged, IPixel<T>
+        {
+            if (sourceRegion.Left < 0 ||
+                sourceRegion.Top < 0 ||
+                sourceRegion.Right > sourceRegion.Width ||
+                sourceRegion.Bottom > sourceRegion.Height)
+            {
+                throw new ArgumentOutOfRangeException(nameof(sourceRegion), "Source rectangle out of bounds.");
+            }
+
+            var size = sourceRegion.Width * sourceRegion.Height;
+
+            T[]? pooled = null;
+            // C# won't let me use an if due to the stackalloc.
+            var copyBuffer = size < 16 * 16
+                ? stackalloc T[size]
+                : (pooled = ArrayPool<T>.Shared.Rent(size)).AsSpan(0, size);
+
+            var srcSpan = sourceImage.GetPixelSpan();
+            var w = sourceImage.Width;
+            FlipCopySubRegion(sourceRegion, w, srcSpan, copyBuffer);
+
+            SetSubImageImpl<T>(clydeTexture, topLeft, (sourceRegion.Width, sourceRegion.Height), copyBuffer);
+
+            if (pooled != null)
+                ArrayPool<T>.Shared.Return(pooled);
+        }
+
+        private void TextureSetSubImage<T>(
+            ClydeTexture clydeTexture,
+            Vector2i topLeft,
+            Vector2i size,
+            ReadOnlySpan<T> buffer)
+            where T : unmanaged, IPixel<T>
+        {
+            T[]? pooled = null;
+            // C# won't let me use an if due to the stackalloc.
+            var copyBuffer = buffer.Length < 16 * 16
+                ? stackalloc T[buffer.Length]
+                : (pooled = ArrayPool<T>.Shared.Rent(buffer.Length)).AsSpan(0, buffer.Length);
+
+            FlipCopy(buffer, copyBuffer, size.X, size.Y);
+
+            SetSubImageImpl<T>(clydeTexture, topLeft, size, copyBuffer);
+
+            if (pooled != null)
+                ArrayPool<T>.Shared.Return(pooled);
+        }
+
+
+        private unsafe void SetSubImageImpl<T>(
+            ClydeTexture texture,
+            Vector2i dstTl,
+            Vector2i size,
+            ReadOnlySpan<T> buf)
+            where T : unmanaged, IPixel<T>
+        {
+            var loaded = _loadedTextures[texture.TextureId];
+            var format = GetPixelTextureFormat<T>(loaded.IsSrgb);
+
+            if (format != loaded.Format)
+            {
+                // TODO:
+                //if (loaded.TexturePixelType == TexturePixelType.RenderTarget)
+                //    throw new InvalidOperationException("Cannot modify texture for render target directly.");
+
+                throw new InvalidOperationException("Mismatching pixel type for texture.");
+            }
+
+            if (loaded.Width < dstTl.X + size.X || loaded.Height < dstTl.Y + size.Y)
+                throw new ArgumentOutOfRangeException(nameof(size), "Destination rectangle out of bounds.");
+
+            var dstY = loaded.Height - dstTl.Y - size.Y;
+
+            Rhi.Queue.WriteTexture(
+                new RhiImageCopyTexture(
+                    loaded.RhiTexture,
+                    0,
+                    new RhiOrigin3D(dstTl.X, dstY)
+                ),
+                buf,
+                new RhiImageDataLayout(0, (uint) (size.X * sizeof(T)), (uint) size.Y),
+                new RhiExtent3D(size.X, size.Y)
+            );
+
+            // GL.TexSubImage2D(
+            //     TextureTarget.Texture2D,
+            //     0,
+            //     dstTl.X, dstY,
+            //     size.X, size.Y,
+            //     pf, pt,
+            //     (IntPtr) aPtr);
+            // CheckGlError();
         }
 
         /*
@@ -376,132 +479,6 @@ namespace Robust.Client.Graphics.Clyde
         }
         */
 
-        /*
-        private unsafe void SetSubImage<T>(
-            ClydeTexture texture,
-            Vector2i dstTl,
-            Image<T> img,
-            in UIBox2i srcBox)
-            where T : unmanaged, IPixel<T>
-        {
-            if (srcBox.Left < 0 ||
-                srcBox.Top < 0 ||
-                srcBox.Right > srcBox.Width ||
-                srcBox.Bottom > srcBox.Height)
-            {
-                throw new ArgumentOutOfRangeException(nameof(srcBox), "Source rectangle out of bounds.");
-            }
-
-            var size = srcBox.Width * srcBox.Height;
-
-            T[]? pooled = null;
-            // C# won't let me use an if due to the stackalloc.
-            var copyBuffer = size < 16 * 16
-                ? stackalloc T[size]
-                : (pooled = ArrayPool<T>.Shared.Rent(size)).AsSpan(0, size);
-
-            var srcSpan = img.GetPixelSpan();
-            var w = img.Width;
-            FlipCopySubRegion(srcBox, w, srcSpan, copyBuffer);
-
-            SetSubImageImpl<T>(texture, dstTl, (srcBox.Width, srcBox.Height), copyBuffer);
-
-            if (pooled != null)
-                ArrayPool<T>.Shared.Return(pooled);
-        }
-        */
-
-        /*private unsafe void SetSubImage<T>(
-            ClydeTexture texture,
-            Vector2i dstTl,
-            Vector2i size,
-            ReadOnlySpan<T> buf)
-            where T : unmanaged, IPixel<T>
-        {
-            T[]? pooled = null;
-            // C# won't let me use an if due to the stackalloc.
-            var copyBuffer = buf.Length < 16 * 16
-                ? stackalloc T[buf.Length]
-                : (pooled = ArrayPool<T>.Shared.Rent(buf.Length)).AsSpan(0, buf.Length);
-
-            FlipCopy(buf, copyBuffer, size.X, size.Y);
-
-            SetSubImageImpl<T>(texture, dstTl, size, copyBuffer);
-
-            if (pooled != null)
-                ArrayPool<T>.Shared.Return(pooled);
-        }*/
-
-        /*
-        private unsafe void SetSubImageImpl<T>(
-            ClydeTexture texture,
-            Vector2i dstTl,
-            Vector2i size,
-            ReadOnlySpan<T> buf)
-            where T : unmanaged, IPixel<T>
-        {
-            if (!_hasGLTextureSwizzle && (typeof(T) == typeof(A8) || typeof(T) == typeof(L8)))
-            {
-                var swizzleBuf = ArrayPool<Rgba32>.Shared.Rent(buf.Length);
-
-                var destSpan = swizzleBuf.AsSpan(0, buf.Length);
-                if (typeof(T) == typeof(A8))
-                    ApplyA8Swizzle(MemoryMarshal.Cast<T, A8>(buf), destSpan);
-                else if (typeof(T) == typeof(L8))
-                    ApplyL8Swizzle(MemoryMarshal.Cast<T, L8>(buf), destSpan);
-
-                SetSubImageImpl<Rgba32>(texture, dstTl, size, destSpan);
-                ArrayPool<Rgba32>.Shared.Return(swizzleBuf);
-                return;
-            }
-
-            var loaded = _loadedTextures[texture.TextureId];
-            var pixType = GetTexturePixelType<T>();
-
-            if (pixType != loaded.TexturePixelType)
-            {
-                if (loaded.TexturePixelType == TexturePixelType.RenderTarget)
-                    throw new InvalidOperationException("Cannot modify texture for render target directly.");
-
-                throw new InvalidOperationException("Mismatching pixel type for texture.");
-            }
-
-            if (loaded.Width < dstTl.X + size.X || loaded.Height < dstTl.Y + size.Y)
-                throw new ArgumentOutOfRangeException(nameof(size), "Destination rectangle out of bounds.");
-
-            if (sizeof(T) != 4)
-            {
-                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
-                CheckGlError();
-            }
-
-            // sRGB doesn't matter since that only changes the internalFormat, which we don't need here.
-            var (_, pf, pt) = PixelEnums<T>(srgb: false);
-
-            GL.BindTexture(TextureTarget.Texture2D, loaded.OpenGLObject.Handle);
-            CheckGlError();
-
-            fixed (T* aPtr = buf)
-            {
-                var dstY = loaded.Height - dstTl.Y - size.Y;
-                GL.TexSubImage2D(
-                    TextureTarget.Texture2D,
-                    0,
-                    dstTl.X, dstY,
-                    size.X, size.Y,
-                    pf, pt,
-                    (IntPtr) aPtr);
-                CheckGlError();
-            }
-
-            if (sizeof(T) != 4)
-            {
-                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
-                CheckGlError();
-            }
-        }
-        */
-
         private void LoadStockTextures()
         {
             var white = new Image<Rgba32>(1, 1);
@@ -619,8 +596,10 @@ namespace Robust.Client.Graphics.Clyde
 
             public int Width;
             public int Height;
-            public bool IsSrgb;
+            public RhiTextureFormat Format;
             public string? Name;
+
+            public bool IsSrgb => Format is RhiTextureFormat.BGRA8UnormSrgb or RhiTextureFormat.RGBA8UnormSrgb;
         }
 
         private void FlushTextureDispose()
@@ -640,14 +619,12 @@ namespace Robust.Client.Graphics.Clyde
 
             public override void SetSubImage<T>(Vector2i topLeft, Image<T> sourceImage, in UIBox2i sourceRegion)
             {
-                /*
-                _clyde.SetSubImage(this, topLeft, sourceImage, sourceRegion);
-            */
+                _clyde.TextureSetSubImage(this, topLeft, sourceImage, sourceRegion);
             }
 
             public override void SetSubImage<T>(Vector2i topLeft, Vector2i size, ReadOnlySpan<T> buffer)
             {
-                /*_clyde.SetSubImage(this, topLeft, size, buffer);*/
+                _clyde.TextureSetSubImage(this, topLeft, size, buffer);
             }
 
             protected override void Dispose(bool disposing)

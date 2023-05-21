@@ -9,6 +9,9 @@ public abstract partial class RhiBase
 
     internal abstract void Shutdown();
 
+    internal abstract RhiTextureView CreateTextureViewForWindow(Clyde.WindowReg reg);
+    internal abstract void WindowPresent(Clyde.WindowReg reg);
+
     internal abstract RhiRenderPassEncoder CommandEncoderBeginRenderPass(
         RhiCommandEncoder encoder,
         in RhiRenderPassDescriptor descriptor

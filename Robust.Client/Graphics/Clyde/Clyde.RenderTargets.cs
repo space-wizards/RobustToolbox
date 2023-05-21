@@ -297,7 +297,9 @@ namespace Robust.Client.Graphics.Clyde
             public GLHandle DepthStencilHandle;
             public long MemoryPressure;
         }
+        */
 
+        /*
         private abstract class RenderTargetBase : IRenderTarget
         {
             protected readonly Clyde Clyde;
@@ -316,7 +318,8 @@ namespace Robust.Client.Graphics.Clyde
 
             public void CopyPixelsToMemory<T>(CopyPixelsDelegate<T> callback, UIBox2i? subRegion = null) where T : unmanaged, IPixel<T>
             {
-                Clyde.CopyRenderTargetPixels(Handle, subRegion, callback);
+                throw new NotImplementedException();
+                //Clyde.CopyRenderTargetPixels(Handle, subRegion, callback);
             }
 
             public ClydeHandle Handle { get; }
@@ -399,6 +402,27 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
         }
-    */
+        */
+
+        private sealed class RenderWindow : IRenderTarget
+        {
+            private readonly Clyde _clyde;
+            public readonly WindowReg Window;
+
+            public void Dispose() => throw new NotSupportedException("Close the window instead");
+
+            public Vector2i Size => Window.FramebufferSize;
+
+            public void CopyPixelsToMemory<T>(CopyPixelsDelegate<T> callback, UIBox2i? subRegion = null) where T : unmanaged, IPixel<T>
+            {
+                throw new NotImplementedException();
+            }
+
+            public RenderWindow(Clyde clyde, WindowReg window)
+            {
+                _clyde = clyde;
+                Window = window;
+            }
+        }
     }
 }

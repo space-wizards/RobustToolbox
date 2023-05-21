@@ -25,6 +25,7 @@ SOFTWARE.
 #endregion --- License ---
 
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -1143,6 +1144,23 @@ namespace Robust.Shared.Maths
         public static Matrix3 operator *(in Matrix3 left, in Matrix3 right)
         {
             Multiply(in left, in right, out var result);
+            return result;
+        }
+
+        /// <summary>
+        /// Convert this matrix into a <see cref="Matrix3x2"/>, dropping the 3rd column.
+        /// </summary>
+        public static explicit operator Matrix3x2(in Matrix3 matrix)
+        {
+            Matrix3x2 result;
+
+            result.M11 = matrix.R0C0;
+            result.M12 = matrix.R0C1;
+            result.M21 = matrix.R1C0;
+            result.M22 = matrix.R1C1;
+            result.M31 = matrix.R2C0;
+            result.M32 = matrix.R2C1;
+
             return result;
         }
 

@@ -8,6 +8,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
@@ -33,41 +34,51 @@ namespace Robust.Client.Graphics.Clyde
 
         private SpriteBatch? _spriteBatch;
 
-        private void SetupSplash()
+        private void RenderInit()
         {
+            LoadStockTextures();
+
             _spriteBatch = new SpriteBatch(this, Rhi);
+            _renderHandle = new RenderHandle(this, _entityManager, _spriteBatch);
         }
 
         private void DrawSplash()
         {
-            var backbuffer = Rhi.CreateTextureViewForWindow(_mainWindow!);
-
-            _spriteBatch!.Start(_mainWindow!.FramebufferSize, backbuffer);
-
             var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
             if (string.IsNullOrEmpty(splashTex))
                 return;
 
+            var backbuffer = _mainWindow!.CurSwapchainView!;
+
+            var size = _mainWindow!.FramebufferSize;
+
+            _spriteBatch!.Start();
+            _spriteBatch.BeginPass(size, backbuffer);
+
             var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
 
-            // _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero, Color.White);
+            var pos = (size - texture.Size) / 2;
 
-            _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (200f, 200f), Color.White);
+            _spriteBatch.Draw((ClydeTexture) texture, pos, Color.White);
 
-            // _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (-0.5f, 0.5f), Color.FromSrgb(Color.LightBlue));
-
-            // _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (0.5f, -0.5f), Color.FromSrgb(Color.LightBlue));
-
-            // _spriteBatch.Draw((ClydeTexture) texture, Vector2.Zero + (-0.5f, -0.5f), Color.FromSrgb(Color.Pink));
-
+            _spriteBatch.EndPass();
             _spriteBatch.Finish();
-
-            Rhi.WindowPresent(_mainWindow!);
         }
 
         public void Render()
         {
-            DrawSplash();
+            AcquireSwapchainTextures();
+
+            try
+            {
+                RenderCore();
+            }
+            finally
+            {
+                // wgpu will be very annoyed if we don't do the present state machine correctly.
+                // So make sure we ALWAYS present.
+                PresentWindows();
+            }
 
             /*CheckTransferringScreenshots();
 
@@ -152,6 +163,19 @@ namespace Robust.Client.Graphics.Clyde
                 _prof.WriteValue("Shadow Lights", ProfData.Int32(_debugStats.ShadowLights));
                 _prof.WriteValue("Occluders", ProfData.Int32(_debugStats.Occluders));
             }*/
+        }
+
+        private void RenderCore()
+        {
+            if (_drawingSplash)
+            {
+                DrawSplash();
+                return;
+            }
+
+            _spriteBatch!.Start();
+            _userInterfaceManager.Render(_renderHandle);
+            _spriteBatch.Finish();
         }
 
         /*private void RenderSingleWorldOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)

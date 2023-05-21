@@ -1,8 +1,11 @@
 using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
+using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -16,14 +19,16 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
             private readonly IEntityManager _entities;
+            private readonly SpriteBatch _spriteBatch;
 
             public DrawingHandleScreen DrawingHandleScreen { get; }
             public DrawingHandleWorld DrawingHandleWorld { get; }
 
-            public RenderHandle(Clyde clyde, IEntityManager entities)
+            public RenderHandle(Clyde clyde, IEntityManager entities, SpriteBatch spriteBatch)
             {
                 _clyde = clyde;
                 _entities = entities;
+                _spriteBatch = spriteBatch;
 
                 var white = _clyde.GetStockTexture(ClydeStockTexture.White);
                 DrawingHandleScreen = new DrawingHandleScreenImpl(white, this);
@@ -32,7 +37,8 @@ namespace Robust.Client.Graphics.Clyde
 
             public void SetModelTransform(in Matrix3 matrix)
             {
-                // _clyde.DrawSetModelTransform(matrix);
+                matrix.Transpose(out var transposed);
+                _spriteBatch.SetModelTransform((Matrix3x2)transposed);
             }
 
             public void SetProjView(in Matrix3 proj, in Matrix3 view)
@@ -60,6 +66,7 @@ namespace Robust.Client.Graphics.Clyde
                 var (w, h) = clydeTexture.Size;
                 var sr = new Box2(csr.Left / w, (h - csr.Top) / h, csr.Right / w, (h - csr.Bottom) / h);
 
+                _spriteBatch.Draw(clydeTexture, bl, br, tl, tr, modulate, sr);
                 // _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, in modulate, in sr);
             }
 
@@ -117,7 +124,27 @@ namespace Robust.Client.Graphics.Clyde
 
             public void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor)
             {
-                // _clyde.RenderInRenderTarget((RenderTargetBase) target, a, clearColor);
+                // TODO: Save/restore SpriteBatch state
+
+                RhiTextureView targetTexture;
+                Vector2i targetSize;
+
+                switch (target)
+                {
+                    case RenderWindow renderWindow:
+                        targetTexture = renderWindow.Window.CurSwapchainView!;
+                        targetSize = renderWindow.Window.FramebufferSize;
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(target));
+                }
+
+                _spriteBatch.BeginPass(targetSize, targetTexture, clearColor);
+
+                a();
+
+                _spriteBatch.EndPass();
             }
 
             public void SetScissor(UIBox2i? scissorBox)

@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
+using SNVector2 = System.Numerics.Vector2;
 
 namespace Robust.Shared.Maths
 {
@@ -10,7 +11,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     [Serializable]
-    public struct Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>, ISpanFormattable
+    public struct  Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>, ISpanFormattable
     {
         /// <summary>
         ///     The X component of the vector.
@@ -391,6 +392,11 @@ namespace Robust.Shared.Maths
         {
             var (x, y) = tuple;
             return new Vector2(x, y);
+        }
+
+        public static explicit operator SNVector2(Vector2 vec)
+        {
+            return new SNVector2(vec.X, vec.Y);
         }
 
         /// <summary>

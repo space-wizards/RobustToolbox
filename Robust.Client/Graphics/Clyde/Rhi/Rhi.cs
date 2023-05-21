@@ -43,10 +43,6 @@ public abstract partial class RhiBase
 
     public abstract RhiRenderPipeline CreateRenderPipeline(in RhiRenderPipelineDescriptor descriptor);
 
-    // TODO: Public API
-    internal abstract RhiTextureView CreateTextureViewForWindow(Clyde.WindowReg reg);
-    internal abstract void WindowPresent(Clyde.WindowReg reg);
-
     public abstract RhiCommandEncoder CreateCommandEncoder(in RhiCommandEncoderDescriptor descriptor);
 
     public abstract RhiBindGroupLayout CreateBindGroupLayout(in RhiBindGroupLayoutDescriptor descriptor);
@@ -445,6 +441,11 @@ public sealed class RhiCommandEncoder : RhiObject
     public RhiCommandBuffer Finish(in RhiCommandBufferDescriptor descriptor)
     {
         return Rhi.CommandEncoderFinish(this, descriptor);
+    }
+
+    public RhiCommandBuffer Finish()
+    {
+        return Finish(new RhiCommandBufferDescriptor());
     }
 
     internal RhiCommandEncoder(RhiBase rhi, RhiHandle handle) : base(rhi, handle)

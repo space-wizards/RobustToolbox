@@ -123,7 +123,10 @@ internal sealed partial class UserInterfaceManager
 
             using (_prof.Group("Main"))
             {
-                DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
+                renderHandle.RenderInRenderTarget(_clyde.MainWindow.RenderTarget, () =>
+                {
+                    DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
+                }, Color.Pink);
             }
 
         void DoRender(WindowRoot root)

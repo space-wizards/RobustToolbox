@@ -203,7 +203,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
 
-            SetupSplash();
+            RenderInit();
             Render();
 
             return true;
@@ -446,6 +446,7 @@ namespace Robust.Client.Graphics.Clyde
             public IClydeWindow? Owner;
 
             public RhiWebGpu.WindowData? RhiWebGpuData;
+            public RhiTextureView? CurSwapchainView;
 
             public bool DisposeOnClose;
 
@@ -474,6 +475,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _clyde = clyde;
                 Reg = reg;
+                RenderTarget = new RenderWindow(_clyde, reg);
             }
 
             public void Dispose()
@@ -483,7 +485,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public Vector2i Size => Reg.FramebufferSize;
 
-            public IRenderTarget RenderTarget => throw new NotImplementedException();
+            public IRenderTarget RenderTarget { get; }
 
             public string Title
             {

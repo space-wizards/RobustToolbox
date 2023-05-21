@@ -506,15 +506,15 @@ namespace Robust.Client.Graphics.Clyde
         {
             var white = new Image<Rgba32>(1, 1);
             white[0, 0] = new Rgba32(255, 255, 255, 255);
-            _stockTextureWhite = (ClydeTexture)Texture.LoadFromImage(white);
+            _stockTextureWhite = (ClydeTexture)LoadTextureFromImage(white, name: "Stock Texture: white");
 
             var black = new Image<Rgba32>(1, 1);
             black[0, 0] = new Rgba32(0, 0, 0, 255);
-            _stockTextureBlack = (ClydeTexture)Texture.LoadFromImage(black);
+            _stockTextureBlack = (ClydeTexture)LoadTextureFromImage(black, name: "Stock Texture: black");
 
             var blank = new Image<Rgba32>(1, 1);
             blank[0, 0] = new Rgba32(0, 0, 0, 0);
-            _stockTextureTransparent = (ClydeTexture)Texture.LoadFromImage(blank);
+            _stockTextureTransparent = (ClydeTexture)LoadTextureFromImage(blank, name: "Stock Texture: transparent");
         }
 
         /// <summary>

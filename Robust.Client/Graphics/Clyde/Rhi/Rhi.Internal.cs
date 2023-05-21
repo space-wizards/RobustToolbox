@@ -5,12 +5,32 @@ namespace Robust.Client.Graphics.Clyde.Rhi;
 
 public abstract partial class RhiBase
 {
-    internal abstract void Init();
+    //
+    // Clyde <-> RHI API.
+    //
 
+    internal abstract void Init();
     internal abstract void Shutdown();
+
+    /// <summary>
+    /// A window was created by Clyde. It should be initialized by the RHI to make it ready for rendering.
+    /// </summary>
+    /// <remarks>
+    /// Does not get called for the main window.
+    /// </remarks>
+    internal abstract void WindowCreated(Clyde.WindowReg reg);
+
+    /// <summary>
+    /// A window is about to be destroyed by Clyde. Clean up resources for it.
+    /// </summary>
+    internal abstract void WindowDestroy(Clyde.WindowReg reg);
 
     internal abstract RhiTextureView CreateTextureViewForWindow(Clyde.WindowReg reg);
     internal abstract void WindowPresent(Clyde.WindowReg reg);
+
+    //
+    // RHI-internal API to de-OOP the public RHI API.
+    //
 
     internal abstract RhiRenderPassEncoder CommandEncoderBeginRenderPass(
         RhiCommandEncoder encoder,
@@ -19,7 +39,6 @@ public abstract partial class RhiBase
 
     internal abstract RhiCommandBuffer CommandEncoderFinish(in RhiCommandEncoder encoder,
         in RhiCommandBufferDescriptor descriptor);
-
 
     internal abstract void RenderPassEncoderSetPipeline(
         in RhiRenderPassEncoder encoder,

@@ -306,7 +306,8 @@ namespace Robust.Client.Graphics.Clyde
 
                 // reg.RenderTarget = new RenderWindow(this, rtId);
 
-                // _glContext!.WindowCreated(glSpec, reg);
+                if (!isMain)
+                    Rhi.WindowCreated(reg);
             }
 
             // Pass through result whether successful or not, caller handles it.
@@ -323,6 +324,8 @@ namespace Robust.Client.Graphics.Clyde
 
             reg.IsDisposed = true;
 
+            Rhi.WindowDestroy(reg);
+
             _windowing!.WindowDestroy(reg);
 
             _windows.Remove(reg);
@@ -337,10 +340,6 @@ namespace Robust.Client.Graphics.Clyde
         {
             _windowing?.ProcessEvents();
             DispatchEvents();
-        }
-
-        private void SwapAllBuffers()
-        {
         }
 
         private void VSyncChanged(bool newValue)

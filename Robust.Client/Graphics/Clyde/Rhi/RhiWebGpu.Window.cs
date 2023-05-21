@@ -112,6 +112,22 @@ internal sealed unsafe partial class RhiWebGpu
         _sawmill.Debug("WebGPU Surface created!");
     }
 
+    internal override void WindowCreated(Clyde.WindowReg reg)
+    {
+        CreateSurfaceForWindow(reg);
+        CreateSwapChainForWindow(reg);
+    }
+
+    internal override void WindowDestroy(Clyde.WindowReg reg)
+    {
+        var rhiData = reg.RhiWebGpuData!;
+
+        _wgpu.SwapChainDrop(rhiData.SwapChain);
+        _wgpu.SurfaceDrop(rhiData.Surface);
+
+        reg.RhiWebGpuData = null;
+    }
+
     internal override void WindowPresent(Clyde.WindowReg reg)
     {
         // TODO: Safety

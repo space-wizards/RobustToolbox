@@ -551,6 +551,23 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return distance;
         }
 
+        public override void CopyTo(Joint original)
+        {
+            if (original is not DistanceJoint distance)
+                return;
+
+            distance.MinLength = MinLength;
+            distance.MaxLength = MaxLength;
+            distance.Length = Length;
+            distance.Stiffness = Stiffness;
+            distance.Damping = Damping;
+            distance._lowerImpulse = _lowerImpulse;
+            distance._upperImpulse = _upperImpulse;
+            distance._impulse = _impulse;
+            distance._bias = _bias;
+            distance._gamma = _gamma;
+        }
+
         public bool Equals(DistanceJoint? other)
         {
             if (ReferenceEquals(null, other)) return false;

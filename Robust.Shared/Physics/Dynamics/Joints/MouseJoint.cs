@@ -282,6 +282,17 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         return mouse;
     }
 
+    public override void CopyTo(Joint original)
+    {
+        if (original is not MouseJoint mouse)
+            return;
+
+        mouse.MaxForce = MaxForce;
+        mouse.Damping = Damping;
+        mouse.Stiffness = Stiffness;
+        mouse._impulse = _impulse;
+    }
+
     public bool Equals(MouseJoint? other)
     {
         if (other == null) return false;

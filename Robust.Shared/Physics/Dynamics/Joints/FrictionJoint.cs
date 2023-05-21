@@ -299,8 +299,19 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             var friction = new FrictionJoint(uidA, uidB, LocalAnchorA, LocalAnchorB);
             friction.MaxTorque = MaxTorque;
-            friction.MaxTorque = MaxForce;
+            friction.MaxForce = MaxForce;
             return friction;
+        }
+
+        public override void CopyTo(Joint original)
+        {
+            if (original is not FrictionJoint friction)
+                return;
+
+            friction.MaxTorque = MaxTorque;
+            friction.MaxForce = MaxForce;
+            friction._linearImpulse = _linearImpulse;
+            friction._angularImpulse = _angularImpulse;
         }
 
         public bool Equals(FrictionJoint? other)

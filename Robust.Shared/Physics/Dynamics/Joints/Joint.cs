@@ -335,10 +335,19 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public abstract Joint Clone(EntityUid uidA, EntityUid uidB);
 
+        /// <summary>
+        /// Copies the networked data for a joint. Does not copy warmstarting.
+        /// </summary>
+        /// <returns></returns>
         public Joint Clone()
         {
             return Clone(BodyAUid, BodyBUid);
         }
+
+        /// <summary>
+        /// Copies all joint data including warm starting.
+        /// </summary>
+        public abstract void CopyTo(Joint original);
     }
 
     [ByRefEvent]

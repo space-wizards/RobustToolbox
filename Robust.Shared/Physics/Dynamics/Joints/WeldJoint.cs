@@ -370,6 +370,17 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return weld;
         }
 
+        public override void CopyTo(Joint original)
+        {
+            if (original is not WeldJoint weld)
+                return;
+
+            weld.Bias = Bias;
+            weld.Damping = Damping;
+            weld.Stiffness = Stiffness;
+            weld._impulse = _impulse;
+        }
+
         public bool Equals(WeldJoint? other)
         {
             if (ReferenceEquals(null, other)) return false;

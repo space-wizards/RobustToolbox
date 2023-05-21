@@ -434,10 +434,9 @@ public abstract partial class SharedPhysicsSystem
                 {
                     foreach (var relay in relayComponent.Relayed)
                     {
+                        // Component might've been kept around for a bit?
                         if (!jointQuery.TryGetComponent(relay, out var relayJointComp))
                         {
-                            // wha happen here
-                            _sawmill.Error($"Found relay joint entity {ToPrettyString(relay)} with no joint component?");
                             continue;
                         }
 
@@ -536,10 +535,15 @@ public abstract partial class SharedPhysicsSystem
         _islandBodyPool.Return(island.Bodies);
         _islandContactPool.Return(island.Contacts);
 
-        foreach (var (joint, _) in island.Joints)
+        foreach (var (original, joint) in island.Joints)
         {
             // Do we need to copy data back to the original?
-            joint.IslandFlag = false;
+            if (original != joint)
+            {
+                joint.CopyTo(original);
+            }
+
+            original.IslandFlag = false;
         }
 
         _islandJointPool.Return(island.Joints);

@@ -478,5 +478,22 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
             return revolute;
         }
+
+        public override void CopyTo(Joint original)
+        {
+            if (original is not RevoluteJoint revolute)
+                return;
+
+            revolute.EnableLimit = EnableLimit;
+            revolute.EnableMotor = EnableMotor;
+            revolute.LowerAngle = LowerAngle;
+            revolute.UpperAngle = UpperAngle;
+            revolute.MaxMotorTorque = MaxMotorTorque;
+            revolute.MotorSpeed = MotorSpeed;
+            revolute._impulse = _impulse;
+            revolute._upperImpulse = _upperImpulse;
+            revolute._lowerImpulse = _lowerImpulse;
+            revolute._motorImpulse = _motorImpulse;
+        }
     }
 }

@@ -77,6 +77,8 @@ public abstract partial class SharedJointSystem : EntitySystem
             RaiseLocalEvent(bodyB.Owner, smug);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
+
+        RefreshRelay(uid, component);
     }
 
     private void OnJointShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)

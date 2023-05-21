@@ -71,7 +71,7 @@ internal partial class Clyde
             ));
 
             _uniformPassBuffer = _rhi.CreateBuffer(new RhiBufferDescriptor(
-                24, RhiBufferUsageFlags.Uniform | RhiBufferUsageFlags.CopyDst, MappedAtCreation: true,
+                32, RhiBufferUsageFlags.Uniform | RhiBufferUsageFlags.CopyDst, MappedAtCreation: true,
                 Label: "_uniformPassBuffer"
             ));
 
@@ -105,10 +105,10 @@ internal partial class Clyde
                     new RhiBindGroupLayoutEntry(
                         0,
                         RhiShaderStage.Vertex | RhiShaderStage.Fragment,
-                        new RhiBufferBindingLayout(MinBindingSize: 24)
+                        new RhiBufferBindingLayout(MinBindingSize: 32)
                     )
                 },
-                "SpriteBatch bind group 1 (pass)"
+                "SpriteBatch bind group 1 (view)"
             ));
 
             _group2Layout = _rhi.CreateBindGroupLayout(new RhiBindGroupLayoutDescriptor(
@@ -172,6 +172,8 @@ internal partial class Clyde
 
         public void Start()
         {
+            Clear();
+
             _commandEncoder = _rhi.CreateCommandEncoder(new RhiCommandEncoderDescriptor());
         }
 
@@ -186,9 +188,13 @@ internal partial class Clyde
             var viewMatrix = Matrix3x2.Identity;
             var projView = viewMatrix * projMatrix;
 
-            _rhi.Queue.WriteBuffer(_uniformPassBuffer, 0, new ReadOnlySpan<ShaderMat3x2F>(
-                ShaderMat3x2F.Transpose(projView)
-            ));
+            var data = new UniformView
+            {
+                ProjViewMatrix = ShaderMat3x2F.Transpose(projView),
+                ScreenPixelSize = new SVector2(1f / size.X, 1f / size.Y)
+            };
+
+            _rhi.Queue.WriteBuffer(_uniformPassBuffer, 0, new ReadOnlySpan<UniformView>(in data));
 
             var rhiClearColor = clearColor == null ? new RhiColor(0, 0, 0, 1) : Color.FromSrgb(clearColor.Value);
 
@@ -274,14 +280,19 @@ internal partial class Clyde
             var tr = (SVector2)(position + (width, height));
             var tl = (SVector2)(position + (0, height));
 
+            var sBl = SVector2.Transform(bl, _modelTransform);
+            var sBr = SVector2.Transform(br, _modelTransform);
+            var sTl = SVector2.Transform(tl, _modelTransform);
+            var sTr = SVector2.Transform(tr, _modelTransform);
+
             var asColor = Unsafe.As<Color, SVector4>(ref color);
 
-            _vertexBufferData[_vertexIdx + 0] = new Vertex2D(bl, new SVector2(0, 1), asColor);
-            _vertexBufferData[_vertexIdx + 1] = new Vertex2D(br, new SVector2(1, 1), asColor);
-            _vertexBufferData[_vertexIdx + 2] = new Vertex2D(tr, new SVector2(1, 0), asColor);
-            _vertexBufferData[_vertexIdx + 3] = new Vertex2D(tr, new SVector2(1, 0), asColor);
-            _vertexBufferData[_vertexIdx + 4] = new Vertex2D(tl, new SVector2(0, 0), asColor);
-            _vertexBufferData[_vertexIdx + 5] = new Vertex2D(bl, new SVector2(0, 1), asColor);
+            _vertexBufferData[_vertexIdx + 0] = new Vertex2D(sBl, new SVector2(0, 1), asColor);
+            _vertexBufferData[_vertexIdx + 1] = new Vertex2D(sBr, new SVector2(1, 1), asColor);
+            _vertexBufferData[_vertexIdx + 2] = new Vertex2D(sTr, new SVector2(1, 0), asColor);
+            _vertexBufferData[_vertexIdx + 3] = new Vertex2D(sTr, new SVector2(1, 0), asColor);
+            _vertexBufferData[_vertexIdx + 4] = new Vertex2D(sTl, new SVector2(0, 0), asColor);
+            _vertexBufferData[_vertexIdx + 5] = new Vertex2D(sBl, new SVector2(0, 1), asColor);
 
             _vertexIdx += 6;
             _curBatchSize += 6;
@@ -380,6 +391,12 @@ internal partial class Clyde
                 TexCoord = texCoord;
                 Color = color;
             }
+        }
+
+        private struct UniformView
+        {
+            public ShaderMat3x2F ProjViewMatrix;
+            public SVector2 ScreenPixelSize;
         }
     }
 }

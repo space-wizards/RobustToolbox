@@ -7,7 +7,8 @@ struct UniformConstants {
 
 // Group 1: parameters that change infrequently in a draw pass.
 struct UniformView {
-    projViewMatrix: mat3x2f
+    projViewMatrix: mat3x2f,
+    screenPixelSize: vec2f
 }
 
 @group(1) @binding(0) var<uniform> View: UniformView;
@@ -34,10 +35,16 @@ struct VertexOutput {
 
 @vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
-    // TODO: Pixel snapping?
+    var transformed = View.projViewMatrix * vec3(input.position, 1.0);
+
+    transformed += 1.0;
+    transformed /= View.screenPixelSize * 2.0;
+    transformed = floor(transformed + 0.5);
+    transformed *= View.screenPixelSize * 2.0;
+    transformed -= 1.0;
 
     var out: VertexOutput;
-    out.position = vec4(View.projViewMatrix * vec3(input.position, 1.0), 0.0, 1.0);
+    out.position = vec4(transformed, 0.0, 1.0);
     out.texCoord = input.texCoord;
     out.color    = srgb_to_linear(input.color);
     return out;

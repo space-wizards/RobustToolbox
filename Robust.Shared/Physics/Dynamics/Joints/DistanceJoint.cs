@@ -543,11 +543,15 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint Clone(EntityUid uidA, EntityUid uidB)
         {
-            var distance = new DistanceJoint(uidA, uidB, LocalAnchorA, LocalAnchorB, Length);
-            distance.MinLength = MinLength;
-            distance.MaxLength = MaxLength;
-            distance.Stiffness = Stiffness;
-            distance.Damping = Damping;
+            var distance = new DistanceJoint(uidA, uidB, LocalAnchorA, LocalAnchorB, Length)
+            {
+                Enabled = Enabled,
+                MinLength = MinLength,
+                MaxLength = MaxLength,
+                Stiffness = Stiffness,
+                Damping = Damping,
+                Breakpoint = Breakpoint
+            };
             return distance;
         }
 
@@ -556,6 +560,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             if (original is not DistanceJoint distance)
                 return;
 
+            distance.Enabled = Enabled;
             distance.MinLength = MinLength;
             distance.MaxLength = MaxLength;
             distance.Length = Length;
@@ -564,8 +569,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             distance._lowerImpulse = _lowerImpulse;
             distance._upperImpulse = _upperImpulse;
             distance._impulse = _impulse;
-            distance._bias = _bias;
-            distance._gamma = _gamma;
+            distance.Breakpoint = Breakpoint;
         }
 
         public bool Equals(DistanceJoint? other)

@@ -277,9 +277,11 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
     {
         var mouse = new MouseJoint(uidA, uidB, LocalAnchorA, LocalAnchorB)
         {
+            Enabled = Enabled,
             MaxForce = MaxForce,
             Damping = Damping,
-            Stiffness = Stiffness
+            Stiffness = Stiffness,
+            Breakpoint = Breakpoint,
         };
         return mouse;
     }
@@ -289,10 +291,12 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         if (original is not MouseJoint mouse)
             return;
 
+        mouse.Enabled = Enabled;
         mouse.MaxForce = MaxForce;
         mouse.Damping = Damping;
         mouse.Stiffness = Stiffness;
         mouse._impulse = _impulse;
+        mouse.Breakpoint = Breakpoint;
     }
 
     public bool Equals(MouseJoint? other)

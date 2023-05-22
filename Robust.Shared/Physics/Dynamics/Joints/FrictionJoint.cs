@@ -297,9 +297,13 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint Clone(EntityUid uidA, EntityUid uidB)
         {
-            var friction = new FrictionJoint(uidA, uidB, LocalAnchorA, LocalAnchorB);
-            friction.MaxTorque = MaxTorque;
-            friction.MaxForce = MaxForce;
+            var friction = new FrictionJoint(uidA, uidB, LocalAnchorA, LocalAnchorB)
+            {
+                Enabled = Enabled,
+                MaxTorque = MaxTorque,
+                MaxForce = MaxForce,
+                Breakpoint = Breakpoint
+            };
             return friction;
         }
 
@@ -308,10 +312,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             if (original is not FrictionJoint friction)
                 return;
 
+            friction.Enabled = Enabled;
             friction.MaxTorque = MaxTorque;
             friction.MaxForce = MaxForce;
             friction._linearImpulse = _linearImpulse;
             friction._angularImpulse = _angularImpulse;
+            friction.Breakpoint = Breakpoint;
         }
 
         public bool Equals(FrictionJoint? other)

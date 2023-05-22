@@ -91,6 +91,14 @@ public abstract partial class SharedJointSystem : EntitySystem
 
     #endregion
 
+    public void SetEnabled(Joint joint, bool value)
+    {
+        if (joint.Enabled == value)
+            return;
+
+        joint.Enabled = value;
+    }
+
     public override void Update(float frameTime)
     {
         base.Update(frameTime);

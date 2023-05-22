@@ -363,10 +363,14 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint Clone(EntityUid uidA, EntityUid uidB)
         {
-            var weld = new WeldJoint(uidA, uidB, LocalAnchorA, LocalAnchorB, ReferenceAngle);
-            weld.Bias = Bias;
-            weld.Damping = Damping;
-            weld.Stiffness = Stiffness;
+            var weld = new WeldJoint(uidA, uidB, LocalAnchorA, LocalAnchorB, ReferenceAngle)
+            {
+                Enabled = Enabled,
+                Bias = Bias,
+                Damping = Damping,
+                Stiffness = Stiffness,
+                Breakpoint = Breakpoint
+            };
             return weld;
         }
 
@@ -375,10 +379,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             if (original is not WeldJoint weld)
                 return;
 
+            weld.Enabled = Enabled;
             weld.Bias = Bias;
             weld.Damping = Damping;
             weld.Stiffness = Stiffness;
             weld._impulse = _impulse;
+            weld.Breakpoint = Breakpoint;
         }
 
         public bool Equals(WeldJoint? other)

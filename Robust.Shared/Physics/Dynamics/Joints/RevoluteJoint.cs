@@ -468,13 +468,17 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint Clone(EntityUid uidA, EntityUid uidB)
         {
-            var revolute = new RevoluteJoint(uidA, uidB, LocalAnchorA, LocalAnchorB, ReferenceAngle);
-            revolute.EnableLimit = EnableLimit;
-            revolute.EnableMotor = EnableMotor;
-            revolute.LowerAngle = LowerAngle;
-            revolute.UpperAngle = UpperAngle;
-            revolute.MaxMotorTorque = MaxMotorTorque;
-            revolute.MotorSpeed = MotorSpeed;
+            var revolute = new RevoluteJoint(uidA, uidB, LocalAnchorA, LocalAnchorB, ReferenceAngle)
+            {
+                Enabled = Enabled,
+                EnableLimit = EnableLimit,
+                EnableMotor = EnableMotor,
+                LowerAngle = LowerAngle,
+                UpperAngle = UpperAngle,
+                MaxMotorTorque = MaxMotorTorque,
+                MotorSpeed = MotorSpeed,
+                Breakpoint = Breakpoint
+            };
 
             return revolute;
         }
@@ -484,6 +488,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             if (original is not RevoluteJoint revolute)
                 return;
 
+            revolute.Enabled = Enabled;
             revolute.EnableLimit = EnableLimit;
             revolute.EnableMotor = EnableMotor;
             revolute.LowerAngle = LowerAngle;
@@ -494,6 +499,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             revolute._upperImpulse = _upperImpulse;
             revolute._lowerImpulse = _lowerImpulse;
             revolute._motorImpulse = _motorImpulse;
+            revolute.Breakpoint = Breakpoint;
         }
     }
 }

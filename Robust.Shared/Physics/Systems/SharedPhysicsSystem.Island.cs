@@ -1022,6 +1022,7 @@ public abstract partial class SharedPhysicsSystem
             RaiseLocalEvent(joint.BodyAUid, ref ev);
             RaiseLocalEvent(joint.BodyBUid, ref ev);
             RaiseLocalEvent(ref ev);
+            joint.Dirty();
         }
 
         var offset = island.Offset;
@@ -1037,7 +1038,7 @@ public abstract partial class SharedPhysicsSystem
             var uid = body.Owner;
             var position = positions[offset + i];
             var angle = angles[offset + i];
-            var xform = xformQuery.GetComponent(body.Owner);
+            var xform = xformQuery.GetComponent(uid);
 
             // Temporary NaN guards until PVS is fixed.
             if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
@@ -1060,7 +1061,7 @@ public abstract partial class SharedPhysicsSystem
             }
 
             // TODO: Should check if the values update.
-            Dirty(body, metaQuery.GetComponent(body.Owner));
+            Dirty(body, metaQuery.GetComponent(uid));
         }
     }
 

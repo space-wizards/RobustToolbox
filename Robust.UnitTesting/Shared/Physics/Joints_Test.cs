@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Robust.Server.Physics;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -15,6 +16,48 @@ namespace Robust.UnitTesting.Shared.Physics;
 [TestFixture, TestOf(typeof(JointSystem))]
 public sealed class Joints_Test
 {
+    [Test]
+    public void JointsRelayTest()
+    {
+        var factory = RobustServerSimulation.NewSimulation();
+        factory.RegisterComponents(fac =>
+        {
+            fac.RegisterClass<CollideOnAnchorComponent>();
+        });
+        var sim = factory.InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var mapManager = sim.Resolve<IMapManager>();
+        var jointSystem = entManager.System<SharedJointSystem>();
+
+        var mapId = mapManager.CreateMap();
+
+        var uidA = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
+        var uidB = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
+        var uidC = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
+
+        entManager.AddComponent<PhysicsComponent>(uidA);
+        entManager.AddComponent<PhysicsComponent>(uidB);
+        entManager.AddComponent<PhysicsComponent>(uidC);
+
+        var container = entManager.System<SharedContainerSystem>().EnsureContainer<Container>(uidC, "weh");
+        var joint = jointSystem.CreateDistanceJoint(uidA, uidB);
+        jointSystem.Update(0.016f);
+
+        container.Insert(uidA, entManager);
+        Assert.Multiple(() =>
+        {
+            Assert.That(container.Contains(uidA));
+            Assert.That(entManager.HasComponent<JointRelayTargetComponent>(uidC));
+            Assert.That(entManager.GetComponent<JointComponent>(uidA).Relay, Is.EqualTo(uidC));
+
+            container.Remove(uidA);
+            Assert.That(entManager.GetComponent<JointRelayTargetComponent>(uidC).Relayed, Is.Empty);
+            Assert.That(entManager.GetComponent<JointComponent>(uidA).Relay, Is.EqualTo(null));
+        });
+        mapManager.DeleteMap(mapId);
+    }
+
     /// <summary>
     /// Assert that if a joint exists between 2 bodies they can collide or not collide correctly.
     /// </summary>

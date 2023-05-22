@@ -330,6 +330,7 @@ public abstract partial class SharedPhysicsSystem
             new List<(Joint Joint, float Error)>());
 
         var islands = new List<IslandData>();
+        var islandJoints = new List<(Joint Original, Joint Joint)>();
 
         // Build the relevant islands / graphs for all bodies.
         foreach (var seed in _awakeBodyList)
@@ -404,97 +405,93 @@ public abstract partial class SharedPhysicsSystem
                     other.Island = true;
                 }
 
-                // If we're a relay then get dummy joints.
+                // Handle joints
                 if (jointRelayQuery.TryGetComponent(bodyUid, out var relayComp))
                 {
                     foreach (var relay in relayComp.Relayed)
                     {
-                        // Component might've been kept around for a bit?
-                        if (!jointQuery.TryGetComponent(relay, out var relayJointComp))
-                        {
+                        if (!jointQuery.TryGetComponent(relay, out var jointComp))
                             continue;
-                        }
 
-                        foreach (var joint in relayJointComp.Joints.Values)
+                        foreach (var joint in jointComp.GetJoints.Values)
                         {
-                            if (joint.IslandFlag) continue;
+                            if (joint.IslandFlag)
+                                continue;
 
-                            var otherUid = joint.BodyAUid == relay
-                                ? joint.BodyBUid
-                                : joint.BodyAUid;
+                            var uidA = joint.BodyAUid;
+                            var uidB = joint.BodyBUid;
 
-                            if (jointQuery.TryGetComponent(otherUid, out var otherJointComp) &&
-                                otherJointComp.Relay != null)
+                            if (jointQuery.TryGetComponent(uidA, out var jointCompA) &&
+                                jointCompA.Relay != null)
                             {
-                                otherUid = otherJointComp.Relay.Value;
+                                uidA = jointCompA.Relay.Value;
                             }
 
-                            var other = bodyQuery.GetComponent(otherUid);
+                            if (jointQuery.TryGetComponent(uidA, out var jointCompB) &&
+                                jointCompB.Relay != null)
+                            {
+                                uidB = jointCompB.Relay.Value;
+                            }
 
-                            // Don't simulate joints connected to inactive bodies.
-                            if (!other.CanCollide) continue;
-
-                            // Copy the joint and use a dummy one.
-                            var uidA = otherUid == joint.BodyAUid ? otherUid : bodyUid;
-                            var uidB = otherUid == joint.BodyBUid ? otherUid : bodyUid;
-
-                            var jointCopy = joint.Clone(uidA, uidB);
-
-                            joints.Add((joint, jointCopy));
-                            // We set the flag on the original joint, not the dummy one.
+                            var copy = joint.Clone(uidA, uidB);
+                            islandJoints.Add((joint, copy));
                             joint.IslandFlag = true;
-
-                            if (other.Island) continue;
-
-                            _bodyStack.Push(other);
-                            other.Island = true;
                         }
                     }
                 }
 
-                // Handle joints
-                if (jointQuery.TryGetComponent(bodyUid, out var jointComponent) && jointComponent.Relay != null)
+                if (jointQuery.TryGetComponent(bodyUid, out var jointComponent))
                 {
-                    var jUid = bodyUid;
-
                     foreach (var joint in jointComponent.Joints.Values)
                     {
-                        if (joint.IslandFlag) continue;
+                        if (joint.IslandFlag)
+                            continue;
 
-                        var otherUid = joint.BodyAUid == bodyUid
-                            ? joint.BodyBUid
-                            : joint.BodyAUid;
+                        var uidA = joint.BodyAUid;
+                        var uidB = joint.BodyBUid;
 
-                        if (jointComponent.Relay != null)
+                        if (jointQuery.TryGetComponent(uidA, out var jointCompA) &&
+                            jointCompA.Relay != null)
                         {
-                            jUid = jointComponent.Relay.Value;
+                            uidA = jointCompA.Relay.Value;
                         }
 
-                        if (jointQuery.TryGetComponent(otherUid, out var otherJointComp) &&
-                            otherJointComp.Relay != null)
+                        if (jointQuery.TryGetComponent(uidA, out var jointCompB) &&
+                            jointCompB.Relay != null)
                         {
-                            otherUid = otherJointComp.Relay.Value;
+                            uidB = jointCompB.Relay.Value;
                         }
 
-                        var other = bodyQuery.GetComponent(otherUid);
-
-                        // Don't simulate joints connected to inactive bodies.
-                        if (!other.CanCollide) continue;
-
-                        // Copy the joint and use a dummy one.
-                        var uidA = otherUid == joint.BodyAUid ? otherUid : jUid;
-                        var uidB = otherUid == joint.BodyBUid ? otherUid : jUid;
-
-                        var jointCopy = joint.Clone(uidA, uidB);
-                        joints.Add((joint, jointCopy));
+                        var copy = joint.Clone(uidA, uidB);
+                        islandJoints.Add((joint, copy));
                         joint.IslandFlag = true;
-
-                        if (other.Island) continue;
-
-                        _bodyStack.Push(other);
-                        other.Island = true;
                     }
                 }
+
+                foreach (var (original, joint) in islandJoints)
+                {
+                    var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
+                    var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
+
+                    if (!bodyA.CanCollide || !bodyB.CanCollide)
+                        continue;
+
+                    joints.Add((original, joint));
+
+                    if (!bodyA.Island)
+                    {
+                        _bodyStack.Push(bodyA);
+                        bodyA.Island = true;
+                    }
+
+                    if (!bodyB.Island)
+                    {
+                        _bodyStack.Push(bodyB);
+                        bodyB.Island = true;
+                    }
+                }
+
+                islandJoints.Clear();
             }
 
             int idx;

@@ -404,35 +404,10 @@ public abstract partial class SharedPhysicsSystem
                     other.Island = true;
                 }
 
-                if (jointQuery.TryGetComponent(bodyUid, out var jointComponent))
+                // If we're a relay then get dummy joints.
+                if (jointRelayQuery.TryGetComponent(bodyUid, out var relayComp))
                 {
-                    DebugTools.Assert(jointComponent.Relay == null);
-
-                    foreach (var joint in jointComponent.Joints.Values)
-                    {
-                        if (joint.IslandFlag) continue;
-
-                        var other = joint.BodyAUid == bodyUid
-                            ? bodyQuery.GetComponent(joint.BodyBUid)
-                            : bodyQuery.GetComponent(joint.BodyAUid);
-
-                        // Don't simulate joints connected to inactive bodies.
-                        if (!other.CanCollide) continue;
-
-                        joints.Add((joint, joint));
-                        joint.IslandFlag = true;
-
-                        if (other.Island) continue;
-
-                        _bodyStack.Push(other);
-                        other.Island = true;
-                    }
-                }
-
-                // Create dummy joints for relays.
-                if (jointRelayQuery.TryGetComponent(bodyUid, out var relayComponent))
-                {
-                    foreach (var relay in relayComponent.Relayed)
+                    foreach (var relay in relayComp.Relayed)
                     {
                         // Component might've been kept around for a bit?
                         if (!jointQuery.TryGetComponent(relay, out var relayJointComp))
@@ -448,7 +423,8 @@ public abstract partial class SharedPhysicsSystem
                                 ? joint.BodyBUid
                                 : joint.BodyAUid;
 
-                            if (jointQuery.TryGetComponent(otherUid, out var otherJointComp) && otherJointComp.Relay != null)
+                            if (jointQuery.TryGetComponent(otherUid, out var otherJointComp) &&
+                                otherJointComp.Relay != null)
                             {
                                 otherUid = otherJointComp.Relay.Value;
                             }
@@ -473,6 +449,50 @@ public abstract partial class SharedPhysicsSystem
                             _bodyStack.Push(other);
                             other.Island = true;
                         }
+                    }
+                }
+
+                // Handle joints
+                if (jointQuery.TryGetComponent(bodyUid, out var jointComponent) && jointComponent.Relay != null)
+                {
+                    var jUid = bodyUid;
+
+                    foreach (var joint in jointComponent.Joints.Values)
+                    {
+                        if (joint.IslandFlag) continue;
+
+                        var otherUid = joint.BodyAUid == bodyUid
+                            ? joint.BodyBUid
+                            : joint.BodyAUid;
+
+                        if (jointComponent.Relay != null)
+                        {
+                            jUid = jointComponent.Relay.Value;
+                        }
+
+                        if (jointQuery.TryGetComponent(otherUid, out var otherJointComp) &&
+                            otherJointComp.Relay != null)
+                        {
+                            otherUid = otherJointComp.Relay.Value;
+                        }
+
+                        var other = bodyQuery.GetComponent(otherUid);
+
+                        // Don't simulate joints connected to inactive bodies.
+                        if (!other.CanCollide) continue;
+
+                        // Copy the joint and use a dummy one.
+                        var uidA = otherUid == joint.BodyAUid ? otherUid : jUid;
+                        var uidB = otherUid == joint.BodyBUid ? otherUid : jUid;
+
+                        var jointCopy = joint.Clone(uidA, uidB);
+                        joints.Add((joint, jointCopy));
+                        joint.IslandFlag = true;
+
+                        if (other.Island) continue;
+
+                        _bodyStack.Push(other);
+                        other.Island = true;
                     }
                 }
             }
@@ -532,6 +552,7 @@ public abstract partial class SharedPhysicsSystem
     {
         foreach (var body in island.Bodies)
         {
+            DebugTools.Assert(body.IslandIndex.ContainsKey(island.Index));
             body.IslandIndex.Remove(island.Index);
         }
 

@@ -275,10 +275,12 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 
     public override Joint Clone(EntityUid uidA, EntityUid uidB)
     {
-        var mouse = new MouseJoint(uidA, uidB, LocalAnchorA, LocalAnchorB);
-        mouse.MaxForce = MaxForce;
-        mouse.Damping = Damping;
-        mouse.Stiffness = Stiffness;
+        var mouse = new MouseJoint(uidA, uidB, LocalAnchorA, LocalAnchorB)
+        {
+            MaxForce = MaxForce,
+            Damping = Damping,
+            Stiffness = Stiffness
+        };
         return mouse;
     }
 

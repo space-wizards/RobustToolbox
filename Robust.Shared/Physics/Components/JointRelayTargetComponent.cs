@@ -12,5 +12,5 @@ namespace Robust.Shared.Physics.Components;
 public sealed class JointRelayTargetComponent : Component
 {
     [DataField("relayTarget")]
-    public List<EntityUid> Relayed = new();
+    public HashSet<EntityUid> Relayed = new();
 }

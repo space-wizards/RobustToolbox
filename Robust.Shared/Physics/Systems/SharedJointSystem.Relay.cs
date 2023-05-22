@@ -19,9 +19,9 @@ public abstract partial class SharedJointSystem
     [Serializable, NetSerializable]
     private sealed class JointRelayComponentState : ComponentState
     {
-        public List<EntityUid> Entities;
+        public HashSet<EntityUid> Entities;
 
-        public JointRelayComponentState(List<EntityUid> entities)
+        public JointRelayComponentState(HashSet<EntityUid> entities)
         {
             Entities = entities;
         }
@@ -45,7 +45,7 @@ public abstract partial class SharedJointSystem
             return;
 
         component.Relayed.Clear();
-        component.Relayed.AddRange(state.Entities);
+        component.Relayed.UnionWith(state.Entities);
     }
 
     private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ComponentShutdown args)
@@ -90,7 +90,12 @@ public abstract partial class SharedJointSystem
         if (relay != null)
         {
             relayTarget = EnsureComp<JointRelayTargetComponent>(relay.Value);
-            relayTarget.Relayed.Add(uid);
+            if (relayTarget.Relayed.Add(uid))
+            {
+                _physics.WakeBody(relay.Value);
+                Dirty(relayTarget);
+            }
+
         }
 
         Dirty(component);

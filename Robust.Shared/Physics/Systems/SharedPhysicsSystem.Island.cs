@@ -427,7 +427,7 @@ public abstract partial class SharedPhysicsSystem
                                 uidA = jointCompA.Relay.Value;
                             }
 
-                            if (jointQuery.TryGetComponent(uidA, out var jointCompB) &&
+                            if (jointQuery.TryGetComponent(uidB, out var jointCompB) &&
                                 jointCompB.Relay != null)
                             {
                                 uidB = jointCompB.Relay.Value;
@@ -440,7 +440,8 @@ public abstract partial class SharedPhysicsSystem
                     }
                 }
 
-                if (jointQuery.TryGetComponent(bodyUid, out var jointComponent))
+                if (jointQuery.TryGetComponent(bodyUid, out var jointComponent) &&
+                    jointComponent.Relay == null)
                 {
                     foreach (var joint in jointComponent.Joints.Values)
                     {

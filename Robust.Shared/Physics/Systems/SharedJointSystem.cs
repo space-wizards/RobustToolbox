@@ -498,17 +498,17 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         // Wake up connected bodies.
         if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
-            MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating &&
-            !_container.IsEntityInContainer(bodyAUid))
+            MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
-            _physics.WakeBody(bodyAUid, body: bodyA);
+            var uidA = jointComponentA.Relay ?? bodyAUid;
+            _physics.WakeBody(uidA);
         }
 
         if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
-            MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating &&
-            !_container.IsEntityInContainer(bodyBUid))
+            MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
-            _physics.WakeBody(bodyBUid, body: bodyB);
+            var uidB = jointComponentB.Relay ?? bodyBUid;
+            _physics.WakeBody(uidB);
         }
 
         if (!jointComponentA.Deleted)

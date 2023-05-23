@@ -781,23 +781,23 @@ public record struct RhiSamplerDescriptor(
 
 public enum RhiAddressMode : byte
 {
-    ClampToEdge = 0,
-    Repeat = 1,
-    MirrorRepeat = 2,
+    Repeat = 0,
+    MirrorRepeat = 1,
+    ClampToEdge = 2,
     Final
 }
 
 public enum RhiFilterMode : byte
 {
-    Linear = 0,
-    Nearest = 1,
+    Nearest = 0,
+    Linear = 1,
     Final
 }
 
 public enum RhiMipmapFilterMode : byte
 {
-    Linear = 0,
-    Nearest = 1,
+    Nearest = 0,
+    Linear = 1,
     Final
 }
 

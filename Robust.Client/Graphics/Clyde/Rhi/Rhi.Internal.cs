@@ -88,6 +88,12 @@ public abstract partial class RhiBase
         ulong offset,
         ulong? size);
 
+    internal abstract void RenderPassEncoderSetScissorRect(RhiRenderPassEncoder encoder,
+        uint x,
+        uint y,
+        uint w,
+        uint h);
+
     internal abstract void CommandBufferDrop(RhiCommandBuffer commandBuffer);
 
     internal abstract RhiBufferMapState BufferGetMapState(RhiBuffer buffer);

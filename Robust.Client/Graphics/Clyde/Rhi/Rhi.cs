@@ -399,6 +399,11 @@ public sealed class RhiRenderPassEncoder : RhiObject
         Rhi.RenderPassEncoderSetVertexBuffer(this, slot, buffer, offset, size);
     }
 
+    public void SetScissorRect(uint x, uint y, uint w, uint h)
+    {
+        Rhi.RenderPassEncoderSetScissorRect(this, x, y, w, h);
+    }
+
     public void End()
     {
         Rhi.RenderPassEncoderEnd(this);

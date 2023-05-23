@@ -161,6 +161,20 @@ internal sealed unsafe partial class RhiWebGpu
         );
     }
 
+    internal override void RenderPassEncoderSetScissorRect(
+        RhiRenderPassEncoder encoder,
+        uint x, uint y, uint w, uint h)
+    {
+        // TODO: safety
+        _webGpu.RenderPassEncoderSetScissorRect(
+            _renderPassEncoderRegistry[encoder.Handle].Native,
+            x,
+            y,
+            w,
+            h
+        );
+    }
+
     internal override RhiCommandBuffer CommandEncoderFinish(
         in RhiCommandEncoder encoder,
         in RhiCommandBufferDescriptor descriptor)

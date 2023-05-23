@@ -149,7 +149,14 @@ namespace Robust.Client.Graphics.Clyde
 
             public void SetScissor(UIBox2i? scissorBox)
             {
-                // _clyde.DrawSetScissor(scissorBox);
+                if (scissorBox is { } box)
+                {
+                    _spriteBatch.SetScissor(box.Left, box.Top, box.Width, box.Height);
+                }
+                else
+                {
+                    _spriteBatch.ClearScissor();
+                }
             }
 
             /// <summary>

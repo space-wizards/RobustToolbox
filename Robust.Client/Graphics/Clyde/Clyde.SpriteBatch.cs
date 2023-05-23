@@ -37,12 +37,17 @@ internal partial class Clyde
         // Active recording state
         private ValueList<RhiBindGroup> _tempBindGroups;
         private RhiCommandEncoder? _commandEncoder;
+        private int _vertexIdx = 0;
+
         private RhiRenderPassEncoder? _passEncoder;
+        private Vector2i _currentPassSize;
 
         // Active batch state
         private int _curBatchSize = 0;
-        private int _vertexIdx = 0;
-        private ClydeHandle _currentTexture;
+
+        private DirtyStateFlags _dirtyStateFlags;
+        private State<ClydeHandle> _stateTexture;
+        private State<(uint x, uint y, uint w, uint h)> _stateScissorRect;
 
         // Other state
         private Matrix3x2 _modelTransform;
@@ -179,6 +184,8 @@ internal partial class Clyde
 
         public void BeginPass(Vector2i size, RhiTextureView targetTexture, Color? clearColor = null)
         {
+            _currentPassSize = size;
+
             var projMatrix = default(Matrix3x2);
             projMatrix.M11 = 2f / size.X;
             projMatrix.M22 = -2f / size.Y;
@@ -252,25 +259,9 @@ internal partial class Clyde
         public void Draw(ClydeTexture texture, RVector2 position, Color color)
         {
             var textureHandle = texture.TextureId;
-            if (textureHandle != _currentTexture)
-            {
-                var loaded = _clyde._loadedTextures[textureHandle];
 
-                FlushBatch();
-
-                var group = AllocTempBindGroup(new RhiBindGroupDescriptor(
-                    _group2Layout,
-                    new[]
-                    {
-                        new RhiBindGroupEntry(0, loaded.DefaultRhiView),
-                        new RhiBindGroupEntry(1, loaded.RhiSampler),
-                    }
-                ));
-
-                _passEncoder!.SetBindGroup(2, group);
-
-                _currentTexture = textureHandle;
-            }
+            SetTexture(textureHandle);
+            ValidateBatchState();
 
             var width = texture.Width;
             var height = texture.Height;
@@ -305,9 +296,74 @@ internal partial class Clyde
             in Box2 region)
         {
             var textureHandle = texture.TextureId;
-            if (textureHandle != _currentTexture)
+
+            SetTexture(textureHandle);
+            ValidateBatchState();
+
+            var asColor = Unsafe.As<Color, SVector4>(ref Unsafe.AsRef(color));
+
+            var sBl = SVector2.Transform((SVector2)bl, _modelTransform);
+            var sBr = SVector2.Transform((SVector2)br, _modelTransform);
+            var sTl = SVector2.Transform((SVector2)tl, _modelTransform);
+            var sTr = SVector2.Transform((SVector2)tr, _modelTransform);
+
+            _vertexBufferData[_vertexIdx + 0] = new Vertex2D(sBl, (SVector2)region.BottomLeft, asColor);
+            _vertexBufferData[_vertexIdx + 1] = new Vertex2D(sBr, (SVector2)region.BottomRight, asColor);
+            _vertexBufferData[_vertexIdx + 2] = new Vertex2D(sTr, (SVector2)region.TopRight, asColor);
+            _vertexBufferData[_vertexIdx + 3] = _vertexBufferData[_vertexIdx + 2];
+            _vertexBufferData[_vertexIdx + 4] = new Vertex2D(sTl, (SVector2)region.TopLeft, asColor);
+            _vertexBufferData[_vertexIdx + 5] = _vertexBufferData[_vertexIdx + 0];
+
+            _vertexIdx += 6;
+            _curBatchSize += 6;
+        }
+
+        public void SetScissor(int x, int y, int width, int height)
+        {
+            checked
             {
-                var loaded = _clyde._loadedTextures[textureHandle];
+                SetScissor((uint)x, (uint)y, (uint)width, (uint)height);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetScissor(uint x, uint y, uint width, uint height)
+        {
+            _stateScissorRect.Set((x, y, width, height), ref _dirtyStateFlags, DirtyStateFlags.ScissorRect);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ClearScissor()
+        {
+            SetScissor(0u, 0u, (uint)_currentPassSize.X, (uint)_currentPassSize.Y);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetTexture(ClydeHandle handle)
+        {
+            _stateTexture.Set(handle, ref _dirtyStateFlags, DirtyStateFlags.Texture);
+        }
+
+        private void ValidateBatchState()
+        {
+            if (_dirtyStateFlags == 0)
+                return;
+
+            DirtyStateFlags sureFlags = 0;
+            sureFlags |= CheckSureState(ref _stateTexture, DirtyStateFlags.Texture);
+            sureFlags |= CheckSureState(ref _stateScissorRect, DirtyStateFlags.ScissorRect);
+
+            if (sureFlags == 0)
+                return;
+
+            // Something changed. Save the active batch so we can change other rendering parameters.
+            FlushBatch();
+
+            _dirtyStateFlags = 0;
+
+            if ((sureFlags & DirtyStateFlags.Texture) != 0)
+            {
+                var loaded = _clyde._loadedTextures[_stateTexture.Active];
 
                 FlushBatch();
 
@@ -321,26 +377,30 @@ internal partial class Clyde
                 ));
 
                 _passEncoder!.SetBindGroup(2, group);
-
-                _currentTexture = textureHandle;
             }
 
-            var asColor = Unsafe.As<Color, SVector4>(ref Unsafe.AsRef(color));
+            if ((sureFlags & DirtyStateFlags.ScissorRect) != 0)
+            {
+                _passEncoder!.SetScissorRect(
+                    _stateScissorRect.Active.x,
+                    _stateScissorRect.Active.y,
+                    _stateScissorRect.Active.w,
+                    _stateScissorRect.Active.h
+                );
+            }
 
-            var sBl = SVector2.Transform((SVector2) bl, _modelTransform);
-            var sBr = SVector2.Transform((SVector2) br, _modelTransform);
-            var sTl = SVector2.Transform((SVector2) tl, _modelTransform);
-            var sTr = SVector2.Transform((SVector2) tr, _modelTransform);
+            DirtyStateFlags CheckSureState<T>(ref State<T> state, DirtyStateFlags thisFlag) where T : IEquatable<T>
+            {
+                // Not really sure this is worth checking again overhead-wise.
+                if ((_dirtyStateFlags & thisFlag) == 0)
+                    return 0;
 
-            _vertexBufferData[_vertexIdx + 0] = new Vertex2D(sBl, (SVector2) region.BottomLeft, asColor);
-            _vertexBufferData[_vertexIdx + 1] = new Vertex2D(sBr, (SVector2) region.BottomRight, asColor);
-            _vertexBufferData[_vertexIdx + 2] = new Vertex2D(sTr, (SVector2) region.TopRight, asColor);
-            _vertexBufferData[_vertexIdx + 3] = _vertexBufferData[_vertexIdx + 2];
-            _vertexBufferData[_vertexIdx + 4] = new Vertex2D(sTl, (SVector2) region.TopLeft, asColor);
-            _vertexBufferData[_vertexIdx + 5] = _vertexBufferData[_vertexIdx + 0];
+                if (state.Active.Equals(state.New))
+                    return 0;
 
-            _vertexIdx += 6;
-            _curBatchSize += 6;
+                state.Active = state.New;
+                return thisFlag;
+            }
         }
 
         private void FlushBatch()
@@ -355,8 +415,11 @@ internal partial class Clyde
         public void Clear()
         {
             _vertexIdx = 0;
-            _currentTexture = default;
             _curBatchSize = 0;
+            _dirtyStateFlags = 0;
+            _stateTexture = default;
+            _stateScissorRect = default;
+            _modelTransform = Matrix3x2.Identity;
 
             foreach (var bindGroup in _tempBindGroups)
             {
@@ -364,7 +427,6 @@ internal partial class Clyde
             }
 
             _tempBindGroups.Clear();
-            _modelTransform = Matrix3x2.Identity;
         }
 
         public void SetModelTransform(in Matrix3x2 matrix)
@@ -397,6 +459,40 @@ internal partial class Clyde
         {
             public ShaderMat3x2F ProjViewMatrix;
             public SVector2 ScreenPixelSize;
+        }
+
+        [Flags]
+        private enum DirtyStateFlags : ushort
+        {
+            // @formatter:off
+            None        = 0,
+            Texture     = 1 << 0,
+            ScissorRect =  1 << 1
+            // @formatter:on
+        }
+
+        private struct State<T> where T : IEquatable<T>
+        {
+            public T Active;
+            public T New;
+
+            public void Set(T newValue, ref DirtyStateFlags flags, DirtyStateFlags thisFlag)
+            {
+                if ((flags & thisFlag) != 0)
+                {
+                    // Property is already dirty, just write it with no further checks.
+                    New = newValue;
+                    return;
+                }
+
+                // Quick case: setting to same value.
+                if (Active.Equals(newValue))
+                    return;
+
+                // Value modified, mark as dirty.
+                New = newValue;
+                flags |= thisFlag;
+            }
         }
     }
 }

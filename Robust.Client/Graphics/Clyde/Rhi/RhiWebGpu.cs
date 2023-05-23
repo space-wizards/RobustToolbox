@@ -143,7 +143,48 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         _sawmill.Debug($"adapter backend: {adapterProps.BackendType}");
         _sawmill.Debug($"adapter type: {adapterProps.AdapterType}");
 
+        var requiredLimits = new RequiredLimits();
+        if (false)
+        {
+            // GLES3.0
+            requiredLimits.Limits.MaxComputeWorkgroupStorageSize = 16384;
+            requiredLimits.Limits.MaxComputeInvocationsPerWorkgroup = 256;
+            requiredLimits.Limits.MaxComputeWorkgroupSizeX = 256;
+            requiredLimits.Limits.MaxComputeWorkgroupSizeY = 256;
+            requiredLimits.Limits.MaxComputeWorkgroupSizeZ = 256;
+            requiredLimits.Limits.MaxComputeWorkgroupsPerDimension = 65536;
+            requiredLimits.Limits.MaxDynamicStorageBuffersPerPipelineLayout = 0;
+            requiredLimits.Limits.MaxStorageBuffersPerShaderStage = 4;
+            requiredLimits.Limits.MaxStorageBufferBindingSize = 134217728;
+        }
+
+        // Required minimums
+        requiredLimits.Limits.MinStorageBufferOffsetAlignment = 256;
+        requiredLimits.Limits.MinUniformBufferOffsetAlignment = 256;
+
+        requiredLimits.Limits.MaxTextureDimension1D = 8192;
+        requiredLimits.Limits.MaxTextureDimension2D = 8192;
+        requiredLimits.Limits.MaxTextureDimension3D = 2048;
+        requiredLimits.Limits.MaxTextureArrayLayers = 256;
+        requiredLimits.Limits.MaxBindGroups = 4;
+        requiredLimits.Limits.MaxBindingsPerBindGroup = 1000;
+        requiredLimits.Limits.MaxDynamicUniformBuffersPerPipelineLayout = 8;
+        requiredLimits.Limits.MaxSampledTexturesPerShaderStage = 16;
+        requiredLimits.Limits.MaxSamplersPerShaderStage = 16;
+        requiredLimits.Limits.MaxUniformBuffersPerShaderStage = 12;
+        requiredLimits.Limits.MaxUniformBufferBindingSize = 65536;
+        requiredLimits.Limits.MaxVertexBuffers = 8;
+        requiredLimits.Limits.MaxVertexAttributes = 16;
+        requiredLimits.Limits.MaxVertexBufferArrayStride = 2048;
+        requiredLimits.Limits.MaxInterStageShaderComponents = 60;
+        requiredLimits.Limits.MaxInterStageShaderVariables = 16;
+        requiredLimits.Limits.MaxColorAttachments = 8;
+        requiredLimits.Limits.MaxColorAttachmentBytesPerSample = 32;
+
+        requiredLimits.Limits.MaxBufferSize = 268435456;
+
         var deviceDesc = new DeviceDescriptor();
+        deviceDesc.RequiredLimits = &requiredLimits;
         WgpuRequestDeviceResult deviceResult;
         _webGpu.AdapterRequestDevice(
             _wgpuAdapter,

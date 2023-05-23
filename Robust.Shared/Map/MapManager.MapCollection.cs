@@ -39,39 +39,10 @@ internal partial class MapManager
         DebugTools.Assert(_dbgGuardRunning);
 #endif
 
-        if (!_mapEntities.TryGetValue(mapId, out var ent))
+        if (!_mapEntities.TryGetValue(mapId, out var ent) || !ent.IsValid())
             throw new InvalidOperationException($"Attempted to delete nonexistent map '{mapId}'");
 
-        if (ent != EntityUid.Invalid)
-        {
-            EntityManager.DeleteEntity(ent);
-        }
-        else
-        {
-            // unbound map
-            TrueDeleteMap(mapId);
-        }
-    }
-
-    /// <inheritdoc />
-    public void TrueDeleteMap(MapId mapId)
-    {
-        // grids are cached because Delete modifies collection
-        var grids = GetAllMapGrids(mapId).ToList();
-
-        foreach (var grid in grids)
-        {
-            DeleteGrid(grid.Owner);
-        }
-
-        if (mapId != MapId.Nullspace)
-        {
-            var args = new MapEventArgs(mapId);
-            OnMapDestroyedGridTree(args);
-            _mapEntities.Remove(mapId);
-        }
-
-        Logger.InfoS("map", $"Deleting map {mapId}");
+        EntityManager.DeleteEntity(ent);
     }
 
     /// <inheritdoc />

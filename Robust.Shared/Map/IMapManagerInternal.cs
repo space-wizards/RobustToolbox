@@ -34,7 +34,7 @@ namespace Robust.Shared.Map
 
         MapId CreateMap(MapId? mapId, EntityUid euid);
 
-        void TrueDeleteMap(MapId mapId);
+        void RemoveMapId(MapId mapId);
         void OnGridBoundsChange(EntityUid uid, MapGridComponent grid);
     }
 }

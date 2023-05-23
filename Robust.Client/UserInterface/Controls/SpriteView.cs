@@ -29,24 +29,27 @@ namespace Robust.Client.UserInterface.Controls
         public EntityUid? Entity { get; private set; }
 
         /// <summary>
-        /// If true this will scale the sprite up or down to fit within the control's actual size.
+        /// This field configures automatic scaling of the sprite. This automatic scaling is done before
+        /// applying the explicitly set scale <see cref="SpriteView.Scale"/>.
         /// </summary>
         public StretchMode Stretch  { get; set; } = StretchMode.Fit;
 
         public enum StretchMode
         {
             /// <summary>
-            /// Don't scale the sprite at all.
+            /// Don't automatically scale the sprite. The sprite can still be scaled via <see cref="SpriteView.Scale"/>
             /// </summary>
             None,
 
             /// <summary>
-            /// Scales the sprite down so that it fits within the control. Does not scale the sprite up.
+            /// Scales the sprite down so that it fits within the control. Does not scale the sprite up. Keeps the same
+            /// aspect ratio. This automatic scaling is done before applying <see cref="SpriteView.Scale"/>.
             /// </summary>
             Fit,
 
             /// <summary>
-            ///  Scale the sprite so that it fills the whole control.
+            /// Scale the sprite up or down so that it fills the whole control. Keeps the same aspect ratio. This
+            /// automatic scaling is done before applying <see cref="SpriteView.Scale"/>.
             /// </summary>
             Fill
         }
@@ -199,12 +202,13 @@ namespace Robust.Client.UserInterface.Controls
             _spriteSystem ??= _entMan.System<SpriteSystem>();
             _spriteSystem.ForceUpdate(uid);
 
-            var stretch = Stretch switch
+            var stretchVec = Stretch switch
             {
                 StretchMode.Fit => Vector2.ComponentMin(Size / _spriteSize, Vector2.One),
                 StretchMode.Fill => Size / _spriteSize,
                 _ => Vector2.One,
             };
+            var stretch = MathF.Min(stretchVec.X, stretchVec.Y);
 
             var offset = SpriteOffset
                 ? Vector2.Zero

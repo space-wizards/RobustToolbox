@@ -467,7 +467,7 @@ internal partial class Clyde
             // @formatter:off
             None        = 0,
             Texture     = 1 << 0,
-            ScissorRect =  1 << 1
+            ScissorRect = 1 << 1
             // @formatter:on
         }
 

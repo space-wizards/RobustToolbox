@@ -19,6 +19,10 @@ internal partial class Clyde
 
     private sealed class SpriteBatch
     {
+        private const uint BindGroup0 = 0;
+        private const uint BindGroup1 = 1;
+        private const uint BindGroup2 = 2;
+
         private readonly Clyde _clyde;
         private readonly RhiBase _rhi;
 
@@ -59,7 +63,7 @@ internal partial class Clyde
             _clyde = clyde;
             _rhi = rhi;
 
-            var vertices = 8192;
+            var vertices = 81920;
 
             _vertexBuffer = _rhi.CreateBuffer(new RhiBufferDescriptor(
                 (ulong)(vertices * 32),
@@ -175,6 +179,9 @@ internal partial class Clyde
             ));
         }
 
+        // TODO: this name sucks
+        public Vector2i CurrentTargetSize => _currentPassSize;
+
         public void Start()
         {
             Clear();
@@ -184,6 +191,8 @@ internal partial class Clyde
 
         public void BeginPass(Vector2i size, RhiTextureView targetTexture, Color? clearColor = null)
         {
+            ClearPassState();
+
             _currentPassSize = size;
 
             var projMatrix = default(Matrix3x2);
@@ -224,14 +233,14 @@ internal partial class Clyde
                 new[] { new RhiBindGroupEntry(0, new RhiBufferBinding(_uniformConstantsBuffer)) }
             ));
 
-            _passEncoder.SetBindGroup(0, constantsGroup);
+            _passEncoder.SetBindGroup(BindGroup0, constantsGroup);
 
             var passGroup = AllocTempBindGroup(new RhiBindGroupDescriptor(
                 _group1Layout,
                 new[] { new RhiBindGroupEntry(0, new RhiBufferBinding(_uniformPassBuffer)) }
             ));
 
-            _passEncoder.SetBindGroup(1, passGroup);
+            _passEncoder.SetBindGroup(BindGroup1, passGroup);
         }
 
         public void EndPass()
@@ -376,7 +385,7 @@ internal partial class Clyde
                     }
                 ));
 
-                _passEncoder!.SetBindGroup(2, group);
+                _passEncoder!.SetBindGroup(BindGroup2, group);
             }
 
             if ((sureFlags & DirtyStateFlags.ScissorRect) != 0)
@@ -414,12 +423,8 @@ internal partial class Clyde
 
         public void Clear()
         {
+            ClearPassState();
             _vertexIdx = 0;
-            _curBatchSize = 0;
-            _dirtyStateFlags = 0;
-            _stateTexture = default;
-            _stateScissorRect = default;
-            _modelTransform = Matrix3x2.Identity;
 
             foreach (var bindGroup in _tempBindGroups)
             {
@@ -427,6 +432,15 @@ internal partial class Clyde
             }
 
             _tempBindGroups.Clear();
+        }
+
+        private void ClearPassState()
+        {
+            _curBatchSize = 0;
+            _dirtyStateFlags = 0;
+            _stateTexture = default;
+            _stateScissorRect = default;
+            _modelTransform = Matrix3x2.Identity;
         }
 
         public void SetModelTransform(in Matrix3x2 matrix)

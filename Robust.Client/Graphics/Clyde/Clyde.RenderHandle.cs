@@ -151,7 +151,14 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (scissorBox is { } box)
                 {
-                    _spriteBatch.SetScissor(box.Left, box.Top, box.Width, box.Height);
+                    var (targetWidth, targetHeight) = _spriteBatch.CurrentTargetSize;
+
+                    _spriteBatch.SetScissor(
+                        Math.Max(0, box.Left),
+                        Math.Max(0, box.Top),
+                        Math.Min(targetWidth, box.Width),
+                        Math.Min(targetHeight, box.Height)
+                    );
                 }
                 else
                 {

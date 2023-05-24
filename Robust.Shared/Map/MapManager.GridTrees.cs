@@ -74,12 +74,14 @@ internal partial class MapManager
         _movedGrids.Add(e.Map, new HashSet<MapGridComponent>());
     }
 
-    private void OnMapDestroyedGridTree(MapEventArgs e)
+    public void RemoveMapId(MapId mapId)
     {
-        if (e.Map == MapId.Nullspace) return;
+        if (mapId == MapId.Nullspace)
+            return;
 
-        _gridTrees.Remove(e.Map);
-        _movedGrids.Remove(e.Map);
+        _mapEntities.Remove(mapId);
+        _gridTrees.Remove(mapId);
+        _movedGrids.Remove(mapId);
     }
 
     private Box2 GetWorldAABB(MapGridComponent grid, TransformComponent? xform = null)

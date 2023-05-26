@@ -93,7 +93,7 @@ internal sealed unsafe partial class RhiWebGpu
         // TODO: Safety
         var rhiData = window.RhiWebGpuData!;
 
-        var format = _webGpu.SurfaceGetPreferredFormat(rhiData.Surface, _wgpuAdapter);
+        var format = TextureFormat.Bgra8UnormSrgb;
         _sawmill.Debug($"Preferred surface format is {format}");
 
         var swapChainDesc = new SwapChainDescriptor

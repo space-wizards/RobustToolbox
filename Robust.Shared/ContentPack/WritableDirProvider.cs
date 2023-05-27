@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Robust.Shared.Log;
@@ -128,6 +129,19 @@ namespace Robust.Shared.ContentPack
             var fullOldPath = GetFullPath(oldPath);
             var fullNewPath = GetFullPath(newPath);
             File.Move(fullOldPath, fullNewPath);
+        }
+
+        public void OpenOsWindow(ResPath path)
+        {
+            if (!IsDir(path))
+                path = path.Directory;
+
+            var fullPath = GetFullPath(path);
+            Process.Start(new ProcessStartInfo
+            {
+                UseShellExecute = true,
+                FileName = fullPath,
+            });
         }
 
         #endregion

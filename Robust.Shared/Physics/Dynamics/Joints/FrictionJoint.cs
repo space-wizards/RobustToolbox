@@ -295,6 +295,31 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return true;
         }
 
+        public override Joint Clone(EntityUid uidA, EntityUid uidB)
+        {
+            var friction = new FrictionJoint(uidA, uidB, LocalAnchorA, LocalAnchorB)
+            {
+                Enabled = Enabled,
+                MaxTorque = MaxTorque,
+                MaxForce = MaxForce,
+                Breakpoint = Breakpoint
+            };
+            return friction;
+        }
+
+        public override void CopyTo(Joint original)
+        {
+            if (original is not FrictionJoint friction)
+                return;
+
+            friction.Enabled = Enabled;
+            friction.MaxTorque = MaxTorque;
+            friction.MaxForce = MaxForce;
+            friction._linearImpulse = _linearImpulse;
+            friction._angularImpulse = _angularImpulse;
+            friction.Breakpoint = Breakpoint;
+        }
+
         public bool Equals(FrictionJoint? other)
         {
             if (ReferenceEquals(null, other)) return false;

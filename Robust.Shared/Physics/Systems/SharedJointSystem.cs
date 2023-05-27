@@ -15,7 +15,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
 
-public abstract class SharedJointSystem : EntitySystem
+public abstract partial class SharedJointSystem : EntitySystem
 {
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
@@ -39,6 +39,8 @@ public abstract class SharedJointSystem : EntitySystem
         UpdatesBefore.Add(typeof(SharedPhysicsSystem));
         SubscribeLocalEvent<JointComponent, ComponentShutdown>(OnJointShutdown);
         SubscribeLocalEvent<JointComponent, ComponentInit>(OnJointInit);
+
+        InitializeRelay();
     }
 
     #region Lifetime
@@ -75,6 +77,8 @@ public abstract class SharedJointSystem : EntitySystem
             RaiseLocalEvent(bodyB.Owner, smug);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
+
+        RefreshRelay(uid, component);
     }
 
     private void OnJointShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)
@@ -86,6 +90,14 @@ public abstract class SharedJointSystem : EntitySystem
     }
 
     #endregion
+
+    public void SetEnabled(Joint joint, bool value)
+    {
+        if (joint.Enabled == value)
+            return;
+
+        joint.Enabled = value;
+    }
 
     public override void Update(float frameTime)
     {
@@ -494,17 +506,17 @@ public abstract class SharedJointSystem : EntitySystem
 
         // Wake up connected bodies.
         if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
-            MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating &&
-            !_container.IsEntityInContainer(bodyAUid))
+            MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
-            _physics.WakeBody(bodyAUid, body: bodyA);
+            var uidA = jointComponentA.Relay ?? bodyAUid;
+            _physics.WakeBody(uidA);
         }
 
         if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
-            MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating &&
-            !_container.IsEntityInContainer(bodyBUid))
+            MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
-            _physics.WakeBody(bodyBUid, body: bodyB);
+            var uidB = jointComponentB.Relay ?? bodyBUid;
+            _physics.WakeBody(uidB);
         }
 
         if (!jointComponentA.Deleted)

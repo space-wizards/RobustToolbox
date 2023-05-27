@@ -177,6 +177,11 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<JointComponent>();
             }
 
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(JointRelayTargetComponent)))
+            {
+                compFactory.RegisterClass<JointRelayTargetComponent>();
+            }
+
             if (!compFactory.AllRegisteredTypes.Contains(typeof(OccluderComponent)))
             {
                 compFactory.RegisterClass<OccluderComponent>();

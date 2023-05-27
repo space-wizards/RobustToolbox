@@ -119,10 +119,8 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 
     public MouseJoint() {}
 
-    public MouseJoint(EntityUid uidA, EntityUid uidB, Vector2 localAnchorA, Vector2 localAnchorB)
+    public MouseJoint(EntityUid uidA, EntityUid uidB, Vector2 localAnchorA, Vector2 localAnchorB) : base(uidA, uidB)
     {
-        BodyAUid = uidA;
-        BodyBUid = uidB;
         LocalAnchorA = localAnchorA;
         LocalAnchorB = localAnchorB;
     }
@@ -273,6 +271,32 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         float[] angles)
     {
         return true;
+    }
+
+    public override Joint Clone(EntityUid uidA, EntityUid uidB)
+    {
+        var mouse = new MouseJoint(uidA, uidB, LocalAnchorA, LocalAnchorB)
+        {
+            Enabled = Enabled,
+            MaxForce = MaxForce,
+            Damping = Damping,
+            Stiffness = Stiffness,
+            Breakpoint = Breakpoint,
+        };
+        return mouse;
+    }
+
+    public override void CopyTo(Joint original)
+    {
+        if (original is not MouseJoint mouse)
+            return;
+
+        mouse.Enabled = Enabled;
+        mouse.MaxForce = MaxForce;
+        mouse.Damping = Damping;
+        mouse.Stiffness = Stiffness;
+        mouse._impulse = _impulse;
+        mouse.Breakpoint = Breakpoint;
     }
 
     public bool Equals(MouseJoint? other)

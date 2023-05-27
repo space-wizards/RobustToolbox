@@ -541,6 +541,37 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return MathF.Abs(C) < PhysicsConstants.LinearSlop;
         }
 
+        public override Joint Clone(EntityUid uidA, EntityUid uidB)
+        {
+            var distance = new DistanceJoint(uidA, uidB, LocalAnchorA, LocalAnchorB, Length)
+            {
+                Enabled = Enabled,
+                MinLength = MinLength,
+                MaxLength = MaxLength,
+                Stiffness = Stiffness,
+                Damping = Damping,
+                Breakpoint = Breakpoint
+            };
+            return distance;
+        }
+
+        public override void CopyTo(Joint original)
+        {
+            if (original is not DistanceJoint distance)
+                return;
+
+            distance.Enabled = Enabled;
+            distance.MinLength = MinLength;
+            distance.MaxLength = MaxLength;
+            distance.Length = Length;
+            distance.Stiffness = Stiffness;
+            distance.Damping = Damping;
+            distance._lowerImpulse = _lowerImpulse;
+            distance._upperImpulse = _upperImpulse;
+            distance._impulse = _impulse;
+            distance.Breakpoint = Breakpoint;
+        }
+
         public bool Equals(DistanceJoint? other)
         {
             if (ReferenceEquals(null, other)) return false;

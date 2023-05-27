@@ -98,5 +98,11 @@ namespace Robust.Shared.ContentPack
         /// <param name="newPath">New name of the file.</param>
         /// <returns></returns>
         void Rename(ResPath oldPath, ResPath newPath);
+
+        /// <summary>
+        /// Opens up an external file window for some subdirectory. For example, this could be used to create a button
+        /// that opens up the screenshot directory using the operating system's file explorer.
+        /// </summary>
+        void OpenOsWindow(ResPath path);
     }
 }

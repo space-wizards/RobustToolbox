@@ -209,6 +209,11 @@ namespace Robust.Shared.ContentPack
             throw new NotImplementedException();
         }
 
+        public void OpenOsWindow(ResPath path)
+        {
+            throw new NotImplementedException();
+        }
+
         private bool TryGetNodeAt(ResPath path, [NotNullWhen(true)] out INode? node)
         {
             if (!path.IsRooted)

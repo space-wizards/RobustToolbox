@@ -478,21 +478,23 @@ namespace Robust.Shared
         /// Engine version that launcher needs to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildEngineVersion =
-            CVarDef.Create("build.engine_version", "", CVar.SERVERONLY);
+            CVarDef.Create("build.engine_version",
+                typeof(CVars).Assembly.GetName().Version?.ToString(4) ?? String.Empty,
+                CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Fork ID, as a hint to the launcher to manage local files.
         /// This can be anything, it does not need a strict format.
         /// </summary>
         public static readonly CVarDef<string> BuildForkId =
-            CVarDef.Create("build.fork_id", "", CVar.SERVERONLY);
+            CVarDef.Create("build.fork_id", "", CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Version string, as a hint to the launcher to manage local files.
         /// This can be anything, it does not need a strict format.
         /// </summary>
         public static readonly CVarDef<string> BuildVersion =
-            CVarDef.Create("build.version", "", CVar.SERVERONLY);
+            CVarDef.Create("build.version", "", CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Content pack the launcher should download to connect to this server.

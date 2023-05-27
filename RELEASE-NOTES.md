@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.120.0.0
+
+### Breaking changes
+
+* Relay contained joints to parents and no longer implicitly break them upon container changes.
+
+### Bugfixes
+
+* Fix upload folder command.
+* Fix SpriteView scaling for aspect ratios.
+
+### Internal
+
+* Cleanup MapManager slightly.
+
+
 ## 0.119.0.1
 
 ### Bugfixes

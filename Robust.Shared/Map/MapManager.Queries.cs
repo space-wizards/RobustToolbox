@@ -137,6 +137,7 @@ internal partial class MapManager
         return grid.ChunkCount == 0 && aabb.Contains(worldPos);
     }
 
+    [Obsolete("Use the FindGridsIntersecting callback")]
     public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false)
     {
         if (!_gridTrees.ContainsKey(mapId)) return Enumerable.Empty<MapGridComponent>();
@@ -200,7 +201,7 @@ internal partial class MapManager
             tuple.uid = iUid;
             tuple.grid = iGrid;
             return false;
-        });
+        }, approx: true);
 
         var mapUid = GetMapEntityId(mapId);
 

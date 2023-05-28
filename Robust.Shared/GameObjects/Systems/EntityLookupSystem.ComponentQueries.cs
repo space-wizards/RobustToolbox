@@ -147,6 +147,52 @@ public sealed partial class EntityLookupSystem
     // Like .Queries but works with components
     #region Box2
 
+    public bool AnyComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    {
+        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        if (mapId == MapId.Nullspace) return false;
+
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var intersecting = new HashSet<Component>();
+
+        if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
+        {
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+
+            foreach (var comp in EntityManager.GetAllComponents(type, true))
+            {
+                var xform = xformQuery.GetComponent(comp.Owner);
+
+                if (xform.MapID != mapId ||
+                    !worldAABB.Contains(_transform.GetWorldPosition(comp.Owner, xformQuery)) ||
+                    ((flags & LookupFlags.Contained) == 0x0 &&
+                    _container.IsEntityOrParentInContainer(comp.Owner, metaQuery.GetComponent(comp.Owner), xform, metaQuery, xformQuery)))
+                {
+                    continue;
+                }
+
+                return true;
+            }
+        }
+        else
+        {
+            var query = EntityManager.GetEntityQuery(type);
+            var lookupQuery = GetEntityQuery<BroadphaseComponent>();
+            // Get grid entities
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            {
+                AddComponentsIntersecting(grid.Owner, intersecting, worldAABB, flags, lookupQuery, xformQuery, query);
+            }
+
+            // Get map entities
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            AddComponentsIntersecting(mapUid, intersecting, worldAABB, flags, lookupQuery, xformQuery, query);
+            AddContained(intersecting, flags, xformQuery, query);
+        }
+
+        return intersecting.Count > 0;
+    }
+
     public HashSet<Component> GetComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
         DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
@@ -157,11 +203,20 @@ public sealed partial class EntityLookupSystem
 
         if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
         {
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+
             foreach (var comp in EntityManager.GetAllComponents(type, true))
             {
                 var xform = xformQuery.GetComponent(comp.Owner);
 
-                if (xform.MapID != mapId || !worldAABB.Contains(_transform.GetWorldPosition(comp.Owner, xformQuery))) continue;
+                if (xform.MapID != mapId ||
+                    !worldAABB.Contains(_transform.GetWorldPosition(comp.Owner, xformQuery)) ||
+                    ((flags & LookupFlags.Contained) == 0x0 &&
+                     _container.IsEntityOrParentInContainer(comp.Owner, metaQuery.GetComponent(comp.Owner), xform, metaQuery, xformQuery)))
+                {
+                    continue;
+                }
+
                 intersecting.Add((Component) comp);
             }
         }
@@ -247,6 +302,18 @@ public sealed partial class EntityLookupSystem
     #endregion
 
     #region MapId
+
+    public bool AnyComponentsInRange(Type type, MapId mapId, Vector2 worldPos, float range)
+    {
+        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        DebugTools.Assert(range > 0, "Range must be a positive float");
+
+        if (mapId == MapId.Nullspace) return false;
+
+        // TODO: Actual circles
+        var worldAABB = new Box2(worldPos - range, worldPos + range);
+        return AnyComponentsIntersecting(type, mapId, worldAABB);
+    }
 
     public HashSet<Component> GetComponentsInRange(Type type, MapId mapId, Vector2 worldPos, float range)
     {

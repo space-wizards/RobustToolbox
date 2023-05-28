@@ -254,12 +254,12 @@ namespace Robust.Client.Placement
         protected EntityCoordinates ScreenToCursorGrid(ScreenCoordinates coords)
         {
             var mapCoords = pManager.EyeManager.ScreenToMap(coords.Position);
-            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var grid))
+            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var gridUid, out var grid))
             {
                 return EntityCoordinates.FromMap(pManager.MapManager, mapCoords);
             }
 
-            return EntityCoordinates.FromMap(pManager.EntityManager, grid.Owner, mapCoords);
+            return EntityCoordinates.FromMap(pManager.EntityManager, gridUid, mapCoords);
         }
     }
 }

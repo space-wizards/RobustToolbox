@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -12,22 +11,22 @@ namespace Robust.Shared.Map;
 internal partial class MapManager
 {
     // TODO: Move IMapManager stuff to the system
-    private Dictionary<MapId, B2DynamicTree<MapGridComponent>> _gridTrees = new();
+    private Dictionary<MapId, B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)>> _gridTrees = new();
 
-    private Dictionary<MapId, HashSet<MapGridComponent>> _movedGrids = new();
+    private Dictionary<MapId, HashSet<EntityUid>> _movedGrids = new();
 
     /// <summary>
     /// Gets the grids that have moved this tick until broadphase has run.
     /// </summary>
     /// <param name="mapId"></param>
     /// <returns></returns>
-    public HashSet<MapGridComponent> GetMovedGrids(MapId mapId)
+    public HashSet<EntityUid> GetMovedGrids(MapId mapId)
     {
         // Temporary until this is moved to SharedPhysicsMapComponent
         if (!_movedGrids.TryGetValue(mapId, out var moved))
         {
             Logger.ErrorS("map", $"Unable to get moved grids for {mapId}");
-            moved = new HashSet<MapGridComponent>();
+            moved = new HashSet<EntityUid>();
             DebugTools.Assert(false);
         }
 
@@ -70,8 +69,8 @@ internal partial class MapManager
     {
         if (e.Map == MapId.Nullspace) return;
 
-        _gridTrees.Add(e.Map, new B2DynamicTree<MapGridComponent>());
-        _movedGrids.Add(e.Map, new HashSet<MapGridComponent>());
+        _gridTrees.Add(e.Map, new B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)>());
+        _movedGrids.Add(e.Map, new HashSet<EntityUid>());
     }
 
     public void RemoveMapId(MapId mapId)
@@ -84,9 +83,9 @@ internal partial class MapManager
         _movedGrids.Remove(mapId);
     }
 
-    private Box2 GetWorldAABB(MapGridComponent grid, TransformComponent? xform = null)
+    private Box2 GetWorldAABB(EntityUid uid, MapGridComponent grid, TransformComponent? xform = null)
     {
-        xform ??= EntityManager.GetComponent<TransformComponent>(grid.Owner);
+        xform ??= EntityManager.GetComponent<TransformComponent>(uid);
 
         var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
@@ -104,18 +103,18 @@ internal partial class MapManager
         if (mapId == MapId.Nullspace) return;
 
         var grid = EntityManager.GetComponent<MapGridComponent>(args.EntityUid);
-        AddGrid(grid, mapId);
+        AddGrid(args.EntityUid, grid, mapId);
     }
 
-    private void AddGrid(MapGridComponent grid, MapId mapId)
+    private void AddGrid(EntityUid uid, MapGridComponent grid, MapId mapId)
     {
-        DebugTools.Assert(!EntityManager.HasComponent<MapComponent>(((Component) grid).Owner));
-        var aabb = GetWorldAABB(grid);
-        var proxy = _gridTrees[mapId].CreateProxy(in aabb, grid);
+        DebugTools.Assert(!EntityManager.HasComponent<MapComponent>(uid));
+        var aabb = GetWorldAABB(uid, grid);
+        var proxy = _gridTrees[mapId].CreateProxy(in aabb, (uid, grid));
         DebugTools.Assert(grid.MapProxy == DynamicTree.Proxy.Free);
         grid.MapProxy = proxy;
 
-        _movedGrids[mapId].Add(grid);
+        _movedGrids[mapId].Add(uid);
     }
 
     private void OnGridRemove(GridRemovalEvent args)
@@ -129,13 +128,13 @@ internal partial class MapManager
         if (xform.MapID == MapId.Nullspace) return;
 
         var grid = EntityManager.GetComponent<MapGridComponent>(args.EntityUid);
-        RemoveGrid(grid, xform.MapID);
+        RemoveGrid(args.EntityUid, grid, xform.MapID);
     }
 
-    private void RemoveGrid(MapGridComponent grid, MapId mapId)
+    private void RemoveGrid(EntityUid uid, MapGridComponent grid, MapId mapId)
     {
         _gridTrees[mapId].DestroyProxy(grid.MapProxy);
-        _movedGrids[mapId].Remove(grid);
+        _movedGrids[mapId].Remove(uid);
         grid.MapProxy = DynamicTree.Proxy.Free;
     }
 
@@ -145,9 +144,9 @@ internal partial class MapManager
         if (component.MapProxy == DynamicTree.Proxy.Free) return;
 
         var xform = args.Component;
-        var aabb = GetWorldAABB(component, xform);
+        var aabb = GetWorldAABB(uid, component, xform);
         _gridTrees[xform.MapID].MoveProxy(component.MapProxy, in aabb, Vector2.Zero);
-        _movedGrids[xform.MapID].Add(component);
+        _movedGrids[xform.MapID].Add(uid);
     }
 
     private void OnGridParentChange(EntityUid uid, MapGridComponent component, ref EntParentChangedMessage args)
@@ -172,15 +171,15 @@ internal partial class MapManager
 
         if (component.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(args.OldMapId, out var oldMovedGrids))
         {
-            oldMovedGrids.Remove(component);
-            RemoveGrid(component, args.OldMapId);
+            oldMovedGrids.Remove(uid);
+            RemoveGrid(uid, component, args.OldMapId);
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
         if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))
         {
-            newMovedGrids.Add(component);
-            AddGrid(component, mapId);
+            newMovedGrids.Add(uid);
+            AddGrid(uid, component, mapId);
         }
     }
 
@@ -190,8 +189,8 @@ internal partial class MapManager
         if (grid.MapProxy == DynamicTree.Proxy.Free) return;
 
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
-        var aabb = GetWorldAABB(grid, xform);
+        var aabb = GetWorldAABB(uid, grid, xform);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
-        _movedGrids[xform.MapID].Add(grid);
+        _movedGrids[xform.MapID].Add(uid);
     }
 }

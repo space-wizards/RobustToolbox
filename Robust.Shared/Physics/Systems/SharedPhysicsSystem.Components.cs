@@ -437,7 +437,7 @@ public partial class SharedPhysicsSystem
         body.Force = Vector2.Zero;
         body.Torque = 0.0f;
 
-        _broadphase.RegenerateContacts(body, manager, xform);
+        _broadphase.RegenerateContacts(uid, body, manager, xform);
 
         if (body.Initialized)
         {

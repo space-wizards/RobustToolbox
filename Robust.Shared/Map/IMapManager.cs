@@ -8,15 +8,16 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
 {
-    public delegate bool GridCallback(MapGridComponent grid);
+    public delegate bool GridCallback(EntityUid uid, MapGridComponent grid);
 
-    public delegate bool GridCallback<TState>(MapGridComponent grid, ref TState state);
+    public delegate bool GridCallback<TState>(EntityUid uid, MapGridComponent grid, ref TState state);
 
     /// <summary>
     ///     This manages all of the grids in the world.
     /// </summary>
     public interface IMapManager
     {
+        [Obsolete("Use EntityQuery<MapGridComponent>")]
         IEnumerable<MapGridComponent> GetAllGrids();
 
         /// <summary>
@@ -28,7 +29,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Get the set of grids that have moved on this map in this tick.
         /// </summary>
-        HashSet<MapGridComponent> GetMovedGrids(MapId mapId);
+        HashSet<EntityUid> GetMovedGrids(MapId mapId);
 
         /// <summary>
         /// Clear the set of grids that have moved on this map in this tick.
@@ -110,7 +111,7 @@ namespace Robust.Shared.Map
         /// <param name="worldPos">Location on the map to check for a grid.</param>
         /// <param name="grid">Grid that was found, if any.</param>
         /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out MapGridComponent? grid);
+        bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid);
 
         /// <summary>
         /// Attempts to find the map grid under the map location.
@@ -122,7 +123,7 @@ namespace Robust.Shared.Map
         /// <param name="worldPos">Location on the map to check for a grid.</param>
         /// <param name="grid">Grid that was found, if any.</param>
         /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(MapId mapId, Vector2 worldPos, EntityQuery<TransformComponent> query, [NotNullWhen(true)] out MapGridComponent? grid);
+        bool TryFindGridAt(MapId mapId, Vector2 worldPos, EntityQuery<TransformComponent> query, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid);
 
         /// <summary>
         /// Attempts to find the map grid under the map location.
@@ -133,11 +134,11 @@ namespace Robust.Shared.Map
         /// <param name="mapCoordinates">Location on the map to check for a grid.</param>
         /// <param name="grid">Grid that was found, if any.</param>
         /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out MapGridComponent? grid);
+        bool TryFindGridAt(MapCoordinates mapCoordinates, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid);
 
-        void FindGridsIntersectingApprox(MapId mapId, Box2 worldAABB, GridCallback callback);
+        void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = false);
 
-        void FindGridsIntersectingApprox<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback);
+        void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false);
 
         /// <summary>
         /// Returns the grids intersecting this AABB.

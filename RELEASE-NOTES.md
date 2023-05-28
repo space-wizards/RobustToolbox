@@ -54,6 +54,30 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.122.0.0
+
+### Breaking changes
+
+* Obsolete some MapManager queries.
+* Add EntityUid to some MapManager queries.
+
+
+## 0.121.0.0
+
+### Breaking changes
+
+* Add replaying loading / reading.
+
+### New features
+
+* Add setter for PlayingStream that also updates source.
+* Add IWritableDirProvider.OpenOSWindow.
+
+### Bugfixes
+
+* Fix component lookups not considering whether an entity is in a container and the flag is set.
+
+
 ## 0.120.0.0
 
 ### Breaking changes

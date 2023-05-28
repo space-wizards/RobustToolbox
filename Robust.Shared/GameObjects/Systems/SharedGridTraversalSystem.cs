@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -87,16 +86,14 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager, _transform);
 
         // Change parent if necessary
-        if (_mapManager.TryFindGridAt(xform.MapID, mapPos, out var grid))
+        if (_mapManager.TryFindGridAt(xform.MapID, mapPos, out var gridUid, out _))
         {
-            var gridUid = grid.Owner;
-
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
             if (gridUid != xform.GridUid)
             {
                 _transform.SetParent(entity, xform, gridUid, xforms);
                 var ev = new ChangedGridEvent(entity, xform.GridUid, gridUid);
-                RaiseLocalEvent(entity, ref ev, true);
+                RaiseLocalEvent(entity, ref ev);
             }
         }
         else
@@ -114,18 +111,10 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
     }
 }
 
-[Obsolete]
 [ByRefEvent]
-public readonly struct ChangedGridEvent
+public readonly record struct ChangedGridEvent(EntityUid Entity, EntityUid? OldGrid, EntityUid? NewGrid)
 {
-    public readonly EntityUid Entity;
-    public readonly EntityUid? OldGrid;
-    public readonly EntityUid? NewGrid;
-
-    public ChangedGridEvent(EntityUid entity, EntityUid? oldGrid, EntityUid? newGrid)
-    {
-        Entity = entity;
-        OldGrid = oldGrid;
-        NewGrid = newGrid;
-    }
+    public readonly EntityUid Entity = Entity;
+    public readonly EntityUid? OldGrid = OldGrid;
+    public readonly EntityUid? NewGrid = NewGrid;
 }

@@ -59,11 +59,6 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public record struct WorldAABBEvent
     {
-        /// <summary>
-        /// If the event is not handled then <see cref="FixturesComponent"/> will be used.
-        /// </summary>
-        public bool Handled;
-
         public Box2 AABB;
     }
 

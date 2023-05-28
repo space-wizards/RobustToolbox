@@ -47,6 +47,8 @@ internal sealed partial class RhiWebGpu
         // TODO: Probably need some more locks here idk.
         // So people can't map the buffer at the same time as or something.
 
+        buffer.MapState = RhiBufferMapState.Pending;
+
         WgpuMapBufferAsyncResult result;
         using (var promise = new WgpuPromise<WgpuMapBufferAsyncResult>())
         {
@@ -64,6 +66,7 @@ internal sealed partial class RhiWebGpu
                 );
             }
 
+            // TODO: are we handling the error correctly, here?
             result = await promise.Task;
 
             buffer.Mapping = new RhiBuffer.ActiveMapping(buffer) { Valid = true };
@@ -71,6 +74,8 @@ internal sealed partial class RhiWebGpu
 
         if (result.Status != BufferMapAsyncStatus.Success)
             throw new RhiException(result.Status.ToString());
+
+        buffer.MapState = RhiBufferMapState.Mapped;
     }
 
     internal override unsafe RhiMappedBufferRange BufferGetMappedRange(RhiBuffer buffer, nuint offset, nuint size)
@@ -117,6 +122,7 @@ internal sealed partial class RhiWebGpu
 
             buffer.Mapping.Valid = false;
             buffer.Mapping = null;
+            buffer.MapState = RhiBufferMapState.Unmapped;
         }
     }
 

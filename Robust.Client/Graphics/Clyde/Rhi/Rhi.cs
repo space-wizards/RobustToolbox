@@ -74,7 +74,7 @@ public sealed class RhiBuffer : RhiObject
 {
     internal ActiveMapping? Mapping;
 
-    // public RhiBufferMapState MapState => Rhi.BufferGetMapState(this);
+    public RhiBufferMapState MapState { get; internal set; }
 
     public async ValueTask MapAsync(RhiMapModeFlags mode, nuint offset, nuint size)
     {

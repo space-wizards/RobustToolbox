@@ -174,7 +174,7 @@ namespace Robust.Server.Placement
             _mapManager.TryGetGrid(coordinates.EntityId, out grid);
 
             if (grid == null)
-                _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager), out grid);
+                _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager), out _, out grid);
 
             if (grid != null)  // stick to existing grid
             {

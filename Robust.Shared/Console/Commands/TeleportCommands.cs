@@ -51,11 +51,11 @@ internal sealed class TeleportCommand : LocalizedCommands
             return;
         }
 
-        if (_map.TryFindGridAt(mapId, position, out var grid))
+        if (_map.TryFindGridAt(mapId, position, out var gridUid, out var grid))
         {
             var gridPos = grid.WorldToLocal(position);
 
-            xformSystem.SetCoordinates(entity, transform, new EntityCoordinates(grid.Owner, gridPos));
+            xformSystem.SetCoordinates(entity, transform, new EntityCoordinates(gridUid, gridPos));
         }
         else
         {

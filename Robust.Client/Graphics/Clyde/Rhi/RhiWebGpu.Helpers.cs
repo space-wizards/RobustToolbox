@@ -1,11 +1,12 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Robust.Shared.Maths;
 using Silk.NET.WebGPU;
+using Color = Silk.NET.WebGPU.Color;
 using RColor = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.Graphics.Clyde.Rhi;
@@ -151,7 +152,7 @@ internal sealed unsafe partial class RhiWebGpu
     private static void* BumpAllocate(ref Span<byte> buf, int size)
     {
         // Round up to 8 to make sure everything stays aligned inside.
-        var alignedSize = RoundUpTo8(size);
+        var alignedSize = MathHelper.CeilingPowerOfTwo(size, 8);
         if (buf.Length < alignedSize)
             ThrowBumpAllocOutOfSpace();
 
@@ -203,10 +204,6 @@ internal sealed unsafe partial class RhiWebGpu
 
         return (byte*) ptr;
     }
-
-    [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int RoundUpTo8(int size) => (size + 7) & ~7;
 
     [DoesNotReturn]
     [MethodImpl(MethodImplOptions.NoInlining)]

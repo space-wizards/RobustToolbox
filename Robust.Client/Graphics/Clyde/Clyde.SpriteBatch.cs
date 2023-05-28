@@ -19,6 +19,8 @@ internal partial class Clyde
 
     private sealed class SpriteBatch
     {
+        private const int VertexSize = 32;
+
         private const uint BindGroup0 = 0;
         private const uint BindGroup1 = 1;
         private const uint BindGroup2 = 2;
@@ -26,8 +28,7 @@ internal partial class Clyde
         private readonly Clyde _clyde;
         private readonly RhiBase _rhi;
 
-        private readonly RhiBuffer _vertexBuffer;
-        private readonly Vertex2D[] _vertexBufferData;
+        private readonly GpuExpansionBuffer _vertexBufferPool;
 
         private readonly RhiBuffer _uniformConstantsBuffer;
         private readonly RhiBuffer _uniformPassBuffer;
@@ -41,7 +42,8 @@ internal partial class Clyde
         // Active recording state
         private ValueList<RhiBindGroup> _tempBindGroups;
         private RhiCommandEncoder? _commandEncoder;
-        private int _vertexIdx = 0;
+        private int _vertexStartIndex;
+        private RhiBuffer? _currentVertexBuffer;
 
         private RhiRenderPassEncoder? _passEncoder;
         private Vector2i _currentPassSize;
@@ -63,15 +65,12 @@ internal partial class Clyde
             _clyde = clyde;
             _rhi = rhi;
 
-            var vertices = 81920;
-
-            _vertexBuffer = _rhi.CreateBuffer(new RhiBufferDescriptor(
-                (ulong)(vertices * 32),
+            _vertexBufferPool = new GpuExpansionBuffer(
+                _rhi,
+                64 * VertexSize,
                 RhiBufferUsageFlags.Vertex | RhiBufferUsageFlags.CopyDst,
-                Label: "_vertexBuffer"
-            ));
-
-            _vertexBufferData = new Vertex2D[vertices];
+                label: "_vertexBuffer"
+            );
 
             _uniformConstantsBuffer = _rhi.CreateBuffer(new RhiBufferDescriptor(
                 sizeof(float),
@@ -226,7 +225,6 @@ internal partial class Clyde
             ));
 
             _passEncoder.SetPipeline(_pipeline);
-            _passEncoder.SetVertexBuffer(0, _vertexBuffer);
 
             var constantsGroup = AllocTempBindGroup(new RhiBindGroupDescriptor(
                 _group0Layout,
@@ -255,7 +253,7 @@ internal partial class Clyde
         {
             DebugTools.Assert(_passEncoder == null, "Must end render pass before finishing the sprite batch!");
 
-            _rhi.Queue.WriteBuffer<Vertex2D>(_vertexBuffer, 0, _vertexBufferData.AsSpan(0, _vertexIdx));
+            _vertexBufferPool.Flush();
 
             var buffer = _commandEncoder!.Finish();
             _rhi.Queue.Submit(buffer);
@@ -272,6 +270,8 @@ internal partial class Clyde
             SetTexture(textureHandle);
             ValidateBatchState();
 
+            var vertices = AllocateVertexSpace(6);
+
             var width = texture.Width;
             var height = texture.Height;
 
@@ -287,14 +287,14 @@ internal partial class Clyde
 
             var asColor = Unsafe.As<Color, SVector4>(ref color);
 
-            _vertexBufferData[_vertexIdx + 0] = new Vertex2D(sBl, new SVector2(0, 1), asColor);
-            _vertexBufferData[_vertexIdx + 1] = new Vertex2D(sBr, new SVector2(1, 1), asColor);
-            _vertexBufferData[_vertexIdx + 2] = new Vertex2D(sTr, new SVector2(1, 0), asColor);
-            _vertexBufferData[_vertexIdx + 3] = new Vertex2D(sTr, new SVector2(1, 0), asColor);
-            _vertexBufferData[_vertexIdx + 4] = new Vertex2D(sTl, new SVector2(0, 0), asColor);
-            _vertexBufferData[_vertexIdx + 5] = new Vertex2D(sBl, new SVector2(0, 1), asColor);
+            vertices[0] = new Vertex2D(sBl, new SVector2(0, 1), asColor);
+            vertices[1] = new Vertex2D(sBr, new SVector2(1, 1), asColor);
+            vertices[2] = new Vertex2D(sTr, new SVector2(1, 0), asColor);
+            vertices[3] = new Vertex2D(sTr, new SVector2(1, 0), asColor);
+            vertices[4] = new Vertex2D(sTl, new SVector2(0, 0), asColor);
+            vertices[5] = new Vertex2D(sBl, new SVector2(0, 1), asColor);
 
-            _vertexIdx += 6;
+            _vertexStartIndex += 6;
             _curBatchSize += 6;
         }
 
@@ -309,6 +309,8 @@ internal partial class Clyde
             SetTexture(textureHandle);
             ValidateBatchState();
 
+            var vertices = AllocateVertexSpace(6);
+
             var asColor = Unsafe.As<Color, SVector4>(ref Unsafe.AsRef(color));
 
             var sBl = SVector2.Transform((SVector2)bl, _modelTransform);
@@ -316,15 +318,37 @@ internal partial class Clyde
             var sTl = SVector2.Transform((SVector2)tl, _modelTransform);
             var sTr = SVector2.Transform((SVector2)tr, _modelTransform);
 
-            _vertexBufferData[_vertexIdx + 0] = new Vertex2D(sBl, (SVector2)region.BottomLeft, asColor);
-            _vertexBufferData[_vertexIdx + 1] = new Vertex2D(sBr, (SVector2)region.BottomRight, asColor);
-            _vertexBufferData[_vertexIdx + 2] = new Vertex2D(sTr, (SVector2)region.TopRight, asColor);
-            _vertexBufferData[_vertexIdx + 3] = _vertexBufferData[_vertexIdx + 2];
-            _vertexBufferData[_vertexIdx + 4] = new Vertex2D(sTl, (SVector2)region.TopLeft, asColor);
-            _vertexBufferData[_vertexIdx + 5] = _vertexBufferData[_vertexIdx + 0];
+            vertices[0] = new Vertex2D(sBl, (SVector2)region.BottomLeft, asColor);
+            vertices[1] = new Vertex2D(sBr, (SVector2)region.BottomRight, asColor);
+            vertices[2] = new Vertex2D(sTr, (SVector2)region.TopRight, asColor);
+            vertices[3] = vertices[2];
+            vertices[4] = new Vertex2D(sTl, (SVector2)region.TopLeft, asColor);
+            vertices[5] = vertices[0];
 
-            _vertexIdx += 6;
+            _vertexStartIndex += 6;
             _curBatchSize += 6;
+        }
+
+        private Span<Vertex2D> AllocateVertexSpace(int count)
+        {
+            var space = _vertexBufferPool.Allocate<Vertex2D>(count, out var position);
+
+            DebugTools.Assert(
+                position.ByteOffset % VertexSize == 0,
+                "Vertices should be getting allocated in exact multiples of vertex size!"
+            );
+
+            if (position.Buffer != _currentVertexBuffer)
+            {
+                FlushBatch();
+
+                _passEncoder!.SetVertexBuffer(0, position.Buffer);
+
+                _currentVertexBuffer = position.Buffer;
+                _vertexStartIndex = position.ByteOffset / VertexSize;
+            }
+
+            return space;
         }
 
         public void SetScissor(int x, int y, int width, int height)
@@ -417,14 +441,22 @@ internal partial class Clyde
             if (_curBatchSize == 0)
                 return;
 
-            _passEncoder!.Draw((uint)_curBatchSize, 1, (uint)(_vertexIdx - _curBatchSize), 0);
+            _passEncoder!.Draw(
+                (uint)_curBatchSize,
+                1,
+                (uint)(_vertexStartIndex - _curBatchSize),
+                0
+            );
+
             _curBatchSize = 0;
         }
 
         public void Clear()
         {
             ClearPassState();
-            _vertexIdx = 0;
+
+            _vertexStartIndex = 0;
+            _currentVertexBuffer = null;
 
             foreach (var bindGroup in _tempBindGroups)
             {
@@ -437,9 +469,13 @@ internal partial class Clyde
         private void ClearPassState()
         {
             _curBatchSize = 0;
+            _currentVertexBuffer = null;
+            _vertexStartIndex = 0;
+
             _dirtyStateFlags = 0;
             _stateTexture = default;
             _stateScissorRect = default;
+
             _modelTransform = Matrix3x2.Identity;
         }
 

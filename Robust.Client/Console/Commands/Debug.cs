@@ -631,7 +631,7 @@ namespace Robust.Client.Console.Commands
         {
             var mousePos = _eye.ScreenToMap(_input.MouseScreenPosition);
 
-            if (!_map.TryFindGridAt(mousePos, out var grid))
+            if (!_map.TryFindGridAt(mousePos, out _, out var grid))
             {
                 shell.WriteLine("No grid under your mouse cursor.");
                 return;

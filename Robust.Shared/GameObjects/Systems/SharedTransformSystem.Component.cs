@@ -278,7 +278,7 @@ public abstract partial class SharedTransformSystem
             // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordiantes)
             // in that case, we attempt to attach to a grid.
             var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
-            _mapManager.TryFindGridAt(pos, out grid);
+            _mapManager.TryFindGridAt(pos, out _, out grid);
         }
 
         if (grid == null)
@@ -1244,10 +1244,10 @@ public abstract partial class SharedTransformSystem
 
         EntityUid newParent;
         var oldPos = GetWorldPosition(xform, query);
-        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, query, out var mapGrid)
-            && !TerminatingOrDeleted(mapGrid.Owner))
+        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, query, out var gridUid, out _)
+            && !TerminatingOrDeleted(gridUid))
         {
-            newParent = mapGrid.Owner;
+            newParent = gridUid;
         }
         else if (_mapManager.GetMapEntityId(xform.MapID) is { Valid: true } mapEnt
             && !TerminatingOrDeleted(mapEnt))
@@ -1283,9 +1283,9 @@ public abstract partial class SharedTransformSystem
 
         EntityUid newParent;
         var oldPos = GetWorldPosition(xform, query);
-        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, query, out var mapGrid))
+        if (_mapManager.TryFindGridAt(xform.MapID, oldPos, query, out var gridUid, out _))
         {
-            newParent = mapGrid.Owner;
+            newParent = gridUid;
         }
         else if (_mapManager.GetMapEntityId(xform.MapID) is { Valid: true } mapEnt)
         {

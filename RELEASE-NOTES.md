@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.122.0.0
+
+### Breaking changes
+
+* Obsolete some MapManager queries.
+* Add EntityUid to some MapManager queries.
+
+
 ## 0.121.0.0
 
 ### Breaking changes

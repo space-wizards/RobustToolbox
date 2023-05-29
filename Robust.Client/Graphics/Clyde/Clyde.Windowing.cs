@@ -201,6 +201,8 @@ namespace Robust.Client.Graphics.Clyde
 
             InitRhi();
 
+            _debugInfo = new ClydeDebugInfo(_windowing!.GetDescription());
+
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
 
             RenderInit();

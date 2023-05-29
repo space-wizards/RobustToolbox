@@ -123,7 +123,7 @@ namespace Robust.Client.Graphics.Clyde
             // InitLighting();
         }
 
-        public IClydeDebugInfo DebugInfo { get; private set; } = default!;
+        public IClydeDebugInfo DebugInfo => _debugInfo ?? throw new InvalidOperationException("Not initialized yet");
         public IClydeDebugStats DebugStats => _debugStats;
 
         public void PostInject()

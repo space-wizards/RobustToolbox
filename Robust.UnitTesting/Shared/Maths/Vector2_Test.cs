@@ -70,8 +70,8 @@ namespace Robust.UnitTesting.Shared.Maths
             var vec1 = new Vector2(-1, 1);
             var vec2 = new Vector2(1, -1);
 
-            Assert.That(Vector2.ComponentMin(vec1, vec2), Is.EqualTo(new Vector2(-1, -1)));
-            Assert.That(Vector2.ComponentMax(vec1, vec2), Is.EqualTo(new Vector2(1, 1)));
+            Assert.That(Vector2.Min(vec1, vec2), Is.EqualTo(new Vector2(-1, -1)));
+            Assert.That(Vector2.Max(vec1, vec2), Is.EqualTo(new Vector2(1, 1)));
         }
 
         [Test]

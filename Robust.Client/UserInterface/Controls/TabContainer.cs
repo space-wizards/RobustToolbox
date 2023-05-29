@@ -233,7 +233,7 @@ namespace Robust.Client.UserInterface.Controls
                 if (child.Visible)
                 {
                     child.Measure(contentsSize);
-                    total = Vector2.ComponentMax(child.DesiredSize, total);
+                    total = Vector2.Max(child.DesiredSize, total);
                 }
             }
 

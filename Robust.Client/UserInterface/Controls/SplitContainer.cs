@@ -334,7 +334,7 @@ namespace Robust.Client.UserInterface.Controls
                 else
                     size.X = _splitStart;
 
-                size = Vector2.ComponentMin(availableSize, size);
+                size = Vector2.Min(availableSize, size);
                 first.Measure(size);
 
                 size = availableSize;
@@ -343,7 +343,7 @@ namespace Robust.Client.UserInterface.Controls
                 else
                     size.X = availableSize.X - _splitStart - _splitWidth;
 
-                size = Vector2.ComponentMax(size, Vector2.Zero);
+                size = Vector2.Max(size, Vector2.Zero);
                 second.Measure(size);
             }
             else

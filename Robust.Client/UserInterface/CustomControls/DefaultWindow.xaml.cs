@@ -113,9 +113,9 @@ namespace Robust.Client.UserInterface.CustomControls
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
 
-            return Vector2.ComponentMax(
+            return Vector2.Max(
                 ContentsMinimumSize,
-                base.MeasureOverride(Vector2.ComponentMax(availableSize, ContentsMinimumSize)));
+                base.MeasureOverride(Vector2.Max(availableSize, ContentsMinimumSize)));
         }
 
         public string? Title
@@ -156,12 +156,12 @@ namespace Robust.Client.UserInterface.CustomControls
             if (Position.Y > spaceY)
                 maxY -= WindowEdgeBump;
 
-            var pos = Vector2.ComponentMin(Position, (maxX, maxY));
+            var pos = Vector2.Min(Position, (maxX, maxY));
 
             var minX = (AllowOffScreen & DirectionFlag.East) ==  0 ? 0 : WindowEdgeSeparation - Size.X;
             var minY = (AllowOffScreen & DirectionFlag.North) == 0 ? 0 : WindowEdgeSeparation - Size.Y;
 
-            pos = Vector2.ComponentMax(pos, (minX, minY));
+            pos = Vector2.Max(pos, (minX, minY));
             if (Position != pos)
                 LayoutContainer.SetPosition(this, pos);
         }

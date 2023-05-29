@@ -337,7 +337,7 @@ namespace Robust.Client.UserInterface
         public Vector2 MinSize
         {
             get => (_minWidth, _minHeight);
-            set => (MinWidth, MinHeight) = Vector2.ComponentMax(Vector2.Zero, value);
+            set => (MinWidth, MinHeight) = Vector2.Max(Vector2.Zero, value);
         }
 
         /// <summary>
@@ -566,8 +566,8 @@ namespace Robust.Client.UserInterface
             measured.Y = Math.Clamp(measured.Y, MinHeight, MaxHeight);
 
             measured = _margin.Inflate(measured);
-            measured = Vector2.ComponentMin(measured, availableSize);
-            measured = Vector2.ComponentMax(measured, Vector2.Zero);
+            measured = Vector2.Min(measured, availableSize);
+            measured = Vector2.Max(measured, Vector2.Zero);
             return measured;
         }
 
@@ -581,7 +581,7 @@ namespace Robust.Client.UserInterface
             foreach (var child in Children)
             {
                 child.Measure(availableSize);
-                min = Vector2.ComponentMax(min, child.DesiredSize);
+                min = Vector2.Max(min, child.DesiredSize);
             }
 
             return min;
@@ -641,7 +641,7 @@ namespace Robust.Client.UserInterface
 
             var arranged = ArrangeOverride(size);
 
-            size = Vector2.ComponentMin(arranged, size);
+            size = Vector2.Min(arranged, size);
 
             switch (HorizontalAlignment)
             {

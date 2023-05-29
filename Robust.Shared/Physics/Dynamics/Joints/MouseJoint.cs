@@ -224,7 +224,7 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         {
             _impulse *= data.DtRatio;
             vB += _impulse * _invMassB;
-            wB += _invIB * Vector2.Cross(_rB, _impulse);
+            wB += _invIB * Vector2Helpers.Cross(_rB, _impulse);
         }
         else
         {
@@ -246,7 +246,7 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         var wB = angularVelocities[offset + _indexB];
 
         // Cdot = v + cross(w, r)
-        var Cdot = vB + Vector2.Cross(wB, _rB);
+        var Cdot = vB + Vector2Helpers.Cross(wB, _rB);
         var impulse = Transform.Mul(_mass, -(Cdot + _C + _impulse * _gamma));
 
         var oldImpulse = _impulse;
@@ -260,7 +260,7 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         impulse = _impulse - oldImpulse;
 
         vB += impulse * _invMassB;
-        wB += _invIB * Vector2.Cross(_rB, impulse);
+        wB += _invIB * Vector2Helpers.Cross(_rB, impulse);
 
         linearVelocities[offset + _indexB] = vB;
         angularVelocities[offset + _indexB] = wB;

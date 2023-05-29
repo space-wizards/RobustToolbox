@@ -478,7 +478,7 @@ namespace Robust.Client.UserInterface.Controls
                     size.Y = anchorMargins.Height / uiScale;
 
                 child.Measure(size);
-                min = Vector2.ComponentMax(min, child.DesiredSize);
+                min = Vector2.Max(min, child.DesiredSize);
             }
 
             return InheritChildMeasure ? min : Vector2.Zero;

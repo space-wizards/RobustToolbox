@@ -263,8 +263,8 @@ namespace Robust.Shared.Physics.Systems
         {
             List<RayCastResults> results = new();
             var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
-            var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
-                Vector2.ComponentMax(ray.Position, endPoint));
+            var rayBox = new Box2(Vector2.Min(ray.Position, endPoint),
+                Vector2.Max(ray.Position, endPoint));
 
             foreach (var broadphase in _broadphase.GetBroadphases(mapId, rayBox))
             {
@@ -368,8 +368,8 @@ namespace Robust.Shared.Physics.Systems
         {
             var penetration = 0f;
             var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
-            var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
-                Vector2.ComponentMax(ray.Position, endPoint));
+            var rayBox = new Box2(Vector2.Min(ray.Position, endPoint),
+                Vector2.Max(ray.Position, endPoint));
 
             foreach (var broadphase in _broadphase.GetBroadphases(mapId, rayBox))
             {

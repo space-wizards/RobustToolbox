@@ -827,7 +827,7 @@ namespace Robust.Shared.Map.Components
         public EntityCoordinates GridTileToLocal(Vector2i gridTile)
         {
             return new(Owner,
-                (gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f)));
+                new Vector2(gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f)));
         }
 
         public Vector2 GridTileToWorldPos(Vector2i gridTile)

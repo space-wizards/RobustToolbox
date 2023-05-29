@@ -541,7 +541,8 @@ public sealed partial class EntityLookupSystem
     {
         if (coordinates.MapId == MapId.Nullspace) return false;
 
-        var worldAABB = new Box2(coordinates.Position - float.Epsilon, coordinates.Position + float.Epsilon);
+        var rangeVec = new Vector2(float.Epsilon, float.Epsilon);
+        var worldAABB = new Box2(coordinates.Position - rangeVec, coordinates.Position + rangeVec);
         return AnyEntitiesIntersecting(coordinates.MapId, worldAABB, flags);
     }
 
@@ -550,7 +551,8 @@ public sealed partial class EntityLookupSystem
         // TODO: Actual circles
         if (coordinates.MapId == MapId.Nullspace) return false;
 
-        var worldAABB = new Box2(coordinates.Position - range, coordinates.Position + range);
+        var rangeVec = new Vector2(range, range);
+        var worldAABB = new Box2(coordinates.Position - rangeVec, coordinates.Position + rangeVec);
         return AnyEntitiesIntersecting(coordinates.MapId, worldAABB, flags);
     }
 
@@ -558,7 +560,8 @@ public sealed partial class EntityLookupSystem
     {
         if (coordinates.MapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
-        var worldAABB = new Box2(coordinates.Position - float.Epsilon, coordinates.Position + float.Epsilon);
+        var rangeVec = new Vector2(float.Epsilon, float.Epsilon);
+        var worldAABB = new Box2(coordinates.Position - rangeVec, coordinates.Position + rangeVec);
         return GetEntitiesIntersecting(coordinates.MapId, worldAABB, flags);
     }
 
@@ -579,7 +582,8 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
         // TODO: Actual circles
-        var worldAABB = new Box2(worldPos - range, worldPos + range);
+        var rangeVec = new Vector2(range, range);
+        var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
         return GetEntitiesIntersecting(mapId, worldAABB, flags);
     }
 

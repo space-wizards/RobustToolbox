@@ -200,10 +200,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        var P = new Vector2(_impulse.X, _impulse.Y);
 
 		        vA -= P * mA;
-		        wA -= iA * (Vector2.Cross(_rA, P) + _impulse.Z);
+		        wA -= iA * (Vector2Helpers.Cross(_rA, P) + _impulse.Z);
 
 		        vB += P * mB;
-		        wB += iB * (Vector2.Cross(_rB, P) + _impulse.Z);
+		        wB += iB * (Vector2Helpers.Cross(_rB, P) + _impulse.Z);
 	        }
 	        else
 	        {
@@ -241,7 +241,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 wA -= iA * impulse2;
                 wB += iB * impulse2;
 
-                var Cdot1 = vB + Vector2.Cross(wB, _rB) - vA - Vector2.Cross(wA, _rA);
+                var Cdot1 = vB + Vector2Helpers.Cross(wB, _rB) - vA - Vector2Helpers.Cross(wA, _rA);
 
                 var impulse1 = -_mass.Mul22(Cdot1);
                 _impulse.X += impulse1.X;
@@ -250,14 +250,14 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 var P = impulse1;
 
                 vA -= P * mA;
-                wA -= iA * Vector2.Cross(_rA, P);
+                wA -= iA * Vector2Helpers.Cross(_rA, P);
 
                 vB += P * mB;
-                wB += iB * Vector2.Cross(_rB, P);
+                wB += iB * Vector2Helpers.Cross(_rB, P);
             }
             else
             {
-                var Cdot1 = vB + Vector2.Cross(wB, _rB) - vA - Vector2.Cross(wA, _rA);
+                var Cdot1 = vB + Vector2Helpers.Cross(wB, _rB) - vA - Vector2Helpers.Cross(wA, _rA);
                 float Cdot2 = wB - wA;
                 var Cdot = new Vector3(Cdot1.X, Cdot1.Y, Cdot2);
 
@@ -267,10 +267,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 var P = new Vector2(impulse.X, impulse.Y);
 
                 vA -= P * mA;
-                wA -= iA * (Vector2.Cross(_rA, P) + impulse.Z);
+                wA -= iA * (Vector2Helpers.Cross(_rA, P) + impulse.Z);
 
                 vB += P * mB;
-                wB += iB * (Vector2.Cross(_rB, P) + impulse.Z);
+                wB += iB * (Vector2Helpers.Cross(_rB, P) + impulse.Z);
             }
 
             linearVelocities[offset + _indexA] = vA;
@@ -320,10 +320,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 var P = -K.Solve22(C1);
 
                 cA -= P * mA;
-                aA -= iA * Vector2.Cross(rA, P);
+                aA -= iA * Vector2Helpers.Cross(rA, P);
 
                 cB += P * mB;
-                aB += iB * Vector2.Cross(rB, P);
+                aB += iB * Vector2Helpers.Cross(rB, P);
             }
             else
             {
@@ -349,10 +349,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 var P = new Vector2(impulse.X, impulse.Y);
 
                 cA -= P * mA;
-                aA -= iA * (Vector2.Cross(rA, P) + impulse.Z);
+                aA -= iA * (Vector2Helpers.Cross(rA, P) + impulse.Z);
 
                 cB += P * mB;
-                aB += iB * (Vector2.Cross(rB, P) + impulse.Z);
+                aB += iB * (Vector2Helpers.Cross(rB, P) + impulse.Z);
             }
 
             positions[_indexA] = cA;

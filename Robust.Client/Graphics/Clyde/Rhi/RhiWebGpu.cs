@@ -211,8 +211,11 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         requiredLimits.Limits.MaxInterStageShaderVariables = 16;
         requiredLimits.Limits.MaxColorAttachments = 8;
         requiredLimits.Limits.MaxColorAttachmentBytesPerSample = 32;
-
         requiredLimits.Limits.MaxBufferSize = 268435456;
+
+        // Custom limits
+        // Take as low UBO alignment as we can get.
+        requiredLimits.Limits.MinUniformBufferOffsetAlignment = adapterLimits.Limits.MinUniformBufferOffsetAlignment;
 
         var deviceDesc = new DeviceDescriptor();
         deviceDesc.RequiredLimits = &requiredLimits;

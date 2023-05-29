@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Shared.Collections;
 using Robust.Shared.Exceptions;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde;
@@ -53,7 +54,14 @@ internal sealed class GpuExpansionBuffer : IDisposable
     }
 
     // TODO: Verify this is safe to expose to content.
-    public unsafe Span<T> Allocate<T>(int count, out Position position)
+    public Span<T> Allocate<T>(int count, out Position position)
+        where T : unmanaged
+    {
+        return AllocateAligned<T>(count, 1, out position);
+    }
+
+    // TODO: Verify this is safe to expose to content.
+    public unsafe Span<T> AllocateAligned<T>(int count, int alignment, out Position position)
         where T : unmanaged
     {
         if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
@@ -63,20 +71,24 @@ internal sealed class GpuExpansionBuffer : IDisposable
         if (length > IndividualBufferSize)
             throw new ArgumentException("Requested allocation is larger than what could fit inside a single buffer.");
 
-        if (_curBufferPos + length > IndividualBufferSize)
+        var posRounded = MathHelper.CeilingPowerOfTwo(_curBufferPos, alignment);
+        if (posRounded + length > IndividualBufferSize)
         {
             FlushCurrentBuffer();
 
             DebugTools.Assert(_curBufferPos == 0, "We must have a fresh buffer now");
+
+            posRounded = 0;
         }
 
-        position = new Position(_gpuBuffers[_curBufferIdx], _curBufferPos);
+        position = new Position(_gpuBuffers[_curBufferIdx], posRounded);
 
-        var byteSpan = _tempBuffer.AsSpan(_curBufferPos, length);
-        _curBufferPos += length;
+        var byteSpan = _tempBuffer.AsSpan(posRounded, length);
+        _curBufferPos = posRounded + length;
         var itemSpan = MemoryMarshal.Cast<byte, T>(byteSpan);
 
         DebugTools.Assert(itemSpan.Length == count);
+        DebugTools.Assert(_curBufferPos <= _tempBuffer.Length);
 
         return itemSpan;
     }

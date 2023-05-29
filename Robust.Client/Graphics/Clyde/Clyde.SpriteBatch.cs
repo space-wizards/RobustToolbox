@@ -20,6 +20,7 @@ internal partial class Clyde
     private sealed class SpriteBatch
     {
         private const int VertexSize = 32;
+        private const int UniformPassSize = 32;
 
         private const uint BindGroup0 = 0;
         private const uint BindGroup1 = 1;
@@ -31,7 +32,7 @@ internal partial class Clyde
         private readonly GpuExpansionBuffer _vertexBufferPool;
 
         private readonly RhiBuffer _uniformConstantsBuffer;
-        private readonly RhiBuffer _uniformPassBuffer;
+        private readonly GpuExpansionBuffer _uniformPassPool;
 
         private readonly RhiRenderPipeline _pipeline;
 
@@ -67,7 +68,7 @@ internal partial class Clyde
 
             _vertexBufferPool = new GpuExpansionBuffer(
                 _rhi,
-                64 * VertexSize,
+                8192 * VertexSize,
                 RhiBufferUsageFlags.Vertex | RhiBufferUsageFlags.CopyDst,
                 label: "_vertexBuffer"
             );
@@ -78,14 +79,16 @@ internal partial class Clyde
                 Label: "_uniformConstantsBuffer"
             ));
 
-            _uniformPassBuffer = _rhi.CreateBuffer(new RhiBufferDescriptor(
-                32, RhiBufferUsageFlags.Uniform | RhiBufferUsageFlags.CopyDst, MappedAtCreation: true,
-                Label: "_uniformPassBuffer"
-            ));
+            var uniformPoolSize = MathHelper.CeilingPowerOfTwo(
+                UniformPassSize,
+                (int)_rhi.DeviceLimits.MinUniformBufferOffsetAlignment
+            ) * 20;
 
-            var mapped = _uniformPassBuffer.GetMappedRange(0, 24);
-            mapped.Write(Matrix3x2.Identity, 0);
-            _uniformPassBuffer.Unmap();
+            _uniformPassPool = new GpuExpansionBuffer(
+                _rhi,
+                uniformPoolSize,
+                RhiBufferUsageFlags.Uniform | RhiBufferUsageFlags.CopyDst,
+                label: "_uniformPassBuffer");
 
             var res = clyde._resourceCache;
             var shaderSource = res.ContentFileReadAllText("/Shaders/Internal/default-sprite.wgsl");
@@ -203,13 +206,17 @@ internal partial class Clyde
             var viewMatrix = Matrix3x2.Identity;
             var projView = viewMatrix * projMatrix;
 
-            var data = new UniformView
+            var uniformPass = _uniformPassPool.AllocateAligned<UniformView>(
+                1,
+                (int) _rhi.DeviceLimits.MinUniformBufferOffsetAlignment,
+                out var uniformPos
+            );
+
+            uniformPass[0] = new UniformView
             {
                 ProjViewMatrix = ShaderMat3x2F.Transpose(projView),
                 ScreenPixelSize = new SVector2(1f / size.X, 1f / size.Y)
             };
-
-            _rhi.Queue.WriteBuffer(_uniformPassBuffer, 0, new ReadOnlySpan<UniformView>(in data));
 
             var rhiClearColor = clearColor == null ? new RhiColor(0, 0, 0, 1) : Color.FromSrgb(clearColor.Value);
 
@@ -235,7 +242,13 @@ internal partial class Clyde
 
             var passGroup = AllocTempBindGroup(new RhiBindGroupDescriptor(
                 _group1Layout,
-                new[] { new RhiBindGroupEntry(0, new RhiBufferBinding(_uniformPassBuffer)) }
+                new[]
+                {
+                    new RhiBindGroupEntry(
+                        0,
+                        new RhiBufferBinding(uniformPos.Buffer, (ulong) uniformPos.ByteOffset, UniformPassSize)
+                    )
+                }
             ));
 
             _passEncoder.SetBindGroup(BindGroup1, passGroup);
@@ -253,6 +266,7 @@ internal partial class Clyde
         {
             DebugTools.Assert(_passEncoder == null, "Must end render pass before finishing the sprite batch!");
 
+            _uniformPassPool.Flush();
             _vertexBufferPool.Flush();
 
             var buffer = _commandEncoder!.Finish();

@@ -33,6 +33,10 @@ public abstract partial class RhiBase
 {
     public abstract RhiQueue Queue { get; }
 
+    public abstract RhiLimits DeviceLimits { get; }
+    public abstract RhiAdapterProperties AdapterProperties { get; }
+    public abstract string Description { get; }
+
     public abstract RhiTexture CreateTexture(in RhiTextureDescriptor descriptor);
 
     public abstract RhiSampler CreateSampler(in RhiSamplerDescriptor descriptor);
@@ -69,6 +73,74 @@ public record struct RhiBufferDescriptor(
     bool MappedAtCreation = false,
     string? Label = null
 );
+
+// TODO: Should have internal constructor to avoid breaking changes if we add fields.
+public sealed record RhiLimits(
+    uint MaxTextureDimension1D,
+    uint MaxTextureDimension2D,
+    uint MaxTextureDimension3D,
+    uint MaxTextureArrayLayers,
+    uint MaxBindGroups,
+    uint MaxBindingsPerBindGroup,
+    uint MaxDynamicUniformBuffersPerPipelineLayout,
+    uint MaxDynamicStorageBuffersPerPipelineLayout,
+    uint MaxSampledTexturesPerShaderStage,
+    uint MaxSamplersPerShaderStage,
+    uint MaxStorageBuffersPerShaderStage,
+    uint MaxStorageTexturesPerShaderStage,
+    uint MaxUniformBuffersPerShaderStage,
+    ulong MaxUniformBufferBindingSize,
+    ulong MaxStorageBufferBindingSize,
+    uint MinUniformBufferOffsetAlignment,
+    uint MinStorageBufferOffsetAlignment,
+    uint MaxVertexBuffers,
+    ulong MaxBufferSize,
+    uint MaxVertexAttributes,
+    uint MaxVertexBufferArrayStride,
+    uint MaxInterStageShaderComponents,
+    uint MaxInterStageShaderVariables,
+    uint MaxColorAttachments,
+    uint MaxColorAttachmentBytesPerSample,
+    uint MaxComputeWorkgroupStorageSize,
+    uint MaxComputeInvocationsPerWorkgroup,
+    uint MaxComputeWorkgroupSizeX,
+    uint MaxComputeWorkgroupSizeY,
+    uint MaxComputeWorkgroupSizeZ,
+    uint MaxComputeWorkgroupsPerDimension
+);
+
+// TODO: Should have internal constructor to avoid breaking changes if we add fields.
+public sealed record RhiAdapterProperties(
+    uint VendorID,
+    string VendorName,
+    string Architecture,
+    string Name,
+    string Driver,
+    RhiAdapterType AdapterType,
+    RhiBackendType BackendType
+);
+
+public enum RhiAdapterType : byte
+{
+    DiscreteGpu = 0,
+    IntegratedCpu = 1,
+    Cpu = 2,
+    Unknown = 3
+}
+
+public enum RhiBackendType : byte
+{
+    Null = 0,
+    WebGpu = 1,
+    D3D11 = 2,
+    D3D12 = 3,
+    Metal = 4,
+    Vulkan = 5,
+    OpenGL = 6,
+    OpenGles = 7,
+}
+
+public sealed record RhiAdapterInfo();
 
 public sealed class RhiBuffer : RhiObject
 {
@@ -142,7 +214,7 @@ public sealed class RhiMappedBufferRange
         {
             CheckMapValid();
 
-            byteSpan.CopyTo(DataSpan[(int) offset..]);
+            byteSpan.CopyTo(DataSpan[(int)offset..]);
         }
     }
 

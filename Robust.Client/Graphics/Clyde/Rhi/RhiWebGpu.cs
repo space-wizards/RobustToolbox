@@ -32,6 +32,18 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
     private Device* _wgpuDevice;
     private Queue* _wgpuQueue;
 
+    private RhiLimits? _deviceLimits;
+    private RhiAdapterProperties? _adapterProperties;
+    private string _description = "not initialized";
+
+    public override RhiLimits DeviceLimits =>
+        _deviceLimits ?? throw new InvalidOperationException("Not initialized yet");
+
+    public override RhiAdapterProperties AdapterProperties =>
+        _adapterProperties ?? throw new InvalidOperationException("Not initialized yet");
+
+    public override string Description => _description;
+
     public RhiWebGpu(Clyde clyde, IDependencyCollection dependencies)
     {
         var logMgr = dependencies.Resolve<ILogManager>();
@@ -61,11 +73,15 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
 
     private void InitInstance()
     {
-        var context = WebGPU.CreateDefaultContext(new[] { "wgpu_native.dll", "libwgpu_native.so", "libwgpu_native.dylib" });
+        var context = WebGPU.CreateDefaultContext(new[]
+            { "wgpu_native.dll", "libwgpu_native.so", "libwgpu_native.dylib" });
         _webGpu = new WebGPU(context);
         _wgpu = new Wgpu(context);
 
-        _sawmill.Debug($"wgpu-native loaded, version: {WgpuVersionToString(_wgpu.GetVersion())}");
+        var wgpuVersion = WgpuVersionToString(_wgpu.GetVersion());
+        _sawmill.Debug($"wgpu-native loaded, version: {wgpuVersion}");
+
+        _description = $"WebGPU (wgpu-native {wgpuVersion})";
 
         InitLogging();
 
@@ -74,9 +90,9 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
 
         // Specify instance extras for wgpu-native.
         var pInstanceExtras = BumpAllocate<InstanceExtras>(ref buffer);
-        pInstanceDescriptor->NextInChain = (ChainedStruct*) pInstanceExtras;
+        pInstanceDescriptor->NextInChain = (ChainedStruct*)pInstanceExtras;
         pInstanceExtras->Chain.SType = (SType)NativeSType.STypeInstanceExtras;
-        pInstanceExtras->Backends = (uint) GetInstanceBackendCfg();
+        pInstanceExtras->Backends = (uint)GetInstanceBackendCfg();
 
         _wgpuInstance = _webGpu.CreateInstance(pInstanceDescriptor);
 
@@ -110,7 +126,7 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
     private void InitAdapterAndDevice(Surface* forSurface)
     {
         var powerPreference = ValidatePowerPreference(
-            (RhiPowerPreference) _cfg.GetCVar(CVars.DisplayGpuPowerPreference)
+            (RhiPowerPreference)_cfg.GetCVar(CVars.DisplayGpuPowerPreference)
         );
 
         var requestAdapterOptions = new RequestAdapterOptions
@@ -136,13 +152,28 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         AdapterProperties adapterProps = default;
         _webGpu.AdapterGetProperties(_wgpuAdapter, &adapterProps);
 
+        SupportedLimits adapterLimits = default;
+        _webGpu.AdapterGetLimits(_wgpuAdapter, &adapterLimits);
+
         _sawmill.Debug($"adapter name: {MarshalFromString(adapterProps.Name)}");
         _sawmill.Debug($"adapter vendor: {MarshalFromString(adapterProps.VendorName)} ({adapterProps.VendorID})");
         _sawmill.Debug($"adapter driver: {MarshalFromString(adapterProps.DriverDescription)}");
         _sawmill.Debug($"adapter architecture: {MarshalFromString(adapterProps.Architecture)}");
         _sawmill.Debug($"adapter backend: {adapterProps.BackendType}");
         _sawmill.Debug($"adapter type: {adapterProps.AdapterType}");
+        _sawmill.Debug($"adapter UBO alignment: {adapterLimits.Limits.MinUniformBufferOffsetAlignment}");
 
+        _adapterProperties = new RhiAdapterProperties(
+            adapterProps.VendorID,
+            MarshalFromString(adapterProps.VendorName),
+            MarshalFromString(adapterProps.Architecture),
+            MarshalFromString(adapterProps.Name),
+            MarshalFromString(adapterProps.DriverDescription),
+            (RhiAdapterType) adapterProps.AdapterType,
+            (RhiBackendType) adapterProps.BackendType
+        );
+
+        // Default limits, from WebGPU spec.
         var requiredLimits = new RequiredLimits();
         if (false)
         {
@@ -200,9 +231,44 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         _wgpuDevice = deviceResult.Device;
         _wgpuQueue = _webGpu.DeviceGetQueue(_wgpuDevice);
 
+        ref var limits = ref requiredLimits.Limits;
+
+        _deviceLimits = new RhiLimits(
+            limits.MaxTextureDimension1D,
+            limits.MaxTextureDimension2D,
+            limits.MaxTextureDimension3D,
+            limits.MaxTextureArrayLayers,
+            limits.MaxBindGroups,
+            limits.MaxBindingsPerBindGroup,
+            limits.MaxDynamicUniformBuffersPerPipelineLayout,
+            limits.MaxDynamicStorageBuffersPerPipelineLayout,
+            limits.MaxSampledTexturesPerShaderStage,
+            limits.MaxSamplersPerShaderStage,
+            limits.MaxStorageBuffersPerShaderStage,
+            limits.MaxStorageTexturesPerShaderStage,
+            limits.MaxUniformBuffersPerShaderStage,
+            limits.MaxUniformBufferBindingSize,
+            limits.MaxStorageBufferBindingSize,
+            limits.MinUniformBufferOffsetAlignment,
+            limits.MinStorageBufferOffsetAlignment,
+            limits.MaxVertexBuffers,
+            limits.MaxBufferSize,
+            limits.MaxVertexAttributes,
+            limits.MaxVertexBufferArrayStride,
+            limits.MaxInterStageShaderComponents,
+            limits.MaxInterStageShaderVariables,
+            limits.MaxColorAttachments,
+            limits.MaxColorAttachmentBytesPerSample,
+            limits.MaxComputeWorkgroupStorageSize,
+            limits.MaxComputeInvocationsPerWorkgroup,
+            limits.MaxComputeWorkgroupSizeX,
+            limits.MaxComputeWorkgroupSizeY,
+            limits.MaxComputeWorkgroupSizeZ,
+            limits.MaxComputeWorkgroupsPerDimension
+        );
+
         InitErrorCallback();
     }
-
 
     private void InitLogging()
     {
@@ -221,7 +287,7 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         _webGpu.DeviceSetUncapturedErrorCallback(
             _wgpuDevice,
             new PfnErrorCallback(&UncapturedErrorCallback),
-            (void*) GCHandle.ToIntPtr(gcHandle));
+            (void*)GCHandle.ToIntPtr(gcHandle));
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]

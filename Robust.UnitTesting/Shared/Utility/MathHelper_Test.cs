@@ -306,6 +306,7 @@ namespace Robust.UnitTesting.Shared.Utility
         }
 
         [Test]
+        [TestCase(5, 1, ExpectedResult = 5)]
         [TestCase(1, 4, ExpectedResult = 4)]
         [TestCase(4, 4, ExpectedResult = 4)]
         [TestCase(5, 4, ExpectedResult = 8)]
@@ -316,6 +317,7 @@ namespace Robust.UnitTesting.Shared.Utility
         }
 
         [Test]
+        [TestCase(5, 1, ExpectedResult = 5)]
         [TestCase(1, 4, ExpectedResult = 4)]
         [TestCase(4, 4, ExpectedResult = 4)]
         [TestCase(5, 4, ExpectedResult = 8)]

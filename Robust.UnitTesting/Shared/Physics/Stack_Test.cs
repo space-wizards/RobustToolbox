@@ -75,10 +75,10 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
             var groundManager = entityManager.EnsureComponent<FixturesComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-            fixtureSystem.CreateFixture(groundUid, new Fixture(horizontal, 1, 1, true), manager: groundManager, body: ground);
+            fixtureSystem.CreateFixture(groundUid, new Fixture("fix1", horizontal, 1, 1, true), manager: groundManager, body: ground);
 
             var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
-            fixtureSystem.CreateFixture(groundUid, new Fixture(vertical, 1, 1, true), manager: groundManager, body: ground);
+            fixtureSystem.CreateFixture(groundUid, new Fixture("fix2", vertical, 1, 1, true), manager: groundManager, body: ground);
 
             physSystem.WakeBody(groundUid, manager: groundManager, body: ground);
 
@@ -108,7 +108,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
                         new(-0.5f, -0.5f),
                     });
 
-                    fixtureSystem.CreateFixture(boxUid, new Fixture(poly, 1, 1, true), manager: manager, body: box);
+                    fixtureSystem.CreateFixture(boxUid, new Fixture("fix1", poly, 1, 1, true), manager: manager, body: box);
                     physSystem.WakeBody(boxUid, manager: manager, body: box);
 
                     bodies[j * rowCount + i] = box;
@@ -181,10 +181,10 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
             var groundManager = entityManager.EnsureComponent<FixturesComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-            fixtureSystem.CreateFixture(groundUid, new Fixture(horizontal, 1, 1, true), manager: groundManager, body: ground);
+            fixtureSystem.CreateFixture(groundUid, new Fixture("fix1", horizontal, 1, 1, true), manager: groundManager, body: ground);
 
             var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
-            fixtureSystem.CreateFixture(groundUid, new Fixture(vertical, 1, 1, true), manager: groundManager, body: ground);
+            fixtureSystem.CreateFixture(groundUid, new Fixture("fix2", vertical, 1, 1, true), manager: groundManager, body: ground);
 
             physSystem.WakeBody(groundUid, manager: groundManager, body: ground);
 
@@ -209,7 +209,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
                     physSystem.SetLinearDamping(circle, 0.05f);
                     physSystem.SetBodyType(circleUid, BodyType.Dynamic, manager: manager, body: circle);
                     shape = new PhysShapeCircle(0.5f);
-                    fixtureSystem.CreateFixture(circleUid, new Fixture(shape, 1, 1, true), manager: manager, body: circle);
+                    fixtureSystem.CreateFixture(circleUid, new Fixture("fix1", shape, 1, 1, true), manager: manager, body: circle);
                     physSystem.WakeBody(circleUid, manager: manager, body: circle);
 
                     bodies[j * rowCount + i] = circle;

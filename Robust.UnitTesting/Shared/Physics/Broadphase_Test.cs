@@ -81,7 +81,7 @@ public sealed class Broadphase_Test
 
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        var fixture = new Fixture(shape, 0, 0, true);
+        var fixture = new Fixture("fix1", shape, 0, 0, true);
         fixturesSystem.CreateFixture(ent, fixture, body: physics, xform: xform);
         physicsSystem.SetCanCollide(ent, true, body: physics);
         Assert.That(physics.CanCollide);
@@ -224,7 +224,7 @@ public sealed class Broadphase_Test
         // enable collision for the child
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        fixtures.CreateFixture(child, new Fixture(shape, 0, 0, false), body: childBody, xform: childXform);
+        fixtures.CreateFixture(child, new Fixture("fix1", shape, 0, 0, false), body: childBody, xform: childXform);
         physSystem.SetCanCollide(child, true, body: childBody);
         Assert.That(childBody.CanCollide);
 
@@ -342,7 +342,7 @@ public sealed class Broadphase_Test
 
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        fixtures.CreateFixture(child1, new Fixture(shape, 0, 0, false), body: child1Body, xform: child1Xform);
+        fixtures.CreateFixture(child1, new Fixture("fix1", shape, 0, 0, false), body: child1Body, xform: child1Xform);
         physSystem.SetCanCollide(child1, true, body: child1Body);
         Assert.That(child1Body.CanCollide);
 

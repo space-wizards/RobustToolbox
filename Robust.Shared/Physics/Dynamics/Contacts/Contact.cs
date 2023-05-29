@@ -71,6 +71,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public Fixture? FixtureA;
         public Fixture? FixtureB;
 
+        public PhysicsComponent? BodyA;
+        public PhysicsComponent? BodyB;
+
         public Manifold Manifold;
 
         internal ContactType Type;
@@ -235,6 +238,27 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         }
 
         /// <summary>
+        /// Trimmed down version of <see cref="Update"/> that only updates whether or not the contact's shapes are
+        /// touching.
+        /// </summary>
+        internal void UpdateIsTouching(Transform bodyATransform, Transform bodyBTransform)
+        {
+            var sensor = !(FixtureA!.Hard && FixtureB!.Hard);
+            if (sensor)
+            {
+                var shapeA = FixtureA!.Shape;
+                var shapeB = FixtureB!.Shape;
+                IsTouching = _manifoldManager.TestOverlap(shapeA,  ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
+            }
+            else
+            {
+                var manifold = Manifold;
+                Evaluate(ref manifold, bodyATransform, bodyBTransform);
+                IsTouching = manifold.PointCount > 0;
+            }
+        }
+
+        /// <summary>
         ///     Evaluate this contact with your own manifold and transforms.
         /// </summary>
         /// <param name="manifold">The manifold.</param>
@@ -315,7 +339,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public override int GetHashCode()
         {
             // TODO: Need to suss this out
-            return HashCode.Combine((FixtureA != null ? FixtureA.Body.Owner : EntityUid.Invalid), (FixtureB != null ? FixtureB.Body.Owner : EntityUid.Invalid));
+            return HashCode.Combine(EntityA, EntityB);
         }
     }
 

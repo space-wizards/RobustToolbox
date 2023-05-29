@@ -601,6 +601,39 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        return linearError <= PhysicsConstants.LinearSlop && angularError <= PhysicsConstants.AngularSlop;
         }
 
+        public override Joint Clone(EntityUid uidA, EntityUid uidB)
+        {
+            var prismatic = new PrismaticJoint(uidA, uidB, LocalAnchorA, LocalAnchorB, LocalAxisA, ReferenceAngle)
+                {
+                    EnableLimit = EnableLimit,
+                    LowerTranslation = LowerTranslation,
+                    UpperTranslation = UpperTranslation,
+                    EnableMotor = EnableMotor,
+                    MaxMotorForce = MaxMotorForce,
+                    MotorSpeed = MotorSpeed,
+                    Breakpoint = Breakpoint
+                };
+            return prismatic;
+        }
+
+        public override void CopyTo(Joint original)
+        {
+            if (original is not PrismaticJoint prismatic)
+                return;
+
+            prismatic.EnableLimit = EnableLimit;
+            prismatic.LowerTranslation = LowerTranslation;
+            prismatic.UpperTranslation = UpperTranslation;
+            prismatic.EnableMotor = EnableMotor;
+            prismatic.MaxMotorForce = MaxMotorForce;
+            prismatic.MotorSpeed = MotorSpeed;
+            prismatic._impulse = _impulse;
+            prismatic._lowerImpulse = _lowerImpulse;
+            prismatic._upperImpulse = _upperImpulse;
+            prismatic._motorImpulse = _motorImpulse;
+            prismatic.Breakpoint = Breakpoint;
+        }
+
         public bool Equals(PrismaticJoint? other)
         {
             if (ReferenceEquals(null, other)) return false;

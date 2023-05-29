@@ -15,7 +15,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
 
-public abstract class SharedJointSystem : EntitySystem
+public abstract partial class SharedJointSystem : EntitySystem
 {
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
@@ -25,6 +25,7 @@ public abstract class SharedJointSystem : EntitySystem
     // we can delete the component.
     private readonly HashSet<JointComponent> _dirtyJoints = new();
     protected readonly HashSet<Joint> AddedJoints = new();
+    protected readonly List<Joint> ToRemove = new();
 
     private ISawmill _sawmill = default!;
 
@@ -38,6 +39,8 @@ public abstract class SharedJointSystem : EntitySystem
         UpdatesBefore.Add(typeof(SharedPhysicsSystem));
         SubscribeLocalEvent<JointComponent, ComponentShutdown>(OnJointShutdown);
         SubscribeLocalEvent<JointComponent, ComponentInit>(OnJointInit);
+
+        InitializeRelay();
     }
 
     #region Lifetime
@@ -74,6 +77,8 @@ public abstract class SharedJointSystem : EntitySystem
             RaiseLocalEvent(bodyB.Owner, smug);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
+
+        RefreshRelay(uid, component);
     }
 
     private void OnJointShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)
@@ -85,6 +90,14 @@ public abstract class SharedJointSystem : EntitySystem
     }
 
     #endregion
+
+    public void SetEnabled(Joint joint, bool value)
+    {
+        if (joint.Enabled == value)
+            return;
+
+        joint.Enabled = value;
+    }
 
     public override void Update(float frameTime)
     {
@@ -404,6 +417,11 @@ public abstract class SharedJointSystem : EntitySystem
         }
 
         // Need to defer this for prediction reasons, yay!
+        // This can also break prediction for reasons, yay!
+        // Whenever a joint is added or removed, you need to check if its queued for adding.
+        // The client can apply multiple game states in a row without running a tick update,
+        // which can lead to things like cross-map joints.
+        // TODO is this actually needed. Its bad for performance coin.
         AddedJoints.Add(joint);
 
         if (_gameTiming.IsFirstTimePredicted)
@@ -427,6 +445,14 @@ public abstract class SharedJointSystem : EntitySystem
             RemoveJoint(a);
         }
 
+        foreach (var j in AddedJoints)
+        {
+            if (j.BodyAUid == uid || j.BodyBUid == uid)
+                ToRemove.Add(j);
+        }
+        AddedJoints.ExceptWith(ToRemove);
+        ToRemove.Clear();
+
         if(_gameTiming.IsFirstTimePredicted)
         {
             _sawmill.Debug($"Removed all joints from entity {ToPrettyString(uid)}");
@@ -439,8 +465,20 @@ public abstract class SharedJointSystem : EntitySystem
         ClearJoints(joint.Owner, joint);
     }
 
+    public void RemoveJoint(EntityUid uid, string id)
+    {
+        if (!TryComp<JointComponent>(uid, out var jointComp))
+            return;
+
+        if (!jointComp.Joints.TryGetValue(id, out var joint))
+            return;
+
+        RemoveJoint(joint);
+    }
+
     public void RemoveJoint(Joint joint)
     {
+        AddedJoints.Remove(joint);
         var bodyAUid = joint.BodyAUid;
         var bodyBUid = joint.BodyBUid;
 
@@ -468,17 +506,17 @@ public abstract class SharedJointSystem : EntitySystem
 
         // Wake up connected bodies.
         if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
-            MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating &&
-            !_container.IsEntityInContainer(bodyAUid))
+            MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
-            _physics.WakeBody(bodyAUid, body: bodyA);
+            var uidA = jointComponentA.Relay ?? bodyAUid;
+            _physics.WakeBody(uidA);
         }
 
         if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
-            MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating &&
-            !_container.IsEntityInContainer(bodyBUid))
+            MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
-            _physics.WakeBody(bodyBUid, body: bodyB);
+            var uidB = jointComponentB.Relay ?? bodyBUid;
+            _physics.WakeBody(uidB);
         }
 
         if (!jointComponentA.Deleted)
@@ -531,7 +569,7 @@ public abstract class SharedJointSystem : EntitySystem
 
     internal void FilterContactsForJoint(Joint joint, PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
     {
-        if (!Resolve(joint.BodyAUid, ref bodyA) || !Resolve(joint.BodyBUid, ref bodyB))
+        if (!Resolve(joint.BodyBUid, ref bodyB))
             return;
 
         var node = bodyB.Contacts.First;
@@ -541,8 +579,8 @@ public abstract class SharedJointSystem : EntitySystem
             var contact = node.Value;
             node = node.Next;
 
-            if (contact.FixtureA?.Body == bodyA ||
-                contact.FixtureB?.Body == bodyA)
+            if (contact.EntityA == joint.BodyAUid ||
+                contact.EntityB == joint.BodyAUid)
             {
                 // Flag the contact for filtering at the next time step (where either
                 // body is awake).

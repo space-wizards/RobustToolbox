@@ -49,6 +49,6 @@ public sealed class ServerSpriteSpecifierSerializer : SpriteSpecifierSerializer
 
         if (statePath is ErrorNode) return statePath;
 
-        return new ValidatedValueNode(node);
+        return new ValidatedMappingNode(new());
     }
 }

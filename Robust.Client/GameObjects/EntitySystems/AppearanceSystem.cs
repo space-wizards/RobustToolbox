@@ -16,7 +16,7 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<ClientAppearanceComponent, ComponentInit>(OnAppearanceInit);
+            SubscribeLocalEvent<ClientAppearanceComponent, ComponentStartup>(OnAppearanceStartup);
             SubscribeLocalEvent<ClientAppearanceComponent, ComponentHandleState>(OnAppearanceHandleState);
         }
 
@@ -26,13 +26,8 @@ namespace Robust.Client.GameObjects
             args.State = new AppearanceComponentState(clone);
         }
 
-        private void OnAppearanceInit(EntityUid uid, ClientAppearanceComponent component, ComponentInit args)
+        private void OnAppearanceStartup(EntityUid uid, ClientAppearanceComponent component, ComponentStartup args)
         {
-            foreach (var visual in component.Visualizers)
-            {
-                visual.InitializeEntity(uid);
-            }
-
             MarkDirty(component);
         }
 
@@ -103,10 +98,9 @@ namespace Robust.Client.GameObjects
             var metaQuery = GetEntityQuery<MetaDataComponent>();
             while (_queuedUpdates.TryDequeue(out var appearance))
             {
-                if (appearance.Deleted)
-                    continue;
-
                 appearance.AppearanceDirty = false;
+                if (!appearance.Running)
+                    continue;
 
                 // If the entity is no longer within the clients PVS, don't bother updating.
                 if ((metaQuery.GetComponent(appearance.Owner).Flags & MetaDataFlags.Detached) != 0 && !appearance.UpdateDetached)
@@ -133,12 +127,6 @@ namespace Robust.Client.GameObjects
 
             // Give it AppearanceData so we can still keep the friend attribute on the component.
             EntityManager.EventBus.RaiseLocalEvent(uid, ref ev);
-
-            // Eventually visualizers would be nuked and we'd just make them components instead.
-            foreach (var visualizer in appearanceComponent.Visualizers)
-            {
-                visualizer.OnChangeData(appearanceComponent);
-            }
         }
     }
 

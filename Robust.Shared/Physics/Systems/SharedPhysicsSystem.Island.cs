@@ -10,7 +10,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Utility;
-using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.Physics.Systems;
 
@@ -132,14 +131,18 @@ public abstract partial class SharedPhysicsSystem
     private readonly ObjectPool<List<Contact>> _islandContactPool =
         new DefaultObjectPool<List<Contact>>(new ListPolicy<Contact>(), MaxIslands);
 
-    private readonly ObjectPool<List<Joint>> _islandJointPool = new DefaultObjectPool<List<Joint>>(new ListPolicy<Joint>(), MaxIslands);
+    /// <summary>
+    /// Due to joint relays we need to track the dummy joint and the original joint.
+    /// </summary>
+    private readonly ObjectPool<List<(Joint Original, Joint Joint)>> _islandJointPool =
+        new DefaultObjectPool<List<(Joint Original, Joint Joint)>>(new ListPolicy<(Joint Original, Joint Joint)>(), MaxIslands);
 
     internal record struct IslandData(
         int Index,
         bool LoneIsland,
         List<PhysicsComponent> Bodies,
         List<Contact> Contacts,
-        List<Joint> Joints,
+        List<(Joint Original, Joint Joint)> Joints,
         List<(Joint Joint, float Error)> BrokenJoints)
     {
         /// <summary>
@@ -160,7 +163,7 @@ public abstract partial class SharedPhysicsSystem
 
         public readonly List<PhysicsComponent> Bodies = Bodies;
         public readonly List<Contact> Contacts = Contacts;
-        public readonly List<Joint> Joints = Joints;
+        public readonly List<(Joint Original, Joint Joint)> Joints = Joints;
         public bool PositionSolved = false;
         public readonly List<(Joint Joint, float Error)> BrokenJoints = BrokenJoints;
     }
@@ -315,6 +318,8 @@ public abstract partial class SharedPhysicsSystem
         var bodyQuery = GetEntityQuery<PhysicsComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var jointQuery = GetEntityQuery<JointComponent>();
+        var jointRelayQuery = GetEntityQuery<JointRelayTargetComponent>();
+
         var islandIndex = 0;
         var loneIsland = new IslandData(
             islandIndex++,
@@ -325,6 +330,7 @@ public abstract partial class SharedPhysicsSystem
             new List<(Joint Joint, float Error)>());
 
         var islands = new List<IslandData>();
+        var islandJoints = new List<(Joint Original, Joint Joint)>();
 
         // Build the relevant islands / graphs for all bodies.
         foreach (var seed in _awakeBodyList)
@@ -358,6 +364,8 @@ public abstract partial class SharedPhysicsSystem
 
             while (_bodyStack.TryPop(out var body))
             {
+                var bodyUid = body.Owner;
+
                 bodies.Add(body);
                 _islandSet.Add(body);
 
@@ -365,7 +373,7 @@ public abstract partial class SharedPhysicsSystem
                 if (body.BodyType == BodyType.Static) continue;
 
                 // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                SetAwake(body.Owner, body, true, updateSleepTime: false);
+                SetAwake(bodyUid, body, true, updateSleepTime: false);
 
                 var node = body.Contacts.First;
 
@@ -385,8 +393,8 @@ public abstract partial class SharedPhysicsSystem
 
                     contacts.Add(contact);
                     contact.Flags |= ContactFlags.Island;
-                    var bodyA = contact.FixtureA!.Body;
-                    var bodyB = contact.FixtureB!.Body;
+                    var bodyA = contact.BodyA!;
+                    var bodyB = contact.BodyB!;
 
                     var other = bodyA == body ? bodyB : bodyA;
 
@@ -397,27 +405,94 @@ public abstract partial class SharedPhysicsSystem
                     other.Island = true;
                 }
 
-                if (!jointQuery.TryGetComponent(body.Owner, out var jointComponent)) continue;
-
-                foreach (var joint in jointComponent.Joints.Values)
+                // Handle joints
+                if (jointRelayQuery.TryGetComponent(bodyUid, out var relayComp))
                 {
-                    if (joint.IslandFlag) continue;
+                    foreach (var relay in relayComp.Relayed)
+                    {
+                        if (!jointQuery.TryGetComponent(relay, out var jointComp))
+                            continue;
 
-                    var other = joint.BodyAUid == body.Owner
-                        ? bodyQuery.GetComponent(joint.BodyBUid)
-                        : bodyQuery.GetComponent(joint.BodyAUid);
+                        foreach (var joint in jointComp.GetJoints.Values)
+                        {
+                            if (joint.IslandFlag)
+                                continue;
 
-                    // Don't simulate joints connected to inactive bodies.
-                    if (!other.CanCollide) continue;
+                            var uidA = joint.BodyAUid;
+                            var uidB = joint.BodyBUid;
 
-                    joints.Add(joint);
-                    joint.IslandFlag = true;
+                            if (jointQuery.TryGetComponent(uidA, out var jointCompA) &&
+                                jointCompA.Relay != null)
+                            {
+                                uidA = jointCompA.Relay.Value;
+                            }
 
-                    if (other.Island) continue;
+                            if (jointQuery.TryGetComponent(uidB, out var jointCompB) &&
+                                jointCompB.Relay != null)
+                            {
+                                uidB = jointCompB.Relay.Value;
+                            }
 
-                    _bodyStack.Push(other);
-                    other.Island = true;
+                            var copy = joint.Clone(uidA, uidB);
+                            islandJoints.Add((joint, copy));
+                            joint.IslandFlag = true;
+                        }
+                    }
                 }
+
+                if (jointQuery.TryGetComponent(bodyUid, out var jointComponent) &&
+                    jointComponent.Relay == null)
+                {
+                    foreach (var joint in jointComponent.Joints.Values)
+                    {
+                        if (joint.IslandFlag)
+                            continue;
+
+                        var uidA = joint.BodyAUid;
+                        var uidB = joint.BodyBUid;
+
+                        if (jointQuery.TryGetComponent(uidA, out var jointCompA) &&
+                            jointCompA.Relay != null)
+                        {
+                            uidA = jointCompA.Relay.Value;
+                        }
+
+                        if (jointQuery.TryGetComponent(uidA, out var jointCompB) &&
+                            jointCompB.Relay != null)
+                        {
+                            uidB = jointCompB.Relay.Value;
+                        }
+
+                        var copy = joint.Clone(uidA, uidB);
+                        islandJoints.Add((joint, copy));
+                        joint.IslandFlag = true;
+                    }
+                }
+
+                foreach (var (original, joint) in islandJoints)
+                {
+                    var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
+                    var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
+
+                    if (!bodyA.CanCollide || !bodyB.CanCollide)
+                        continue;
+
+                    joints.Add((original, joint));
+
+                    if (!bodyA.Island)
+                    {
+                        _bodyStack.Push(bodyA);
+                        bodyA.Island = true;
+                    }
+
+                    if (!bodyB.Island)
+                    {
+                        _bodyStack.Push(bodyB);
+                        bodyB.Island = true;
+                    }
+                }
+
+                islandJoints.Clear();
             }
 
             int idx;
@@ -475,15 +550,22 @@ public abstract partial class SharedPhysicsSystem
     {
         foreach (var body in island.Bodies)
         {
+            DebugTools.Assert(body.IslandIndex.ContainsKey(island.Index));
             body.IslandIndex.Remove(island.Index);
         }
 
         _islandBodyPool.Return(island.Bodies);
         _islandContactPool.Return(island.Contacts);
 
-        foreach (var joint in island.Joints)
+        foreach (var (original, joint) in island.Joints)
         {
-            joint.IslandFlag = false;
+            // Do we need to copy data back to the original?
+            if (original != joint)
+            {
+                joint.CopyTo(original);
+            }
+
+            original.IslandFlag = false;
         }
 
         _islandJointPool.Return(island.Joints);
@@ -707,7 +789,7 @@ public abstract partial class SharedPhysicsSystem
         {
             for (var i = 0; i < island.Joints.Count; i++)
             {
-                var joint = island.Joints[i];
+                var joint = island.Joints[i].Joint;
                 if (!joint.Enabled) continue;
 
                 var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
@@ -721,7 +803,7 @@ public abstract partial class SharedPhysicsSystem
         {
             for (var j = 0; j < jointCount; ++j)
             {
-                var joint = island.Joints[j];
+                var joint = island.Joints[j].Joint;
 
                 if (!joint.Enabled)
                     continue;
@@ -731,7 +813,7 @@ public abstract partial class SharedPhysicsSystem
                 var error = joint.Validate(data.InvDt);
 
                 if (error > 0.0f)
-                    island.BrokenJoints.Add((joint, error));
+                    island.BrokenJoints.Add((island.Joints[j].Original, error));
             }
 
             SolveVelocityConstraints(island, options, velocityConstraints, linearVelocities, angularVelocities);
@@ -776,9 +858,9 @@ public abstract partial class SharedPhysicsSystem
             var contactsOkay = SolvePositionConstraints(data, in island, options, positionConstraints, positions, angles);
             var jointsOkay = true;
 
-            for (int j = 0; j < island.Joints.Count; ++j)
+            for (var j = 0; j < island.Joints.Count; ++j)
             {
-                var joint = island.Joints[j];
+                var joint = island.Joints[j].Joint;
 
                 if (!joint.Enabled)
                     continue;
@@ -940,6 +1022,7 @@ public abstract partial class SharedPhysicsSystem
             RaiseLocalEvent(joint.BodyAUid, ref ev);
             RaiseLocalEvent(joint.BodyBUid, ref ev);
             RaiseLocalEvent(ref ev);
+            joint.Dirty();
         }
 
         var offset = island.Offset;
@@ -955,7 +1038,7 @@ public abstract partial class SharedPhysicsSystem
             var uid = body.Owner;
             var position = positions[offset + i];
             var angle = angles[offset + i];
-            var xform = xformQuery.GetComponent(body.Owner);
+            var xform = xformQuery.GetComponent(uid);
 
             // Temporary NaN guards until PVS is fixed.
             if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
@@ -978,7 +1061,7 @@ public abstract partial class SharedPhysicsSystem
             }
 
             // TODO: Should check if the values update.
-            Dirty(body, metaQuery.GetComponent(body.Owner));
+            Dirty(body, metaQuery.GetComponent(uid));
         }
     }
 

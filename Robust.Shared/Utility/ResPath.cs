@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.Serialization;
@@ -91,6 +92,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     ///     Assert.AreEqual("/foo", new ResPath("/foo/x.txt").Directory.ToString());
     /// </code>
     /// </example>
+    [JsonIgnore]
     public ResPath Directory
     {
         get
@@ -450,9 +452,11 @@ public readonly struct ResPath : IEquatable<ResPath>
             return this;
         }
 
-        return this == Root
-            ? Self
-            : new ResPath(CanonPath[1..]);
+        if (this == Root)
+            return Self;
+
+        var newPath = new ResPath(CanonPath[1..]);
+        return newPath.IsRelative ? newPath : newPath.ToRelativePath();
     }
 
     /// <summary>

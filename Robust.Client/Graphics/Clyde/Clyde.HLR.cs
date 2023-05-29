@@ -240,7 +240,7 @@ namespace Robust.Client.Graphics.Clyde
                 try
                 {
                     if (!overlay.BeforeDraw(args))
-                        return;
+                        continue;
 
                     if (overlay.RequestScreenTexture)
                     {

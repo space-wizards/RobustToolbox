@@ -11,6 +11,7 @@ cmd-parse-failure-uid = {$arg} is not a valid entity UID.
 cmd-parse-failure-mapid = {$arg} is not a valid MapId.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 
+cmd-failure-no-attached-entity = There is no entity attached to this shell.
 
 ## 'help' command
 cmd-help-desc = Display general help or help text for a specific command
@@ -377,8 +378,11 @@ cmd-netaudit-help = netaudit
 cmd-tp-desc = Teleports a player to any location in the round.
 cmd-tp-help = tp <x> <y> [<mapID>]
 
-cmd-tpto-desc = Teleports the current player or the specified players/entities to the location of last player/entity specified.d.
+cmd-tpto-desc = Teleports the current player or the specified players/entities to the location of the first player/entity.
 cmd-tpto-help = tpto <username|uid> [username|uid]...
+cmd-tpto-destination-hint = destination (uid or username)
+cmd-tpto-victim-hint = entity to teleport (uid or username)
+cmd-tpto-parse-error = Cant resolve entity or player: {$str}
 
 cmd-listplayers-desc = Lists all players currently connected.
 cmd-listplayers-help = listplayers
@@ -531,10 +535,13 @@ cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
 cmd-vvinvoke-help = Usage: vvinvoke <path> [arguments...]
 
 cmd-replaystart-desc = Starts a replay recording, optionally with some time limit.
-cmd-replaystart-help = Usage: replaystart [minutes] [directory] [overwrite bool]
+cmd-replaystart-help = Usage: replaystart [time limit (minutes)] [path] [overwrite bool]
 cmd-replaystart-success = Started recording a replay.
 cmd-replaystart-already-recording = Already recording a replay.
 cmd-replaystart-error = An error occurred while trying to start the recording.
+cmd-replaystart-hint-time = [optional time limit (minutes)]
+cmd-replaystart-hint-name = [optional path]
+cmd-replaystart-hint-overwrite = [overwrite path (bool)]
 
 cmd-replaystop-desc = Stops a replay recording.
 cmd-replaystop-help = Usage: replaystop

@@ -209,6 +209,11 @@ namespace Robust.Shared.ContentPack
             throw new NotImplementedException();
         }
 
+        public void OpenOsWindow(ResPath path)
+        {
+            // Not valid for virtual directories. As this has no effect on the rest of the game no exception is thrown.
+        }
+
         private bool TryGetNodeAt(ResPath path, [NotNullWhen(true)] out INode? node)
         {
             if (!path.IsRooted)

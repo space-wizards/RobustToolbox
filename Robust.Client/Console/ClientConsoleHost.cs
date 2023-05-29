@@ -171,7 +171,7 @@ namespace Robust.Client.Console
             }
 
             args.RemoveAt(0);
-            var shell = new ConsoleShell(this, null);
+            var shell = new ConsoleShell(this, session ?? _player.LocalPlayer?.Session, session == null);
             var cmdArgs = args.ToArray();
 
             AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);

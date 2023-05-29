@@ -40,6 +40,9 @@ namespace Robust.Shared.ContentPack
                 return false;
             }
 
+            public bool FileExists(ResPath relPath)
+                => relPath == _resourcePath;
+
             public IEnumerable<ResPath> FindFiles(ResPath path)
             {
                 if (_resourcePath.TryRelativeTo(path, out var relative))

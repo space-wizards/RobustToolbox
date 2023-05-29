@@ -13,6 +13,17 @@ internal sealed partial class ProfTreeEntry : Control
     private readonly ProfTree.TreeExpand _parentExpand;
     public readonly (int str, int i) Id;
 
+    protected override void StylePropertiesChanged()
+    {
+        base.StylePropertiesChanged();
+
+        if (!TryGetStyleProperty("arrowColor", out Arrow.Color))
+            Arrow.Color = Color.White;
+
+        if (!TryGetStyleProperty("arrowOutline", out Arrow.OutlineColor))
+            Arrow.OutlineColor = Color.Black;
+    }
+
     public ProfTreeEntry(
         ProfTree tab,
         ProfTree.TreeExpand parentExpand,

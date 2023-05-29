@@ -54,6 +54,254 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.122.0.0
+
+### Breaking changes
+
+* Obsolete some MapManager queries.
+* Add EntityUid to some MapManager queries.
+
+
+## 0.121.0.0
+
+### Breaking changes
+
+* Add replaying loading / reading.
+
+### New features
+
+* Add setter for PlayingStream that also updates source.
+* Add IWritableDirProvider.OpenOSWindow.
+
+### Bugfixes
+
+* Fix component lookups not considering whether an entity is in a container and the flag is set.
+
+
+## 0.120.0.0
+
+### Breaking changes
+
+* Relay contained joints to parents and no longer implicitly break them upon container changes.
+
+### Bugfixes
+
+* Fix upload folder command.
+* Fix SpriteView scaling for aspect ratios.
+
+### Internal
+
+* Cleanup MapManager slightly.
+
+
+## 0.119.0.1
+
+### Bugfixes
+
+* Fix non-hard kinematiccontroller fixtures not colliding.
+
+
+## 0.119.0.0
+
+### Breaking changes
+
+* Move prototype upload commands to the engine.
+
+### New features
+
+* Add IContentRoot.FileExists(ResPath).
+
+
+## 0.118.0.0
+
+### Breaking changes
+
+* ComponentRegistry has been re-namespaced.
+
+### New features
+
+* You can now provide a ComponentRegistry to SpawnEntity to override some components from the prototype.
+
+
+## 0.117.0.0
+
+### Breaking changes
+
+* Deprecate some sprite methods and cleanup IconComponent.
+* YAML Linter supports inheritance.
+
+
+## 0.116.0.0
+
+### Breaking changes
+
+* Removed AppearanceVisualizers.
+* Modify replay record directory selection.
+
+
+## 0.115.0.0
+
+### Breaking changes
+
+* The signature and behaviour of `IClientGameStateManager.PartialStateReset()` has changed. By default it will no longer delete client-side entities, unless they are parented to a networked entity that is being deleted during the reset.
+
+
+## 0.114.1.0
+
+### New features
+
+* Add a new method for physics joint removal.
+
+### Other
+
+* Slightly speedup entity deletion.
+
+### Internal
+
+* Remove static logs from EntityManager.
+
+
+## 0.114.0.0
+
+### Breaking changes
+
+* The way that UI themes resolve textures has changed. Absolute texture paths will simply be read directly, while relative paths will attempt to find a theme specific texture before falling back to simply trying to read the given file path.
+* The signature of public UI theme methods have changed, and some new methods have been added.
+
+### New features
+
+* Added non-generic versions of various component/entity lookup queries.
+
+### Bugfixes
+
+* Fixed an erroneous error that would get logged when clients reconnect to a server.
+* Fixed a UI bug that was preventing some controls from being disposed and was causing the UI to become laggy.
+
+
+## 0.113.0.3
+
+### Bugfixes
+
+* Fix PVS error log threading issue.
+
+
+## 0.113.0.2
+
+### Bugfixes
+
+* Removed or fixed some erroneous debug asserts
+* Fixed entity-deletion not being properly sent to clients
+
+
+## 0.113.0.1
+
+### Bugfixes
+
+* Use ThemeResolve for TextureButton texture normals.
+
+
+## 0.113.0.0
+
+### Breaking changes
+
+* Move JobQueue<T> from content to engine.
+
+### New features
+
+* Make InitializeEntity and StartEntity public. InitializeAndStartEntity was already public.
+
+### Bugfixes
+
+* Add padding to font glyphs in the atlas.
+* Fix log for duplicate component references.
+* Make Map-Grids set GridUid earlier.
+* Fix hidden action numbers when updating UI theme.
+* Fix joint change events subscribing to predictedphysics instead of just physics.
+
+### Other
+
+* Remove joint log as it's never been read and caused threading issues.
+* Decouple vvwrite / vvread / vvinvoke perms slightly from vv so vv no longer implicitly grants the others.
+* Add start line to duplicate prototype yaml error.
+* Fix debug sprite assert.
+* Fix some joint bugs
+
+
+## 0.112.0.1
+
+
+## 0.112.0.0
+
+### Breaking changes
+
+* Move default theme directory to /Interface/ from /UserInterface/
+* Try to fix contact mispredicts with PredictedPhysicsComponent.
+
+### Bugfixes
+
+* Fix JSON Serialization of ResPath.
+
+### Other
+
+* Change prof tree style & add basic stylesheet support.
+
+
+## 0.111.0.0
+
+### Breaking changes
+
+* Add default stylesheet for engine + debug connect screen.
+
+
+## 0.110.0.0
+
+### Breaking changes
+
+* Remove name + authors from map files as these were unused and overwritten on every mapfile write.
+
+### Bugfixes
+
+* Fix Omnisharp failing to analyze the client by default.
+* Fix EntityLookup not properly adding nested container entities.
+
+### Other
+
+* Sort NetSerializable types.
+* Remove obsolete Fixture.Body references.
+
+
+## 0.109.1.0
+
+### New features
+
+* Add "IsDefault" to EntityManager for basic checks on whether an entity has default prototype data.
+
+
+## 0.109.0.0
+
+### Breaking changes
+
+* `BeforeSaveEvent` has been moved from `Robust.Server.Maps` to `Robust.Shared.Map.Events`
+
+### New features
+
+* Added `IMidiRenderer.ClearAllEvents()`, a new method that clears all scheduled midi events.
+* Added a new event (`BeforeSaveEvent`) which gets raised before a map/entity gets serialized to yaml.
+* Added a new `ROBUST_SOUNDFONT_OVERRIDE` environmental variable that can be used to override system soundfonts.
+
+### Bugfixes
+
+* Fixed `EndCollideEvent` not setting the EntityUid fields.
+* Fixed a bug that would cause screen-space overlays to sometimes not be drawn.
+
+
+## 0.108.0.0
+
+### Breaking changes
+
+* Physics fixtures are now serialized by id, fixture rather than as a list with ids attached.
+
+
 ## 0.107.0.1
 
 ### Bugfixes

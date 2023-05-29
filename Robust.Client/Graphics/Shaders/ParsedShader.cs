@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Graphics
 {
@@ -22,14 +23,14 @@ namespace Robust.Client.Graphics
             Constants = constants;
         }
 
-        public IReadOnlyDictionary<string, ShaderUniformDefinition> Uniforms { get; }
-        public IReadOnlyDictionary<string, ShaderVaryingDefinition> Varyings { get; }
-        public IReadOnlyDictionary<string, ShaderConstantDefinition> Constants { get; }
-        public IList<ShaderFunctionDefinition> Functions { get; }
-        public ShaderLightMode LightMode { get; }
-        public ShaderBlendMode BlendMode { get; }
-        public ShaderPreset Preset { get; }
-        public ICollection<ResPath> Includes { get; }
+        [ViewVariables] public IReadOnlyDictionary<string, ShaderUniformDefinition> Uniforms { get; }
+        [ViewVariables] public IReadOnlyDictionary<string, ShaderVaryingDefinition> Varyings { get; }
+        [ViewVariables] public IReadOnlyDictionary<string, ShaderConstantDefinition> Constants { get; }
+        [ViewVariables] public IList<ShaderFunctionDefinition> Functions { get; }
+        [ViewVariables] public ShaderLightMode LightMode { get; }
+        [ViewVariables] public ShaderBlendMode BlendMode { get; }
+        [ViewVariables] public ShaderPreset Preset { get; }
+        [ViewVariables] public ICollection<ResPath> Includes { get; }
 
     }
 

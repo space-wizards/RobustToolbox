@@ -2,12 +2,14 @@ using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using System;
+using Robust.Shared.ContentPack;
 
 namespace Robust.Server.Replays;
 
 internal sealed class ReplayStartCommand : LocalizedCommands
 {
     [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
+    [Dependency] private readonly IResourceManager _resMan = default!;
 
     public override string Command => "replaystart";
 
@@ -42,10 +44,24 @@ internal sealed class ReplayStartCommand : LocalizedCommands
             }
         }
 
-        if (_replay.TryStartRecording(dir, overwrite, duration))
+        if (_replay.TryStartRecording(_resMan.UserData, dir, overwrite, duration))
             shell.WriteLine(Loc.GetString("cmd-replaystart-success"));
         else
             shell.WriteLine(Loc.GetString("cmd-replaystart-error"));
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length == 1)
+            return CompletionResult.FromHint(Loc.GetString("cmd-replaystart-hint-time"));
+
+        if (args.Length == 2)
+            return CompletionResult.FromHint(Loc.GetString("cmd-replaystart-hint-name"));
+
+        if (args.Length == 3)
+            return CompletionResult.FromHint(Loc.GetString("cmd-replaystart-hint-overwrite"));
+
+        return CompletionResult.Empty;
     }
 }
 

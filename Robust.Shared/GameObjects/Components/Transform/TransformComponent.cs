@@ -94,6 +94,7 @@ namespace Robust.Shared.GameObjects
         public MapId MapID { get; internal set; }
 
         internal bool _mapIdInitialized;
+        internal bool _gridInitialized;
 
         // TODO: Cache this.
         /// <summary>
@@ -354,7 +355,7 @@ namespace Robust.Shared.GameObjects
                 {
                     _anchored = value;
                 }
-                else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
+                else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out _, out var grid))
                 {
                     _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
                 }
@@ -392,30 +393,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables] public int ChildCount => _children.Count;
 
         [ViewVariables] internal EntityUid LerpParent { get; set; }
-
-        internal EntityUid? FindGridEntityId(EntityQuery<TransformComponent> xformQuery)
-        {
-            if (_entMan.HasComponent<MapComponent>(Owner))
-            {
-                return null;
-            }
-
-            if (_entMan.HasComponent<MapGridComponent>(Owner))
-            {
-                return Owner;
-            }
-
-            if (_parent.IsValid())
-            {
-                var parentXform = xformQuery.GetComponent(_parent);
-                if (parentXform.GridUid != null || parentXform.LifeStage >= ComponentLifeStage.Initialized)
-                    return parentXform.GridUid;
-                else
-                    return parentXform.FindGridEntityId(xformQuery);
-            }
-
-            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Owner : null;
-        }
 
         /// <summary>
         /// Detaches this entity from its parent.

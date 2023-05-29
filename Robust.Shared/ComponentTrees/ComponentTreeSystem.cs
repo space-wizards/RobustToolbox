@@ -167,6 +167,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
             var (comp, xform) = entry;
 
             comp.TreeUpdateQueued = false;
+            if (!comp.Running)
+                continue;
+
             if (!_updated.Add(comp.Owner))
                 continue;
 

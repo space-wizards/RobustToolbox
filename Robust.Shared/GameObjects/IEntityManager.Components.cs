@@ -353,6 +353,11 @@ namespace Robust.Shared.GameObjects
         IEnumerable<T> GetComponents<T>(EntityUid uid);
 
         /// <summary>
+        /// Returns the number of components on this entity.
+        /// </summary>
+        int ComponentCount(EntityUid uid);
+
+        /// <summary>
         ///     Returns ALL networked components on an entity, including deleted ones.
         /// </summary>
         /// <param name="uid">Entity UID to look on.</param>

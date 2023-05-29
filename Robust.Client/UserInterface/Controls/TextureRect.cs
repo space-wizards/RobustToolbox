@@ -42,17 +42,6 @@ namespace Robust.Client.UserInterface.Controls
 
         private string? _texturePath;
 
-        // TODO HUD REFACTOR BEFORE MERGE use or cleanup
-        public string TextureThemePath
-        {
-            set
-            {
-                Texture = Theme.ResolveTexture(value);
-                _texturePath = value;
-            }
-        }
-
-        // TODO HUD REFACTOR BEFORE MERGE use or cleanup
         public string TexturePath
         {
             set

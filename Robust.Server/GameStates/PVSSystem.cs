@@ -16,6 +16,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -224,7 +225,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private PVSCollection<TIndex> RegisterPVSCollection<TIndex>() where TIndex : IComparable<TIndex>, IEquatable<TIndex>
     {
-        var collection = new PVSCollection<TIndex>(EntityManager, _transform);
+        var collection = new PVSCollection<TIndex>(_sawmill, EntityManager, _transform);
         _pvsCollections.Add(collection);
         return collection;
     }
@@ -253,8 +254,8 @@ internal sealed partial class PVSSystem : EntitySystem
     private void OnEntityMove(ref MoveEvent ev)
     {
         // GriddUid is only set after init.
-        if (ev.Component.LifeStage < ComponentLifeStage.Initialized && ev.Component.GridUid == null)
-            _transform.SetGridId(ev.Component, ev.Component.FindGridEntityId(GetEntityQuery<TransformComponent>()));
+        if (!ev.Component._gridInitialized)
+            _transform.InitializeGridUid(ev.Sender, ev.Component, GetEntityQuery<TransformComponent>(), GetEntityQuery<MapGridComponent>());
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
         if (ev.Component.GridUid == ev.Sender)
@@ -420,10 +421,14 @@ internal sealed partial class PVSSystem : EntitySystem
         // Keep track of the index of each chunk we use for a faster index lookup.
         // Pool it because this will allocate a lot across ticks as we scale in players.
         foreach (var chunks in _mapIndices.Values)
+        {
             _mapChunkPool.Return(chunks);
+        }
 
         foreach (var chunks in _gridIndices.Values)
+        {
             _gridChunkPool.Return(chunks);
+        }
 
         _mapIndices.Clear();
         _gridIndices.Clear();
@@ -480,11 +485,12 @@ internal sealed partial class PVSSystem : EntitySystem
                     _gridIndices[visMask] = gridDict;
                 }
 
-                var state = (i, transformQuery, viewPos, range, visMask, gridDict, playerChunks, _chunkList);
+                var state = (i, transformQuery, viewPos, range, visMask, gridDict, playerChunks, _chunkList, _transform);
 
-                _mapManager.FindGridsIntersectingApprox(mapId, new Box2(viewPos - range, viewPos + range),
+                _mapManager.FindGridsIntersecting(mapId, new Box2(viewPos - range, viewPos + range),
                     ref state, static (
-                        MapGridComponent mapGrid,
+                        EntityUid gridUid,
+                        MapGridComponent _,
                         ref (int i,
                             EntityQuery<TransformComponent> transformQuery,
                             Vector2 viewPos,
@@ -492,17 +498,18 @@ internal sealed partial class PVSSystem : EntitySystem
                             uint visMask,
                             Dictionary<GridChunkLocation, int> gridDict,
                             HashSet<int>[] playerChunks,
-                            List<(uint, IChunkIndexLocation)> _chunkList) tuple) =>
+                            List<(uint, IChunkIndexLocation)> _chunkList,
+                            SharedTransformSystem xformSystem) tuple) =>
                     {
                         {
-                            var localPos = tuple.transformQuery.GetComponent(mapGrid.Owner).InvWorldMatrix.Transform(tuple.viewPos);
+                            var localPos = tuple.xformSystem.GetInvWorldMatrix(gridUid, tuple.transformQuery).Transform(tuple.viewPos);
 
                             var gridChunkEnumerator =
                                 new ChunkIndicesEnumerator(localPos, tuple.range, ChunkSize);
 
                             while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                             {
-                                var chunkLocation = new GridChunkLocation(mapGrid.Owner, gridChunkIndices.Value);
+                                var chunkLocation = new GridChunkLocation(gridUid, gridChunkIndices.Value);
                                 var entry = (tuple.visMask, chunkLocation);
 
                                 if (tuple.gridDict.TryGetValue(chunkLocation, out var indexOf))
@@ -819,7 +826,6 @@ internal sealed partial class PVSSystem : EntitySystem
                 _visSetPool.Return(oldEntry.Value.Value);
         }
 
-        if (deletions.Count == 0) deletions = default;
         if (entityStates.Count == 0) entityStates = default;
         return (entityStates, deletions, leftView, sessionData.RequestedFull ? GameTick.Zero : fromTick);
     }
@@ -1071,10 +1077,7 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         _uidSetPool.Return(toSend);
-        List<EntityUid>? deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-
-        if (deletions.Count == 0)
-            deletions = null;
+        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         if (stateEntities.Count == 0)
             stateEntities = null;

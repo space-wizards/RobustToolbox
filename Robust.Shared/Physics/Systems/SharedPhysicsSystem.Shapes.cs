@@ -28,8 +28,8 @@ public abstract partial class SharedPhysicsSystem
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase) &&
             TryComp<PhysicsMapComponent>(xform.MapUid, out var physicsMap))
         {
-            _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
-            _lookup.CreateProxies(xform, fixture);
+            _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
+            _lookup.CreateProxies(uid, xform, fixture, body);
         }
 
         _fixtures.FixtureUpdate(uid, manager: manager, body: body);
@@ -58,8 +58,8 @@ public abstract partial class SharedPhysicsSystem
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase) &&
             TryComp<PhysicsMapComponent>(xform.MapUid, out var physicsMap))
         {
-            _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
-            _lookup.CreateProxies(xform, fixture);
+            _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
+            _lookup.CreateProxies(uid, xform, fixture, body);
         }
 
         Dirty(manager);
@@ -83,8 +83,8 @@ public abstract partial class SharedPhysicsSystem
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase) &&
             TryComp<PhysicsMapComponent>(xform.MapUid, out var physicsMap))
         {
-            _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
-            _lookup.CreateProxies(xform, fixture);
+            _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
+            _lookup.CreateProxies(uid, xform, fixture, body);
         }
 
         Dirty(manager);
@@ -118,8 +118,8 @@ public abstract partial class SharedPhysicsSystem
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase) &&
             TryComp<PhysicsMapComponent>(xform.MapUid, out var physicsMap))
         {
-            _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
-            _lookup.CreateProxies(xform, fixture);
+            _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
+            _lookup.CreateProxies(uid, xform, fixture, body);
         }
 
         _fixtures.FixtureUpdate(uid, manager: manager, body: body);
@@ -147,8 +147,8 @@ public abstract partial class SharedPhysicsSystem
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase) &&
             TryComp<PhysicsMapComponent>(xform.MapUid, out var physicsMap))
         {
-            _lookup.DestroyProxies(fixture, xform, broadphase, physicsMap);
-            _lookup.CreateProxies(xform, fixture);
+            _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
+            _lookup.CreateProxies(uid, xform, fixture, body);
         }
 
         _fixtures.FixtureUpdate(uid, manager: manager, body: body);

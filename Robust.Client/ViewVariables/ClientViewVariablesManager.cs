@@ -418,7 +418,7 @@ namespace Robust.Client.ViewVariables
             tcs.SetException(new SessionDenyException(message.Reason));
         }
 
-        protected override bool CheckPermissions(INetChannel channel)
+        protected override bool CheckPermissions(INetChannel channel, string command)
         {
             // Acquiesce, client!! Do what the server tells you.
             return true;

@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ResourceManagement
 {
@@ -12,7 +13,10 @@ namespace Robust.Client.ResourceManagement
     /// </summary>
     internal sealed class ShaderSourceResource : BaseResource
     {
+        [ViewVariables]
         internal ClydeHandle ClydeHandle { get; private set; }
+
+        [ViewVariables]
         internal ParsedShader ParsedShader { get; private set; } = default!;
 
         public override void Load(IResourceCache cache, ResPath path)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -728,6 +729,7 @@ public partial class EntitySystem
     #region Entity Query
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure]
     protected EntityQuery<T> GetEntityQuery<T>() where T : Component
     {
         return EntityManager.GetEntityQuery<T>();

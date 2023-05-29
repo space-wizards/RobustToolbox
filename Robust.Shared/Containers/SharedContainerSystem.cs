@@ -11,12 +11,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
 {
-    public abstract partial class SharedContainerSystem : EntitySystem
+    public abstract partial class SharedContainerSystem
     {
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly SharedJointSystem _joint = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         /// <inheritdoc />
         public override void Initialize()

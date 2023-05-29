@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 
-namespace Robust.Server.Maps;
+namespace Robust.Shared.Map.Events;
 
 /// <summary>
 /// This event is broadcast just before the map loader reads the entity section. It can be used to somewhat modify
@@ -24,4 +25,27 @@ public sealed class BeforeEntityReadEvent
     /// might cause unexpected errors, user beware.
     /// </summary>
     public readonly Dictionary<string, string> RenamedPrototypes = new();
+}
+
+/// <summary>
+/// This event is broadcast just before the map loader reads the entity section. It can be used to somewhat modify
+/// how the map data is read, as a super basic kind of map migration tool.
+/// </summary>
+public sealed class BeforeSaveEvent
+{
+    /// <summary>
+    /// The entity that is going to be saved. usually a map or grid.
+    /// </summary>
+    public EntityUid Entity;
+
+    /// <summary>
+    /// The map that the <see cref="Entity"/> is on.
+    /// </summary>
+    public EntityUid? Map;
+
+    public BeforeSaveEvent(EntityUid entity, EntityUid? map)
+    {
+        Entity = entity;
+        Map = map;
+    }
 }

@@ -13,6 +13,7 @@ using Robust.Server.Scripting;
 using Robust.Server.Serialization;
 using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
+using Robust.Server.Upload;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -22,13 +23,13 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.Shared.Upload;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server
@@ -90,6 +91,8 @@ namespace Robust.Server
             deps.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             deps.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
+            deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
+            deps.Register<NetworkResourceManager>();
         }
     }
 }

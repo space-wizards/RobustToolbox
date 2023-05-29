@@ -499,9 +499,9 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            if (PlayerManager.LocalPlayer?.ControlledEntity is {Valid: true} ent)
+            if (EntityManager.TryGetComponent(PlayerManager.LocalPlayer?.ControlledEntity, out TransformComponent? xform))
             {
-                map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
+                map = xform.MapID;
             }
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
@@ -723,7 +723,7 @@ namespace Robust.Client.Placement
             }
             else
             {
-                sc.AddLayer(new ResPath("/Textures/UserInterface/tilebuildoverlay.png"));
+                sc.AddLayer(new ResPath("/Textures/Interface/tilebuildoverlay.png"));
             }
             sc.NoRotation = noRot;
 
@@ -737,7 +737,7 @@ namespace Robust.Client.Placement
         private void PreparePlacementTile()
         {
             var sc = SetupPlacementOverlayEntity();
-            sc.AddLayer(new ResPath("/Textures/UserInterface/tilebuildoverlay.png"));
+            sc.AddLayer(new ResPath("/Textures/Interface/tilebuildoverlay.png"));
 
             IsActive = true;
         }

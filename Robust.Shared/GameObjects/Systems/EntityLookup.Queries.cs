@@ -38,7 +38,7 @@ public sealed partial class EntityLookupSystem
             lookup.DynamicTree.QueryAabb(ref intersecting,
                 static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
                 {
-                    state.Add(value.Fixture.Body.Owner);
+                    state.Add(value.Entity);
                     return true;
                 }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
@@ -48,7 +48,7 @@ public sealed partial class EntityLookupSystem
             lookup.StaticTree.QueryAabb(ref intersecting,
                 static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
                 {
-                    state.Add(value.Fixture.Body.Owner);
+                    state.Add(value.Entity);
                     return true;
                 }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
@@ -92,7 +92,7 @@ public sealed partial class EntityLookupSystem
             lookup.DynamicTree.QueryAabb(ref intersecting,
             static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
             {
-                state.Add(value.Fixture.Body.Owner);
+                state.Add(value.Entity);
                 return true;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
@@ -102,7 +102,7 @@ public sealed partial class EntityLookupSystem
             lookup.StaticTree.QueryAabb(ref intersecting,
             static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
             {
-                state.Add(value.Fixture.Body.Owner);
+                state.Add(value.Entity);
                 return true;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
@@ -143,7 +143,7 @@ public sealed partial class EntityLookupSystem
         {
             lookup.DynamicTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
             {
-                if (tuple.ignored == value.Fixture.Body.Owner)
+                if (tuple.ignored == value.Entity)
                     return true;
 
                 tuple.found = true;
@@ -155,7 +155,7 @@ public sealed partial class EntityLookupSystem
         {
             lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
             {
-                if (tuple.ignored == value.Fixture.Body.Owner)
+                if (tuple.ignored == value.Entity)
                     return true;
 
                 tuple.found = true;
@@ -208,7 +208,7 @@ public sealed partial class EntityLookupSystem
         {
             lookup.DynamicTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
             {
-                if (tuple.ignored == value.Fixture.Body.Owner)
+                if (tuple.ignored == value.Entity)
                     return true;
 
                 tuple.found = true;
@@ -220,7 +220,7 @@ public sealed partial class EntityLookupSystem
         {
             lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
             {
-                if (tuple.ignored == value.Fixture.Body.Owner)
+                if (tuple.ignored == value.Entity)
                     return true;
 
                 tuple.found = true;
@@ -258,14 +258,14 @@ public sealed partial class EntityLookupSystem
         return state.found;
     }
 
-    private void RecursiveAdd(EntityUid uid, ValueList<EntityUid> toAdd, EntityQuery<TransformComponent> xformQuery)
+    private void RecursiveAdd(EntityUid uid, ref ValueList<EntityUid> toAdd, EntityQuery<TransformComponent> xformQuery)
     {
         var childEnumerator = xformQuery.GetComponent(uid).ChildEnumerator;
 
         while (childEnumerator.MoveNext(out var child))
         {
             toAdd.Add(child.Value);
-            RecursiveAdd(child.Value, toAdd, xformQuery);
+            RecursiveAdd(child.Value, ref toAdd, xformQuery);
         }
     }
 
@@ -286,7 +286,7 @@ public sealed partial class EntityLookupSystem
                 foreach (var contained in con.ContainedEntities)
                 {
                     toAdd.Add(contained);
-                    RecursiveAdd(contained, toAdd, xformQuery);
+                    RecursiveAdd(contained, ref toAdd, xformQuery);
                 }
             }
         }
@@ -607,7 +607,7 @@ public sealed partial class EntityLookupSystem
             {
                 lookup.DynamicTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
                 {
-                    state.Add(value.Fixture.Body.Owner);
+                    state.Add(value.Entity);
                     return true;
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
             }
@@ -616,7 +616,7 @@ public sealed partial class EntityLookupSystem
             {
                 lookup.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> state, in FixtureProxy value) =>
                 {
-                    state.Add(value.Fixture.Body.Owner);
+                    state.Add(value.Entity);
                     return true;
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
             }
@@ -665,7 +665,7 @@ public sealed partial class EntityLookupSystem
             lookup.DynamicTree.QueryAabb(ref intersecting,
                 static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
                 {
-                    intersecting.Add(value.Fixture.Body.Owner);
+                    intersecting.Add(value.Entity);
                     return true;
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
         }
@@ -675,7 +675,7 @@ public sealed partial class EntityLookupSystem
             lookup.StaticTree.QueryAabb(ref intersecting,
                 static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
                 {
-                    intersecting.Add(value.Fixture.Body.Owner);
+                    intersecting.Add(value.Entity);
                     return true;
                 }, aabb, (flags & LookupFlags.Approximate) != 0x0);
         }
@@ -754,7 +754,7 @@ public sealed partial class EntityLookupSystem
         {
             component.DynamicTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
             {
-                intersecting.Add(value.Fixture.Body.Owner);
+                intersecting.Add(value.Entity);
                 return true;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
@@ -763,7 +763,7 @@ public sealed partial class EntityLookupSystem
         {
             component.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
             {
-                intersecting.Add(value.Fixture.Body.Owner);
+                intersecting.Add(value.Entity);
                 return true;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
@@ -799,7 +799,7 @@ public sealed partial class EntityLookupSystem
         {
             component.DynamicTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
             {
-                intersecting.Add(value.Fixture.Body.Owner);
+                intersecting.Add(value.Entity);
                 return true;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
@@ -808,7 +808,7 @@ public sealed partial class EntityLookupSystem
         {
             component.StaticTree.QueryAabb(ref intersecting, static (ref HashSet<EntityUid> intersecting, in FixtureProxy value) =>
             {
-                intersecting.Add(value.Fixture.Body.Owner);
+                intersecting.Add(value.Entity);
                 return true;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }

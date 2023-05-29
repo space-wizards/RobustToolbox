@@ -138,6 +138,9 @@ public abstract partial class SharedPhysicsSystem
         contact.FixtureA = fixtureA;
         contact.FixtureB = fixtureB;
 
+        contact.BodyA = fixtureA?.Body;
+        contact.BodyB = fixtureB?.Body;
+
         contact.ChildIndexA = indexA;
         contact.ChildIndexB = indexB;
 
@@ -231,8 +234,8 @@ public abstract partial class SharedPhysicsSystem
         // Contact creation may swap fixtures.
         fixtureA = contact.FixtureA!;
         fixtureB = contact.FixtureB!;
-        bodyA = fixtureA.Body;
-        bodyB = fixtureB.Body;
+        bodyA = contact.BodyA!;
+        bodyB = contact.BodyB!;
 
         // Insert into world
         _activeContacts.AddLast(contact.MapNode);
@@ -253,7 +256,7 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     internal void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
     {
-        AddPair(proxyA.Fixture.Body.Owner, proxyB.Fixture.Body.Owner, proxyA.Fixture, proxyA.ChildIndex, proxyB.Fixture, proxyB.ChildIndex);
+        AddPair(proxyA.Entity, proxyB.Entity, proxyA.Fixture, proxyA.ChildIndex, proxyB.Fixture, proxyB.ChildIndex);
     }
 
     internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
@@ -266,15 +269,15 @@ public abstract partial class SharedPhysicsSystem
     {
         Fixture fixtureA = contact.FixtureA!;
         Fixture fixtureB = contact.FixtureB!;
-        PhysicsComponent bodyA = fixtureA.Body;
-        PhysicsComponent bodyB = fixtureB.Body;
+        var bodyA = contact.BodyA!;
+        var bodyB = contact.BodyB!;
         var aUid = bodyA.Owner;
         var bUid = bodyB.Owner;
 
         if (contact.IsTouching)
         {
-            var ev1 = new EndCollideEvent(aUid, bUid, fixtureA, fixtureB);
-            var ev2 = new EndCollideEvent(bUid, aUid, fixtureB, fixtureA);
+            var ev1 = new EndCollideEvent(aUid, bUid, fixtureA, fixtureB, bodyA, bodyB);
+            var ev2 = new EndCollideEvent(bUid, aUid, fixtureB, fixtureA, bodyB, bodyA);
             RaiseLocalEvent(aUid, ref ev1);
             RaiseLocalEvent(bUid, ref ev2);
         }
@@ -329,8 +332,8 @@ public abstract partial class SharedPhysicsSystem
             int indexA = contact.ChildIndexA;
             int indexB = contact.ChildIndexB;
 
-            var bodyA = fixtureA.Body;
-            var bodyB = fixtureB.Body;
+            var bodyA = contact.BodyA!;
+            var bodyB = contact.BodyB!;
             var uidA = contact.EntityA;
             var uidB = contact.EntityB;
 
@@ -427,6 +430,10 @@ public abstract partial class SharedPhysicsSystem
                 }
                 else
                 {
+                    // TODO maybe change this? Needs benchmarking.
+                    // Instead of transforming both boxes (which enlarges both aabbs), maybe just transform one box.
+                    // I.e. use (matrixA * invMatrixB).TransformBox(). Or (invMatrixB * matrixA), whichever is correct.
+                    // Alternatively, maybe just directly construct the relative transform matrix?
                     var proxyAWorldAABB = _transform.GetWorldMatrix(xformQuery.GetComponent(broadphaseA.Value), xformQuery).TransformBox(proxyA.AABB);
                     var proxyBWorldAABB = _transform.GetWorldMatrix(xformQuery.GetComponent(broadphaseB.Value), xformQuery).TransformBox(proxyB.AABB);
                     overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
@@ -475,12 +482,14 @@ public abstract partial class SharedPhysicsSystem
 
                     var fixtureA = contact.FixtureA!;
                     var fixtureB = contact.FixtureB!;
+                    var bodyA = fixtureA.Body;
+                    var bodyB = fixtureB.Body;
                     var uidA = contact.EntityA;
                     var uidB = contact.EntityB;
                     var worldPoint = worldPoints[i];
 
-                    var ev1 = new StartCollideEvent(uidA, uidB, fixtureA, fixtureB, worldPoint);
-                    var ev2 = new StartCollideEvent(uidB, uidA, fixtureB, fixtureA, worldPoint);
+                    var ev1 = new StartCollideEvent(uidA, uidB, fixtureA, fixtureB, bodyA, bodyB, worldPoint);
+                    var ev2 = new StartCollideEvent(uidB, uidA, fixtureB, fixtureA, bodyB, bodyA, worldPoint);
 
                     RaiseLocalEvent(uidA, ref ev1, true);
                     RaiseLocalEvent(uidB, ref ev2, true);
@@ -497,13 +506,13 @@ public abstract partial class SharedPhysicsSystem
                     // then we'll just skip the EndCollide.
                     if (fixtureA == null || fixtureB == null) continue;
 
-                    var bodyA = fixtureA.Body;
-                    var bodyB = fixtureB.Body;
+                    var bodyA = contact.BodyA!;
+                    var bodyB = contact.BodyB!;
                     var uidA = contact.EntityA;
                     var uidB = contact.EntityB;
 
-                    var ev1 = new EndCollideEvent(uidA, uidB, fixtureA, fixtureB);
-                    var ev2 = new EndCollideEvent(uidB, uidA, fixtureB, fixtureA);
+                    var ev1 = new EndCollideEvent(uidA, uidB, fixtureA, fixtureB, bodyA, bodyB);
+                    var ev2 = new EndCollideEvent(uidB, uidA, fixtureB, fixtureA, bodyB, bodyA);
 
                     RaiseLocalEvent(uidA, ref ev1);
                     RaiseLocalEvent(uidB, ref ev2);
@@ -549,8 +558,8 @@ public abstract partial class SharedPhysicsSystem
             if (!shouldWake) continue;
 
             var contact = contacts[i];
-            var bodyA = contact.FixtureA!.Body;
-            var bodyB = contact.FixtureB!.Body;
+            var bodyA = contact.BodyA!;
+            var bodyB = contact.BodyB!;
             var aUid = contact.EntityA;
             var bUid = contact.EntityB;
 
@@ -598,13 +607,13 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Used to prevent bodies from colliding; may lie depending on joints.
     /// </summary>
-    private bool ShouldCollide(PhysicsComponent body, PhysicsComponent other, Fixture fixture, Fixture otherFixture)
+    protected bool ShouldCollide(PhysicsComponent body, PhysicsComponent other, Fixture fixture, Fixture otherFixture)
     {
         if (((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
             (other.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||
             // Kinematic controllers can't collide.
-            (body.BodyType == BodyType.KinematicController &&
-             other.BodyType == BodyType.KinematicController))
+            (fixture.Hard && body.BodyType == BodyType.KinematicController &&
+             otherFixture.Hard && other.BodyType == BodyType.KinematicController))
         {
             return false;
         }

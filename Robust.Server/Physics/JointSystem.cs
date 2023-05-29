@@ -5,26 +5,25 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Physics.Systems;
 
-namespace Robust.Server.Physics
+namespace Robust.Server.Physics;
+
+public sealed class JointSystem : SharedJointSystem
 {
-    public sealed class JointSystem : SharedJointSystem
+    public override void Initialize()
     {
-        public override void Initialize()
+        base.Initialize();
+        SubscribeLocalEvent<JointComponent, ComponentGetState>(GetCompState);
+    }
+
+    private void GetCompState(EntityUid uid, JointComponent component, ref ComponentGetState args)
+    {
+        var states = new Dictionary<string, JointState>(component.Joints.Count);
+
+        foreach (var (id, joint) in component.Joints)
         {
-            base.Initialize();
-            SubscribeLocalEvent<JointComponent, ComponentGetState>(GetCompState);
+            states.Add(id, joint.GetState());
         }
 
-        private void GetCompState(EntityUid uid, JointComponent component, ref ComponentGetState args)
-        {
-            var states = new Dictionary<string, JointState>(component.Joints.Count);
-
-            foreach (var (_, joint) in component.Joints)
-            {
-                states.Add(joint.ID, joint.GetState());
-            }
-
-            args.State = new JointComponent.JointComponentState(states);
-        }
+        args.State = new JointComponentState(component.Relay, states);
     }
 }

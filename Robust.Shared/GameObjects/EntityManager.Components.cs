@@ -1,17 +1,15 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.GameStates;
-using Robust.Shared.Physics;
-using Robust.Shared.Players;
-using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
+using Robust.Shared.GameStates;
 using Robust.Shared.Log;
-using System.Diagnostics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Players;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -262,9 +260,10 @@ namespace Robust.Shared.GameObjects
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit) where T : Component
         {
+            // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
                 GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Terminating,
-                $"Attempted to add a {typeof(T).Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
+                $"Attempted to add a {component.GetType().Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
 
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
@@ -278,7 +277,7 @@ namespace Robust.Shared.GameObjects
 
                 if (!overwrite && !duplicate.Deleted)
                     throw new InvalidOperationException(
-                        $"Component reference type {type} already occupied by {duplicate}");
+                        $"Component reference type {component.GetType().Name} already occupied by {duplicate}");
 
                 RemoveComponentImmediate(duplicate, uid, false);
             }
@@ -451,13 +450,12 @@ namespace Robust.Shared.GameObjects
                 }
                 catch (Exception)
                 {
-                    Logger.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
+                    _sawmill.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
                 }
             }
 
-            // DisposeComponents means the entity is getting deleted.
-            // Safe to wipe the entity out of the index.
             _entCompIndex.Remove(uid);
+            _netComponents.Remove(uid);
         }
 
         private void RemoveComponentDeferred(Component component, EntityUid uid, bool terminating)
@@ -492,7 +490,7 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception while queuing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _sawmill.Error($"Caught exception while queuing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
                 _runtimeLog.LogException(e, nameof(RemoveComponentDeferred));
             }
 #endif
@@ -502,7 +500,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component.Deleted)
             {
-                Logger.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {_componentFactory.GetComponentName(component.GetType())}.");
+                _sawmill.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {_componentFactory.GetComponentName(component.GetType())}.");
                 return;
             }
 
@@ -527,14 +525,14 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception during immediate component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _sawmill.Error($"Caught exception during immediate component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
                 _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
             var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), terminating);
             ComponentRemoved?.Invoke(eventArgs);
             _eventBus.OnComponentRemoved(eventArgs);
-            DeleteComponent(component, terminating);
+            DeleteComponent(uid, component, terminating);
         }
 
         /// <inheritdoc />
@@ -544,6 +542,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (component.Deleted)
                     continue;
+                var uid = component.Owner;
 
 #if EXCEPTION_TOLERANCE
             try
@@ -553,7 +552,7 @@ namespace Robust.Shared.GameObjects
                 if (component.Running)
                 {
                     // TODO add options to cancel deferred deletion?
-                    Logger.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                    _sawmill.Warning($"Found a running component while culling deferred deletions, owner={ToPrettyString(uid)}, type={component.GetType()}");
                     component.LifeShutdown(this);
                 }
 
@@ -564,35 +563,32 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception  while processing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
+                _sawmill.Error($"Caught exception  while processing deferred component removal. Entity={ToPrettyString(component.Owner)}, type={component.GetType()}");
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
-                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, component.Owner), false);
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), false);
                 ComponentRemoved?.Invoke(eventArgs);
                 _eventBus.OnComponentRemoved(eventArgs);
 
-                DeleteComponent(component, false);
+                DeleteComponent(uid, component, false);
             }
 
             _deleteSet.Clear();
         }
 
-        private void DeleteComponent(Component component, bool terminating)
+        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating)
         {
             var reg = _componentFactory.GetRegistration(component.GetType());
 
-            var entityUid = component.Owner;
-
-            // ReSharper disable once InvertIf
-            if (reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
+            if (!terminating && reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
             {
                 if (netSet.Count == 1)
                     _netComponents.Remove(entityUid);
                 else
                     netSet.Remove(reg.NetID.Value);
 
-                if (!terminating && component.NetSyncEnabled)
+                if (component.NetSyncEnabled)
                     DirtyEntity(entityUid);
             }
 
@@ -601,7 +597,10 @@ namespace Robust.Shared.GameObjects
                 _entTraitArray[refType.Value].Remove(entityUid);
             }
 
+            // TODO if terminating the entity, maybe defer this?
+            // _entCompIndex.Remove(uid) gets called later on anyways.
             _entCompIndex.Remove(entityUid, component);
+
             ComponentDeleted?.Invoke(new DeletedComponentEventArgs(new ComponentEventArgs(component, entityUid), terminating));
         }
 
@@ -887,14 +886,14 @@ namespace Robust.Shared.GameObjects
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
-            return new EntityQuery<TComp1>(comps!);
+            return new EntityQuery<TComp1>(comps!, _resolveSawmill);
         }
 
         public EntityQuery<Component> GetEntityQuery(Type type)
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex(type)];
             DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
-            return new EntityQuery<Component>(comps!);
+            return new EntityQuery<Component>(comps!, _resolveSawmill);
         }
 
         /// <inheritdoc />
@@ -907,6 +906,13 @@ namespace Robust.Shared.GameObjects
 
                 yield return comp;
             }
+        }
+
+        /// <inheritdoc />
+        public int ComponentCount(EntityUid uid)
+        {
+            var comps = _entCompIndex[uid];
+            return comps.Count;
         }
 
         /// <summary>
@@ -1326,12 +1332,15 @@ namespace Robust.Shared.GameObjects
     public readonly struct EntityQuery<TComp1> where TComp1 : Component
     {
         private readonly Dictionary<EntityUid, Component> _traitDict;
+        private readonly ISawmill _sawmill;
 
-        public EntityQuery(Dictionary<EntityUid, Component> traitDict)
+        public EntityQuery(Dictionary<EntityUid, Component> traitDict, ISawmill sawmill)
         {
             _traitDict = traitDict;
+            _sawmill = sawmill;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TComp1 GetComponent(EntityUid uid)
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
@@ -1340,6 +1349,7 @@ namespace Robust.Shared.GameObjects
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
         {
             if (uid == null)
@@ -1351,6 +1361,7 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(uid.Value, out component);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
@@ -1363,6 +1374,7 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid)
         {
             return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
@@ -1384,11 +1396,12 @@ namespace Robust.Shared.GameObjects
             }
 
             if (logMissing)
-                Logger.ErrorS("resolve", $"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
 
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TComp1? CompOrNull(EntityUid uid)
         {
             if (TryGetComponent(uid, out var comp))

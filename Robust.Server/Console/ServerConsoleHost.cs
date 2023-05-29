@@ -27,7 +27,7 @@ namespace Robust.Server.Console
         /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
         {
-            var shell = new ConsoleShell(this, session);
+            var shell = new ConsoleShell(this, session, session == null);
             ExecuteInShell(shell, command);
         }
 
@@ -183,7 +183,7 @@ namespace Robust.Server.Console
         private async void HandleConCompletions(MsgConCompletion message)
         {
             var session = _players.GetSessionByChannel(message.MsgChannel);
-            var shell = new ConsoleShell(this, session);
+            var shell = new ConsoleShell(this, session, false);
 
             var result = await CalcCompletions(shell, message.Args);
 
@@ -236,6 +236,7 @@ namespace Robust.Server.Console
             public IConsoleHost ConsoleHost => _host;
             public bool IsServer => _owner.IsServer;
             public ICommonSession? Player => _owner.Player;
+            public bool IsLocal => _owner.IsLocal;
 
             public void ExecuteCommand(string command)
             {

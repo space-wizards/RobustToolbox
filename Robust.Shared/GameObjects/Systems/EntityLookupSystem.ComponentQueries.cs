@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -30,7 +32,7 @@ public sealed partial class EntityLookupSystem
         {
             lookup.DynamicTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
             {
-                if (!tuple.query.TryGetComponent(value.Fixture.Body.Owner, out var comp))
+                if (!tuple.query.TryGetComponent(value.Entity, out var comp))
                     return true;
 
                 tuple.intersecting.Add(comp);
@@ -42,7 +44,7 @@ public sealed partial class EntityLookupSystem
         {
             lookup.StaticTree.QueryAabb(ref state, static (ref (HashSet<T> intersecting, EntityQuery<T> query) tuple, in FixtureProxy value) =>
             {
-                if (!tuple.query.TryGetComponent(value.Fixture.Body.Owner, out var comp))
+                if (!tuple.query.TryGetComponent(value.Entity, out var comp))
                     return true;
 
                 tuple.intersecting.Add(comp);
@@ -75,7 +77,7 @@ public sealed partial class EntityLookupSystem
         }
     }
 
-    private void RecursiveAdd<T>(EntityUid uid, List<T> toAdd, EntityQuery<TransformComponent> xformQuery, EntityQuery<T> query) where T : Component
+    private void RecursiveAdd<T>(EntityUid uid, ref ValueList<T> toAdd, EntityQuery<TransformComponent> xformQuery, EntityQuery<T> query) where T : Component
     {
         var childEnumerator = xformQuery.GetComponent(uid).ChildEnumerator;
 
@@ -86,7 +88,7 @@ public sealed partial class EntityLookupSystem
                 toAdd.Add(compies);
             }
 
-            RecursiveAdd(child.Value, toAdd, xformQuery, query);
+            RecursiveAdd(child.Value, ref toAdd, xformQuery, query);
         }
     }
 
@@ -95,7 +97,7 @@ public sealed partial class EntityLookupSystem
         if ((flags & LookupFlags.Contained) == 0x0) return;
 
         var conQuery = GetEntityQuery<ContainerManagerComponent>();
-        var toAdd = new List<T>();
+        var toAdd = new ValueList<T>();
 
         foreach (var comp in intersecting)
         {
@@ -110,7 +112,7 @@ public sealed partial class EntityLookupSystem
                         toAdd.Add(compies);
                     }
 
-                    RecursiveAdd(contained, toAdd, xformQuery, query);
+                    RecursiveAdd(contained, ref toAdd, xformQuery, query);
                 }
             }
         }
@@ -119,6 +121,14 @@ public sealed partial class EntityLookupSystem
         {
             intersecting.Add(uid);
         }
+    }
+
+    /// <summary>
+    /// Should we just iterate every component and check position or do bounds checks.
+    /// </summary>
+    private bool UseBoundsQuery(Type type, float area)
+    {
+        return Count(type) > area;
     }
 
     /// <summary>
@@ -137,6 +147,98 @@ public sealed partial class EntityLookupSystem
     // Like .Queries but works with components
     #region Box2
 
+    public bool AnyComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    {
+        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        if (mapId == MapId.Nullspace) return false;
+
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var intersecting = new HashSet<Component>();
+
+        if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
+        {
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+
+            foreach (var comp in EntityManager.GetAllComponents(type, true))
+            {
+                var xform = xformQuery.GetComponent(comp.Owner);
+
+                if (xform.MapID != mapId ||
+                    !worldAABB.Contains(_transform.GetWorldPosition(comp.Owner, xformQuery)) ||
+                    ((flags & LookupFlags.Contained) == 0x0 &&
+                    _container.IsEntityOrParentInContainer(comp.Owner, metaQuery.GetComponent(comp.Owner), xform, metaQuery, xformQuery)))
+                {
+                    continue;
+                }
+
+                return true;
+            }
+        }
+        else
+        {
+            var query = EntityManager.GetEntityQuery(type);
+            var lookupQuery = GetEntityQuery<BroadphaseComponent>();
+            // Get grid entities
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            {
+                AddComponentsIntersecting(grid.Owner, intersecting, worldAABB, flags, lookupQuery, xformQuery, query);
+            }
+
+            // Get map entities
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            AddComponentsIntersecting(mapUid, intersecting, worldAABB, flags, lookupQuery, xformQuery, query);
+            AddContained(intersecting, flags, xformQuery, query);
+        }
+
+        return intersecting.Count > 0;
+    }
+
+    public HashSet<Component> GetComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    {
+        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        if (mapId == MapId.Nullspace) return new HashSet<Component>();
+
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var intersecting = new HashSet<Component>();
+
+        if (!UseBoundsQuery(type, worldAABB.Height * worldAABB.Width))
+        {
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+
+            foreach (var comp in EntityManager.GetAllComponents(type, true))
+            {
+                var xform = xformQuery.GetComponent(comp.Owner);
+
+                if (xform.MapID != mapId ||
+                    !worldAABB.Contains(_transform.GetWorldPosition(comp.Owner, xformQuery)) ||
+                    ((flags & LookupFlags.Contained) == 0x0 &&
+                     _container.IsEntityOrParentInContainer(comp.Owner, metaQuery.GetComponent(comp.Owner), xform, metaQuery, xformQuery)))
+                {
+                    continue;
+                }
+
+                intersecting.Add((Component) comp);
+            }
+        }
+        else
+        {
+            var query = EntityManager.GetEntityQuery(type);
+            var lookupQuery = GetEntityQuery<BroadphaseComponent>();
+            // Get grid entities
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            {
+                AddComponentsIntersecting(grid.Owner, intersecting, worldAABB, flags, lookupQuery, xformQuery, query);
+            }
+
+            // Get map entities
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            AddComponentsIntersecting(mapUid, intersecting, worldAABB, flags, lookupQuery, xformQuery, query);
+            AddContained(intersecting, flags, xformQuery, query);
+        }
+
+        return intersecting;
+    }
+
     public HashSet<T> GetComponentsIntersecting<T>(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags) where T : Component
     {
         if (mapId == MapId.Nullspace) return new HashSet<T>();
@@ -146,9 +248,11 @@ public sealed partial class EntityLookupSystem
 
         if (!UseBoundsQuery<T>(worldAABB.Height * worldAABB.Width))
         {
-            foreach (var (comp, xform) in EntityQuery<T, TransformComponent>(true))
+            var query = AllEntityQuery<T, TransformComponent>();
+
+            while (query.MoveNext(out var comp, out var xform))
             {
-                if (xform.MapID != mapId || !worldAABB.Contains(_transform.GetWorldPosition(comp.Owner, xformQuery))) continue;
+                if (xform.MapID != mapId || !worldAABB.Contains(_transform.GetWorldPosition(xform, xformQuery))) continue;
                 intersecting.Add(comp);
             }
         }
@@ -184,6 +288,12 @@ public sealed partial class EntityLookupSystem
 
     #region MapCoordinates
 
+    public HashSet<Component> GetComponentsInRange(Type type, MapCoordinates coordinates, float range)
+    {
+        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        return GetComponentsInRange(type, coordinates.MapId, coordinates.Position, range);
+    }
+
     public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : Component
     {
         return GetComponentsInRange<T>(coordinates.MapId, coordinates.Position, range);
@@ -192,6 +302,30 @@ public sealed partial class EntityLookupSystem
     #endregion
 
     #region MapId
+
+    public bool AnyComponentsInRange(Type type, MapId mapId, Vector2 worldPos, float range)
+    {
+        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        DebugTools.Assert(range > 0, "Range must be a positive float");
+
+        if (mapId == MapId.Nullspace) return false;
+
+        // TODO: Actual circles
+        var worldAABB = new Box2(worldPos - range, worldPos + range);
+        return AnyComponentsIntersecting(type, mapId, worldAABB);
+    }
+
+    public HashSet<Component> GetComponentsInRange(Type type, MapId mapId, Vector2 worldPos, float range)
+    {
+        DebugTools.Assert(typeof(Component).IsAssignableFrom(type));
+        DebugTools.Assert(range > 0, "Range must be a positive float");
+
+        if (mapId == MapId.Nullspace) return new HashSet<Component>();
+
+        // TODO: Actual circles
+        var worldAABB = new Box2(worldPos - range, worldPos + range);
+        return GetComponentsIntersecting(type, mapId, worldAABB);
+    }
 
     public HashSet<T> GetComponentsInRange<T>(MapId mapId, Vector2 worldPos, float range) where T : Component
     {

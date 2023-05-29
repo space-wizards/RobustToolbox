@@ -4,7 +4,8 @@ namespace Robust.Shared.ViewVariables.Commands;
 
 public sealed class ViewVariablesWriteCommand : ViewVariablesBaseCommand
 {
-    public override string Command => "vvwrite";
+    public const string Comm = "vvwrite";
+    public override string Command => Comm;
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {

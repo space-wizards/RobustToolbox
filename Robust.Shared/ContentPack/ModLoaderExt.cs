@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 namespace Robust.Shared.ContentPack
 {
@@ -13,7 +14,7 @@ namespace Robust.Shared.ContentPack
 
         public static bool IsContentTypeAccessAllowed(this IModLoader modLoader, Type type)
         {
-            return modLoader.IsContentType(type);
+            return modLoader.IsContentType(type) || type.GetCustomAttribute(typeof(ContentAccessAllowedAttribute)) != null;
         }
     }
 }

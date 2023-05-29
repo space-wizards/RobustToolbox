@@ -121,6 +121,11 @@ public interface IMidiRenderer : IDisposable
     void StopAllNotes();
 
     /// <summary>
+    /// Clears all scheduled events.
+    /// </summary>
+    void ClearAllEvents();
+
+    /// <summary>
     ///     Render and play MIDI to the audio source.
     /// </summary>
     internal void Render();

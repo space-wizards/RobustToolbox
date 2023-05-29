@@ -32,7 +32,7 @@ namespace Robust.Shared.Map
             {
                 var mapCoords = coords.ToMap(entityManager);
 
-                if (mapManager.TryFindGridAt(mapCoords, out mapGrid))
+                if (mapManager.TryFindGridAt(mapCoords, out _, out mapGrid))
                 {
                     return mapGrid.GridTileToLocal(mapGrid.CoordinatesToTile(coords));
                 }

@@ -7,6 +7,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
+using Robust.Client.Physics;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
@@ -269,7 +270,7 @@ namespace Robust.Client.GameStates
                     _processor.LastFullStateRequested = null;
                     _timing.LastProcessedTick = curState.ToSequence;
                     DebugTools.Assert(curState.FromSequence == GameTick.Zero);
-                    PartialStateReset(curState, true, true);
+                    PartialStateReset(curState, true);
                 }
                 else
                     _timing.LastProcessedTick += 1;
@@ -556,6 +557,11 @@ namespace Robust.Client.GameStates
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
             }
 
+            _entityManager.System<PhysicsSystem>().ResetContacts();
+
+            // TODO maybe reset more of physics?
+            // E.g., warm impulses for warm starting?
+
             system.Reset();
 
             _prof.WriteValue("Reset count", ProfData.Int32(countReset));
@@ -786,7 +792,11 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
-        public void PartialStateReset(GameState state, bool resetAllEnts, bool deleteClientSideEnts)
+        public void PartialStateReset(
+            GameState state,
+            bool resetAllEntities,
+            bool deleteClientEntities = false,
+            bool deleteClientChildren = true)
         {
             using var _ = _timing.StartStateApplicationArea();
 
@@ -816,14 +826,14 @@ namespace Robust.Client.GameStates
             {
                 if (ent.IsClientSide())
                 {
-                    if (deleteClientSideEnts)
+                    if (deleteClientEntities)
                         toDelete.Add(ent);
                     continue;
                 }
 
                 if (stateEnts.Contains(ent) && metas.TryGetComponent(ent, out var meta))
                 {
-                    if (resetAllEnts || meta.LastStateApplied > state.ToSequence)
+                    if (resetAllEntities || meta.LastStateApplied > state.ToSequence)
                         meta.LastStateApplied = GameTick.Zero; // TODO track last-state-applied for individual components? Is it even worth it?
                     continue;
                 }
@@ -831,17 +841,20 @@ namespace Robust.Client.GameStates
                 if (!xforms.TryGetComponent(ent, out var xform))
                     continue;
 
-                // this entity is going to get deleted, but maybe some if its children won't be, so lets detach them to null.
+                // This entity is going to get deleted, but maybe some if its children won't be, so lets detach them to
+                // null. First we will detach the parent in order to reduce the number of broadphase/lookup updates.
                 xformSys.DetachParentToNull(ent, xform, xforms, metas);
+
+                // Then detach all children.
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
                     xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xforms, metas, xform);
 
-                    if (!deleteClientSideEnts && child.Value.IsClientSide())
+                    if (deleteClientChildren
+                        && !deleteClientEntities // don't add duplicates
+                        && child.Value.IsClientSide())
                     {
-                        // Even though we aren't meant to be deleting client-side entities here, this client-side entity is getting detached to null space, so we will delete it anyways).
-                        _sawmill.Warning($"Deleting client-side entity ({_entities.ToPrettyString(child.Value)}) as it was parented to a server side entity that is getting deleted ({_entities.ToPrettyString(ent)})");
                         toDelete.Add(child.Value);
                     }
                 }

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <!-- Avoid MSBuild adding a None entry for XAML files because they'd show up TWICE in the project view. -->
     <DefaultItemExcludes>**/*.xaml</DefaultItemExcludes>
-    <RobustUseExternalMSBuild>false</RobustUseExternalMSBuild>
+    <RobustUseExternalMSBuild>true</RobustUseExternalMSBuild>
     <_RobustUseExternalMSBuild>$(RobustUseExternalMSBuild)</_RobustUseExternalMSBuild>
     <_RobustUseExternalMSBuild Condition="'$(_RobustForceInternalMSBuild)' == 'true'">false</_RobustUseExternalMSBuild>
   </PropertyGroup>

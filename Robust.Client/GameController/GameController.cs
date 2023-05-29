@@ -10,8 +10,10 @@ using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Placement;
+using Robust.Client.Replays.Loading;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
+using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
 using Robust.Client.UserInterface.Themes;
@@ -34,6 +36,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -75,6 +78,10 @@ namespace Robust.Client
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
+        [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
+        [Dependency] private readonly NetworkResourceManager _netResMan = default!;
+        [Dependency] private readonly IReplayLoadManager _replayLoader = default!;
+
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -171,6 +178,9 @@ namespace Robust.Client
             _client.Initialize();
             _discord.Initialize();
             _tagManager.Initialize();
+            _protoLoadMan.Initialize();
+            _netResMan.Initialize();
+            _replayLoader.Initialize();
             _userInterfaceManager.PostInitialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
@@ -544,9 +554,9 @@ namespace Robust.Client
             {
                 using (_prof.Group("Entity"))
                 {
-                    if (ContentEntityTickUpdate != null)
+                    if (TickUpdateOverride != null)
                     {
-                        ContentEntityTickUpdate.Invoke(frameEventArgs);
+                        TickUpdateOverride.Invoke(frameEventArgs);
                     }
                     else
                     {
@@ -727,6 +737,6 @@ namespace Robust.Client
             bool AutoConnect
         );
 
-        public event Action<FrameEventArgs>? ContentEntityTickUpdate;
+        public event Action<FrameEventArgs>? TickUpdateOverride;
     }
 }

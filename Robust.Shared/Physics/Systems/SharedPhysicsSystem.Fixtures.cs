@@ -23,7 +23,7 @@ public abstract partial class SharedPhysicsSystem
         fixture.Density = value;
 
         if (update)
-            _fixtures.FixtureUpdate(uid, manager: manager, body: fixture.Body);
+            _fixtures.FixtureUpdate(uid, manager: manager);
     }
 
     public void SetFriction(EntityUid uid, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
@@ -39,7 +39,7 @@ public abstract partial class SharedPhysicsSystem
         fixture.Friction = value;
 
         if (update)
-            _fixtures.FixtureUpdate(uid, manager: manager, body: fixture.Body);
+            _fixtures.FixtureUpdate(uid, manager: manager);
     }
 
     public void SetHard(EntityUid uid, Fixture fixture, bool value, FixturesComponent? manager = null)
@@ -51,8 +51,8 @@ public abstract partial class SharedPhysicsSystem
             return;
 
         fixture.Hard = value;
-        _fixtures.FixtureUpdate(uid, manager: manager, body:fixture.Body);
-        WakeBody(uid, body: fixture.Body);
+        _fixtures.FixtureUpdate(uid, manager: manager);
+        WakeBody(uid);
     }
 
     public void SetRestitution(EntityUid uid, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
@@ -68,7 +68,7 @@ public abstract partial class SharedPhysicsSystem
         fixture.Restitution = value;
 
         if (update)
-            _fixtures.FixtureUpdate(uid, manager: manager, body: fixture.Body);
+            _fixtures.FixtureUpdate(uid, manager: manager);
     }
 
     #region Collision Masks & Layers
@@ -88,7 +88,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(uid, manager: manager, body: body);
         }
 
-        _broadphase.Refilter(fixture);
+        _broadphase.Refilter(uid, fixture);
     }
 
     public void SetCollisionMask(EntityUid uid, Fixture fixture, int mask, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -106,7 +106,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(uid, manager: manager, body: body);
         }
 
-        _broadphase.Refilter(fixture);
+        _broadphase.Refilter(uid, fixture);
     }
 
     public void RemoveCollisionMask(EntityUid uid, Fixture fixture, int mask, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -124,7 +124,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(uid, manager: manager, body: body);
         }
 
-        _broadphase.Refilter(fixture);
+        _broadphase.Refilter(uid, fixture);
     }
 
     public void AddCollisionLayer(EntityUid uid, Fixture fixture, int layer, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -142,7 +142,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(uid, manager: manager, body: body);
         }
 
-        _broadphase.Refilter(fixture);
+        _broadphase.Refilter(uid, fixture);
     }
 
     public void SetCollisionLayer(EntityUid uid, Fixture fixture, int layer, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -160,7 +160,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(uid, manager: manager, body: body);
         }
 
-        _broadphase.Refilter(fixture);
+        _broadphase.Refilter(uid, fixture);
     }
 
     public void RemoveCollisionLayer(EntityUid uid, Fixture fixture, int layer, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -175,7 +175,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(uid, manager: manager, body: body);
         }
 
-        _broadphase.Refilter(fixture);
+        _broadphase.Refilter(uid, fixture);
     }
 
     #endregion

@@ -59,11 +59,6 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public record struct WorldAABBEvent
     {
-        /// <summary>
-        /// If the event is not handled then <see cref="FixturesComponent"/> will be used.
-        /// </summary>
-        public bool Handled;
-
         public Box2 AABB;
     }
 
@@ -92,9 +87,15 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MoveEvent>(OnMove);
 
             SubscribeLocalEvent<TransformComponent, PhysicsBodyTypeChangedEvent>(OnBodyTypeChange);
+            SubscribeLocalEvent<PhysicsComponent, ComponentStartup>(OnBodyStartup);
             SubscribeLocalEvent<CollisionChangeEvent>(OnPhysicsUpdate);
 
             EntityManager.EntityInitialized += OnEntityInit;
+        }
+
+        private void OnBodyStartup(EntityUid uid, PhysicsComponent component, ComponentStartup args)
+        {
+            UpdatePhysicsBroadphase(uid, Transform(uid), component);
         }
 
         public override void Shutdown()
@@ -203,7 +204,7 @@ namespace Robust.Shared.GameObjects
             return treeXform.InvWorldMatrix.TransformBox(GetWorldAABB(entity, xform));
         }
 
-        internal void CreateProxies(TransformComponent xform, Fixture fixture)
+        internal void CreateProxies(EntityUid uid, TransformComponent xform, Fixture fixture, PhysicsComponent body)
         {
             if (!TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
@@ -217,23 +218,23 @@ namespace Robust.Shared.GameObjects
 
             var (_, broadWorldRot, _, broadInvMatrix) = xformQuery.GetComponent(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
             var broadphaseTransform = new Transform(broadInvMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadWorldRot);
-            var tree = fixture.Body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
+            var tree = body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
             DebugTools.Assert(fixture.ProxyCount == 0);
 
-            AddOrMoveProxies(fixture, tree, broadphaseTransform, mapTransform, physMap.MoveBuffer);
+            AddOrMoveProxies(uid, fixture, body, tree, broadphaseTransform, mapTransform, physMap.MoveBuffer);
         }
 
-        internal void DestroyProxies(Fixture fixture, TransformComponent xform, BroadphaseComponent broadphase, PhysicsMapComponent? physicsMap)
+        internal void DestroyProxies(EntityUid uid, Fixture fixture, TransformComponent xform, BroadphaseComponent broadphase, PhysicsMapComponent? physicsMap)
         {
             DebugTools.AssertNotNull(xform.Broadphase);
             DebugTools.Assert(xform.Broadphase!.Value.Uid == broadphase.Owner);
 
-            if (!xform.Broadphase.Value.CanCollide || xform.GridUid == xform.Owner)
+            if (!xform.Broadphase.Value.CanCollide || xform.GridUid == uid)
                 return;
 
             if (fixture.ProxyCount == 0)
             {
-                Logger.Warning($"Tried to destroy fixture {fixture.ID} on {ToPrettyString(fixture.Body.Owner)} that already has no proxies?");
+                Logger.Warning($"Tried to destroy fixture {fixture.ID} on {ToPrettyString(uid)} that already has no proxies?");
                 return;
             }
 
@@ -253,6 +254,7 @@ namespace Robust.Shared.GameObjects
             // ensure that the cached broadphase is correct.
             DebugTools.Assert(_timing.ApplyingState
                 || xform.Broadphase == null
+                || ev.Body.LifeStage <= ComponentLifeStage.Initializing
                 || !xform.Broadphase.Value.IsValid()
                 || ((xform.Broadphase.Value.CanCollide == ev.Body.CanCollide)
                 && (xform.Broadphase.Value.Static == (ev.Body.BodyType == BodyType.Static))));
@@ -269,6 +271,9 @@ namespace Robust.Shared.GameObjects
 
         private void UpdatePhysicsBroadphase(EntityUid uid, TransformComponent xform, PhysicsComponent body)
         {
+            if (body.LifeStage <= ComponentLifeStage.Initializing)
+                return;
+
             if (xform.GridUid == uid)
                 return;
             DebugTools.Assert(!_mapManager.IsGrid(uid));
@@ -293,7 +298,7 @@ namespace Robust.Shared.GameObjects
 
             // Add to new broadphase
             if (body.CanCollide)
-                AddPhysicsTree(old.Uid, broadphase, xform, body, fixtures);
+                AddPhysicsTree(uid, old.Uid, broadphase, xform, body, fixtures);
             else
                 AddOrUpdateSundriesTree(old.Uid, broadphase, uid, xform, body.BodyType == BodyType.Static);
         }
@@ -321,7 +326,7 @@ namespace Robust.Shared.GameObjects
             fixture.Proxies = Array.Empty<FixtureProxy>();
         }
 
-        private void AddPhysicsTree(EntityUid broadUid, BroadphaseComponent broadphase, TransformComponent xform, PhysicsComponent body, FixturesComponent fixtures)
+        private void AddPhysicsTree(EntityUid uid, EntityUid broadUid, BroadphaseComponent broadphase, TransformComponent xform, PhysicsComponent body, FixturesComponent fixtures)
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
             var broadphaseXform = xformQuery.GetComponent(broadUid);
@@ -332,10 +337,11 @@ namespace Robust.Shared.GameObjects
             if (!TryComp(broadphaseXform.MapUid, out PhysicsMapComponent? physMap))
                 throw new InvalidOperationException($"Physics Broadphase is missing physics map. {ToPrettyString(broadUid)}");
 
-            AddOrUpdatePhysicsTree(broadUid, broadphase, broadphaseXform, physMap, xform, body, fixtures, xformQuery);
+            AddOrUpdatePhysicsTree(uid, broadUid, broadphase, broadphaseXform, physMap, xform, body, fixtures, xformQuery);
         }
 
         private void AddOrUpdatePhysicsTree(
+            EntityUid uid,
             EntityUid broadUid,
             BroadphaseComponent broadphase,
             TransformComponent broadphaseXform,
@@ -361,19 +367,19 @@ namespace Robust.Shared.GameObjects
 
             foreach (var fixture in manager.Fixtures.Values)
             {
-                AddOrMoveProxies(fixture, tree, broadphaseTransform, mapTransform, physicsMap.MoveBuffer);
+                AddOrMoveProxies(uid, fixture, body, tree, broadphaseTransform, mapTransform, physicsMap.MoveBuffer);
             }
         }
 
         private void AddOrMoveProxies(
+            EntityUid uid,
             Fixture fixture,
+            PhysicsComponent body,
             IBroadPhase tree,
             Transform broadphaseTransform,
             Transform mapTransform,
             Dictionary<FixtureProxy, Box2> moveBuffer)
         {
-            DebugTools.Assert(fixture.Body.CanCollide);
-
             // Moving
             if (fixture.ProxyCount > 0)
             {
@@ -395,7 +401,7 @@ namespace Robust.Shared.GameObjects
             for (var i = 0; i < count; i++)
             {
                 var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
-                var proxy = new FixtureProxy(bounds, fixture, i);
+                var proxy = new FixtureProxy(uid, body, bounds, fixture, i);
                 proxy.ProxyId = tree.AddProxy(ref proxy);
                 proxy.AABB = bounds;
                 proxies[i] = proxy;
@@ -724,7 +730,7 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                AddOrUpdatePhysicsTree(broadUid, broadphase, broadphaseXform, physicsMap, xform, body, fixturesQuery.GetComponent(uid), xformQuery);
+                AddOrUpdatePhysicsTree(uid, broadUid, broadphase, broadphaseXform, physicsMap, xform, body, fixturesQuery.GetComponent(uid), xformQuery);
             }
 
             var childEnumerator = xform.ChildEnumerator;

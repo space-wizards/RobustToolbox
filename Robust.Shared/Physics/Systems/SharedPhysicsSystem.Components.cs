@@ -106,7 +106,6 @@ public partial class SharedPhysicsSystem
         SetFriction(component, newState.Friction);
         SetLinearDamping(component, newState.LinearDamping);
         SetAngularDamping(component, newState.AngularDamping);
-        component.Predict = false;
     }
 
     #endregion
@@ -438,7 +437,7 @@ public partial class SharedPhysicsSystem
         body.Force = Vector2.Zero;
         body.Torque = 0.0f;
 
-        _broadphase.RegenerateContacts(body, manager, xform);
+        _broadphase.RegenerateContacts(uid, body, manager, xform);
 
         if (body.Initialized)
         {
@@ -689,5 +688,10 @@ public partial class SharedPhysicsSystem
         }
 
         return (layer, mask);
+    }
+
+    public virtual void UpdateIsPredicted(EntityUid? uid, PhysicsComponent? physics = null)
+    {
+        // See client-side system
     }
 }

@@ -1328,10 +1328,9 @@ namespace Robust.Shared
          */
 
         /// <summary>
-        /// The folder within the server data directory where a replay will be recorded. Note that existing files in
-        /// this directory will be removed when starting a new recording.
+        /// A relative path pointing to a folder within the server data directory where all replays will be stored.
         /// </summary>
-        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replay", CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replays", CVar.SERVERONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
@@ -1355,6 +1354,29 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> ReplayEnabled = CVarDef.Create("replay.enabled", true, CVar.SERVERONLY | CVar.ARCHIVE);
 
+        /// <summary>
+        ///     Determines the threshold before visual events (muzzle flashes, chat pop-ups, etc) are suppressed when jumping forward in time.
+        /// </summary>
+        /// <remarks>
+        ///     Effects should still show up when jumping forward ~ 1 second, but definitely not when skipping a minute or two of a gunfight.
+        /// </remarks>
+        public static readonly CVarDef<int> VisualEventThreshold = CVarDef.Create("replay.visual_event_threshold", 20);
+
+        /// <summary>
+        ///     Maximum number of ticks before a new checkpoint tick is generated.
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointInterval = CVarDef.Create("replay.checkpoint_interval", 200);
+
+        /// <summary>
+        ///     Maximum number of entities that can be spawned before a new checkpoint tick is generated.
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 100);
+
+        /// <summary>
+        ///     Maximum number of entity states that can be applied before a new checkpoint tick is generated.
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointEntityStateThreshold = CVarDef.Create("replay.checkpoint_entity_state_threshold", 50 * 600);
+
         /*
          * CFG
          */
@@ -1369,5 +1391,23 @@ namespace Robust.Shared
         /// and will complain if anything unknown is found (probably indicating a typo of some kind).
         /// </remarks>
         public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
+
+        /*
+        * Network Resource Manager
+        */
+
+        /// <summary>
+        /// Controls whether new resources can be uploaded by admins.
+        /// Does not prevent already uploaded resources from being sent.
+        /// </summary>
+        public static readonly CVarDef<bool> ResourceUploadingEnabled =
+            CVarDef.Create("netres.enabled", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Controls the data size limit in megabytes for uploaded resources. If they're too big, they will be dropped.
+        /// Set to zero or a negative value to disable limit.
+        /// </summary>
+        public static readonly CVarDef<float> ResourceUploadingLimitMb =
+            CVarDef.Create("netres.limit", 3f, CVar.REPLICATED | CVar.SERVER);
     }
 }

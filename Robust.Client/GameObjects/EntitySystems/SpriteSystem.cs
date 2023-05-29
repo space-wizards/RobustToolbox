@@ -8,6 +8,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -35,6 +36,8 @@ namespace Robust.Client.GameObjects
         /// </summary>
         private readonly HashSet<EntityUid> _queuedFrameUpdate = new();
 
+        private ISawmill _sawmill = default!;
+
         internal void Render(EntityUid uid, SpriteComponent sprite, DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
         {
             if (!sprite.IsInert)
@@ -54,6 +57,7 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
+            _sawmill = Logger.GetSawmill("sprite");
         }
 
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)

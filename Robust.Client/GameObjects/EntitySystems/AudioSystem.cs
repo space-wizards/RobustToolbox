@@ -486,7 +486,18 @@ public sealed class AudioSystem : SharedAudioSystem
         public EntityCoordinates? TrackingCoordinates;
         public EntityCoordinates? TrackingFallbackCoordinates;
         public bool Done;
-        public float Volume;
+
+        public float Volume
+        {
+            get => _volume;
+            set
+            {
+                _volume = value;
+                Source.SetVolume(value);
+            }
+        }
+
+        private float _volume;
 
         public float MaxDistance;
         public float ReferenceDistance;

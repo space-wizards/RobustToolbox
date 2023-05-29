@@ -24,7 +24,6 @@ using System;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -88,21 +87,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// Indicate if this joint is enabled or not. Disabling a joint
         /// means it is still in the simulation, but inactive.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool Enabled
-        {
-            get => _enabled;
-            set
-            {
-                if (_enabled == value) return;
-
-                _enabled = value;
-                Dirty();
-            }
-        }
-
-        [DataField("enabled")]
-        private bool _enabled = true;
+        [ViewVariables(VVAccess.ReadWrite), DataField("enabled")]
+        public bool Enabled { get; internal set; } = true;
 
         /// <summary>
         ///     Has this joint already been added to an island.
@@ -117,10 +103,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public abstract JointType JointType { get; }
 
         [DataField("bodyA")]
-        public EntityUid BodyAUid { get; init; }
+        public EntityUid BodyAUid { get; private set; }
 
         [DataField("bodyB")]
-        public EntityUid BodyBUid { get; init; }
+        public EntityUid BodyBUid { get; private set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LocalAnchorA
@@ -198,7 +184,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         // serializer.DataField(this, x => x.BodyA, "bodyA", EntityUid.Invalid);
         // serializer.DataField(this, x => x.BodyB, "bodyB", Ent);
 
-        protected void Dirty(IEntityManager? entMan = null)
+        protected internal void Dirty(IEntityManager? entMan = null)
         {
             // TODO: move dirty & setter functions to a system.
             IoCManager.Resolve(ref entMan);
@@ -226,7 +212,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             ID = state.ID;
             BodyAUid = state.UidA;
             BodyBUid = state.UidB;
-            _enabled = state.Enabled;
+            Enabled = state.Enabled;
             _collideConnected = state.CollideConnected;
             _localAnchorA = state.LocalAnchorA;
             _localAnchorB = state.LocalAnchorB;
@@ -241,7 +227,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             state.ID = ID;
             state.CollideConnected = _collideConnected;
-            state.Enabled = _enabled;
+            state.Enabled = Enabled;
             state.UidA = BodyAUid;
             state.UidB = BodyBUid;
             state.Breakpoint = _breakpoint;
@@ -292,7 +278,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             if (MathF.Abs(jointErrorSquared) <= _breakpointSquared)
                 return 0.0f;
 
-            Logger.DebugS("physics", $"Broke joint {ID}; force was {MathF.Sqrt(jointErrorSquared)}");
             Enabled = false;
             return jointErrorSquared;
         }
@@ -334,6 +319,22 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             hashcode = hashcode * 397 ^ JointType.GetHashCode();
             return hashcode;
         }
+
+        public abstract Joint Clone(EntityUid uidA, EntityUid uidB);
+
+        /// <summary>
+        /// Copies the networked data for a joint. Does not copy warmstarting.
+        /// </summary>
+        /// <returns></returns>
+        public Joint Clone()
+        {
+            return Clone(BodyAUid, BodyBUid);
+        }
+
+        /// <summary>
+        /// Copies all joint data including warm starting.
+        /// </summary>
+        public abstract void CopyTo(Joint original);
     }
 
     [ByRefEvent]

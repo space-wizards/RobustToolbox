@@ -112,7 +112,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public RevoluteJoint() {}
 
-        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB, float referenceAngle) : base(bodyA.Owner, bodyB.Owner)
+        public RevoluteJoint(EntityUid uidA, EntityUid uidB, Vector2 anchorA, Vector2 anchorB, float referenceAngle) : base(uidA, uidB)
         {
             LocalAnchorA = anchorA;
             LocalAnchorB = anchorB;
@@ -461,32 +461,45 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public override int GetHashCode()
         {
             var hashCode = new HashCode();
-            hashCode.Add(base.GetHashCode());
-            hashCode.Add(_impulse);
-            hashCode.Add(_indexA);
-            hashCode.Add(_indexB);
-            hashCode.Add(_localCenterA);
-            hashCode.Add(_localCenterB);
-            hashCode.Add(_invMassA);
-            hashCode.Add(_invMassB);
-            hashCode.Add(_invIA);
-            hashCode.Add(_invIB);
-            hashCode.Add(_rA);
-            hashCode.Add(_rB);
-            hashCode.Add(_K);
-            hashCode.Add(_axialMass);
-            hashCode.Add(_angle);
-            hashCode.Add(_motorImpulse);
-            hashCode.Add(_lowerImpulse);
-            hashCode.Add(_upperImpulse);
-            hashCode.Add(EnableLimit);
-            hashCode.Add(EnableMotor);
-            hashCode.Add(ReferenceAngle);
-            hashCode.Add(LowerAngle);
-            hashCode.Add(UpperAngle);
-            hashCode.Add(MotorSpeed);
-            hashCode.Add(MaxMotorTorque);
+            hashCode.Add(BodyAUid);
+            hashCode.Add(BodyBUid);
             return hashCode.ToHashCode();
+        }
+
+        public override Joint Clone(EntityUid uidA, EntityUid uidB)
+        {
+            var revolute = new RevoluteJoint(uidA, uidB, LocalAnchorA, LocalAnchorB, ReferenceAngle)
+            {
+                Enabled = Enabled,
+                EnableLimit = EnableLimit,
+                EnableMotor = EnableMotor,
+                LowerAngle = LowerAngle,
+                UpperAngle = UpperAngle,
+                MaxMotorTorque = MaxMotorTorque,
+                MotorSpeed = MotorSpeed,
+                Breakpoint = Breakpoint
+            };
+
+            return revolute;
+        }
+
+        public override void CopyTo(Joint original)
+        {
+            if (original is not RevoluteJoint revolute)
+                return;
+
+            revolute.Enabled = Enabled;
+            revolute.EnableLimit = EnableLimit;
+            revolute.EnableMotor = EnableMotor;
+            revolute.LowerAngle = LowerAngle;
+            revolute.UpperAngle = UpperAngle;
+            revolute.MaxMotorTorque = MaxMotorTorque;
+            revolute.MotorSpeed = MotorSpeed;
+            revolute._impulse = _impulse;
+            revolute._upperImpulse = _upperImpulse;
+            revolute._lowerImpulse = _lowerImpulse;
+            revolute._motorImpulse = _motorImpulse;
+            revolute.Breakpoint = Breakpoint;
         }
     }
 }

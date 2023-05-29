@@ -38,11 +38,19 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEntityManager entities = default!;
         [Dependency] private readonly IReflectionManager reflection = default!;
         [Dependency] private readonly IEyeManager eyeManager = default!;
+        [Dependency] private readonly IComponentFactory factory = default!;
 
         /// <summary>
         ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
         /// </summary>
         public static double DirectionBias = -0.05;
+
+        /// <summary>
+        ///     Whether the layers have independant drawing strategies, e.g some may snap to cardinals while others won't.
+        ///     The sprite should still set its global rendering method (e.g NoRot or SnapCardinals), this only gives finer control over how layers are rendered internally.
+        /// </summary>
+        [DataField("granularLayersRendering")]
+        public bool GranularLayersRendering = false;
 
         [DataField("visible")]
         private bool _visible = true;
@@ -338,6 +346,7 @@ namespace Robust.Client.GameObjects
                         Color = Color.White,
                         Scale = Vector2.One,
                         Visible = true,
+                        RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy,
                     });
                     state = null;
                     texture = null;
@@ -393,6 +402,7 @@ namespace Robust.Client.GameObjects
             }
 
             RenderOrder = other.RenderOrder;
+            GranularLayersRendering = other.GranularLayersRendering;
         }
 
         internal void UpdateLocalMatrix()
@@ -802,6 +812,8 @@ namespace Robust.Client.GameObjects
                 }
             }
 
+            layer.RenderingStrategy = layerDatum.RenderingStrategy ?? layer.RenderingStrategy;
+
             layer.Color = layerDatum.Color ?? layer.Color;
             layer._rotation = layerDatum.Rotation ?? layer._rotation;
             layer._offset = layerDatum.Offset ?? layer._offset;
@@ -1201,6 +1213,22 @@ namespace Robust.Client.GameObjects
             LayerSetOffset(layer, layerOffset);
         }
 
+        public void LayerSetRenderingStrategy(int layer, LayerRenderingStrategy renderingStrategy)
+        {
+            if (!TryGetLayer(layer, out var theLayer, true))
+                return;
+
+            theLayer.RenderingStrategy = renderingStrategy;
+        }
+
+        public void LayerSetRenderingStrategy(object layerKey, LayerRenderingStrategy renderingStrategy)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetRenderingStrategy(layer, renderingStrategy);
+        }
+
         /// <inheritdoc />
         public RSI.StateId LayerGetState(int layer)
         {
@@ -1268,10 +1296,9 @@ namespace Robust.Client.GameObjects
         internal void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
-            var cardinal = Angle.Zero;
+            angle = angle.Reduced().FlipPositive();  // Reduce the angles to fix math shenanigans
 
-            // Reduce the angles to fix math shenanigans
-            angle = angle.Reduced().FlipPositive();
+            var cardinal = Angle.Zero;
 
             // If we have a 1-directional sprite then snap it to try and always face it south if applicable.
             if (!NoRotation && SnapCardinals)
@@ -1283,11 +1310,49 @@ namespace Robust.Client.GameObjects
             // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
             var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
 
-            Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transform);
+            Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformSprite);
 
-            foreach (var layer in Layers)
+            if (GranularLayersRendering)
             {
-                layer.Render(drawingHandle, ref transform, angle, overrideDirection);
+                //Default rendering
+                entityMatrix = Matrix3.CreateTransform(worldPosition, worldRotation);
+                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformDefault);
+                //Snap to cardinals
+                entityMatrix = Matrix3.CreateTransform(worldPosition, worldRotation - angle.GetCardinalDir().ToAngle());
+                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformSnap);
+                //No rotation
+                entityMatrix = Matrix3.CreateTransform(worldPosition, -eyeRotation);
+                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformNoRot);
+
+
+                foreach (var layer in Layers) {
+                    switch (layer.RenderingStrategy)
+                    {
+                        case LayerRenderingStrategy.NoRotation:
+                            layer.Render(drawingHandle, ref transformNoRot, angle, overrideDirection);
+                            break;
+                        case LayerRenderingStrategy.SnapToCardinals:
+                            layer.Render(drawingHandle, ref transformSnap, angle, overrideDirection);
+                            break;
+                        case LayerRenderingStrategy.Default:
+                            layer.Render(drawingHandle, ref transformDefault, angle, overrideDirection);
+                            break;
+                        case LayerRenderingStrategy.UseSpriteStrategy:
+                            layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
+                            break;
+                        default:
+                            Logger.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
+                            break;
+                    }
+                }
+            }
+
+            else
+            {
+                foreach (var layer in Layers)
+                {
+                    layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
+                }
             }
         }
 
@@ -1379,13 +1444,13 @@ namespace Robust.Client.GameObjects
             foreach (var layer in Layers)
             {
                 builder.AppendFormat(
-                    "shad/tex/rsi/state/ant/anf/scl/rot/vis/col/dofs: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}/{10}\n",
+                    "shad/tex/rsi/state/ant/anf/scl/rot/vis/col/dofs/renderstrat: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}/{10}/{11}\n",
                     // These are references and don't include useful data for knowing where they came from, sadly.
                     // "is one set" is better than nothing at least.
                     layer.Shader != null, layer.Texture != null, layer.RSI != null,
                     layer.State,
                     layer.AnimationTimeLeft, layer.AnimationFrame, layer.Scale, layer.Rotation, layer.Visible,
-                    layer.Color, layer.DirOffset
+                    layer.Color, layer.DirOffset, layer.RenderingStrategy
                 );
             }
 
@@ -1596,6 +1661,13 @@ namespace Robust.Client.GameObjects
             [ViewVariables]
             public RSI? ActualRsi => RSI ?? _parent.BaseRSI;
 
+            /// <summary>
+            ///    Whether the current layer have a specific rendering method (e.g no rotation or snap to cardinal)
+            ///    The sprite GranularLayersRendering var must be set to true for this to have any effect.
+            /// </summary>
+            [ViewVariables]
+            public LayerRenderingStrategy RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy;
+
             public Layer(SpriteComponent parent)
             {
                 _parent = parent;
@@ -1623,6 +1695,7 @@ namespace Robust.Client.GameObjects
                 Color = toClone.Color;
                 DirOffset = toClone.DirOffset;
                 _autoAnimated = toClone._autoAnimated;
+                RenderingStrategy = toClone.RenderingStrategy;
             }
 
             void ISerializationHooks.AfterDeserialization()
@@ -1650,6 +1723,7 @@ namespace Robust.Client.GameObjects
                     State = State.Name,
                     Visible = Visible,
                     RsiPath = RSI?.Path.CanonPath,
+                    RenderingStrategy = RenderingStrategy,
                     //todo TexturePath = Textur
                     //todo MapKeys
                 };
@@ -1853,7 +1927,8 @@ namespace Robust.Client.GameObjects
                 {
                     size = new Vector2(longestRotatedSide, longestRotatedSide);
                 }
-                else if (_parent.SnapCardinals)
+                else if (_parent.SnapCardinals && (!_parent.GranularLayersRendering || RenderingStrategy == LayerRenderingStrategy.UseSpriteStrategy)
+                         || _parent.GranularLayersRendering && RenderingStrategy == LayerRenderingStrategy.SnapToCardinals)
                 {
                     DebugTools.Assert(_actualState == null || _actualState.Directions == RSI.State.DirectionType.Dir1);
                     size = new Vector2(longestSide, longestSide);
@@ -1963,7 +2038,7 @@ namespace Robust.Client.GameObjects
 
                 var dir = _actualState == null ? RSIDirection.South : GetDirection(_actualState.Directions, angle);
 
-                // Set the drawing transform for this  layer
+                // Set the drawing transform for this layer
                 GetLayerDrawMatrix(dir, out var layerMatrix);
                 Matrix3.Multiply(in layerMatrix, in spriteMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
@@ -2081,10 +2156,12 @@ namespace Robust.Client.GameObjects
         {
             var results = new List<IDirectionalTextureProvider>();
             noRot = false;
-            var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
-            if (icon != null)
+
+            // TODO when moving to a non-static method in a system, pass in IComponentFactory
+            if (prototype.TryGetComponent(out IconComponent? icon))
             {
-                results.Add(icon);
+                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
+                results.Add(sys.GetIcon(icon));
                 return results;
             }
 
@@ -2132,8 +2209,12 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use SpriteSystem")]
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
-            var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
-            if (icon != null) return icon;
+            // TODO when moving to a non-static method in a system, pass in IComponentFactory
+            if (prototype.TryGetComponent(out IconComponent? icon))
+            {
+                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
+                return sys.GetIcon(icon);
+            }
 
             if (!prototype.Components.ContainsKey("Sprite"))
             {

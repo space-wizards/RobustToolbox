@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
@@ -99,11 +100,11 @@ namespace Robust.Client.UserInterface.Controls
                 InvalidateMeasure();
             }
         }
-        
+
         /// <summary>
         /// Determines which side of the split expands when the parent is resized.
         /// </summary>
-        public SplitStretchDirection StretchDirection 
+        public SplitStretchDirection StretchDirection
         {
             get => _stretchDirection;
             set
@@ -417,7 +418,7 @@ namespace Robust.Client.UserInterface.Controls
             Horizontal,
             Vertical
         }
-        
+
         /// <summary>
         /// Specifies horizontal alignment modes.
         /// </summary>
@@ -428,7 +429,7 @@ namespace Robust.Client.UserInterface.Controls
             /// The control should stretch the the control on the bottom or the right.
             /// </summary>
             BottomRight,
-            
+
             /// <summary>
             /// The control should stretch the the control on the top or the left.
             /// </summary>

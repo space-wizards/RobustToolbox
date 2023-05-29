@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 

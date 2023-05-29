@@ -23,6 +23,7 @@
 */
 
 using System;
+using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;

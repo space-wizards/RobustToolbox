@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;

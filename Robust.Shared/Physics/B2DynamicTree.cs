@@ -24,11 +24,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
-using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Shared.Physics
 {
@@ -338,8 +337,8 @@ namespace Robust.Shared.Physics
                 // Perhaps the object was moving fast but has since gone to sleep.
                 // The huge AABB is larger than the new fat AABB.
                 var hugeAabb = new Box2(
-                    fatAabb.BottomLeft - (4, 4) * ext,
-                    fatAabb.TopRight + (4, 4) * ext);
+                    fatAabb.BottomLeft - new Vector2(4, 4) * ext,
+                    fatAabb.TopRight + new Vector2(4, 4) * ext);
 
                 if (hugeAabb.Contains(treeAabb))
                 {

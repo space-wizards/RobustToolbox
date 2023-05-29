@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;

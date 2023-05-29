@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;

@@ -2,12 +2,15 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Text;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {

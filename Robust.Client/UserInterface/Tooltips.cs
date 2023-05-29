@@ -1,4 +1,5 @@
-﻿using Robust.Client.UserInterface.Controls;
+﻿using System.Numerics;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface

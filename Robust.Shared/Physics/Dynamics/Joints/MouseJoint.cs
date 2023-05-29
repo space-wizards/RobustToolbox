@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -252,9 +253,9 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         _impulse += impulse;
         float maxImpulse = data.FrameTime * _maxForce;
 
-        if (_impulse.LengthSquared > maxImpulse * maxImpulse)
+        if (_impulse.LengthSquared() > maxImpulse * maxImpulse)
         {
-            _impulse *= maxImpulse / _impulse.Length;
+            _impulse *= maxImpulse / _impulse.Length();
         }
         impulse = _impulse - oldImpulse;
 

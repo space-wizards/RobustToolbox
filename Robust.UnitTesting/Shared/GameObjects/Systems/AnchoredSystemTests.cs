@@ -9,6 +9,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
 using System.Linq;
+using System.Numerics;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 

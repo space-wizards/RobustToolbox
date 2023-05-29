@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;

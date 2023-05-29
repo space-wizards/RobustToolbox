@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;

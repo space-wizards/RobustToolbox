@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls

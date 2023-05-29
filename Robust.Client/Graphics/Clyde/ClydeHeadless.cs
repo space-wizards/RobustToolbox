@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
@@ -13,6 +14,8 @@ using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {

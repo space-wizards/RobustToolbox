@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.RichText;
 using Robust.Shared.IoC;

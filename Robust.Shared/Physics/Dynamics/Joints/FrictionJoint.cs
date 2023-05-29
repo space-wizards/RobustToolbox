@@ -21,6 +21,7 @@
 */
 
 using System;
+using System.Numerics;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;

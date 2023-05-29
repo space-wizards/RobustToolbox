@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.IoC;

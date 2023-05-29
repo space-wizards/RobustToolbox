@@ -1,8 +1,10 @@
+using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
+using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Client.Graphics.Clyde
 {

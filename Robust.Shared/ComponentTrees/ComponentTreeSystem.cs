@@ -7,6 +7,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.ComponentTrees;

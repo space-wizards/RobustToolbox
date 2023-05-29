@@ -29,6 +29,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 using Robust.Shared.Utility;
+using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Shared.Maths
 {

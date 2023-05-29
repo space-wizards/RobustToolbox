@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.BoxContainer;

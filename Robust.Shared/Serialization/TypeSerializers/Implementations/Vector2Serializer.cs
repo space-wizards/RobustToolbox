@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Numerics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;

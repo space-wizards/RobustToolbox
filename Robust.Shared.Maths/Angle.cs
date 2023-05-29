@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
@@ -37,7 +38,7 @@ namespace Robust.Shared.Maths
         /// <param name="dir"></param>
         public Angle(Vector2 dir)
         {
-            dir = dir.Normalized;
+            dir = dir.Normalized();
             Theta = Math.Atan2(dir.Y, dir.X);
         }
 

@@ -5,6 +5,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 using System;
+using System.Numerics;
 
 namespace Robust.Shared.GameObjects
 {

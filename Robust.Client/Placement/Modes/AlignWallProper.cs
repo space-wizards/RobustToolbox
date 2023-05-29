@@ -1,6 +1,6 @@
 using System.Linq;
 using Robust.Shared.Map;
-using Vector2 = Robust.Shared.Maths.Vector2;
+using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.Placement.Modes
 {

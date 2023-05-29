@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Collections;

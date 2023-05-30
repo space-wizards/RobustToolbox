@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed keyboard events always propagating to the default viewport if `devwindow` is open.
 
 ### Other
 

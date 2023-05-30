@@ -42,7 +42,7 @@ internal partial class MapManager
             {
                 var data = tuple.gridTree.GetUserData(proxy);
 
-                if (tuple.approx && !IsIntersecting(tuple.worldAABB, data.Uid, data.Grid,
+                if (!tuple.approx && !IsIntersecting(tuple.worldAABB, data.Uid, data.Grid,
                         tuple.physicsQuery, tuple.xformQuery, tuple.xformSystem))
                 {
                     return true;
@@ -82,7 +82,7 @@ internal partial class MapManager
         {
             var data = tuple.gridTree.GetUserData(proxy);
 
-            if (tuple.approx && !IsIntersecting(tuple.worldAABB, data.Uid, data.Grid,
+            if (!tuple.approx && !IsIntersecting(tuple.worldAABB, data.Uid, data.Grid,
                     tuple.physicsQuery, tuple.xformQuery, tuple.xformSystem))
             {
                 return true;
@@ -126,6 +126,7 @@ internal partial class MapManager
                 {
                     for (var j = 0; j < fixture.Shape.ChildCount; j++)
                     {
+                        // TODO: Should do shape intersects given this is supposed to be non-approx.
                         if (!fixture.Shape.ComputeAABB(transform, j).Intersects(aabb)) continue;
 
                         return true;

@@ -200,13 +200,6 @@ namespace Robust.Server.ServerStatus
                 SetCVarIfUnmodified(CVars.BuildManifestUrl, info.ManifestUrl ?? "");
             }
 
-            // Automatically determine engine version if no other source has provided a result
-            var asmVer = typeof(StatusHost).Assembly.GetName().Version;
-            if (asmVer != null)
-            {
-                SetCVarIfUnmodified(CVars.BuildEngineVersion, asmVer.ToString(4));
-            }
-
             void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
             {
                 if (_cfg.GetCVar(cvar) == "")

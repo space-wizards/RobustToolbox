@@ -164,8 +164,7 @@ namespace Robust.Client
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
             _prototypeManager.Initialize();
-            _prototypeManager.LoadDirectory(new("/EnginePrototypes/"));
-            _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
+            _prototypeManager.LoadDefaultPrototypes();
             _prototypeManager.ResolveResults();
             _userInterfaceManager.Initialize();
             _eyeManager.Initialize();

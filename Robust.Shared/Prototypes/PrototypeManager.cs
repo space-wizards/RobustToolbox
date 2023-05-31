@@ -7,9 +7,9 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Random;
 using Robust.Shared.Reflection;
@@ -17,19 +17,18 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes
 {
-    [Virtual]
-    public partial class PrototypeManager : IPrototypeManagerInternal
+    public abstract partial class PrototypeManager : IPrototypeManagerInternal
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] protected readonly IResourceManager Resources = default!;
         [Dependency] protected readonly ITaskManager TaskManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly ILocalizationManager _locMan = default!;
 
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _kindPriorities = new();
@@ -188,6 +187,31 @@ namespace Robust.Shared.Prototypes
             _kinds.Clear();
         }
 
+        public void Reset()
+        {
+            var removed = _kinds.ToDictionary(
+                x => x.Key,
+                x => x.Value.Instances.Keys.ToHashSet());
+
+            ReloadPrototypeKinds();
+            var protos = LoadDefaultPrototypes();
+
+            foreach (var (kind, ids) in protos)
+            {
+                if (!removed.TryGetValue(kind, out var removedIds))
+                    continue;
+
+                removedIds.ExceptWith(ids);
+                if (removedIds.Count == 0)
+                    removed.Remove(kind);
+            }
+
+            ReloadPrototypes(protos, removed);
+            _locMan.ReloadLocalizations();
+        }
+
+        public abstract Dictionary<Type, HashSet<string>> LoadDefaultPrototypes();
+
         private int SortPrototypesByPriority(Type a, Type b)
         {
             return _kindPriorities[b].CompareTo(_kindPriorities[a]);
@@ -206,10 +230,11 @@ namespace Robust.Shared.Prototypes
 #endif
         }
 
-        public void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes)
+        public void ReloadPrototypes(Dictionary<Type, HashSet<string>> modified,
+            Dictionary<Type, HashSet<string>>? removed = null)
         {
 #if TOOLS
-            var prototypeTypeOrder = prototypes.Keys.ToList();
+            var prototypeTypeOrder = modified.Keys.ToList();
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
             var pushed = new Dictionary<Type, HashSet<string>>();
@@ -219,7 +244,7 @@ namespace Robust.Shared.Prototypes
                 var kindData = _kinds[kind];
                 if (!kind.IsAssignableTo(typeof(IInheritingPrototype)))
                 {
-                    foreach (var id in prototypes[kind])
+                    foreach (var id in modified[kind])
                     {
                         var prototype = (IPrototype)_serializationManager.Read(kind, kindData.Results[id])!;
                         kindData.Instances[id] = prototype;
@@ -230,7 +255,7 @@ namespace Robust.Shared.Prototypes
 
                 var tree = kindData.Inheritance!;
                 var processQueue = new Queue<string>();
-                foreach (var id in prototypes[kind])
+                foreach (var id in modified[kind])
                 {
                     processQueue.Enqueue(id);
                 }
@@ -245,7 +270,7 @@ namespace Robust.Shared.Prototypes
                         foreach (var parent in parents)
                         {
                             //our parent has been reloaded and has not been added to the pushedSet yet
-                            if (prototypes[kind].Contains(parent) && !pushedSet.Contains(parent))
+                            if (modified[kind].Contains(parent) && !pushedSet.Contains(parent))
                             {
                                 //we re-queue ourselves at the end of the queue
                                 processQueue.Enqueue(id);
@@ -285,12 +310,13 @@ namespace Robust.Shared.Prototypes
             //todo paul i hate it but i am not opening that can of worms in this refactor
             PrototypesReloaded?.Invoke(
                 new PrototypesReloadedEventArgs(
-                    prototypes
+                    modified
                         .ToDictionary(
                             g => g.Key,
                             g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
                                 g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
-                                    .ToDictionary(a => a, a => _kinds[g.Key].Instances[a])))));
+                                    .ToDictionary(a => a, a => _kinds[g.Key].Instances[a]))),
+                    removed));
         }
 
         /// <summary>
@@ -506,7 +532,7 @@ namespace Robust.Shared.Prototypes
 
         #endregion IPrototypeManager members
 
-        private void ReloadPrototypeKinds()
+        public void ReloadPrototypeKinds()
         {
             Clear();
             foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())

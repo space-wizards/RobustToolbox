@@ -12,6 +12,7 @@ using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Server.Player;
+using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
 using Robust.Server.Replays;
 using Robust.Shared;
@@ -221,7 +222,7 @@ namespace Robust.UnitTesting.Server
             container.Register<EntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<ISerializationManager, SerializationManager>();
-            container.Register<IPrototypeManager, PrototypeManager>();
+            container.Register<IPrototypeManager, ServerPrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IManifoldManager, CollisionManager>();

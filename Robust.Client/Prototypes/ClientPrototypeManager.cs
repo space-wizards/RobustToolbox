@@ -8,7 +8,6 @@ using Robust.Client.Graphics;
 using Robust.Client.Timing;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -25,6 +24,7 @@ namespace Robust.Client.Prototypes
         [Dependency] private readonly INetManager _netManager = default!;
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IGameControllerInternal _controller = default!;
 
         private readonly List<FileSystemWatcher> _watchers = new();
         private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
@@ -40,6 +40,15 @@ namespace Robust.Client.Prototypes
             _clyde.OnWindowFocused += WindowFocusedChanged;
 
             WatchResources();
+        }
+
+        public override Dictionary<Type, HashSet<string>> LoadDefaultPrototypes()
+        {
+            var prototypes = new Dictionary<Type, HashSet<string>>();
+            LoadDirectory(new("/EnginePrototypes/"), changed: prototypes);
+            LoadDirectory(_controller.Options.PrototypeDirectory, changed: prototypes);
+            ResolveResults();
+            return prototypes;
         }
 
         private void WindowFocusedChanged(WindowFocusedEventArgs args)

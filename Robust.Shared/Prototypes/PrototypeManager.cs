@@ -194,9 +194,10 @@ namespace Robust.Shared.Prototypes
                 x => x.Value.Instances.Keys.ToHashSet());
 
             ReloadPrototypeKinds();
-            var protos = LoadDefaultPrototypes();
+            Dictionary<Type, HashSet<string>> prototypes = new();
+            LoadDefaultPrototypes(prototypes);
 
-            foreach (var (kind, ids) in protos)
+            foreach (var (kind, ids) in prototypes)
             {
                 if (!removed.TryGetValue(kind, out var removedIds))
                     continue;
@@ -206,11 +207,11 @@ namespace Robust.Shared.Prototypes
                     removed.Remove(kind);
             }
 
-            ReloadPrototypes(protos, removed);
+            ReloadPrototypes(prototypes, removed);
             _locMan.ReloadLocalizations();
         }
 
-        public abstract Dictionary<Type, HashSet<string>> LoadDefaultPrototypes();
+        public abstract void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? changed = null);
 
         private int SortPrototypesByPriority(Type a, Type b)
         {

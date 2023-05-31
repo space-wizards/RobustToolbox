@@ -224,7 +224,8 @@ public interface IPrototypeManager
     /// <summary>
     /// Loads prototypes from the default directories.
     /// </summary>
-    Dictionary<Type, HashSet<string>> LoadDefaultPrototypes();
+    /// <param name="loaded">Dictionary that will be filled with all the loaded prototypes.</param>
+    void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? loaded = null);
 
     /// <summary>
     /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.

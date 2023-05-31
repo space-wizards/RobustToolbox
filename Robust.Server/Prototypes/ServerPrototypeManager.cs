@@ -49,13 +49,10 @@ namespace Robust.Server.Prototypes
 #endif
         }
 
-        public override Dictionary<Type, HashSet<string>> LoadDefaultPrototypes()
+        public override void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? changed = null)
         {
-            var prototypes = new Dictionary<Type, HashSet<string>>();
-            LoadDirectory(new("/EnginePrototypes/"), changed: prototypes);
-            LoadDirectory(_server.Options.PrototypeDirectory, changed: prototypes);
+            LoadDirectory(_server.Options.PrototypeDirectory, changed: changed);
             ResolveResults();
-            return prototypes;
         }
     }
 }

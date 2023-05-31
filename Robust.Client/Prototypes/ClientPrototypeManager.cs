@@ -42,13 +42,11 @@ namespace Robust.Client.Prototypes
             WatchResources();
         }
 
-        public override Dictionary<Type, HashSet<string>> LoadDefaultPrototypes()
+        public override void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? changed = null)
         {
-            var prototypes = new Dictionary<Type, HashSet<string>>();
-            LoadDirectory(new("/EnginePrototypes/"), changed: prototypes);
-            LoadDirectory(_controller.Options.PrototypeDirectory, changed: prototypes);
+            LoadDirectory(new("/EnginePrototypes/"), changed: changed);
+            LoadDirectory(_controller.Options.PrototypeDirectory, changed: changed);
             ResolveResults();
-            return prototypes;
         }
 
         private void WindowFocusedChanged(WindowFocusedEventArgs args)

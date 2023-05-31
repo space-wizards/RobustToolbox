@@ -211,6 +211,7 @@ namespace Robust.UnitTesting.Server
                 .Setup(x => x.FindAllTypes())
                 .Returns(() => realReflection.FindAllTypes());
 
+            container.RegisterInstance<IBaseServerInternal>(new Mock<IBaseServerInternal>().Object);
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types
             container.RegisterInstance<IRobustSerializer>(new Mock<IRobustSerializer>().Object);
             container.RegisterInstance<IResourceManager>(new Mock<IResourceManager>().Object); // no disk access for tests

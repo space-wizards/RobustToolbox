@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed keyboard events always propagating to the default viewport if `devwindow` is open.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,23 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.123.0.0
+
+### New features
+
+* Added `ValueList.RemoveSwap()`
+* The Centroid property on polygon shapes is now available to content.
+
+### Bugfixes
+
+* Fixed keyboard events always propagating to the default viewport if `devwindow` is open.
+* Fixed some map-manager queries not properly using the `approx` argument.
+
+### Other
+
+* Several build/version cvars are now replicated to clients, instead of being server exclusive.
 
 
 ## 0.122.0.0

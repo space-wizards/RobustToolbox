@@ -365,7 +365,7 @@ namespace Robust.Server
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             _prototype.Initialize();
-            _prototype.LoadDirectory(Options.PrototypeDirectory);
+            _prototype.LoadDefaultPrototypes();
             _prototype.ResolveResults();
 
             _consoleHost.Initialize();

@@ -88,7 +88,7 @@ namespace Robust.Shared.Physics.Systems
 
             var state = (body, entities);
 
-            foreach (var (_, fixture) in fixtureComp.Fixtures)
+            foreach (var fixture in fixtureComp.Fixtures.Values)
             {
                 foreach (var proxy in fixture.Proxies)
                 {
@@ -481,14 +481,14 @@ namespace Robust.Shared.Physics.Systems
             input.UseRadii = true;
 
             // No requirement on collision being enabled so chainshapes will fail
-            foreach (var (_, fixtureA) in managerA.Fixtures)
+            foreach (var fixtureA in managerA.Fixtures.Values)
             {
                 if (bodyA.Hard && !fixtureA.Hard)
                     continue;
 
                 DebugTools.Assert(fixtureA.ProxyCount <= 1);
 
-                foreach (var (_, fixtureB) in managerB.Fixtures)
+                foreach (var fixtureB in managerB.Fixtures.Values)
                 {
                     if (bodyB.Hard && !fixtureB.Hard)
                         continue;
@@ -535,7 +535,7 @@ namespace Robust.Shared.Physics.Systems
             var xfA = GetPhysicsTransform(uidA, xformA, xformQuery);
             var xfB = GetPhysicsTransform(uidB, xformB, xformQuery);
 
-            return TryGetNearest(uidA, uidB, out pointA, out pointB, out distance, xfA, xfB);
+            return TryGetNearest(uidA, uidB, out pointA, out pointB, out distance, xfA, xfB, managerA, managerB, bodyA, bodyB);
         }
 
         #endregion

@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.123.1.0
+
+### New features
+
+* Add Box2.Rounded(int digits) method.
+* Add Pure attributes to Box2 methods.
+
+
 ## 0.123.0.0
 
 ### New features

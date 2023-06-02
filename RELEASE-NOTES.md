@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.123.1.1
+
+### Bugfixes
+
+* Also clone warmstarting data for joints in the physics solver.
+
+
 ## 0.123.1.0
 
 ### New features

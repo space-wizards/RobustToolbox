@@ -84,5 +84,15 @@ namespace Robust.Client.Graphics
                 1 / (_scale.X * renderScale.X),
                 1 / (_scale.Y * renderScale.Y));
         }
+
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Exposure { get; set; }
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadOnly)]
+        public float LastBrightness { get; set; }
+
     }
 }

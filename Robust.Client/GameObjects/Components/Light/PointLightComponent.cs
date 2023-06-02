@@ -7,9 +7,44 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Client.GameObjects
 {
+    public sealed class PointLight
+    {
+        // Only the values required to actually render the light.
+        public Color Color;
+        public bool MaskAutoRotate;
+        public Angle Rotation;
+        public Texture? Mask;
+        public float Radius;
+        public float Energy;
+        public bool CastShadows;
+        public float Softness;
+
+        public PointLight(PointLightComponent light)
+        {
+            Color = light.Color;
+            MaskAutoRotate = light.MaskAutoRotate;
+            Rotation = light.Rotation;
+            Mask = light.Mask;
+            Radius = light.Radius;
+            Energy = light.Energy;
+            CastShadows = light.CastShadows;
+            Softness = light.Softness;
+        }
+
+        public PointLight(float energy, float radius, bool castShadows)
+        {
+            Energy = energy;
+            Radius = radius;
+            CastShadows = castShadows;
+            Color = Color.White;
+        }
+    }
+
+
     [RegisterComponent]
     [ComponentReference(typeof(SharedPointLightComponent))]
     public sealed class PointLightComponent : SharedPointLightComponent, IComponentTreeEntry<PointLightComponent>

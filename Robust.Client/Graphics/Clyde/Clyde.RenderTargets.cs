@@ -115,6 +115,7 @@ namespace Robust.Client.Graphics.Clyde
                     RTCF.R8 =>           (PIF.R8,           PF.Red,  PT.UnsignedByte),
                     _ => throw new ArgumentOutOfRangeException(nameof(format.ColorFormat), format.ColorFormat, null)
                 };
+                var textureFormat = new TextureFormat(internalFormat, pixFormat, pixType);
                 // @formatter:on
 
                 if (_isGLES2)
@@ -148,7 +149,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGlError();
 
                 // Check on original format is NOT a bug, this is so srgb emulation works
-                textureObject = GenTexture(texture, size, format.ColorFormat == RTCF.Rgba8Srgb, name == null ? null : $"{name}-color", TexturePixelType.RenderTarget);
+                textureObject = GenTexture(texture, size, format.ColorFormat == RTCF.Rgba8Srgb, name == null ? null : $"{name}-color", TexturePixelType.RenderTarget, textureFormat);
             }
 
             // Depth/stencil buffers.

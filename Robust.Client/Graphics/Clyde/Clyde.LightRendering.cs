@@ -91,7 +91,7 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
 
-        private (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
+        private (PointLight light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
 
         private unsafe void InitLighting()
         {
@@ -347,7 +347,7 @@ namespace Robust.Client.Graphics.Clyde
             Box2 expandedBounds;
             using (_prof.Group("LightsToRender"))
             {
-                (count, expandedBounds) = GetLightsToRender(mapId, worldBounds, worldAABB);
+                (count, expandedBounds) = GetLightsToRender(mapId, worldBounds, worldAABB, viewport.Eye?.Exposure ?? 1.0f);
             }
 
             eye.GetViewMatrixNoOffset(out var eyeTransform, eye.Scale);
@@ -425,6 +425,15 @@ namespace Robust.Client.Graphics.Clyde
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
             var lastSoftness = float.NaN;
             Texture? lastMask = null;
+
+            if (eye.Exposure > 1.0f && count < _maxLights)
+            {
+                // Turn on a point light centred on the player
+                _lightsToRenderList[count++] = (new PointLight(energy:(eye.Exposure - 1.0f) * 0.02f, radius:3.0f * eye.Exposure, castShadows:false)
+                {
+                    Color = new(200, 255, 150)
+                }, worldAABB.Center, 0.0f, 0.0f);
+            }
 
             using (_prof.Group("Draw Lights"))
             {
@@ -519,6 +528,11 @@ namespace Robust.Client.Graphics.Clyde
                 MergeWallLayer(viewport);
             }
 
+            using (_prof.Group("MeasureBrightness"))
+            {
+                MeasureBrightness(viewport);
+            }
+
             BindRenderTargetFull(viewport.RenderTarget);
             GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
             CheckGlError();
@@ -528,13 +542,15 @@ namespace Robust.Client.Graphics.Clyde
             _lightingReady = true;
         }
 
+
         private static bool LightQuery(ref (
             Clyde clyde,
             int count,
             int shadowCastingCount,
             TransformSystem xformSystem,
             EntityQuery<TransformComponent> xforms,
-            Box2 worldAABB) state,
+            Box2 worldAABB,
+            float exposure) state,
             in ComponentTreeEntry<PointLightComponent> value)
         {
             ref var count = ref state.count;
@@ -544,15 +560,22 @@ namespace Robust.Client.Graphics.Clyde
             if (count >= state.clyde._maxLights)
                 return false;
 
-            var (light, transform) = value;
+            var powerMul = Math.Min(state.exposure, 1.2f + state.exposure * 0.05f);
+            var rangeMul = state.exposure * 0.5f + 0.5f;
+
+            var (light_comp, transform) = value;
             var (lightPos, rot) = state.xformSystem.GetWorldPositionRotation(transform, state.xforms);
-            lightPos += rot.RotateVec(light.Offset);
-            var circle = new Circle(lightPos, light.Radius);
+            lightPos += rot.RotateVec(light_comp.Offset);
+            var circle = new Circle(lightPos, light_comp.Radius * rangeMul);
 
             // If the light doesn't touch anywhere the camera can see, it doesn't matter.
             // The tree query is not fully accurate because the viewport may be rotated relative to a grid.
             if (!circle.Intersects(state.worldAABB))
                 return true;
+
+            var light = new PointLight(light_comp);
+            light.Radius *= rangeMul;
+            light.Energy *= powerMul;
 
             // If the light is a shadow casting light, keep a separate track of that
             if (light.CastShadows)
@@ -567,18 +590,24 @@ namespace Robust.Client.Graphics.Clyde
         private (int count, Box2 expandedBounds) GetLightsToRender(
             MapId map,
             in Box2Rotated worldBounds,
-            in Box2 worldAABB)
+            in Box2 worldAABB,
+            float exposure)
         {
             var lightTreeSys = _entitySystemManager.GetEntitySystem<LightTreeSystem>();
             var xformSystem = _entitySystemManager.GetEntitySystem<TransformSystem>();
 
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
-            var state = (this, count: 0, shadowCastingCount: 0, xformSystem, xforms, worldAABB);
+            var state = (this, count: 0, shadowCastingCount: 0, xformSystem, xforms, worldAABB, exposure);
 
             foreach (var comp in lightTreeSys.GetIntersectingTrees(map, worldAABB))
             {
                 var bounds = xformSystem.GetInvWorldMatrix(comp.Owner, xforms).TransformBox(worldBounds);
+                if (exposure > 1.5f)
+                {
+                    // Need to query a larger area because at higher exposure the radius of lights is increased.
+                    bounds = bounds.Enlarged(5.0f * exposure);
+                }
                 comp.Tree.QueryAabb(ref state, LightQuery, bounds);
             }
 
@@ -782,6 +811,60 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.Enable(EnableCap.Blend);
             CheckGlError();
+        }
+
+        private void MeasureBrightness(Viewport viewport)
+        {
+            var dims = viewport.LightRenderTarget.Size;
+            var midpoint = dims / 2;
+            var fraction = dims / 30;
+            // Midpoint of the screen and a box around the player
+            var posWeight = new[]{((midpoint.X, midpoint.Y), 5.0f),
+                ((midpoint.X - fraction.X, midpoint.Y - fraction.Y), 1.0f),
+                ((midpoint.X + fraction.X, midpoint.Y - fraction.Y), 1.0f),
+                ((midpoint.X - fraction.X, midpoint.Y + fraction.Y), 1.0f),
+                ((midpoint.X + fraction.X, midpoint.Y + fraction.Y), 1.0f)};
+
+            var totWeight = 0.0f;
+            var totIntensity = 0.0f;
+            foreach (((var x, var y), var weight) in posWeight)
+            {
+                // TODO: Texture format (probably float) needs to be taken into account here:
+                var brightness = viewport.LightRenderTarget.Texture.GetPixel(x, y);
+                var intensity = (brightness.R + brightness.G + brightness.B) * 0.33f;
+                totIntensity += intensity * weight;
+                totWeight += weight;
+            }
+
+            if (viewport.Eye != null)
+            {
+                viewport.Eye.LastBrightness = totIntensity / totWeight;
+
+                // TODO: Move this calculation back to user code
+                // How much should we increase or decrease brightness as a ratio to land at 80% lighting?
+                var goalChange = Math.Clamp(1.2f / Math.Max(0.0001f, viewport.Eye.LastBrightness), 0.1f, 2.0f);
+                var goalExposure = viewport.Eye.Exposure * goalChange;
+                goalExposure = goalExposure * 0.8f + 0.2f; // Always slowly move back towards 1
+                if (goalChange < 1.0f)
+                {
+                    // quickly reduce exposure
+                    viewport.Eye.Exposure = (viewport.Eye.Exposure * 0.95f) + (goalExposure * 0.05f);
+                    // viewport.Eye.Exposure += goalExposure - viewport.Eye.Exposure;
+                }
+                else
+                {
+                    // slowly increase exposure
+                    viewport.Eye.Exposure = (viewport.Eye.Exposure * 0.99f) + (goalExposure * 0.01f);
+                    //viewport.Eye.Exposure += goalExposure - viewport.Eye.Exposure;
+
+                }
+
+                if (float.IsNaN(viewport.Eye.Exposure))
+                {
+                    viewport.Eye.Exposure = 1.0f;
+                }
+                viewport.Eye.Exposure = Math.Clamp(viewport.Eye.Exposure, 0.5f, 5.0f);
+            }
         }
 
         private void ApplyFovToBuffer(Viewport viewport, IEye eye)
@@ -1219,7 +1302,7 @@ namespace Robust.Client.Graphics.Clyde
         private void MaxLightsChanged(int value)
         {
             _maxLights = value;
-            _lightsToRenderList = new (PointLightComponent, Vector2, float , Angle)[value];
+            _lightsToRenderList = new (PointLight, Vector2, float , Angle)[value];
             DebugTools.Assert(_maxLights >= _maxShadowcastingLights);
         }
     }

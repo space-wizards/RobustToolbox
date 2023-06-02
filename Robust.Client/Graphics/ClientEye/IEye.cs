@@ -14,7 +14,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         /// Should the black FoV effect be drawn for this eye?
         /// </summary>
-        bool DrawFov { get; set; }
+        public bool DrawFov { get; set; }
 
         /// <summary>
         /// Current position of the center of the eye in the game world.
@@ -58,5 +58,17 @@ namespace Robust.Client.Graphics
         void GetViewMatrixInv(out Matrix3 viewMatrixInv, Vector2 renderScale);
 
         void GetViewMatrixNoOffset(out Matrix3 viewMatrix, Vector2 renderScale);
+
+        /// <summary>
+        /// How much we should brighten lights around the player. 1.0 is default brightness
+        /// </summary>
+        public float Exposure { get; set; }
+
+        /// <summary>
+        /// Renderer measurement of light intensity last frame. 0.1 is dark, 1.0 is extremely bright.
+        ///   Note that this is after exposure is applied, so adjusting exposure each frame to keep this around
+        ///   50-70% makes sense.
+        /// </summary>
+        float LastBrightness { get; set; }
     }
 }

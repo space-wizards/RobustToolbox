@@ -21,6 +21,9 @@ using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using Color = Robust.Shared.Maths.Color;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
+using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
+using PT = OpenToolkit.Graphics.OpenGL4.PixelType;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -365,8 +368,10 @@ namespace Robust.Client.Graphics.Clyde
             screenBufferHandle = new GLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
             ApplySampleParameters(new TextureSampleParameters() { Filter = false, WrapMode = TextureWrapMode.MirroredRepeat});
+            var format = new TextureFormat(PIF.Rgba, PF.Rgba, PT.UnsignedByte);
+
             // TODO: This is atrocious and broken and awful why did I merge this
-            ScreenBufferTexture = GenTexture(screenBufferHandle, (1920, 1080), true, null, TexturePixelType.Rgba32);
+            ScreenBufferTexture = GenTexture(screenBufferHandle, (1920, 1080), true, null, TexturePixelType.Rgba32, format);
         }
 
         private GLHandle MakeQuadVao()

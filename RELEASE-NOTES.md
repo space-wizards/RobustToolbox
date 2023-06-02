@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix exception if running the `>` command (remote execute) without even a space after it.
 
 ### Other
 

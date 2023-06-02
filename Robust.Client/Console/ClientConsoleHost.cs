@@ -312,7 +312,7 @@ namespace Robust.Client.Console
 
             public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                shell.RemoteExecuteCommand(argStr["> ".Length..]);
+                shell.RemoteExecuteCommand(argStr[">".Length..]);
             }
 
             public override async ValueTask<CompletionResult> GetCompletionAsync(

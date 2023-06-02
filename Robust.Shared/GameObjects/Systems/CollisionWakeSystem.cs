@@ -79,7 +79,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
         {
-            UpdateCanCollide(uid, component, (PhysicsComponent) args.OurBody);
+            UpdateCanCollide(uid, component, args.OurBody);
         }
 
         private void OnJointAdd(EntityUid uid, CollisionWakeComponent component, JointAddedEvent args)

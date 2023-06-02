@@ -308,7 +308,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 var active = _currentTab == i;
                 var box = active ? boxActive : boxInactive;
-                var boxAdvance = titleLength + box?.MinimumSize.X ?? 0;
+                var boxAdvance = titleLength + (box?.MinimumSize.X ?? 0);
 
                 if (headerOffset < relX && headerOffset + boxAdvance > relX)
                 {

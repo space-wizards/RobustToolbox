@@ -1,9 +1,49 @@
 ﻿using JetBrains.Annotations;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Graphics
 {
+    [DataDefinition]
+    public sealed class NightVision
+    {
+        [DataField("color"), ViewVariables(VVAccess.ReadWrite)] public Color Color = Color.White;
+        [DataField("range"), ViewVariables(VVAccess.ReadWrite)] public float Range = 0.5f;
+        [DataField("power"), ViewVariables(VVAccess.ReadWrite)] public float Power = 0.2f;
+        [DataField("minExposure"), ViewVariables(VVAccess.ReadWrite)] public float MinExposure = 2.0f;
+    }
+
+    public sealed class AutoExpose
+    {
+        [DataField("min"), ViewVariables(VVAccess.ReadWrite)]
+        public float Min = 0.8f;
+        [DataField("max"), ViewVariables(VVAccess.ReadWrite)]
+        public float Max = 4.0f;            // 12 is a good limit for quite reasonable nightvision.
+        [DataField("rampDown"), ViewVariables(VVAccess.ReadWrite)]
+        public float RampDown = 0.1f;
+        [DataField("rampDownNight"), ViewVariables(VVAccess.ReadWrite)]
+        public float RampDownNight = 0.5f; // Lose night vision quite fast
+        [DataField("rampUp"), ViewVariables(VVAccess.ReadWrite)]
+        public float RampUp = 0.025f;
+        [DataField("rampUpNight"), ViewVariables(VVAccess.ReadWrite)]
+        public float RampUpNight = 0.0015f; // As the eyes start straining, how fast do you adjust? (exposure / sec)
+
+        /// <summary>
+        /// How bright you want the lights to appear in the centre of the screen
+        /// </summary>
+        [DataField("goalBrightness"), ViewVariables(VVAccess.ReadWrite)]
+        public float GoalBrightness = 0.95f;
+
+        /// <summary>
+        /// Renderer measurement of light intensity last frame. 0.1 is dark, 1.0 is extremely bright.
+        ///   Note that this is after exposure is applied, so adjusting exposure each frame to keep this around
+        ///   50-70% makes sense.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadOnly)] public float LastBrightness = 1.0f;
+    }
+
     /// <summary>
     /// An Eye is a point through which the player can view the world.
     /// It's a 2D camera in other game dev lingo basically.
@@ -64,11 +104,7 @@ namespace Robust.Client.Graphics
         /// </summary>
         public float Exposure { get; set; }
 
-        /// <summary>
-        /// Renderer measurement of light intensity last frame. 0.1 is dark, 1.0 is extremely bright.
-        ///   Note that this is after exposure is applied, so adjusting exposure each frame to keep this around
-        ///   50-70% makes sense.
-        /// </summary>
-        float LastBrightness { get; set; }
+        public NightVision? Night { get; set; }
+        public AutoExpose? AutoExpose { get; set; }
     }
 }

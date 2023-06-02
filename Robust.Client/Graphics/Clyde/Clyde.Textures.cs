@@ -707,7 +707,6 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         fixed (float* p = rgba)
                         {
-
                             GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, width, height, 1, Format.pixFormat, Format.pixType, rgba.Length * sizeof(float), (IntPtr) p);
                         }
                     }
@@ -725,18 +724,28 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else // Assume unsigned byte
                 {
-                    // Span<byte> rgba = new byte[4];
-                    // // Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
-                    // unsafe
-                    // {
-                    //     fixed (byte* p = rgba)
-                    //     {
-                    //
-                    //         GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, 1, 1, 1, Format.pixFormat, Format.pixType, 4, (IntPtr) p);
-                    //     }
-                    // }
-                    // // int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
-                    return new Color();
+                    var stride = Format.pixFormat == PF.Rgb ? 3 : 4;
+                    Span<byte> rgba = new byte[stride * width * height];
+                    // Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
+                    unsafe
+                    {
+                        fixed (byte* p = rgba)
+                        {
+
+                            GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, width, height, 1, Format.pixFormat, Format.pixType, rgba.Length, (IntPtr) p);
+                        }
+                    }
+                    // int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
+                    var accum = new Color();
+                    for (int i = 0; i < rgba.Length; i+=stride)
+                    {
+                        accum.R += rgba[i + 0];
+                        accum.G += rgba[i + 1];
+                        accum.B += rgba[i + 2];
+                    }
+
+                    var divisor = (1.0f / (float)(width * height * 255.0f));
+                    return accum * new Color(divisor, divisor, divisor, divisor);
                 }
             }
         }

@@ -426,12 +426,13 @@ namespace Robust.Client.Graphics.Clyde
             var lastSoftness = float.NaN;
             Texture? lastMask = null;
 
-            if (eye.Exposure > 1.0f && count < _maxLights)
+            if (count < _maxLights && eye.Night != null && eye.Exposure > eye.Night.MinExposure )
             {
                 // Turn on a point light centred on the player
-                _lightsToRenderList[count++] = (new PointLight(energy:(eye.Exposure - 1.0f) * 0.02f, radius:3.0f * eye.Exposure, castShadows:false)
+                //   Rade it in as we increase our exposure > eye.Night.MinExposure
+                _lightsToRenderList[count++] = (new PointLight(energy:(eye.Exposure - eye.Night.MinExposure) * 0.02f * eye.Night.Power, radius:eye.Exposure * eye.Night.Range, castShadows:false)
                 {
-                    Color = new(200, 255, 150)
+                    Color = eye.Night.Color // new(200, 255, 150)
                 }, worldAABB.Center, 0.0f, 0.0f);
             }
 
@@ -810,45 +811,37 @@ namespace Robust.Client.Graphics.Clyde
 
         private void MeasureBrightness(Viewport viewport)
         {
-            var dims = viewport.LightRenderTarget.Size;
-
-            var midpoint = dims / 2;
-            var fraction = dims / 64;
-
-            // Midpoint of the screen and a box around the player
-            var centreSqColor = viewport.LightRenderTarget.Texture.MeasureBrightness(midpoint.X - fraction.X,
-                midpoint.Y - fraction.Y, fraction.X * 2, fraction.Y * 2);
-
-            var intensity = (centreSqColor.R + centreSqColor.G + centreSqColor.B) * 0.33f;
-
             if (viewport.Eye != null)
             {
-                viewport.Eye.LastBrightness = intensity;
-
-                // TODO: Move this calculation back to user code
-                // How much should we increase or decrease brightness as a ratio to land at 80% lighting?
-                var goalChange = Math.Clamp(1.2f / Math.Max(0.0001f, viewport.Eye.LastBrightness), 0.1f, 2.0f);
-                var goalExposure = viewport.Eye.Exposure * goalChange;
-                goalExposure = goalExposure * 0.8f + 0.2f; // Always slowly move back towards 1
-                if (goalChange < 1.0f)
+                if (viewport.Eye.AutoExpose == null)
                 {
-                    // quickly reduce exposure
-                    viewport.Eye.Exposure = (viewport.Eye.Exposure * 0.95f) + (goalExposure * 0.05f);
-                    // viewport.Eye.Exposure += goalExposure - viewport.Eye.Exposure;
+                    // This eye does not process autoexpose, so exit now.
+                    return;
                 }
-                else
-                {
-                    // slowly increase exposure
-                    viewport.Eye.Exposure = (viewport.Eye.Exposure * 0.99f) + (goalExposure * 0.01f);
-                    //viewport.Eye.Exposure += goalExposure - viewport.Eye.Exposure;
+                var dims = viewport.LightRenderTarget.Size;
 
+                // Sample a small square in the middle of the viewport
+                var midpoint = dims / 2;
+                var fraction = dims / 64;
+
+                // Midpoint of the screen and a box around the player.
+                // It's expensive to get textures back from the GPU but the results are worth it.
+                var centreSqColor = viewport.LightRenderTarget.Texture.MeasureBrightness(midpoint.X - fraction.X,
+                    midpoint.Y - fraction.Y, fraction.X * 2, fraction.Y * 2);
+
+                // When calculating intensity, count the red less because red doesn't bother human night vision, so why
+                //   not extend that into the game.
+                var intensity = centreSqColor.R * 0.2f + centreSqColor.G * 0.4f + centreSqColor.B * 0.4f;
+                if (!_hasGLFloatFramebuffers)
+                {
+                    // Measured intensity is going to cap out at 1.0 because without floats we have no overbrighten.
+                    //   So aim for a slightly darker fullbright.
+                    intensity *= 1.5f;
                 }
 
-                if (float.IsNaN(viewport.Eye.Exposure))
-                {
-                    viewport.Eye.Exposure = 1.0f;
-                }
-                viewport.Eye.Exposure = Math.Clamp(viewport.Eye.Exposure, 0.5f, 5.0f);
+                // User code can now use this to adjust exposure. See EyeExposureSystem.UpdateViewportExposure in
+                //   SS14 client code.
+                viewport.Eye.AutoExpose.LastBrightness = intensity;
             }
         }
 

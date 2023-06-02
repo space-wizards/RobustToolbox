@@ -1,5 +1,6 @@
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 #nullable enable
@@ -88,11 +89,14 @@ namespace Robust.Client.Graphics
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        public float Exposure { get; set; }
+        public float Exposure { get; set; } = 1.0f;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadOnly)]
         public float LastBrightness { get; set; }
+
+        [DataField("nightVision"), ViewVariables(VVAccess.ReadWrite)] public NightVision? Night { get; set; } = new();
+        [DataField("autoExpose"), ViewVariables(VVAccess.ReadWrite)] public AutoExpose? AutoExpose { get; set; } = new();
 
     }
 }

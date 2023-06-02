@@ -95,8 +95,9 @@ namespace Robust.Client.Graphics
         [ViewVariables(VVAccess.ReadOnly)]
         public float LastBrightness { get; set; }
 
-        [DataField("nightVision"), ViewVariables(VVAccess.ReadWrite)] public NightVision? Night { get; set; } = new();
-        [DataField("autoExpose"), ViewVariables(VVAccess.ReadWrite)] public AutoExpose? AutoExpose { get; set; } = new();
+        // These are to be set using EyeComponent itself
+        [ViewVariables(VVAccess.ReadWrite)] public NightVision? Night { get; set; } = new();
+        [ViewVariables(VVAccess.ReadWrite)] public AutoExpose? AutoExpose { get; set; } = new();
 
     }
 }

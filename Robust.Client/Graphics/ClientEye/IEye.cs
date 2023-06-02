@@ -15,6 +15,7 @@ namespace Robust.Client.Graphics
         [DataField("minExposure"), ViewVariables(VVAccess.ReadWrite)] public float MinExposure = 2.0f;
     }
 
+    [DataDefinition]
     public sealed class AutoExpose
     {
         [DataField("min"), ViewVariables(VVAccess.ReadWrite)]

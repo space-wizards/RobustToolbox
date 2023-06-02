@@ -369,6 +369,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 Bias = Bias,
                 Damping = Damping,
                 Stiffness = Stiffness,
+                _impulse = _impulse,
                 Breakpoint = Breakpoint
             };
             return weld;

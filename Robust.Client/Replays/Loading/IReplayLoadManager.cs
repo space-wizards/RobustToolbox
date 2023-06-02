@@ -19,7 +19,8 @@ public interface IReplayLoadManager
     public MappingDataNode? LoadYamlMetadata(IWritableDirProvider dir, ResPath path);
 
     /// <summary>
-    /// Async task that loads up a replay for playback.
+    /// Async task that loads up a replay for playback. Note that this will have some side effects, such as loading
+    /// networked resources and prototypes. These resources are not tracked or automatically unloaded.
     /// </summary>
     /// <remarks>
     /// This task is intended to be used with a <see cref="Job{T}"/> so that the loading can happen over several frame
@@ -34,7 +35,9 @@ public interface IReplayLoadManager
     Task<ReplayData> LoadReplayAsync(IWritableDirProvider dir, ResPath path, LoadReplayCallback callback);
 
     /// <summary>
-    /// Async task that loads the initial state of a replay, including spawning & initializing all entities.
+    /// Async task that loads the initial state of a replay, including spawning & initializing all entities. Note that
+    /// this will have some side effects, such as loading networked resources and prototypes. These resources are not
+    /// tracked or automatically unloaded.
     /// </summary>
     /// <remarks>
     /// This task is intended to be used with a <see cref="Job{T}"/> so that the loading can happen over several frame

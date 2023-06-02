@@ -31,6 +31,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Entity that this component is attached to.
         /// </summary>
+        /// <seealso cref="EntityQueryEnumerator{TComp1}"/>
         EntityUid Owner { get; }
 
         /// <summary>

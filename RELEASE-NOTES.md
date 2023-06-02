@@ -54,6 +54,45 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.124.0.0
+
+### Breaking changes
+
+* PreventCollideEvent changes to align it with the other physics events.
+
+
+## 0.123.1.1
+
+### Bugfixes
+
+* Also clone warmstarting data for joints in the physics solver.
+
+
+## 0.123.1.0
+
+### New features
+
+* Add Box2.Rounded(int digits) method.
+* Add Pure attributes to Box2 methods.
+
+
+## 0.123.0.0
+
+### New features
+
+* Added `ValueList.RemoveSwap()`
+* The Centroid property on polygon shapes is now available to content.
+
+### Bugfixes
+
+* Fixed keyboard events always propagating to the default viewport if `devwindow` is open.
+* Fixed some map-manager queries not properly using the `approx` argument.
+
+### Other
+
+* Several build/version cvars are now replicated to clients, instead of being server exclusive.
+
+
 ## 0.122.0.0
 
 ### Breaking changes

@@ -13,31 +13,31 @@ public struct PreventCollideEvent
     /// <summary>
     /// The entity that this event was directed at. Owner of <see cref="OurBody"/>
     /// </summary>
-    public EntityUid OurEntity;
+    public readonly EntityUid OurEntity;
 
     /// <summary>
     /// The other colliding entity. Owner of <see cref="OtherBody"/>
     /// </summary>
-    public EntityUid OtherEntity;
+    public readonly EntityUid OtherEntity;
 
     /// <summary>
     /// The body of the entity that this event was directed at.
     /// </summary>
-    public PhysicsComponent OurBody;
+    public readonly PhysicsComponent OurBody;
 
     /// <summary>
     /// The other body..
     /// </summary>
-    public PhysicsComponent OtherBody;
+    public readonly PhysicsComponent OtherBody;
     /// <summary>
     /// The fixture on the first body to prevent the collision of if specified.
     /// </summary>
-    public Fixture OurFixture;
+    public readonly Fixture OurFixture;
 
     /// <summary>
     /// The fixture on the other body to prevent the collision of if specified.
     /// </summary>
-    public Fixture OtherFixture;
+    public readonly Fixture OtherFixture;
 
     /// <summary>
     /// Whether or not to prevent the collision between the physics bodies.

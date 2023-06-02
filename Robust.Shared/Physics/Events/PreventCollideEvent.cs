@@ -11,35 +11,52 @@ namespace Robust.Shared.Physics.Events;
 public struct PreventCollideEvent
 {
     /// <summary>
-    /// One of the bodies to prevent the collision of.
+    /// The entity that this event was directed at. Owner of <see cref="OurBody"/>
     /// </summary>
-    public PhysicsComponent BodyA;
+    public EntityUid OurEntity;
 
     /// <summary>
-    /// The other body to prevent the collision of.
+    /// The other colliding entity. Owner of <see cref="OtherBody"/>
     /// </summary>
-    public PhysicsComponent BodyB;
+    public EntityUid OtherEntity;
 
+    /// <summary>
+    /// The body of the entity that this event was directed at.
+    /// </summary>
+    public PhysicsComponent OurBody;
+
+    /// <summary>
+    /// The other body..
+    /// </summary>
+    public PhysicsComponent OtherBody;
     /// <summary>
     /// The fixture on the first body to prevent the collision of if specified.
     /// </summary>
-    public Fixture FixtureA;
+    public Fixture OurFixture;
 
     /// <summary>
     /// The fixture on the other body to prevent the collision of if specified.
     /// </summary>
-    public Fixture FixtureB;
+    public Fixture OtherFixture;
 
     /// <summary>
     /// Whether or not to prevent the collision between the physics bodies.
     /// </summary>
     public bool Cancelled = false;
 
-    public PreventCollideEvent(PhysicsComponent ourBody, PhysicsComponent otherBody, Fixture ourFixture, Fixture otherFixture)
+    public PreventCollideEvent(
+        EntityUid ourEntity,
+        EntityUid otherEntity,
+        PhysicsComponent ourBody,
+        PhysicsComponent otherBody,
+        Fixture ourFixture,
+        Fixture otherFixture)
     {
-        BodyA = ourBody;
-        BodyB = otherBody;
-        FixtureA = ourFixture;
-        FixtureB = otherFixture;
+        OurEntity = ourEntity;
+        OtherEntity = otherEntity;
+        OurBody = ourBody;
+        OtherBody = otherBody;
+        OurFixture = ourFixture;
+        OtherFixture = otherFixture;
     }
 }

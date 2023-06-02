@@ -259,7 +259,7 @@ namespace Robust.Build.Tasks
                         var parameterlessCtor = classTypeDefinition.GetConstructors()
                             .FirstOrDefault(c => c.IsPublic && !c.IsStatic && !c.HasParameters);
 
-                        if (compiledBuildMethod != null && parameterlessCtor != null)
+                        if (compiledBuildMethod != null || parameterlessCtor != null)
                         {
                             var i = loaderDispatcherMethod.Body.Instructions;
                             var nop = Instruction.Create(OpCodes.Nop);

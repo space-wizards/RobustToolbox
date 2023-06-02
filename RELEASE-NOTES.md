@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.124.0.0
+
+### Breaking changes
+
+* PreventCollideEvent changes to align it with the other physics events.
+
+
 ## 0.123.1.1
 
 ### Bugfixes

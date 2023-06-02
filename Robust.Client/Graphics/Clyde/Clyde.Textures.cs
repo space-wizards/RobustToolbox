@@ -690,6 +690,55 @@ namespace Robust.Client.Graphics.Clyde
                     return new Color(rgba[0], rgba[1], rgba[2], rgba[3]);
                 }
             }
+
+            public Color MeasureBrightness(int x, int y, int width, int height)
+            {
+                if (!_clyde._loadedTextures.TryGetValue(TextureId, out var loaded))
+                {
+                    throw new DataException("Texture not found");
+                }
+
+                if (Format.pixType == PT.Float)
+                {
+                    var stride = Format.pixFormat == PF.Rgb ? 3 : 4;
+                    Span<float> rgba = new float[stride * width * height];
+                    // Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
+                    unsafe
+                    {
+                        fixed (float* p = rgba)
+                        {
+
+                            GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, width, height, 1, Format.pixFormat, Format.pixType, rgba.Length * sizeof(float), (IntPtr) p);
+                        }
+                    }
+                    // int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
+                    var accum = new Color();
+                    for (int i = 0; i < rgba.Length; i+=stride)
+                    {
+                        accum.R += rgba[i + 0];
+                        accum.G += rgba[i + 1];
+                        accum.B += rgba[i + 2];
+                    }
+
+                    var divisor = (1.0f / (float)(width * height));
+                    return accum * new Color(divisor, divisor, divisor, divisor);
+                }
+                else // Assume unsigned byte
+                {
+                    // Span<byte> rgba = new byte[4];
+                    // // Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
+                    // unsafe
+                    // {
+                    //     fixed (byte* p = rgba)
+                    //     {
+                    //
+                    //         GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, 1, 1, 1, Format.pixFormat, Format.pixType, 4, (IntPtr) p);
+                    //     }
+                    // }
+                    // // int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
+                    return new Color();
+                }
+            }
         }
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)

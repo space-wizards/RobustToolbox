@@ -546,6 +546,11 @@ namespace Robust.Client.Graphics.Clyde
                     RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
                 }
 
+                using (_prof.Group("MeasureBrightness"))
+                {
+                    MeasureBrightness(viewport);
+                }
+
                 _currentViewport = oldVp;
             }, viewport.ClearColor);
         }

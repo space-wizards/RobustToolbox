@@ -528,11 +528,6 @@ namespace Robust.Client.Graphics.Clyde
                 MergeWallLayer(viewport);
             }
 
-            using (_prof.Group("MeasureBrightness"))
-            {
-                MeasureBrightness(viewport);
-            }
-
             BindRenderTargetFull(viewport.RenderTarget);
             GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
             CheckGlError();
@@ -816,29 +811,19 @@ namespace Robust.Client.Graphics.Clyde
         private void MeasureBrightness(Viewport viewport)
         {
             var dims = viewport.LightRenderTarget.Size;
-            var midpoint = dims / 2;
-            var fraction = dims / 30;
-            // Midpoint of the screen and a box around the player
-            var posWeight = new[]{((midpoint.X, midpoint.Y), 5.0f),
-                ((midpoint.X - fraction.X, midpoint.Y - fraction.Y), 1.0f),
-                ((midpoint.X + fraction.X, midpoint.Y - fraction.Y), 1.0f),
-                ((midpoint.X - fraction.X, midpoint.Y + fraction.Y), 1.0f),
-                ((midpoint.X + fraction.X, midpoint.Y + fraction.Y), 1.0f)};
 
-            var totWeight = 0.0f;
-            var totIntensity = 0.0f;
-            foreach (((var x, var y), var weight) in posWeight)
-            {
-                // TODO: Texture format (probably float) needs to be taken into account here:
-                var brightness = viewport.LightRenderTarget.Texture.GetPixel(x, y);
-                var intensity = (brightness.R + brightness.G + brightness.B) * 0.33f;
-                totIntensity += intensity * weight;
-                totWeight += weight;
-            }
+            var midpoint = dims / 2;
+            var fraction = dims / 64;
+
+            // Midpoint of the screen and a box around the player
+            var centreSqColor = viewport.LightRenderTarget.Texture.MeasureBrightness(midpoint.X - fraction.X,
+                midpoint.Y - fraction.Y, fraction.X * 2, fraction.Y * 2);
+
+            var intensity = (centreSqColor.R + centreSqColor.G + centreSqColor.B) * 0.33f;
 
             if (viewport.Eye != null)
             {
-                viewport.Eye.LastBrightness = totIntensity / totWeight;
+                viewport.Eye.LastBrightness = intensity;
 
                 // TODO: Move this calculation back to user code
                 // How much should we increase or decrease brightness as a ratio to land at 80% lighting?

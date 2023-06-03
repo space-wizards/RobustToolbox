@@ -39,7 +39,8 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `CompletionHelper.ContentDirPath()`.
+* Added `vfs_ls` command to list VFS contents.
 
 ### Bugfixes
 

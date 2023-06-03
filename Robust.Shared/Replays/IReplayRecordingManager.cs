@@ -54,6 +54,7 @@ public interface IReplayRecordingManager
 
     // Yaml keys
     public const string Hash = "typeHash";
+    public const string CompHash = "componentHash";
     public const string Strings = "stringHash";
     public const string Time = "time";
     public const string Name = "name";

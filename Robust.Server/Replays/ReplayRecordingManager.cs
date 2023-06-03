@@ -36,7 +36,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     [Dependency] private readonly IRobustSerializer _seri = default!;
     [Dependency] private readonly IPlayerManager _playerMan = default!;
     [Dependency] private readonly IEntitySystemManager _sysMan = default!;
-    [Dependency] private readonly IResourceManager _resourceManager = default!;
+    [Dependency] private readonly IComponentFactory _factory = default!;
     [Dependency] private readonly INetConfigurationManager _netConf = default!;
 
     private ISawmill _sawmill = default!;
@@ -275,6 +275,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
             // Hash data
             _yamlMetadata[Hash] = new ValueDataNode(Convert.ToHexString(_seri.GetSerializableTypesHash()));
             _yamlMetadata[Strings] = new ValueDataNode(Convert.ToHexString(stringHash));
+            _yamlMetadata[CompHash] = new ValueDataNode(Convert.ToHexString(_factory.GetHash(true)));
 
             // Time data
             var timeBase = _timing.TimeBase;

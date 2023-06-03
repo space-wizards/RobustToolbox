@@ -44,6 +44,10 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix exception if running the `>` command (remote execute) without even a space after it.
+* `ResPath.RelativeTo()` now considers non-rooted paths relative to `.`.
+  * This fixes some things like `MemoryContentRoot`'s `FindFiles()` implementation.
+* Fix `IContentRoot.GetEntries()` default implementation (used by all content roots except `DirLoader`) not working at all.
+* Made `ResourceManager.ContentGetDirectoryEntries()` report content root mount paths as directories.
 
 ### Other
 
@@ -51,7 +55,8 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Made `ConfigurationManager` not-abstract anymore so we can instantiate it from tests.
+* Added new tests for `ResourceManager`.
 
 
 ## 0.124.0.0

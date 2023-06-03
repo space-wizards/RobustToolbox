@@ -556,22 +556,25 @@ namespace Robust.Client.Graphics.Clyde
             if (count >= state.clyde._maxLights)
                 return false;
 
-            var powerMul = Math.Min(state.exposure, 1.2f + state.exposure * 0.05f);
-            var rangeMul = state.exposure * 0.5f + 0.5f;
-
             var (light_comp, transform) = value;
+
+            var powerMul = Math.Min(state.exposure, 1.2f + state.exposure * 0.05f);
+            var rangeMul = state.exposure * 0.2f + 0.8f;
+
+            // Create a simplified light from the component then scale power & range using the exposure.
+            var light = new PointLight(light_comp);
+            // Lights that have a radius beyond a certian limit create popping artifacts. Prevent those here.
+            light.Radius = Math.Min(40.0f, light.Radius * rangeMul);
+            light.Energy *= powerMul;
+
             var (lightPos, rot) = state.xformSystem.GetWorldPositionRotation(transform, state.xforms);
             lightPos += rot.RotateVec(light_comp.Offset);
-            var circle = new Circle(lightPos, light_comp.Radius * rangeMul);
+            var circle = new Circle(lightPos, light.Radius);
 
             // If the light doesn't touch anywhere the camera can see, it doesn't matter.
             // The tree query is not fully accurate because the viewport may be rotated relative to a grid.
             if (!circle.Intersects(state.worldAABB))
                 return true;
-
-            var light = new PointLight(light_comp);
-            light.Radius *= rangeMul;
-            light.Energy *= powerMul;
 
             // If the light is a shadow casting light, keep a separate track of that
             if (light.CastShadows)

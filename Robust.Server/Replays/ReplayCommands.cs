@@ -11,13 +11,15 @@ internal sealed class ReplayStartCommand : LocalizedCommands
     [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
     [Dependency] private readonly IResourceManager _resMan = default!;
 
-    public override string Command => "replaystart";
+    public override string Command => "replay_recording_start";
+    public override string Description => LocalizationManager.GetString($"cmd-replay-recording-start-desc");
+    public override string Help => LocalizationManager.GetString($"cmd-replay-recording-start-help");
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (_replay.Recording)
         {
-            shell.WriteLine(Loc.GetString("cmd-replaystart-already-recording"));
+            shell.WriteLine(Loc.GetString("cmd-replay-recording-start-already-recording"));
             return;
         }
 
@@ -45,21 +47,21 @@ internal sealed class ReplayStartCommand : LocalizedCommands
         }
 
         if (_replay.TryStartRecording(_resMan.UserData, dir, overwrite, duration))
-            shell.WriteLine(Loc.GetString("cmd-replaystart-success"));
+            shell.WriteLine(Loc.GetString("cmd-replay-recording-start-success"));
         else
-            shell.WriteLine(Loc.GetString("cmd-replaystart-error"));
+            shell.WriteLine(Loc.GetString("cmd-replay-recording-start-error"));
     }
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
-            return CompletionResult.FromHint(Loc.GetString("cmd-replaystart-hint-time"));
+            return CompletionResult.FromHint(Loc.GetString("cmd-replay-recording-start-hint-time"));
 
         if (args.Length == 2)
-            return CompletionResult.FromHint(Loc.GetString("cmd-replaystart-hint-name"));
+            return CompletionResult.FromHint(Loc.GetString("cmd-replay-recording-start-hint-name"));
 
         if (args.Length == 3)
-            return CompletionResult.FromHint(Loc.GetString("cmd-replaystart-hint-overwrite"));
+            return CompletionResult.FromHint(Loc.GetString("cmd-replay-recording-start-hint-overwrite"));
 
         return CompletionResult.Empty;
     }
@@ -69,17 +71,19 @@ internal sealed class ReplayStopCommand : LocalizedCommands
 {
     [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
 
-    public override string Command => "replaystop";
+    public override string Command => "replay_recording_stop";
+    public override string Description => LocalizationManager.GetString($"cmd-replay-recording-stop-desc");
+    public override string Help => LocalizationManager.GetString($"cmd-replay-recording-stop-help");
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (_replay.Recording)
         {
             _replay.StopRecording();
-            shell.WriteLine(Loc.GetString("cmd-replaystop-success"));
+            shell.WriteLine(Loc.GetString("cmd-replay-recording-stop-success"));
         }
         else
-            shell.WriteLine(Loc.GetString("cmd-replaystop-not-recording"));
+            shell.WriteLine(Loc.GetString("cmd-replay-recording-stop-not-recording"));
     }
 }
 
@@ -87,16 +91,21 @@ internal sealed class ReplayStatsCommand : LocalizedCommands
 {
     [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
 
-    public override string Command => "replaystats";
+    public override string Command => "replay_recording_stats";
+    public override string Description => LocalizationManager.GetString($"cmd-replay-recording-stats-desc");
+    public override string Help => LocalizationManager.GetString($"cmd-replay-recording-stats-help");
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (_replay.Recording)
         {
             var (time, tick, size, _) = _replay.GetReplayStats();
-            shell.WriteLine(Loc.GetString("cmd-replaystats-result", ("time", time.ToString("F1")), ("ticks", tick), ("size", size.ToString("F1")), ("rate", (size/time).ToString("F2"))));
+            shell.WriteLine(Loc.GetString("cmd-replay-recording-stats-result",
+                ("time", time.ToString("F1")),
+                ("ticks", tick), ("size", size.ToString("F1")),
+                ("rate", (size/time).ToString("F2"))));
         }
         else
-            shell.WriteLine(Loc.GetString("cmd-replaystop-error"));
+            shell.WriteLine(Loc.GetString("cmd-replay-recording-stats-error"));
     }
 }

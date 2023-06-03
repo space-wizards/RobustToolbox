@@ -11,6 +11,9 @@ cmd-parse-failure-uid = {$arg} is not a valid entity UID.
 cmd-parse-failure-mapid = {$arg} is not a valid MapId.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 
+cmd-error-file-not-found = Could not find file: {$file}.
+cmd-error-dir-not-found = Could not find directory: {$dir}.
+
 cmd-failure-no-attached-entity = There is no entity attached to this shell.
 
 ## 'help' command
@@ -533,24 +536,6 @@ cmd-vv-help = Usage: vv <path|entity ID|guihover>
 
 cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
 cmd-vvinvoke-help = Usage: vvinvoke <path> [arguments...]
-
-cmd-replaystart-desc = Starts a replay recording, optionally with some time limit.
-cmd-replaystart-help = Usage: replaystart [time limit (minutes)] [path] [overwrite bool]
-cmd-replaystart-success = Started recording a replay.
-cmd-replaystart-already-recording = Already recording a replay.
-cmd-replaystart-error = An error occurred while trying to start the recording.
-cmd-replaystart-hint-time = [optional time limit (minutes)]
-cmd-replaystart-hint-name = [optional path]
-cmd-replaystart-hint-overwrite = [overwrite path (bool)]
-
-cmd-replaystop-desc = Stops a replay recording.
-cmd-replaystop-help = Usage: replaystop
-cmd-replaystop-success = Stopped recording a replay.
-cmd-replaystop-not-recording = Not currently recording a replay.
-
-cmd-replaystats-desc = Displays information about the current replay recording.
-cmd-replaystats-help = Usage: replaystats
-cmd-replaystats-result = Duration: {$time} min, Ticks: {$ticks}, Size: {$size} mb, rate: {$rate} mb/min.
 
 cmd-dump_dependency_injectors-desc = Dump IoCManager's dependency injector cache.
 cmd-dump_dependency_injectors-help = Usage: dump_dependency_injectors

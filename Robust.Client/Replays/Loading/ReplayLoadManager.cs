@@ -1,4 +1,5 @@
 using Robust.Client.GameStates;
+using Robust.Client.Replays.Playback;
 using Robust.Client.Serialization;
 using Robust.Client.Timing;
 using Robust.Client.Upload;
@@ -15,6 +16,7 @@ namespace Robust.Client.Replays.Loading;
 
 public sealed partial class ReplayLoadManager : IReplayLoadManager
 {
+    [Dependency] private readonly IBaseClient _client = default!;
     [Dependency] private readonly IEntityManager _entMan = default!;
     [Dependency] private readonly IClientGameTiming _timing = default!;
     [Dependency] private readonly IClientNetManager _netMan = default!;
@@ -25,6 +27,7 @@ public sealed partial class ReplayLoadManager : IReplayLoadManager
     [Dependency] private readonly NetworkResourceManager _netResMan = default!;
     [Dependency] private readonly IClientGameStateManager _gameState = default!;
     [Dependency] private readonly IClientRobustSerializer _serializer = default!;
+    [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
 
     private ushort _metaId;
     private bool _initialized;

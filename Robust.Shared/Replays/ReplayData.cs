@@ -23,6 +23,15 @@ public sealed class ReplayData
     public readonly List<ReplayMessage> Messages;
 
     /// <summary>
+    /// Replay recording time for each corresponding entry in <see cref="States"/>. Starts at 0.
+    /// </summary>
+    /// <remarks>
+    /// This array exists mainly because the tickrate may change throughout a replay, so this makes it significantly
+    /// easier to jump to some specific point in time.
+    /// </remarks>
+    public readonly TimeSpan[] ReplayTime;
+
+    /// <summary>
     /// The first tick in this recording.
     /// </summary>
     public readonly GameTick TickOffset;
@@ -46,15 +55,19 @@ public sealed class ReplayData
     /// This indexes the <see cref="States"/> and <see cref="Messages"/> lists. It is basically the "current tick"
     /// but without the <see cref="TickOffset"/> .
     /// </summary>
-    public int CurrentIndex;
+    /// <remarks>
+    /// A negative value implies that the initial replay state has not yet been loaded (e.g., setting up cvars).
+    /// </remarks>
+    public int CurrentIndex { get; internal set; } = -1;
 
-    public GameTick LastApplied;
-
+    public GameTick LastApplied { get; internal set; }
 
     public GameTick CurTick => new GameTick((uint) CurrentIndex + TickOffset.Value);
     public GameState CurState => States[CurrentIndex];
     public GameState? NextState => CurrentIndex + 1 < States.Count ? States[CurrentIndex + 1] : null;
     public ReplayMessage CurMessages => Messages[CurrentIndex];
+
+    public TimeSpan CurrentReplayTime => ReplayTime[CurrentIndex];
 
     /// <summary>
     /// The initial set of messages that were added to the recording before any tick was ever recorded. This might
@@ -64,6 +77,7 @@ public sealed class ReplayData
 
     public ReplayData(List<GameState> states,
         List<ReplayMessage> messages,
+        TimeSpan[] replayTime,
         GameTick tickOffset,
         TimeSpan startTime,
         TimeSpan duration,
@@ -72,6 +86,7 @@ public sealed class ReplayData
     {
         States = states;
         Messages = messages;
+        ReplayTime = replayTime;
         TickOffset = tickOffset;
         StartTime = startTime;
         Duration = duration;
@@ -79,7 +94,6 @@ public sealed class ReplayData
         InitialMessages = initData;
     }
 }
-
 
 /// <summary>
 /// Checkpoints are full game states that make it faster to jump around in time. I.e., instead of having to apply 1000

@@ -41,6 +41,7 @@ END TEMPLATE-->
 
 * Added `CompletionHelper.ContentDirPath()`.
 * Added `vfs_ls` command to list VFS contents.
+* The resource manifest (`manifest.yml`) now accepts a `clientAssemblies` key. When given, only the assembly names listed will be loaded from `/Assemblies/` rather than automatically loading all assemblies found.
 
 ### Bugfixes
 

@@ -106,6 +106,6 @@ internal sealed class ReplayStatsCommand : LocalizedCommands
                 ("rate", (size/time).ToString("F2"))));
         }
         else
-            shell.WriteLine(Loc.GetString("cmd-replay-recording-stats-error"));
+            shell.WriteLine(Loc.GetString("cmd-replay-recording-stop-not-recording"));
     }
 }

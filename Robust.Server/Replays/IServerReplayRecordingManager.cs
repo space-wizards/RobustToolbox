@@ -10,7 +10,7 @@ public interface IServerReplayRecordingManager : IReplayRecordingManager
     /// <summary>
     ///     Starts recording a replay.
     /// </summary>
-    /// <param name="path">
+    /// <param name="name">
     /// The folder where the replay will be stored. This will be some folder within  <see cref="CVars.ReplayDirectory"/>.
     /// If not provided, will default to using the current time.
     /// </param>
@@ -21,7 +21,7 @@ public interface IServerReplayRecordingManager : IReplayRecordingManager
     /// Optional time limit for the recording.
     /// </param>
     /// <returns>Returns true if the recording was successfully started.</returns>
-    bool TryStartRecording(IWritableDirProvider directory, string? path = null, bool overwrite = false, TimeSpan? duration = null);
+    bool TryStartRecording(IWritableDirProvider directory, string? name = null, bool overwrite = false, TimeSpan? duration = null);
 
     void StopRecording();
 

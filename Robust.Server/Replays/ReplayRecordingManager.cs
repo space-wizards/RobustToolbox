@@ -106,19 +106,20 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     }
 
     /// <inheritdoc/>
-    public bool TryStartRecording(IWritableDirProvider directory, string? path = null, bool overwrite = false, TimeSpan? duration = null)
+    public bool TryStartRecording(IWritableDirProvider directory, string? name = null, bool overwrite = false, TimeSpan? duration = null)
     {
         if (!_enabled || _curStream != null)
             return false;
 
         ResPath subDir;
-        if (path == null)
+        if (name == null)
         {
-            subDir = new ResPath(DateTime.UtcNow.ToString(DefaultReplayNameFormat));
+            name = DateTime.UtcNow.ToString(DefaultReplayNameFormat);
+            subDir = new ResPath(name);
         }
         else
         {
-            subDir = new ResPath(path).Clean();
+            subDir = new ResPath(name).Clean();
             if (subDir == ResPath.Root || subDir == ResPath.Empty || subDir == ResPath.Self)
                 subDir = new ResPath(DateTime.UtcNow.ToString(DefaultReplayNameFormat));
         }
@@ -149,7 +150,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
 
         try
         {
-            WriteInitialMetadata();
+            WriteInitialMetadata(name);
         }
         catch
         {
@@ -252,7 +253,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     /// <summary>
     ///     Write general replay data required to read the rest of the replay. We write this at the beginning rather than at the end on the off-chance that something goes wrong along the way and the recording is incomplete.
     /// </summary>
-    private void WriteInitialMetadata()
+    private void WriteInitialMetadata(string name)
     {
         if (_directory is not var (dir, path))
             return;
@@ -264,6 +265,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
         {
             _yamlMetadata = new MappingDataNode();
             _yamlMetadata[Time] = new ValueDataNode(DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
+            _yamlMetadata[Name] = new ValueDataNode(name);
 
             // version info
             _yamlMetadata[Engine] = new ValueDataNode(_netConf.GetCVar(CVars.BuildEngineVersion));

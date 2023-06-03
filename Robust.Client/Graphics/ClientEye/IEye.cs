@@ -2,6 +2,7 @@
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Graphics
@@ -9,7 +10,7 @@ namespace Robust.Client.Graphics
     [DataDefinition]
     public sealed class NightVision
     {
-        [DataField("color"), ViewVariables(VVAccess.ReadWrite)] public Color Color = Color.White;
+        [DataField("color", customTypeSerializer:typeof(ColorSerializer)), ViewVariables(VVAccess.ReadWrite)] public Color Color = Color.White;
         [DataField("range"), ViewVariables(VVAccess.ReadWrite)] public float Range = 0.5f;
         [DataField("power"), ViewVariables(VVAccess.ReadWrite)] public float Power = 0.2f;
         [DataField("minExposure"), ViewVariables(VVAccess.ReadWrite)] public float MinExposure = 2.0f;
@@ -30,6 +31,9 @@ namespace Robust.Client.Graphics
         public float RampUp = 0.025f;
         [DataField("rampUpNight"), ViewVariables(VVAccess.ReadWrite)]
         public float RampUpNight = 0.0015f; // As the eyes start straining, how fast do you adjust? (exposure / sec)
+
+        [DataField("reduction"), ViewVariables(VVAccess.ReadWrite)]
+        public float Reduction = 0.0f; // If you put on sunglasses, increase this (and decrease exposure the same)
 
         /// <summary>
         /// How bright you want the lights to appear in the centre of the screen

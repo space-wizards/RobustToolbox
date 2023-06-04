@@ -121,6 +121,12 @@ namespace Robust.Client.UserInterface.Controls
                     desiredSize.X += child.DesiredSize.X;
                     desiredSize.Y = Math.Max(desiredSize.Y, child.DesiredSize.Y);
                 }
+
+                // TODO Maybe make BoxContainer.MeasureOverride more rigorous.
+                // This should check if size < desired size. If it is, treat child as non-stretching (see the code in
+                // ArrangeOverride). This requires remeasuring all stretching controls + the control that just became
+                // non-stretching. But the re-measured controls might then become smaller (e.g. rich text wrapping),
+                // leading to a recursion problem.
             }
 
             return desiredSize;

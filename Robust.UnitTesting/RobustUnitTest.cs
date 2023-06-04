@@ -177,6 +177,16 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<JointComponent>();
             }
 
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(GridTreeComponent)))
+            {
+                compFactory.RegisterClass<GridTreeComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(MovedGridsComponent)))
+            {
+                compFactory.RegisterClass<MovedGridsComponent>();
+            }
+
             if (!compFactory.AllRegisteredTypes.Contains(typeof(JointRelayTargetComponent)))
             {
                 compFactory.RegisterClass<JointRelayTargetComponent>();

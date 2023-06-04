@@ -568,7 +568,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Increase light proportional to exposure.
             var powerMul = state.exposure; // Math.Min(state.exposure, 1.2f + state.exposure * 0.05f);
-            var rangeMul = (float)Math.Sqrt(powerMul);
+            var rangeMul = (float)Math.Sqrt(powerMul * 2.0);
 
             // Create a simplified light from the component then scale power & range using the exposure.
             var light = new PointLight(light_comp);

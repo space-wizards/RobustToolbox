@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 0.124.0.1
+
+### New features
+
 * Added `CompletionHelper.ContentDirPath()`.
 * Added `vfs_ls` command to list VFS contents.
 * The resource manifest (`manifest.yml`) now accepts a `clientAssemblies` key. When given, only the assembly names listed will be loaded from `/Assemblies/` rather than automatically loading all assemblies found.
@@ -50,10 +69,6 @@ END TEMPLATE-->
   * This fixes some things like `MemoryContentRoot`'s `FindFiles()` implementation.
 * Fix `IContentRoot.GetEntries()` default implementation (used by all content roots except `DirLoader`) not working at all.
 * Made `ResourceManager.ContentGetDirectoryEntries()` report content root mount paths as directories.
-
-### Other
-
-*None yet*
 
 ### Internal
 

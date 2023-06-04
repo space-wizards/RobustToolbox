@@ -31,15 +31,14 @@ internal partial class MapManager
         var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var xformSystem = EntityManager.System<SharedTransformSystem>();
-        var state = (worldAABB, gridTree, callback, approx, physicsQuery, xformQuery, xformSystem);
+        var state = (worldAABB, gridTree.Tree, callback, approx, physicsQuery, xformQuery, xformSystem);
 
         gridTree.Tree.Query(ref state,
             static (ref (Box2 worldAABB,
                     B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> gridTree,
                     GridCallback callback,
                     bool approx,
-                    EntityQuery<PhysicsComponent> physicsQuery,
-                    EntityQuery<TransformComponent> xformQuery,
+                    EntityQuery<PhysicsComponent> physicsQuery, EntityQuery<TransformComponent> xformQuery,
                     SharedTransformSystem xformSystem) tuple,
                 DynamicTree.Proxy proxy) =>
             {
@@ -72,7 +71,7 @@ internal partial class MapManager
         var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var xformSystem = EntityManager.System<SharedTransformSystem>();
-        var state2 = (state, worldAABB, gridTree, callback, approx, physicsQuery, xformQuery, xformSystem);
+        var state2 = (state, worldAABB, gridTree.Tree, callback, approx, physicsQuery, xformQuery, xformSystem);
 
         gridTree.Tree.Query(ref state2, static (ref (
                 TState state,

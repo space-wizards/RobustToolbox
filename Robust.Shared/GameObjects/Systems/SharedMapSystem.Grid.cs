@@ -123,15 +123,23 @@ public abstract partial class SharedMapSystem
         SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
     }
 
-    public void OnGridBoundsChange(EntityUid uid, MapGridComponent grid)
+    public void OnGridBoundsChange(EntityUid uid, MapGridComponent component)
     {
         // Just MapLoader things.
-        if (grid.MapProxy == DynamicTree.Proxy.Free) return;
+        if (component.MapProxy == DynamicTree.Proxy.Free) return;
 
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
-        var aabb = GetWorldAABB(uid, grid, xform);
-        _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
-        _movedGrids[xform.MapID].Add(uid);
+        var aabb = GetWorldAABB(uid, component, xform);
+
+        if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
+        {
+            gridTree.Tree.MoveProxy(component.MapProxy, in aabb, Vector2.Zero);
+        }
+
+        if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
+        {
+            movedGrids.MovedGrids.Add(uid);
+        }
     }
 
     private void OnGridMove(EntityUid uid, MapGridComponent component, ref MoveEvent args)
@@ -147,8 +155,16 @@ public abstract partial class SharedMapSystem
 
         var xform = args.Component;
         var aabb = GetWorldAABB(uid, component, xform);
-        _gridTrees[xform.MapID].MoveProxy(component.MapProxy, in aabb, Vector2.Zero);
-        _movedGrids[xform.MapID].Add(uid);
+
+        if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
+        {
+            gridTree.Tree.MoveProxy(component.MapProxy, in aabb, Vector2.Zero);
+        }
+
+        if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
+        {
+            movedGrids.MovedGrids.Add(uid);
+        }
     }
 
     private void OnParentChange(EntityUid uid, MapGridComponent component, ref MoveEvent args)
@@ -162,25 +178,26 @@ public abstract partial class SharedMapSystem
         // Want gridinit to handle this hence specialcase those situations.
         // oh boy oh boy, its even worse now.
         // transform now raises parent change events on startup, because container code is a POS.
-        if (lifestage < EntityLifeStage.Initialized || args.Transform.LifeStage == ComponentLifeStage.Starting)
+        if (lifestage < EntityLifeStage.Initialized || args.Component.LifeStage == ComponentLifeStage.Starting)
             return;
 
         // Make sure we cleanup old map for moved grid stuff.
-        var mapId = args.Transform.MapID;
+        var mapId = args.Component.MapID;
+        var oldMap = args.OldPosition.ToMap(EntityManager, _transform);
 
         // y'all need jesus
-        if (args.OldMapId == mapId) return;
+        if (oldMap.MapId == mapId) return;
 
-        if (component.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(args.OldMapId, out var oldMovedGrids))
+        if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(oldMap.MapId), out var oldMovedGrids))
         {
-            oldMovedGrids.Remove(uid);
+            oldMovedGrids.MovedGrids.Remove(uid);
             RemoveGrid(uid, component, args.OldMapId);
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
-        if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))
+        if (TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(mapId), out var newMovedGrids))
         {
-            newMovedGrids.Add(uid);
+            newMovedGrids.MovedGrids.Add(uid);
             AddGrid(uid, component, mapId);
         }
     }
@@ -378,12 +395,19 @@ public abstract partial class SharedMapSystem
 
         if (!HasComp<MapComponent>(uid))
         {
-            var aabb = GetGridAABB(uid, grid);
-            var proxy = _gridTrees[mapId].CreateProxy(in aabb, (uid, grid));
-            DebugTools.Assert(grid.MapProxy == DynamicTree.Proxy.Free);
-            grid.MapProxy = proxy;
+            var aabb = GetWorldAABB(uid, component);
 
-            _movedGrids[mapId].Add(uid);
+            if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
+            {
+                var proxy = gridTree.Tree.CreateProxy(in aabb, (uid, component));
+                DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
+                component.MapProxy = proxy;
+            }
+
+            if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
+            {
+                movedGrids.MovedGrids.Add(uid);
+            }
         }
 
         var msg = new GridInitializeEvent(uid);
@@ -423,7 +447,7 @@ public abstract partial class SharedMapSystem
         MapManager.DeleteGrid(uid);
     }
 
-    private Box2 GetGridAABB(EntityUid uid, MapGridComponent grid, TransformComponent? xform = null)
+    private Box2 GetWorldAABB(EntityUid uid, MapGridComponent grid, TransformComponent? xform = null)
     {
         if (!Resolve(uid, ref xform))
             return new Box2();

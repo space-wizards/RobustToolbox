@@ -16,5 +16,14 @@ void main()
 
     lowp vec3 lightSample = texture2D(lightMap, Pos).rgb;
 
-    gl_FragColor = zAdjustResult(COLOR * VtxModulate * vec4(lightSample, 1.0));
+    // Whiten everything (even black source pixels) as lighting becomes too intense.
+    vec3 overBrightC = max(vec3(0.0), lightSample - vec3(1.3));
+    // Calculate a bright to white effect for strong lights
+    float overBright = sqrt((overBrightC.r + overBrightC.g + overBrightC.b) * 0.33);
+    vec3 bloomColor = min(vec3(1.0), vec3(0.002) * overBright + lightSample * overBright * 0.01);
+    // Add the white component to a slight colored component.
+    vec4 bloom = vec4(vec3(bloomColor), 0.0);
+    // bloom = vec4(1.0);
+
+    gl_FragColor = zAdjustResult(COLOR * VtxModulate * vec4(lightSample, 1.0) + bloom);
 }

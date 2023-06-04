@@ -45,6 +45,7 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeHandle _fovLightShaderHandle;
         private ClydeHandle _wallBleedBlurShaderHandle;
         private ClydeHandle _lightBlurShaderHandle;
+        private ClydeHandle _lightLimitShaderHandle;
         private ClydeHandle _mergeWallLayerShaderHandle;
 
         // Sampler used to sample the FovTexture with linear filtering, used in the lighting FOV pass
@@ -206,6 +207,8 @@ namespace Robust.Client.Graphics.Clyde
             _fovLightShaderHandle = LoadShaderHandle("/Shaders/Internal/fov-lighting.swsl");
             _wallBleedBlurShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-bleed-blur.swsl");
             _lightBlurShaderHandle = LoadShaderHandle("/Shaders/Internal/light-blur.swsl");
+            _lightLimitShaderHandle = LoadShaderHandle("/Shaders/Internal/light-limit.swsl");
+
             _mergeWallLayerShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-merge.swsl");
         }
 
@@ -519,6 +522,11 @@ namespace Robust.Client.Graphics.Clyde
             if (_cfg.GetCVar(CVars.LightBlur))
                 BlurLights(viewport, eye);
 
+            // Float light buffers can handle >1.0 brightness, but it needs cooling off
+            // or it is overpowering.
+            if (_hasGLFloatFramebuffers)
+                LimitLights(viewport, eye);
+
             using (_prof.Group("BlurOntoWalls"))
             {
                 BlurOntoWalls(viewport, eye);
@@ -558,13 +566,14 @@ namespace Robust.Client.Graphics.Clyde
 
             var (light_comp, transform) = value;
 
-            var powerMul = Math.Min(state.exposure, 1.2f + state.exposure * 0.05f);
-            var rangeMul = state.exposure * 0.2f + 0.8f;
+            // Increase light proportional to exposure.
+            var powerMul = state.exposure; // Math.Min(state.exposure, 1.2f + state.exposure * 0.05f);
+            var rangeMul = (float)Math.Sqrt(powerMul);
 
             // Create a simplified light from the component then scale power & range using the exposure.
             var light = new PointLight(light_comp);
-            // Lights that have a radius beyond a certian limit create popping artifacts. Prevent those here.
-            light.Radius = Math.Min(40.0f, light.Radius * rangeMul);
+            // Lights that have a radius beyond a certain limit create popping artifacts. Cap the max range to help prevent those here.
+            light.Radius = Math.Min(20.0f, light.Radius * rangeMul);
             light.Energy *= powerMul;
 
             var (lightPos, rot) = state.xformSystem.GetWorldPositionRotation(transform, state.xforms);
@@ -718,6 +727,45 @@ namespace Robust.Client.Graphics.Clyde
             SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
         }
 
+        // LimitLights - A shader pass that reduces lighting >1.0 to avoid completely blowing out the lighting
+        private void LimitLights(Viewport viewport, IEye eye)
+        {
+            using var _ = DebugGroup(nameof(LimitLights));
+
+            GL.Disable(EnableCap.Blend);
+            CheckGlError();
+            CalcScreenMatrices(viewport.Size, out var proj, out var view);
+            SetProjViewBuffer(proj, view);
+
+            var shader = _loadedShaders[_lightLimitShaderHandle].Program;
+            shader.Use();
+
+            SetupGlobalUniformsImmediate(shader, viewport.LightRenderTarget.Texture);
+
+            var size = viewport.LightRenderTarget.Size;
+
+            // Above 95% brightness, we limit light to the SQRT of the excess * 0.5
+            shader.SetUniformMaybe("lightLimit", 0.95f);
+            shader.SetUniformMaybe("limitScale", eye.Night?.LightIntolerance ?? 0.5f);
+            shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+
+            GL.Viewport(0, 0, size.X, size.Y);
+            CheckGlError();
+
+            // Initially we're pulling from the light render target.
+            // So we set it out of the loop so
+            // _wallBleedIntermediateRenderTarget2 gets bound at the end of the loop body.
+            SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
+            BindRenderTargetFull(viewport.LightRenderTarget);
+
+            _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+            SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
+
+            GL.Enable(EnableCap.Blend);
+            CheckGlError();
+            // We didn't trample over the old _currentMatrices so just roll it back.
+            SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
+        }
         private void BlurOntoWalls(Viewport viewport, IEye eye)
         {
             using var _ = DebugGroup(nameof(BlurOntoWalls));

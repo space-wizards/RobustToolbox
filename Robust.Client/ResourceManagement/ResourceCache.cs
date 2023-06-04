@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Robust.Client.Graphics.Clyde;
 using Robust.LoaderApi;
 
 namespace Robust.Client.ResourceManagement
@@ -36,6 +37,12 @@ namespace Robust.Client.ResourceManagement
                 _resource.Load(this, path);
                 cache[path] = _resource;
                 return _resource;
+            }
+            catch (ShaderCompilationException e)
+            {
+                Logger.Error(
+                    $"Shader compilation Exception while loading resource {typeof(T)} at '{path}', {e.InnerException?.Message}\n{e}");
+                throw;
             }
             catch (Exception e)
             {

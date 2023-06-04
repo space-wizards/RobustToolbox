@@ -1,0 +1,33 @@
+preset raw;
+
+uniform highp float lightLimit;
+uniform highp float limitScale;
+
+varying highp vec2 pos;
+
+
+void vertex()
+{
+    VERTEX = apply_mvp(VERTEX);
+    pos = (VERTEX + vec2(1.0)) / 2.0;
+}
+
+
+void fragment()
+{
+    vec4 color = zTexture(pos);
+
+    // Whiten over-bright regions (>1.0 light)
+    vec4 overBrightC = max(vec4(0.0), color - vec4(lightLimit));
+    float overBright = sqrt((overBrightC.r + overBrightC.g + overBrightC.b) * 0.33);
+
+    // Remove >1 component and add back in sqrt of that component
+    vec4 darken = overBrightC * overBright * limitScale - overBrightC;
+
+    // Apply the whiten and the darken
+    // color += vec4(overBright);
+    color += darken;
+
+    COLOR = color;
+
+}

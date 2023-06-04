@@ -53,6 +53,33 @@ public static class CompletionHelper
         return options;
     }
 
+    public static IEnumerable<CompletionOption> ContentDirPath(string arg, IResourceManager res)
+    {
+        var curPath = arg;
+        if (!curPath.StartsWith("/"))
+            return new[] { new CompletionOption("/") };
+
+        var resPath = new ResPath(curPath);
+
+        if (!curPath.EndsWith("/"))
+        {
+            resPath /= "..";
+            resPath = resPath.Clean();
+        }
+
+        var options = res.ContentGetDirectoryEntries(resPath)
+            .Where(c => c.EndsWith("/"))
+            .OrderBy(c => c)
+            .Select(c =>
+            {
+                var opt = (resPath / c).ToString();
+
+                return new CompletionOption(opt, Flags: CompletionOptionFlags.PartialCompletion);
+            });
+
+        return options;
+    }
+
     public static IEnumerable<CompletionOption> UserFilePath(string arg, IWritableDirProvider provider)
     {
         var curPath = arg;

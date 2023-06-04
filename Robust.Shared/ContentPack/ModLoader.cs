@@ -19,7 +19,7 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Class for managing the loading of assemblies into the engine.
     /// </summary>
-    internal sealed class ModLoader : BaseModLoader, IModLoaderInternal, IDisposable
+    internal sealed class ModLoader : BaseModLoader, IModLoaderInternal, IDisposable, IPostInjectInit
     {
         [Dependency] private readonly IResourceManagerInternal _res = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
@@ -39,6 +39,8 @@ namespace Robust.Shared.ContentPack
         private readonly List<string> _engineModuleDirectories = new();
         private readonly List<ExtraModuleLoad> _extraModuleLoads = new();
 
+        private ISawmill _sawmillResMod = default!;
+
         public event ExtraModuleLoad ExtraModuleLoaders
         {
             add => _extraModuleLoads.Add(value);
@@ -53,6 +55,11 @@ namespace Robust.Shared.ContentPack
             _loadContext.Resolving += ResolvingAssembly;
 
             AssemblyLoadContext.Default.Resolving += DefaultOnResolving;
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _sawmillResMod = _logManager.GetSawmill("res.mod");
         }
 
         public void SetUseLoadContext(bool useLoadContext)
@@ -76,17 +83,30 @@ namespace Robust.Shared.ContentPack
 
         public bool TryLoadModulesFrom(ResPath mountPath, string filterPrefix)
         {
+            var paths = new List<ResPath>();
+
+            foreach (var filePath in _res.ContentFindRelativeFiles(mountPath)
+                         .Where(p => !p.ToString().Contains('/') && p.Filename.StartsWith(filterPrefix) &&
+                                     p.Extension == "dll"))
+            {
+                var fullPath = mountPath / filePath;
+                _sawmillResMod.Debug($"Found module '{fullPath}'");
+
+                paths.Add(fullPath);
+            }
+
+            return TryLoadModules(paths);
+        }
+
+        public bool TryLoadModules(IEnumerable<ResPath> paths)
+        {
             var sw = Stopwatch.StartNew();
             Logger.DebugS("res.mod", "LOADING modules");
             var files = new Dictionary<string, (ResPath Path, string[] references)>();
 
             // Find all modules we want to load.
-            foreach (var filePath in _res.ContentFindRelativeFiles(mountPath)
-                .Where(p => !p.ToString().Contains('/') && p.Filename.StartsWith(filterPrefix) && p.Extension == "dll"))
+            foreach (var fullPath in paths)
             {
-                var fullPath = mountPath / filePath;
-                Logger.DebugS("res.mod", $"Found module '{fullPath}'");
-
                 using var asmFile = _res.ContentFileRead(fullPath);
                 var refData = GetAssemblyReferenceData(asmFile);
                 if (refData == null)

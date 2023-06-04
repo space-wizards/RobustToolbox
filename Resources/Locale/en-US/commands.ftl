@@ -564,3 +564,12 @@ cmd-hub_advertise_now-help = Usage: hub_advertise_now
 
 cmd-echo-desc = Echo arguments back to the console
 cmd-echo-help = Usage: echo "<message>"
+
+## 'vfs_ls' command
+cmd-vfs_ls-desc = List directory contents in the VFS.
+cmd-vfs_ls-help = Usage: vfs_list <path>
+    Example:
+    vfs_list /Assemblies
+
+cmd-vfs_ls-err-args = Need exactly 1 argument.
+cmd-vfs_ls-hint-path = <path>

@@ -38,7 +38,7 @@ namespace Robust.Client.Graphics
         public float RampUpNight = 0.0015f; // As the eyes start straining, how fast do you adjust? (exposure / sec)
 
         [DataField("reduction"), ViewVariables(VVAccess.ReadWrite)]
-        public float Reduction = 0.0f; // If you put on sunglasses, increase this (and decrease exposure the same)
+        public float Reduction = 1.0f; // If you put on sunglasses, increase this (and decrease exposure the same)
 
         /// <summary>
         /// How bright you want the lights to appear in the centre of the screen when lights are bright

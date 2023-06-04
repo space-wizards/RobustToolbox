@@ -191,7 +191,7 @@ public abstract partial class SharedMapSystem
         if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(oldMap.MapId), out var oldMovedGrids))
         {
             oldMovedGrids.MovedGrids.Remove(uid);
-            RemoveGrid(uid, component, args.OldMapId);
+            RemoveGrid(uid, component, oldMap.MapId);
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
@@ -456,5 +456,47 @@ public abstract partial class SharedMapSystem
         var aabb = grid.LocalAABB.Translated(worldPos);
 
         return new Box2Rotated(aabb, worldRot, worldPos).CalcBoundingBox();
+    }
+
+    private void AddGrid(EntityUid uid, MapGridComponent grid, MapId mapId)
+    {
+        DebugTools.Assert(!EntityManager.HasComponent<MapComponent>(uid));
+        var aabb = GetWorldAABB(uid, grid);
+
+        if (!TryComp<TransformComponent>(uid, out var xform))
+            return;
+
+        if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
+        {
+            var proxy = gridTree.Tree.CreateProxy(in aabb, (uid, grid));
+            DebugTools.Assert(grid.MapProxy == DynamicTree.Proxy.Free);
+            grid.MapProxy = proxy;
+        }
+
+        if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
+        {
+            movedGrids.MovedGrids.Add(uid);
+        }
+    }
+
+    private void RemoveGrid(EntityUid uid, MapGridComponent grid, MapId mapId)
+    {
+        if (!TryComp<TransformComponent>(uid, out var xform))
+        {
+            DebugTools.Assert(grid.MapProxy == DynamicTree.Proxy.Free);
+            return;
+        }
+
+        if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
+        {
+            gridTree.Tree.DestroyProxy(grid.MapProxy);
+        }
+
+        grid.MapProxy = DynamicTree.Proxy.Free;
+
+        if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
+        {
+            movedGrids.MovedGrids.Remove(uid);
+        }
     }
 }

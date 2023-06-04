@@ -167,7 +167,7 @@ namespace Robust.Client.UserInterface.Controls
                 // We will treat stretching children that fail to reach their desired size as non-stretching.
                 // This then requires all stretching children to be re-stretched
                 bool stretchAvailChanged = true;
-                while (stretchAvailChanged && totalStretchRatio > 0)
+                while (stretchAvailChanged)
                 {
                     stretchAvailChanged = false;
                     for (var i = 0; i < sizeList.Count; i++)

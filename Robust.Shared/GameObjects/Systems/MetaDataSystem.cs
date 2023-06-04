@@ -39,6 +39,33 @@ public abstract class MetaDataSystem : EntitySystem
         component.PauseTime = state.PauseTime;
     }
 
+    public void SetEntityName(EntityUid uid, string value, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata) || value.Equals(metadata.EntityName))
+            return;
+
+        metadata._entityName = value;
+        Dirty(metadata);
+    }
+
+    public void SetEntityDescription(EntityUid uid, string value, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata) || value.Equals(metadata.EntityDescription))
+            return;
+
+        metadata._entityDescription = value;
+        Dirty(metadata);
+    }
+
+    public void SetEntityPrototype(EntityUid uid, EntityPrototype? value, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata) || value?.Equals(metadata._entityPrototype) == true)
+            return;
+
+        metadata._entityPrototype = value;
+        Dirty(metadata);
+    }
+
     public bool EntityPaused(EntityUid uid, MetaDataComponent? metadata = null)
     {
         if (!Resolve(uid, ref metadata))

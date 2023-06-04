@@ -191,7 +191,7 @@ public abstract partial class SharedMapSystem
         if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(oldMap.MapId), out var oldMovedGrids))
         {
             oldMovedGrids.MovedGrids.Remove(uid);
-            RemoveGrid(uid, component, oldMap.MapId);
+            RemoveGrid(uid, component, MapManager.GetMapEntityId(oldMap.MapId));
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
@@ -479,22 +479,16 @@ public abstract partial class SharedMapSystem
         }
     }
 
-    private void RemoveGrid(EntityUid uid, MapGridComponent grid, MapId mapId)
+    private void RemoveGrid(EntityUid uid, MapGridComponent grid, EntityUid mapUid)
     {
-        if (!TryComp<TransformComponent>(uid, out var xform))
-        {
-            DebugTools.Assert(grid.MapProxy == DynamicTree.Proxy.Free);
-            return;
-        }
-
-        if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
+        if (TryComp<GridTreeComponent>(mapUid, out var gridTree))
         {
             gridTree.Tree.DestroyProxy(grid.MapProxy);
         }
 
         grid.MapProxy = DynamicTree.Proxy.Free;
 
-        if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
+        if (TryComp<MovedGridsComponent>(mapUid, out var movedGrids))
         {
             movedGrids.MovedGrids.Remove(uid);
         }

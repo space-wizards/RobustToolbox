@@ -231,7 +231,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             var style = _getStyleBox();
             var box = style?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
-            box.Right -= _scrollBar.DesiredSize.X;
+            box.Right = Math.Max(box.Left, box.Right - _scrollBar.DesiredPixelSize.X);
             return box;
         }
 

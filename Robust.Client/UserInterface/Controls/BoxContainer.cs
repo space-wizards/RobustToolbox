@@ -158,12 +158,11 @@ namespace Robust.Client.UserInterface.Controls
             }
             stretchAvail = Math.Max(0, stretchAvail);
 
-
+            // Step two: allocate space for all the stretchable children.
             float offset = 0;
             var anyStretch = totalStretchRatio > 0;
             if (anyStretch)
             {
-                // Step two: allocate space for all the stretchable children.
                 // We will treat stretching children that fail to reach their desired size as non-stretching.
                 // This then requires all stretching children to be re-stretched
                 bool stretchAvailChanged = true;

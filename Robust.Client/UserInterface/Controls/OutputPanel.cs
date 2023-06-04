@@ -230,7 +230,9 @@ namespace Robust.Client.UserInterface.Controls
         private UIBox2 _getContentBox()
         {
             var style = _getStyleBox();
-            return style?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
+            var box = style?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
+            box.Right -= _scrollBar.DesiredSize.X;
+            return box;
         }
 
         protected internal override void UIScaleChanged()

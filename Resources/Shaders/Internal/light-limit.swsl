@@ -22,12 +22,5 @@ void fragment()
     float overBright = sqrt((overBrightC.r + overBrightC.g + overBrightC.b) * 0.33);
 
     // Remove >1 component and add back in sqrt of that component
-    vec4 darken = overBrightC * overBright * limitScale - overBrightC;
-
-    // Apply the whiten and the darken
-    // color += vec4(overBright);
-    color += darken;
-
-    COLOR = color;
-
+    COLOR = color - overBrightC + overBrightC * overBright * limitScale;
 }

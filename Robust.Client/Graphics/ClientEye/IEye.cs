@@ -29,9 +29,9 @@ namespace Robust.Client.Graphics
         [DataField("max"), ViewVariables(VVAccess.ReadWrite)]
         public float Max = 4.0f;            // 12 is a good limit for quite reasonable nightvision.
         [DataField("rampDown"), ViewVariables(VVAccess.ReadWrite)]
-        public float RampDown = 0.1f;
+        public float RampDown = 0.2f;
         [DataField("rampDownNight"), ViewVariables(VVAccess.ReadWrite)]
-        public float RampDownNight = 0.5f; // Lose night vision quite fast
+        public float RampDownNight = 1.0f; // Lose night vision quite fast
         [DataField("rampUp"), ViewVariables(VVAccess.ReadWrite)]
         public float RampUp = 0.025f;
         [DataField("rampUpNight"), ViewVariables(VVAccess.ReadWrite)]

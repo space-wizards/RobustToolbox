@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.125.0.0
+
+### Breaking changes
+
+* Several replay related cvars and commands have been renamed.
+
+### New features
+
+* Added support for basic replay playback. The API is likely to change in the next version or two.
+
+
 ## 0.124.0.1
 
 ### New features

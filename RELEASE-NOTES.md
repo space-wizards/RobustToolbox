@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix exception if running the `>` command (remote execute) without even a space after it.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,28 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.124.0.1
+
+### New features
+
+* Added `CompletionHelper.ContentDirPath()`.
+* Added `vfs_ls` command to list VFS contents.
+* The resource manifest (`manifest.yml`) now accepts a `clientAssemblies` key. When given, only the assembly names listed will be loaded from `/Assemblies/` rather than automatically loading all assemblies found.
+
+### Bugfixes
+
+* Fix exception if running the `>` command (remote execute) without even a space after it.
+* `ResPath.RelativeTo()` now considers non-rooted paths relative to `.`.
+  * This fixes some things like `MemoryContentRoot`'s `FindFiles()` implementation.
+* Fix `IContentRoot.GetEntries()` default implementation (used by all content roots except `DirLoader`) not working at all.
+* Made `ResourceManager.ContentGetDirectoryEntries()` report content root mount paths as directories.
+
+### Internal
+
+* Made `ConfigurationManager` not-abstract anymore so we can instantiate it from tests.
+* Added new tests for `ResourceManager`.
 
 
 ## 0.124.0.0

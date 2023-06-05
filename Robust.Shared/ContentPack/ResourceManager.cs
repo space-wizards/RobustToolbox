@@ -263,6 +263,10 @@ namespace Robust.Shared.ContentPack
             if (!path.IsRooted)
                 throw new ArgumentException("Path is not rooted", nameof(path));
 
+            // If we don't do this, TryRelativeTo won't work correctly.
+            if (!path.CanonPath.EndsWith("/"))
+                path = new ResPath(path.CanonPath + "/");
+
             var entries = new HashSet<string>();
 
             foreach (var (prefix, root) in _contentRoots)
@@ -273,6 +277,23 @@ namespace Robust.Shared.ContentPack
                 }
 
                 entries.UnionWith(root.GetEntries(relative.Value));
+            }
+
+            // We have to add mount points too.
+            // e.g. during development, /Assemblies/ is a mount point,
+            // and there's no explicit /Assemblies/ folder in Resources.
+            // So we need to manually add it since the previous pass won't catch it at all.
+            foreach (var (prefix, _) in _contentRoots)
+            {
+                if (!prefix.TryRelativeTo(path, out var relative))
+                    continue;
+
+                // Return first relative segment, unless it's literally just "." (identical path).
+                var segments = relative.Value.EnumerateSegments();
+                if (segments is ["."])
+                    continue;
+
+                entries.Add(segments[0] + "/");
             }
 
             return entries;

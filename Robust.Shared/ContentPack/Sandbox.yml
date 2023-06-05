@@ -345,6 +345,7 @@ Types:
     CompareOptions: { }
     CultureInfo: { All: True }
     DateTimeStyles: { All: True } # Enum
+    NumberFormatInfo: { All: True }
     NumberStyles: { } # Enum
     TextInfo:
       Methods:

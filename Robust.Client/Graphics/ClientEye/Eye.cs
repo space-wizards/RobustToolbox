@@ -93,11 +93,15 @@ namespace Robust.Client.Graphics
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadOnly)]
-        public float LastBrightness { get; set; }
+        public float LastBrightness { get; set; } = 1.0f;
 
-        // These are to be set using EyeComponent itself
-        [ViewVariables(VVAccess.ReadWrite)] public NightVision? Night { get; set; } = new();
-        [ViewVariables(VVAccess.ReadWrite)] public AutoExpose? AutoExpose { get; set; } = new();
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool MeasureBrightness { get; set; } = false;
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float LightIntolerance { get; set; } = 0.5f;
 
     }
 }

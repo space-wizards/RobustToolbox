@@ -92,7 +92,7 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
 
-        private (PointLight light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
+        private PointLight[] _lightsToRenderList = default!;
 
         private unsafe void InitLighting()
         {
@@ -378,11 +378,11 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     for (var i = 0; i < count; i++)
                     {
-                        var (light, lightPos, _, _) = _lightsToRenderList[i];
+                        ref var light = ref _lightsToRenderList[i];
 
                         if (!light.CastShadows) continue;
 
-                        DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i);
+                        DrawOcclusionDepth(light.ScreenPosition, ShadowMapSize, light.Radius, i);
                     }
                 }
 
@@ -429,32 +429,32 @@ namespace Robust.Client.Graphics.Clyde
             var lastSoftness = float.NaN;
             Texture? lastMask = null;
 
-            if (count < _maxLights && eye.Night != null && eye.Exposure > eye.Night.MinExposure )
-            {
-                // Turn on a point light centred on the player
-                //   Rade it in as we increase our exposure > eye.Night.MinExposure
-                _lightsToRenderList[count++] = (new PointLight(energy:(eye.Exposure - eye.Night.MinExposure) * 0.02f * eye.Night.Power, radius:eye.Exposure * eye.Night.Range, castShadows:false)
-                {
-                    Color = eye.Night.Color // new(200, 255, 150)
-                }, worldAABB.Center, 0.0f, 0.0f);
-            }
+            // if (count < _maxLights && eye.Night != null && eye.Exposure > eye.Night.MinExposure )
+            // {
+            //     // Turn on a point light centred on the player
+            //     //   Rade it in as we increase our exposure > eye.Night.MinExposure
+            //     _lightsToRenderList[count++] = (new PointLight(energy:(eye.Exposure - eye.Night.MinExposure) * 0.02f * eye.Night.Power, radius:eye.Exposure * eye.Night.Range, castShadows:false)
+            //     {
+            //         Color = eye.Night.Color // new(200, 255, 150)
+            //     }, worldAABB.Center, 0.0f, 0.0f);
+            // }
 
             using (_prof.Group("Draw Lights"))
             {
                 for (var i = 0; i < count; i++)
                 {
-                    var (component, lightPos, _, rot) = _lightsToRenderList[i];
+                    ref var light = ref _lightsToRenderList[i];
 
                     Texture? mask = null;
                     var rotation = Angle.Zero;
-                    if (component.Mask != null)
+                    if (light.Mask != null)
                     {
-                        mask = component.Mask;
-                        rotation = component.Rotation;
+                        mask = light.Mask;
+                        rotation = light.Rotation;
 
-                        if (component.MaskAutoRotate)
+                        if (light.MaskAutoRotate)
                         {
-                            rotation += rot;
+                            rotation += light.ScreenRotation;
                         }
                     }
 
@@ -466,35 +466,35 @@ namespace Robust.Client.Graphics.Clyde
                         lightShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                     }
 
-                    if (!MathHelper.CloseToPercent(lastRange, component.Radius))
+                    if (!MathHelper.CloseToPercent(lastRange, light.Radius))
                     {
-                        lastRange = component.Radius;
+                        lastRange = light.Radius;
                         lightShader.SetUniformMaybe("lightRange", lastRange);
                     }
 
-                    if (!MathHelper.CloseToPercent(lastPower, component.Energy))
+                    if (!MathHelper.CloseToPercent(lastPower, light.Energy))
                     {
-                        lastPower = component.Energy;
+                        lastPower = light.Energy;
                         lightShader.SetUniformMaybe("lightPower", lastPower);
                     }
 
-                    if (lastColor != component.Color)
+                    if (lastColor != light.Color)
                     {
-                        lastColor = component.Color;
+                        lastColor = light.Color;
                         lightShader.SetUniformMaybe("lightColor", lastColor);
                     }
 
-                    if (_enableSoftShadows && !MathHelper.CloseToPercent(lastSoftness, component.Softness))
+                    if (_enableSoftShadows && !MathHelper.CloseToPercent(lastSoftness, light.Softness))
                     {
-                        lastSoftness = component.Softness;
+                        lastSoftness = light.Softness;
                         lightShader.SetUniformMaybe("lightSoftness", lastSoftness);
                     }
 
-                    lightShader.SetUniformMaybe("lightCenter", lightPos);
+                    lightShader.SetUniformMaybe("lightCenter", light.ScreenPosition);
                     lightShader.SetUniformMaybe("lightIndex",
-                        component.CastShadows ? (i + 0.5f) / ShadowTexture.Height : -1);
+                        light.CastShadows ? (i + 0.5f) / ShadowTexture.Height : -1);
 
-                    var offset = new Vector2(component.Radius, component.Radius);
+                    var offset = new Vector2(light.Radius, light.Radius);
 
                     Matrix3 matrix;
                     if (mask == null)
@@ -507,7 +507,7 @@ namespace Robust.Client.Graphics.Clyde
                         matrix = Matrix3.CreateRotation(rotation);
                     }
 
-                    (matrix.R0C2, matrix.R1C2) = lightPos;
+                    (matrix.R0C2, matrix.R1C2) = light.ScreenPosition;
 
                     _drawQuad(-offset, offset, matrix, lightShader);
                 }
@@ -541,7 +541,10 @@ namespace Robust.Client.Graphics.Clyde
             GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
             CheckGlError();
 
+#if DEBUG
+            // Clearing the array is unimportant, other than to make the watch window easier to read.
             Array.Clear(_lightsToRenderList, 0, count);
+#endif
 
             _lightingReady = true;
         }
@@ -568,29 +571,35 @@ namespace Robust.Client.Graphics.Clyde
 
             // Increase light proportional to exposure.
             var powerMul = state.exposure; // Math.Min(state.exposure, 1.2f + state.exposure * 0.05f);
-            var rangeMul = (float)Math.Sqrt(powerMul * 2.0);
+            var rangeMul = (float)Math.Sqrt(powerMul);
 
             // Create a simplified light from the component then scale power & range using the exposure.
-            var light = new PointLight(light_comp);
+            ref var light = ref state.clyde._lightsToRenderList[count++];
+            light.UpdateFrom(light_comp);
+
             // Lights that have a radius beyond a certain limit create popping artifacts. Cap the max range to help prevent those here.
             light.Radius = Math.Min(20.0f, light.Radius * rangeMul);
             light.Energy *= powerMul;
 
-            var (lightPos, rot) = state.xformSystem.GetWorldPositionRotation(transform, state.xforms);
-            lightPos += rot.RotateVec(light_comp.Offset);
-            var circle = new Circle(lightPos, light.Radius);
+            (light.ScreenPosition, light.ScreenRotation) = state.xformSystem.GetWorldPositionRotation(transform, state.xforms);
+            light.ScreenPosition += light.ScreenRotation.RotateVec(light_comp.Offset);
+
+            var circle = new Circle(light.ScreenPosition, light.Radius);
 
             // If the light doesn't touch anywhere the camera can see, it doesn't matter.
             // The tree query is not fully accurate because the viewport may be rotated relative to a grid.
             if (!circle.Intersects(state.worldAABB))
+            {
+                count--; // Forget this light again
                 return true;
+            }
+
+            light.DistFromCentreSq = (state.worldAABB.Center - light.ScreenPosition).LengthSquared;
 
             // If the light is a shadow casting light, keep a separate track of that
             if (light.CastShadows)
                 shadowCount++;
 
-            float distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared;
-            state.clyde._lightsToRenderList[count++] = (light, lightPos, distanceSquared, rot);
 
             return true;
         }
@@ -655,7 +664,7 @@ namespace Robust.Client.Graphics.Clyde
 
             for (var i = 0; i < state.count; i++)
             {
-                expandedBounds = expandedBounds.ExtendToContain(_lightsToRenderList[i].pos);
+                expandedBounds = expandedBounds.ExtendToContain(_lightsToRenderList[i].ScreenPosition);
             }
 
             _debugStats.TotalLights += state.count;
@@ -744,9 +753,10 @@ namespace Robust.Client.Graphics.Clyde
 
             var size = viewport.LightRenderTarget.Size;
 
+            // Default eye.LightIntolerance is 0.5. At that value:
             // Above 95% brightness, we limit light to the SQRT of the excess * 0.5
-            shader.SetUniformMaybe("lightLimit", 0.95f);
-            shader.SetUniformMaybe("limitScale", eye.Night?.LightIntolerance ?? 0.5f);
+            shader.SetUniformMaybe("lightLimit", 1.0f - eye.LightIntolerance * 0.1f);
+            shader.SetUniformMaybe("limitScale", eye.LightIntolerance);
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
             GL.Viewport(0, 0, size.X, size.Y);
@@ -864,16 +874,16 @@ namespace Robust.Client.Graphics.Clyde
         {
             if (viewport.Eye != null)
             {
-                if (viewport.Eye.AutoExpose == null)
+                if (!viewport.Eye.MeasureBrightness)
                 {
-                    // This eye does not process autoexpose, so exit now.
+                    // This eye does not care about brightness so exit now.
                     return;
                 }
                 var dims = viewport.LightRenderTarget.Size;
 
                 // Sample a small square in the middle of the viewport
                 var midpoint = dims / 2;
-                var fraction = dims / 64;
+                var fraction = dims / 32;
 
                 // Midpoint of the screen and a box around the player.
                 // It's expensive to get textures back from the GPU but the results are worth it.
@@ -892,7 +902,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // User code can now use this to adjust exposure. See EyeExposureSystem.UpdateViewportExposure in
                 //   SS14 client code.
-                viewport.Eye.AutoExpose.LastBrightness = intensity;
+                viewport.Eye.LastBrightness = intensity;
             }
         }
 
@@ -1331,7 +1341,7 @@ namespace Robust.Client.Graphics.Clyde
         private void MaxLightsChanged(int value)
         {
             _maxLights = value;
-            _lightsToRenderList = new (PointLight, Vector2, float , Angle)[value];
+            _lightsToRenderList = new PointLight[value];
             DebugTools.Assert(_maxLights >= _maxShadowcastingLights);
         }
     }

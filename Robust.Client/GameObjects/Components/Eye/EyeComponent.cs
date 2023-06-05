@@ -35,11 +35,6 @@ namespace Robust.Client.GameObjects
         [ViewVariables]
         public EntityUid? Target;
 
-        [DataField("nightVision"), ViewVariables(VVAccess.ReadWrite)]
-        public NightVision? Night { get; set; } = new();
-        [DataField("autoExpose"), ViewVariables(VVAccess.ReadWrite)]
-        public AutoExpose? AutoExpose { get; set; } = new();
-
         public IEye? Eye => _eye;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -133,8 +128,6 @@ namespace Robust.Client.GameObjects
                 Position = _entityManager.GetComponent<TransformComponent>(Owner).MapPosition,
                 Zoom = _setZoomOnInitialize,
                 DrawFov = _setDrawFovOnInitialize,
-                Night = Night,
-                AutoExpose = AutoExpose,
             };
 
             if ((_eyeManager.CurrentEye == _eye) != _setCurrentOnInitialize)

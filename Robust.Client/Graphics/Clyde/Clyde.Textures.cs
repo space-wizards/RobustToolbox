@@ -660,8 +660,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (Format.pixType == PT.Float)
                 {
-                    Span<float> rgba = new float[4];
-                    // Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
+                    Span<float> rgba = stackalloc float[4];
                     unsafe
                     {
                         fixed (float* p = rgba)
@@ -670,14 +669,12 @@ namespace Robust.Client.Graphics.Clyde
                             GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, 1, 1, 1, Format.pixFormat, Format.pixType, 4 * sizeof(float), (IntPtr) p);
                         }
                     }
-                    // int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
                     return new Color(rgba[0], rgba[1], rgba[2], rgba[3]);
 
                 }
                 else // Assume unsigned byte
                 {
-                    Span<byte> rgba = new byte[4];
-                    // Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
+                    Span<byte> rgba = stackalloc byte[4];
                     unsafe
                     {
                         fixed (byte* p = rgba)
@@ -686,7 +683,6 @@ namespace Robust.Client.Graphics.Clyde
                             GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, 1, 1, 1, Format.pixFormat, Format.pixType, 4, (IntPtr) p);
                         }
                     }
-                    // int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
                     return new Color(rgba[0], rgba[1], rgba[2], rgba[3]);
                 }
             }
@@ -701,8 +697,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (Format.pixType == PT.Float)
                 {
                     var stride = Format.pixFormat == PF.Rgb ? 3 : 4;
-                    Span<float> rgba = new float[stride * width * height];
-                    // Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
+                    Span<float> rgba = stackalloc float[stride * width * height];
                     unsafe
                     {
                         fixed (float* p = rgba)
@@ -725,8 +720,7 @@ namespace Robust.Client.Graphics.Clyde
                 else // Assume unsigned byte
                 {
                     var stride = Format.pixFormat == PF.Rgb ? 3 : 4;
-                    Span<byte> rgba = new byte[stride * width * height];
-                    // Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
+                    Span<byte> rgba = stackalloc byte[stride * width * height];
                     unsafe
                     {
                         fixed (byte* p = rgba)

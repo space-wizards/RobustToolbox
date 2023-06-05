@@ -11,7 +11,7 @@ using TerraFX.Interop.Windows;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class PointLight
+    public struct PointLight
     {
         // Only the values required to actually render the light.
         public Color Color;
@@ -22,6 +22,11 @@ namespace Robust.Client.GameObjects
         public float Energy;
         public bool CastShadows;
         public float Softness;
+
+        // These are calculated by lighting engine after transforming from the above.
+        public Vector2 ScreenPosition;
+        public float DistFromCentreSq;
+        public Angle ScreenRotation;
 
         public PointLight(PointLightComponent light)
         {
@@ -42,6 +47,19 @@ namespace Robust.Client.GameObjects
             CastShadows = castShadows;
             Color = Color.White;
         }
+
+        public void UpdateFrom(PointLightComponent light)
+        {
+            Color = light.Color;
+            MaskAutoRotate = light.MaskAutoRotate;
+            Rotation = light.Rotation;
+            Mask = light.Mask;
+            Radius = light.Radius;
+            Energy = light.Energy;
+            CastShadows = light.CastShadows;
+            Softness = light.Softness;
+        }
+
     }
 
 

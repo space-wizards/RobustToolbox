@@ -7,59 +7,6 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Graphics
 {
-    [DataDefinition]
-    public sealed class NightVision
-    {
-        [DataField("color", customTypeSerializer:typeof(ColorSerializer)), ViewVariables(VVAccess.ReadWrite)] public Color Color = Color.White;
-        [DataField("range"), ViewVariables(VVAccess.ReadWrite)] public float Range = 0.5f;
-        [DataField("power"), ViewVariables(VVAccess.ReadWrite)] public float Power = 0.2f;
-        [DataField("minExposure"), ViewVariables(VVAccess.ReadWrite)] public float MinExposure = 2.0f;
-        /// <summary>
-        /// How much very bright lights bother this eye. 0.1 means we can handle very bright lighting.
-        ///   2.0 means everything turns white
-        /// </summary>
-        [DataField("lightIntolerance"), ViewVariables(VVAccess.ReadWrite)] public float LightIntolerance = 0.5f;
-    }
-
-    [DataDefinition]
-    public sealed class AutoExpose
-    {
-        [DataField("min"), ViewVariables(VVAccess.ReadWrite)]
-        public float Min = 0.4f;
-        [DataField("max"), ViewVariables(VVAccess.ReadWrite)]
-        public float Max = 4.0f;            // 12 is a good limit for quite reasonable nightvision.
-        [DataField("rampDown"), ViewVariables(VVAccess.ReadWrite)]
-        public float RampDown = 0.2f;
-        [DataField("rampDownNight"), ViewVariables(VVAccess.ReadWrite)]
-        public float RampDownNight = 1.0f; // Lose night vision quite fast
-        [DataField("rampUp"), ViewVariables(VVAccess.ReadWrite)]
-        public float RampUp = 0.025f;
-        [DataField("rampUpNight"), ViewVariables(VVAccess.ReadWrite)]
-        public float RampUpNight = 0.0015f; // As the eyes start straining, how fast do you adjust? (exposure / sec)
-
-        [DataField("reduction"), ViewVariables(VVAccess.ReadWrite)]
-        public float Reduction = 1.0f; // If you put on sunglasses, increase this (and decrease exposure the same)
-
-        /// <summary>
-        /// How bright you want the lights to appear in the centre of the screen when lights are bright
-        /// </summary>
-        [DataField("goalBrightness"), ViewVariables(VVAccess.ReadWrite)]
-        public float GoalBrightness = 1.1f;
-
-        /// <summary>
-        /// How bright you want the lights to appear in the centre of the screen when lights are dim
-        /// </summary>
-        [DataField("goalBrightnessNight"), ViewVariables(VVAccess.ReadWrite)]
-        public float GoalBrightnessNight = 0.60f;
-
-        /// <summary>
-        /// Renderer measurement of light intensity last frame. 0.1 is dark, 1.0 is extremely bright.
-        ///   Note that this is after exposure is applied, so adjusting exposure each frame to keep this around
-        ///   50-70% makes sense.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadOnly)] public float LastBrightness = 1.0f;
-    }
-
     /// <summary>
     /// An Eye is a point through which the player can view the world.
     /// It's a 2D camera in other game dev lingo basically.
@@ -117,10 +64,31 @@ namespace Robust.Client.Graphics
 
         /// <summary>
         /// How much we should brighten lights around the player. 1.0 is default brightness
+        ///   This is a multiplier to light power and it also increases range by sqrt(Exposure) as per light laws..
         /// </summary>
         public float Exposure { get; set; }
 
-        public NightVision? Night { get; set; }
-        public AutoExpose? AutoExpose { get; set; }
+        /// <summary>
+        /// Renderer measurement of light intensity last frame. 0.1 is dark, 1.0 is extremely bright.
+        ///   The renderer measures a tiny square in the very centre of the viewport.
+        ///   Note that this is after exposure is applied, so adjusting exposure each frame to keep this around
+        ///   50-70% makes sense.
+        /// </summary>
+        public float LastBrightness { get; set; }
+
+        /// <summary>
+        /// Set true if you want to use LastBrightness.
+        ///   The renderer will read the lighting texture and calculate it for you each frame.
+        /// </summary>
+        public bool MeasureBrightness { get; set; }
+
+        /// <summary>
+        /// Lighting over 100% is compressed by taking sqrt and then multiplying by this value.
+        ///   A value like 0.5 looks nice, 0.05 crushes bright light down to near-fullbright.
+        ///   0.0 crushes it to exactly fullbright, which is bland.
+        /// Important when there are LOT of lightsources, or they are powerful, or Exposure is high.
+        /// </summary>
+        public float LightIntolerance { get; set; }
+
     }
 }

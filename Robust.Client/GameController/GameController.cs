@@ -12,12 +12,12 @@ using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Placement;
 using Robust.Client.Replays.Loading;
+using Robust.Client.Replays.Playback;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
-using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Client.WebViewHook;
@@ -82,7 +82,7 @@ namespace Robust.Client
         [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
         [Dependency] private readonly NetworkResourceManager _netResMan = default!;
         [Dependency] private readonly IReplayLoadManager _replayLoader = default!;
-
+        [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -177,6 +177,7 @@ namespace Robust.Client
             _protoLoadMan.Initialize();
             _netResMan.Initialize();
             _replayLoader.Initialize();
+            _replayPlayback.Initialize();
             _userInterfaceManager.PostInitialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 

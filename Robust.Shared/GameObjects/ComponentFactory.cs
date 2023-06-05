@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using Robust.Shared.GameStates;
@@ -494,6 +495,32 @@ namespace Robust.Shared.GameObjects
         }
 
         public Type IdxToType(CompIdx idx) => _idxToType[idx];
+
+        public byte[] GetHash(bool networkedOnly)
+        {
+            if (_networkedComponents is null)
+                throw new ComponentRegistrationLockException();
+
+            return GetHash(networkedOnly ? _networkedComponents : _array);
+        }
+
+        public byte[] GetHash(IEnumerable<ComponentRegistration> comps)
+        {
+            comps = comps.OrderBy(x => x.Name, StringComparer.InvariantCulture);
+            var stream = new MemoryStream();
+            using (var writer = new StreamWriter(stream, leaveOpen: true))
+            {
+                foreach (var item in comps)
+                {
+                    writer.Write(item.Name);
+                    writer.Write(item.NetID);
+                }
+            }
+
+            stream.Position = 0;
+            var sha256 = System.Security.Cryptography.SHA256.Create();
+            return sha256.ComputeHash(stream);
+        }
     }
 
     [Serializable]

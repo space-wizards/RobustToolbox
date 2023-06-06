@@ -30,7 +30,7 @@ internal sealed partial class ReplayPlaybackManager
             Playing = false;
 
         // TODO REPLAYS do we actually need to do this?
-        // if not, we can probably remove all of the UpdateFullRep() calls, which speeds things up significantly.
+        // Either way, the UpdateFullRep() calls need to stay because it is needed for PVS-detached entities.
         _gameState.ResetPredictedEntities();
 
         if (Playing)

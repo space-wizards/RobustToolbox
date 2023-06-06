@@ -1,6 +1,9 @@
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Replays.Loading;
 using Robust.Client.Replays.Playback;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
@@ -15,6 +18,7 @@ public sealed class ReplayLoadCommand : BaseReplayCommand
     [Dependency] private readonly IResourceManager _resMan = default!;
     [Dependency] private readonly IReplayLoadManager _loadMan = default!;
     [Dependency] private readonly IBaseClient _client = default!;
+    [Dependency] private readonly IConfigurationManager _cfg = default!;
 
     public override string Command => IReplayPlaybackManager.LoadCommand;
 
@@ -38,7 +42,7 @@ public sealed class ReplayLoadCommand : BaseReplayCommand
             return;
         }
 
-        var dir = new ResPath(args[0]);
+        var dir = new ResPath(_cfg.GetCVar(CVars.ReplayDirectory)) / args[0];
         var file = dir / IReplayRecordingManager.MetaFile;
         if (!_resMan.UserData.Exists(file))
         {
@@ -54,8 +58,12 @@ public sealed class ReplayLoadCommand : BaseReplayCommand
         if (args.Length != 1)
             return CompletionResult.Empty;
 
-        var opts = CompletionHelper.UserFilePath(args[0], _resMan.UserData);
-        return CompletionResult.FromHintOptions(opts, Loc.GetString(""));
+        var dir = new ResPath(_cfg.GetCVar(CVars.ReplayDirectory)) / args[0];
+        dir = dir.ToRootedPath();
+        var opts = CompletionHelper.UserFilePath(dir.CanonPath, _resMan.UserData);
+        opts = opts.Where(x => _resMan.UserData.IsDir(new ResPath(x.Value)));
+
+        return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-replay-load-hint"));
     }
 }
 

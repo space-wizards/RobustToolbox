@@ -55,7 +55,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     This is invoked whenever a pvs-leave message is received.
         /// </summary>
-        public event Action<MsgStateLeavePvs>? PvsLeave;
+        event Action<MsgStateLeavePvs>? PvsLeave;
 
         /// <summary>
         ///     One time initialization of the service.
@@ -91,7 +91,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     Requests a full state from the server. This should override even implicit entity data.
         /// </summary>
-        public void RequestFullState(EntityUid? missingEntity = null);
+        void RequestFullState(EntityUid? missingEntity = null);
 
         uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs;
 
@@ -101,6 +101,11 @@ namespace Robust.Client.GameStates
         /// <param name="cloneDelta">If true, this will clone old states while applying delta states, rather than
         /// modifying them directly. Useful if they are still cached elsewhere (e.g., replays).</param>
         void UpdateFullRep(GameState state, bool cloneDelta = false);
+
+        /// <summary>
+        /// Returns the full collection of cached game states that are used to reset predicted entities.
+        /// </summary>
+        Dictionary<EntityUid, Dictionary<ushort, ComponentState>> GetFullRep();
 
         /// <summary>
         /// This will perform some setup in order to reset the game to an earlier state. To fully reset the state
@@ -134,5 +139,21 @@ namespace Robust.Client.GameStates
             bool resetAllEntities,
             bool deleteClientEntities = false,
             bool deleteClientChildren = true);
+
+        /// <summary>
+        /// Queue a collection of entities that are to be detached to null-space & marked as PVS-detached.
+        /// This store and modify the list given to it.
+        /// </summary>
+        void QueuePvsDetach(List<EntityUid> entities, GameTick tick);
+
+        /// <summary>
+        /// Immediately detach several entities.
+        /// </summary>
+        void DetachImmediate(List<EntityUid> entities);
+
+        /// <summary>
+        /// Clears the PVS detach queue.
+        /// </summary>
+        void ClearDetachQueue();
     }
 }

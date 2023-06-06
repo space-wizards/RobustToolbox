@@ -108,7 +108,7 @@ namespace Robust.Shared.GameObjects
         protected void RaiseNetworkEvent(EntityEventArgs message, Filter filter, bool recordReplay = true)
         {
             if (recordReplay)
-                _replayMan.QueueReplayMessage(message);
+                _replayMan.RecordServerMessage(message);
 
             foreach (var session in filter.Recipients)
             {

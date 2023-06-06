@@ -4,6 +4,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Maths;
 using Prometheus;
+using Robust.Shared.Configuration;
 using Robust.Shared.Profiling;
 
 namespace Robust.Shared.Timing
@@ -58,6 +59,7 @@ namespace Robust.Shared.Timing
                 Buckets = Histogram.ExponentialBuckets(.001, 1.5, 10)
             });
 
+        private readonly IConfigurationManager _cfgManager;
         private readonly IGameTiming _timing;
         private TimeSpan _lastKeepUp; // last wall time keep up announcement
 
@@ -105,8 +107,9 @@ namespace Robust.Shared.Timing
         private const int MaxSoftLockExceptions = 10;
 #endif
 
-        public GameLoop(IGameTiming timing, IRuntimeLog runtimeLog, ProfManager prof)
+        public GameLoop(IConfigurationManager cfgManager, IGameTiming timing, IRuntimeLog runtimeLog, ProfManager prof)
         {
+            _cfgManager = cfgManager;
             _timing = timing;
             _runtimeLog = runtimeLog;
             _prof = prof;
@@ -125,9 +128,11 @@ namespace Robust.Shared.Timing
 
             FrameEventArgs realFrameEvent;
             FrameEventArgs simFrameEvent;
+            FrameEventArgs renderFrameEvent;
 
             while (Running)
             {
+                var timeScale = _cfgManager.GetCVar(CVars.TimeScale);
                 var profFrameStart = _prof.WriteValue(ProfTextStartFrame, ProfData.Int64(_timing.CurFrame));
                 var profFrameGroupStart = _prof.WriteGroupStart();
                 var profFrameSw = ProfSampler.StartNew();
@@ -197,7 +202,7 @@ namespace Robust.Shared.Timing
                         countTicksRan += 1;
 
                         // update the simulation
-                        simFrameEvent = new FrameEventArgs((float)_timing.FrameTime.TotalSeconds);
+                        simFrameEvent = new FrameEventArgs((float)_timing.FrameTime.TotalSeconds * timeScale);
 #if EXCEPTION_TOLERANCE
                     var threw = false;
                     try
@@ -255,6 +260,7 @@ namespace Robust.Shared.Timing
                 _timing.InSimulation = false;
 
                 // update out of the simulation
+                renderFrameEvent = new FrameEventArgs((float)_timing.RealFrameTime.TotalSeconds * timeScale);
 
 #if EXCEPTION_TOLERANCE
                 try
@@ -262,7 +268,7 @@ namespace Robust.Shared.Timing
                 {
                     using var _ = _prof.Group("Update");
 
-                    Update?.Invoke(this, realFrameEvent);
+                    Update?.Invoke(this, renderFrameEvent);
                 }
 #if EXCEPTION_TOLERANCE
                 catch (Exception exp)
@@ -278,7 +284,7 @@ namespace Robust.Shared.Timing
                 {
                     using (_prof.Group("Render"))
                     {
-                        Render?.Invoke(this, realFrameEvent);
+                        Render?.Invoke(this, renderFrameEvent);
                     }
                 }
 #if EXCEPTION_TOLERANCE

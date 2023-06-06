@@ -430,12 +430,14 @@ namespace Robust.Client.GameStates
 
                 if (_timing.CurTick != predictionTarget)
                 {
+                    var timeScale = _config.GetCVar(CVars.TimeScale);
+
                     using (_prof.Group("Systems"))
                     {
                         // Don't run EntitySystemManager.TickUpdate if this is the target tick,
                         // because the rest of the main loop will call into it with the target tick later,
                         // and it won't be a past prediction.
-                        _entitySystemManager.TickUpdate((float)_timing.TickPeriod.TotalSeconds, noPredictions: false);
+                        _entitySystemManager.TickUpdate((float)_timing.TickPeriod.TotalSeconds * timeScale, noPredictions: false);
                     }
 
                     using (_prof.Group("Event queue"))

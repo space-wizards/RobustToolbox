@@ -587,6 +587,16 @@ namespace Robust.Shared
             CVarDef.Create("game.auto_pause_empty", true, CVar.SERVERONLY);
 
         /*
+         * Sim
+         */
+
+        /// <summary>
+        /// Time scale of Update and FrameUpdate.
+        /// </summary>
+        public static readonly CVarDef<float> TimeScale =
+            CVarDef.Create("sim.time_scale", 1f, CVar.REPLICATED | CVar.SERVER);
+
+        /*
          * LOG
          */
 

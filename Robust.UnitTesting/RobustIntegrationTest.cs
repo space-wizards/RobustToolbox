@@ -672,6 +672,7 @@ namespace Robust.UnitTesting
                 }
 
                 GameLoop = new IntegrationGameLoop(
+                    DependencyCollection.Resolve<IConfigurationManager>(),
                     DependencyCollection.Resolve<IGameTiming>(),
                     _fromInstanceWriter, _toInstanceReader);
                 server.OverrideMainLoop(GameLoop);
@@ -840,7 +841,8 @@ namespace Robust.UnitTesting
                     (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
 
-                GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
+                GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IConfigurationManager>(),
+                    DependencyCollection.Resolve<IGameTiming>(),
                     _fromInstanceWriter, _toInstanceReader);
 
                 client.OverrideMainLoop(GameLoop);
@@ -877,6 +879,7 @@ namespace Robust.UnitTesting
 
         internal sealed class IntegrationGameLoop : IGameLoop
         {
+            private readonly IConfigurationManager _cfgManager;
             private readonly IGameTiming _gameTiming;
 
             private readonly ChannelWriter<object> _channelWriter;
@@ -894,9 +897,10 @@ namespace Robust.UnitTesting
             public int MaxQueuedTicks { get; set; }
             public SleepMode SleepMode { get; set; }
 
-            public IntegrationGameLoop(IGameTiming gameTiming, ChannelWriter<object> channelWriter,
+            public IntegrationGameLoop(IConfigurationManager cfgManager, IGameTiming gameTiming, ChannelWriter<object> channelWriter,
                 ChannelReader<object> channelReader)
             {
+                _cfgManager = cfgManager;
                 _gameTiming = gameTiming;
                 _channelWriter = channelWriter;
                 _channelReader = channelReader;
@@ -936,10 +940,16 @@ namespace Robust.UnitTesting
                     {
                         case RunTicksMessage msg:
                             _gameTiming.InSimulation = true;
-                            var simFrameEvent = new FrameEventArgs((float) _gameTiming.TickPeriod.TotalSeconds);
+                            var inputTime = (float)_gameTiming.TickPeriod.TotalSeconds;
+
+                            var inputFrameEvent = new FrameEventArgs(inputTime);
+                            var simFrameEvent = new FrameEventArgs(
+                                inputTime *
+                                _cfgManager.GetCVar(CVars.TimeScale));
+
                             for (var i = 0; i < msg.Ticks && Running; i++)
                             {
-                                Input?.Invoke(this, simFrameEvent);
+                                Input?.Invoke(this, inputFrameEvent);
                                 Tick?.Invoke(this, simFrameEvent);
                                 _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
                                 Update?.Invoke(this, simFrameEvent);

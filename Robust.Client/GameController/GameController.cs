@@ -97,6 +97,8 @@ namespace Robust.Client
 
         private ResourceManifestData? _resourceManifest;
 
+        private float _timeScale;
+
         public void SetCommandLineArgs(CommandLineArgs args)
         {
             _commandLineArgs = args;
@@ -197,7 +199,7 @@ namespace Robust.Client
             // Setup main loop
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_gameTiming, _runtimeLog, _prof)
+                _mainLoop = new GameLoop(_configurationManager, _gameTiming, _runtimeLog, _prof)
                 {
                     SleepMode = displayMode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
                 };

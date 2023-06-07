@@ -20,7 +20,7 @@ internal abstract partial class SharedReplayRecordingManager
     private void WriteYaml(YamlDocument data, IWritableDirProvider dir, ResPath path)
     {
         var memStream = new MemoryStream();
-        var writer = new StreamWriter(memStream);
+        using var writer = new StreamWriter(memStream);
         var yamlStream = new YamlStream { data };
         yamlStream.Save(new YamlMappingFix(new Emitter(writer)), false);
         writer.Flush();
@@ -50,9 +50,15 @@ internal abstract partial class SharedReplayRecordingManager
 
         static async Task Write(byte[] bytes, int length, IWritableDirProvider dir, ResPath path)
         {
-            var slice = new ReadOnlyMemory<byte>(bytes, 0, length);
-            await dir.WriteBytesAsync(path, slice);
-            ArrayPool<byte>.Shared.Return(bytes);
+            try
+            {
+                var slice = new ReadOnlyMemory<byte>(bytes, 0, length);
+                await dir.WriteBytesAsync(path, slice);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(bytes);
+            }
         }
     }
 

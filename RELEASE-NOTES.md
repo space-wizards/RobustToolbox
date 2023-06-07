@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.125.0.1
+
+### Other
+
+* Use a logger sawmill in MapManager rather than the static logger.
+
+
 ## 0.125.0.0
 
 ### Breaking changes

@@ -17,9 +17,13 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
     [Dependency] private readonly IConsoleHost _conhost = default!;
 
+    private ISawmill _sawmill = default!;
+
     /// <inheritdoc />
     public void Initialize()
     {
+        _sawmill = Logger.GetSawmill("map");
+
 #if DEBUG
         DebugTools.Assert(!_dbgGuardInit);
         DebugTools.Assert(!_dbgGuardRunning);

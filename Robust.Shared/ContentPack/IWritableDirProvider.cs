@@ -118,14 +118,14 @@ namespace Robust.Shared.ContentPack
         /// Asynchronously opens and writes the sequence of bytes to a file. If the file exists, its existing contents will
         /// be replaced.
         /// </summary>
-        public Task WriteBytesAsync(ResPath path, byte[] bytes, int offset, int length,
+        Task WriteBytesAsync(ResPath path, byte[] bytes, int offset, int length,
             CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Asynchronously opens and writes the sequence of bytes to a file. If the file exists, its existing contents will
         /// be replaced.
         /// </summary>
-        public Task WriteBytesAsync(ResPath patch, ReadOnlyMemory<byte> bytes,
+        Task WriteBytesAsync(ResPath patch, ReadOnlyMemory<byte> bytes,
             CancellationToken cancellationToken = default);
     }
 }

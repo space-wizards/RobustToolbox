@@ -171,23 +171,23 @@ namespace Robust.Shared.ContentPack
             return Path.GetFullPath(Path.Combine(root, relPath));
         }
 
-        public Task WriteAllBytesAsync(ResPath path, byte[] bytes, CancellationToken cancellationToken = default)
+        public async Task WriteAllBytesAsync(ResPath path, byte[] bytes, CancellationToken cancellationToken = default)
         {
             var fullPath = GetFullPath(path);
-            return File.WriteAllBytesAsync(fullPath, bytes, cancellationToken);
+            await File.WriteAllBytesAsync(fullPath, bytes, cancellationToken);
         }
 
-        public Task WriteBytesAsync(ResPath path, byte[] bytes, int offset, int length, CancellationToken cancellationToken = default)
+        public async Task WriteBytesAsync(ResPath path, byte[] bytes, int offset, int length, CancellationToken cancellationToken = default)
         {
             var slice = new ReadOnlyMemory<byte>(bytes, offset, length);
-            return WriteBytesAsync(path, slice, cancellationToken);
+            await WriteBytesAsync(path, slice, cancellationToken);
         }
 
-        public Task WriteBytesAsync(ResPath patch, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
+        public async Task WriteBytesAsync(ResPath patch, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
         {
             var fullPath = GetFullPath(patch);
-            using var fs = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
-            return fs.WriteAsync(bytes, cancellationToken).AsTask();
+            await using var fs = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
+            await fs.WriteAsync(bytes, cancellationToken);
         }
     }
 }

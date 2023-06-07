@@ -1038,7 +1038,7 @@ namespace Robust.Client.GameStates
         private void HandleEntityState(EntityUid uid, IEventBus bus, EntityState? curState,
             EntityState? nextState, GameTick lastApplied, GameTick toTick, bool enteringPvs)
         {
-            var size = curState?.ComponentChanges.Span.Length ?? 0 + nextState?.ComponentChanges.Span.Length ?? 0;
+            var size = (curState?.ComponentChanges.Span.Length ?? 0) + (nextState?.ComponentChanges.Span.Length ?? 0);
             var compStateWork = new Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)>(size);
 
             // First remove any deleted components

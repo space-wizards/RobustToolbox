@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +13,17 @@ namespace Robust.Client.Replays.Loading;
 
 public sealed partial class ReplayLoadManager
 {
-    public async Task<ReplayData> LoadAndStartReplayAsync(
+    public event Action<IWritableDirProvider, ResPath>? LoadOverride;
+
+    public void LoadAndStartReplay(IWritableDirProvider dir, ResPath path)
+    {
+        if (LoadOverride != null)
+            LoadOverride.Invoke(dir, path);
+        else
+            LoadAndStartReplayAsync(dir, path);
+    }
+
+    public async Task LoadAndStartReplayAsync(
         IWritableDirProvider dir,
         ResPath path,
         LoadReplayCallback? callback = null)
@@ -20,14 +31,20 @@ public sealed partial class ReplayLoadManager
         callback ??= (_, _, _, _) => Task.CompletedTask;
         var data = await LoadReplayAsync(dir, path, callback);
         await StartReplayAsync(data, callback);
-        return data;
     }
 
     public async Task StartReplayAsync(ReplayData data, LoadReplayCallback callback)
     {
+        if (_client.RunLevel != ClientRunLevel.SinglePlayerGame)
+            throw new Exception($"Invalid runlevel: {_client.RunLevel}.");
+
+        if (_replayPlayback.Replay != null)
+            throw new Exception("Already playing a replay");
+
         if (data.Checkpoints.Length == 0)
             return;
 
+        _timing.Paused = true;
         var checkpoint = data.Checkpoints[0];
         data.CurrentIndex = checkpoint.Index;
         var state = checkpoint.State;
@@ -65,7 +82,6 @@ public sealed partial class ReplayLoadManager
         }
 
         await callback(0, total, LoadingState.Initializing, true);
-        // TODO add async variant?
         _gameState.ApplyGameState(state, data.NextState);
 
         i = 0;
@@ -97,5 +113,8 @@ public sealed partial class ReplayLoadManager
         DebugTools.Assert(_timing.LastRealTick == tick);
         DebugTools.Assert(_timing.LastProcessedTick == tick);
         _timing.CurTick = tick + 1;
+        data.CurrentIndex = 0;
+        _replayPlayback.StartReplay(data);
+        _timing.Paused = false;
     }
 }

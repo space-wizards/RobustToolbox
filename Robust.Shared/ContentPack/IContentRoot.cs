@@ -49,7 +49,7 @@ namespace Robust.Shared.ContentPack
 
             var options = FindFiles(path).Select(c =>
             {
-                var segment = path.CanonPath.Split('/');
+                var segment = c.CanonPath.Split('/');
                 var segCount = segment.Count();
                 var newPath = segment.Skip(countDirs).First();
                 if (segCount > countDirs + 1)

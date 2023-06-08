@@ -377,7 +377,7 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
-            // Pending deletion from earlier in the tick so stop raising events any new contact events on it.
+            // Pending deletion from earlier in the tick so stop raising any new contact events on it.
             if (EntityManager.IsQueuedForDeletion(uidA) || EntityManager.IsQueuedForDeletion(uidB))
             {
                 DestroyContact(contact);

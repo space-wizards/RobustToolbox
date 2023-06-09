@@ -20,7 +20,7 @@ namespace Robust.Client
                         LoadRobustWebView(mode);
                         break;
                     default:
-                        Logger.Error($"Unknown Robust module: {module}");
+                        _logger.Error($"Unknown Robust module: {module}");
                         return;
                 }
             }
@@ -28,7 +28,7 @@ namespace Robust.Client
 
         private void LoadRobustWebView(GameController.DisplayMode mode)
         {
-            Logger.Debug("Loading Robust.Client.WebView");
+            _logger.Debug("Loading Robust.Client.WebView");
 
             var alc = CreateModuleLoadContext("Robust.Client.WebView");
             var assembly = alc.LoadFromAssemblyName(new AssemblyName("Robust.Client.WebView"));
@@ -39,7 +39,7 @@ namespace Robust.Client
             _webViewHook = (IWebViewManagerHook)Activator.CreateInstance(managerType)!;
             _webViewHook.PreInitialize(_dependencyCollection, mode);
 
-            Logger.Debug("Done pre-initializing Robust.Client.WebView");
+            _logger.Debug("Done pre-initializing Robust.Client.WebView");
         }
 
         /// <summary>

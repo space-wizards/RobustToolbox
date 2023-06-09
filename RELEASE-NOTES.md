@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Obsoleted the following methods from IPlayerSession: AttachToEntity, DetachFromEntity. Use the methods in ActorSystem instead.
+* Obsoleted the following methods from `IPlayerSession`: `AttachToEntity`, `DetachFromEntity`. Use the methods in `ActorSystem` instead.
 
 ### New features
 

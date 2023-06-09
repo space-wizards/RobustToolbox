@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `System.Net.IPAddress` is now accessible from the sandbox.
 
 ### Bugfixes
 

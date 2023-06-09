@@ -73,7 +73,7 @@ namespace Robust.Server.ViewVariables
 
                 if (message.ReinterpretValue && !TryReinterpretValue(value, out value))
                 {
-                    Sawmill.WarningS("vv", $"Couldn't reinterpret value \"{message.Value}\" sent by {session.PlayerUser}!");
+                    Sawmill.Warning($"Couldn't reinterpret value \"{message.Value}\" sent by {session.PlayerUser}!");
                     return;
                 }
 
@@ -172,7 +172,7 @@ namespace Robust.Server.ViewVariables
                     }
                     catch (Exception e)
                     {
-                        Sawmill.ErrorS("vv", "Exception while retrieving value for session. {0}", e);
+                        Sawmill.Error("Exception while retrieving value for session. {0}", e);
                         Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }

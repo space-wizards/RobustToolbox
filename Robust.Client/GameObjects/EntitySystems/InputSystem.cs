@@ -20,13 +20,16 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    public sealed class InputSystem : SharedInputSystem
+    public sealed class InputSystem : SharedInputSystem, IPostInjectInit
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientGameStateManager _stateManager = default!;
         [Dependency] private readonly IConsoleHost _conHost = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+
+        private ISawmill _sawmillInputContext = default!;
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
 
@@ -172,7 +175,7 @@ namespace Robust.Client.GameObjects
 
             if (!EntityManager.TryGetComponent(entity, out InputComponent? inputComp))
             {
-                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                _sawmillInputContext.Debug($"AttachedEnt has no InputComponent: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
                 return;
             }
@@ -183,7 +186,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS("input.context", $"Unknown context: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                _sawmillInputContext.Error($"Unknown context: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }
@@ -200,6 +203,11 @@ namespace Robust.Client.GameObjects
             }
 
             SetEntityContextActive(_inputManager, controlled);
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _sawmillInputContext = _logManager.GetSawmill("input.context");
         }
     }
 

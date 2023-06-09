@@ -28,6 +28,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IPrototypeManager _proto = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
 
@@ -57,7 +58,7 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
-            _sawmill = Logger.GetSawmill("sprite");
+            _sawmill = _logManager.GetSawmill("sprite");
         }
 
         private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)

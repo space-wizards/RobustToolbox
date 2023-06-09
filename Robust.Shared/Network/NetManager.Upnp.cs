@@ -11,7 +11,7 @@ public partial class NetManager
 {
     private void InitUpnp()
     {
-        var sawmill = Logger.GetSawmill("net.upnp");
+        var sawmill = _logMan.GetSawmill("net.upnp");
         var port = Port;
 
         var peers = _netPeers.Select(p => p.Peer).Where(p => p.Configuration.EnableUPnP).ToArray();

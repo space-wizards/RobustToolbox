@@ -219,7 +219,7 @@ namespace Robust.Client.ViewVariables
             ViewVariablesInstance instance;
             if (obj is EntityUid entity && _entityManager.EntityExists(entity))
             {
-                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
+                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer, Sawmill);
             }
             else
             {
@@ -270,7 +270,7 @@ namespace Robust.Client.ViewVariables
             ViewVariablesInstance instance;
             if (type != null && typeof(EntityUid).IsAssignableFrom(type))
             {
-                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
+                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer, Sawmill);
             }
             else
             {

@@ -19,10 +19,11 @@ using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Client.Graphics.Audio
 {
-    internal partial class ClydeAudio
+    internal partial class ClydeAudio : IPostInjectInit
     {
         [Robust.Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
         [Robust.Shared.IoC.Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Robust.Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
 
         private Thread? _gameThread;
 
@@ -45,6 +46,11 @@ namespace Robust.Client.Graphics.Audio
         private bool IsMainThread()
         {
             return Thread.CurrentThread == _gameThread;
+        }
+
+        public void PostInject()
+        {
+            OpenALSawmill = _logMan.GetSawmill("clyde.oal");
         }
     }
 }

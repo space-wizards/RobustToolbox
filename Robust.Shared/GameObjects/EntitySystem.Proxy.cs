@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -796,26 +795,6 @@ public partial class EntitySystem
     {
         EntityManager.RaisePredictiveEvent(msg);
     }
-
-    #endregion
-
-    #region Logging
-
-    protected void LogDebug(string message, params object?[] args) => Sawmill.Debug(message, args);
-    protected void LogDebug(string message) => Sawmill.Debug(message);
-    protected void LogInfo(string message, params object?[] args) => Sawmill.Info(message, args);
-    protected void LogInfo(string message) => Sawmill.Info(message);
-    protected void LogWarning(string message, params object?[] args) => Sawmill.Warning(message);
-    protected void LogWarning(string message) => Sawmill.Warning(message);
-    protected void LogError(string message, params object?[] args) => Sawmill.Error(message, args);
-    protected void LogError(string message) => Sawmill.Error(message);
-    protected void LogFatal(string message, params object?[] args) => Sawmill.Fatal(message, args);
-    protected void LogFatal(string message) => Sawmill.Fatal(message);
-    protected void Log(LogLevel level, string message) => Sawmill.Log(level, message);
-    protected void Log(LogLevel level, string message, params object?[] args) => Sawmill.Log(level, message, args);
-
-    protected void Log(LogLevel level, Exception? exception, string message, params object?[] args)
-        => Sawmill.Log(level, exception, message, args);
 
     #endregion
 }

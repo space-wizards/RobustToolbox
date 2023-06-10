@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -27,7 +25,21 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly ISharedPlayerManager _playerMan = default!;
         [Dependency] private readonly IReplayRecordingManager _replayMan = default!;
         [Dependency] private readonly ILogManager _logMan = default!;
-        protected ISawmill Sawmill = default!;
+        public ISawmill Log { get; private set; } = default!;
+
+        protected virtual string SawmillName
+        {
+            get
+            {
+                var name = GetType().Name;
+                if (name.EndsWith("System"))
+                    name = name.Substring(0, name.Length - "System".Length);
+
+                // Convention is foo.bar_baz
+                // But fuck trying to automatically snake_case something like "PVSOverrideSystem"
+                return $"system.{name.ToLowerInvariant()}";
+            }
+        }
 
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
@@ -185,15 +197,7 @@ namespace Robust.Shared.GameObjects
 
         public void PostInject()
         {
-            var name = GetType().Name;
-
-            if (name.EndsWith("System"))
-                name = name.Substring(0, name.Length - "System".Length);
-
-            // Convention is foo.bar_baz
-            // But fuck trying to automatically snake_case something like "PVSSystem"
-            name = name.ToLowerInvariant();
-            Sawmill = _logMan.GetSawmill($"system.{name}");
+            Log = _logMan.GetSawmill(SawmillName);
         }
     }
 }

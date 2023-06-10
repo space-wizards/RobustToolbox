@@ -26,22 +26,25 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
 
     public override void RecordServerMessage(object obj)
         => RecordReplayMessage(obj);
-    
+
     public override void RecordClientMessage(object obj)
     {
         // Do nothing.
     }
 
-    public void SaveReplayData()
+    public void Update()
     {
         if (!IsRecording)
+        {
+            UpdateWriteTasks();
             return;
+        }
 
         var (entStates, deletions, _) = _pvs.GetAllEntityStates(null, _fromTick, Timing.CurTick);
         var playerStates = _player.GetPlayerStates(_fromTick);
         var state = new GameState(_fromTick, Timing.CurTick, 0, entStates, playerStates, deletions);
         _fromTick = Timing.CurTick;
-        SaveReplayData(state);
+        Update(state);
     }
 
     protected override void Reset()

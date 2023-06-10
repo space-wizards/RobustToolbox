@@ -633,7 +633,7 @@ namespace Robust.Client.GameStates
             // Also, currently this will cause a state to be serialized, which in principle shouldn't differ from the
             // data that we received from the server. So if a recording is active we could actually just copy those
             // raw bytes.
-            _replayRecording.SaveReplayData(curState);
+            _replayRecording.Update(curState);
 
             using (_prof.Group("Config"))
             {

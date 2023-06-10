@@ -80,7 +80,7 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
         var (state, detachMsg) = CreateFullState();
         if (detachMsg != null)
             RecordReplayMessage(detachMsg);
-        SaveReplayData(state);
+        Update(state);
         return true;
     }
 

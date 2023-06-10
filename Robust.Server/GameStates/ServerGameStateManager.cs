@@ -213,8 +213,7 @@ namespace Robust.Server.GameStates
             var mQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
 
             // Replays process game states in parallel with players
-            var start = _replay.IsRecording ? -1 : 0;
-            Parallel.For(start, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
+            Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
 
             PvsThreadResources SendPlayer(int i, ParallelLoopState state, PvsThreadResources resource)
             {
@@ -223,7 +222,7 @@ namespace Robust.Server.GameStates
                     if (i >= 0)
                         SendStateUpdate(i, resource, inputSystem, players[i], pvsData, mQuery, tQuery, ref oldestAckValue);
                     else
-                        _replay.SaveReplayData();
+                        _replay.Update();
                 }
                 catch (Exception e) // Catch EVERY exception
                 {

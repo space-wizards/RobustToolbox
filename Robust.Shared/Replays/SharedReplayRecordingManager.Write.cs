@@ -2,7 +2,6 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -71,7 +70,7 @@ internal abstract partial class SharedReplayRecordingManager
         _writeTasks.Add(task);
     }
 
-    private bool UpdateWriteTasks()
+    protected bool UpdateWriteTasks()
     {
         bool isWriting = false;
         for (var i = _writeTasks.Count - 1; i >= 0; i--)

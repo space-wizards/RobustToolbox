@@ -52,10 +52,10 @@ public interface IReplayRecordingManager
     bool IsRecording { get; }
 
     /// <summary>
-    /// Saves the replay data for the current tick, asing the given game state. Does nothing if
-    /// <see cref="IsRecording"/> is false.
+    /// Processes pending write tasks and saves the replay data for the current tick. This should be called even if a
+    /// replay is not currently being recorded.
     /// </summary>
-    void SaveReplayData(GameState state);
+    void Update(GameState? state);
 
     /// <summary>
     /// This gets invoked whenever a replay recording is starting. Subscribers can use this to add extra yaml data

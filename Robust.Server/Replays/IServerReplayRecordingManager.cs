@@ -5,7 +5,8 @@ namespace Robust.Server.Replays;
 public interface IServerReplayRecordingManager : IReplayRecordingManager
 {
     /// <summary>
-    /// Saves the replay data for the current tick. Does nothing if <see cref="IReplayRecordingManager.IsRecording"/> is false.
+    /// Processes pending write tasks and saves the replay data for the current tick. This should be called even if a
+    /// replay is not currently being recorded.
     /// </summary>
-    void SaveReplayData();
+    void Update();
 }

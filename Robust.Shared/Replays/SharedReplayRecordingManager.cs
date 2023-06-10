@@ -106,9 +106,11 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         UpdateWriteTasks();
     }
 
-    public void SaveReplayData(GameState state)
+    public void Update(GameState? state)
     {
-        if (_replay is not var (stream, _))
+        UpdateWriteTasks();
+
+        if (state == null || _replay is not var (stream, _))
             return;
 
         try
@@ -214,8 +216,6 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
     private void WriteGameState(bool continueRecording = true)
     {
-        UpdateWriteTasks();
-
         if (_replay is not var (stream, context) || _directory is not var (dir, path))
             return;
 

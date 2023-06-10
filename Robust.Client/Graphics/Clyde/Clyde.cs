@@ -89,7 +89,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public bool InitializePreWindowing()
         {
-            _sawmillOgl = Logger.GetSawmill("clyde.ogl");
+            _sawmillOgl = _logManager.GetSawmill("clyde.ogl");
 
             _cfg.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
             _cfg.OnValueChanged(CVars.DisplayVSync, VSyncChanged, true);

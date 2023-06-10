@@ -204,8 +204,7 @@ namespace Robust.Client.Graphics.Audio
                 if (_sourceStream.ChannelCount > 1 && !_didPositionWarning)
                 {
                     _didPositionWarning = true;
-                    Logger.WarningS("clyde.oal",
-                        "Attempting to set position on audio source with multiple audio channels! Stream: '{0}'.  Make sure the audio is MONO, not stereo.",
+                    _master.OpenALSawmill.Warning("Attempting to set position on audio source with multiple audio channels! Stream: '{0}'.  Make sure the audio is MONO, not stereo.",
                         _sourceStream.Name);
                     // warning isn't enough, people just ignore it :(
                     DebugTools.Assert(false, $"Attempting to set position on audio source with multiple audio channels! Stream: '{_sourceStream.Name}'. Make sure the audio is MONO, not stereo.");

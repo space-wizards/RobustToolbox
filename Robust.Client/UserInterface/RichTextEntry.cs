@@ -176,7 +176,7 @@ namespace Robust.Client.UserInterface
             var globalBreakCounter = 0;
             var lineBreakIndex = 0;
             var baseLine = drawBox.TopLeft + new Vector2(0, defaultFont.GetAscent(uiScale) + verticalOffset);
-            var controlYAdvance = 0;
+            var controlYAdvance = 0f;
 
             var nodeIndex = -1;
             foreach (var node in Message.Nodes)
@@ -208,10 +208,12 @@ namespace Robust.Client.UserInterface
                 if (!_tagControls.TryGetValue(nodeIndex, out var control))
                     continue;
 
-                control.Position = new Vector2(baseLine.X, baseLine.Y - defaultFont.GetAscent(uiScale));
+                var invertedScale = 1f / uiScale;
+
+                control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
                 control.Measure(new Vector2(Width, Height));
                 var advanceX = control.DesiredPixelSize.X;
-                controlYAdvance = Math.Max(0, control.DesiredPixelSize.Y - font.GetLineHeight(uiScale));
+                controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - font.GetLineHeight(uiScale)) * invertedScale);
                 baseLine += new Vector2(advanceX, 0);
             }
         }

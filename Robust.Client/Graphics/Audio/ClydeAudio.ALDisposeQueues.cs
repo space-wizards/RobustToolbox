@@ -16,7 +16,7 @@ namespace Robust.Client.Graphics.Audio
             // Clear out finalized audio sources.
             while (_sourceDisposeQueue.TryDequeue(out var handles))
             {
-                _openALSawmill.Debug("Cleaning out source {0} which finalized in another thread.", handles.sourceHandle);
+                OpenALSawmill.Debug("Cleaning out source {0} which finalized in another thread.", handles.sourceHandle);
                 if (IsEfxSupported) RemoveEfx(handles);
                 AL.DeleteSource(handles.sourceHandle);
                 _checkAlError();
@@ -26,7 +26,7 @@ namespace Robust.Client.Graphics.Audio
             // Clear out finalized buffered audio sources.
             while (_bufferedSourceDisposeQueue.TryDequeue(out var handles))
             {
-                _openALSawmill.Debug("Cleaning out buffered source {0} which finalized in another thread.", handles.sourceHandle);
+                OpenALSawmill.Debug("Cleaning out buffered source {0} which finalized in another thread.", handles.sourceHandle);
                 if (IsEfxSupported) RemoveEfx(handles);
                 AL.DeleteSource(handles.sourceHandle);
                 _checkAlError();

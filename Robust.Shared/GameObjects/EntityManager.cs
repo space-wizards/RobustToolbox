@@ -25,6 +25,7 @@ namespace Robust.Shared.GameObjects
         #region Dependencies
 
         [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
+        [Dependency] protected readonly ILogManager LogManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -102,8 +103,8 @@ namespace Robust.Shared.GameObjects
             InitializeComponents();
             _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
             _metaName = _componentFactory.GetComponentName(typeof(MetaDataComponent));
-            _sawmill = Logger.GetSawmill("entity");
-            _resolveSawmill = Logger.GetSawmill("resolve");
+            _sawmill = LogManager.GetSawmill("entity");
+            _resolveSawmill = LogManager.GetSawmill("resolve");
 
             Initialized = true;
         }

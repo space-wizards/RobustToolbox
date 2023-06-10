@@ -113,6 +113,7 @@ namespace Robust.Server.Player
         public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
+        [Obsolete("Use ActorSystem.Attach() instead.")]
         public void AttachToEntity(EntityUid? entity)
         {
             DetachFromEntity();
@@ -124,6 +125,7 @@ namespace Robust.Server.Player
         }
 
         /// <inheritdoc />
+        [Obsolete("Use ActorSystem.Attach() instead.")]
         public void AttachToEntity(EntityUid uid)
         {
             DetachFromEntity();
@@ -135,6 +137,7 @@ namespace Robust.Server.Player
         }
 
         /// <inheritdoc />
+        [Obsolete("Use ActorSystem.Detach() instead.")]
         public void DetachFromEntity()
         {
             if (AttachedEntity == null)

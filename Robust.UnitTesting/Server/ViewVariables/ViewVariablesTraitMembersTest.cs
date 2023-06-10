@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Robust.Server.ViewVariables;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.Analyzers;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -19,12 +20,13 @@ namespace Robust.UnitTesting.Server.ViewVariables
             var ser = new Mock<IRobustSerializer>();
             ser.Setup(p => p.CanSerialize(It.IsAny<Type>())).Returns(true);
 
+            var logger = new Mock<ISawmill>();
             var session = new Mock<IViewVariablesSession>();
             session.SetupGet(p => p.Object).Returns(new C());
             session.SetupGet(p => p.ObjectType).Returns(typeof(C));
             session.SetupGet(p => p.RobustSerializer).Returns(ser.Object);
 
-            var blob = new ViewVariablesTraitMembers(session.Object).DataRequest(new ViewVariablesRequestMembers());
+            var blob = new ViewVariablesTraitMembers(session.Object, logger.Object).DataRequest(new ViewVariablesRequestMembers());
             Assert.That(blob, Is.TypeOf<ViewVariablesBlobMembers>());
 
             var blobM = (ViewVariablesBlobMembers) blob!;

@@ -361,7 +361,7 @@ namespace Robust.Shared.Physics.Systems
                         }
 
                         return true;
-                    });
+                    }, includeMap: false);
             }
         }
 

@@ -416,6 +416,7 @@ Types:
     IOrderedEnumerable`1: { All: True }
   System.Net:
     DnsEndPoint: { }
+    IPAddress: { }
     HttpStatusCode: { } # Enum
   System.Numerics:
     BitOperations: { All: True }

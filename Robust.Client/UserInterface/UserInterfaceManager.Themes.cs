@@ -37,13 +37,13 @@ internal partial class UserInterfaceManager
         if (_defaultOverriden)
         {
             //this exists to stop people from misusing default theme
-            Logger.Error("Tried to set default theme twice!");
+            _sawmillUI.Error("Tried to set default theme twice!");
             return;
         }
 
         if (!_protoManager.TryIndex(themeId, out UITheme? theme))
         {
-            Logger.Error("Could not find UI theme prototype for ID:"+ themeId);
+            _sawmillUI.Error("Could not find UI theme prototype for ID:"+ themeId);
             return;
         }
         DefaultTheme = theme;

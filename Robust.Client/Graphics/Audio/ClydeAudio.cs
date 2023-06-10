@@ -46,6 +46,8 @@ namespace Robust.Client.Graphics.Audio
 
         private bool _initializeAudio()
         {
+            OpenALSawmill = _logMan.GetSawmill("clyde.oal");
+
             if (!_audioOpenDevice())
                 return false;
 

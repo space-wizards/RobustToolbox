@@ -57,13 +57,16 @@ public abstract class MetaDataSystem : EntitySystem
         Dirty(metadata);
     }
 
-    public void SetEntityPrototype(EntityUid uid, EntityPrototype? value, MetaDataComponent? metadata = null)
+    internal void SetEntityPrototype(EntityUid uid, EntityPrototype? value, MetaDataComponent? metadata = null)
     {
         if (!Resolve(uid, ref metadata) || value?.Equals(metadata._entityPrototype) == true)
             return;
 
+        // The ID string should never change after an entity has been created.
+        // Otherwise this breaks networking in multiplayer games.
+        DebugTools.Assert(value?.ID == metadata._entityPrototype?.ID);
+
         metadata._entityPrototype = value;
-        Dirty(metadata);
     }
 
     public bool EntityPaused(EntityUid uid, MetaDataComponent? metadata = null)

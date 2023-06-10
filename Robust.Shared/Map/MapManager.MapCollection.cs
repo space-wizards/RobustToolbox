@@ -144,8 +144,6 @@ internal partial class MapManager
         // Yeah this sucks but I just want to save maps for now, deal.
         if (raiseEvent)
         {
-            var args = new MapEventArgs(mapId);
-            OnMapCreatedGridTree(args);
             var ev = new MapChangedEvent(newMapEntity, mapId, true);
             EntityManager.EventBus.RaiseLocalEvent(newMapEntity, ev, true);
         }
@@ -246,7 +244,6 @@ internal partial class MapManager
         }
 
         var args = new MapEventArgs(actualId);
-        OnMapCreatedGridTree(args);
         return actualId;
     }
 }

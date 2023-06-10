@@ -153,7 +153,8 @@ namespace Robust.Shared.Physics.Systems
         internal void FindNewContacts(PhysicsMapComponent component, MapId mapId)
         {
             var moveBuffer = component.MoveBuffer;
-            var movedGrids = _mapManager.GetMovedGrids(mapId);
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var movedGrids = Comp<MovedGridsComponent>(mapUid).MovedGrids;
             var gridMoveBuffer = new Dictionary<FixtureProxy, Box2>();
 
             var broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
@@ -265,7 +266,7 @@ namespace Robust.Shared.Physics.Systems
             ArrayPool<List<FixtureProxy>>.Shared.Return(contactBuffer);
             ArrayPool<(FixtureProxy Proxy, Box2 AABB)>.Shared.Return(pMoveBuffer);
             moveBuffer.Clear();
-            _mapManager.ClearMovedGrids(mapId);
+            movedGrids.Clear();
         }
 
         private void HandleGridCollisions(

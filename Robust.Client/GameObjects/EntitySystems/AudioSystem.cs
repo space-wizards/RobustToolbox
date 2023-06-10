@@ -29,6 +29,7 @@ namespace Robust.Client.GameObjects;
 [UsedImplicitly]
 public sealed class AudioSystem : SharedAudioSystem
 {
+    [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
     [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
     [Dependency] private readonly IClydeAudio _clyde = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -38,7 +39,7 @@ public sealed class AudioSystem : SharedAudioSystem
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-    [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
+    [Dependency] private readonly ILogManager _logManager = default!;
 
     private readonly List<PlayingStream> _playingClydeStreams = new();
 
@@ -55,7 +56,7 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
         SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
 
-        _sawmill = Logger.GetSawmill("audio");
+        _sawmill = _logManager.GetSawmill("audio");
 
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
     }

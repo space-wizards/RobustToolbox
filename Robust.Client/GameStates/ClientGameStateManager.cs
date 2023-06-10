@@ -35,7 +35,7 @@ namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
     [UsedImplicitly]
-    public sealed class ClientGameStateManager : IClientGameStateManager
+    public sealed class ClientGameStateManager : IClientGameStateManager, IPostInjectInit
     {
         private GameStateProcessor _processor = default!;
 
@@ -52,6 +52,7 @@ namespace Robust.Client.GameStates
 
         private uint _metaCompNetId;
 
+        [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
         [Dependency] private readonly IComponentFactory _compFactory = default!;
         [Dependency] private readonly IClientEntityManagerInternal _entities = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
@@ -65,7 +66,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-        [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
+        [Dependency] private readonly ILogManager _logMan = default!;
 
         private ISawmill _sawmill = default!;
 
@@ -101,7 +102,6 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public void Initialize()
         {
-            _sawmill = Logger.GetSawmill(CVars.NetPredict.Name);
             _processor = new GameStateProcessor(_timing);
 
             _network.RegisterNetMessage<MsgState>(HandleStateMessage);
@@ -1351,6 +1351,11 @@ namespace Robust.Client.GameStates
             }
         }
         #endregion
+
+        void IPostInjectInit.PostInject()
+        {
+            _sawmill = _logMan.GetSawmill(CVars.NetPredict.Name);
+        }
     }
 
     public sealed class GameStateAppliedArgs : EventArgs

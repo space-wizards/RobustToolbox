@@ -273,7 +273,7 @@ namespace Robust.Client
 
             if (!result)
             {
-                Logger.Fatal("Errors while loading content assemblies.");
+                _logger.Fatal("Errors while loading content assemblies.");
                 return false;
             }
 
@@ -511,7 +511,7 @@ namespace Robust.Client
 
                 if (uri.Scheme != "udp")
                 {
-                    Logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
+                    _logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
                 }
 
                 LaunchState = new InitialLaunchState(
@@ -534,11 +534,11 @@ namespace Robust.Client
 
             if (reason != null)
             {
-                Logger.Info($"Shutting down! Reason: {reason}");
+                _logger.Info($"Shutting down! Reason: {reason}");
             }
             else
             {
-                Logger.Info("Shutting down!");
+                _logger.Info("Shutting down!");
             }
 
             _mainLoop.Running = false;

@@ -30,7 +30,7 @@ namespace Robust.Shared.Network
         {
             CryptoBox.KeyPair(CryptoPublicKey, _cryptoPrivateKey);
 
-            Logger.DebugS("auth", "Public key is {0}", Convert.ToBase64String(CryptoPublicKey));
+            _authLogger.Debug("Public key is {0}", Convert.ToBase64String(CryptoPublicKey));
         }
 
         private async void HandleHandshake(NetPeerData peer, NetConnection connection)
@@ -199,8 +199,7 @@ namespace Robust.Shared.Network
                 if (connection.Status == NetConnectionStatus.Disconnecting ||
                     connection.Status == NetConnectionStatus.Disconnected)
                 {
-                    Logger.InfoS("net",
-                        "{ConnectionEndpoint} ({UserId}/{UserName}) disconnected during handshake",
+                    _logger.Info("{ConnectionEndpoint} ({UserId}/{UserName}) disconnected during handshake",
                         connection.RemoteEndPoint, userData.UserId, userData.UserName);
 
                     return;
@@ -222,8 +221,7 @@ namespace Robust.Shared.Network
                 encryption?.Encrypt(msg);
                 peer.Peer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
 
-                Logger.InfoS("net",
-                    "Approved {ConnectionEndpoint} with username {Username} user ID {userId} into the server",
+                _logger.Info("Approved {ConnectionEndpoint} with username {Username} user ID {userId} into the server",
                     connection.RemoteEndPoint, userData.UserName, userData.UserId);
 
                 // Handshake complete!
@@ -231,13 +229,12 @@ namespace Robust.Shared.Network
             }
             catch (ClientDisconnectedException)
             {
-                Logger.InfoS("net",
-                    $"Peer {NetUtility.ToHexString(connection.RemoteUniqueIdentifier)} disconnected while handshake was in-progress.");
+                _logger.Info($"Peer {NetUtility.ToHexString(connection.RemoteUniqueIdentifier)} disconnected while handshake was in-progress.");
             }
             catch (Exception e)
             {
                 connection.Disconnect("Unknown server error occured during handshake.");
-                Logger.ErrorS("net", "Exception during handshake with peer {0}:\n{1}",
+                _logger.Error("Exception during handshake with peer {0}:\n{1}",
                     NetUtility.ToHexString(connection.RemoteUniqueIdentifier), e);
             }
         }

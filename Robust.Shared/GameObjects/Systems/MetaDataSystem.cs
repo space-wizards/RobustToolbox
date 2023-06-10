@@ -39,6 +39,36 @@ public abstract class MetaDataSystem : EntitySystem
         component.PauseTime = state.PauseTime;
     }
 
+    public void SetEntityName(EntityUid uid, string value, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata) || value.Equals(metadata.EntityName))
+            return;
+
+        metadata._entityName = value;
+        Dirty(metadata);
+    }
+
+    public void SetEntityDescription(EntityUid uid, string value, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata) || value.Equals(metadata.EntityDescription))
+            return;
+
+        metadata._entityDescription = value;
+        Dirty(metadata);
+    }
+
+    internal void SetEntityPrototype(EntityUid uid, EntityPrototype? value, MetaDataComponent? metadata = null)
+    {
+        if (!Resolve(uid, ref metadata) || value?.Equals(metadata._entityPrototype) == true)
+            return;
+
+        // The ID string should never change after an entity has been created.
+        // Otherwise this breaks networking in multiplayer games.
+        DebugTools.Assert(value?.ID == metadata._entityPrototype?.ID);
+
+        metadata._entityPrototype = value;
+    }
+
     public bool EntityPaused(EntityUid uid, MetaDataComponent? metadata = null)
     {
         if (!Resolve(uid, ref metadata))

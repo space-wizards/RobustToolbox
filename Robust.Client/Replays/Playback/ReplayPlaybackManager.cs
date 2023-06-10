@@ -23,6 +23,7 @@ namespace Robust.Client.Replays.Playback;
 
 internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
 {
+    [Dependency] private readonly ILogManager _logMan = default!;
     [Dependency] private readonly IBaseClient _client = default!;
     [Dependency] private readonly IMidiManager _midi = default!;
     [Dependency] private readonly IPlayerManager _player = default!;
@@ -84,7 +85,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
             return;
 
         _initialized = true;
-        _sawmill = Logger.GetSawmill("replay");
+        _sawmill = _logMan.GetSawmill("replay");
         _metaId = _factory.GetRegistration(typeof(MetaDataComponent)).NetID!.Value;
         _confMan.OnValueChanged(CVars.CheckpointInterval, (value) => _checkpointInterval = value, true);
         _confMan.OnValueChanged(CVars.ReplaySkipThreshold, (value) => _visualEventThreshold = value, true);

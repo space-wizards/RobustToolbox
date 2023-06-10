@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Obsoleted the following methods from `IPlayerSession`: `AttachToEntity`, `DetachFromEntity`. Use the methods in `ActorSystem` instead.
+*None yet*
 
 ### New features
 
-* `System.Net.IPAddress` is now accessible from the sandbox.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,33 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.126.0.0
+
+### Breaking changes
+
+* Several `MapManager` methods were moved to `MapSystem`.
+* The signature of grid lookup queries has changed, with a new optional `includeMap` bool added in-between other optional bools.
+
+### New features
+
+* `System.Net.IPAddress` is now accessible from the sandbox.
+
+### Bugfixes
+
+* Fixed RichText not rendering some tags properly for some UI scales.
+* Text inside of `OutputPanel` controls should no longer overlap with the scrollbar.
+
+### Other
+
+* Obsoleted the following methods from `IPlayerSession`: `AttachToEntity`, `DetachFromEntity`. Use the methods in `ActorSystem` instead.
+* Static Loggers (e.g., `Logger.Log()` are now obsoleted. Get a sawmill from ILogManager instead.
+* Several `MetadataComponent` setters have been marked as obsolete. Use `MetaDataSystem` methods instead.
+
+### Internal
+
+* Removed several static logging calls.
 
 
 ## 0.125.0.1

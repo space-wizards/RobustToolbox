@@ -52,23 +52,30 @@ public interface IReplayRecordingManager
     bool IsRecording { get; }
 
     /// <summary>
-    /// Saves the replay data for the current tick, using the given game state. Does nothing if
+    /// Saves the replay data for the current tick, asing the given game state. Does nothing if
     /// <see cref="IsRecording"/> is false.
     /// </summary>
     void SaveReplayData(GameState state);
 
     /// <summary>
-    /// This gets invoked whenever a replay recording starts. Subscribers can use this to add extra yaml data
+    /// This gets invoked whenever a replay recording is starting. Subscribers can use this to add extra yaml data
     /// to the recording's metadata file, as well as to provide serializable messages that get replayed when the replay
     /// is initially loaded. E.g., this should contain networked events that would get sent to a newly connected client.
     /// </summary>
     event Action<MappingDataNode, List<object>>? RecordingStarted;
 
     /// <summary>
-    /// This gets invoked whenever a replay recording ends. Subscribers can use this to add extra yaml data to the
+    /// This gets invoked whenever a replay recording is stopping. Subscribers can use this to add extra yaml data to the
     /// recording's metadata file.
     /// </summary>
     event Action<MappingDataNode>? RecordingStopped;
+
+    /// <summary>
+    /// This gets invoked after a replay recording has finished and provides information about where the replay data
+    /// was saved. Note that this only means that all write tasks have started, however some of the file tasks may not
+    /// have finished yet. See <see cref="WaitWriteTasks"/>.
+    /// </summary>
+    event Action<IWritableDirProvider, ResPath>? RecordingFinished;
 
     /// <summary>
     /// Tries to starts a replay recording.

@@ -35,6 +35,8 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
     public event Action<MappingDataNode, List<object>>? RecordingStarted;
     public event Action<MappingDataNode>? RecordingStopped;
+    public event Action<IWritableDirProvider, ResPath>? RecordingFinished;
+
 
     private ISawmill _sawmill = default!;
     private List<object> _queuedMessages = new();
@@ -238,10 +240,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         if (continueRecording)
             stream.SetLength(0);
         else
-        {
             WriteFinalMetadata();
-            Reset();
-        }
     }
 
     protected virtual void Reset()
@@ -334,6 +333,8 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         var document = new YamlDocument(_yamlMetadata.ToYaml());
         WriteYaml(document, dir, path / MetaFile);
         UpdateWriteTasks();
+        RecordingFinished?.Invoke(dir, path);
+        Reset();
     }
 
     public (float Minutes, int Ticks, float Size, float UncompressedSize) GetReplayStats()

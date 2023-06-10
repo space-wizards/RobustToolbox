@@ -113,6 +113,6 @@ internal abstract partial class SharedReplayRecordingManager
         // First, check for any tasks that have encountered errors.
         UpdateWriteTasks();
 
-        return Task.WhenAll(_writeTasks.ToArray());
+        return Task.WhenAll(_writeTasks);
     }
 }

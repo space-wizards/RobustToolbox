@@ -15,12 +15,12 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var style = _getStyleBox();
-            style?.Draw(handle, PixelSizeBox);
+            style?.Draw(handle, PixelSizeBox, UIScale);
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            var styleSize = (_getStyleBox()?.MinimumSize ?? Vector2.Zero) / UIScale;
+            var styleSize = (_getStyleBox()?.MinimumSize ?? Vector2.Zero);
             var measureSize = Vector2.ComponentMax(availableSize - styleSize, Vector2.Zero);
             var childSize = Vector2.Zero;
             foreach (var child in Children)
@@ -36,7 +36,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             var pixelSize = finalSize * UIScale;
             var ourSize = UIBox2.FromDimensions(Vector2.Zero, pixelSize);
-            var contentBox = _getStyleBox()?.GetContentBox(ourSize) ?? ourSize;
+            var contentBox = _getStyleBox()?.GetContentBox(ourSize, UIScale) ?? ourSize;
 
             foreach (var child in Children)
             {

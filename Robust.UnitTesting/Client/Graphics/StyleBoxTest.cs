@@ -30,6 +30,10 @@ namespace Robust.UnitTesting.Client.Graphics
             Assert.That(
                 styleBox.GetEnvelopBox(new Vector2(10, 10), new Vector2(50, 50)),
                 Is.EqualTo(new UIBox2(10, 10, 70, 76)));
+
+            Assert.That(
+                styleBox.GetEnvelopBox(new Vector2(10, 10), new Vector2(50, 50), 2.0f),
+                Is.EqualTo(new UIBox2(10, 10, 80, 92)));
         }
     }
 }

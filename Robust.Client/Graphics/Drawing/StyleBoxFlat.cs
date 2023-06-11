@@ -9,7 +9,7 @@ namespace Robust.Client.Graphics
         public Color BorderColor { get; set; }
         public Thickness BorderThickness { get; set; }
 
-        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
+        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box, float uiScale)
         {
             var (btl, btt, btr, btb) = BorderThickness;
             if (btl > 0)

@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.Contracts;
+using System.Diagnostics.Contracts;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
@@ -62,7 +62,7 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var bg = _getBackground();
-            bg?.Draw(handle, PixelSizeBox);
+            bg?.Draw(handle, PixelSizeBox, UIScale);
 
             var fg = _getForeground();
             if (fg == null)
@@ -73,7 +73,7 @@ namespace Robust.Client.UserInterface.Controls
             var size = PixelWidth * GetAsRatio() - minSize.X;
             if (size > 0)
             {
-                fg.Draw(handle, UIBox2.FromDimensions(0, 0, minSize.X + size, PixelHeight));
+                fg.Draw(handle, UIBox2.FromDimensions(0, 0, minSize.X + size, PixelHeight), UIScale);
             }
         }
 

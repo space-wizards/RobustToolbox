@@ -1500,5 +1500,25 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> ResourceUploadingLimitMb =
             CVarDef.Create("netres.limit", 3f, CVar.REPLICATED | CVar.SERVER);
+
+        /*
+         * LAUNCH
+         * CVars relating to how the client is launched. Primarily set from the launcher.
+         */
+
+        /// <summary>
+        /// Game was launched from the launcher.
+        /// </summary>
+        /// <remarks>
+        /// The game should not try to automatically connect to a server, there's other variables for that.
+        /// </remarks>
+        public static readonly CVarDef<bool> LaunchLauncher =
+            CVarDef.Create("launch.launcher", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Game was launched from a content bundle.
+        /// </summary>
+        public static readonly CVarDef<bool> LaunchContentBundle =
+            CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
     }
 }

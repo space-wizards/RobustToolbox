@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added `launch.launcher` and `launch.content_bundle` CVars. These are intended to eventually replace the `InitialLaunchState` values.
+* Allow `System.Net.IPAdress` through sandbox _properly_, add `System.Net.Sockets.AddressFamily` too.
 
 ### Bugfixes
 

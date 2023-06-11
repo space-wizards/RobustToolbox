@@ -1332,7 +1332,7 @@ namespace Robust.Shared
         /// <summary>
         /// A relative path pointing to a folder within the server data directory where all replays will be stored.
         /// </summary>
-        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replays", CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replays", CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
@@ -1357,27 +1357,31 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ReplayEnabled = CVarDef.Create("replay.enabled", true, CVar.SERVERONLY | CVar.ARCHIVE);
 
         /// <summary>
-        ///     Determines the threshold before visual events (muzzle flashes, chat pop-ups, etc) are suppressed when jumping forward in time.
+        /// Determines the threshold before visual events (muzzle flashes, chat pop-ups, etc) are suppressed when
+        /// jumping forward in time. Jumps larger than this will simply skip directly to the target tick.
         /// </summary>
-        /// <remarks>
-        ///     Effects should still show up when jumping forward ~ 1 second, but definitely not when skipping a minute or two of a gunfight.
-        /// </remarks>
-        public static readonly CVarDef<int> VisualEventThreshold = CVarDef.Create("replay.visual_event_threshold", 20);
+        public static readonly CVarDef<int> ReplaySkipThreshold = CVarDef.Create("replay.skip_threshold", 30);
 
         /// <summary>
-        ///     Maximum number of ticks before a new checkpoint tick is generated.
+        /// Maximum number of ticks before a new checkpoint tick is generated.
         /// </summary>
         public static readonly CVarDef<int> CheckpointInterval = CVarDef.Create("replay.checkpoint_interval", 200);
 
         /// <summary>
-        ///     Maximum number of entities that can be spawned before a new checkpoint tick is generated.
+        /// Maximum number of entities that can be spawned before a new checkpoint tick is generated.
         /// </summary>
         public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 100);
 
         /// <summary>
-        ///     Maximum number of entity states that can be applied before a new checkpoint tick is generated.
+        /// Maximum number of entity states that can be applied before a new checkpoint tick is generated.
         /// </summary>
         public static readonly CVarDef<int> CheckpointEntityStateThreshold = CVarDef.Create("replay.checkpoint_entity_state_threshold", 50 * 600);
+
+        /// <summary>
+        /// Whether or not to constantly apply game states while using something like a slider to scrub through replays.
+        /// If false, this will only jump to a point in time when the scrubbing ends.
+        /// </summary>
+        public static readonly CVarDef<bool> ReplayDynamicalScrubbing = CVarDef.Create("replay.dynamical_scrubbing", true);
 
         /*
          * CFG
@@ -1411,5 +1415,25 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> ResourceUploadingLimitMb =
             CVarDef.Create("netres.limit", 3f, CVar.REPLICATED | CVar.SERVER);
+
+        /*
+         * LAUNCH
+         * CVars relating to how the client is launched. Primarily set from the launcher.
+         */
+
+        /// <summary>
+        /// Game was launched from the launcher.
+        /// </summary>
+        /// <remarks>
+        /// The game should not try to automatically connect to a server, there's other variables for that.
+        /// </remarks>
+        public static readonly CVarDef<bool> LaunchLauncher =
+            CVarDef.Create("launch.launcher", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Game was launched from a content bundle.
+        /// </summary>
+        public static readonly CVarDef<bool> LaunchContentBundle =
+            CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
     }
 }

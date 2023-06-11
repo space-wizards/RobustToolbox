@@ -39,7 +39,8 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `launch.launcher` and `launch.content_bundle` CVars. These are intended to eventually replace the `InitialLaunchState` values.
+* Allow `System.Net.IPAdress` through sandbox _properly_, add `System.Net.Sockets.AddressFamily` too.
 
 ### Bugfixes
 
@@ -52,6 +53,73 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.126.0.0
+
+### Breaking changes
+
+* Several `MapManager` methods were moved to `MapSystem`.
+* The signature of grid lookup queries has changed, with a new optional `includeMap` bool added in-between other optional bools.
+
+### New features
+
+* `System.Net.IPAddress` is now accessible from the sandbox.
+
+### Bugfixes
+
+* Fixed RichText not rendering some tags properly for some UI scales.
+* Text inside of `OutputPanel` controls should no longer overlap with the scrollbar.
+
+### Other
+
+* Obsoleted the following methods from `IPlayerSession`: `AttachToEntity`, `DetachFromEntity`. Use the methods in `ActorSystem` instead.
+* Static Loggers (e.g., `Logger.Log()` are now obsoleted. Get a sawmill from ILogManager instead.
+* Several `MetadataComponent` setters have been marked as obsolete. Use `MetaDataSystem` methods instead.
+
+### Internal
+
+* Removed several static logging calls.
+
+
+## 0.125.0.1
+
+### Other
+
+* Use a logger sawmill in MapManager rather than the static logger.
+
+
+## 0.125.0.0
+
+### Breaking changes
+
+* Several replay related cvars and commands have been renamed.
+
+### New features
+
+* Added support for basic replay playback. The API is likely to change in the next version or two.
+
+
+## 0.124.0.1
+
+### New features
+
+* Added `CompletionHelper.ContentDirPath()`.
+* Added `vfs_ls` command to list VFS contents.
+* The resource manifest (`manifest.yml`) now accepts a `clientAssemblies` key. When given, only the assembly names listed will be loaded from `/Assemblies/` rather than automatically loading all assemblies found.
+
+### Bugfixes
+
+* Fix exception if running the `>` command (remote execute) without even a space after it.
+* `ResPath.RelativeTo()` now considers non-rooted paths relative to `.`.
+  * This fixes some things like `MemoryContentRoot`'s `FindFiles()` implementation.
+* Fix `IContentRoot.GetEntries()` default implementation (used by all content roots except `DirLoader`) not working at all.
+* Made `ResourceManager.ContentGetDirectoryEntries()` report content root mount paths as directories.
+
+### Internal
+
+* Made `ConfigurationManager` not-abstract anymore so we can instantiate it from tests.
+* Added new tests for `ResourceManager`.
 
 
 ## 0.124.0.0

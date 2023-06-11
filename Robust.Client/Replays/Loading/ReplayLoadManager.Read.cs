@@ -22,6 +22,12 @@ public sealed partial class ReplayLoadManager
     [SuppressMessage("ReSharper", "UseAwaitUsing")]
     public async Task<ReplayData> LoadReplayAsync(IWritableDirProvider dir, ResPath path, LoadReplayCallback callback)
     {
+        if (_client.RunLevel == ClientRunLevel.Initialize)
+            _client.StartSinglePlayer();
+        else if (_client.RunLevel != ClientRunLevel.SinglePlayerGame)
+            throw new Exception($"Invalid runlevel: {_client.RunLevel}.");
+
+        _timing.Paused = true;
         List<GameState> states = new();
         List<ReplayMessage> messages = new();
 
@@ -68,8 +74,22 @@ public sealed partial class ReplayLoadManager
         var initData = LoadInitFile(dir, path, compressionContext);
         compressionContext.Dispose();
 
-        var checkpoints = await GenerateCheckpointsAsync(initData, metaData.CVars, states, messages, callback);
-        return new(states, messages, states[0].ToSequence, metaData.StartTime, metaData.Duration, checkpoints, initData);
+        var (checkpoints, serverTime) = await GenerateCheckpointsAsync(
+            initData,
+            metaData.CVars,
+            states, messages,
+            callback);
+
+        _timing.Paused = false;
+        return new ReplayData(
+            states,
+            messages,
+            serverTime,
+            states[0].ToSequence,
+            metaData.StartTime,
+            metaData.Duration,
+            checkpoints,
+            initData);
     }
 
     private ReplayMessage? LoadInitFile(

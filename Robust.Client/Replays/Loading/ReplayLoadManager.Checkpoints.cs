@@ -7,6 +7,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System.Threading.Tasks;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Replays;
 using Robust.Shared.Upload;
@@ -19,7 +20,7 @@ namespace Robust.Client.Replays.Loading;
 // so that when jumping to tick 1001 the client only has to apply states for tick 1000 and 1001, instead of 0, 1, 2, ...
 public sealed partial class ReplayLoadManager
 {
-    public async Task<CheckpointState[]> GenerateCheckpointsAsync(
+    public async Task<(CheckpointState[], TimeSpan[])> GenerateCheckpointsAsync(
         ReplayMessage? initMessages,
         HashSet<string> initialCvars,
         List<GameState> states,
@@ -112,6 +113,17 @@ public sealed partial class ReplayLoadManager
         DebugTools.Assert(state0.EntityDeletions.Value.Count == 0);
         var empty = Array.Empty<EntityUid>();
 
+        TimeSpan GetTime(GameTick tick)
+        {
+            var rate = (int) cvars[CVars.NetTickrate.Name];
+            var period = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / rate);
+            return timeBase.Item1 + (tick.Value - timeBase.Item2.Value) * period;
+        }
+
+        var serverTime = new TimeSpan[states.Count];
+        serverTime[0] = TimeSpan.Zero;
+        var initialTime = GetTime(state0.ToSequence);
+
         var ticksSinceLastCheckpoint = 0;
         var spawnedTracker = 0;
         var stateTracker = 0;
@@ -125,6 +137,7 @@ public sealed partial class ReplayLoadManager
             UpdateDeletions(curState.EntityDeletions, entStates);
             UpdateEntityStates(curState.EntityStates.Span, entStates, ref spawnedTracker, ref stateTracker);
             UpdateMessages(messages[i], uploadedFiles, prototypes, cvars, ref timeBase);
+            serverTime[i] = GetTime(curState.ToSequence) - initialTime;
             ticksSinceLastCheckpoint++;
 
             if (ticksSinceLastCheckpoint < _checkpointInterval && spawnedTracker < _checkpointEntitySpawnThreshold && stateTracker < _checkpointEntityStateThreshold)
@@ -144,7 +157,7 @@ public sealed partial class ReplayLoadManager
 
         _sawmill.Info($"Finished generating checkpoints. Elapsed time: {st.Elapsed}");
         await callback(states.Count, states.Count, LoadingState.ProcessingFiles, false);
-        return checkPoints.ToArray();
+        return (checkPoints.ToArray(), serverTime);
     }
 
     private void UpdateMessages(ReplayMessage message,
@@ -154,9 +167,9 @@ public sealed partial class ReplayLoadManager
         ref (TimeSpan, GameTick) timeBase,
         bool ignoreDuplicates = false)
     {
-        foreach (var msg in message.Messages)
+        for (var i = message.Messages.Count - 1; i >= 0; i--)
         {
-            switch (msg)
+            switch (message.Messages[i])
             {
                 case CvarChangeMsg cvar:
                     foreach (var (name, value) in cvar.ReplicatedCvars)
@@ -176,6 +189,7 @@ public sealed partial class ReplayLoadManager
                         {
                             RelativePath = path, Data = resUpload.Data
                         });
+                        message.Messages.RemoveSwap(i);
                         break;
                     }
 
@@ -186,16 +200,18 @@ public sealed partial class ReplayLoadManager
                     if (!ignoreDuplicates)
                         throw new NotSupportedException("Overwriting an existing file is not yet supported by replays.");
 
+                    message.Messages.RemoveSwap(i);
                     break;
             }
         }
 
         // Process prototype uploads **after** resource uploads.
-        foreach (var msg in message.Messages)
+        for (var i = message.Messages.Count - 1; i >= 0; i--)
         {
-            if (msg is not ReplayPrototypeUploadMsg protoUpload)
+            if (message.Messages[i] is not ReplayPrototypeUploadMsg protoUpload)
                 continue;
 
+            message.Messages.RemoveSwap(i);
             var changed = new Dictionary<Type, HashSet<string>>();
             _protoMan.LoadString(protoUpload.PrototypeData, true, changed);
 

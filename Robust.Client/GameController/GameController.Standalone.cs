@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client
 {
-    internal partial class GameController
+    internal partial class GameController : IPostInjectInit
     {
         private IGameLoop? _mainLoop;
 
@@ -20,6 +20,7 @@ namespace Robust.Client
         private static bool _hasStarted;
 
         private Thread? _gameThread;
+        private ISawmill _logger = default!;
 
         public static void Main(string[] args)
         {
@@ -73,7 +74,7 @@ namespace Robust.Client
         {
             if (!StartupSystemSplash(options, logHandlerFactory))
             {
-                Logger.Fatal("Failed to start game controller!");
+                _logger.Fatal("Failed to start game controller!");
                 return;
             }
 
@@ -96,7 +97,7 @@ namespace Robust.Client
 
                 if (_gameThread.IsAlive)
                 {
-                    Logger.Debug("Window loop exited; waiting for game thread to exit");
+                    _logger.Debug("Window loop exited; waiting for game thread to exit");
                     _gameThread.Join();
                 }
             }
@@ -107,7 +108,7 @@ namespace Robust.Client
 
             CleanupWindowThread();
 
-            Logger.Debug("Goodbye");
+            _logger.Debug("Goodbye");
             _dependencyCollection.Clear();
         }
 
@@ -125,7 +126,7 @@ namespace Robust.Client
         {
             if (!StartupContinue(mode))
             {
-                Logger.Fatal("Failed to start game controller!");
+                _logger.Fatal("Failed to start game controller!");
                 return;
             }
 
@@ -133,6 +134,11 @@ namespace Robust.Client
             _mainLoop!.Run();
 
             CleanupGameThread();
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _logger = _logManager.GetSawmill("game");
         }
     }
 }

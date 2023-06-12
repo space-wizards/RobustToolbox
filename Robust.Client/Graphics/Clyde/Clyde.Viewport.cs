@@ -19,10 +19,10 @@ namespace Robust.Client.Graphics.Clyde
             var viewport = new Viewport(handle, name, this)
             {
                 Size = size,
-                /*RenderTarget = CreateRenderTarget(size,
+                RenderTarget = CreateRenderTarget(size,
                     new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                     sampleParameters: sampleParameters,
-                    name: $"{name}-MainRenderTarget")*/
+                    name: $"{name}-MainRenderTarget")
             };
 
             // RegenLightRts(viewport);
@@ -84,7 +84,6 @@ namespace Robust.Client.Graphics.Clyde
             private readonly ClydeHandle _handle;
             private readonly Clyde _clyde;
 
-            /*
             // Primary render target.
             public RenderTexture RenderTarget = default!;
 
@@ -102,7 +101,6 @@ namespace Robust.Client.Graphics.Clyde
             // We need two of them because efficient blur works in two stages and also we're doing multiple iterations.
             public RenderTexture WallBleedIntermediateRenderTarget1 = default!;
             public RenderTexture WallBleedIntermediateRenderTarget2 = default!;
-            */
 
             public string? Name { get; }
 
@@ -188,18 +186,17 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Dispose()
             {
-                /*
+                // TODO: These shouldn't be ?. disposes. Temporary thing for WebGPU.
                 RenderTarget.Dispose();
-                LightRenderTarget.Dispose();
-                WallMaskRenderTarget.Dispose();
-                WallBleedIntermediateRenderTarget1.Dispose();
-                WallBleedIntermediateRenderTarget2.Dispose();
-                */
+                LightRenderTarget?.Dispose();
+                WallMaskRenderTarget?.Dispose();
+                WallBleedIntermediateRenderTarget1?.Dispose();
+                WallBleedIntermediateRenderTarget2?.Dispose();
 
                 _clyde._viewports.Remove(_handle);
             }
 
-            IRenderTexture IClydeViewport.RenderTarget => throw new NotImplementedException();
+            IRenderTexture IClydeViewport.RenderTarget => RenderTarget;
             public IEye? Eye { get; set; }
         }
     }

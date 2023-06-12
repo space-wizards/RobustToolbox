@@ -55,6 +55,7 @@ internal partial class Clyde
         private DirtyStateFlags _dirtyStateFlags;
         private State<ClydeHandle> _stateTexture;
         private State<(uint x, uint y, uint w, uint h)> _stateScissorRect;
+        private bool _scissorSkip;
 
         // Other state
         private Matrix3x2 _modelTransform;
@@ -428,12 +429,24 @@ internal partial class Clyde
 
             if ((sureFlags & DirtyStateFlags.ScissorRect) != 0)
             {
-                _passEncoder!.SetScissorRect(
-                    _stateScissorRect.Active.x,
-                    _stateScissorRect.Active.y,
-                    _stateScissorRect.Active.w,
-                    _stateScissorRect.Active.h
-                );
+                // wgpu doesn't support 0-size scissor rects right now.
+                // We ignore draws if the scissor state says 0 width.
+                // TODO: Fix this wgpu-side
+                if (_stateScissorRect.Active.w != 0 && _stateScissorRect.Active.h != 0)
+                {
+                    _passEncoder!.SetScissorRect(
+                        _stateScissorRect.Active.x,
+                        _stateScissorRect.Active.y,
+                        _stateScissorRect.Active.w,
+                        _stateScissorRect.Active.h
+                    );
+                    _scissorSkip = false;
+                }
+                else
+                {
+                    _scissorSkip = true;
+                }
+
             }
 
             DirtyStateFlags CheckSureState<T>(ref State<T> state, DirtyStateFlags thisFlag) where T : IEquatable<T>
@@ -455,12 +468,15 @@ internal partial class Clyde
             if (_curBatchSize == 0)
                 return;
 
-            _passEncoder!.Draw(
-                (uint)_curBatchSize,
-                1,
-                (uint)(_vertexStartIndex - _curBatchSize),
-                0
-            );
+            if (!_scissorSkip)
+            {
+                _passEncoder!.Draw(
+                    (uint)_curBatchSize,
+                    1,
+                    (uint)(_vertexStartIndex - _curBatchSize),
+                    0
+                );
+            }
 
             _curBatchSize = 0;
         }

@@ -127,17 +127,23 @@ namespace Robust.Client.Graphics.Clyde
                 // TODO: Save/restore SpriteBatch state
 
                 RhiTextureView targetTexture;
+                RhiTextureView? depthView = null;
                 Vector2i targetSize;
 
-                switch (target)
-                {
-                    case RenderWindow renderWindow:
-                        targetTexture = renderWindow.Window.CurSwapchainView!;
-                        targetSize = renderWindow.Window.FramebufferSize;
-                        break;
+                var loaded = _clyde.RtToLoaded((RenderTargetBase)target);
 
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(target));
+                if (loaded.IsWindow)
+                {
+                    targetTexture = loaded.Window!.CurSwapchainView!;
+                    targetSize = loaded.Window!.FramebufferSize;
+                }
+                else
+                {
+                    var loadedTex = _clyde._loadedTextures[loaded.TextureHandle];
+                    targetTexture = loadedTex.DefaultRhiView;
+
+                    depthView = loaded.DepthSencilTextureView;
+                    targetSize = loaded.Size;
                 }
 
                 _spriteBatch.BeginPass(targetSize, targetTexture, clearColor);

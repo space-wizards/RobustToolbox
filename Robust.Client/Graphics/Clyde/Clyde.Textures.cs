@@ -95,6 +95,16 @@ namespace Robust.Client.Graphics.Clyde
 
             var format = GetPixelTextureFormat<T>(srgb);
 
+            return CreateBlankTextureCore(size, name, format, actualParams.SampleParameters, srgb);
+        }
+
+        private (ClydeTexture, LoadedTexture) CreateBlankTextureCore(
+            Vector2i size,
+            string? name,
+            RhiTextureFormat format,
+            TextureSampleParameters sampleParams,
+            bool srgb)
+        {
             var rhiTexture = Rhi.CreateTexture(new RhiTextureDescriptor(
                 new RhiExtent3D(size.X, size.Y),
                 format,
@@ -114,7 +124,7 @@ namespace Robust.Client.Graphics.Clyde
                 BaseMipLevel = 0
             });
 
-            var addressMode = actualParams.SampleParameters.WrapMode switch
+            var addressMode = sampleParams.WrapMode switch
             {
                 TextureWrapMode.None => RhiAddressMode.ClampToEdge,
                 TextureWrapMode.Repeat => RhiAddressMode.Repeat,
@@ -122,7 +132,7 @@ namespace Robust.Client.Graphics.Clyde
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            var filter = actualParams.SampleParameters.Filter ? RhiFilterMode.Linear : RhiFilterMode.Nearest;
+            var filter = sampleParams.Filter ? RhiFilterMode.Linear : RhiFilterMode.Nearest;
 
             // TODO: Cache samplers somewhere, we can't actually make infinite of these and they're simple enough.
             var rhiSampler = Rhi.CreateSampler(new RhiSamplerDescriptor(
@@ -463,9 +473,9 @@ namespace Robust.Client.Graphics.Clyde
         }
         */
 
-        /*
         private void DeleteTexture(ClydeHandle textureHandle)
         {
+            /*
             if (!_loadedTextures.TryGetValue(textureHandle, out var loadedTexture))
             {
                 // Already deleted I guess.
@@ -476,8 +486,8 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             _loadedTextures.Remove(textureHandle);
             //GC.RemoveMemoryPressure(loadedTexture.MemoryPressure);
-        }
         */
+        }
 
         private void LoadStockTextures()
         {

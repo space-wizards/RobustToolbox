@@ -296,17 +296,15 @@ namespace Robust.Client.Graphics.Clyde
                 _windowHandles.Add(reg.Handle);
 
                 var rtId = AllocRid();
-                /*
                 _renderTargets.Add(rtId, new LoadedRenderTarget
                 {
                     Size = reg.FramebufferSize,
                     IsWindow = true,
-                    WindowId = reg.Id,
+                    Window = reg,
                     IsSrgb = true
                 });
-                */
 
-                // reg.RenderTarget = new RenderWindow(this, rtId);
+                reg.RenderTarget = new RenderWindow(this, rtId);
 
                 if (!isMain)
                     Rhi.WindowCreated(reg);
@@ -453,7 +451,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public bool IsMainWindow;
             public WindowHandle Handle = default!;
-            // public RenderWindow RenderTarget = default!;
+            public RenderWindow RenderTarget = default!;
             public Action<WindowRequestClosedEventArgs>? RequestClosed;
             public Action<WindowDestroyedEventArgs>? Closed;
             public Action<WindowResizedEventArgs>? Resized;
@@ -476,7 +474,6 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _clyde = clyde;
                 Reg = reg;
-                RenderTarget = new RenderWindow(_clyde, reg);
             }
 
             public void Dispose()
@@ -486,7 +483,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public Vector2i Size => Reg.FramebufferSize;
 
-            public IRenderTarget RenderTarget { get; }
+            public IRenderTarget RenderTarget => Reg.RenderTarget;
 
             public string Title
             {

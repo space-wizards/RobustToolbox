@@ -28,6 +28,8 @@ namespace Robust.Client.UserInterface.Controls
         public const string StyleClassLineEditNotEditable = "notEditable";
         public const string StylePseudoClassPlaceholder = "placeholder";
 
+        public StyleBox? StyleBoxOverride { get; set; }
+
         // It is assumed that these two positions are NEVER inside a surrogate pair in the text buffer.
         private int _cursorPosition;
         private int _selectionStart;
@@ -861,6 +863,11 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private StyleBox _getStyleBox()
         {
+            if (StyleBoxOverride != null)
+            {
+                return StyleBoxOverride;
+            }
+
             if (TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box))
             {
                 return box;

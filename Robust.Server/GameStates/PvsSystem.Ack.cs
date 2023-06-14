@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 namespace Robust.Server.GameStates;
 
 // This partial class contains code relating to acknowledging game states received by clients.
-internal sealed partial class PVSSystem
+internal sealed partial class PvsSystem
 {
     /// <summary>
     ///     Invoked when a client ack message is received. Queues up for processing in parallel prior to sending game
@@ -45,7 +45,7 @@ internal sealed partial class PVSSystem
             return;
 
         var ackedTick = sessionData.LastReceivedAck;
-        Dictionary<EntityUid, PVSEntityVisiblity>? ackedData;
+        Dictionary<EntityUid, PvsEntityVisibility>? ackedData;
 
         if (sessionData.Overflow != null && sessionData.Overflow.Value.Tick <= ackedTick)
         {

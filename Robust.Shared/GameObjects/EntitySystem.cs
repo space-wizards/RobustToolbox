@@ -43,7 +43,6 @@ namespace Robust.Shared.GameObjects
                 name = string.Concat(name.Select(x => char.IsUpper(x) ? $"_{char.ToLower(x)}" : x.ToString()));
                 name = name.Trim('_');
 
-
                 return $"system.{name}";
             }
         }

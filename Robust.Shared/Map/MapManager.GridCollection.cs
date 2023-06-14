@@ -142,7 +142,7 @@ internal partial class MapManager
         var grid = EntityManager.AddComponent<MapGridComponent>(gridEnt);
         grid.ChunkSize = chunkSize;
 
-        Logger.DebugS("map", $"Binding new grid {gridEnt}");
+        _sawmill.Debug($"Binding new grid {gridEnt}");
 
         //TODO: This is a hack to get TransformComponent.MapId working before entity states
         //are applied. After they are applied the parent may be different, but the MapId will

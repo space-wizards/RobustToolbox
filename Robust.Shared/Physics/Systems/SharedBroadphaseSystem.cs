@@ -153,10 +153,12 @@ namespace Robust.Shared.Physics.Systems
         internal void FindNewContacts(PhysicsMapComponent component, MapId mapId)
         {
             var moveBuffer = component.MoveBuffer;
-            var movedGrids = _mapManager.GetMovedGrids(mapId);
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var movedGrids = Comp<MovedGridsComponent>(mapUid).MovedGrids;
             var gridMoveBuffer = new Dictionary<FixtureProxy, Box2>();
 
             var broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
+            var physicsQuery = GetEntityQuery<PhysicsComponent>();
             var xformQuery = GetEntityQuery<TransformComponent>();
 
             // Find any entities being driven over that might need to be considered
@@ -172,7 +174,7 @@ namespace Robust.Shared.Physics.Systems
             // to cache a bunch of stuff to make up for it.
 
             // Handle grids first as they're not stored on map broadphase at all.
-            HandleGridCollisions(mapId, movedGrids, xformQuery);
+            HandleGridCollisions(mapId, movedGrids, physicsQuery, xformQuery);
 
             // EZ
             if (moveBuffer.Count == 0)
@@ -265,12 +267,13 @@ namespace Robust.Shared.Physics.Systems
             ArrayPool<List<FixtureProxy>>.Shared.Return(contactBuffer);
             ArrayPool<(FixtureProxy Proxy, Box2 AABB)>.Shared.Return(pMoveBuffer);
             moveBuffer.Clear();
-            _mapManager.ClearMovedGrids(mapId);
+            movedGrids.Clear();
         }
 
         private void HandleGridCollisions(
             MapId mapId,
             HashSet<EntityUid> movedGrids,
+            EntityQuery<PhysicsComponent> physicsQuery,
             EntityQuery<TransformComponent> xformQuery)
         {
             var gridQuery = GetEntityQuery<MapGridComponent>();
@@ -289,7 +292,7 @@ namespace Robust.Shared.Physics.Systems
                 // (nothing in SS14 does this yet).
 
                 var transform = _physicsSystem.GetPhysicsTransform(gridUid, xformQuery: xformQuery);
-                var state = (gridUid, grid, transform, worldMatrix, invWorldMatrix, _physicsSystem, _transform, xformQuery);
+                var state = (gridUid, grid, transform, worldMatrix, invWorldMatrix, _physicsSystem, _transform, physicsQuery, xformQuery);
 
                 _mapManager.FindGridsIntersecting(mapId, aabb, ref state,
                     static (EntityUid uid, MapGridComponent component,
@@ -300,6 +303,7 @@ namespace Robust.Shared.Physics.Systems
                             Matrix3 invWorldMatrix,
                             SharedPhysicsSystem _physicsSystem,
                             SharedTransformSystem xformSystem,
+                            EntityQuery<PhysicsComponent> physicsQuery,
                             EntityQuery<TransformComponent> xformQuery) tuple) =>
                     {
                         if (tuple.gridUid == uid ||
@@ -317,6 +321,8 @@ namespace Robust.Shared.Physics.Systems
 
                         // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
                         var ourChunks = tuple.grid.GetLocalMapChunks(aabb1);
+                        var physicsA = tuple.physicsQuery.GetComponent(tuple.gridUid);
+                        var physicsB = tuple.physicsQuery.GetComponent(uid);
 
                         // Only care about chunks on other grid overlapping us.
                         while (ourChunks.MoveNext(out var ourChunk))
@@ -342,8 +348,11 @@ namespace Robust.Shared.Physics.Systems
                                                 var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
 
                                                 if (!fixAABB.Intersects(otherAABB)) continue;
-                                                tuple._physicsSystem.AddPair(tuple.gridUid, uid, fixture, i, otherFixture,
-                                                    j, ContactFlags.Grid);
+                                                tuple._physicsSystem.AddPair(tuple.gridUid, uid,
+                                                    fixture, i,
+                                                    otherFixture, j,
+                                                    physicsA, physicsB,
+                                                    ContactFlags.Grid);
                                                 break;
                                             }
                                         }
@@ -353,7 +362,7 @@ namespace Robust.Shared.Physics.Systems
                         }
 
                         return true;
-                    });
+                    }, includeMap: false);
             }
         }
 

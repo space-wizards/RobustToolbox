@@ -39,8 +39,6 @@ namespace Robust.Shared.GameObjects
                 if (name.EndsWith("System"))
                     name = name.Substring(0, name.Length - "System".Length);
 
-
-
                 // Convert CamelCase to snake_case
                 name = string.Concat(name.Select(x => char.IsUpper(x) ? $"_{char.ToLower(x)}" : x.ToString()));
                 name = name.Trim('_');

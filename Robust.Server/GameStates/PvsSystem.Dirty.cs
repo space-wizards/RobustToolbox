@@ -11,7 +11,7 @@ namespace Robust.Server.GameStates
     /// <summary>
     /// Caching for dirty bodies
     /// </summary>
-    internal sealed partial class PVSSystem
+    internal sealed partial class PvsSystem
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 

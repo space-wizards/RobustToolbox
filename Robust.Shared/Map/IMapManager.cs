@@ -126,9 +126,9 @@ namespace Robust.Shared.Map
         /// <returns>Returns true when a grid was found under the location.</returns>
         bool TryFindGridAt(MapCoordinates mapCoordinates, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid);
 
-        void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = false);
+        void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = false, bool includeMap = true);
 
-        void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false);
+        void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true);
 
         /// <summary>
         /// Returns the grids intersecting this AABB.
@@ -137,7 +137,7 @@ namespace Robust.Shared.Map
         /// <param name="worldAabb">The AABB to intersect</param>
         /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
         /// <returns></returns>
-        IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false);
+        IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false, bool includeMap = true);
 
         /// <summary>
         /// Returns the grids intersecting this AABB.
@@ -145,7 +145,7 @@ namespace Robust.Shared.Map
         /// <param name="mapId">The relevant MapID</param>
         /// <param name="worldArea">The AABB to intersect</param>
         /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
-        IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
+        IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false, bool includeMap = true);
 
         void DeleteGrid(EntityUid euid);
 

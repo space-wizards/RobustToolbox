@@ -306,7 +306,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
-            entitySystemMan.LoadExtraSystemType<PVSSystem>();
+            entitySystemMan.LoadExtraSystemType<PvsSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

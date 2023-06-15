@@ -40,7 +40,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     [Dependency] private readonly INetConfigurationManager _netConf = default!;
 
     private ISawmill _sawmill = default!;
-    private PVSSystem _pvs = default!;
+    private PvsSystem _pvs = default!;
     private List<object> _queuedMessages = new();
 
     private int _maxCompressedSize;
@@ -62,7 +62,7 @@ internal sealed class ReplayRecordingManager : IInternalReplayRecordingManager
     public void Initialize()
     {
         _sawmill = Logger.GetSawmill("replay");
-        _pvs = _sysMan.GetEntitySystem<PVSSystem>();
+        _pvs = _sysMan.GetEntitySystem<PvsSystem>();
 
         _netConf.OnValueChanged(CVars.ReplayEnabled, SetReplayEnabled, true);
         _netConf.OnValueChanged(CVars.ReplayMaxCompressedSize, (v) => _maxCompressedSize = v * 1024, true);

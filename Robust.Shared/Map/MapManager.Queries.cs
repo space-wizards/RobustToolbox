@@ -13,14 +13,14 @@ namespace Robust.Shared.Map;
 internal partial class MapManager
 {
     [Obsolete("Use the FindGridsIntersecting callback")]
-    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated bounds, bool approx = false)
+    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated bounds, bool approx = false, bool includeMap = true)
     {
         var aabb = bounds.CalcBoundingBox();
         // TODO: We can do slower GJK checks to check if 2 bounds actually intersect, but WYCI.
-        return FindGridsIntersecting(mapId, aabb, approx);
+        return FindGridsIntersecting(mapId, aabb, includeMap, approx);
     }
 
-    public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = false)
+    public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = false, bool includeMap = true)
     {
         if (!_mapEntities.TryGetValue(mapId, out var mapEnt) ||
             !EntityManager.TryGetComponent<GridTreeComponent>(mapEnt, out var gridTree))
@@ -55,13 +55,13 @@ internal partial class MapManager
 
         var mapUid = GetMapEntityId(mapId);
 
-        if (EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
+        if (includeMap && EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
         {
             callback(mapUid, grid);
         }
     }
 
-    public void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false)
+    public void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true)
     {
         if (!_mapEntities.TryGetValue(mapId, out var mapEnt) ||
             !EntityManager.TryGetComponent<GridTreeComponent>(mapEnt, out var gridTree))
@@ -97,7 +97,7 @@ internal partial class MapManager
 
         var mapUid = GetMapEntityId(mapId);
 
-        if (EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
+        if (includeMap && EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
         {
             callback(mapUid, grid, ref state);
         }
@@ -143,7 +143,7 @@ internal partial class MapManager
     }
 
     [Obsolete("Use the FindGridsIntersecting callback")]
-    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false)
+    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false, bool includeMap = true)
     {
         var grids = new List<MapGridComponent>();
         var state = grids;

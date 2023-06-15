@@ -1,8 +1,6 @@
-using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -29,7 +27,7 @@ namespace Robust.Shared.GameObjects
             var found = EntityManager.TryGetComponent(uid, out component);
 
             if(logMissing && !found)
-                Logger.ErrorS("resolve", $"Can't resolve \"{typeof(TComp)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+                Log.Error($"Can't resolve \"{typeof(TComp)}\" on entity {uid}!\n{new StackTrace(1, true)}");
 
             return found;
         }

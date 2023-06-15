@@ -109,7 +109,7 @@ namespace Robust.UnitTesting
             else
             {
                 systems.LoadExtraSystemType<ServerMetaDataSystem>();
-                systems.LoadExtraSystemType<PVSSystem>();
+                systems.LoadExtraSystemType<PvsSystem>();
                 systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
                 systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
                 systems.LoadExtraSystemType<BroadPhaseSystem>();

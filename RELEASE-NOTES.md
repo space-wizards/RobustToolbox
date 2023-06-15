@@ -39,8 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `launch.launcher` and `launch.content_bundle` CVars. These are intended to eventually replace the `InitialLaunchState` values.
-* Allow `System.Net.IPAdress` through sandbox _properly_, add `System.Net.Sockets.AddressFamily` too.
+*None yet*
 
 ### Bugfixes
 
@@ -53,6 +52,25 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 0.127.0.0
+
+### Breaking changes
+
+* Rename PVSSystem to PvsSystem.
+
+### New features
+
+* Added `launch.launcher` and `launch.content_bundle` CVars. These are intended to eventually replace the `InitialLaunchState` values.
+* Allow `System.Net.IPAdress` through sandbox _properly_, add `System.Net.Sockets.AddressFamily` too.
+* Systems now have their own logger sawmills automatically and can be access via `Log`.
+
+### Bugfixes
+
+* Make BoxContainer's MeasureOverride account for stretching.
+* Fix IPAddress sandboxing.
+* Revert physics contact getcomponents and also fix ShouldCollide ordering for PreventCollideEvent.
 
 
 ## 0.126.0.0

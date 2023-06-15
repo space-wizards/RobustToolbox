@@ -163,6 +163,21 @@ public abstract partial class SharedPhysicsSystem
             4096);
 
         InitializePool();
+        EntityManager.EntityQueueDeleted += OnContactEntityQueueDel;
+    }
+
+    private void ShutdownContacts()
+    {
+        EntityManager.EntityQueueDeleted -= OnContactEntityQueueDel;
+    }
+
+    private void OnContactEntityQueueDel(EntityUid obj)
+    {
+        // If an entity is queuedeleted then we want to purge its contacts before SimulateWorld runs in the same tick.
+        if (!TryComp<PhysicsComponent>(obj, out var physicsComp))
+            return;
+
+        DestroyContacts(physicsComp);
     }
 
     private void InitializePool()
@@ -378,13 +393,6 @@ public abstract partial class SharedPhysicsSystem
             var xformB = xformQuery.GetComponent(uidB);
 
             if (xformA.MapUid == null || xformA.MapUid != xformB.MapUid)
-            {
-                DestroyContact(contact);
-                continue;
-            }
-
-            // Pending deletion from earlier in the tick so stop raising any new contact events on it.
-            if (EntityManager.IsQueuedForDeletion(uidA) || EntityManager.IsQueuedForDeletion(uidB))
             {
                 DestroyContact(contact);
                 continue;

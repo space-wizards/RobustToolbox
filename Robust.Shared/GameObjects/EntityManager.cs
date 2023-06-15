@@ -72,6 +72,11 @@ namespace Robust.Shared.GameObjects
         public event Action<EntityUid>? EntityInitialized;
         public event Action<EntityUid>? EntityStarted;
         public event Action<EntityUid>? EntityDeleted;
+
+        /// <summary>
+        /// Raised when an entity is queued for deletion. Not raised if an entity is deleted.
+        /// </summary>
+        public event Action<EntityUid>? EntityQueueDeleted;
         public event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
         private string _xformName = string.Empty;
@@ -580,8 +585,11 @@ namespace Robust.Shared.GameObjects
 
         public virtual void QueueDeleteEntity(EntityUid uid)
         {
-            if(QueuedDeletionsSet.Add(uid))
-                QueuedDeletions.Enqueue(uid);
+            if (!QueuedDeletionsSet.Add(uid))
+                return;
+
+            QueuedDeletions.Enqueue(uid);
+            EntityQueueDeleted?.Invoke(uid);
         }
 
         public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);

@@ -246,13 +246,14 @@ namespace Robust.Shared.Physics.Systems
         {
             base.Shutdown();
 
+            ShutdownContacts();
             ShutdownIsland();
             _configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void OnWake(ref PhysicsWakeEvent @event)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Entity).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
@@ -263,7 +264,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnSleep(ref PhysicsSleepEvent @event)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Entity).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;

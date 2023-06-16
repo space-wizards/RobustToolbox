@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.127.1.0
+
+### New features
+
+* Add SpriteSystem.Frame0 method for entity prototypes.
+
+
 ## 0.127.0.0
 
 ### Breaking changes

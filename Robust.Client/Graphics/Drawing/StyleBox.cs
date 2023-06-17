@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 
@@ -162,6 +162,17 @@ namespace Robust.Client.Graphics
                 PaddingRight = value.Right;
                 PaddingBottom = value.Bottom;
             }
+        }
+
+        /// <summary>
+        ///     Draw this style box to the screen at the specified coordinates.
+        /// </summary>
+        /// <param name="handle"></param>
+        /// <param name="box"></param>
+        [Obsolete("Use variant with a uiScale argument")]
+        public void Draw(DrawingHandleScreen handle, UIBox2 box)
+        {
+            Draw(handle, box, 1.0f);
         }
 
         /// <summary>

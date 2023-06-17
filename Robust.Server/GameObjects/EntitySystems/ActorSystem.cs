@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects
 {
@@ -32,7 +33,7 @@ namespace Robust.Server.GameObjects
         /// <param name="player">The player to attach to the entity</param>
         /// <param name="force">Whether to kick any existing players from the entity</param>
         /// <returns>Whether the attach succeeded, or not.</returns>
-        public bool Attach(EntityUid uid, IPlayerSession player, bool force = false)
+        public bool Attach(EntityUid? uid, IPlayerSession player, bool force = false)
         {
             return Attach(uid, player, false, out _);
         }
@@ -40,15 +41,24 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Attaches a player session to an entity, optionally kicking any sessions already attached to it.
         /// </summary>
-        /// <param name="uid">The entity to attach the player to</param>
+        /// <param name="entity">The entity to attach the player to</param>
         /// <param name="player">The player to attach to the entity</param>
         /// <param name="force">Whether to kick any existing players from the entity</param>
         /// <param name="forceKicked">The player that was forcefully kicked, or null.</param>
         /// <returns>Whether the attach succeeded, or not.</returns>
-        public bool Attach(EntityUid uid, IPlayerSession player, bool force, out IPlayerSession? forceKicked)
+        public bool Attach(EntityUid? entity, IPlayerSession player, bool force, out IPlayerSession? forceKicked)
         {
             // Null by default.
             forceKicked = null;
+
+            if (player.AttachedEntity == entity)
+                return true;
+
+            if (!Detach(player))
+                return false;
+
+            if (entity is not {} uid)
+                return true;
 
             // Cannot attach to a deleted, nonexisting or terminating entity.
             if (!TryComp(uid, out MetaDataComponent? meta) || meta.EntityLifeStage > EntityLifeStage.MapInitialized)
@@ -77,10 +87,11 @@ namespace Robust.Server.GameObjects
             actor = EntityManager.AddComponent<ActorComponent>(uid);
             EntityManager.EnsureComponent<EyeComponent>(uid);
             actor.PlayerSession = player;
-            player.SetAttachedEntity(actor.Owner);
+            player.SetAttachedEntity(uid);
 
             // The player is fully attached now, raise an event!
-            RaiseLocalEvent(uid, new PlayerAttachedEvent(actor.Owner, player, forceKicked), true);
+            RaiseLocalEvent(uid, new PlayerAttachedEvent(uid, player, forceKicked), true);
+            DebugTools.Assert(player.AttachedEntity == entity);
             return true;
         }
 
@@ -99,12 +110,8 @@ namespace Robust.Server.GameObjects
         /// <returns>Whether any player session was detached.</returns>
         public bool Detach(EntityUid entity)
         {
-            if (!EntityManager.HasComponent<ActorComponent>(entity))
-                return false;
-
             // Removing the component will call shutdown, and our subscription will handle the rest of the detach logic.
-            EntityManager.RemoveComponent<ActorComponent>(entity);
-            return true;
+            return RemComp<ActorComponent>(entity);
         }
 
         /// <summary>

@@ -225,7 +225,7 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
 
         // Does a joint override collision? Is at least one body dynamic?
-        if (!ShouldCollide(uidA, uidB, bodyB, bodyA, fixtureA, fixtureB))
+        if (!ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB))
             return;
 
         // Call the factory.
@@ -338,8 +338,8 @@ public abstract partial class SharedPhysicsSystem
             int indexA = contact.ChildIndexA;
             int indexB = contact.ChildIndexB;
 
-            var bodyA = bodyQuery.GetComponent(contact.EntityA);
-            var bodyB = bodyQuery.GetComponent(contact.EntityB);
+            var bodyA = contact.BodyA!;
+            var bodyB = contact.BodyB!;
             var uidA = contact.EntityA;
             var uidB = contact.EntityB;
 
@@ -355,7 +355,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 // Check default filtering
                 if (!ShouldCollide(fixtureA, fixtureB) ||
-                    !ShouldCollide(uidA, uidB, bodyB, bodyA, fixtureA, fixtureB))
+                    !ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB))
                 {
                     DestroyContact(contact);
                     continue;
@@ -488,8 +488,8 @@ public abstract partial class SharedPhysicsSystem
 
                     var fixtureA = contact.FixtureA!;
                     var fixtureB = contact.FixtureB!;
-                    var bodyA = bodyQuery.GetComponent(contact.EntityA);
-                    var bodyB = bodyQuery.GetComponent(contact.EntityB);
+                    var bodyA = contact.BodyA!;
+                    var bodyB = contact.BodyB!;
                     var uidA = contact.EntityA;
                     var uidB = contact.EntityB;
                     var worldPoint = worldPoints[i];

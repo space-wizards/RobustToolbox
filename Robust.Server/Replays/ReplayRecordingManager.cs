@@ -15,12 +15,12 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
     [Dependency] private readonly IEntitySystemManager _sysMan = default!;
     private GameTick _fromTick = GameTick.Zero;
 
-    private PVSSystem _pvs = default!;
+    private PvsSystem _pvs = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        _pvs = _sysMan.GetEntitySystem<PVSSystem>();
+        _pvs = _sysMan.GetEntitySystem<PvsSystem>();
         NetConf.OnValueChanged(CVars.ReplayServerRecordingEnabled, SetReplayEnabled, true);
     }
 

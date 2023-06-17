@@ -35,7 +35,7 @@ namespace Robust.Server.GameStates
         // Mapping of net UID of clients -> last known acked state.
         private GameTick _lastOldestAck = GameTick.Zero;
 
-        private PVSSystem _pvs = default!;
+        private PvsSystem _pvs = default!;
 
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -66,7 +66,7 @@ namespace Robust.Server.GameStates
 
         public void PostInject()
         {
-            _logger = Logger.GetSawmill("PVS");
+            _logger = Logger.GetSawmill("gamestate");
         }
 
         /// <inheritdoc />
@@ -77,7 +77,7 @@ namespace Robust.Server.GameStates
             _networkManager.RegisterNetMessage<MsgStateAck>(HandleStateAck);
             _networkManager.RegisterNetMessage<MsgStateRequestFull>(HandleFullStateRequest);
 
-            _pvs = _entityManager.System<PVSSystem>();
+            _pvs = _entityManager.System<PvsSystem>();
 
             _parallelMgr.AddAndInvokeParallelCountChanged(ResetParallelism);
 

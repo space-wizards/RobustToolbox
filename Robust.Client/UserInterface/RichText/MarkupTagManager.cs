@@ -45,7 +45,7 @@ public sealed class MarkupTagManager
                 continue;
 
             var instance = (IMarkupTag)_sandboxHelper.CreateInstance(type);
-            _markupTagTypes.Add(instance.Name.ToLower(),  instance);
+            _markupTagTypes[instance.Name.ToLower()] = instance;
         }
 
         foreach (var (_, tag) in _markupTagTypes)

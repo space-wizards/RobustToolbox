@@ -72,8 +72,7 @@ public sealed partial class FormattedMessage
     private static readonly Parser<char, List<MarkupNode>> Text =
          EscapeSequence.Or(Token(c => c != '[' && c != '\\'))
                 .AtLeastOnceString()
-                .Select(s => new MarkupNode(s))
-                .Select(tag => new List<MarkupNode>{tag});
+                .Select(s => new List<MarkupNode>{new(s)});
 
     //Parses a string of letters or digits beginning with a letter
 	private static readonly Parser<char, string> Identifier =

@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.128.0.0
+
+### Breaking changes
+
+* Add ILocalizationManager as a dependency on systems as `Loc`.
+
+
 ## 0.127.1.0
 
 ### New features

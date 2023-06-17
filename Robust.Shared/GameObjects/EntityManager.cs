@@ -404,21 +404,18 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public virtual void Dirty(Component component, MetaDataComponent? meta = null)
+        [Obsolete("use override with an EntityUid")]
+        public void Dirty(Component component, MetaDataComponent? meta = null)
         {
-#pragma warning disable CS0618
-            var owner = component.Owner;
-#pragma warning restore CS0618
+            Dirty(component.Owner, component, meta);
+        }
 
-            // Deserialization will cause this to be true.
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (!owner.IsValid() || component.LifeStage >= ComponentLifeStage.Removing)
+        public virtual void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+        {
+            if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;
 
-            if (!component.NetSyncEnabled)
-                return;
-
-            DirtyEntity(owner, meta);
+            DirtyEntity(uid, meta);
             component.LastModifiedTick = CurrentTick;
         }
 

@@ -9,6 +9,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -348,6 +349,12 @@ namespace Robust.Shared.Physics.Systems
 
             if (resetMass)
                 _physics.ResetMassData(uid, manager, body);
+
+            if (body.CollisionLayer != layer)
+            {
+                var ev = new CollisionLayerChangeEvent(body);
+                RaiseLocalEvent(ref ev);
+            }
 
             // Normally this method is called when fixtures need to be dirtied anyway so no point in returning early I think
             body.CollisionMask = mask;

@@ -479,7 +479,7 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> BuildEngineVersion =
             CVarDef.Create("build.engine_version",
-                typeof(CVars).Assembly.GetName().Version?.ToString(4) ?? String.Empty,
+                typeof(CVars).Assembly.GetName().Version?.ToString(3) ?? String.Empty,
                 CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>

@@ -16,6 +16,17 @@ internal sealed partial class ReplayPlaybackManager
         if (Replay == null)
             throw new Exception("Not currently playing a replay");
 
+        if (_timing.ApplyingState)
+        {
+            // This fixes a niche error. If scrubbing forward in time, and the currently spectated entity gets deleted
+            // this can trigger events that cause the player to be attached to a new entity. This may cause game UI
+            // state / screen changes, which then trigger key-up events, which in turn cause scrubbing to end, thus
+            // causing this method to try apply a game state while already in the middle of applying another state. So
+            // we will just do nothing instead.
+            return;
+        }
+
+
         Playing &= !pausePlayback;
         value = Math.Clamp(value, 0, Replay.States.Count - 1);
         if (value == Replay.CurrentIndex)
@@ -53,8 +64,9 @@ internal sealed partial class ReplayPlaybackManager
             // TODO REPLAYS block audio
             // Just block audio/midi from ever starting, rather than repeatedly stopping it.
             StopAudio();
-
-            DebugTools.Assert(Replay.LastApplied + 1 == state.ToSequence);
+;
+            DebugTools.Assert(Replay.LastApplied >= state.FromSequence);
+            DebugTools.Assert(Replay.LastApplied + 1 <= state.ToSequence);
             Replay.LastApplied = state.ToSequence;
         }
 

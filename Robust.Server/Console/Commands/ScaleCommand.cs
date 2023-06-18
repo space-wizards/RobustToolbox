@@ -50,7 +50,7 @@ public sealed class ScaleCommand : LocalizedCommands
         var @event = new ScaleEntityEvent();
         _entityManager.EventBus.RaiseLocalEvent(uid, ref @event);
 
-        var appearanceComponent = _entityManager.EnsureComponent<ServerAppearanceComponent>(uid);
+        var appearanceComponent = _entityManager.EnsureComponent<AppearanceComponent>(uid);
         if (!appearance.TryGetData<Vector2>(uid, ScaleVisuals.Scale, out var oldScale, appearanceComponent))
             oldScale = Vector2.One;
 

@@ -1,23 +1,23 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
     public sealed class AppearanceSystem : SharedAppearanceSystem
     {
-        private readonly Queue<ClientAppearanceComponent> _queuedUpdates = new();
+        private readonly Queue<(EntityUid uid, AppearanceComponent)> _queuedUpdates = new();
 
         public override void Initialize()
         {
             base.Initialize();
 
-            SubscribeLocalEvent<ClientAppearanceComponent, ComponentStartup>(OnAppearanceStartup);
-            SubscribeLocalEvent<ClientAppearanceComponent, ComponentHandleState>(OnAppearanceHandleState);
+            SubscribeLocalEvent<AppearanceComponent, ComponentStartup>(OnAppearanceStartup);
+            SubscribeLocalEvent<AppearanceComponent, ComponentHandleState>(OnAppearanceHandleState);
         }
 
         protected override void OnAppearanceGetState(EntityUid uid, AppearanceComponent component, ref ComponentGetState args)
@@ -26,12 +26,12 @@ namespace Robust.Client.GameObjects
             args.State = new AppearanceComponentState(clone);
         }
 
-        private void OnAppearanceStartup(EntityUid uid, ClientAppearanceComponent component, ComponentStartup args)
+        private void OnAppearanceStartup(EntityUid uid, AppearanceComponent component, ComponentStartup args)
         {
-            MarkDirty(component);
+            QueueUpdate(uid, component);
         }
 
-        private void OnAppearanceHandleState(EntityUid uid, ClientAppearanceComponent component, ref ComponentHandleState args)
+        private void OnAppearanceHandleState(EntityUid uid, AppearanceComponent component, ref ComponentHandleState args)
         {
             if (args.Current is not AppearanceComponentState actualState)
                 return;
@@ -51,10 +51,15 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            if (!stateDiff) return;
+            if (!stateDiff)
+            {
+                // Even if the appearance hasn't changed, we may need to update if we are re-entering PVS
+                if (component.AppearanceDirty)
+                    QueueUpdate(uid, component);
+            }
 
             component.AppearanceData = CloneAppearanceData(actualState.Data);
-            MarkDirty(component);
+            QueueUpdate(uid, component);
         }
 
         /// <summary>
@@ -80,43 +85,46 @@ namespace Robust.Client.GameObjects
             return newDict;
         }
 
-        public override void MarkDirty(AppearanceComponent component, bool updateDetached = false)
+        public override void QueueUpdate(EntityUid uid, AppearanceComponent component)
         {
-            var clientComp = (ClientAppearanceComponent)component;
-            clientComp.UpdateDetached |= updateDetached;
-
-            if (component.AppearanceDirty)
+            if (component.UpdateQueued)
+            {
+                DebugTools.Assert(component.AppearanceDirty);
                 return;
+            }
 
-            _queuedUpdates.Enqueue(clientComp);
+            _queuedUpdates.Enqueue((uid, component));
             component.AppearanceDirty = true;
+            component.UpdateQueued = true;
         }
 
         public override void FrameUpdate(float frameTime)
         {
             var spriteQuery = GetEntityQuery<SpriteComponent>();
             var metaQuery = GetEntityQuery<MetaDataComponent>();
-            while (_queuedUpdates.TryDequeue(out var appearance))
+            while (_queuedUpdates.TryDequeue(out var next))
             {
-                appearance.AppearanceDirty = false;
+                var (uid, appearance) = next;
+                appearance.UpdateQueued = false;
                 if (!appearance.Running)
                     continue;
 
                 // If the entity is no longer within the clients PVS, don't bother updating.
-                if ((metaQuery.GetComponent(appearance.Owner).Flags & MetaDataFlags.Detached) != 0 && !appearance.UpdateDetached)
+                if ((metaQuery.GetComponent(uid).Flags & MetaDataFlags.Detached) != 0)
                     continue;
 
-                appearance.UpdateDetached = false;
+                appearance.AppearanceDirty = false;
 
                 // Sprite comp is allowed to be null, so that things like spriteless point-lights can use this system
-                spriteQuery.TryGetComponent(appearance.Owner, out var sprite);
-                OnChangeData(appearance.Owner, sprite, appearance);
+                spriteQuery.TryGetComponent(uid, out var sprite);
+                OnChangeData(uid, sprite, appearance);
             }
         }
 
-        public void OnChangeData(EntityUid uid, SpriteComponent? sprite, ClientAppearanceComponent? appearanceComponent = null)
+        public void OnChangeData(EntityUid uid, SpriteComponent? sprite, AppearanceComponent? appearanceComponent = null)
         {
-            if (!Resolve(uid, ref appearanceComponent, false)) return;
+            if (!Resolve(uid, ref appearanceComponent, false))
+                return;
 
             var ev = new AppearanceChangeEvent
             {
@@ -126,7 +134,7 @@ namespace Robust.Client.GameObjects
             };
 
             // Give it AppearanceData so we can still keep the friend attribute on the component.
-            EntityManager.EventBus.RaiseLocalEvent(uid, ref ev);
+            RaiseLocalEvent(uid, ref ev);
         }
     }
 

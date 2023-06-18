@@ -14,13 +14,19 @@ namespace Robust.Client.ViewVariables.Editors
             var enumList = Enum.GetValues(enumType);
 
             var optionButton = new OptionButton();
+            bool hasValue = false;
             foreach (var val in enumList)
             {
                 var label = val?.ToString();
                 if (label == null)
                     continue;
                 optionButton.AddItem(label, Convert.ToInt32(val));
+                hasValue |= Convert.ToInt32(val) == Convert.ToInt32(value);
             }
+
+            // TODO properly support enum flags
+            if (!hasValue)
+                optionButton.AddItem(value.ToString() ?? string.Empty, Convert.ToInt32(value));
 
             optionButton.SelectId(Convert.ToInt32(value));
             optionButton.Disabled = ReadOnly;

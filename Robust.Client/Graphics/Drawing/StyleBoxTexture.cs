@@ -37,6 +37,7 @@ namespace Robust.Client.Graphics
 
             Texture = copy.Texture;
             Modulate = copy.Modulate;
+            TextureScale = copy.TextureScale;
         }
 
         public float ExpandMarginLeft { get; set; }
@@ -327,13 +328,13 @@ namespace Robust.Client.Graphics
             switch (margin)
             {
                 case Margin.Top:
-                    return PatchMarginTop;
+                    return PatchMarginTop * TextureScale.Y;
                 case Margin.Bottom:
-                    return PatchMarginBottom;
+                    return PatchMarginBottom * TextureScale.Y;
                 case Margin.Right:
-                    return PatchMarginRight;
+                    return PatchMarginRight * TextureScale.X;
                 case Margin.Left:
-                    return PatchMarginLeft;
+                    return PatchMarginLeft * TextureScale.X;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(margin), margin, null);
             }

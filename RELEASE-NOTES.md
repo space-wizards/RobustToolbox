@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Updated Lidgren, fixing a bug where socket errors were not reported properly on Linux.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,30 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 129.0.0
+
+### Breaking changes
+
+* `AnchorSystem.Attach()` now behaves more like the obsolete `AttachToEntity()` methods as it will automatically detach a player from their current entity first.
+* A chunk of server- and client-side `PrototypeLoadManager` code has been moved to shared.
+* Replay recording and playback now supports client-side replays. Many replay related functions, cvars, and commands have changed.
+
+### New features
+
+* Richtext tags can now be overridden by content
+* The LineEdit control now has a field to override the StyleBox
+* `IWritableDirProvider` has new methods for async file writing.
+
+### Bugfixes
+
+* Updated Lidgren, fixing a bug where socket errors were not reported properly on Linux.
+
+### Other
+
+* The `Dirty()` method for networked components now has an override that takes  in an EntityUid. The old IEntityManager method being obsoleted.
+
 
 
 ## 0.128.0.0

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Updated Lidgren, fixing a bug where socket errors were not reported properly on Linux.
 
 ### Other
 

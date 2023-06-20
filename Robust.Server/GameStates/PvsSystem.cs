@@ -1057,8 +1057,8 @@ internal sealed partial class PvsSystem : EntitySystem
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick || md.EntityLastModifiedTick == GameTick.Zero);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick || md.EntityLastModifiedTick == GameTick.Zero);
                     stateEntities.Add(GetEntityState(player, uid, fromTick, md));
                 }
 
@@ -1069,8 +1069,8 @@ internal sealed partial class PvsSystem : EntitySystem
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick || md.EntityLastModifiedTick == GameTick.Zero);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick || md.EntityLastModifiedTick == GameTick.Zero);
                     stateEntities.Add(GetEntityState(player, uid, fromTick, md));
                 }
             }

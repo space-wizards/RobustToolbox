@@ -885,6 +885,21 @@ namespace Robust.Client.Graphics.Clyde
                 var midpoint = dims / 2;
                 var fraction = dims / 32;
 
+
+                SampleLighting(viewport, viewport.LightRenderTarget.Handle,
+                    new UIBox2i(midpoint.X - fraction.X,
+                        midpoint.Y - fraction.Y, fraction.X * 2, fraction.Y * 2));
+
+                // if (_hasGLFloatFramebuffers)
+                // {
+                //     viewport.LightRenderTarget.CopyPixelsToMemory<R11fG11fB10f>(image => { }
+                //
+                // }
+                //     ? RenderTargetColorFormat.R11FG11FB10F
+                //     : RenderTargetColorFormat.Rgba8;
+                //
+                // CopyRenderTargetPixels(viewport.LightRenderTarget)
+
                 // Midpoint of the screen and a box around the player.
                 // It's expensive to get textures back from the GPU but the results are worth it.
                 var centreSqColor = viewport.LightRenderTarget.Texture.MeasureBrightness(midpoint.X - fraction.X,

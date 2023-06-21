@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Network;
+using Robust.Shared.Replays;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Configuration;
@@ -12,6 +13,8 @@ namespace Robust.Client.Configuration;
 internal sealed class ClientNetConfigurationManager : NetConfigurationManager, IClientNetConfigurationManager
 {
     [Dependency] private readonly IBaseClient _client = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly IReplayRecordingManager _replay = default!;
 
     private bool _receivedInitialNwVars = false;
 
@@ -86,6 +89,12 @@ internal sealed class ClientNetConfigurationManager : NetConfigurationManager, I
             ApplyClientNetVarChange(message.NetworkedVars, message.Tick);
         else
             base.HandleNetVarMessage(message);
+
+        _replay.RecordClientMessage(new ReplayMessage.CvarChangeMsg()
+        {
+            ReplicatedCvars = message.NetworkedVars,
+            TimeBase = _timing.TimeBase
+        });
     }
 
     protected override void ApplyNetVarChange(

@@ -34,6 +34,11 @@ public sealed partial class ReplayLoadManager
         var compressionContext = new ZStdCompressionContext();
         var metaData = LoadMetadata(dir, path);
 
+        // Strip tailing "/"
+        // why is there no method for this.
+        if (path.CanonPath.EndsWith("/"))
+            path = new(path.CanonPath.Substring(0, path.CanonPath.Length - 1));
+
         var total = dir.Find($"{path.ToRelativePath()}/*.{Ext}").files.Count();
 
         // Exclude string & init event files from the total.
@@ -57,6 +62,7 @@ public sealed partial class ReplayLoadManager
             var decompressedStream = new MemoryStream(uncompressedSize);
             decompressStream.CopyTo(decompressedStream, uncompressedSize);
             decompressedStream.Position = 0;
+            DebugTools.Assert(uncompressedSize == decompressedStream.Length);
 
             while (decompressedStream.Position < decompressedStream.Length)
             {
@@ -89,7 +95,9 @@ public sealed partial class ReplayLoadManager
             metaData.StartTime,
             metaData.Duration,
             checkpoints,
-            initData);
+            initData,
+            metaData.ClientSide,
+            metaData.YamlData);
     }
 
     private ReplayMessage? LoadInitFile(
@@ -100,7 +108,7 @@ public sealed partial class ReplayLoadManager
         if (!dir.Exists(path / InitFile))
             return null;
 
-        // TODO compress init messages, then decompress them here.
+        // TODO replays compress init messages, then decompress them here.
         using var fileStream = dir.OpenRead(path / InitFile);
         _serializer.DeserializeDirect(fileStream, out ReplayMessage initData);
         return initData;
@@ -116,7 +124,7 @@ public sealed partial class ReplayLoadManager
         return parsed.FirstOrDefault()?.Root as MappingDataNode;
     }
 
-    private (HashSet<string> CVars, TimeSpan Duration, TimeSpan StartTime)
+    private (MappingDataNode YamlData, HashSet<string> CVars, TimeSpan Duration, TimeSpan StartTime, bool ClientSide)
         LoadMetadata(IWritableDirProvider directory, ResPath path)
     {
         _sawmill.Info($"Reading replay metadata");
@@ -129,6 +137,7 @@ public sealed partial class ReplayLoadManager
         var startTick = ((ValueDataNode) data[Tick]).Value;
         var timeBaseTick = ((ValueDataNode) data[BaseTick]).Value;
         var timeBaseTimespan = ((ValueDataNode) data[BaseTime]).Value;
+        var clientSide = bool.Parse(((ValueDataNode) data[IsClient]).Value);
         var duration = TimeSpan.Parse(((ValueDataNode) data[Duration]).Value);
 
         if (!typeHash.SequenceEqual(_serializer.GetSerializableTypesHash()))
@@ -147,6 +156,6 @@ public sealed partial class ReplayLoadManager
         _timing.TimeBase = (new TimeSpan(long.Parse(timeBaseTimespan)), new GameTick(uint.Parse(timeBaseTick)));
 
         _sawmill.Info($"Successfully read metadata");
-        return (cvars, duration, _timing.CurTime);
+        return (data, cvars, duration, _timing.CurTime, clientSide);
     }
 }

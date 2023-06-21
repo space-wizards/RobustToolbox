@@ -84,7 +84,8 @@ namespace Robust.Shared.GameObjects
         ///     The session sending or receiving this message.
         ///     Only set when the message is raised as a directed event.
         /// </summary>
-        public ICommonSession Session { get; set; } = default!;
+        [NonSerialized]
+        public ICommonSession Session = default!;
     }
 
     [NetSerializable, Serializable]

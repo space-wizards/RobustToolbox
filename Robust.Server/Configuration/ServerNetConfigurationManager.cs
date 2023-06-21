@@ -85,7 +85,7 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
 
         NetManager.ServerSendToAll(msg);
 
-        _replayRecording.QueueReplayMessage(new ReplayMessage.CvarChangeMsg()
+        _replayRecording.RecordServerMessage(new ReplayMessage.CvarChangeMsg()
         {
             ReplicatedCvars = msg.NetworkedVars,
             TimeBase = _timing.TimeBase

@@ -201,6 +201,15 @@ public partial class EntitySystem
     }
 
     /// <summary>
+    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+    {
+        EntityManager.Dirty(uid, component, meta);
+    }
+
+    /// <summary>
     ///     Retrieves the name of an entity.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>

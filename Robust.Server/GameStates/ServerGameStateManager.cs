@@ -22,8 +22,8 @@ using Robust.Shared.Utility;
 using SharpZstd.Interop;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
-using Robust.Shared.Players;
 using Robust.Server.Replays;
+using Robust.Shared.Players;
 using Robust.Shared.Map.Components;
 
 namespace Robust.Server.GameStates
@@ -35,7 +35,7 @@ namespace Robust.Server.GameStates
         // Mapping of net UID of clients -> last known acked state.
         private GameTick _lastOldestAck = GameTick.Zero;
 
-        private PVSSystem _pvs = default!;
+        private PvsSystem _pvs = default!;
 
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -43,7 +43,7 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
-        [Dependency] private readonly IInternalReplayRecordingManager _replay = default!;
+        [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IParallelManager _parallelMgr = default!;
@@ -66,7 +66,7 @@ namespace Robust.Server.GameStates
 
         public void PostInject()
         {
-            _logger = Logger.GetSawmill("PVS");
+            _logger = Logger.GetSawmill("gamestate");
         }
 
         /// <inheritdoc />
@@ -77,7 +77,7 @@ namespace Robust.Server.GameStates
             _networkManager.RegisterNetMessage<MsgStateAck>(HandleStateAck);
             _networkManager.RegisterNetMessage<MsgStateRequestFull>(HandleFullStateRequest);
 
-            _pvs = _entityManager.System<PVSSystem>();
+            _pvs = _entityManager.System<PvsSystem>();
 
             _parallelMgr.AddAndInvokeParallelCountChanged(ResetParallelism);
 
@@ -213,8 +213,7 @@ namespace Robust.Server.GameStates
             var mQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
 
             // Replays process game states in parallel with players
-            var start = _replay.Recording ? -1 : 0;
-            Parallel.For(start, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
+            Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
 
             PvsThreadResources SendPlayer(int i, ParallelLoopState state, PvsThreadResources resource)
             {
@@ -223,7 +222,7 @@ namespace Robust.Server.GameStates
                     if (i >= 0)
                         SendStateUpdate(i, resource, inputSystem, players[i], pvsData, mQuery, tQuery, ref oldestAckValue);
                     else
-                        _replay.SaveReplayData(resource);
+                        _replay.Update();
                 }
                 catch (Exception e) // Catch EVERY exception
                 {

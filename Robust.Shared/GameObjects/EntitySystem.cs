@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
@@ -20,15 +21,36 @@ namespace Robust.Shared.GameObjects
     ///     This class is instantiated by the <c>EntitySystemManager</c>, and any IoC Dependencies will be resolved.
     /// </remarks>
     [Reflect(false), PublicAPI]
-    public abstract partial class EntitySystem : IEntitySystem
+    public abstract partial class EntitySystem : IEntitySystem, IPostInjectInit
     {
         [Dependency] protected readonly EntityManager EntityManager;
+        [Dependency] protected readonly ILogManager LogManager = default!;
         [Dependency] private readonly ISharedPlayerManager _playerMan = default!;
         [Dependency] private readonly IReplayRecordingManager _replayMan = default!;
+        [Dependency] protected readonly ILocalizationManager Loc = default!;
+
+        public ISawmill Log { get; private set; } = default!;
+
+        protected virtual string SawmillName
+        {
+            get
+            {
+                var name = GetType().Name;
+
+                // Strip trailing "system"
+                if (name.EndsWith("System"))
+                    name = name.Substring(0, name.Length - "System".Length);
+
+                // Convert CamelCase to snake_case
+                name = string.Concat(name.Select(x => char.IsUpper(x) ? $"_{char.ToLower(x)}" : x.ToString()));
+                name = name.Trim('_');
+
+                return $"system.{name}";
+            }
+        }
 
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
-
 
         public bool UpdatesOutsidePrediction { get; protected internal set; }
 
@@ -108,7 +130,7 @@ namespace Robust.Shared.GameObjects
         protected void RaiseNetworkEvent(EntityEventArgs message, Filter filter, bool recordReplay = true)
         {
             if (recordReplay)
-                _replayMan.QueueReplayMessage(message);
+                _replayMan.RecordServerMessage(message);
 
             foreach (var session in filter.Recipients)
             {
@@ -180,5 +202,10 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion
+
+        void IPostInjectInit.PostInject()
+        {
+            Log = LogManager.GetSawmill(SawmillName);
+        }
     }
 }

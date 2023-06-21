@@ -195,10 +195,10 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
-        /// ZSTD compression level to use when compressing game states. Also used for replays.
+        /// ZSTD compression level to use when compressing game states. Used by both networking and replays.
         /// </summary>
         public static readonly CVarDef<int> NetPVSCompressLevel =
-            CVarDef.Create("net.pvs_compress_level", 3, CVar.SERVERONLY);
+            CVarDef.Create("net.pvs_compress_level", 3, CVar.ARCHIVE);
 
         /// <summary>
         /// Log late input messages from clients.
@@ -479,7 +479,7 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> BuildEngineVersion =
             CVarDef.Create("build.engine_version",
-                typeof(CVars).Assembly.GetName().Version?.ToString(4) ?? String.Empty,
+                typeof(CVars).Assembly.GetName().Version?.ToString(3) ?? String.Empty,
                 CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
@@ -1417,29 +1417,44 @@ namespace Robust.Shared
         /// <summary>
         /// A relative path pointing to a folder within the server data directory where all replays will be stored.
         /// </summary>
-        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replays", CVar.ARCHIVE);
+        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replays",
+            CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
-        public static readonly CVarDef<int> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size", 1024 * 100, CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<int> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
+            1024 * 256, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum uncompressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
-        public static readonly CVarDef<int> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size", 1024 * 300, CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<int> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
+            1024 * 1024, CVar.ARCHIVE);
 
         /// <summary>
         /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data
-        /// for one or more tick. Actual files may be slightly larger, this is just a lower threshold. After
-        /// compressing, the files are generally ~30% of their uncompressed size.
+        /// for one or more ticks. Actual files may be slightly larger, this is just a threshold for the file to get
+        /// written. After compressing, the files are generally ~30% of their uncompressed size.
         /// </summary>
-        public static readonly CVarDef<int> ReplayTickBatchSize = CVarDef.Create("replay.replay_tick_batchSize", 1024, CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<int> ReplayTickBatchSize = CVarDef.Create("replay.replay_tick_batchSize",
+            1024, CVar.ARCHIVE);
 
         /// <summary>
-        /// Whether or not recording replays is enabled.
+        /// Whether or not server-side replay recording is enabled.
         /// </summary>
-        public static readonly CVarDef<bool> ReplayEnabled = CVarDef.Create("replay.enabled", true, CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<bool> ReplayServerRecordingEnabled = CVarDef.Create(
+            "replay.server_recording_enabled",
+            true,
+            CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Whether or not client-side replay recording is enabled.
+        /// </summary>
+        public static readonly CVarDef<bool> ReplayClientRecordingEnabled = CVarDef.Create(
+            "replay.client_recording_enabled",
+            true,
+            CVar.SERVER | CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Determines the threshold before visual events (muzzle flashes, chat pop-ups, etc) are suppressed when
@@ -1500,5 +1515,25 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> ResourceUploadingLimitMb =
             CVarDef.Create("netres.limit", 3f, CVar.REPLICATED | CVar.SERVER);
+
+        /*
+         * LAUNCH
+         * CVars relating to how the client is launched. Primarily set from the launcher.
+         */
+
+        /// <summary>
+        /// Game was launched from the launcher.
+        /// </summary>
+        /// <remarks>
+        /// The game should not try to automatically connect to a server, there's other variables for that.
+        /// </remarks>
+        public static readonly CVarDef<bool> LaunchLauncher =
+            CVarDef.Create("launch.launcher", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Game was launched from a content bundle.
+        /// </summary>
+        public static readonly CVarDef<bool> LaunchContentBundle =
+            CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
     }
 }

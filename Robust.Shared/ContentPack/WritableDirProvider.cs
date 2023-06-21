@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using Robust.Shared.Log;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -169,6 +169,25 @@ namespace Robust.Shared.ContentPack
             }
 
             return Path.GetFullPath(Path.Combine(root, relPath));
+        }
+
+        public async Task WriteAllBytesAsync(ResPath path, byte[] bytes, CancellationToken cancellationToken = default)
+        {
+            var fullPath = GetFullPath(path);
+            await File.WriteAllBytesAsync(fullPath, bytes, cancellationToken);
+        }
+
+        public async Task WriteBytesAsync(ResPath path, byte[] bytes, int offset, int length, CancellationToken cancellationToken = default)
+        {
+            var slice = new ReadOnlyMemory<byte>(bytes, offset, length);
+            await WriteBytesAsync(path, slice, cancellationToken);
+        }
+
+        public async Task WriteBytesAsync(ResPath patch, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
+        {
+            var fullPath = GetFullPath(patch);
+            await using var fs = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
+            await fs.WriteAsync(bytes, cancellationToken);
         }
     }
 }

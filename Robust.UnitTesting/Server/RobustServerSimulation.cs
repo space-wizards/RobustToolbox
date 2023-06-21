@@ -244,7 +244,6 @@ namespace Robust.UnitTesting.Server
             container.RegisterInstance<IServerGameStateManager>(new Mock<IServerGameStateManager>().Object);
             container.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
             container.RegisterInstance<IServerReplayRecordingManager>(new Mock<IServerReplayRecordingManager>().Object);
-            container.RegisterInstance<IInternalReplayRecordingManager>(new Mock<IInternalReplayRecordingManager>().Object);
 
             _diFactory?.Invoke(container);
             container.BuildGraph();
@@ -306,7 +305,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
-            entitySystemMan.LoadExtraSystemType<PVSSystem>();
+            entitySystemMan.LoadExtraSystemType<PvsSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

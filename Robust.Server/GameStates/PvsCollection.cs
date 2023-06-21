@@ -58,7 +58,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2i GetChunkIndices(Vector2 coordinates)
     {
-        return (coordinates / PVSSystem.ChunkSize).Floored();
+        return (coordinates / PvsSystem.ChunkSize).Floored();
     }
 
     /// <summary>

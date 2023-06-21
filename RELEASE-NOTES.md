@@ -54,6 +54,73 @@ END TEMPLATE-->
 *None yet*
 
 
+## 130.0.0
+
+### Breaking changes
+
+* Engine versions will no longer start with a leading 0.
+
+
+## 0.129.0.1
+
+
+## 129.0.0
+
+### Breaking changes
+
+* `AnchorSystem.Attach()` now behaves more like the obsolete `AttachToEntity()` methods as it will automatically detach a player from their current entity first.
+* A chunk of server- and client-side `PrototypeLoadManager` code has been moved to shared.
+* Replay recording and playback now supports client-side replays. Many replay related functions, cvars, and commands have changed.
+
+### New features
+
+* Richtext tags can now be overridden by content
+* The LineEdit control now has a field to override the StyleBox
+* `IWritableDirProvider` has new methods for async file writing.
+
+### Bugfixes
+
+* Updated Lidgren, fixing a bug where socket errors were not reported properly on Linux.
+
+### Other
+
+* The `Dirty()` method for networked components now has an override that takes  in an EntityUid. The old IEntityManager method being obsoleted.
+
+
+
+## 0.128.0.0
+
+### Breaking changes
+
+* Add ILocalizationManager as a dependency on systems as `Loc`.
+
+
+## 0.127.1.0
+
+### New features
+
+* Add SpriteSystem.Frame0 method for entity prototypes.
+
+
+## 0.127.0.0
+
+### Breaking changes
+
+* Rename PVSSystem to PvsSystem.
+
+### New features
+
+* Added `launch.launcher` and `launch.content_bundle` CVars. These are intended to eventually replace the `InitialLaunchState` values.
+* Allow `System.Net.IPAdress` through sandbox _properly_, add `System.Net.Sockets.AddressFamily` too.
+* Systems now have their own logger sawmills automatically and can be access via `Log`.
+
+### Bugfixes
+
+* Make BoxContainer's MeasureOverride account for stretching.
+* Fix IPAddress sandboxing.
+* Revert physics contact getcomponents and also fix ShouldCollide ordering for PreventCollideEvent.
+
+
 ## 0.126.0.0
 
 ### Breaking changes

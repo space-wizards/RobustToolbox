@@ -78,6 +78,21 @@ public interface IRobustRandom
             (list[k], list[n]) = (list[n], list[k]);
         }
     }
+
+    public byte NextByte(byte maxValue)
+    {
+        return (byte) Next(maxValue);
+    }
+
+    public byte NextByte()
+    {
+        return (byte) Next(byte.MaxValue);
+    }
+
+    public byte NextByte(byte minValue, byte maxValue)
+    {
+        return (byte) Next(minValue, maxValue);
+    }
 }
 
 public static class RandomHelpers
@@ -96,5 +111,20 @@ public static class RandomHelpers
     public static bool Prob(this System.Random random, double chance)
     {
         return random.NextDouble() < chance;
+    }
+
+    public static byte NextByte(this System.Random random, byte maxValue)
+    {
+        return (byte)random.Next(maxValue);
+    }
+
+    public static byte NextByte(this System.Random random)
+    {
+        return (byte) random.Next(byte.MaxValue);
+    }
+
+    public static byte NextByte(this System.Random random, byte minValue, byte maxValue)
+    {
+        return (byte) random.Next(minValue, maxValue);
     }
 }

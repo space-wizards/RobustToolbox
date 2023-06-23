@@ -21,6 +21,7 @@ namespace Robust.Shared.Map.Components
         [ViewVariables(VVAccess.ReadOnly)]
         public bool MapPaused { get; set; } = false;
 
+        //TODO replace MapPreInit with the map's entity life stage
         [ViewVariables(VVAccess.ReadOnly)]
         public bool MapPreInit { get; set; } = false;
     }

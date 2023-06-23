@@ -293,10 +293,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 var containerSys = entMan.EntitySysManager.GetEntitySystem<Robust.Server.Containers.ContainerSystem>();
 
                 // build the map
-                var mapIdOne = new MapId(1);
                 var mapManager = IoCManager.Resolve<IMapManager>();
 
-                mapManager.CreateMap(mapIdOne);
+                var mapIdOne = mapManager.CreateMap();
                 Assert.That(mapManager.IsMapInitialized(mapIdOne), Is.True);
 
                 var containerEnt = entMan.SpawnEntity(null, new MapCoordinates(1, 1, mapIdOne));
@@ -322,9 +321,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             await server.WaitAssertion(() =>
             {
-                var mapIdTwo = new MapId(2);
                 var mapManager = IoCManager.Resolve<IMapManager>();
                 var mapLoader = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
+                var mapIdTwo = mapManager.CreateMap();
 
                 // load the map
                 mapLoader.Load(mapIdTwo, "container_test.yml");

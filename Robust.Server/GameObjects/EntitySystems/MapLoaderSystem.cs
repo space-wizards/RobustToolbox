@@ -915,7 +915,14 @@ public sealed class MapLoaderSystem : EntitySystem
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
         var metadata = Comp<MetaDataComponent>(uid);
         var pauseTime = _meta.GetPauseTime(uid, metadata);
-        var postInit = metadata.EntityLifeStage >= EntityLifeStage.MapInitialized;
+
+        // TODO replace MapPreInit with the map's entity lifestage
+        // Yes, post-init maps do not have EntityLifeStage >= EntityLifeStage.MapInitialized
+        bool postInit;
+        if (TryComp(uid, out MapComponent? mapComp))
+            postInit = !mapComp.MapPreInit;
+        else
+            postInit = metadata.EntityLifeStage >= EntityLifeStage.MapInitialized;
 
         var rootXform = _serverEntityManager.GetComponent<TransformComponent>(uid);
         _context.Set(uidEntityMap, entityUidMap, postInit, pauseTime, rootXform.ParentUid);

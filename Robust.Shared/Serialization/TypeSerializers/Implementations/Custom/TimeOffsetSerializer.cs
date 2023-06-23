@@ -8,7 +8,6 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -30,20 +29,14 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
     {
-        // Caveat: if non-zero times are to be supported for prototypes, then this method needs to be changed so that
-        // the time is added when copying, instead of when reading.
-        if (context == null || context.WritingReadingPrototypes)
-            return TimeSpan.Zero;
-
-        IGameTiming? timing = null;
-        if (context is MapSerializationContext mapContext)
+        if (context is not MapSerializationContext mapContext
+            || mapContext.WritingReadingPrototypes
+            || !mapContext.MapInitialized)
         {
-            if (!mapContext.MapInitialized)
-                return TimeSpan.Zero;
-            timing = mapContext.Timing;
+            return TimeSpan.Zero;
         }
 
-        timing ??= dependencies.Resolve<IGameTiming>();
+        var timing = mapContext.Timing;
         var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
         return TimeSpan.FromSeconds(seconds) + timing.CurTime;
     }
@@ -60,19 +53,14 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
     public DataNode Write(ISerializationManager serializationManager, TimeSpan value, IDependencyCollection dependencies, bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        // If we're reading from the prototype (e.g. for diffs) then ignore.
-        if (context == null || context.WritingReadingPrototypes)
+        if (context is not MapSerializationContext mapContext
+            || mapContext.WritingReadingPrototypes
+            || !mapContext.MapInitialized)
         {
-            DebugTools.Assert(value == TimeSpan.Zero,
+            DebugTools.Assert(value == TimeSpan.Zero || context?.WritingReadingPrototypes != true,
                 "non-zero time offsets in prototypes are not supported. If required, initialize offsets on map-init");
 
             return new ValueDataNode("0");
-        }
-
-        if (context is not MapSerializationContext mapContext)
-        {
-            value -= dependencies.Resolve<IGameTiming>().CurTime;
-            return new ValueDataNode(value.TotalSeconds.ToString(CultureInfo.InvariantCulture));
         }
 
         if (!mapContext.MapInitialized)

@@ -166,6 +166,7 @@ namespace Robust.Shared.Map
 
         void DoMapInitialize(MapId mapId);
 
+        // TODO rename this to actually be descriptive or just remove it.
         void AddUninitializedMap(MapId mapId);
 
         [Pure]

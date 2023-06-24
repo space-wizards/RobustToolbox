@@ -35,11 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `IWritableDirProvider` async functions have been removed.
+* Replay recording & load API has been reworked to operate on zip files instead.
+* Constants on `IReplayRecordingManager` have been moved to a new `ReplayConstants` class, renamed and values changed.
 
 ### New features
 
-*None yet*
+* Added `ISawmill.Verbose()` log functions.
+* Replays are now written as `.zip` files. These will be [content bundles](https://docs.spacestation14.io/en/launcher/content-bundles) directly executable by the launcher if the server has the necessary build information.
+* Client replays now use local time rather than UTC as default file name.
 
 ### Bugfixes
 

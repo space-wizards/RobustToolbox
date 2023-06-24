@@ -2,10 +2,12 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using Robust.Shared.ContentPack;
+using System.IO.Compression;
+using System.Threading.Channels;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using System.Threading.Tasks;
+using Robust.Shared.Log;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
@@ -14,95 +16,132 @@ namespace Robust.Shared.Replays;
 // This partial class has various methods for async file writing (in case the path is on a networked drive or something like that)
 internal abstract partial class SharedReplayRecordingManager
 {
-    private List<Task> _writeTasks = new();
+    // To avoid stuttering the main thread, we do IO (and writing to the zip in general) in the thread pool.
 
-    private void WriteYaml(YamlDocument data, IWritableDirProvider dir, ResPath path)
+    // While recording a replay, the Task for the write queue is stored in the RecordingState.
+    // However when the replay recording gets finished, we immediately clear _recState before the write queue is finished.
+    // As such, we need to track the task here.
+    // In practice, this list will most likely never contain more than a single element,
+    // and even then not for much longer than a couple hundred ms at most.
+    private readonly List<Task> _finalizingWriteTasks = new();
+
+    private static void WriteYaml(RecordingState state, ResPath path, YamlDocument data)
     {
         var memStream = new MemoryStream();
         using var writer = new StreamWriter(memStream);
         var yamlStream = new YamlStream { data };
         yamlStream.Save(new YamlMappingFix(new Emitter(writer)), false);
         writer.Flush();
-        var task = Task.Run(() => dir.WriteAllBytesAsync(path, memStream.ToArray()));
-        _writeTasks.Add(task);
+        WriteBytes(state, path, memStream.AsMemory());
     }
 
-    private void WriteSerializer<T>(T obj, IWritableDirProvider dir, ResPath path)
+    private void WriteSerializer<T>(RecordingState state, ResPath path, T obj)
     {
         var memStream = new MemoryStream();
         _serializer.SerializeDirect(memStream, obj);
 
-        var task = Task.Run(() => dir.WriteAllBytesAsync(path, memStream.ToArray()));
-        _writeTasks.Add(task);
+        WriteBytes(state, path, memStream.AsMemory());
     }
 
-    private void WriteBytes(byte[] bytes, IWritableDirProvider dir, ResPath path)
+    private static void WritePooledBytes(
+        RecordingState state,
+        ResPath path,
+        byte[] bytes,
+        int length,
+        CompressionLevel compression)
     {
-        var task = Task.Run(() => dir.WriteAllBytesAsync(path, bytes));
-        _writeTasks.Add(task);
-    }
+        DebugTools.Assert(path.IsRelative, "Zip path should be relative");
 
-    private void WritePooledBytes(byte[] bytes, int length, IWritableDirProvider dir, ResPath path)
-    {
-        var task = Task.Run(() => Write(bytes, length, dir, path));
-        _writeTasks.Add(task);
-
-        static async Task Write(byte[] bytes, int length, IWritableDirProvider dir, ResPath path)
+        WriteQueueTask(state, () =>
         {
             try
             {
-                var slice = new ReadOnlyMemory<byte>(bytes, 0, length);
-                await dir.WriteBytesAsync(path, slice);
+                var entry = state.Zip.CreateEntry(path.ToString(), compression);
+                using var stream = entry.Open();
+                stream.Write(bytes, 0, length);
             }
             finally
             {
                 ArrayPool<byte>.Shared.Return(bytes);
             }
-        }
+        });
     }
 
-    private void WriteToml(IEnumerable<string> enumerable, IWritableDirProvider dir, ResPath path)
+    private void WriteToml(RecordingState state, IEnumerable<string> enumerable, ResPath path)
     {
         var memStream = new MemoryStream();
         NetConf.SaveToTomlStream(memStream, enumerable);
 
-        var task = Task.Run(() => dir.WriteAllBytesAsync(path, memStream.ToArray()));
-        _writeTasks.Add(task);
+        WriteBytes(state, path, memStream.AsMemory());
     }
 
-    protected bool UpdateWriteTasks()
+    private static void WriteBytes(
+        RecordingState recState,
+        ResPath path,
+        ReadOnlyMemory<byte> bytes,
+        CompressionLevel compression = CompressionLevel.Optimal)
     {
-        bool isWriting = false;
-        for (var i = _writeTasks.Count - 1; i >= 0; i--)
+        DebugTools.Assert(path.IsRelative, "Zip path should be relative");
+
+        WriteQueueTask(recState, () =>
         {
-            var task = _writeTasks[i];
-            switch(task.Status)
+            var entry = recState.Zip.CreateEntry(path.ToString(), compression);
+            using var stream = entry.Open();
+            stream.Write(bytes.Span);
+        });
+    }
+
+    private static void WriteQueueTask(RecordingState recState, Action a)
+    {
+        var task = recState.WriteCommandChannel.WriteAsync(a);
+
+        // If we have to wait here, it's because the channel is full.
+        // Synchronous waiting is safe here: the writing code doesn't rely on the synchronization context.
+        if (!task.IsCompletedSuccessfully)
+            task.AsTask().Wait();
+    }
+
+    protected void UpdateWriteTasks()
+    {
+        if (_recState != null)
+        {
+            // We are actively recording a replay. Check the status of the write task to make sure nothing went wrong.
+            if (_recState.WriteTask.IsFaulted)
             {
-                case TaskStatus.Canceled:
-                case TaskStatus.RanToCompletion:
-                    _writeTasks.RemoveSwap(i);
-                    break;
+                _sawmill.Log(
+                    LogLevel.Error,
+                    _recState.WriteTask.Exception,
+                    "Write task failed while recording due to exception, aborting recording!");
 
-                case TaskStatus.Faulted:
-                    var ex = task.Exception;
-                    _sawmill.Error($"Replay write task encountered a fault. Rethrowing exception");
-                    Reset();
-                    throw ex!;
-
-                case TaskStatus.Created:
-                    Reset();
-                    throw new Exception("A replay write task was never started?");
-
-                default:
-                    isWriting = true;
-                    break;
+                Reset();
+            }
+            else if (_recState.WriteTask.IsCompleted)
+            {
+                // This shouldn't be possible since the write task only exits if we close the channel,
+                // which we only do while clearing _recState.
+                _sawmill.Error("Write task completed, but did not report an error?");
             }
         }
 
-        return isWriting;
-    }
+        for (var i = _finalizingWriteTasks.Count - 1; i >= 0; i--)
+        {
+            var task = _finalizingWriteTasks[i];
+            if (task.IsCompletedSuccessfully)
+            {
+                _sawmill.Debug("Write task finalized cleanly");
+            }
+            else if (task.IsFaulted)
+            {
+                _sawmill.Log(
+                    LogLevel.Error,
+                    task.Exception,
+                    "Write task hit exception while finalizing, replay may have been corrupted!");
+            }
 
-    public bool IsWriting() => UpdateWriteTasks();
+            if (task.IsCompleted)
+                _finalizingWriteTasks.RemoveSwap(i);
+        }
+    }
 
     public Task WaitWriteTasks()
     {
@@ -112,6 +151,26 @@ internal abstract partial class SharedReplayRecordingManager
         // First, check for any tasks that have encountered errors.
         UpdateWriteTasks();
 
-        return Task.WhenAll(_writeTasks);
+        return Task.WhenAll(_finalizingWriteTasks);
+    }
+
+    private static async Task WriteQueueLoop(ChannelReader<Action> reader, ZipArchive archive)
+    {
+        try
+        {
+            while (true)
+            {
+                var result = await reader.WaitToReadAsync();
+                if (!result)
+                    break;
+
+                var action = await reader.ReadAsync();
+                action();
+            }
+        }
+        finally
+        {
+            archive.Dispose();
+        }
     }
 }

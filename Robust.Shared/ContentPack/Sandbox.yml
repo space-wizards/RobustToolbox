@@ -359,7 +359,12 @@ Types:
       - "string ToUpper(string)"
   System.IO.Compression:
     CompressionMode: { } # Enum
+    CompressionLevel: { } # Enum
     DeflateStream: { All: True }
+    ZipArchive: { All : True }
+    ZipArchiveEntry: { All : True }
+    ZipArchiveMode: { } # Enum
+
   System.IO:
     BinaryReader: { All: True }
     FileAccess: { } # Enum

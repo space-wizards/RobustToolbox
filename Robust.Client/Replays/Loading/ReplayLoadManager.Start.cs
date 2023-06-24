@@ -13,23 +13,22 @@ namespace Robust.Client.Replays.Loading;
 
 public sealed partial class ReplayLoadManager
 {
-    public event Action<IWritableDirProvider, ResPath>? LoadOverride;
+    public event Action<IReplayFileReader>? LoadOverride;
 
-    public async void  LoadAndStartReplay(IWritableDirProvider dir, ResPath path)
+    public async void  LoadAndStartReplay(IReplayFileReader fileReader)
     {
         if (LoadOverride != null)
-            LoadOverride.Invoke(dir, path);
+            LoadOverride.Invoke(fileReader);
         else
-            await LoadAndStartReplayAsync(dir, path);
+            await LoadAndStartReplayAsync(fileReader);
     }
 
     public async Task LoadAndStartReplayAsync(
-        IWritableDirProvider dir,
-        ResPath path,
+        IReplayFileReader fileReader,
         LoadReplayCallback? callback = null)
     {
         callback ??= (_, _, _, _) => Task.CompletedTask;
-        var data = await LoadReplayAsync(dir, path, callback);
+        var data = await LoadReplayAsync(fileReader, callback);
         await StartReplayAsync(data, callback);
     }
 

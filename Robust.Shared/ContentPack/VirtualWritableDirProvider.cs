@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -213,24 +211,6 @@ namespace Robust.Shared.ContentPack
         public void OpenOsWindow(ResPath path)
         {
             // Not valid for virtual directories. As this has no effect on the rest of the game no exception is thrown.
-        }
-
-        public async Task WriteAllBytesAsync(ResPath path, byte[] bytes, CancellationToken cancellationToken = default)
-        {
-            var file = Open(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            await file.WriteAsync(bytes, cancellationToken);
-        }
-
-        public async Task WriteBytesAsync(ResPath path, byte[] bytes, int offset, int length, CancellationToken cancellationToken = default)
-        {
-            var slice = new ReadOnlyMemory<byte>(bytes, offset, length);
-            await WriteBytesAsync(path, slice, cancellationToken);
-        }
-
-        public async Task WriteBytesAsync(ResPath path, ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken = default)
-        {
-            var file = Open(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            await file.WriteAsync(bytes, cancellationToken);
         }
 
         private bool TryGetNodeAt(ResPath path, [NotNullWhen(true)] out INode? node)

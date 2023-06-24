@@ -112,53 +112,10 @@ public interface IReplayRecordingManager
     (float Minutes, int Ticks, float Size, float UncompressedSize) GetReplayStats();
 
     /// <summary>
-    /// Check the status of all async write tasks and return true if one of the tasks is still writing something.
-    /// </summary>
-    bool IsWriting();
-
-    /// <summary>
     /// Returns a task that will wait for all the current writing tasks to finish.
     /// </summary>
-    /// <exception cref="Exception">
-    /// Throws an exception if <see cref="IsRecording"/> is true (i.e., new write tasks as still being created).
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if we are currently recording (<see cref="IsRecording"/> true).
     /// </exception>
     Task WaitWriteTasks();
-
-    // Define misc constants for writing and reading replays files.
-    # region Constants
-
-    /// <summary>
-    /// File extension for data files that have to be deserialized and decompressed.
-    /// </summary>
-    public const string Ext = "dat";
-
-    // filenames
-    public static readonly ResPath MetaFile = new($"replay.yml");
-    public static readonly ResPath CvarFile = new($"cvars.toml");
-    public static readonly ResPath StringsFile = new($"strings.{Ext}");
-    public static readonly ResPath InitFile = new($"init.{Ext}");
-
-    // Yaml keys
-    public const string Hash = "typeHash";
-    public const string CompHash = "componentHash";
-    public const string Strings = "stringHash";
-    public const string Time = "time";
-    public const string Name = "name";
-    public const string Tick = "serverStartTime";
-    public const string ServerTime = "startTick";
-    public const string BaseTick = "timeBaseTick";
-    public const string BaseTime = "timeBaseTimespan";
-    public const string Duration = "duration";
-    public const string Engine = "engineVersion";
-    public const string Fork = "buildForkId";
-    public const string ForkVersion = "buildVersion";
-    public const string FileCount = "fileCount";
-    public const string Compressed = "size";
-    public const string Uncompressed = "uncompressedSize";
-    public const string EndTick = "endTick";
-    public const string EndTime = "serverEndTime";
-    public const string IsClient = "clientRecording";
-    public const string Recorder = "recordedBy";
-
-    #endregion
 }

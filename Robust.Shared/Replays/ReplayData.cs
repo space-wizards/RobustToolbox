@@ -112,7 +112,7 @@ public sealed class ReplayData
         ClientSideRecording = clientSideRecording;
         YamlData = yamlData;
 
-        if (YamlData.TryGet(new ValueDataNode(IReplayRecordingManager.Recorder), out ValueDataNode? node)
+        if (YamlData.TryGet(new ValueDataNode(ReplayConstants.MetaKeyRecordedBy), out ValueDataNode? node)
             && Guid.TryParse(node.Value, out var guid))
         {
             Recorder = new NetUserId(guid);

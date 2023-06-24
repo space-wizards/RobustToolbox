@@ -70,7 +70,7 @@ namespace Robust.Shared.GameObjects
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
-        public GameTick EntityLastModifiedTick { get; internal set; } = new(1);
+        public GameTick EntityLastModifiedTick { get; internal set; } = GameTick.Zero;
 
         /// <summary>
         ///     This is the tick at which the client last applied state data received from the server.

@@ -71,6 +71,14 @@ namespace Robust.Shared.GameObjects
 
         void StartEntity(EntityUid entity);
 
+        EntityUid[] SpawnEntities(EntityCoordinates coordinates, params string?[] protoNames);
+
+        EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames);
+
+        EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames);
+
+        EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames);
+
         /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
         /// </summary>

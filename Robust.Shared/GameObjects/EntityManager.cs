@@ -1,5 +1,4 @@
 using Prometheus;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Profiling;
@@ -11,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Markdown.Mapping;
 
@@ -24,13 +24,13 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
-        [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [Dependency] protected readonly ILogManager LogManager = default!;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly ISerializationManager _serManager = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
+        [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
+        [IoC.Dependency] protected readonly ILogManager LogManager = default!;
+        [IoC.Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
+        [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+        [IoC.Dependency] private readonly ISerializationManager _serManager = default!;
+        [IoC.Dependency] private readonly ProfManager _prof = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
@@ -347,13 +347,65 @@ namespace Robust.Shared.GameObjects
             return newEntity;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(EntityCoordinates coordinates, params string?[] protoNames)
+        {
+            var ents = new EntityUid[protoNames.Length];
+
+            for (var i = 0; i < protoNames.Length; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames)
+        {
+            var ents = new EntityUid[protoNames.Length];
+
+            for (var i = 0; i < protoNames.Length; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames)
+        {
+            var ents = new EntityUid[protoNames.Count];
+
+            for (var i = 0; i < protoNames.Count; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames)
+        {
+            var ents = new EntityUid[protoNames.Count];
+
+            for (var i = 0; i < protoNames.Count; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
         /// <inheritdoc />
         public virtual EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
             if (!coordinates.IsValid(this))
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
-            var entity = CreateEntityUninitialized(protoName, coordinates);
+            var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
             InitializeAndStartEntity(entity, coordinates.GetMapId(this));
             return entity;
         }

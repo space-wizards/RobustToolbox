@@ -893,12 +893,12 @@ namespace Robust.Shared.Network
             }
             catch (InvalidCastException ice)
             {
-                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet: {ice.Message}");
+                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet:\n{ice}");
                 return true;
             }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
-                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet: {e.Message}");
+                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet:\n{e}");
                 return true;
             }
 

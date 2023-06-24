@@ -737,6 +737,8 @@ namespace Robust.Shared.Network
             NetEncryption? encryption,
             LoginType loginType)
         {
+            _logger.Verbose($"{sender.RemoteEndPoint}: Initial handshake complete!");
+
             var channel = new NetChannel(this, sender, userData, loginType);
             _assignedUserIds.Add(userData.UserId, sender);
             _assignedUsernames.Add(userData.UserName, sender);

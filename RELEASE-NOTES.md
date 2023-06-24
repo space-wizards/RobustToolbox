@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `ISawmill.Verbose()` log functions.
 
 ### Bugfixes
 

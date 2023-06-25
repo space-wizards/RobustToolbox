@@ -851,7 +851,6 @@ internal sealed partial class PvsSystem : EntitySystem
         return leftView.Count > 0 ? leftView : null;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void RecursivelyAddTreeNode(in EntityUid nodeIndex,
         RobustTree<EntityUid> tree,
         Dictionary<EntityUid, PvsEntityVisibility>? lastAcked,

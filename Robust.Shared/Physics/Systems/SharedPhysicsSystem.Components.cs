@@ -67,7 +67,7 @@ public partial class SharedPhysicsSystem
         if (manager.FixtureCount == 0)
             component.CanCollide = false;
 
-        var ev = new CollisionChangeEvent(component, component.CanCollide);
+        var ev = new CollisionChangeEvent(uid, component, component.CanCollide);
         RaiseLocalEvent(ref ev);
     }
 
@@ -502,7 +502,7 @@ public partial class SharedPhysicsSystem
 
         if (body.Initialized)
         {
-            var ev = new CollisionChangeEvent(body, value);
+            var ev = new CollisionChangeEvent(uid, body, value);
             RaiseLocalEvent(ref ev);
         }
 

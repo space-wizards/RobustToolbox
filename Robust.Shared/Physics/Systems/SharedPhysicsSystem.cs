@@ -101,7 +101,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnCollisionChange(ref CollisionChangeEvent ev)
         {
-            var uid = ev.Body.Owner;
+            var uid = ev.BodyUid;
             var mapId = Transform(uid).MapID;
 
             if (mapId == MapId.Nullspace)

@@ -248,8 +248,8 @@ namespace Robust.Shared.GameObjects
 
         private void OnPhysicsUpdate(ref CollisionChangeEvent ev)
         {
-            var xform = Transform(ev.Body.Owner);
-            UpdatePhysicsBroadphase(ev.Body.Owner, xform, ev.Body);
+            var xform = Transform(ev.BodyUid);
+            UpdatePhysicsBroadphase(ev.BodyUid, xform, ev.Body);
 
             // ensure that the cached broadphase is correct.
             DebugTools.Assert(_timing.ApplyingState

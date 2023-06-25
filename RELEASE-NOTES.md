@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 131.1.0
+
+### New features
+
+* Add NextByte method to random.
+* Add method to get a random tile variant.
+
+### Bugfixes
+
+* Fix replay component state bug.
+
+### Internal
+
+* Remove some AggressiveOptimization attributes.
+
+
 ## 131.0.0
 
 ### Breaking changes

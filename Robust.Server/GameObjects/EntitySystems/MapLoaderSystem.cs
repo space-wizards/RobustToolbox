@@ -46,6 +46,7 @@ public sealed class MapLoaderSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private ISawmill _logLoader = default!;
+    private ISawmill _logWriter = default!;
 
     private static readonly MapLoadOptions DefaultLoadOptions = new();
     private const int MapFormatVersion = 5;
@@ -59,8 +60,9 @@ public sealed class MapLoaderSystem : EntitySystem
         base.Initialize();
         _serverEntityManager = (IServerEntityManagerInternal)EntityManager;
         _logLoader = Logger.GetSawmill("loader");
+        _logWriter = Logger.GetSawmill("writer");
         _logLoader.Level = LogLevel.Info;
-        _context = new MapSerializationContext();
+        _context = new MapSerializationContext(_serverEntityManager, _timing);
     }
 
     #region Public
@@ -913,7 +915,14 @@ public sealed class MapLoaderSystem : EntitySystem
         _logLoader.Debug($"Populated entity list in {_stopwatch.Elapsed}");
         var metadata = Comp<MetaDataComponent>(uid);
         var pauseTime = _meta.GetPauseTime(uid, metadata);
-        var postInit = metadata.EntityLifeStage >= EntityLifeStage.MapInitialized;
+
+        // TODO replace MapPreInit with the map's entity lifestage
+        // Yes, post-init maps do not have EntityLifeStage >= EntityLifeStage.MapInitialized
+        bool postInit;
+        if (TryComp(uid, out MapComponent? mapComp))
+            postInit = !mapComp.MapPreInit;
+        else
+            postInit = metadata.EntityLifeStage >= EntityLifeStage.MapInitialized;
 
         var rootXform = _serverEntityManager.GetComponent<TransformComponent>(uid);
         _context.Set(uidEntityMap, entityUidMap, postInit, pauseTime, rootXform.ParentUid);
@@ -1065,7 +1074,12 @@ public sealed class MapLoaderSystem : EntitySystem
 
         foreach (var (entityUid, saveId) in entityUidMap)
         {
-            var id = metaQuery.GetComponent(entityUid).EntityPrototype?.ID;
+            var meta = metaQuery.GetComponent(entityUid);
+
+            if (!_context.MapInitialized && meta.EntityLifeStage >= EntityLifeStage.MapInitialized)
+                _logWriter.Error($"Encountered a post-init entity in a pre-init map. Entity: {ToPrettyString(entityUid)}");
+
+            var id = meta.EntityPrototype?.ID;
             id ??= string.Empty;
             var uids = prototypes.GetOrNew(id);
             uids.Add(saveId);

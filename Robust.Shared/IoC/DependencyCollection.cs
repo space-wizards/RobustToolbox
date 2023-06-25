@@ -332,21 +332,21 @@ namespace Robust.Shared.IoC
             return (T)ResolveType(typeof(T));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T>([NotNull] ref T? instance)
         {
             // Resolve<T>() will either throw or return a concrete instance, therefore we suppress the nullable warning.
             instance ??= Resolve<T>()!;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
         {
             Resolve(ref instance1);
             Resolve(ref instance2);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2,
             [NotNull] ref T3? instance3)
         {
@@ -354,7 +354,7 @@ namespace Robust.Shared.IoC
             Resolve(ref instance3);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2,
             [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
         {

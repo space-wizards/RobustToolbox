@@ -479,52 +479,51 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> BuildEngineVersion =
             CVarDef.Create("build.engine_version",
-                typeof(CVars).Assembly.GetName().Version?.ToString(3) ?? String.Empty,
-                CVar.SERVER | CVar.REPLICATED);
+                typeof(CVars).Assembly.GetName().Version?.ToString(3) ?? String.Empty);
 
         /// <summary>
         /// Fork ID, as a hint to the launcher to manage local files.
         /// This can be anything, it does not need a strict format.
         /// </summary>
         public static readonly CVarDef<string> BuildForkId =
-            CVarDef.Create("build.fork_id", "", CVar.SERVER | CVar.REPLICATED);
+            CVarDef.Create("build.fork_id", "");
 
         /// <summary>
         /// Version string, as a hint to the launcher to manage local files.
         /// This can be anything, it does not need a strict format.
         /// </summary>
         public static readonly CVarDef<string> BuildVersion =
-            CVarDef.Create("build.version", "", CVar.SERVER | CVar.REPLICATED);
+            CVarDef.Create("build.version", "");
 
         /// <summary>
         /// Content pack the launcher should download to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildDownloadUrl =
-            CVarDef.Create("build.download_url", string.Empty, CVar.SERVERONLY);
+            CVarDef.Create("build.download_url", string.Empty);
 
         /// <summary>
         /// URL of the content manifest the launcher should download to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildManifestUrl =
-            CVarDef.Create("build.manifest_url", string.Empty, CVar.SERVERONLY);
+            CVarDef.Create("build.manifest_url", string.Empty);
 
         /// <summary>
         /// URL at which the launcher can download the manifest game files.
         /// </summary>
         public static readonly CVarDef<string> BuildManifestDownloadUrl =
-            CVarDef.Create("build.manifest_download_url", string.Empty, CVar.SERVERONLY);
+            CVarDef.Create("build.manifest_download_url", string.Empty);
 
         /// <summary>
         /// SHA-256 hash of the content pack hosted at <c>build.download_url</c>
         /// </summary>
         public static readonly CVarDef<string> BuildHash =
-            CVarDef.Create("build.hash", "", CVar.SERVERONLY);
+            CVarDef.Create("build.hash", "");
 
         /// <summary>
         /// SHA-256 hash of the manifest hosted at <c>build.manifest_url</c>
         /// </summary>
         public static readonly CVarDef<string> BuildManifestHash =
-            CVarDef.Create("build.manifest_hash", "", CVar.SERVERONLY);
+            CVarDef.Create("build.manifest_hash", "");
 
         /*
          * WATCHDOG
@@ -1441,6 +1440,11 @@ namespace Robust.Shared
             1024, CVar.ARCHIVE);
 
         /// <summary>
+        /// The max amount of pending write commands while recording replays.
+        /// </summary>
+        public static readonly CVarDef<int> ReplayWriteChannelSize = CVarDef.Create("replay.write_channel_size", 5);
+
+        /// <summary>
         /// Whether or not server-side replay recording is enabled.
         /// </summary>
         public static readonly CVarDef<bool> ReplayServerRecordingEnabled = CVarDef.Create(
@@ -1482,6 +1486,16 @@ namespace Robust.Shared
         /// If false, this will only jump to a point in time when the scrubbing ends.
         /// </summary>
         public static readonly CVarDef<bool> ReplayDynamicalScrubbing = CVarDef.Create("replay.dynamical_scrubbing", true);
+
+        /// <summary>
+        /// When recording replays,
+        /// should we attempt to make a valid content bundle that can be directly executed by the launcher?
+        /// </summary>
+        /// <remarks>
+        /// This requires the server's build information to be sufficiently filled out.
+        /// </remarks>
+        public static readonly CVarDef<bool> ReplayMakeContentBundle =
+            CVarDef.Create("replay.make_content_bundle", true);
 
         /*
          * CFG

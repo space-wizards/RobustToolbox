@@ -54,6 +54,37 @@ END TEMPLATE-->
 *None yet*
 
 
+## 131.1.0
+
+### New features
+
+* Add NextByte method to random.
+* Add method to get a random tile variant.
+
+### Bugfixes
+
+* Fix replay component state bug.
+
+### Internal
+
+* Remove some AggressiveOptimization attributes.
+
+
+## 131.0.0
+
+### Breaking changes
+
+* `IWritableDirProvider` async functions have been removed.
+* Replay recording & load API has been reworked to operate on zip files instead.
+* Constants on `IReplayRecordingManager` have been moved to a new `ReplayConstants` class, renamed and values changed.
+
+### New features
+
+* Added `ISawmill.Verbose()` log functions.
+* Replays are now written as `.zip` files. These will be [content bundles](https://docs.spacestation14.io/en/launcher/content-bundles) directly executable by the launcher if the server has the necessary build information.
+* Client replays now use local time rather than UTC as default file name.
+
+
 ## 130.0.0
 
 ### Breaking changes

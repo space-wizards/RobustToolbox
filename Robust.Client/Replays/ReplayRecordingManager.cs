@@ -42,7 +42,7 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
         // Add information about the user doing the recording. This is used to set the default replay observer position
         // when playing back the replay.
         var guid = _player.LocalPlayer.UserId.UserId.ToString();
-        metadata[IReplayRecordingManager.Recorder] = new ValueDataNode(guid);
+        metadata[ReplayConstants.MetaKeyRecordedBy] = new ValueDataNode(guid);
     }
 
     private void OnRunLevelChanged(object? sender, RunLevelChangedEventArgs e)
@@ -62,6 +62,12 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
 
     public override void RecordClientMessage(object obj)
         => RecordReplayMessage(obj);
+
+    protected override string DefaultReplayFileName()
+    {
+        // Local time
+        return DateTime.Now.ToString(DefaultReplayNameFormat);
+    }
 
     public override void RecordServerMessage(object obj)
     {

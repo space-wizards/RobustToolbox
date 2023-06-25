@@ -737,6 +737,8 @@ namespace Robust.Shared.Network
             NetEncryption? encryption,
             LoginType loginType)
         {
+            _logger.Verbose($"{sender.RemoteEndPoint}: Initial handshake complete!");
+
             var channel = new NetChannel(this, sender, userData, loginType);
             _assignedUserIds.Add(userData.UserId, sender);
             _assignedUsernames.Add(userData.UserName, sender);
@@ -891,12 +893,12 @@ namespace Robust.Shared.Network
             }
             catch (InvalidCastException ice)
             {
-                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet: {ice.Message}");
+                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet:\n{ice}");
                 return true;
             }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
-                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet: {e.Message}");
+                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet:\n{e}");
                 return true;
             }
 

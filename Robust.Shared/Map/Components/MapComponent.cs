@@ -12,7 +12,7 @@ namespace Robust.Shared.Map.Components
     public sealed class MapComponent : Component
     {
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataField(("lightingEnabled"))]
+        [DataField("lightingEnabled")]
         public bool LightingEnabled { get; set; } = true;
 
         [ViewVariables(VVAccess.ReadOnly)]

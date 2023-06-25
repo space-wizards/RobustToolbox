@@ -101,7 +101,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Adds scalar b to a and stores the result in a.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Add(Span<float> a, float b)
         {
             Add(a, b, a);
@@ -110,7 +110,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Adds scalar b to a and stores the result in s.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Add(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             if (a.Length != s.Length)
@@ -125,7 +125,7 @@ namespace Robust.Shared.Maths
             Add128(a, b, s);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void AddScalar(ReadOnlySpan<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
@@ -134,7 +134,7 @@ namespace Robust.Shared.Maths
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Add128(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & (Vector128<float>.Count - 1);
@@ -159,7 +159,7 @@ namespace Robust.Shared.Maths
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void Add256(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & (Vector256<float>.Count - 1);
@@ -191,7 +191,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Adds all elements of a and returns the value.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float HorizontalAdd(ReadOnlySpan<float> a)
         {
             if (Vector256Enabled && LengthValid256Single(a.Length))
@@ -202,7 +202,7 @@ namespace Robust.Shared.Maths
             return HorizontalAdd128(a);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static float HorizontalAddScalar(ReadOnlySpan<float> a, int start, int end)
         {
             var sum = 0f;
@@ -215,7 +215,7 @@ namespace Robust.Shared.Maths
             return sum;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static float HorizontalAdd128(ReadOnlySpan<float> a)
         {
             var remainder = a.Length & 3;
@@ -242,7 +242,7 @@ namespace Robust.Shared.Maths
             return sum;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static float HorizontalAdd256(ReadOnlySpan<float> a)
         {
             var remainder = a.Length & 7;

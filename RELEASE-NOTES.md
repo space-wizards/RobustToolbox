@@ -54,6 +54,26 @@ END TEMPLATE-->
 *None yet*
 
 
+## 132.0.0
+
+### Breaking changes
+
+* TimeOffsetSerializer now always reads & writes zeros unless it is reading/writing an initialized map. EntityPrototypes with TimeOffsetSerializer data-fields need to default to zero.\
+* TimeOffsetSerializer now only applies a time offset when reading from yaml, not when copying.
+
+### New features
+
+* Added a function to count the number of prototypes of a given kind. See `IPrototypeManager.Count<T>()`.
+
+### Bugfixes
+
+* Fixed a bug in `IPrototypeManager.EnumerateParents()` that was causing it to not actually return the parent prototypes.
+
+### Other
+
+* Map serialisation will now log errors when saving an uninitialized map that contains initialized entities.
+
+
 ## 131.1.0
 
 ### New features

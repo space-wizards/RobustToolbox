@@ -331,7 +331,7 @@ public sealed partial class ReplayLoadManager
         {
             var existing = combined[index];
 
-            if (!newCompStates.TryGetValue(existing.NetID, out var newCompState))
+            if (!newCompStates.Remove(existing.NetID, out var newCompState))
                 continue;
 
             if (newCompState.State is not IComponentDeltaState delta || delta.FullState)
@@ -344,6 +344,14 @@ public sealed partial class ReplayLoadManager
             combined[index] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State), newCompState.LastModifiedTick);
         }
 
+        foreach (var compChange in newCompStates.Values)
+        {
+            // I'm not 100% sure about this, but I think delta states should always be full states here?
+            DebugTools.Assert(compChange.State is not IComponentDeltaState delta || delta.FullState);
+            combined.Add(compChange);
+        }
+
+        DebugTools.Assert(newState.NetComponents == null || newState.NetComponents.Count == combined.Count);
         return new EntityState(newState.Uid, combined, newState.EntityLastModified, newState.NetComponents ?? oldNetComps);
     }
 

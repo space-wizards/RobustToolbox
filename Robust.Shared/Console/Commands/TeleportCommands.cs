@@ -37,7 +37,7 @@ internal sealed class TeleportCommand : LocalizedCommands
         var transform = _entityManager.GetComponent<TransformComponent>(entity);
         var position = new Vector2(posX, posY);
 
-        transform.AttachToGridOrMap();
+        xformSystem.AttachToGridOrMap(entity, transform);
 
         MapId mapId;
         if (args.Length == 3 && int.TryParse(args[2], out var intMapId))
@@ -148,7 +148,7 @@ public sealed class TeleportToCommand : LocalizedCommands
     {
         if (args.Length == 0)
             return CompletionResult.Empty;
-        
+
         var last = args[^1];
 
         var users = _players.Sessions

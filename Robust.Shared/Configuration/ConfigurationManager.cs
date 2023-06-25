@@ -80,7 +80,7 @@ namespace Robust.Shared.Configuration
             catch (Exception e)
             {
                 loaded.Clear();
-                Logger.WarningS("cfg", "Unable to load configuration from stream:\n{0}", e);
+                _sawmill.Warning("Unable to load configuration from stream:\n{0}", e);
             }
 
             return loaded;
@@ -130,12 +130,12 @@ namespace Robust.Shared.Configuration
                 using var file = File.OpenRead(configFile);
                 var result = LoadFromTomlStream(file);
                 _configFile = configFile;
-                Logger.InfoS("cfg", $"Configuration Loaded from '{Path.GetFullPath(configFile)}'");
+                _sawmill.Info($"Configuration Loaded from '{Path.GetFullPath(configFile)}'");
                 return result;
             }
             catch (Exception e)
             {
-                Logger.WarningS("cfg", "Unable to load configuration file:\n{0}", e);
+                _sawmill.Warning("Unable to load configuration file:\n{0}", e);
                 return new HashSet<string>(0);
             }
         }
@@ -182,8 +182,7 @@ namespace Robust.Shared.Configuration
 
                     if (value == null)
                     {
-                        Logger.ErrorS("cfg",
-                            $"CVar {name} has no value or default value, was the default value registered as null?");
+                        _sawmill.Error($"CVar {name} has no value or default value, was the default value registered as null?");
                         continue;
                     }
 
@@ -229,7 +228,7 @@ namespace Robust.Shared.Configuration
                             table.Add(keyName, val);
                             break;
                         default:
-                            Logger.WarningS("cfg", $"Cannot serialize '{name}', unsupported type.");
+                            _sawmill.Warning($"Cannot serialize '{name}', unsupported type.");
                             break;
                     }
                 }
@@ -243,7 +242,7 @@ namespace Robust.Shared.Configuration
         {
             if (_configFile == null)
             {
-                Logger.WarningS("cfg", "Cannot save the config file, because one was never loaded.");
+                _sawmill.Warning("Cannot save the config file, because one was never loaded.");
                 return;
             }
 
@@ -262,11 +261,11 @@ namespace Robust.Shared.Configuration
                 memoryStream.Position = 0;
                 using var file = File.Create(_configFile);
                 memoryStream.CopyTo(file);
-                Logger.InfoS("cfg", $"config saved to '{_configFile}'.");
+                _sawmill.Info($"config saved to '{_configFile}'.");
             }
             catch (Exception e)
             {
-                Logger.WarningS("cfg", $"Cannot save the config file '{_configFile}'.\n {e}");
+                _sawmill.Warning($"Cannot save the config file '{_configFile}'.\n {e}");
             }
         }
 
@@ -298,7 +297,7 @@ namespace Robust.Shared.Configuration
             if (_configVars.TryGetValue(name, out var cVar))
             {
                 if (cVar.Registered)
-                    Logger.ErrorS("cfg", $"The variable '{name}' has already been registered.");
+                    _sawmill.Error($"The variable '{name}' has already been registered.");
 
                 if (!type.IsEnum && cVar.Value != null && !type.IsAssignableFrom(cVar.Value.GetType()))
                 {
@@ -309,7 +308,7 @@ namespace Robust.Shared.Configuration
                     }
                     catch
                     {
-                        Logger.Error($"TOML parsed cvar does not match registered cvar type. Name: {name}. Code Type: {type.Name}. Toml type: {cVar.Value.GetType().Name}");
+                        _sawmill.Error($"TOML parsed cvar does not match registered cvar type. Name: {name}. Code Type: {type.Name}. Toml type: {cVar.Value.GetType().Name}");
                         return;
                     }
                 }

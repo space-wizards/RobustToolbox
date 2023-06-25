@@ -245,6 +245,8 @@ namespace Robust.Shared.Network
                 throw new InvalidOperationException("NetManager has already been initialized.");
             }
 
+            _strings.Sawmill = _logger;
+
             HttpClientUserAgent.AddUserAgent(_httpClient);
 
             SynchronizeNetTime();

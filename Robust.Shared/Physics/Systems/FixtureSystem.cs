@@ -174,7 +174,7 @@ namespace Robust.Shared.Physics.Systems
 
             if (!manager.Fixtures.Remove(fixture.ID))
             {
-                Logger.ErrorS("fixtures", $"Tried to remove fixture from {ToPrettyString(uid)} that was already removed.");
+                Log.Error($"Tried to remove fixture from {ToPrettyString(uid)} that was already removed.");
                 return;
             }
 
@@ -214,7 +214,9 @@ namespace Robust.Shared.Physics.Systems
                         throw new InvalidOperationException($"Tried to setup fixture on init for {ToPrettyString(uid)} with no ID!");
                     }
 
+#pragma warning disable CS0618
                     fixture.Body = body;
+#pragma warning restore CS0618
                 }
 
                 // Make sure all the right stuff is set on the body
@@ -236,7 +238,7 @@ namespace Robust.Shared.Physics.Systems
 
             if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? physics))
             {
-                Logger.ErrorS("physics", $"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
+                Log.Error($"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;
             }
 
@@ -245,7 +247,9 @@ namespace Robust.Shared.Physics.Systems
             foreach (var (id, fixture) in component.Fixtures)
             {
                 DebugTools.Assert(id == fixture.ID);
+#pragma warning disable CS0618
                 fixture.Body = physics;
+#pragma warning restore CS0618
             }
 
             var toAddFixtures = new ValueList<Fixture>();
@@ -260,7 +264,9 @@ namespace Robust.Shared.Physics.Systems
                 var fixture = state.Fixtures[i];
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
+#pragma warning disable CS0618
                 newFixture.Body = physics;
+#pragma warning restore CS0618
                 newFixtures.Add(newFixture.ID, newFixture);
             }
 

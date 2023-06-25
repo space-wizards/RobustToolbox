@@ -15,6 +15,7 @@ namespace Robust.Shared.ContentPack
         sealed class PackLoader : IContentRoot
         {
             private readonly FileInfo? _pack;
+            private readonly ISawmill _sawmill;
             private readonly Stream? _stream;
             private ZipArchive _zip = default!;
 
@@ -22,14 +23,17 @@ namespace Robust.Shared.ContentPack
             ///     Constructor.
             /// </summary>
             /// <param name="pack">The zip file to mount in the VFS.</param>
-            public PackLoader(FileInfo pack)
+            /// <param name="sawmill">Sawmill to use for logging.</param>
+            public PackLoader(FileInfo pack, ISawmill sawmill)
             {
                 _pack = pack;
+                _sawmill = sawmill;
             }
 
-            public PackLoader(Stream stream)
+            public PackLoader(Stream stream, ISawmill sawmill)
             {
                 _stream = stream;
+                _sawmill = sawmill;
             }
 
             /// <inheritdoc />
@@ -37,7 +41,7 @@ namespace Robust.Shared.ContentPack
             {
                 if (_pack != null)
                 {
-                    Logger.InfoS("res", $"Loading ContentPack: {_pack.FullName}...");
+                    _sawmill.Info($"Loading ContentPack: {_pack.FullName}...");
 
                     _zip = ZipFile.OpenRead(_pack.FullName);
                 }

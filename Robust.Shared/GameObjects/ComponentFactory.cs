@@ -17,6 +17,7 @@ namespace Robust.Shared.GameObjects
     {
         private readonly IDynamicTypeFactoryInternal _typeFactory;
         private readonly IReflectionManager _reflectionManager;
+        private readonly ISawmill _sawmill;
 
         // Bunch of dictionaries to allow lookups in all directions.
         /// <summary>
@@ -71,10 +72,11 @@ namespace Robust.Shared.GameObjects
 
         private IEnumerable<ComponentRegistration> AllRegistrations => types.Values;
 
-        public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager)
+        public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, ILogManager logManager)
         {
             _typeFactory = typeFactory;
             _reflectionManager = reflectionManager;
+            _sawmill = logManager.GetSawmill("ent.componentFactory");
         }
 
         private void Register(Type type, bool overwrite = false)
@@ -435,21 +437,23 @@ namespace Robust.Shared.GameObjects
         {
             if (!typeof(IComponent).IsAssignableFrom(type))
             {
-                Logger.Error("Type {0} has RegisterComponentAttribute but does not implement IComponent.", type);
+                _sawmill.Error("Type {0} has RegisterComponentAttribute but does not implement IComponent.", type);
                 return;
             }
 
             Register(type);
 
+#pragma warning disable CS0618
             foreach (var attribute in Attribute.GetCustomAttributes(type, typeof(ComponentReferenceAttribute)))
             {
                 var cast = (ComponentReferenceAttribute) attribute;
+#pragma warning restore CS0618
 
                 var refType = cast.ReferenceType;
 
                 if (!refType.IsAssignableFrom(type))
                 {
-                    Logger.Error("Type {0} has reference for type it does not implement: {1}.", type, refType);
+                    _sawmill.Error("Type {0} has reference for type it does not implement: {1}.", type, refType);
                     continue;
                 }
 

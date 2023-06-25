@@ -62,7 +62,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 #pragma warning disable RA0013
                 SubscribeLocalEvent<TestStructEvent>(MyRefHandler);
                 SubscribeLocalEvent<TestStructEvent>(MyValueHandler);
-#pragma warning enable RA0013
+#pragma warning restore RA0013
             }
 
             private void MyValueHandler(TestStructEvent args) { }

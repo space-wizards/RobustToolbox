@@ -157,7 +157,7 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var broadphase in _broadphase.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
             {
-                var gridAABB = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(worldBounds);
+                var gridAABB = _transform.GetInvWorldMatrix(broadphase.Owner).TransformBox(worldBounds);
 
                 foreach (var proxy in broadphase.StaticTree.QueryAabb(gridAABB, false))
                 {
@@ -267,7 +267,7 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var broadphase in _broadphase.GetBroadphases(mapId, rayBox))
             {
-                var (_, rot, matrix, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
+                var (_, rot, matrix, invMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(broadphase.Owner);
 
                 var position = invMatrix.Transform(ray.Position);
                 var gridRot = new Angle(-rot.Theta);

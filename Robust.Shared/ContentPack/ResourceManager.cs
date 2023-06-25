@@ -17,6 +17,7 @@ namespace Robust.Shared.ContentPack
     internal partial class ResourceManager : IResourceManagerInternal
     {
         [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private (ResPath prefix, IContentRoot root)[] _contentRoots =
             new (ResPath prefix, IContentRoot root)[0];
@@ -32,12 +33,16 @@ namespace Robust.Shared.ContentPack
         private static readonly Regex BadPathCharacterRegex =
             new("[<>:\"|?*\0\\x01-\\x1f]", RegexOptions.IgnoreCase);
 
+        private ISawmill _sawmill = default!;
+
         /// <inheritdoc />
         public IWritableDirProvider UserData { get; private set; } = default!;
 
         /// <inheritdoc />
         public void Initialize(string? userData)
         {
+            _sawmill = _logManager.GetSawmill("res");
+
             if (userData != null)
             {
                 UserData = new WritableDirProvider(Directory.CreateDirectory(userData));
@@ -60,7 +65,7 @@ namespace Robust.Shared.ContentPack
             // no pack in config
             if (string.IsNullOrWhiteSpace(zipPath))
             {
-                Logger.WarningS("res", "No default ContentPack to load in configuration.");
+                _sawmill.Warning("No default ContentPack to load in configuration.");
                 return;
             }
 
@@ -84,7 +89,7 @@ namespace Robust.Shared.ContentPack
 
             //create new PackLoader
 
-            var loader = new PackLoader(packInfo);
+            var loader = new PackLoader(packInfo, _sawmill);
             AddRoot(prefix.Value, loader);
         }
 
@@ -92,7 +97,7 @@ namespace Robust.Shared.ContentPack
         {
             prefix = SanitizePrefix(prefix);
 
-            var loader = new PackLoader(zipStream);
+            var loader = new PackLoader(zipStream, _sawmill);
             AddRoot(prefix.Value, loader);
         }
 
@@ -140,7 +145,7 @@ namespace Robust.Shared.ContentPack
                 throw new DirectoryNotFoundException("Specified directory does not exist: " + pathInfo.FullName);
             }
 
-            var loader = new DirLoader(pathInfo, Logger.GetSawmill("res"), _config.GetCVar(CVars.ResCheckPathCasing));
+            var loader = new DirLoader(pathInfo, _logManager.GetSawmill("res"), _config.GetCVar(CVars.ResCheckPathCasing));
             AddRoot(prefix.Value, loader);
         }
 

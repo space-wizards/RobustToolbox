@@ -17,6 +17,7 @@ namespace Robust.Shared.Profiling;
 public sealed class ProfManager
 {
     [IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
+    [IoC.Dependency] private readonly ILogManager _logManager = default!;
 
     /// <summary>
     /// Proxy to <c>prof.enabled</c> CVar.
@@ -29,13 +30,17 @@ public sealed class ProfManager
 
     public ProfBuffer Buffer;
 
+    private ISawmill? _sawmill = default!;
+
     internal void Initialize()
     {
+        _sawmill = _logManager.GetSawmill("prof");
+
         _cfg.OnValueChanged(CVars.ProfIndexSize, i =>
         {
             if (!BitOperations.IsPow2(i))
             {
-                Logger.WarningS("prof", "Rounding prof.index_size to next POT");
+                _sawmill.Warning("Rounding prof.index_size to next POT");
                 i = BufferHelpers.FittingPowerOfTwo(i);
             }
 
@@ -47,7 +52,7 @@ public sealed class ProfManager
         {
             if (!BitOperations.IsPow2(i))
             {
-                Logger.WarningS("prof", "Rounding prof.buffer_size to next POT");
+                _sawmill.Warning("Rounding prof.buffer_size to next POT");
                 i = BufferHelpers.FittingPowerOfTwo(i);
             }
 

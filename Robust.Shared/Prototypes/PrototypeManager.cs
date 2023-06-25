@@ -89,7 +89,7 @@ namespace Robust.Shared.Prototypes
 
         public IEnumerable<IPrototype> EnumeratePrototypes(string variant)
         {
-            return EnumeratePrototypes(GetVariantType(variant));
+            return EnumeratePrototypes(GetKindType(variant));
         }
 
         public IEnumerable<T> EnumerateParents<T>(string kind, bool includeSelf = false)

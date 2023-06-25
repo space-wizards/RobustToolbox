@@ -31,7 +31,7 @@ public abstract class SharedAudioSystem : EntitySystem
         switch (specifier)
         {
             case SoundPathSpecifier path:
-                return path.Path == null ? string.Empty : path.Path.ToString();
+                return path.Path == default ? string.Empty : path.Path.ToString();
 
             case SoundCollectionSpecifier collection:
             {

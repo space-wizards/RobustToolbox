@@ -56,7 +56,7 @@ namespace Robust.Shared.ContentPack
             // Config is huge and YAML is slow so config loading is delayed.
             // This means we can parallelize config loading with IL verification
             // (first time we need the config is when we print verifier errors).
-            _config = Task.Run(LoadConfig);
+            _config = Task.Run(() => LoadConfig(sawmill));
         }
 
         private Resolver CreateResolver()

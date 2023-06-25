@@ -308,7 +308,7 @@ public sealed partial class EntityLookupSystem
         float arcWidth,
         LookupFlags flags = DefaultFlags)
     {
-        var position = coordinates.ToMap(EntityManager);
+        var position = coordinates.ToMap(EntityManager, _transform);
 
         return GetEntitiesInArc(position, range, direction, arcWidth, flags);
     }
@@ -324,7 +324,7 @@ public sealed partial class EntityLookupSystem
 
         foreach (var entity in GetEntitiesInRange(coordinates, range * 2, flags))
         {
-            var angle = new Angle(xformQuery.GetComponent(entity).WorldPosition - coordinates.Position);
+            var angle = new Angle(_transform.GetWorldPosition(entity, xformQuery) - coordinates.Position);
             if (angle.Degrees < direction.Degrees + arcWidth / 2 &&
                 angle.Degrees > direction.Degrees - arcWidth / 2)
                 yield return entity;
@@ -508,7 +508,7 @@ public sealed partial class EntityLookupSystem
     {
         if (!coordinates.IsValid(EntityManager)) return false;
 
-        var mapPos = coordinates.ToMap(EntityManager);
+        var mapPos = coordinates.ToMap(EntityManager, _transform);
         return AnyEntitiesIntersecting(mapPos, flags);
     }
 
@@ -516,19 +516,19 @@ public sealed partial class EntityLookupSystem
     {
         if (!coordinates.IsValid(EntityManager)) return false;
 
-        var mapPos = coordinates.ToMap(EntityManager);
+        var mapPos = coordinates.ToMap(EntityManager, _transform);
         return AnyEntitiesInRange(mapPos, range, flags);
     }
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates, LookupFlags flags = DefaultFlags)
     {
-        var mapPos = coordinates.ToMap(EntityManager);
+        var mapPos = coordinates.ToMap(EntityManager, _transform);
         return GetEntitiesIntersecting(mapPos, flags);
     }
 
     public HashSet<EntityUid> GetEntitiesInRange(EntityCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
     {
-        var mapPos = coordinates.ToMap(EntityManager);
+        var mapPos = coordinates.ToMap(EntityManager, _transform);
         return GetEntitiesInRange(mapPos, range, flags);
     }
 
@@ -594,7 +594,7 @@ public sealed partial class EntityLookupSystem
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
 
-        var lookup = Comp<BroadphaseComponent>(grid.Owner);
+        var lookup = Comp<BroadphaseComponent>(gridId);
         var intersecting = new HashSet<EntityUid>();
         var tileSize = grid.TileSize;
 
@@ -650,7 +650,7 @@ public sealed partial class EntityLookupSystem
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
-        var lookup = Comp<BroadphaseComponent>(grid.Owner);
+        var lookup = Comp<BroadphaseComponent>(gridId);
         var tileSize = grid.TileSize;
         var aabb = GetLocalBounds(gridIndices, tileSize);
         return GetEntitiesIntersecting(lookup, aabb, flags);
@@ -708,7 +708,7 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
-        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        if (!_mapManager.GridExists(gridId)) return new HashSet<EntityUid>();
 
         var lookupQuery = GetEntityQuery<BroadphaseComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -722,13 +722,13 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
     {
-        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
+        if (!_mapManager.GridExists(gridId)) return new HashSet<EntityUid>();
 
         var lookupQuery = GetEntityQuery<BroadphaseComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
         var intersecting = new HashSet<EntityUid>();
 
-        AddEntitiesIntersecting(grid.Owner, intersecting, worldBounds, flags, lookupQuery, xformQuery);
+        AddEntitiesIntersecting(gridId, intersecting, worldBounds, flags, lookupQuery, xformQuery);
         AddContained(intersecting, flags, xformQuery);
 
         return intersecting;
@@ -897,7 +897,7 @@ public sealed partial class EntityLookupSystem
 
         if (worldMatrix == null || angle == null)
         {
-            var gridXform = Transform(grid.Owner);
+            var gridXform = Transform(tileRef.GridUid);
             var (_, wAng, wMat) = gridXform.GetWorldPositionRotationMatrix();
             worldMatrix = wMat;
             angle = wAng;

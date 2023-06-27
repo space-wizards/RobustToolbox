@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 132.0.1
+
+### Bugfixes
+
+* Return maps first from FindGridsIntersecting which fixes rendering order issues for grids.
+
+
 ## 132.0.0
 
 ### Breaking changes

@@ -68,6 +68,14 @@ internal partial class MapManager
         {
             return;
         }
+
+        var mapUid = GetMapEntityId(mapId);
+
+        if (includeMap && EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
+        {
+            callback(mapUid, grid, ref state);
+        }
+
         var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var xformSystem = EntityManager.System<SharedTransformSystem>();
@@ -94,13 +102,6 @@ internal partial class MapManager
 
             return tuple.callback(data.Uid, data.Grid, ref tuple.state);
         }, worldAABB);
-
-        var mapUid = GetMapEntityId(mapId);
-
-        if (includeMap && EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
-        {
-            callback(mapUid, grid, ref state);
-        }
 
         state = state2.state;
     }

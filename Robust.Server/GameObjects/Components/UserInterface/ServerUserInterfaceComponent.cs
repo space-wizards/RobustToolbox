@@ -114,11 +114,6 @@ namespace Robust.Server.GameObjects
         {
             IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<UserInterfaceSystem>().TrySendUiMessage(this, message, session);
         }
-
-        internal void InvokeOnReceiveMessage(ServerBoundUserInterfaceMessage message)
-        {
-            OnReceiveMessage?.Invoke(message);
-        }
     }
 
     [PublicAPI]

@@ -121,11 +121,6 @@ namespace Robust.Server.GameObjects
 
             // Raise as object so the correct type is used.
             RaiseLocalEvent(uid, (object)message, true);
-
-            // Once we have populated our message's wrapped message, we will wrap it up into a message that can be sent
-            // to old component-code.
-            var WrappedUnwrappedMessageMessageMessage = new ServerBoundUserInterfaceMessage(message, session);
-            ui.InvokeOnReceiveMessage(WrappedUnwrappedMessageMessageMessage);
         }
 
         /// <inheritdoc />

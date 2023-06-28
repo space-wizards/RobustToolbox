@@ -29,6 +29,7 @@ namespace Robust.Server.GameObjects
             base.Initialize();
 
             SubscribeNetworkEvent<BoundUIWrapMessage>(OnMessageReceived);
+            SubscribeLocalEvent<ServerUserInterfaceComponent, ComponentInit>(OnUserInterfaceInit);
             SubscribeLocalEvent<ServerUserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
             _playerMan.PlayerStatusChanged += OnPlayerStatusChanged;
         }
@@ -54,6 +55,16 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        private void OnUserInterfaceInit(EntityUid uid, ServerUserInterfaceComponent component, ComponentInit args)
+        {
+            component.Interfaces.Clear();
+
+            foreach (var prototypeData in component._interfaceData)
+            {
+                component.Interfaces[prototypeData.UiKey] = new BoundUserInterface(prototypeData, uid);
+            }
+        }
+
         private void OnUserInterfaceShutdown(EntityUid uid, ServerUserInterfaceComponent component, ComponentShutdown args)
         {
             if (!TryComp(uid, out ActiveUserInterfaceComponent? activeUis))
@@ -74,15 +85,15 @@ namespace Robust.Server.GameObjects
             if (!TryComp(uid, out ServerUserInterfaceComponent? uiComp) || args.SenderSession is not IPlayerSession session)
                 return;
 
-            if (!uiComp._interfaces.TryGetValue(msg.UiKey, out var ui))
+            if (!uiComp.Interfaces.TryGetValue(msg.UiKey, out var ui))
             {
-                Logger.DebugS("go.comp.ui", "Got BoundInterfaceMessageWrapMessage for unknown UI key: {0}", msg.UiKey);
+                Log.Debug($"Got BoundInterfaceMessageWrapMessage for unknown UI key: {msg.UiKey}");
                 return;
             }
 
             if (!ui.SubscribedSessions.Contains(session))
             {
-                Logger.DebugS("go.comp.ui", $"UI {msg.UiKey} got BoundInterfaceMessageWrapMessage from a client who was not subscribed: {session}", msg.UiKey);
+                Log.Debug($"UI {msg.UiKey} got BoundInterfaceMessageWrapMessage from a client who was not subscribed: {session}");
                 return;
             }
 
@@ -184,17 +195,17 @@ namespace Robust.Server.GameObjects
 
         private void DeactivateInterface(BoundUserInterface ui, ActiveUserInterfaceComponent? activeUis = null)
         {
-            if (!Resolve(ui.Component.Owner, ref activeUis, false))
+            if (!Resolve(ui.Owner, ref activeUis, false))
                 return;
 
             activeUis.Interfaces.Remove(ui);
             if (activeUis.Interfaces.Count == 0)
-                RemCompDeferred(activeUis.Owner, activeUis);
+                RemCompDeferred(ui.Owner, activeUis);
         }
 
         private void ActivateInterface(BoundUserInterface ui)
         {
-            EnsureComp<ActiveUserInterfaceComponent>(ui.Component.Owner).Interfaces.Add(ui);
+            EnsureComp<ActiveUserInterfaceComponent>(ui.Owner).Interfaces.Add(ui);
         }
 
         #region Get BUI
@@ -203,7 +214,7 @@ namespace Robust.Server.GameObjects
             if (!Resolve(uid, ref ui))
                 return false;
 
-            return ui._interfaces.ContainsKey(uiKey);
+            return ui.Interfaces.ContainsKey(uiKey);
         }
 
         public BoundUserInterface GetUi(EntityUid uid, Enum uiKey, ServerUserInterfaceComponent? ui = null)
@@ -211,7 +222,7 @@ namespace Robust.Server.GameObjects
             if (!Resolve(uid, ref ui))
                 throw new InvalidOperationException($"Cannot get {typeof(BoundUserInterface)} from an entity without {typeof(ServerUserInterfaceComponent)}!");
 
-            return ui._interfaces[uiKey];
+            return ui.Interfaces[uiKey];
         }
 
         public BoundUserInterface? GetUiOrNull(EntityUid uid, Enum uiKey, ServerUserInterfaceComponent? ui = null)
@@ -224,7 +235,7 @@ namespace Robust.Server.GameObjects
         {
             bui = null;
 
-            return Resolve(uid, ref ui, false) && ui._interfaces.TryGetValue(uiKey, out bui);
+            return Resolve(uid, ref ui, false) && ui.Interfaces.TryGetValue(uiKey, out bui);
         }
 
         /// <summary>
@@ -296,7 +307,7 @@ namespace Robust.Server.GameObjects
         /// </param>
         public void SetUiState(BoundUserInterface bui, BoundUserInterfaceState state, IPlayerSession? session = null, bool clearOverrides = true)
         {
-            var msg = new BoundUIWrapMessage(bui.Component.Owner, new UpdateBoundStateMessage(state), bui.UiKey);
+            var msg = new BoundUIWrapMessage(bui.Owner, new UpdateBoundStateMessage(state), bui.UiKey);
             if (session == null)
             {
                 bui.LastStateMsg = msg;
@@ -356,9 +367,9 @@ namespace Robust.Server.GameObjects
                 return false;
 
             _openInterfaces.GetOrNew(session).Add(bui);
-            RaiseLocalEvent(bui.Component.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Component.Owner, session));
+            RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Owner, session));
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Component.Owner, new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
+            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
 
             // Fun fact, clients needs to have BUIs open before they can receive the state.....
             if (bui.LastStateMsg != null)
@@ -387,14 +398,14 @@ namespace Robust.Server.GameObjects
             if (!bui._subscribedSessions.Remove(session))
                 return false;
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Component.Owner, new CloseBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
+            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, new CloseBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
             CloseShared(bui, session, activeUis);
             return true;
         }
 
         private void CloseShared(BoundUserInterface bui, IPlayerSession session, ActiveUserInterfaceComponent? activeUis = null)
         {
-            var owner = bui.Component.Owner;
+            var owner = bui.Owner;
             bui._subscribedSessions.Remove(session);
             bui.PlayerStateOverrides.Remove(session);
 
@@ -465,7 +476,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         public void SendUiMessage(BoundUserInterface bui, BoundUserInterfaceMessage message)
         {
-            var msg = new BoundUIWrapMessage(bui.Component.Owner, message, bui.UiKey);
+            var msg = new BoundUIWrapMessage(bui.Owner, message, bui.UiKey);
             foreach (var session in bui.SubscribedSessions)
             {
                 RaiseNetworkEvent(msg, session.ConnectedClient);
@@ -491,7 +502,7 @@ namespace Robust.Server.GameObjects
             if (!bui.SubscribedSessions.Contains(session))
                 return false;
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Component.Owner, message, bui.UiKey), session.ConnectedClient);
+            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, message, bui.UiKey), session.ConnectedClient);
             return true;
         }
 

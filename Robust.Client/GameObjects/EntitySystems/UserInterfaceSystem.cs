@@ -90,7 +90,7 @@ namespace Robust.Client.GameObjects
             // TODO: This type should be cached, but I'm too lazy.
             var type = _reflectionManager.LooseGetType(data.ClientType);
             var boundInterface =
-                (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new object[] {this, uiKey});
+                (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new object[] {uid, uiKey});
 
             boundInterface.Open();
             uiComp.OpenInterfaces[uiKey] = boundInterface;
@@ -125,7 +125,7 @@ namespace Robust.Client.GameObjects
 
         internal void SendUiMessage(BoundUserInterface bui, BoundUserInterfaceMessage msg)
         {
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner.Owner, msg, bui.UiKey));
+            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, msg, bui.UiKey));
         }
     }
 }

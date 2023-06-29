@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
@@ -27,14 +25,14 @@ namespace Robust.Client.GameObjects
         protected readonly UserInterfaceSystem UiSystem = default!;
 
         public readonly Enum UiKey;
-        public ClientUserInterfaceComponent Owner { get; }
+        public EntityUid Owner { get; }
 
         /// <summary>
         ///     The last received state object sent from the server.
         /// </summary>
         protected BoundUserInterfaceState? State { get; private set; }
 
-        protected BoundUserInterface(ClientUserInterfaceComponent owner, Enum uiKey)
+        protected BoundUserInterface(EntityUid owner, Enum uiKey)
         {
             IoCManager.InjectDependencies(this);
             UiSystem = EntMan.System<UserInterfaceSystem>();
@@ -70,7 +68,7 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void Close()
         {
-            UiSystem.TryCloseUi(Owner.Owner, UiKey);
+            UiSystem.TryCloseUi(Owner, UiKey);
         }
 
         /// <summary>

@@ -14,13 +14,12 @@ namespace Robust.Server.GameObjects
     [UsedImplicitly]
     public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
     {
+        [Dependency] private readonly IPlayerManager _playerMan = default!;
         [Dependency] private readonly TransformSystem _xformSys = default!;
 
         private readonly List<IPlayerSession> _sessionCache = new();
 
-        private Dictionary<IPlayerSession, List<BoundUserInterface>> _openInterfaces = new();
-
-        [Dependency] private readonly IPlayerManager _playerMan = default!;
+        private readonly Dictionary<IPlayerSession, List<BoundUserInterface>> _openInterfaces = new();
 
         /// <inheritdoc />
         public override void Initialize()
@@ -299,7 +298,7 @@ namespace Robust.Server.GameObjects
         ///     The player session to send this new state to.
         ///     Set to null for sending it to every subscribed player session.
         /// </param>
-        public void SetUiState(BoundUserInterface bui, BoundUserInterfaceState state, IPlayerSession? session = null, bool clearOverrides = true)
+        public static void SetUiState(BoundUserInterface bui, BoundUserInterfaceState state, IPlayerSession? session = null, bool clearOverrides = true)
         {
             var msg = new BoundUIWrapMessage(bui.Owner, new UpdateBoundStateMessage(state), bui.UiKey);
             if (session == null)

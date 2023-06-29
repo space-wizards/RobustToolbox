@@ -18,7 +18,7 @@ namespace Robust.Server.GameObjects
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
         [ViewVariables]
-        internal readonly Dictionary<Enum, BoundUserInterface> Interfaces = new();
+        public readonly Dictionary<Enum, BoundUserInterface> Interfaces = new();
     }
 
     [RegisterComponent]

@@ -458,7 +458,7 @@ public abstract partial class SharedPhysicsSystem
                             uidA = jointCompA.Relay.Value;
                         }
 
-                        if (jointQuery.TryGetComponent(uidA, out var jointCompB) &&
+                        if (jointQuery.TryGetComponent(uidB, out var jointCompB) &&
                             jointCompB.Relay != null)
                         {
                             uidB = jointCompB.Relay.Value;

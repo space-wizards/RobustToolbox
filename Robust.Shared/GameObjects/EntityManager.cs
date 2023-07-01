@@ -1,5 +1,4 @@
 using Prometheus;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Profiling;
@@ -11,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Markdown.Mapping;
 
@@ -24,12 +24,13 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
-        [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly ISerializationManager _serManager = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
+        [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
+        [IoC.Dependency] protected readonly ILogManager LogManager = default!;
+        [IoC.Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
+        [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+        [IoC.Dependency] private readonly ISerializationManager _serManager = default!;
+        [IoC.Dependency] private readonly ProfManager _prof = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
@@ -102,8 +103,8 @@ namespace Robust.Shared.GameObjects
             InitializeComponents();
             _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
             _metaName = _componentFactory.GetComponentName(typeof(MetaDataComponent));
-            _sawmill = Logger.GetSawmill("entity");
-            _resolveSawmill = Logger.GetSawmill("resolve");
+            _sawmill = LogManager.GetSawmill("entity");
+            _resolveSawmill = LogManager.GetSawmill("resolve");
 
             Initialized = true;
         }
@@ -346,13 +347,65 @@ namespace Robust.Shared.GameObjects
             return newEntity;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(EntityCoordinates coordinates, params string?[] protoNames)
+        {
+            var ents = new EntityUid[protoNames.Length];
+
+            for (var i = 0; i < protoNames.Length; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames)
+        {
+            var ents = new EntityUid[protoNames.Length];
+
+            for (var i = 0; i < protoNames.Length; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames)
+        {
+            var ents = new EntityUid[protoNames.Count];
+
+            for (var i = 0; i < protoNames.Count; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames)
+        {
+            var ents = new EntityUid[protoNames.Count];
+
+            for (var i = 0; i < protoNames.Count; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
         /// <inheritdoc />
         public virtual EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
             if (!coordinates.IsValid(this))
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
-            var entity = CreateEntityUninitialized(protoName, coordinates);
+            var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
             InitializeAndStartEntity(entity, coordinates.GetMapId(this));
             return entity;
         }
@@ -403,21 +456,18 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public virtual void Dirty(Component component, MetaDataComponent? meta = null)
+        [Obsolete("use override with an EntityUid")]
+        public void Dirty(Component component, MetaDataComponent? meta = null)
         {
-#pragma warning disable CS0618
-            var owner = component.Owner;
-#pragma warning restore CS0618
+            Dirty(component.Owner, component, meta);
+        }
 
-            // Deserialization will cause this to be true.
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (!owner.IsValid() || component.LifeStage >= ComponentLifeStage.Removing)
+        public virtual void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+        {
+            if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;
 
-            if (!component.NetSyncEnabled)
-                return;
-
-            DirtyEntity(owner, meta);
+            DirtyEntity(uid, meta);
             component.LastModifiedTick = CurrentTick;
         }
 

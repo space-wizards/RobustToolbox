@@ -27,7 +27,7 @@ internal partial class GameController
         // Otherwise abuse could happen.
         DebugTools.AssertNotNull(_mainLoop);
 
-        Logger.Info($"Attempting redial of {address}: {text ?? "no reason given"}");
+        _logger.Info($"Attempting redial of {address}: {text ?? "no reason given"}");
 
         if (!_mainLoop!.Running)
         {

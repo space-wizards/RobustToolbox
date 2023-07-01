@@ -282,6 +282,7 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
             MaxForce = MaxForce,
             Damping = Damping,
             Stiffness = Stiffness,
+            _impulse = _impulse,
             Breakpoint = Breakpoint,
         };
         return mouse;

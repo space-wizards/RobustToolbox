@@ -141,7 +141,7 @@ public sealed partial class PhysicsSystem
             if ((contact.Flags & ContactFlags.Filter) != 0x0)
             {
                 if (!ShouldCollide(fixtureA, fixtureB) ||
-                    !ShouldCollide(bodyB, bodyA, fixtureA, fixtureB))
+                    !ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB))
                 {
                     contact.IsTouching = false;
                     continue;

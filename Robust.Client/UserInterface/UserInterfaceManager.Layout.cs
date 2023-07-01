@@ -141,7 +141,7 @@ internal sealed partial class UserInterfaceManager
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception while trying to draw a UI element: {root}");
+                _sawmillUI.Error($"Caught exception while trying to draw a UI element: {root}");
                 _runtime.LogException(e, nameof(UserInterfaceManager));
             }
         }

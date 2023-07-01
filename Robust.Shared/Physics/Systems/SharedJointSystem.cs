@@ -72,10 +72,10 @@ public abstract partial class SharedJointSystem : EntitySystem
             _physics.WakeBody(joint.BodyBUid, body: bodyB);
 
             // Raise broadcast last so we can do both sides of directed first.
-            var vera = new JointAddedEvent(joint, bodyA, bodyB);
-            RaiseLocalEvent(bodyA.Owner, vera);
-            var smug = new JointAddedEvent(joint, bodyB, bodyA);
-            RaiseLocalEvent(bodyB.Owner, smug);
+            var vera = new JointAddedEvent(joint, joint.BodyAUid, joint.BodyBUid, bodyA, bodyB);
+            RaiseLocalEvent(joint.BodyAUid, vera);
+            var smug = new JointAddedEvent(joint, joint.BodyBUid, joint.BodyAUid, bodyB, bodyA);
+            RaiseLocalEvent(joint.BodyBUid, smug);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
 
@@ -199,9 +199,9 @@ public abstract partial class SharedJointSystem : EntitySystem
         // Note: creating a joint doesn't wake the bodies.
 
         // Raise broadcast last so we can do both sides of directed first.
-        var vera = new JointAddedEvent(joint, bodyA, bodyB);
+        var vera = new JointAddedEvent(joint, aUid, bUid, bodyA, bodyB);
         EntityManager.EventBus.RaiseLocalEvent(aUid, vera);
-        var smug = new JointAddedEvent(joint, bodyB, bodyA);
+        var smug = new JointAddedEvent(joint, bUid, aUid, bodyB, bodyA);
         EntityManager.EventBus.RaiseLocalEvent(bUid, smug);
         EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
     }
@@ -549,10 +549,10 @@ public abstract partial class SharedJointSystem : EntitySystem
         }
         else
         {
-            var vera = new JointRemovedEvent(joint, bodyA, bodyB);
-            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
-            var smug = new JointRemovedEvent(joint, bodyB, bodyA);
-            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
+            var vera = new JointRemovedEvent(joint, bodyAUid, bodyBUid, bodyA, bodyB);
+            EntityManager.EventBus.RaiseLocalEvent(bodyAUid, vera, false);
+            var smug = new JointRemovedEvent(joint, bodyBUid, bodyAUid, bodyB, bodyA);
+            EntityManager.EventBus.RaiseLocalEvent(bodyBUid, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
 
             if (_gameTiming.IsFirstTimePredicted)

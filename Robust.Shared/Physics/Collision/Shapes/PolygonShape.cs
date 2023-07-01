@@ -54,7 +54,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public Vector2[] Normals = Array.Empty<Vector2>();
 
         [ViewVariables, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
-        internal Vector2 Centroid { get; set; } = Vector2.Zero;
+        public Vector2 Centroid { get; internal set; } = Vector2.Zero;
 
         public int ChildCount => 1;
 

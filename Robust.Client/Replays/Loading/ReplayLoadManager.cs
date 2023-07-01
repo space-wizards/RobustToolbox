@@ -1,4 +1,5 @@
 using Robust.Client.GameStates;
+using Robust.Client.Replays.Playback;
 using Robust.Client.Serialization;
 using Robust.Client.Timing;
 using Robust.Client.Upload;
@@ -10,11 +11,14 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Replays;
 
 namespace Robust.Client.Replays.Loading;
 
 public sealed partial class ReplayLoadManager : IReplayLoadManager
 {
+    [Dependency] private readonly ILogManager _logMan = default!;
+    [Dependency] private readonly IBaseClient _client = default!;
     [Dependency] private readonly IEntityManager _entMan = default!;
     [Dependency] private readonly IClientGameTiming _timing = default!;
     [Dependency] private readonly IClientNetManager _netMan = default!;
@@ -25,6 +29,7 @@ public sealed partial class ReplayLoadManager : IReplayLoadManager
     [Dependency] private readonly NetworkResourceManager _netResMan = default!;
     [Dependency] private readonly IClientGameStateManager _gameState = default!;
     [Dependency] private readonly IClientRobustSerializer _serializer = default!;
+    [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
 
     private ushort _metaId;
     private bool _initialized;
@@ -40,9 +45,11 @@ public sealed partial class ReplayLoadManager : IReplayLoadManager
 
         _initialized = true;
         _confMan.OnValueChanged(CVars.CheckpointInterval, value => _checkpointInterval = value, true);
-        _confMan.OnValueChanged(CVars.CheckpointEntitySpawnThreshold, value => _checkpointEntitySpawnThreshold = value, true);
-        _confMan.OnValueChanged(CVars.CheckpointEntityStateThreshold, value => _checkpointEntityStateThreshold = value, true);
+        _confMan.OnValueChanged(CVars.CheckpointEntitySpawnThreshold, value => _checkpointEntitySpawnThreshold = value,
+            true);
+        _confMan.OnValueChanged(CVars.CheckpointEntityStateThreshold, value => _checkpointEntityStateThreshold = value,
+            true);
         _metaId = _factory.GetRegistration(typeof(MetaDataComponent)).NetID!.Value;
-        _sawmill = Logger.GetSawmill("replay");
+        _sawmill = _logMan.GetSawmill("replay");
     }
 }

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Server.Console;
 using Robust.Server.Player;
@@ -14,6 +16,7 @@ namespace Robust.Server.Prototypes
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IConGroupController _conGroups = default!;
         [Dependency] private readonly INetManager _netManager = default!;
+        [Dependency] private readonly IBaseServerInternal _server = default!;
 
         public ServerPrototypeManager()
         {
@@ -46,5 +49,10 @@ namespace Robust.Server.Prototypes
 #endif
         }
 
+        public override void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? changed = null)
+        {
+            LoadDirectory(_server.Options.PrototypeDirectory, changed: changed);
+            ResolveResults();
+        }
     }
 }

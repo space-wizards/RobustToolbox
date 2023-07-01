@@ -109,7 +109,7 @@ namespace Robust.UnitTesting
             else
             {
                 systems.LoadExtraSystemType<ServerMetaDataSystem>();
-                systems.LoadExtraSystemType<PVSSystem>();
+                systems.LoadExtraSystemType<PvsSystem>();
                 systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
                 systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
                 systems.LoadExtraSystemType<BroadPhaseSystem>();
@@ -175,6 +175,16 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(JointComponent)))
             {
                 compFactory.RegisterClass<JointComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(GridTreeComponent)))
+            {
+                compFactory.RegisterClass<GridTreeComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(MovedGridsComponent)))
+            {
+                compFactory.RegisterClass<MovedGridsComponent>();
             }
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(JointRelayTargetComponent)))

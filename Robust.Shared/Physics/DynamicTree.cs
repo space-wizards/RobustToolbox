@@ -176,7 +176,7 @@ namespace Robust.Shared.Physics
         bool ICollection<T>.Remove(T item)
             => Remove(item);
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public bool Update(in T item, Box2? newBox = null)
         {
             if (!TryGetProxy(item, out var proxy))

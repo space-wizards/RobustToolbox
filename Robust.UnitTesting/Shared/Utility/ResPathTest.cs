@@ -130,6 +130,7 @@ public sealed class ResPathTest
     [TestCase("a/b", "a", ExpectedResult = "b")]
     [TestCase("/bar/", "/", ExpectedResult = "bar")]
     [TestCase("/Textures/Weapons/laser.png", "/Textures/", ExpectedResult = "Weapons/laser.png")]
+    [TestCase("foo.txt", ".", ExpectedResult = "foo.txt")]
     public string RelativeToTest(string source, string baseDir)
     {
         var path = new ResPath(source);

@@ -17,6 +17,7 @@ using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
 using Robust.Client.Replays;
 using Robust.Client.Replays.Loading;
+using Robust.Client.Replays.Playback;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Serialization;
 using Robust.Client.State;
@@ -81,6 +82,7 @@ namespace Robust.Client
             deps.Register<IClientEntityManagerInternal, ClientEntityManager>();
             deps.Register<IEntityNetworkManager, ClientEntityManager>();
             deps.Register<IReplayLoadManager, ReplayLoadManager>();
+            deps.Register<IReplayPlaybackManager, ReplayPlaybackManager>();
             deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IClientGameStateManager, ClientGameStateManager>();
             deps.Register<IBaseClient, BaseClient>();

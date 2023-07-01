@@ -55,146 +55,152 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            var separation = ActualSeparation;
+            // Account for separation.
+            var separation = ActualSeparation * (ChildCount - 1);
+            var desiredSize = Vector2.Zero;
+            if (Vertical)
+            {
+                desiredSize.Y += separation;
+                availableSize.Y = Math.Max(0, availableSize.Y - separation);
+            }
+            else
+            {
+                desiredSize.X += separation;
+                availableSize.X = Math.Max(0, availableSize.X - separation);
+            }
 
-            var minSize = Vector2.Zero;
-            var first = true;
-
+            // First, we measure non-stretching children.
+            var stretching = new List<Control>();
+            float totalStretchRatio = 0;
             foreach (var child in Children)
             {
                 if (!child.Visible)
+                    continue;
+
+                var stretch = Vertical ? child.VerticalExpand : child.HorizontalExpand;
+                if (stretch)
                 {
+                    totalStretchRatio += child.SizeFlagsStretchRatio;
+                    stretching.Add(child);
                     continue;
                 }
 
                 child.Measure(availableSize);
 
-                var childSize = child.DesiredSize;
                 if (Vertical)
                 {
-                    var taken = childSize.Y;
-                    if (!first)
-                    {
-                        taken += separation;
-                    }
-
-                    minSize.Y += taken;
-                    availableSize.Y = Math.Max(0, availableSize.Y - taken);
-
-                    first = false;
-                    minSize.X = Math.Max(minSize.X, childSize.X);
+                    desiredSize.Y += child.DesiredSize.Y;
+                    desiredSize.X = Math.Max(desiredSize.X, child.DesiredSize.X);
+                    availableSize.Y = Math.Max(0, availableSize.Y - child.DesiredSize.Y);
                 }
                 else
                 {
-                    var taken = childSize.X;
-                    if (!first)
-                    {
-                        taken += separation;
-                    }
-
-                    minSize.X += taken;
-                    availableSize.X = Math.Max(0, availableSize.X - taken);
-
-                    first = false;
-
-                    minSize.Y = Math.Max(minSize.Y, childSize.Y);
+                    desiredSize.X += child.DesiredSize.X;
+                    desiredSize.Y = Math.Max(desiredSize.Y, child.DesiredSize.Y);
+                    availableSize.X = Math.Max(0, availableSize.X - child.DesiredSize.X);
                 }
             }
 
-            return minSize;
+            if (stretching.Count == 0)
+                return desiredSize;
+
+            // Then we measure stretching children
+            foreach (var child in stretching)
+            {
+                var size = availableSize;
+                if (Vertical)
+                {
+                    size.Y *= child.SizeFlagsStretchRatio / totalStretchRatio;
+                    child.Measure(size);
+                    desiredSize.Y += child.DesiredSize.Y;
+                    desiredSize.X = Math.Max(desiredSize.X, child.DesiredSize.X);
+                }
+                else
+                {
+                    size.X *= child.SizeFlagsStretchRatio / totalStretchRatio;
+                    child.Measure(size);
+                    desiredSize.X += child.DesiredSize.X;
+                    desiredSize.Y = Math.Max(desiredSize.Y, child.DesiredSize.Y);
+                }
+
+                // TODO Maybe make BoxContainer.MeasureOverride more rigorous.
+                // This should check if size < desired size. If it is, treat child as non-stretching (see the code in
+                // ArrangeOverride). This requires remeasuring all stretching controls + the control that just became
+                // non-stretching. But the re-measured controls might then become smaller (e.g. rich text wrapping),
+                // leading to a recursion problem.
+            }
+
+            return desiredSize;
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
-            var finalPixel = (Vector2i) (finalSize * UIScale);
-            var separation = (int) (ActualSeparation * UIScale);
+            var separation = ActualSeparation;
+
+            var stretchAvail = Vertical ? finalSize.Y : finalSize.X;
+            stretchAvail -= separation * (ChildCount - 1);
+            stretchAvail = Math.Max(0, stretchAvail);
 
             // Step one: figure out the sizes of all our children and whether they want to stretch.
-            var sizeList = new List<(Control control, int minSize, int finalSize, bool stretch)>(ChildCount);
+            var sizeList = new List<(Control control, float size, bool stretch)>(ChildCount);
             var totalStretchRatio = 0f;
-            // Amount of space not available for stretching.
-            var stretchMin = 0;
-
             foreach (var child in Children)
             {
                 if (!child.Visible)
-                {
                     continue;
-                }
 
-                var (minX, minY) = child.DesiredPixelSize;
-                int minSize;
-                bool stretch;
-
-                if (Vertical)
-                {
-                    minSize = minY;
-                    stretch = child.VerticalExpand;
-                }
-                else
-                {
-                    minSize = minX;
-                    stretch = child.HorizontalExpand;
-                }
-
+                bool stretch = Vertical ? child.VerticalExpand : child.HorizontalExpand;
                 if (!stretch)
                 {
-                    stretchMin += minSize;
+                    var size = Vertical ? child.DesiredSize.Y : child.DesiredSize.X;
+                    size = Math.Clamp(size, 0, stretchAvail);
+                    stretchAvail -= size;
+                    sizeList.Add((child, size, false));
                 }
                 else
                 {
                     totalStretchRatio += child.SizeFlagsStretchRatio;
-                }
-
-                sizeList.Add((child, minSize, minSize, stretch));
-            }
-
-            var stretchMax = Vertical ? finalPixel.Y : finalPixel.X;
-
-            stretchMax -= separation * (ChildCount - 1);
-            // This is the amount of space allocated for stretchable children.
-            var stretchAvail = Math.Max(0, stretchMax - stretchMin);
-
-            // Step two: figure out which that want to stretch need to suck it,
-            // because due to their stretch ratio they would be smaller than minSize.
-            // Treat those as non-stretching.
-            for (var i = 0; i < sizeList.Count; i++)
-            {
-                var (control, minSize, _, stretch) = sizeList[i];
-                if (!stretch)
-                {
-                    continue;
-                }
-
-                var share = (int) (stretchAvail * (control.SizeFlagsStretchRatio / totalStretchRatio));
-                if (share < minSize)
-                {
-                    sizeList[i] = (control, minSize, minSize, false);
-                    stretchAvail -= minSize;
-                    totalStretchRatio -= control.SizeFlagsStretchRatio;
+                    sizeList.Add((child, 0, true));
                 }
             }
+            stretchAvail = Math.Max(0, stretchAvail);
 
-            // Step three: allocate space for all the stretchable children.
-            var stretchingAtAll = false;
-            for (var i = 0; i < sizeList.Count; i++)
+            // Step two: allocate space for all the stretchable children.
+            float offset = 0;
+            var anyStretch = totalStretchRatio > 0;
+            if (anyStretch)
             {
-                var (control, minSize, _, stretch) = sizeList[i];
-                if (!stretch)
+                // We will treat stretching children that fail to reach their desired size as non-stretching.
+                // This then requires all stretching children to be re-stretched
+                bool stretchAvailChanged = true;
+                while (stretchAvailChanged)
                 {
-                    continue;
+                    stretchAvailChanged = false;
+                    for (var i = 0; i < sizeList.Count; i++)
+                    {
+                        var (control, _, stretch) = sizeList[i];
+                        if (!stretch)
+                            continue;
+
+                        var share = stretchAvail * control.SizeFlagsStretchRatio / totalStretchRatio;
+                        var desired = Vertical ? control.DesiredSize.Y : control.DesiredSize.X;
+                        if (share >= desired)
+                        {
+                            sizeList[i] = (control, share, true);
+                            continue;
+                        }
+
+                        // Insufficient space -> treat as non-stretching.
+                        sizeList[i] = (control, Math.Min(stretchAvail, desired), false);
+                        stretchAvail = Math.Max(0, stretchAvail - desired);
+                        totalStretchRatio -= control.SizeFlagsStretchRatio;
+                        stretchAvailChanged = true;
+                    }
                 }
-
-                stretchingAtAll = true;
-
-                var share = (int) (stretchAvail * (control.SizeFlagsStretchRatio / totalStretchRatio));
-                sizeList[i] = (control, minSize, share, false);
             }
-
-            // Step four: actually lay them out one by one.
-            var offset = 0;
-            if (!stretchingAtAll)
+            else
             {
+                // No stretching children -> offset the children based on the alignment.
                 switch (Align)
                 {
                     case AlignMode.Begin:
@@ -210,8 +216,9 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
+            // Step three: actually lay them out one by one.
             var first = true;
-            foreach (var (control, _, size, _) in sizeList)
+            foreach (var (control, size, _) in sizeList)
             {
                 if (!first)
                 {
@@ -220,17 +227,17 @@ namespace Robust.Client.UserInterface.Controls
 
                 first = false;
 
-                UIBox2i targetBox;
+                UIBox2 targetBox;
                 if (Vertical)
                 {
-                    targetBox = new UIBox2i(0, offset, finalPixel.X, offset + size);
+                    targetBox = new UIBox2(0, offset, finalSize.X, offset + size);
                 }
                 else
                 {
-                    targetBox = new UIBox2i(offset, 0, offset + size, finalPixel.Y);
+                    targetBox = new UIBox2(offset, 0, offset + size, finalSize.Y);
                 }
 
-                control.ArrangePixel(targetBox);
+                control.Arrange(targetBox);
 
                 offset += size;
             }

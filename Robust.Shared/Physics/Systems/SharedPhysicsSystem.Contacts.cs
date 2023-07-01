@@ -210,11 +210,12 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     /// Try to create a contact between these 2 fixtures.
     /// </summary>
-    internal void AddPair(EntityUid uidA, EntityUid uidB, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB, ContactFlags flags = ContactFlags.None)
+    internal void AddPair(EntityUid uidA, EntityUid uidB,
+        Fixture fixtureA, int indexA,
+        Fixture fixtureB, int indexB,
+        PhysicsComponent bodyA, PhysicsComponent bodyB,
+        ContactFlags flags = ContactFlags.None)
     {
-        var bodyA = fixtureA.Body;
-        var bodyB = fixtureB.Body;
-
         // Broadphase has already done the faster check for collision mask / layers
         // so no point duplicating
 
@@ -225,7 +226,7 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
 
         // Does a joint override collision? Is at least one body dynamic?
-        if (!ShouldCollide(bodyB, bodyA, fixtureA, fixtureB))
+        if (!ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB))
             return;
 
         // Call the factory.
@@ -257,7 +258,10 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     internal void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
     {
-        AddPair(proxyA.Entity, proxyB.Entity, proxyA.Fixture, proxyA.ChildIndex, proxyB.Fixture, proxyB.ChildIndex);
+        AddPair(proxyA.Entity, proxyB.Entity,
+            proxyA.Fixture, proxyA.ChildIndex,
+            proxyB.Fixture, proxyB.ChildIndex,
+            proxyA.Body, proxyB.Body);
     }
 
     internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
@@ -272,8 +276,8 @@ public abstract partial class SharedPhysicsSystem
         Fixture fixtureB = contact.FixtureB!;
         var bodyA = contact.BodyA!;
         var bodyB = contact.BodyB!;
-        var aUid = bodyA.Owner;
-        var bUid = bodyB.Owner;
+        var aUid = contact.EntityA;
+        var bUid = contact.EntityB;
 
         if (contact.IsTouching)
         {
@@ -321,6 +325,8 @@ public abstract partial class SharedPhysicsSystem
         // TODO: check for null instead?
         // Work out which contacts are still valid before we decide to update manifolds.
         var node = _activeContacts.First;
+        var metaQuery = GetEntityQuery<MetaDataComponent>();
+        var bodyQuery = GetEntityQuery<PhysicsComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
 
         while (node != null)
@@ -350,7 +356,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 // Check default filtering
                 if (!ShouldCollide(fixtureA, fixtureB) ||
-                    !ShouldCollide(bodyB, bodyA, fixtureA, fixtureB))
+                    !ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB))
                 {
                     DestroyContact(contact);
                     continue;
@@ -483,8 +489,8 @@ public abstract partial class SharedPhysicsSystem
 
                     var fixtureA = contact.FixtureA!;
                     var fixtureB = contact.FixtureB!;
-                    var bodyA = fixtureA.Body;
-                    var bodyB = fixtureB.Body;
+                    var bodyA = contact.BodyA!;
+                    var bodyB = contact.BodyB!;
                     var uidA = contact.EntityA;
                     var uidB = contact.EntityB;
                     var worldPoint = worldPoints[i];
@@ -608,10 +614,10 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Used to prevent bodies from colliding; may lie depending on joints.
     /// </summary>
-    protected bool ShouldCollide(PhysicsComponent body, PhysicsComponent other, Fixture fixture, Fixture otherFixture)
+    protected bool ShouldCollide(EntityUid aUid, EntityUid bUid, PhysicsComponent body, PhysicsComponent other, Fixture fixture, Fixture otherFixture)
     {
         if (((body.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
-            (other.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||
+             (other.BodyType & (BodyType.Kinematic | BodyType.Static)) != 0) ||
             // Kinematic controllers can't collide.
             (fixture.Hard && body.BodyType == BodyType.KinematicController &&
              otherFixture.Hard && other.BodyType == BodyType.KinematicController))
@@ -622,30 +628,23 @@ public abstract partial class SharedPhysicsSystem
         // Does a joint prevent collision?
         // if one of them doesn't have jointcomp then they can't share a common joint.
         // otherwise, only need to iterate over the joints of one component as they both store the same joint.
-        if (TryComp(body.Owner, out JointComponent? jointComponentA) &&
-            TryComp(other.Owner, out JointComponent? jointComponentB))
+        if (TryComp(aUid, out JointComponent? jointComponentA) && HasComp<JointComponent>(bUid))
         {
-            var aUid = jointComponentA.Owner;
-            var bUid = jointComponentB.Owner;
-
             foreach (var joint in jointComponentA.Joints.Values)
             {
                 // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
-                if (!joint.CollideConnected &&
-                    ((aUid == joint.BodyAUid &&
-                     bUid == joint.BodyBUid) ||
-                    (bUid == joint.BodyAUid &&
-                     aUid == joint.BodyBUid))) return false;
+                if (!joint.CollideConnected && (bUid == joint.BodyAUid || bUid == joint.BodyBUid))
+                    return false;
             }
         }
 
-        var preventCollideMessage = new PreventCollideEvent(body, other, fixture, otherFixture);
-        RaiseLocalEvent(body.Owner, ref preventCollideMessage);
+        var preventCollideMessage = new PreventCollideEvent(aUid, bUid, body, other, fixture, otherFixture);
+        RaiseLocalEvent(aUid, ref preventCollideMessage);
 
         if (preventCollideMessage.Cancelled) return false;
 
-        preventCollideMessage = new PreventCollideEvent(other, body, otherFixture, fixture);
-        RaiseLocalEvent(other.Owner, ref preventCollideMessage);
+        preventCollideMessage = new PreventCollideEvent(bUid, aUid, other, body, otherFixture, fixture);
+        RaiseLocalEvent(bUid, ref preventCollideMessage);
 
         if (preventCollideMessage.Cancelled) return false;
 

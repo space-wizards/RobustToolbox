@@ -395,7 +395,7 @@ public readonly struct ResPath : IEquatable<ResPath>
             return relative.Value;
         }
 
-        throw new ArgumentException($"{CanonPath} does not start with {basePath}.");
+        throw new ArgumentException($"{CanonPath} does not start with '{basePath}'.");
     }
 
     /// <summary>
@@ -410,6 +410,13 @@ public readonly struct ResPath : IEquatable<ResPath>
         if (this == basePath)
         {
             relative = Self;
+            return true;
+        }
+
+        // "foo.txt" is relative to "."
+        if (basePath == Self && IsRelative)
+        {
+            relative = this;
             return true;
         }
 

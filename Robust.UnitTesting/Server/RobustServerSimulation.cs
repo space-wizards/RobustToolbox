@@ -12,6 +12,7 @@ using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Server.Player;
+using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
 using Robust.Server.Replays;
 using Robust.Shared;
@@ -210,6 +211,7 @@ namespace Robust.UnitTesting.Server
                 .Setup(x => x.FindAllTypes())
                 .Returns(() => realReflection.FindAllTypes());
 
+            container.RegisterInstance<IBaseServerInternal>(new Mock<IBaseServerInternal>().Object);
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types
             container.RegisterInstance<IRobustSerializer>(new Mock<IRobustSerializer>().Object);
             container.RegisterInstance<IResourceManager>(new Mock<IResourceManager>().Object); // no disk access for tests
@@ -221,7 +223,7 @@ namespace Robust.UnitTesting.Server
             container.Register<EntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<ISerializationManager, SerializationManager>();
-            container.Register<IPrototypeManager, PrototypeManager>();
+            container.Register<IPrototypeManager, ServerPrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IManifoldManager, CollisionManager>();
@@ -242,7 +244,6 @@ namespace Robust.UnitTesting.Server
             container.RegisterInstance<IServerGameStateManager>(new Mock<IServerGameStateManager>().Object);
             container.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
             container.RegisterInstance<IServerReplayRecordingManager>(new Mock<IServerReplayRecordingManager>().Object);
-            container.RegisterInstance<IInternalReplayRecordingManager>(new Mock<IInternalReplayRecordingManager>().Object);
 
             _diFactory?.Invoke(container);
             container.BuildGraph();
@@ -268,6 +269,8 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapLightComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<JointComponent>();
+            compFactory.RegisterClass<GridTreeComponent>();
+            compFactory.RegisterClass<MovedGridsComponent>();
             compFactory.RegisterClass<JointRelayTargetComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
@@ -302,7 +305,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
-            entitySystemMan.LoadExtraSystemType<PVSSystem>();
+            entitySystemMan.LoadExtraSystemType<PvsSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

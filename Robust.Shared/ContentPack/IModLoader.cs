@@ -40,6 +40,13 @@ namespace Robust.Shared.ContentPack
         bool TryLoadModulesFrom(ResPath mountPath, string filterPrefix);
 
         /// <summary>
+        ///     Loads all content assemblies given
+        /// </summary>
+        /// <param name="paths">The list of paths to content assemblies that must be loaded.</param>
+        /// <returns>True if all modules loaded successfully. False if there were load errors.</returns>
+        bool TryLoadModules(IEnumerable<ResPath> paths);
+
+        /// <summary>
         ///     Loads an assembly into the current AppDomain.
         /// </summary>
         /// <param name="assembly">Byte array of the assembly.</param>

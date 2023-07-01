@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
+using Robust.Shared.Collections;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
@@ -64,6 +65,8 @@ namespace Robust.Client.Input
         [ViewVariables] private readonly List<KeyBinding> _bindings = new();
         private readonly bool[] _keysPressed = new bool[256];
 
+        private ValueList<Func<BoundKeyEventArgs, bool>> _uiKeyBindStateChanged;
+
         /// <inheritdoc />
         [ViewVariables]
         public BoundKeyMap NetworkBindMap { get; private set; } = default!;
@@ -73,7 +76,11 @@ namespace Robust.Client.Input
         public IInputContextContainer Contexts { get; } = new InputContextContainer();
 
         /// <inheritdoc />
-        public event Func<BoundKeyEventArgs, bool>? UIKeyBindStateChanged;
+        public event Func<BoundKeyEventArgs, bool> UIKeyBindStateChanged
+        {
+            add => _uiKeyBindStateChanged.Add(value);
+            remove => _uiKeyBindStateChanged.Remove(value);
+        }
 
         /// <inheritdoc />
         public event Action<ViewportBoundKeyEventArgs>? KeyBindStateChanged;
@@ -389,7 +396,14 @@ namespace Robust.Client.Input
 
                 // UI returns true here into blockPass if it wants to prevent us from giving input events
                 // to the viewport, but doesn't want it hard-handled so we keep processing possible key actions.
-                var blockPass = UIKeyBindStateChanged?.Invoke(eventArgs);
+                //
+                // I wouldn't normally use an unordered event subscription, but hey I'm fixing a bloody bug here ok.
+                var blockPass = false;
+                foreach (var stateChangedHandler in _uiKeyBindStateChanged)
+                {
+                    blockPass |= stateChangedHandler(eventArgs);
+                }
+
                 if ((state == BoundKeyState.Up || (!(blockPass == true || eventArgs.Handled) && !uiOnly))
                     && _currentlyFindingViewport)
                 {

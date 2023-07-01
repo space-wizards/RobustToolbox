@@ -132,7 +132,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void ResetFriction()
         {
-            Friction = MathF.Sqrt(FixtureA?.Friction ?? 0.0f * FixtureB?.Friction ?? 0.0f);
+            Friction = MathF.Sqrt((FixtureA?.Friction ?? 0.0f) * (FixtureB?.Friction ?? 0.0f));
         }
 
         /// <summary>

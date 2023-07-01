@@ -1,7 +1,6 @@
 using Robust.Shared.ContentPack;
 using System.Threading.Tasks;
 using Robust.Shared.CPUJob.JobQueues;
-using Robust.Shared.Replays;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Replays.Loading;
@@ -11,27 +10,25 @@ namespace Robust.Client.Replays.Loading;
 /// (<see cref="IGameController.TickUpdateOverride"/>) in order to avoid unexpected errors.
 /// </summary>
 [Virtual]
-public class LoadReplayJob : Job<ReplayData>
+public class LoadReplayJob : Job<bool>
 {
-    private readonly IWritableDirProvider _dir;
-    private readonly ResPath _path;
+    private readonly IReplayFileReader _fileReader;
     private readonly IReplayLoadManager _loadMan;
 
     public LoadReplayJob(
         float maxTime,
-        IWritableDirProvider dir,
-        ResPath path,
+        IReplayFileReader fileReader,
         IReplayLoadManager loadMan)
         : base(maxTime)
     {
-        _dir = dir;
-        _path = path;
+        _fileReader = fileReader;
         _loadMan = loadMan;
     }
 
-    protected override async Task<ReplayData?> Process()
+    protected override async Task<bool> Process()
     {
-        return await _loadMan.LoadAndStartReplayAsync(_dir, _path, Yield);
+        await _loadMan.LoadAndStartReplayAsync(_fileReader, Yield);
+        return true;
     }
 
     protected virtual async Task Yield(float value, float maxValue, LoadingState state, bool force)

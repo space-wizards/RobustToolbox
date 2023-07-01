@@ -13,6 +13,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
+using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -83,6 +84,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
             deps.RegisterInstance<IModLoader>(new Mock<IModLoader>().Object);
             deps.Register<IEntitySystemManager, EntitySystemManager>();
             deps.RegisterInstance<IEntityManager>(new Mock<IEntityManager>().Object);
+            // WHEN WILL THE SUFFERING END
+            deps.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
 
             var reflectionMock = new Mock<IReflectionManager>();
             reflectionMock.Setup(p => p.GetAllChildren<IEntitySystem>(false))

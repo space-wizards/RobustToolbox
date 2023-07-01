@@ -201,6 +201,15 @@ public partial class EntitySystem
     }
 
     /// <summary>
+    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+    {
+        EntityManager.Dirty(uid, component, meta);
+    }
+
+    /// <summary>
     ///     Retrieves the name of an entity.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
@@ -728,6 +737,9 @@ public partial class EntitySystem
 
     #region Entity Query
 
+    /// <remarks>
+    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1}"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [Pure]
     protected EntityQuery<T> GetEntityQuery<T>() where T : Component
@@ -735,12 +747,18 @@ public partial class EntitySystem
         return EntityManager.GetEntityQuery<T>();
     }
 
+    /// <remarks>
+    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1}"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<TComp1> EntityQuery<TComp1>(bool includePaused = false) where TComp1 : Component
     {
         return EntityManager.EntityQuery<TComp1>(includePaused);
     }
 
+    /// <remarks>
+    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2}"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
         where TComp1 : Component
@@ -749,6 +767,9 @@ public partial class EntitySystem
         return EntityManager.EntityQuery<TComp1, TComp2>(includePaused);
     }
 
+    /// <remarks>
+    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2, TComp3}"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
         where TComp1 : Component
@@ -758,6 +779,9 @@ public partial class EntitySystem
         return EntityManager.EntityQuery<TComp1, TComp2, TComp3>(includePaused);
     }
 
+    /// <remarks>
+    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2, TComp3, TComp4}"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
         where TComp1 : Component

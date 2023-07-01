@@ -1,6 +1,6 @@
 namespace Robust.Server.GameStates;
 
-public enum PVSEntityVisiblity : byte
+public enum PvsEntityVisibility : byte
 {
     Entered,
     StayedUnchanged,

@@ -23,6 +23,7 @@ namespace Robust.Client.Graphics.Audio
     {
         [Robust.Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
         [Robust.Shared.IoC.Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Robust.Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
 
         private Thread? _gameThread;
 

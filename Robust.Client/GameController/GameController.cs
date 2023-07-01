@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Runtime;
 using System.Threading.Tasks;
@@ -11,12 +12,12 @@ using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Placement;
 using Robust.Client.Replays.Loading;
+using Robust.Client.Replays.Playback;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
-using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Client.WebViewHook;
@@ -32,6 +33,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
@@ -81,7 +83,8 @@ namespace Robust.Client
         [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
         [Dependency] private readonly NetworkResourceManager _netResMan = default!;
         [Dependency] private readonly IReplayLoadManager _replayLoader = default!;
-
+        [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
+        [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -122,12 +125,8 @@ namespace Robust.Client
             var disableSandbox = Environment.GetEnvironmentVariable("ROBUST_DISABLE_SANDBOX") == "1";
             _modLoader.SetEnableSandboxing(!disableSandbox && Options.Sandboxing);
 
-            var assemblyPrefix = Options.ContentModulePrefix ?? _resourceManifest!.AssemblyPrefix ?? "Content.";
-            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, assemblyPrefix))
-            {
-                Logger.Fatal("Errors while loading content assemblies.");
+            if (!LoadModules())
                 return false;
-            }
 
             foreach (var loadedModule in _modLoader.LoadedModules)
             {
@@ -164,8 +163,7 @@ namespace Robust.Client
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
             _prototypeManager.Initialize();
-            _prototypeManager.LoadDirectory(new("/EnginePrototypes/"));
-            _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
+            _prototypeManager.LoadDefaultPrototypes();
             _prototypeManager.ResolveResults();
             _userInterfaceManager.Initialize();
             _eyeManager.Initialize();
@@ -181,6 +179,8 @@ namespace Robust.Client
             _protoLoadMan.Initialize();
             _netResMan.Initialize();
             _replayLoader.Initialize();
+            _replayPlayback.Initialize();
+            _replayRecording.Initialize();
             _userInterfaceManager.PostInitialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
@@ -252,11 +252,39 @@ namespace Robust.Client
             return true;
         }
 
+        private bool LoadModules()
+        {
+            DebugTools.Assert(_resourceManifest != null);
+
+            var assemblyPrefix = Options.ContentModulePrefix ?? _resourceManifest!.AssemblyPrefix ?? "Content.";
+            var assemblyDir = Options.AssemblyDirectory;
+
+            bool result;
+            if (_resourceManifest.ClientAssemblies is { } clientAssemblies)
+            {
+                // We have client assemblies. Load only the assemblies listed in the content manifest.
+                var paths = clientAssemblies.Select(p => assemblyDir / $"{p}.dll");
+                result = _modLoader.TryLoadModules(paths);
+            }
+            else
+            {
+                result = _modLoader.TryLoadModulesFrom(assemblyDir, assemblyPrefix);
+            }
+
+            if (!result)
+            {
+                _logger.Fatal("Errors while loading content assemblies.");
+                return false;
+            }
+
+            return true;
+        }
+
         private ResourceManifestData LoadResourceManifest()
         {
             // Parses /manifest.yml for game-specific settings that cannot be exclusively set up by content code.
             if (!_resourceCache.TryContentFileRead("/manifest.yml", out var stream))
-                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true);
+                return ResourceManifestData.Default;
 
             var yamlStream = new YamlStream();
             using (stream)
@@ -266,7 +294,7 @@ namespace Robust.Client
             }
 
             if (yamlStream.Documents.Count == 0)
-                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true);
+                return ResourceManifestData.Default;
 
             if (yamlStream.Documents.Count != 1 || yamlStream.Documents[0].RootNode is not YamlMappingNode mapping)
             {
@@ -274,16 +302,7 @@ namespace Robust.Client
                     "Expected a single YAML document with root mapping for /manifest.yml");
             }
 
-            var modules = Array.Empty<string>();
-            if (mapping.TryGetNode("modules", out var modulesMap))
-            {
-                var sequence = (YamlSequenceNode)modulesMap;
-                modules = new string[sequence.Children.Count];
-                for (var i = 0; i < modules.Length; i++)
-                {
-                    modules[i] = sequence[i].AsString();
-                }
-            }
+            var modules = ReadStringArray(mapping, "modules") ?? Array.Empty<string>();
 
             string? assemblyPrefix = null;
             if (mapping.TryGetNode("assemblyPrefix", out var prefixNode))
@@ -305,7 +324,32 @@ namespace Robust.Client
             if (mapping.TryGetNode("autoConnect", out var autoConnectNode))
                 autoConnect = autoConnectNode.AsBool();
 
-            return new ResourceManifestData(modules, assemblyPrefix, defaultWindowTitle, windowIconSet, splashLogo, autoConnect);
+            var clientAssemblies = ReadStringArray(mapping, "clientAssemblies");
+
+            return new ResourceManifestData(
+                modules,
+                assemblyPrefix,
+                defaultWindowTitle,
+                windowIconSet,
+                splashLogo,
+                autoConnect,
+                clientAssemblies
+            );
+
+            static string[]? ReadStringArray(YamlMappingNode mapping, string key)
+            {
+                if (!mapping.TryGetNode(key, out var node))
+                    return null;
+
+                var sequence = (YamlSequenceNode)node;
+                var array = new string[sequence.Children.Count];
+                for (var i = 0; i < array.Length; i++)
+                {
+                    array[i] = sequence[i].AsString();
+                }
+
+                return array;
+            }
         }
 
         internal bool StartupSystemSplash(
@@ -467,7 +511,7 @@ namespace Robust.Client
 
                 if (uri.Scheme != "udp")
                 {
-                    Logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
+                    _logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
                 }
 
                 LaunchState = new InitialLaunchState(
@@ -490,11 +534,11 @@ namespace Robust.Client
 
             if (reason != null)
             {
-                Logger.Info($"Shutting down! Reason: {reason}");
+                _logger.Info($"Shutting down! Reason: {reason}");
             }
             else
             {
-                Logger.Info("Shutting down!");
+                _logger.Info("Shutting down!");
             }
 
             _mainLoop.Running = false;
@@ -734,8 +778,13 @@ namespace Robust.Client
             string? DefaultWindowTitle,
             string? WindowIconSet,
             string? SplashLogo,
-            bool AutoConnect
-        );
+            bool AutoConnect,
+            string[]? ClientAssemblies
+        )
+        {
+            public static readonly ResourceManifestData Default =
+                new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true, null);
+        }
 
         public event Action<FrameEventArgs>? TickUpdateOverride;
     }

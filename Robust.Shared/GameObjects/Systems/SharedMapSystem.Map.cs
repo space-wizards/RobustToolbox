@@ -47,6 +47,9 @@ public abstract partial class SharedMapSystem
 
     private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
     {
+        EnsureComp<GridTreeComponent>(uid);
+        EnsureComp<MovedGridsComponent>(uid);
+
         var msg = new MapChangedEvent(uid, component.MapId, true);
         RaiseLocalEvent(uid, msg, true);
     }

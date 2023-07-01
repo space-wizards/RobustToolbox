@@ -25,7 +25,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-internal sealed partial class PVSSystem : EntitySystem
+internal sealed partial class PvsSystem : EntitySystem
 {
     [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -70,9 +70,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private readonly List<IPVSCollection> _pvsCollections = new();
 
-    private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool
-        = new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
-            new DictPolicy<EntityUid, PVSEntityVisiblity>(), MaxVisPoolSize);
+    private readonly ObjectPool<Dictionary<EntityUid, PvsEntityVisibility>> _visSetPool
+        = new DefaultObjectPool<Dictionary<EntityUid, PvsEntityVisibility>>(
+            new DictPolicy<EntityUid, PvsEntityVisibility>(), MaxVisPoolSize);
 
     private readonly ObjectPool<Stack<EntityUid>> _stackPool
         = new DefaultObjectPool<Stack<EntityUid>>(
@@ -786,10 +786,10 @@ internal sealed partial class PVSSystem : EntitySystem
                 continue;
             }
 
-            if (visiblity == PVSEntityVisiblity.StayedUnchanged)
+            if (visiblity == PvsEntityVisibility.StayedUnchanged)
                 continue;
 
-            var entered = visiblity == PVSEntityVisiblity.Entered;
+            var entered = visiblity == PvsEntityVisibility.Entered;
             var entFromTick = entered ? lastSeen.GetValueOrDefault(uid) : fromTick;
             var state = GetEntityState(session, uid, entFromTick, mQuery.GetComponent(uid));
 
@@ -836,8 +836,8 @@ internal sealed partial class PVSSystem : EntitySystem
     ///     in a separate net message.
     /// </summary>
     private List<EntityUid>? ProcessLeavePVS(
-        Dictionary<EntityUid, PVSEntityVisiblity> visibleEnts,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastSent)
+        Dictionary<EntityUid, PvsEntityVisibility> visibleEnts,
+        Dictionary<EntityUid, PvsEntityVisibility>? lastSent)
     {
         if (lastSent == null)
             return null;
@@ -852,12 +852,11 @@ internal sealed partial class PVSSystem : EntitySystem
         return leftView.Count > 0 ? leftView : null;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void RecursivelyAddTreeNode(in EntityUid nodeIndex,
         RobustTree<EntityUid> tree,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastSent,
-        Dictionary<EntityUid, PVSEntityVisiblity> toSend,
+        Dictionary<EntityUid, PvsEntityVisibility>? lastAcked,
+        Dictionary<EntityUid, PvsEntityVisibility>? lastSent,
+        Dictionary<EntityUid, PvsEntityVisibility> toSend,
         Dictionary<EntityUid, GameTick> lastSeen,
         Dictionary<EntityUid, MetaDataComponent> metaDataCache,
         Stack<EntityUid> stack,
@@ -901,9 +900,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public bool RecursivelyAddOverride(
         in EntityUid uid,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastSent,
-        Dictionary<EntityUid, PVSEntityVisiblity> toSend,
+        Dictionary<EntityUid, PvsEntityVisibility>? lastAcked,
+        Dictionary<EntityUid, PvsEntityVisibility>? lastSent,
+        Dictionary<EntityUid, PvsEntityVisibility> toSend,
         Dictionary<EntityUid, GameTick> lastSeen,
         in EntityQuery<MetaDataComponent> metaQuery,
         in EntityQuery<TransformComponent> transQuery,
@@ -941,8 +940,8 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     private (bool Entered, bool ShouldAdd) ProcessEntry(in EntityUid uid,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastAcked,
-        Dictionary<EntityUid, PVSEntityVisiblity>? lastSent,
+        Dictionary<EntityUid, PvsEntityVisibility>? lastAcked,
+        Dictionary<EntityUid, PvsEntityVisibility>? lastSent,
         Dictionary<EntityUid, GameTick> lastSeen,
         ref int newEntityCount,
         ref int enteredEntityCount,
@@ -974,7 +973,7 @@ internal sealed partial class PVSSystem : EntitySystem
         return (entered, true);
     }
 
-    private void AddToSendSet(in EntityUid uid, MetaDataComponent metaDataComponent, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, in bool entered, ref int entStateCount)
+    private void AddToSendSet(in EntityUid uid, MetaDataComponent metaDataComponent, Dictionary<EntityUid, PvsEntityVisibility> toSend, GameTick fromTick, in bool entered, ref int entStateCount)
     {
         if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
         {
@@ -985,7 +984,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         if (entered)
         {
-            toSend.Add(uid, PVSEntityVisiblity.Entered);
+            toSend.Add(uid, PvsEntityVisibility.Entered);
             entStateCount++;
             return;
         }
@@ -993,12 +992,12 @@ internal sealed partial class PVSSystem : EntitySystem
         if (metaDataComponent.EntityLastModifiedTick <= fromTick)
         {
             //entity has been sent before and hasnt been updated since
-            toSend.Add(uid, PVSEntityVisiblity.StayedUnchanged);
+            toSend.Add(uid, PvsEntityVisibility.StayedUnchanged);
             return;
         }
 
         //add us
-        toSend.Add(uid, PVSEntityVisiblity.StayedChanged);
+        toSend.Add(uid, PvsEntityVisibility.StayedChanged);
         entStateCount++;
     }
 
@@ -1058,8 +1057,8 @@ internal sealed partial class PVSSystem : EntitySystem
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick || md.EntityLastModifiedTick == GameTick.Zero);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick || md.EntityLastModifiedTick == GameTick.Zero);
                     stateEntities.Add(GetEntityState(player, uid, fromTick, md));
                 }
 
@@ -1070,8 +1069,8 @@ internal sealed partial class PVSSystem : EntitySystem
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick || md.EntityLastModifiedTick == GameTick.Zero);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick || md.EntityLastModifiedTick == GameTick.Zero);
                     stateEntities.Add(GetEntityState(player, uid, fromTick, md));
                 }
             }
@@ -1250,12 +1249,12 @@ internal sealed partial class PVSSystem : EntitySystem
         /// <summary>
         /// All <see cref="EntityUid"/>s that this session saw during the last <see cref="DirtyBufferSize"/> ticks.
         /// </summary>
-        public readonly OverflowDictionary<GameTick, Dictionary<EntityUid, PVSEntityVisiblity>> SentEntities = new(DirtyBufferSize);
+        public readonly OverflowDictionary<GameTick, Dictionary<EntityUid, PvsEntityVisibility>> SentEntities = new(DirtyBufferSize);
 
         /// <summary>
         ///     The most recently acked entities
         /// </summary>
-        public (GameTick Tick, Dictionary<EntityUid, PVSEntityVisiblity> Data)? LastAcked;
+        public (GameTick Tick, Dictionary<EntityUid, PvsEntityVisibility> Data)? LastAcked;
 
         /// <summary>
         ///     Stores the last tick at which a given entity was acked by a player. Used to avoid re-sending the whole entity
@@ -1266,7 +1265,7 @@ internal sealed partial class PVSSystem : EntitySystem
         /// <summary>
         ///     <see cref="SentEntities"/> overflow in case a player's last ack is more than <see cref="DirtyBufferSize"/> ticks behind the current tick.
         /// </summary>
-        public (GameTick Tick, Dictionary<EntityUid, PVSEntityVisiblity> SentEnts)? Overflow;
+        public (GameTick Tick, Dictionary<EntityUid, PvsEntityVisibility> SentEnts)? Overflow;
 
         /// <summary>
         ///     If true, the client has explicitly requested a full state. Unlike the first state, we will send them

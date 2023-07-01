@@ -1,5 +1,4 @@
 using Robust.Shared.GameObjects;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
@@ -19,6 +18,5 @@ namespace Robust.Shared.Map
         MapId CreateMap(MapId? mapId, EntityUid euid);
 
         void RemoveMapId(MapId mapId);
-        void OnGridBoundsChange(EntityUid uid, MapGridComponent grid);
     }
 }

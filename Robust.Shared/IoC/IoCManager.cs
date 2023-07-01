@@ -201,7 +201,7 @@ namespace Robust.Shared.IoC
         }
 
         /// <inheritdoc cref="Resolve{T}()"/>
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Resolve<T>([NotNull] ref T? instance)
         {
             // Do not call into IDependencyCollection immediately for this,
@@ -213,7 +213,7 @@ namespace Robust.Shared.IoC
         /// <summary>
         /// Resolve two dependencies manually.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
@@ -225,7 +225,7 @@ namespace Robust.Shared.IoC
         /// <summary>
         /// Resolve three dependencies manually.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
@@ -237,7 +237,7 @@ namespace Robust.Shared.IoC
         /// <summary>
         /// Resolve four dependencies manually.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);

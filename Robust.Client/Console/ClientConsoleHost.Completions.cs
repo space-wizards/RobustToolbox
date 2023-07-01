@@ -18,7 +18,7 @@ internal sealed partial class ClientConsoleHost
     {
         // Last element is the command currently being typed. May be empty.
 
-        // Logger.Debug($"Running completions: {string.Join(", ", args)}");
+        // _logger.Debug($"Running completions: {string.Join(", ", args)}");
 
         var delay = _cfg.GetCVar(CVars.ConCompletionDelay);
         if (delay > 0)

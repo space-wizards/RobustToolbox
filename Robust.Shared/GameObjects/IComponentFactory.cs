@@ -262,5 +262,11 @@ namespace Robust.Shared.GameObjects
         void GenerateNetIds();
 
         Type IdxToType(CompIdx idx);
+
+        /// <summary>
+        /// Gets a hash of all the registered components.
+        /// </summary>
+        /// <param name="networkedOnly">Whether to include all components or only networked ones.</param>
+        byte[] GetHash(bool networkedOnly);
     }
 }

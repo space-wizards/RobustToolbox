@@ -17,9 +17,13 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
     [Dependency] private readonly IConsoleHost _conhost = default!;
 
+    private ISawmill _sawmill = default!;
+
     /// <inheritdoc />
     public void Initialize()
     {
+        _sawmill = Logger.GetSawmill("map");
+
 #if DEBUG
         DebugTools.Assert(!_dbgGuardInit);
         DebugTools.Assert(!_dbgGuardRunning);
@@ -38,8 +42,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
         Logger.DebugS("map", "Starting...");
 
-        StartupGridTrees();
-
         DebugTools.Assert(!GridExists(EntityUid.Invalid));
     }
 
@@ -55,7 +57,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         {
             EntityManager.DeleteEntity(mapComp.Owner);
         }
-        ShutdownGridTrees();
 
 #if DEBUG
         DebugTools.Assert(!GridExists(EntityUid.Invalid));

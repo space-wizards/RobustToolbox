@@ -510,4 +510,16 @@ public struct ValueList<T> : IEnumerable<T>
             _index = -1;
         }
     }
+
+    /// <summary>
+    /// <see cref="CollectionExtensions"/>
+    /// </summary>
+    public T RemoveSwap(int index)
+    {
+        var old = this[index];
+        var replacement = this[Count - 1];
+        this[index] = replacement;
+        RemoveAt(Count - 1);
+        return old;
+    }
 }

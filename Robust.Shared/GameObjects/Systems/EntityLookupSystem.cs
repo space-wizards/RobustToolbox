@@ -216,7 +216,7 @@ namespace Robust.Shared.GameObjects
             var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery);
             var mapTransform = new Transform(worldPos, worldRot);
 
-            var (_, broadWorldRot, _, broadInvMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(uid);
+            var (_, broadWorldRot, _, broadInvMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(broadphase.Owner);
             var broadphaseTransform = new Transform(broadInvMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadWorldRot);
             var tree = body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
             DebugTools.Assert(fixture.ProxyCount == 0);

@@ -185,7 +185,7 @@ namespace Robust.Server.Placement
             {
                 var newGrid = _mapManager.CreateGrid(coordinates.GetMapId(_entityManager));
                 var newGridXform = _entityManager.GetComponent<TransformComponent>(newGrid.Owner);
-                newGridXform.WorldPosition = coordinates.Position - (newGrid.TileSize / 2f); // assume bottom left tile origin
+                newGridXform.WorldPosition = coordinates.Position - new Vector2(newGrid.TileSize / 2f); // assume bottom left tile origin
                 var tilePos = newGrid.WorldToTile(coordinates.Position);
                 newGrid.SetTile(tilePos, new Tile(tileType));
             }

@@ -120,7 +120,7 @@ namespace Robust.Client.Animations
             switch (a)
             {
                 case Vector2 vector2:
-                    return Vector2.InterpolateCubic((Vector2) preA, vector2, (Vector2) b, (Vector2) postB, t);
+                    return Vector2Helpers.InterpolateCubic((Vector2) preA, vector2, (Vector2) b, (Vector2) postB, t);
                 case Vector3 vector3:
                     return Vector3.InterpolateCubic((Vector3) preA, vector3, (Vector3) b, (Vector3) postB, t);
                 case Vector4 vector4:

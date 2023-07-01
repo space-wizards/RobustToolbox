@@ -1,20 +1,14 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using OpenTK.Mathematics;
 using Robust.Client.Audio;
 using Robust.Shared;
-using Robust.Shared.Configuration;
-using Robust.Shared.IoC;
 using Robust.Shared.Audio;
 using Robust.Shared.Log;
-using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.Graphics.Audio
 {

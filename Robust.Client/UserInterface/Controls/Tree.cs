@@ -126,7 +126,7 @@ namespace Robust.Client.UserInterface.Controls
             bool DoSearch(Item item, float hOffset)
             {
                 var itemHeight = font.GetHeight(UIScale);
-                var itemBox = UIBox2.FromDimensions((hOffset, vOffset), (PixelWidth - hOffset, itemHeight));
+                var itemBox = UIBox2.FromDimensions(new(hOffset, vOffset), new(PixelWidth - hOffset, itemHeight));
                 if (itemBox.Contains(position))
                 {
                     final = item;

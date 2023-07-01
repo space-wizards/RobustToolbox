@@ -10,6 +10,12 @@ public static class Vector2Helpers
     public static readonly Vector2 NaN = new(float.NaN, float.NaN);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2 InterpolateCubic(Vector2 preA, Vector2 a, Vector2 b, Vector2 postB, float t)
+    {
+        return a + (b - preA + (preA * 2.0f - a * 5.0f + b * 4.0f - postB + ((a - b) * 3.0f + postB - preA) * t) * t) * t * 0.5f;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool EqualsApprox(this Vector2 vec, Vector2 otherVec)
     {
         return MathHelper.CloseTo(vec.X, otherVec.X) && MathHelper.CloseTo(vec.Y, otherVec.Y);
@@ -79,6 +85,7 @@ public static class Vector2Helpers
         return new Vector2i((int) MathF.Floor(vec.X), (int) MathF.Floor(vec.Y));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Deconstruct(this Vector2 vec, out float x, out float y)
     {
         x = vec.X;

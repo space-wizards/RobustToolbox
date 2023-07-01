@@ -114,7 +114,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (SizeToContent != WindowSizeToContent.Manual)
             {
-                Measure(Vector2.Infinity);
+                Measure(Vector2Helpers.Infinity);
 
                 if ((SizeToContent & WindowSizeToContent.Width) != 0)
                     parameters.Width = (int)DesiredSize.X;

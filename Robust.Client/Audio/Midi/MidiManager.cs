@@ -368,15 +368,15 @@ internal sealed partial class MidiManager : IMidiManager
 
                     var sourceRelative = pos.Position - _eyeManager.CurrentEye.Position.Position;
                     var occlusion = 0f;
-                    if (sourceRelative.Length > 0)
+                    if (sourceRelative.Length() > 0)
                     {
                         occlusion = _broadPhaseSystem.IntersectRayPenetration(
                             pos.MapId,
                             new CollisionRay(
                                 _eyeManager.CurrentEye.Position.Position,
-                                sourceRelative.Normalized,
+                                sourceRelative.Normalized(),
                                 OcclusionCollisionMask),
-                            MathF.Min(sourceRelative.Length, _maxCastLength),
+                            MathF.Min(sourceRelative.Length(), _maxCastLength),
                             renderer.TrackingEntity);
                     }
 

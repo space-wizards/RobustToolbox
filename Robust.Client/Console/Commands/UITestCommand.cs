@@ -89,7 +89,7 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
             {
                 grid.AddChild(new Button
                 {
-                    MinSize = (50, 50),
+                    MinSize = new(50, 50),
                     Text = $"{x}, {y}"
                 });
             }

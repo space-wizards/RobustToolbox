@@ -138,7 +138,7 @@ namespace Robust.Client.UserInterface.Controls
             if (show)
             {
                 var globalPos = GlobalPosition;
-                OptionsScroll.Measure(Window?.Size ?? Vector2.Infinity);
+                OptionsScroll.Measure(Window?.Size ?? Vector2Helpers.Infinity);
                 var (minX, minY) = OptionsScroll.DesiredSize;
                 var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
                 UserInterfaceManager.ModalRoot.AddChild(_popup);

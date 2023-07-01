@@ -34,7 +34,7 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             RobustXamlLoader.Load(this);
 
-            MeasureButton.Measure(Vector2.Infinity);
+            MeasureButton.Measure(Vector2Helpers.Infinity);
 
             for (var i = 0; i < InitOpts.Length; i++)
             {

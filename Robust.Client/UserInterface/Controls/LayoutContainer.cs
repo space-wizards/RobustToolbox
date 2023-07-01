@@ -310,7 +310,7 @@ namespace Robust.Client.UserInterface.Controls
             LayoutPresetMode resizeMode = LayoutPresetMode.MinSize,
             int margin = 0)
         {
-            control.Measure(Vector2.Infinity);
+            control.Measure(Vector2Helpers.Infinity);
             var newSize = control.Size;
             var minSize = control.DesiredSize;
             if ((resizeMode & LayoutPresetMode.KeepWidth) == 0)

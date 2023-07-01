@@ -336,7 +336,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="MinHeight"/>
         public Vector2 MinSize
         {
-            get => (_minWidth, _minHeight);
+            get => new(_minWidth, _minHeight);
             set => (MinWidth, MinHeight) = Vector2.Max(Vector2.Zero, value);
         }
 
@@ -359,7 +359,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="SetHeight"/>
         public Vector2 SetSize
         {
-            get => (_setWidth, _setHeight);
+            get => new(_setWidth, _setHeight);
             set => (SetWidth, SetHeight) = value;
         }
 
@@ -375,7 +375,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="MaxHeight"/>
         public Vector2 MaxSize
         {
-            get => (_maxWidth, _maxHeight);
+            get => new(_maxWidth, _maxHeight);
             set => (MaxWidth, MaxHeight) = value;
         }
 
@@ -709,7 +709,7 @@ namespace Robust.Client.UserInterface
             minConstraint = float.IsNaN(setH) ? 0 : setH;
             minH = MathHelper.Clamp(maxH, minConstraint, minH);
 
-            return (
+            return new Vector2(
                 Math.Clamp(avail.X, minW, maxW),
                 Math.Clamp(avail.Y, minH, maxH));
         }

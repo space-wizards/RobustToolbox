@@ -44,7 +44,7 @@ internal partial class Clyde
     private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds, RefList<SpriteData> list)
     {
         var query = _entityManager.GetEntityQuery<TransformComponent>();
-        var viewScale = eye.Scale * view.RenderScale * (EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
+        var viewScale = eye.Scale * view.RenderScale * new Vector2(EyeManager.PixelsPerMeter, -EyeManager.PixelsPerMeter);
         var treeData = new BatchData()
         {
             Sys = _entityManager.EntitySysManager.GetEntitySystem<TransformSystem>(),

@@ -11,7 +11,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class TextureButton : BaseButton
     {
-        private Vector2 _scale = (1, 1);
+        private Vector2 _scale = new(1, 1);
         private Texture? _textureNormal;
         public const string StylePropertyTexture = "texture";
         public const string StylePseudoClassNormal = "normal";

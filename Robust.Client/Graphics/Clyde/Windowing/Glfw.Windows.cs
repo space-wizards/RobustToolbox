@@ -560,7 +560,7 @@ namespace Robust.Client.Graphics.Clyde
                 reg.FramebufferSize = (fbW, fbH);
 
                 GLFW.GetWindowContentScale(window, out var scaleX, out var scaleY);
-                reg.WindowScale = (scaleX, scaleY);
+                reg.WindowScale = new Vector2(scaleX, scaleY);
 
                 GLFW.GetWindowSize(window, out var w, out var h);
                 reg.PrevWindowSize = reg.WindowSize = (w, h);

@@ -46,6 +46,8 @@ namespace Robust.Shared.GameObjects
         private UniqueIndexHkm<EntityUid, Component> _entCompIndex =
             new(ComponentCollectionCapacity);
 
+        private EntityQuery<MetaDataComponent> _metaQuery;
+
         /// <inheritdoc />
         public event Action<AddedComponentEventArgs>? ComponentAdded;
 
@@ -63,6 +65,7 @@ namespace Robust.Shared.GameObjects
             FillComponentDict();
             _componentFactory.ComponentAdded += OnComponentAdded;
             _componentFactory.ComponentReferenceAdded += OnComponentReferenceAdded;
+            _metaQuery = GetEntityQuery<MetaDataComponent>();
         }
 
         /// <summary>
@@ -700,7 +703,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetComponent<T>(EntityUid uid)
+        public T GetComponent<T>(EntityUid uid) where T : Component
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
@@ -708,7 +711,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!comp.Deleted)
                 {
-                    return (T)(IComponent)comp;
+                    return (T)comp;
                 }
             }
 
@@ -1006,8 +1009,7 @@ namespace Robust.Shared.GameObjects
             where TComp1 : Component
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var metaTraits = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
-            return new EntityQueryEnumerator<TComp1>(trait1, metaTraits);
+            return new EntityQueryEnumerator<TComp1>(trait1, _metaQuery);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
@@ -1016,8 +1018,7 @@ namespace Robust.Shared.GameObjects
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            var metaTraits = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
-            return new EntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, metaTraits);
+            return new EntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, _metaQuery);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
@@ -1028,8 +1029,7 @@ namespace Robust.Shared.GameObjects
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-            var metaTraits = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
-            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, metaTraits);
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, _metaQuery);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
@@ -1042,8 +1042,8 @@ namespace Robust.Shared.GameObjects
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
             var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
-            var metaTraits = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
-            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, metaTraits);
+
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, _metaQuery);
         }
 
         /// <inheritdoc />
@@ -1063,15 +1063,11 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                var metaComps = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
-
-                foreach (var t1Comp in comps!.Values)
+                foreach (var t1Comp in comps.Values)
                 {
-                    if (t1Comp.Deleted || !metaComps.TryGetValue(t1Comp.Owner, out var metaComp)) continue;
+                    if (t1Comp.Deleted || !_metaQuery.TryGetComponent(t1Comp.Owner, out var metaComp)) continue;
 
-                    var meta = (MetaDataComponent)metaComp;
-
-                    if (meta.EntityPaused) continue;
+                    if (metaComp.EntityPaused) continue;
 
                     yield return (T)(object)t1Comp;
                 }
@@ -1420,14 +1416,14 @@ namespace Robust.Shared.GameObjects
         where TComp1 : Component
     {
         private Dictionary<EntityUid, Component>.Enumerator _traitDict;
-        private readonly Dictionary<EntityUid, Component> _metaDict;
+        private readonly EntityQuery<MetaDataComponent> _metaQuery;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, Component> traitDict,
-            Dictionary<EntityUid, Component> metaDict)
+            EntityQuery<MetaDataComponent> metaQuery)
         {
             _traitDict = traitDict.GetEnumerator();
-            _metaDict = metaDict;
+            _metaQuery = metaQuery;
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1)
@@ -1448,7 +1444,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_metaDict.TryGetValue(current.Key, out var metaComp) || ((MetaDataComponent)metaComp).EntityPaused)
+                if (!_metaQuery.TryGetComponent(current.Key, out var metaComp) || metaComp.EntityPaused)
                 {
                     continue;
                 }
@@ -1480,16 +1476,16 @@ namespace Robust.Shared.GameObjects
     {
         private Dictionary<EntityUid, Component>.Enumerator _traitDict;
         private readonly Dictionary<EntityUid, Component> _traitDict2;
-        private readonly Dictionary<EntityUid, Component> _metaDict;
+        private readonly EntityQuery<MetaDataComponent> _metaQuery;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, Component> traitDict,
             Dictionary<EntityUid, Component> traitDict2,
-            Dictionary<EntityUid, Component> metaDict)
+            EntityQuery<MetaDataComponent> metaQuery)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
-            _metaDict = metaDict;
+            _metaQuery = metaQuery;
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
@@ -1511,7 +1507,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_metaDict.TryGetValue(current.Key, out var metaComp) || ((MetaDataComponent)metaComp).EntityPaused)
+                if (!_metaQuery.TryGetComponent(current.Key, out var metaComp) || metaComp.EntityPaused)
                 {
                     continue;
                 }
@@ -1551,18 +1547,18 @@ namespace Robust.Shared.GameObjects
         private Dictionary<EntityUid, Component>.Enumerator _traitDict;
         private readonly Dictionary<EntityUid, Component> _traitDict2;
         private readonly Dictionary<EntityUid, Component> _traitDict3;
-        private readonly Dictionary<EntityUid, Component> _metaDict;
+        private readonly EntityQuery<MetaDataComponent> _metaQuery;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, Component> traitDict,
             Dictionary<EntityUid, Component> traitDict2,
             Dictionary<EntityUid, Component> traitDict3,
-            Dictionary<EntityUid, Component> metaDict)
+            EntityQuery<MetaDataComponent> metaQuery)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
             _traitDict3 = traitDict3;
-            _metaDict = metaDict;
+            _metaQuery = metaQuery;
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
@@ -1585,7 +1581,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_metaDict.TryGetValue(current.Key, out var metaComp) || ((MetaDataComponent)metaComp).EntityPaused)
+                if (!_metaQuery.TryGetComponent(current.Key, out var metaComp) || metaComp.EntityPaused)
                 {
                     continue;
                 }
@@ -1636,20 +1632,20 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, Component> _traitDict2;
         private readonly Dictionary<EntityUid, Component> _traitDict3;
         private readonly Dictionary<EntityUid, Component> _traitDict4;
-        private readonly Dictionary<EntityUid, Component> _metaDict;
+        private readonly EntityQuery<MetaDataComponent> _metaQuery;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, Component> traitDict,
             Dictionary<EntityUid, Component> traitDict2,
             Dictionary<EntityUid, Component> traitDict3,
             Dictionary<EntityUid, Component> traitDict4,
-            Dictionary<EntityUid, Component> metaDict)
+            EntityQuery<MetaDataComponent> metaQuery)
         {
             _traitDict = traitDict.GetEnumerator();
             _traitDict2 = traitDict2;
             _traitDict3 = traitDict3;
             _traitDict4 = traitDict4;
-            _metaDict = metaDict;
+            _metaQuery = metaQuery;
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
@@ -1673,7 +1669,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_metaDict.TryGetValue(current.Key, out var metaComp) || ((MetaDataComponent)metaComp).EntityPaused)
+                if (!_metaQuery.TryGetComponent(current.Key, out var metaComp) || metaComp.EntityPaused)
                 {
                     continue;
                 }

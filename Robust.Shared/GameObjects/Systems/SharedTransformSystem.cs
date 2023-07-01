@@ -9,17 +9,19 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Physics.Systems;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
     public abstract partial class SharedTransformSystem : EntitySystem
     {
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
-        // Needed on release no remove.
-        // ReSharper disable once NotAccessedField.Local
-        private ISawmill _logger = default!;
+        private EntityQuery<TransformComponent> _xformQuery;
 
         private readonly Queue<MoveEvent> _gridMoves = new();
         private readonly Queue<MoveEvent> _otherMoves = new();
@@ -28,9 +30,9 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
-            _logger = Logger.GetSawmill("transform");
             UpdatesOutsidePrediction = true;
 
+            _xformQuery = GetEntityQuery<TransformComponent>();
             SubscribeLocalEvent<TileChangedEvent>(MapManagerOnTileChanged);
             SubscribeLocalEvent<TransformComponent, ComponentInit>(OnCompInit);
             SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnCompStartup);
@@ -47,11 +49,11 @@ namespace Robust.Shared.GameObjects
                 return;
 
             if (LifeStage(ev.Entity) >= EntityLifeStage.Terminating)
-                _logger.Error($"Entity {ToPrettyString(ev.Entity)} is getting attached to a new parent while terminating. New parent: {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
+                Log.Error($"Entity {ToPrettyString(ev.Entity)} is getting attached to a new parent while terminating. New parent: {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
 
 
             if (LifeStage(ev.Transform.ParentUid) >= EntityLifeStage.Terminating)
-                _logger.Error($"Entity {ToPrettyString(ev.Entity)} is attaching itself to a terminating entity {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
+                Log.Error($"Entity {ToPrettyString(ev.Entity)} is attaching itself to a terminating entity {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
         }
 
         private void MapManagerOnTileChanged(ref TileChangedEvent e)
@@ -84,9 +86,9 @@ namespace Robust.Shared.GameObjects
             if (!xformQuery.TryGetComponent(gridXform.MapUid, out var mapTransform))
                 return;
 
-            var aabb = _entityLookup.GetLocalBounds(tileIndices, grid.TileSize);
+            var aabb = _lookup.GetLocalBounds(tileIndices, grid.TileSize);
 
-            foreach (var entity in _entityLookup.GetEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
+            foreach (var entity in _lookup.GetEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
             {
                 if (!xformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
                     continue;
@@ -202,7 +204,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Variant of <see cref="GetMoverCoordinates()"/> that also returns the entity's world rotation
         /// </summary>
-        public (EntityCoordinates Coords, Angle worldRot) GetMoverCoordinateRotation(TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+        public (EntityCoordinates Coords, Angle worldRot) GetMoverCoordinateRotation(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
             // Nullspace (or map)
             if (!xform.ParentUid.IsValid())
@@ -210,13 +212,13 @@ namespace Robust.Shared.GameObjects
 
             // GriddUid is only set after init.
             if (!xform._gridInitialized)
-                InitializeGridUid(xform.Owner, xform, xformQuery, GetEntityQuery<MapGridComponent>());
+                InitializeGridUid(uid, xform, xformQuery, GetEntityQuery<MapGridComponent>());
 
             // Is the entity directly parented to the grid?
             if (xform.GridUid == xform.ParentUid)
                 return (xform.Coordinates, GetWorldRotation(xform, xformQuery));
 
-            DebugTools.Assert(!_mapManager.IsGrid(xform.Owner) && !_mapManager.IsMap(xform.Owner));
+            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
             var (pos, worldRot) = GetWorldPositionRotation(xform, xformQuery);
 

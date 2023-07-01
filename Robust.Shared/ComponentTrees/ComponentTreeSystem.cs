@@ -274,10 +274,10 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
         if (TryComp(mapUid, out TTreeComp? mapTreeComp))
         {
-            trees.Add((mapUid, mapTreeComp));
+            state.trees.Add((mapUid, mapTreeComp));
         }
 
-        return trees;
+        return state.trees;
     }
 
     public HashSet<ComponentTreeEntry<TComp>> QueryAabb(MapId mapId, Box2 worldBounds, bool approx = true)

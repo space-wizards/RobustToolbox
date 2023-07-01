@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using NetSerializer;
 using NUnit.Framework;
+using Robust.Shared.Maths;
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
@@ -88,6 +90,28 @@ namespace Robust.UnitTesting.Shared.Serialization
             {
                 Assert.That(deserialized, Is.EquivalentTo(set));
             }
+        }
+
+        public static readonly Vector2[] Vector2Values =
+        {
+            Vector2.Zero,
+            Vector2.One,
+            Vector2Helpers.NaN,
+            Vector2Helpers.Infinity,
+            new(-1f, -1f),
+            new(10f, -10f),
+            new(-10f, 10f),
+        };
+
+        [Test]
+        public void TestVector2([ValueSource(nameof(Vector2Values))] Vector2 vec)
+        {
+            var stream = new MemoryStream();
+            Primitives.WritePrimitive(stream, vec);
+            stream.Position = 0;
+            Primitives.ReadPrimitive(stream, out Vector2 read);
+
+            Assert.That(read, NUnit.Framework.Is.EqualTo(vec));
         }
 
         [Test]

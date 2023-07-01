@@ -25,7 +25,7 @@ namespace Robust.Build.Tasks
             Single = ts.GetType("System.Single");
             Int32 = ts.GetType("System.Int32");
 
-            (Vector2, Vector2ConstructorFull) = GetNumericTypeInfo("Robust.Shared.Maths.Vector2", Single, 2);
+            (Vector2, Vector2ConstructorFull) = GetNumericTypeInfo("System.Numerics.Vector2", Single, 2);
             (Vector2i, Vector2iConstructorFull) = GetNumericTypeInfo("Robust.Shared.Maths.Vector2i", Int32, 2);
             (Thickness, ThicknessConstructorFull) = GetNumericTypeInfo("Robust.Shared.Maths.Thickness", Single, 4);
 

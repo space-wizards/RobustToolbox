@@ -703,15 +703,15 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetComponent<T>(EntityUid uid) where T : Component
+        public T GetComponent<T>(EntityUid uid) where T : IComponent
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
             if (dict!.TryGetValue(uid, out var comp))
             {
-                if (!comp.Deleted)
+                if (!comp!.Deleted)
                 {
-                    return (T)comp;
+                    return (T)(IComponent) comp;
                 }
             }
 

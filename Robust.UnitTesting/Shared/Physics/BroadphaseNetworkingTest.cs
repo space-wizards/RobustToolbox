@@ -73,7 +73,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         EntityUid player = default;
         await server.WaitPost(() =>
         {
-            var coords = new EntityCoordinates(grid1, (0.5f, 0.5f));
+            var coords = new EntityCoordinates(grid1, new Vector2(0.5f, 0.5f));
             player = sEntMan.SpawnEntity("", coords);
 
             // Enable physics

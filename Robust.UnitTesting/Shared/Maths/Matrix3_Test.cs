@@ -26,14 +26,14 @@ namespace Robust.UnitTesting.Shared.Maths
 
         private static readonly IEnumerable<(Vector2, double)> _rotationTests = new[]
         {
-            (new Vector2( 1, 0).Normalized, 0.0),
-            (new Vector2( 1, 1).Normalized, 1 * System.Math.PI / 4.0),
-            (new Vector2( 0, 1).Normalized, 1 * System.Math.PI / 2.0),
-            (new Vector2(-1, 1).Normalized, 3 * System.Math.PI / 4.0),
-            (new Vector2(-1, 0).Normalized, 1 * System.Math.PI / 1.0),
-            (new Vector2(-1,-1).Normalized, 5 * System.Math.PI / 4.0),
-            (new Vector2( 0,-1).Normalized, 3 * System.Math.PI / 2.0),
-            (new Vector2( 1,-1).Normalized, 7 * System.Math.PI / 4.0),
+            (new Vector2( 1, 0).Normalized(), 0.0),
+            (new Vector2( 1, 1).Normalized(), 1 * System.Math.PI / 4.0),
+            (new Vector2( 0, 1).Normalized(), 1 * System.Math.PI / 2.0),
+            (new Vector2(-1, 1).Normalized(), 3 * System.Math.PI / 4.0),
+            (new Vector2(-1, 0).Normalized(), 1 * System.Math.PI / 1.0),
+            (new Vector2(-1,-1).Normalized(), 5 * System.Math.PI / 4.0),
+            (new Vector2( 0,-1).Normalized(), 3 * System.Math.PI / 2.0),
+            (new Vector2( 1,-1).Normalized(), 7 * System.Math.PI / 4.0),
         };
 
         [Test]

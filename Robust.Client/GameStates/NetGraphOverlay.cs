@@ -228,7 +228,7 @@ namespace Robust.Client.GameStates
 
             // average payload line
             var avg = height - BytesToPixels(_totalHistoryPayload/HistorySize);
-            var avgEnd = new Vector2(LeftMargin + width, avg)+ (70,0);
+            var avgEnd = new Vector2(LeftMargin + width, avg) + new Vector2(70, 0);
             handle.DrawLine(new Vector2(LeftMargin, avg), avgEnd, Color.DarkGray.WithAlpha(0.8f));
 
             // top payload warning line
@@ -253,7 +253,7 @@ namespace Robust.Client.GameStates
             handle.DrawString(_font, new Vector2(LeftMargin + width, minYoff), "8.19Kbit/s");
 
             // avg text
-            handle.DrawString(_font, avgEnd - _font.GetLineHeight(1)/2f, "average");
+            handle.DrawString(_font, avgEnd - _font.GetLineHeight(1) / 2f, "average");
 
             // lag text info
             if(lastLagY != -1)

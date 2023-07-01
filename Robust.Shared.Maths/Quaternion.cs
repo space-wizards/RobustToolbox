@@ -532,7 +532,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion FromAxisAngle(Vector3 axis, float angle)
         {
-            if (axis.LengthSquared == 0.0f)
+            if (axis.LengthSquared() == 0.0f)
                 return Identity;
 
             var result = Identity;
@@ -560,9 +560,9 @@ namespace Robust.Shared.Maths
         public static Quaternion Slerp(Quaternion q1, Quaternion q2, float blend)
         {
             // if either input is zero, return the other.
-            if (q1.LengthSquared == 0.0f)
+            if (q1.LengthSquared() == 0.0f)
             {
-                if (q2.LengthSquared == 0.0f)
+                if (q2.LengthSquared() == 0.0f)
                 {
                     return Identity;
                 }
@@ -570,7 +570,7 @@ namespace Robust.Shared.Maths
                 return q2;
             }
 
-            if (q2.LengthSquared == 0.0f)
+            if (q2.LengthSquared() == 0.0f)
             {
                 return q1;
             }
@@ -609,7 +609,7 @@ namespace Robust.Shared.Maths
             }
 
             var result = new Quaternion(blendA * q1.Xyz + blendB * q2.Xyz, blendA * q1.W + blendB * q2.W);
-            if (result.LengthSquared > 0.0f)
+            if (result.LengthSquared() > 0.0f)
                 return Normalize(result);
             return Identity;
         }

@@ -58,7 +58,7 @@ namespace Robust.Client.UserInterface.CustomControls
             RobustXamlLoader.Load(this);
             MouseFilter = MouseFilterMode.Stop;
 
-            WindowHeader.MinSize = (0, HEADER_SIZE_Y);
+            WindowHeader.MinSize = new Vector2(0, HEADER_SIZE_Y);
 
             Contents = ContentsContainer;
 
@@ -108,7 +108,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         // TODO: Un-hard code this header size.
         private const float HEADER_SIZE_Y = 25;
-        protected virtual Vector2 ContentsMinimumSize => (50, 50);
+        protected virtual Vector2 ContentsMinimumSize => new Vector2(50, 50);
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
@@ -156,12 +156,12 @@ namespace Robust.Client.UserInterface.CustomControls
             if (Position.Y > spaceY)
                 maxY -= WindowEdgeBump;
 
-            var pos = Vector2.Min(Position, (maxX, maxY));
+            var pos = Vector2.Min(Position, new Vector2(maxX, maxY));
 
             var minX = (AllowOffScreen & DirectionFlag.East) ==  0 ? 0 : WindowEdgeSeparation - Size.X;
             var minY = (AllowOffScreen & DirectionFlag.North) == 0 ? 0 : WindowEdgeSeparation - Size.Y;
 
-            pos = Vector2.Max(pos, (minX, minY));
+            pos = Vector2.Max(pos, new Vector2(minX, minY));
             if (Position != pos)
                 LayoutContainer.SetPosition(this, pos);
         }

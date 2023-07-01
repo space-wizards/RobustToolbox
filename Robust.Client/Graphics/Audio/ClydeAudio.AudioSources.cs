@@ -14,6 +14,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Audio;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Vector2 = System.Numerics.Vector2;
 using Robust.Shared.Utility;
 

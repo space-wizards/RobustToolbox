@@ -86,7 +86,7 @@ namespace Robust.Client.GameObjects
                     {
                         var lerpDest = transform.NextPosition.Value;
                         var lerpSource = transform.PrevPosition;
-                        var distance = (lerpDest - lerpSource).LengthSquared;
+                        var distance = (lerpDest - lerpSource).LengthSquared();
 
                         if (distance is > MinInterpolationDistanceSquared and < MaxInterpolationDistanceSquared)
                         {

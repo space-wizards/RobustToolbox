@@ -35,7 +35,7 @@ namespace Robust.Client.Placement.Modes
             }
 
             var closestNode = (from Vector2 node in nodes
-                                   orderby (node - MouseCoords.Position).LengthSquared ascending
+                                   orderby (node - MouseCoords.Position).LengthSquared() ascending
                                    select node).First();
 
             MouseCoords = new EntityCoordinates(MouseCoords.EntityId,

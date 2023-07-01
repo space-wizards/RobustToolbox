@@ -469,7 +469,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Min(Vector3 left, Vector3 right)
         {
-            return left.LengthSquared < right.LengthSquared ? left : right;
+            return left.LengthSquared() < right.LengthSquared() ? left : right;
         }
 
         #endregion
@@ -485,7 +485,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Max(Vector3 left, Vector3 right)
         {
-            return left.LengthSquared >= right.LengthSquared ? left : right;
+            return left.LengthSquared() >= right.LengthSquared() ? left : right;
         }
 
         #endregion

@@ -70,7 +70,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (Viewport == null)
             {
-                handle.DrawRect(UIBox2.FromDimensions((0, 0), Size * UIScale), Color.Red);
+                handle.DrawRect(UIBox2.FromDimensions(new Vector2(0, 0), Size * UIScale), Color.Red);
             }
             else
             {
@@ -82,7 +82,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 Viewport.Render();
                 handle.DrawTextureRect(Viewport.RenderTarget.Texture,
-                    UIBox2.FromDimensions((0, 0), (Vector2i) (Viewport.Size / _viewportResolution)));
+                    UIBox2.FromDimensions(new Vector2(0, 0), (Vector2i) (Viewport.Size / _viewportResolution)));
 
                 Viewport.RenderScreenOverlaysAbove(handle, this, viewportBounds);
             }

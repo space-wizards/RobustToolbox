@@ -92,9 +92,9 @@ namespace Robust.Client.UserInterface.CustomControls
                 var gc = _gcMarkers[currentFrameIndex];
                 if (gc)
                 {
-                    triangle[0] = (rect.Left, 0);
-                    triangle[1] = (rect.Right, 0);
-                    triangle[2] = (rect.Center.X, 5);
+                    triangle[0] = new Vector2(rect.Left, 0);
+                    triangle[1] = new Vector2(rect.Right, 0);
+                    triangle[2] = new Vector2(rect.Center.X, 5);
 
                     handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, triangle, Color.LightBlue);
                 }

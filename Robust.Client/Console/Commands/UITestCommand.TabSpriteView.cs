@@ -105,7 +105,7 @@ internal sealed partial class UITestControl
             {
                 e.View.SetSize = (64, 64);
                 e.View.Stretch = SpriteView.StretchMode.None;
-                e.View.Scale = (1, 0.75f);
+                e.View.Scale = new(1, 0.75f);
                 e.View.EyeRotation = Angle.FromDegrees(45);
                 e.View.SpriteOffset = true;
                 e.View.WorldRotation = null;

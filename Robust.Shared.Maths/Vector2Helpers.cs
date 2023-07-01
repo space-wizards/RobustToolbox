@@ -6,6 +6,9 @@ namespace Robust.Shared.Maths;
 
 public static class Vector2Helpers
 {
+    public static readonly Vector2 Infinity = new(float.PositiveInfinity, float.PositiveInfinity);
+    public static readonly Vector2 NaN = new(float.NaN, float.NaN);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool EqualsApprox(this Vector2 vec, Vector2 otherVec)
     {
@@ -75,7 +78,7 @@ public static class Vector2Helpers
     {
         return new Vector2i((int) MathF.Floor(vec.X), (int) MathF.Floor(vec.Y));
     }
-    
+
     public static void Deconstruct(this Vector2 vec, out float x, out float y)
     {
         x = vec.X;

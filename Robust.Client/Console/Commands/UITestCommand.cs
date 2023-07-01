@@ -235,7 +235,7 @@ internal sealed class UITestCommand : LocalizedCommands
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        var window = new DefaultWindow { MinSize = (800, 600) };
+        var window = new DefaultWindow { MinSize = new(800, 600) };
         var control = new UITestControl();
         window.OnClose += control.OnClosed;
         window.Contents.AddChild(control);

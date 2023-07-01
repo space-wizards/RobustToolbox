@@ -33,7 +33,7 @@ namespace Robust.Shared.Prototypes
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _kindPriorities = new();
 
-        private ISawmill _sawmill = default!;
+        protected ISawmill Sawmill = default!;
 
         private bool _initialized;
         private bool _hasEverBeenReloaded;
@@ -51,7 +51,7 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException($"{nameof(PrototypeManager)} has already been initialized.");
             }
 
-            _sawmill = _logManager.GetSawmill("proto");
+            Sawmill = _logManager.GetSawmill("proto");
 
             _initialized = true;
             ReloadPrototypeKinds();
@@ -473,7 +473,7 @@ namespace Robust.Shared.Prototypes
             }
             catch (Exception e)
             {
-                _sawmill.Error($"Reading {kind}({id}) threw the following exception: {e}");
+                Sawmill.Error($"Reading {kind}({id}) threw the following exception: {e}");
                 return null;
             }
         }

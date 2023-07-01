@@ -136,7 +136,7 @@ public abstract partial class SharedTransformSystem
             //TODO: make grid components the actual grid
 
             // I have NFI what the comment above is on about, but this doesn't seem good, so lets log an error if it happens.
-            Logger.Error($"Missing grid while unanchoring {ToPrettyString(uid)}");
+            Log.Error($"Missing grid while unanchoring {ToPrettyString(uid)}");
         }
 
         if (!xform.Running)
@@ -515,7 +515,7 @@ public abstract partial class SharedTransformSystem
                             // E.g., client is holding a foldable bed and predicts dropping & sitting in it -> reset to holding it -> bed is parent of player and vice versa.
                             // Even though its temporary, this can still cause the client to get stuck in infinite loops while applying the game state.
                             // So we will just break the loop by detaching to null and just trusting that the loop wasn't actually a real feature of the server state.
-                            Logger.Warning($"Encountered circular transform hierarchy while applying state for entity: {ToPrettyString(uid)}. Detaching child to null: {ToPrettyString(recursiveUid)}");
+                            Log.Warning($"Encountered circular transform hierarchy while applying state for entity: {ToPrettyString(uid)}. Detaching child to null: {ToPrettyString(recursiveUid)}");
                             DetachParentToNull(recursiveUid, recursiveXform);
                             break;
                         }
@@ -876,7 +876,7 @@ public abstract partial class SharedTransformSystem
             }
 
             // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
-            Logger.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
+            Log.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
             var relXform = query.GetComponent(relative);
             pos = relXform.InvWorldMatrix.Transform(pos);
             rot = rot - GetWorldRotation(relXform, query);
@@ -907,7 +907,7 @@ public abstract partial class SharedTransformSystem
             }
 
             // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
-            Logger.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
+            Log.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
             var relXform = query.GetComponent(relative);
             pos = relXform.InvWorldMatrix.Transform(pos);
             break;

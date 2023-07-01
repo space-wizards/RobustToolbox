@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `Robust.Shared.Physics.Events.CollisionChangeEvent` now has the `EntityUid` of the physics body.
 
 ### Bugfixes
 

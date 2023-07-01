@@ -40,9 +40,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         _dbgGuardRunning = true;
 #endif
 
-        Logger.DebugS("map", "Starting...");
-
-        DebugTools.Assert(!GridExists(EntityUid.Invalid));
+        _sawmill.Debug("Starting...");
     }
 
     /// <inheritdoc />
@@ -51,23 +49,18 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 #if DEBUG
         DebugTools.Assert(_dbgGuardInit);
 #endif
-        Logger.DebugS("map", "Stopping...");
+        _sawmill.Debug("Stopping...");
 
         foreach (var mapComp in EntityManager.EntityQuery<MapComponent>())
         {
             EntityManager.DeleteEntity(mapComp.Owner);
         }
-
-#if DEBUG
-        DebugTools.Assert(!GridExists(EntityUid.Invalid));
-        _dbgGuardRunning = false;
-#endif
     }
 
     /// <inheritdoc />
     public void Restart()
     {
-        Logger.DebugS("map", "Restarting...");
+        _sawmill.Debug("Restarting...");
 
         // Don't just call Shutdown / Startup because we don't want to touch the subscriptions on gridtrees
         // Restart can be called any time during a game, whereas shutdown / startup are typically called upon connection.

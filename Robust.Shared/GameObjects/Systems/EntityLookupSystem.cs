@@ -177,9 +177,9 @@ namespace Robust.Shared.GameObjects
             component.DynamicTree = new DynamicTreeBroadPhase();
             component.StaticTree = new DynamicTreeBroadPhase();
             component.StaticSundriesTree = new DynamicTree<EntityUid>(
-                (in EntityUid value) => GetTreeAABB(value, component.Owner));
+                (in EntityUid value) => GetTreeAABB(value, uid));
             component.SundriesTree = new DynamicTree<EntityUid>(
-                (in EntityUid value) => GetTreeAABB(value, component.Owner));
+                (in EntityUid value) => GetTreeAABB(value, uid));
         }
 
         private Box2 GetTreeAABB(EntityUid entity, EntityUid tree)
@@ -188,7 +188,7 @@ namespace Robust.Shared.GameObjects
 
             if (!xformQuery.TryGetComponent(entity, out var xform))
             {
-                Logger.Error($"Entity tree contains a deleted entity? Tree: {ToPrettyString(tree)}, entity: {entity}");
+                Log.Error($"Entity tree contains a deleted entity? Tree: {ToPrettyString(tree)}, entity: {entity}");
                 return default;
             }
 
@@ -197,11 +197,11 @@ namespace Robust.Shared.GameObjects
 
             if (!xformQuery.TryGetComponent(tree, out var treeXform))
             {
-                Logger.Error($"Entity tree has no transform? Tree Uid: {tree}");
+                Log.Error($"Entity tree has no transform? Tree Uid: {tree}");
                 return default;
             }
 
-            return treeXform.InvWorldMatrix.TransformBox(GetWorldAABB(entity, xform));
+            return _transform.GetInvWorldMatrix(treeXform, xformQuery).TransformBox(GetWorldAABB(entity, xform));
         }
 
         internal void CreateProxies(EntityUid uid, TransformComponent xform, Fixture fixture, PhysicsComponent body)
@@ -216,7 +216,7 @@ namespace Robust.Shared.GameObjects
             var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery);
             var mapTransform = new Transform(worldPos, worldRot);
 
-            var (_, broadWorldRot, _, broadInvMatrix) = xformQuery.GetComponent(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
+            var (_, broadWorldRot, _, broadInvMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(broadphase.Owner);
             var broadphaseTransform = new Transform(broadInvMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadWorldRot);
             var tree = body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
             DebugTools.Assert(fixture.ProxyCount == 0);
@@ -234,7 +234,7 @@ namespace Robust.Shared.GameObjects
 
             if (fixture.ProxyCount == 0)
             {
-                Logger.Warning($"Tried to destroy fixture {fixture.ID} on {ToPrettyString(uid)} that already has no proxies?");
+                Log.Warning($"Tried to destroy fixture {fixture.ID} on {ToPrettyString(uid)} that already has no proxies?");
                 return;
             }
 
@@ -248,8 +248,8 @@ namespace Robust.Shared.GameObjects
 
         private void OnPhysicsUpdate(ref CollisionChangeEvent ev)
         {
-            var xform = Transform(ev.Body.Owner);
-            UpdatePhysicsBroadphase(ev.Body.Owner, xform, ev.Body);
+            var xform = Transform(ev.BodyUid);
+            UpdatePhysicsBroadphase(ev.BodyUid, xform, ev.Body);
 
             // ensure that the cached broadphase is correct.
             DebugTools.Assert(_timing.ApplyingState
@@ -812,7 +812,7 @@ namespace Robust.Shared.GameObjects
             if (old.PhysicsMap.IsValid() && physicsMap?.Owner != old.PhysicsMap)
             {
                 if (!TryComp(old.PhysicsMap, out physicsMap))
-                    Logger.Error($"Entity {ToPrettyString(uid)} has missing physics map?");
+                    Log.Error($"Entity {ToPrettyString(uid)} has missing physics map?");
             }
 
             if (old.CanCollide)
@@ -978,7 +978,7 @@ namespace Robust.Shared.GameObjects
         {
             var xformQuery = GetEntityQuery<TransformComponent>();
             xform ??= xformQuery.GetComponent(uid);
-            var (worldPos, worldRot) = xform.GetWorldPositionRotation(xformQuery);
+            var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery);
 
             return GetAABB(uid, worldPos, worldRot, xform, xformQuery);
         }

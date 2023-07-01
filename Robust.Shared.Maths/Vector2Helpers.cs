@@ -108,4 +108,10 @@ public static class Vector2Helpers
         x = vec.X;
         y = vec.Y;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool EqualsApproxPercent(this Vector2 vec, Vector2 other, double tolerance = 0.0001)
+    {
+        return MathHelper.CloseToPercent(vec.X, other.X, tolerance) && MathHelper.CloseToPercent(vec.Y, other.Y, tolerance);
+    }
 }

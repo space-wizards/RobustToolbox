@@ -46,6 +46,10 @@ namespace Robust.Shared.Map.Components
         [DataField("tileSize")]
         public ushort TileSize { get; internal set; } = 1;
 
+        public Vector2 TileSizeVector => new(TileSize, TileSize);
+
+        public Vector2 TileSizeHalfVector => new(TileSize / 2f, TileSize / 2f);
+
         [ViewVariables] internal readonly List<(GameTick tick, Vector2i indices)> ChunkDeletionHistory = new();
 
         /// <summary>

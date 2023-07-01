@@ -9,6 +9,11 @@ public static class Vector2Helpers
     public static readonly Vector2 Infinity = new(float.PositiveInfinity, float.PositiveInfinity);
     public static readonly Vector2 NaN = new(float.NaN, float.NaN);
 
+    /// <summary>
+    /// Half of a unit vector.
+    /// </summary>
+    public static readonly Vector2 Half = new(0.5f, 0.5f);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2 InterpolateCubic(Vector2 preA, Vector2 a, Vector2 b, Vector2 postB, float t)
     {
@@ -83,6 +88,12 @@ public static class Vector2Helpers
     public static Vector2i Floored(this Vector2 vec)
     {
         return new Vector2i((int) MathF.Floor(vec.X), (int) MathF.Floor(vec.Y));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2i Ceiled(this Vector2 vec)
+    {
+        return new Vector2i((int) MathF.Ceiling(vec.X), (int) MathF.Ceiling(vec.Y));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

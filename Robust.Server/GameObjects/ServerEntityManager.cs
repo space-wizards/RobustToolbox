@@ -174,7 +174,7 @@ namespace Robust.Server.GameObjects
             newMsg.SourceTick = _gameTiming.CurTick;
 
             if (recordReplay)
-                _replay.QueueReplayMessage(message);
+                _replay.RecordServerMessage(message);
 
             _networkManager.ServerSendToAll(newMsg);
         }

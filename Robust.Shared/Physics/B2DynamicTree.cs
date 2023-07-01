@@ -104,7 +104,7 @@ namespace Robust.Shared.Physics
 
         public int MaxBalance
         {
-            [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+            [MethodImpl(MethodImplOptions.NoInlining)]
             get
             {
                 var maxBal = 0;
@@ -130,7 +130,7 @@ namespace Robust.Shared.Physics
 
         public float AreaRatio
         {
-            [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+            [MethodImpl(MethodImplOptions.NoInlining)]
             get
             {
                 if (_root == Proxy.Free)
@@ -387,7 +387,7 @@ namespace Robust.Shared.Physics
             return _nodes[proxy].Aabb;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private void RemoveLeaf(Proxy leaf)
         {
             if (leaf == _root)
@@ -562,7 +562,7 @@ namespace Robust.Shared.Physics
             return cost;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private void Balance(Proxy index)
         {
             while (index != Proxy.Free)
@@ -755,7 +755,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Compute the height of a sub-tree.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private int ComputeHeight(Proxy proxy)
         {
             ref var node = ref _nodes[proxy];
@@ -770,7 +770,7 @@ namespace Robust.Shared.Physics
             ) + 1;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public void RebuildBottomUp(int free = 0)
         {
             var proxies = new Proxy[NodeCount + free];
@@ -909,7 +909,6 @@ namespace Robust.Shared.Physics
 
         public delegate void FastQueryCallback(ref T userData);
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void FastQuery(ref Box2 aabb, FastQueryCallback callback)
         {
             var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);

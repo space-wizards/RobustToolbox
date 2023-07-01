@@ -33,13 +33,13 @@ cmd-replay-error-run-level = You cannot load a replay while connected to a serve
 # Recording commands
 
 cmd-replay-recording-start-desc = Starts a replay recording, optionally with some time limit.
-cmd-replay-recording-start-help = Usage: replay_recording_start [time limit (minutes)] [path] [overwrite bool]
+cmd-replay-recording-start-help = Usage: replay_recording_start [name] [overwrite] [time limit] 
 cmd-replay-recording-start-success = Started recording a replay.
 cmd-replay-recording-start-already-recording = Already recording a replay.
 cmd-replay-recording-start-error = An error occurred while trying to start the recording.
-cmd-replay-recording-start-hint-time = [optional time limit (minutes)]
-cmd-replay-recording-start-hint-name = [optional path]
-cmd-replay-recording-start-hint-overwrite = [overwrite path (bool)]
+cmd-replay-recording-start-hint-time = [time limit (minutes)]
+cmd-replay-recording-start-hint-name = [name]
+cmd-replay-recording-start-hint-overwrite = [overwrite (bool)]
 
 cmd-replay-recording-stop-desc = Stops a replay recording.
 cmd-replay-recording-stop-help = Usage: replay_recording_stop

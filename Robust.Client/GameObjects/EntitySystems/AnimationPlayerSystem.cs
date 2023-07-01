@@ -7,11 +7,14 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class AnimationPlayerSystem : EntitySystem
+    public sealed class AnimationPlayerSystem : EntitySystem, IPostInjectInit
     {
         private readonly List<AnimationPlayerComponent> _activeAnimations = new();
 
         [Dependency] private readonly IComponentFactory _compFact = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+
+        private ISawmill _sawmill = default!;
 
         public override void FrameUpdate(float frameTime)
         {
@@ -101,13 +104,13 @@ namespace Robust.Client.GameObjects
 
                 if (compTrack.ComponentType == null)
                 {
-                    Logger.Error($"Attempted to play a component animation without any component specified.");
+                    _sawmill.Error($"Attempted to play a component animation without any component specified.");
                     return;
                 }
 
                 if (!EntityManager.TryGetComponent(component.Owner, compTrack.ComponentType, out var animatedComp))
                 {
-                    Logger.Error(
+                    _sawmill.Error(
                         $"Attempted to play a component animation, but the entity {ToPrettyString(component.Owner)} does not have the component to be animated: {compTrack.ComponentType}.");
                     return;
                 }
@@ -121,7 +124,7 @@ namespace Robust.Client.GameObjects
                 // animated is not part of the networked state and setting it does not dirty the component. Hence only a
                 // warning in debug mode.
                 if (reg.NetID != null)
-                    Logger.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(component.Owner)}");
+                    _sawmill.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(component.Owner)}");
             }
 #endif
 
@@ -162,6 +165,11 @@ namespace Robust.Client.GameObjects
         {
             if (!Resolve(uid, ref component, false)) return;
             component.PlayingAnimations.Remove(key);
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _sawmill = _logManager.GetSawmill("anim");
         }
     }
 

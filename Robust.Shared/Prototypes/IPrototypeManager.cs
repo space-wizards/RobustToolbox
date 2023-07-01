@@ -28,6 +28,11 @@ public interface IPrototypeManager
     IEnumerable<string> GetPrototypeKinds();
 
     /// <summary>
+    /// Returns the count of the specified prototype.
+    /// </summary>
+    int Count<T>() where T : class, IPrototype;
+
+    /// <summary>
     /// Return an <see cref="IEnumerable{T}"/> of all prototypes of a certain kind.
     /// </summary>
     /// <exception cref="KeyNotFoundException">

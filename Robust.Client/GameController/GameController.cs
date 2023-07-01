@@ -33,6 +33,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
@@ -83,6 +84,7 @@ namespace Robust.Client
         [Dependency] private readonly NetworkResourceManager _netResMan = default!;
         [Dependency] private readonly IReplayLoadManager _replayLoader = default!;
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
+        [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -178,6 +180,7 @@ namespace Robust.Client
             _netResMan.Initialize();
             _replayLoader.Initialize();
             _replayPlayback.Initialize();
+            _replayRecording.Initialize();
             _userInterfaceManager.PostInitialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
@@ -270,7 +273,7 @@ namespace Robust.Client
 
             if (!result)
             {
-                Logger.Fatal("Errors while loading content assemblies.");
+                _logger.Fatal("Errors while loading content assemblies.");
                 return false;
             }
 
@@ -508,7 +511,7 @@ namespace Robust.Client
 
                 if (uri.Scheme != "udp")
                 {
-                    Logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
+                    _logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
                 }
 
                 LaunchState = new InitialLaunchState(
@@ -531,11 +534,11 @@ namespace Robust.Client
 
             if (reason != null)
             {
-                Logger.Info($"Shutting down! Reason: {reason}");
+                _logger.Info($"Shutting down! Reason: {reason}");
             }
             else
             {
-                Logger.Info("Shutting down!");
+                _logger.Info("Shutting down!");
             }
 
             _mainLoop.Running = false;

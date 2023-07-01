@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Text.Json.Nodes;
 using Robust.Shared;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.ServerStatus
 {
@@ -108,50 +109,20 @@ namespace Robust.Server.ServerStatus
 
         private JsonObject GetExternalBuildInfo()
         {
-            var zipHash = _cfg.GetCVar(CVars.BuildHash);
-            var manifestHash = _cfg.GetCVar(CVars.BuildManifestHash);
-            var forkId = _cfg.GetCVar(CVars.BuildForkId);
-            var forkVersion = _cfg.GetCVar(CVars.BuildVersion);
-
-            var manifestDownloadUrl = Interpolate(_cfg.GetCVar(CVars.BuildManifestDownloadUrl));
-            var manifestUrl = Interpolate(_cfg.GetCVar(CVars.BuildManifestUrl));
-            var downloadUrl = Interpolate(_cfg.GetCVar(CVars.BuildDownloadUrl));
-
-            if (zipHash == "")
-                zipHash = null;
-
-            if (manifestHash == "")
-                manifestHash = null;
-
-            if (manifestDownloadUrl == "")
-                manifestDownloadUrl = null;
-
-            if (manifestUrl == "")
-                manifestUrl = null;
+            var buildInfo = GameBuildInformation.GetBuildInfoFromConfig(_cfg);
 
             return new JsonObject
             {
-                ["engine_version"] = _cfg.GetCVar(CVars.BuildEngineVersion),
-                ["fork_id"] = forkId,
-                ["version"] = forkVersion,
-                ["download_url"] = downloadUrl,
-                ["hash"] = zipHash,
+                ["engine_version"] = buildInfo.EngineVersion,
+                ["fork_id"] = buildInfo.ForkId,
+                ["version"] = buildInfo.Version,
+                ["download_url"] = buildInfo.ZipDownload,
+                ["hash"] = buildInfo.ZipHash,
                 ["acz"] = false,
-                ["manifest_download_url"] = manifestDownloadUrl,
-                ["manifest_url"] = manifestUrl,
-                ["manifest_hash"] = manifestHash
+                ["manifest_download_url"] = buildInfo.ManifestDownloadUrl,
+                ["manifest_url"] = buildInfo.ManifestUrl,
+                ["manifest_hash"] = buildInfo.ManifestHash
             };
-
-            string? Interpolate(string? value)
-            {
-                // Can't tell if splitting the ?. like this is more cursed than
-                // failing to align due to putting the full ?. on the next line
-                return value?
-                    .Replace("{FORK_VERSION}", forkVersion)
-                    .Replace("{FORK_ID}", forkId)
-                    .Replace("{MANIFEST_HASH}", manifestHash)
-                    .Replace("{ZIP_HASH}", zipHash);
-            }
         }
 
         private async Task<JsonObject?> PrepareACZBuildInfo()

@@ -46,16 +46,19 @@ namespace Robust.Client.Console
     }
 
     /// <inheritdoc cref="IClientConsoleHost" />
-    internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal
+    internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal, IPostInjectInit
     {
         [Dependency] private readonly IClientConGroupController _conGroup = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IPlayerManager _player = default!;
         [Dependency] private readonly IBaseClient _client = default!;
+        [Dependency] private readonly ILogManager _logMan = default!;
 
         [ViewVariables] private readonly Dictionary<string, IConsoleCommand> _availableServerCommands = new();
 
         private bool _requestedCommands;
+        private ISawmill _logger = default!;
+        private ISawmill _conLogger = default!;
 
         public ClientConsoleHost() : base(isServer: false) {}
 
@@ -216,7 +219,7 @@ namespace Robust.Client.Console
             AddString?.Invoke(this, new AddStringArgs(text, local, error));
 
             var level = error ? LogLevel.Warning : LogLevel.Info;
-            Logger.LogS(level, "CON", text);
+            _conLogger.Log(level, text);
         }
 
         private void OnNetworkConnected(object? sender, NetChannelArgs netChannelArgs)
@@ -238,7 +241,7 @@ namespace Robust.Client.Console
                 // Do not do duplicate commands.
                 if (_availableServerCommands.ContainsKey(commandName))
                 {
-                    Logger.Error("console", $"Server sent duplicate console command {commandName}");
+                    _logger.Error($"Server sent duplicate console command {commandName}");
                     continue;
                 }
 
@@ -264,6 +267,12 @@ namespace Robust.Client.Console
             NetManager.ClientSendMessage(msg);
 
             _requestedCommands = true;
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _logger = _logMan.GetSawmill("console");
+            _conLogger = _logMan.GetSawmill("CON");
         }
 
         /// <summary>

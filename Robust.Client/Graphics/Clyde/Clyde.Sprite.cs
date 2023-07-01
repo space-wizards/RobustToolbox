@@ -59,11 +59,12 @@ internal partial class Clyde
         var index = 0;
         var added = 0;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
-        foreach (var comp in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTrees(map, worldBounds))
+        var xformSystem = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
+
+        foreach (var (treeOwner, comp) in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTrees(map, worldBounds))
         {
-            var treeOwner = comp.Owner;
-            var treeXform = query.GetComponent(comp.Owner);
-            var bounds = treeXform.InvWorldMatrix.TransformBox(worldBounds);
+            var treeXform = query.GetComponent(treeOwner);
+            var bounds = xformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
             DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
 
             treeData = treeData with
@@ -88,7 +89,7 @@ internal partial class Clyde
             // Get bounding boxes & world positions
             added = list.Count - index;
             var batches = added/_spriteProcessingBatchSize;
-                
+
             // TODO also do sorting here & use a merge sort later on for y-sorting?
             if (batches > 1)
                 Parallel.For(0, batches, opts, (i) => ProcessSprites(list, index + i * _spriteProcessingBatchSize, _spriteProcessingBatchSize, treeData));
@@ -121,7 +122,7 @@ internal partial class Clyde
 
             // To help explain the remainder of this function, it should be functionally equivalent to the following
             // three lines of code, but has been expanded & simplified to speed up the calculation:
-            // 
+            //
             // (data.WorldPos, data.WorldRot) = batch.Sys.GetWorldPositionRotation(data.Xform, batch.Query);
             // var spriteWorldBB = data.Sprite.CalculateRotatedBoundingBox(data.WorldPos, data.WorldRot, batch.ViewRotation);
             // data.SpriteScreenBB = Viewport.GetWorldToLocalMatrix().TransformBox(spriteWorldBB);
@@ -160,7 +161,7 @@ internal partial class Clyde
 
     /// <summary>
     /// This is effectively a specialized combination of a <see cref="Matrix3.TransformBox(in Box2Rotated)"/> and <see cref="Box2Rotated.CalcBoundingBox()"/>.
-    /// </summary> 
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe Box2 TransformCenteredBox(in Box2 box, float angle, in Vector2 offset, in Vector2 scale)
     {

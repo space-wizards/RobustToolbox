@@ -64,13 +64,14 @@ namespace Robust.Shared.GameObjects
         internal EntityPrototype? _entityPrototype;
 
         /// <summary>
-        /// When this entity was paused, if applicable
+        /// When this entity was paused, if applicable. Note that this is the actual time, not the duration which gets
+        /// returned by <see cref="MetaDataSystem.GetPauseTime"/>.
         /// </summary>
         internal TimeSpan? PauseTime;
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
-        public GameTick EntityLastModifiedTick { get; internal set; } = new(1);
+        public GameTick EntityLastModifiedTick { get; internal set; } = GameTick.Zero;
 
         /// <summary>
         ///     This is the tick at which the client last applied state data received from the server.
@@ -96,17 +97,13 @@ namespace Robust.Shared.GameObjects
                     return _entityPrototype != null ? _entityPrototype.Name : string.Empty;
                 return _entityName;
             }
+            [Obsolete("Use MetaDataSystem.SetEntityName")]
             set
             {
-                string? newValue = value;
-                if (_entityPrototype != null && _entityPrototype.Name == newValue)
-                    newValue = null;
-
-                if (_entityName == newValue)
+                if (value == EntityName)
                     return;
 
-                _entityName = newValue;
-                Dirty();
+                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetEntityName(Owner, value, this);
             }
         }
 
@@ -122,17 +119,13 @@ namespace Robust.Shared.GameObjects
                     return _entityPrototype != null ? _entityPrototype.Description : string.Empty;
                 return _entityDescription;
             }
+            [Obsolete("Use MetaDataSystem.SetEntityDescription")]
             set
             {
-                string? newValue = value;
-                if (_entityPrototype != null && _entityPrototype.Description == newValue)
-                    newValue = null;
-
-                if(_entityDescription == newValue)
+                if (value == EntityDescription)
                     return;
 
-                _entityDescription = newValue;
-                Dirty();
+                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetEntityDescription(Owner, value, this);
             }
         }
 
@@ -143,6 +136,7 @@ namespace Robust.Shared.GameObjects
         public EntityPrototype? EntityPrototype
         {
             get => _entityPrototype;
+            [Obsolete("Use MetaDataSystem.SetEntityPrototype")]
             set
             {
                 _entityPrototype = value;
@@ -163,6 +157,9 @@ namespace Robust.Shared.GameObjects
             get => _flags;
             internal set
             {
+                if (_flags == value)
+                    return;
+
                 // In container and detached to null are mutually exclusive flags.
                 DebugTools.Assert((value & (MetaDataFlags.InContainer | MetaDataFlags.Detached)) != (MetaDataFlags.InContainer | MetaDataFlags.Detached));
                 _flags = value;

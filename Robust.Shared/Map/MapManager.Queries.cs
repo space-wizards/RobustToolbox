@@ -13,30 +13,32 @@ namespace Robust.Shared.Map;
 internal partial class MapManager
 {
     [Obsolete("Use the FindGridsIntersecting callback")]
-    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated bounds, bool approx = false)
+    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2Rotated bounds, bool approx = false, bool includeMap = true)
     {
         var aabb = bounds.CalcBoundingBox();
         // TODO: We can do slower GJK checks to check if 2 bounds actually intersect, but WYCI.
-        return FindGridsIntersecting(mapId, aabb, approx);
+        return FindGridsIntersecting(mapId, aabb, includeMap, approx);
     }
 
-    public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = false)
+    public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = false, bool includeMap = true)
     {
-        if (!_gridTrees.TryGetValue(mapId, out var gridTree))
+        if (!_mapEntities.TryGetValue(mapId, out var mapEnt) ||
+            !EntityManager.TryGetComponent<GridTreeComponent>(mapEnt, out var gridTree))
+        {
             return;
+        }
 
         var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var xformSystem = EntityManager.System<SharedTransformSystem>();
-        var state = (worldAABB, gridTree, callback, approx, physicsQuery, xformQuery, xformSystem);
+        var state = (worldAABB, gridTree.Tree, callback, approx, physicsQuery, xformQuery, xformSystem);
 
-        gridTree.Query(ref state,
+        gridTree.Tree.Query(ref state,
             static (ref (Box2 worldAABB,
                     B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> gridTree,
                     GridCallback callback,
                     bool approx,
-                    EntityQuery<PhysicsComponent> physicsQuery,
-                    EntityQuery<TransformComponent> xformQuery,
+                    EntityQuery<PhysicsComponent> physicsQuery, EntityQuery<TransformComponent> xformQuery,
                     SharedTransformSystem xformSystem) tuple,
                 DynamicTree.Proxy proxy) =>
             {
@@ -53,23 +55,33 @@ internal partial class MapManager
 
         var mapUid = GetMapEntityId(mapId);
 
-        if (EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
+        if (includeMap && EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
         {
             callback(mapUid, grid);
         }
     }
 
-    public void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false)
+    public void FindGridsIntersecting<TState>(MapId mapId, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = false, bool includeMap = true)
     {
-        if (!_gridTrees.TryGetValue(mapId, out var gridTree))
+        if (!_mapEntities.TryGetValue(mapId, out var mapEnt) ||
+            !EntityManager.TryGetComponent<GridTreeComponent>(mapEnt, out var gridTree))
+        {
             return;
+        }
+
+        var mapUid = GetMapEntityId(mapId);
+
+        if (includeMap && EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
+        {
+            callback(mapUid, grid, ref state);
+        }
 
         var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var xformSystem = EntityManager.System<SharedTransformSystem>();
-        var state2 = (state, worldAABB, gridTree, callback, approx, physicsQuery, xformQuery, xformSystem);
+        var state2 = (state, worldAABB, gridTree.Tree, callback, approx, physicsQuery, xformQuery, xformSystem);
 
-        gridTree.Query(ref state2, static (ref (
+        gridTree.Tree.Query(ref state2, static (ref (
                 TState state,
                 Box2 worldAABB,
                 B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> gridTree,
@@ -90,13 +102,6 @@ internal partial class MapManager
 
             return tuple.callback(data.Uid, data.Grid, ref tuple.state);
         }, worldAABB);
-
-        var mapUid = GetMapEntityId(mapId);
-
-        if (EntityManager.TryGetComponent<MapGridComponent>(mapUid, out var grid))
-        {
-            callback(mapUid, grid, ref state);
-        }
 
         state = state2.state;
     }
@@ -139,10 +144,8 @@ internal partial class MapManager
     }
 
     [Obsolete("Use the FindGridsIntersecting callback")]
-    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false)
+    public IEnumerable<MapGridComponent> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false, bool includeMap = true)
     {
-        if (!_gridTrees.ContainsKey(mapId)) return Enumerable.Empty<MapGridComponent>();
-
         var grids = new List<MapGridComponent>();
         var state = grids;
 

@@ -15,6 +15,11 @@ public sealed partial class SpriteSystem
 {
     private readonly Dictionary<string, IRsiStateLike> _cachedPrototypeIcons = new();
 
+    public Texture Frame0(EntityPrototype prototype)
+    {
+        return GetPrototypeIcon(prototype).Default;
+    }
+
     public Texture Frame0(SpriteSpecifier specifier)
     {
         return RsiStateLike(specifier).Default;

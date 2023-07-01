@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack

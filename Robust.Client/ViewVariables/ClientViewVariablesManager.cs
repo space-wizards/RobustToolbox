@@ -9,7 +9,6 @@ using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
@@ -220,7 +219,7 @@ namespace Robust.Client.ViewVariables
             ViewVariablesInstance instance;
             if (obj is EntityUid entity && _entityManager.EntityExists(entity))
             {
-                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
+                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer, Sawmill);
             }
             else
             {
@@ -271,7 +270,7 @@ namespace Robust.Client.ViewVariables
             ViewVariablesInstance instance;
             if (type != null && typeof(EntityUid).IsAssignableFrom(type))
             {
-                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
+                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer, Sawmill);
             }
             else
             {
@@ -371,7 +370,7 @@ namespace Robust.Client.ViewVariables
         {
             if (!_requestedSessions.TryGetValue(msg.RequestId, out var tcs))
             {
-                Logger.ErrorS("vv", "Server sent us new session {0}/{1} which we didn't request.", msg.RequestId,
+                Sawmill.Error("Server sent us new session {0}/{1} which we didn't request.", msg.RequestId,
                     msg.SessionId);
                 return;
             }
@@ -386,7 +385,7 @@ namespace Robust.Client.ViewVariables
         {
             if (!_sessions.TryGetValue(message.SessionId, out var session))
             {
-                Logger.WarningS("vv", "Got a close session message for an unknown session: {0}", message.SessionId);
+                Sawmill.Warning("Got a close session message for an unknown session: {0}", message.SessionId);
                 return;
             }
 
@@ -398,7 +397,7 @@ namespace Robust.Client.ViewVariables
         {
             if (!_requestedData.TryGetValue(message.RequestId, out var tcs))
             {
-                Logger.WarningS("vv", "Server sent us data we didn't request: {0}.", message.RequestId);
+                Sawmill.Warning("Server sent us data we didn't request: {0}.", message.RequestId);
                 return;
             }
 
@@ -410,7 +409,7 @@ namespace Robust.Client.ViewVariables
         {
             if (!_requestedSessions.TryGetValue(message.RequestId, out var tcs))
             {
-                Logger.WarningS("vv", "Server sent us a deny session {0} which we didn't request.", message.RequestId);
+                Sawmill.Warning("Server sent us a deny session {0} which we didn't request.", message.RequestId);
                 return;
             }
 

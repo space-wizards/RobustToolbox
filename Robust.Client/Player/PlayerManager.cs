@@ -178,16 +178,23 @@ namespace Robust.Client.Player
             {
                 hitSet.Add(state.UserId);
 
-                if (_sessions.TryGetValue(state.UserId, out var local))
+                if (_sessions.TryGetValue(state.UserId, out var session))
                 {
+                    var local = (PlayerSession) session;
                     // Exists, update data.
-                    if (local.Name == state.Name && local.Status == state.Status && local.Ping == state.Ping)
+                    if (local.Name == state.Name
+                        && local.Status == state.Status
+                        && local.Ping == state.Ping
+                        && local.AttachedEntity == state.ControlledEntity)
+                    {
                         continue;
+                    }
 
                     dirty = true;
                     local.Name = state.Name;
                     local.Status = state.Status;
                     local.Ping = state.Ping;
+                    local.AttachedEntity = state.ControlledEntity;
                 }
                 else
                 {
@@ -198,7 +205,8 @@ namespace Robust.Client.Player
                     {
                         Name = state.Name,
                         Status = state.Status,
-                        Ping = state.Ping
+                        Ping = state.Ping,
+                        AttachedEntity = state.ControlledEntity,
                     };
                     _sessions.Add(state.UserId, newSession);
                     if (state.UserId == LocalPlayer!.UserId)

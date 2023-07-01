@@ -22,9 +22,12 @@ namespace Robust.Shared.Configuration
         void SetupNetworking();
 
         /// <summary>
-        /// Gets the list of networked cvars.
+        /// Gets the list of networked cvars that need to be sent to when connecting to server or client.
         /// </summary>
-        List<(string name, object value)> GetReplicatedVars();
+        /// <param name="all">If true, includes all replicated cvars. I.e., clients would include cvars that were
+        /// received from the server, instead of only the ones that need to be sent to the server.</param>
+        /// <returns></returns>
+        List<(string name, object value)> GetReplicatedVars(bool all = false);
 
         /// <summary>
         /// Called every tick to process any incoming network messages.
@@ -159,7 +162,7 @@ namespace Robust.Shared.Configuration
             NetManager.ServerSendMessage(msg, client);
         }
 
-        public List<(string name, object value)> GetReplicatedVars()
+        public List<(string name, object value)> GetReplicatedVars(bool all = false)
         {
             using var _ = Lock.ReadGuard();
 
@@ -173,14 +176,14 @@ namespace Robust.Shared.Configuration
                 if ((cVar.Flags & CVar.REPLICATED) == 0)
                     continue;
 
-                if (NetManager.IsClient)
+                if (!all)
                 {
-                    if ((cVar.Flags & CVar.SERVER) != 0)
-                        continue;
-                }
-                else
-                {
-                    if ((cVar.Flags & CVar.CLIENT) != 0)
+                    if (NetManager.IsClient)
+                    {
+                        if ((cVar.Flags & CVar.SERVER) != 0)
+                            continue;
+                    }
+                    else if ((cVar.Flags & CVar.CLIENT) != 0)
                         continue;
                 }
 

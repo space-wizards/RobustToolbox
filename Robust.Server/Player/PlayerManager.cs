@@ -356,9 +356,17 @@ namespace Robust.Server.Player
             _sessionsLock.EnterReadLock();
             try
             {
+#if FULL_RELEASE
                 return _sessions.Values
                     .Select(s => s.PlayerState)
                     .ToList();
+#else
+                // Integration tests need to clone data before "sending" it to the client. Otherwise they reference the
+                // same object.
+                return _sessions.Values
+                    .Select(s => s.PlayerState.Clone())
+                    .ToList();
+#endif
             }
             finally
             {

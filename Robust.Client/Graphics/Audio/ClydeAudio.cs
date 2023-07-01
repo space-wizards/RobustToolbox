@@ -42,11 +42,11 @@ namespace Robust.Client.Graphics.Audio
 
         internal bool IsEfxSupported;
 
-        private ISawmill _openALSawmill = default!;
+        internal ISawmill OpenALSawmill = default!;
 
         private bool _initializeAudio()
         {
-            _openALSawmill = Logger.GetSawmill("clyde.oal");
+            OpenALSawmill = _logMan.GetSawmill("clyde.oal");
 
             if (!_audioOpenDevice())
                 return false;
@@ -79,9 +79,9 @@ namespace Robust.Client.Graphics.Audio
                 _alContextExtensions.Add(extension);
             }
 
-            _openALSawmill.Debug("OpenAL Vendor: {0}", AL.Get(ALGetString.Vendor));
-            _openALSawmill.Debug("OpenAL Renderer: {0}", AL.Get(ALGetString.Renderer));
-            _openALSawmill.Debug("OpenAL Version: {0}", AL.Get(ALGetString.Version));
+            OpenALSawmill.Debug("OpenAL Vendor: {0}", AL.Get(ALGetString.Vendor));
+            OpenALSawmill.Debug("OpenAL Renderer: {0}", AL.Get(ALGetString.Renderer));
+            OpenALSawmill.Debug("OpenAL Version: {0}", AL.Get(ALGetString.Version));
         }
 
         private bool _audioOpenDevice()
@@ -94,7 +94,7 @@ namespace Robust.Client.Graphics.Audio
                 _openALDevice = ALC.OpenDevice(preferredDevice);
                 if (_openALDevice == IntPtr.Zero)
                 {
-                    _openALSawmill.Warning("Unable to open preferred audio device '{0}': {1}. Falling back default.",
+                    OpenALSawmill.Warning("Unable to open preferred audio device '{0}': {1}. Falling back default.",
                         preferredDevice, ALC.GetError(ALDevice.Null));
 
                     _openALDevice = ALC.OpenDevice(null);
@@ -109,7 +109,7 @@ namespace Robust.Client.Graphics.Audio
 
             if (_openALDevice == IntPtr.Zero)
             {
-                _openALSawmill.Error("Unable to open OpenAL device! {1}", ALC.GetError(ALDevice.Null));
+                OpenALSawmill.Error("Unable to open OpenAL device! {1}", ALC.GetError(ALDevice.Null));
                 return false;
             }
 
@@ -241,7 +241,7 @@ namespace Robust.Client.Graphics.Audio
 
             var attToString = attenuation == Attenuation.Default ? Attenuation.InverseDistanceClamped : attenuation;
 
-            _openALSawmill.Info($"Set audio attenuation to {attToString.ToString()}");
+            OpenALSawmill.Info($"Set audio attenuation to {attToString.ToString()}");
         }
 
         public IClydeAudioSource? CreateAudioSource(AudioStream stream)
@@ -250,7 +250,7 @@ namespace Robust.Client.Graphics.Audio
 
             if (!AL.IsSource(source))
             {
-                _openALSawmill.Error("Failed to generate source. Too many simultaneous audio streams? {0}", Environment.StackTrace);
+                OpenALSawmill.Error("Failed to generate source. Too many simultaneous audio streams? {0}", Environment.StackTrace);
                 return null;
             }
 
@@ -281,7 +281,7 @@ namespace Robust.Client.Graphics.Audio
             var error = ALC.GetError(device);
             if (error != AlcError.NoError)
             {
-                _openALSawmill.Error("[{0}:{1}] ALC error: {2}", callerMember, callerLineNumber, error);
+                OpenALSawmill.Error("[{0}:{1}] ALC error: {2}", callerMember, callerLineNumber, error);
             }
         }
 
@@ -291,7 +291,7 @@ namespace Robust.Client.Graphics.Audio
             var error = AL.GetError();
             if (error != ALError.NoError)
             {
-                _openALSawmill.Error("[{0}:{1}] AL error: {2}", callerMember, callerLineNumber, error);
+                OpenALSawmill.Error("[{0}:{1}] AL error: {2}", callerMember, callerLineNumber, error);
             }
         }
 

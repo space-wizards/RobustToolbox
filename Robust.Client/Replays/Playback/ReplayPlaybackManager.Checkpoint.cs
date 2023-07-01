@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -24,14 +26,14 @@ internal sealed partial class ReplayPlaybackManager
             _entMan.FlushEntities();
 
         var checkpoint = GetLastCheckpoint(Replay, index);
-        var state = checkpoint.State;
 
         _sawmill.Info($"Resetting to checkpoint. From {Replay.CurrentIndex} to {checkpoint.Index}");
         var st = new Stopwatch();
         st.Start();
 
         Replay.CurrentIndex = checkpoint.Index;
-        DebugTools.Assert(state.ToSequence == new GameTick(Replay.TickOffset.Value + (uint) Replay.CurrentIndex));
+        DebugTools.Assert(Replay.ClientSideRecording
+                          || checkpoint.Tick == new GameTick(Replay.TickOffset.Value + (uint) Replay.CurrentIndex));
 
         foreach (var (name, value) in checkpoint.Cvars)
         {
@@ -40,20 +42,61 @@ internal sealed partial class ReplayPlaybackManager
 
         _timing.TimeBase = checkpoint.TimeBase;
         _timing.CurTick = _timing.LastRealTick = _timing.LastProcessedTick = new GameTick(Replay.TickOffset.Value + (uint) Replay.CurrentIndex);
-        Replay.LastApplied = state.ToSequence;
+        Replay.LastApplied = checkpoint.Tick;
 
-        _gameState.PartialStateReset(state, false, false);
-        _entMan.EntitySysManager.GetEntitySystem<ClientDirtySystem>().Reset();
-        _entMan.EntitySysManager.GetEntitySystem<TransformSystem>().Reset();
-
-        _gameState.UpdateFullRep(state, cloneDelta: true);
-        _gameState.ApplyGameState(state, Replay.NextState);
+        ApplyCheckpointState(checkpoint, Replay);
 
         ReplayCheckpointReset?.Invoke();
 
         _sawmill.Info($"Resetting to checkpoint took {st.Elapsed}");
         StopAudio();
         _timing.CurTick += 1;
+    }
+
+    private void ApplyCheckpointState(CheckpointState checkpoint, ReplayData replay)
+    {
+        DebugTools.Assert(replay.ClientSideRecording || checkpoint.Detached.Count == 0);
+
+        var nextIndex = checkpoint.Index + 1;
+        var next =  nextIndex < replay.States.Count ? replay.States[nextIndex] : null;
+        _gameState.PartialStateReset(checkpoint.FullState, false, false);
+        _entMan.EntitySysManager.GetEntitySystem<ClientDirtySystem>().Reset();
+        _entMan.EntitySysManager.GetEntitySystem<TransformSystem>().Reset();
+        _gameState.UpdateFullRep(checkpoint.FullState, cloneDelta: true);
+        _gameState.ClearDetachQueue();
+        EnsureDetachedExist(checkpoint);
+        _gameState.DetachImmediate(checkpoint.Detached);
+        _gameState.ApplyGameState(checkpoint.State, next);
+    }
+
+    private void EnsureDetachedExist(CheckpointState checkpoint)
+    {
+        // Client-side replays only apply states for currently attached entities. But this means that when rewinding
+        // time we need to ensure that detached entities still get "un-deleted".
+        // Also important when jumping forward to a point after the entity was first encountered and then detached.
+
+        if (checkpoint.DetachedStates == null)
+            return;
+
+        DebugTools.Assert(checkpoint.Detached.Count == checkpoint.DetachedStates.Length); ;
+        var metas = _entMan.GetEntityQuery<MetaDataComponent>();
+        foreach (var es in checkpoint.DetachedStates)
+        {
+            if (metas.TryGetComponent(es.Uid, out var meta) && !meta.EntityDeleted)
+                continue;
+            ;
+            var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?
+                .FirstOrDefault(c => c.NetID == _metaId).State;
+
+            if (metaState == null)
+                throw new MissingMetadataException(es.Uid);
+
+            _entMan.CreateEntityUninitialized(metaState.PrototypeId, es.Uid);
+            meta = metas.GetComponent(es.Uid);
+            _entMan.InitializeEntity(es.Uid, meta);
+            _entMan.StartEntity(es.Uid);
+            meta.LastStateApplied = checkpoint.Tick;
+        }
     }
 
     public CheckpointState GetLastCheckpoint(ReplayData data, int index)

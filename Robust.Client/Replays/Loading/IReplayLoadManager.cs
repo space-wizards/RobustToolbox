@@ -17,9 +17,8 @@ public interface IReplayLoadManager
     /// <summary>
     /// Load metadata information from a replay's yaml file.
     /// </summary>
-    /// <param name="dir">A directory containing the replay files.</param>
-    /// <param name="path">The path to the replay's subdirectory.</param>
-    public MappingDataNode? LoadYamlMetadata(IWritableDirProvider dir, ResPath path);
+    /// <param name="fileReader">A reader containing the replay files. Disposed when loading is done.</param>
+    public MappingDataNode? LoadYamlMetadata(IReplayFileReader fileReader);
 
     /// <summary>
     /// Async task that loads up a replay for playback. Note that this will have some side effects, such as loading
@@ -29,11 +28,10 @@ public interface IReplayLoadManager
     /// This task is intended to be used with a <see cref="Job{T}"/> so that the loading can happen over several frame
     /// updates.
     /// </remarks>
-    /// <param name="dir">A directory containing the replay data that should be loaded.</param>
-    /// <param name="path">The path to the replay's subdirectory.</param>
+    /// <param name="fileReader">A reader containing the replay files. Disposed when loading is done.</param>
     /// <param name="callback">A callback delegate that invoked to provide information about the current loading
     /// progress. This callback can be used to invoke <see cref="Job{T}.SuspendIfOutOfTime"/>. </param>
-    Task<ReplayData> LoadReplayAsync(IWritableDirProvider dir, ResPath path, LoadReplayCallback callback);
+    Task<ReplayData> LoadReplayAsync(IReplayFileReader fileReader, LoadReplayCallback callback);
 
     /// <summary>
     /// Async task that loads the initial state of a replay, including spawning and initializing all entities. Note that
@@ -55,17 +53,16 @@ public interface IReplayLoadManager
     /// This task is intended to be used with a <see cref="Job{T}"/> so that the loading can happen over several frame
     /// updates.
     /// </remarks>
-    /// <param name="dir">A directory containing the replay files.</param>
-    /// <param name="path">The path to the replay's subdirectory.</param>
+    /// <param name="fileReader">A reader containing the replay files. Disposed when loading is done.</param>
     /// <param name="callback">A callback delegate that invoked to provide information about the current loading
     /// progress. This callback can be used to invoke <see cref="Job{T}.SuspendIfOutOfTime"/>. </param>
-    Task LoadAndStartReplayAsync(IWritableDirProvider dir, ResPath path, LoadReplayCallback? callback = null);
+    Task LoadAndStartReplayAsync(IReplayFileReader fileReader, LoadReplayCallback? callback = null);
 
     /// <summary>
     /// This is a variant of <see cref="LoadAndStartReplayAsync"/> that will first invoke <see cref="LoadOverride"/>
     /// before defaulting to simply simply running <see cref="LoadAndStartReplayAsync"/> synchronously.
     /// </summary>
-    void LoadAndStartReplay(IWritableDirProvider resManUserData, ResPath dir);
+    void LoadAndStartReplay(IReplayFileReader fileReader);
 
     /// <summary>
     /// Event that can be used to override the default replay loading behaviour.
@@ -74,7 +71,7 @@ public interface IReplayLoadManager
     /// E.g., this could be used to make the <see cref="ReplayLoadCommand"/> switch to some loading screen with an async
     /// load job, rather than just hanging the client.
     /// </remarks>
-    event Action<IWritableDirProvider, ResPath>? LoadOverride;
+    event Action<IReplayFileReader>? LoadOverride;
 }
 
 public delegate Task LoadReplayCallback(float current, float max, LoadingState state, bool forceSuspend);

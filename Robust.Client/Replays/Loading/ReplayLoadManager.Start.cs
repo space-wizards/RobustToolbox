@@ -13,23 +13,22 @@ namespace Robust.Client.Replays.Loading;
 
 public sealed partial class ReplayLoadManager
 {
-    public event Action<IWritableDirProvider, ResPath>? LoadOverride;
+    public event Action<IReplayFileReader>? LoadOverride;
 
-    public void LoadAndStartReplay(IWritableDirProvider dir, ResPath path)
+    public async void  LoadAndStartReplay(IReplayFileReader fileReader)
     {
         if (LoadOverride != null)
-            LoadOverride.Invoke(dir, path);
+            LoadOverride.Invoke(fileReader);
         else
-            LoadAndStartReplayAsync(dir, path);
+            await LoadAndStartReplayAsync(fileReader);
     }
 
     public async Task LoadAndStartReplayAsync(
-        IWritableDirProvider dir,
-        ResPath path,
+        IReplayFileReader fileReader,
         LoadReplayCallback? callback = null)
     {
         callback ??= (_, _, _, _) => Task.CompletedTask;
-        var data = await LoadReplayAsync(dir, path, callback);
+        var data = await LoadReplayAsync(fileReader, callback);
         await StartReplayAsync(data, callback);
     }
 
@@ -47,7 +46,6 @@ public sealed partial class ReplayLoadManager
         _timing.Paused = true;
         var checkpoint = data.Checkpoints[0];
         data.CurrentIndex = checkpoint.Index;
-        var state = checkpoint.State;
 
         foreach (var (name, value) in checkpoint.Cvars)
         {
@@ -57,14 +55,15 @@ public sealed partial class ReplayLoadManager
         var tick = new GameTick(data.TickOffset.Value + (uint) data.CurrentIndex);
         _timing.CurTick = _timing.LastRealTick = _timing.LastProcessedTick = tick;
 
-        _gameState.UpdateFullRep(state, cloneDelta: true);
+        _gameState.UpdateFullRep(checkpoint.FullState, cloneDelta: true);
 
         var i = 0;
-        var total = state.EntityStates.Value.Count;
-        List<EntityUid> entities = new(state.EntityStates.Value.Count);
+        var entStates = checkpoint.FullState.EntityStates.Value;
+        var total = entStates.Count;
+        List<EntityUid> entities = new(total);
 
         await callback(i, total, LoadingState.Spawning, true);
-        foreach (var ent in state.EntityStates.Value)
+        foreach (var ent in entStates)
         {
             var metaState = (MetaDataComponentState?)ent.ComponentChanges.Value?
                 .FirstOrDefault(c => c.NetID == _metaId).State;
@@ -81,8 +80,12 @@ public sealed partial class ReplayLoadManager
             }
         }
 
+        // TODO add progress bar / loading stage for this?
         await callback(0, total, LoadingState.Initializing, true);
-        _gameState.ApplyGameState(state, data.NextState);
+        var nextIndex = checkpoint.Index + 1;
+        var next =  nextIndex < data.States.Count ? data.States[nextIndex] : null;
+        _gameState.ClearDetachQueue();
+        _gameState.ApplyGameState(checkpoint.State, next);
 
         i = 0;
         var query = _entMan.GetEntityQuery<MetaDataComponent>();
@@ -108,8 +111,12 @@ public sealed partial class ReplayLoadManager
             }
         }
 
+        // TODO add progress bar / loading stage for this?
+        _gameState.ClearDetachQueue();
+        _gameState.DetachImmediate(checkpoint.Detached);
+
         _timing.TimeBase = checkpoint.TimeBase;
-        data.LastApplied = state.ToSequence;
+        data.LastApplied = checkpoint.Tick;
         DebugTools.Assert(_timing.LastRealTick == tick);
         DebugTools.Assert(_timing.LastProcessedTick == tick);
         _timing.CurTick = tick + 1;

@@ -54,6 +54,165 @@ END TEMPLATE-->
 *None yet*
 
 
+## 132.0.1
+
+### Bugfixes
+
+* Return maps first from FindGridsIntersecting which fixes rendering order issues for grids.
+
+
+## 132.0.0
+
+### Breaking changes
+
+* TimeOffsetSerializer now always reads & writes zeros unless it is reading/writing an initialized map. EntityPrototypes with TimeOffsetSerializer data-fields need to default to zero.\
+* TimeOffsetSerializer now only applies a time offset when reading from yaml, not when copying.
+
+### New features
+
+* Added a function to count the number of prototypes of a given kind. See `IPrototypeManager.Count<T>()`.
+
+### Bugfixes
+
+* Fixed a bug in `IPrototypeManager.EnumerateParents()` that was causing it to not actually return the parent prototypes.
+
+### Other
+
+* Map serialisation will now log errors when saving an uninitialized map that contains initialized entities.
+
+
+## 131.1.0
+
+### New features
+
+* Add NextByte method to random.
+* Add method to get a random tile variant.
+
+### Bugfixes
+
+* Fix replay component state bug.
+
+### Internal
+
+* Remove some AggressiveOptimization attributes.
+
+
+## 131.0.0
+
+### Breaking changes
+
+* `IWritableDirProvider` async functions have been removed.
+* Replay recording & load API has been reworked to operate on zip files instead.
+* Constants on `IReplayRecordingManager` have been moved to a new `ReplayConstants` class, renamed and values changed.
+
+### New features
+
+* Added `ISawmill.Verbose()` log functions.
+* Replays are now written as `.zip` files. These will be [content bundles](https://docs.spacestation14.io/en/launcher/content-bundles) directly executable by the launcher if the server has the necessary build information.
+* Client replays now use local time rather than UTC as default file name.
+
+
+## 130.0.0
+
+### Breaking changes
+
+* Engine versions will no longer start with a leading 0.
+
+
+## 0.129.0.1
+
+
+## 129.0.0
+
+### Breaking changes
+
+* `AnchorSystem.Attach()` now behaves more like the obsolete `AttachToEntity()` methods as it will automatically detach a player from their current entity first.
+* A chunk of server- and client-side `PrototypeLoadManager` code has been moved to shared.
+* Replay recording and playback now supports client-side replays. Many replay related functions, cvars, and commands have changed.
+
+### New features
+
+* Richtext tags can now be overridden by content
+* The LineEdit control now has a field to override the StyleBox
+* `IWritableDirProvider` has new methods for async file writing.
+
+### Bugfixes
+
+* Updated Lidgren, fixing a bug where socket errors were not reported properly on Linux.
+
+### Other
+
+* The `Dirty()` method for networked components now has an override that takes  in an EntityUid. The old IEntityManager method being obsoleted.
+
+
+
+## 0.128.0.0
+
+### Breaking changes
+
+* Add ILocalizationManager as a dependency on systems as `Loc`.
+
+
+## 0.127.1.0
+
+### New features
+
+* Add SpriteSystem.Frame0 method for entity prototypes.
+
+
+## 0.127.0.0
+
+### Breaking changes
+
+* Rename PVSSystem to PvsSystem.
+
+### New features
+
+* Added `launch.launcher` and `launch.content_bundle` CVars. These are intended to eventually replace the `InitialLaunchState` values.
+* Allow `System.Net.IPAdress` through sandbox _properly_, add `System.Net.Sockets.AddressFamily` too.
+* Systems now have their own logger sawmills automatically and can be access via `Log`.
+
+### Bugfixes
+
+* Make BoxContainer's MeasureOverride account for stretching.
+* Fix IPAddress sandboxing.
+* Revert physics contact getcomponents and also fix ShouldCollide ordering for PreventCollideEvent.
+
+
+## 0.126.0.0
+
+### Breaking changes
+
+* Several `MapManager` methods were moved to `MapSystem`.
+* The signature of grid lookup queries has changed, with a new optional `includeMap` bool added in-between other optional bools.
+
+### New features
+
+* `System.Net.IPAddress` is now accessible from the sandbox.
+
+### Bugfixes
+
+* Fixed RichText not rendering some tags properly for some UI scales.
+* Text inside of `OutputPanel` controls should no longer overlap with the scrollbar.
+
+### Other
+
+* Obsoleted the following methods from `IPlayerSession`: `AttachToEntity`, `DetachFromEntity`. Use the methods in `ActorSystem` instead.
+* Static Loggers (e.g., `Logger.Log()` are now obsoleted. Get a sawmill from ILogManager instead.
+* Several `MetadataComponent` setters have been marked as obsolete. Use `MetaDataSystem` methods instead.
+
+### Internal
+
+* Removed several static logging calls.
+
+
+## 0.125.0.1
+
+### Other
+
+* Use a logger sawmill in MapManager rather than the static logger.
+
+
 ## 0.125.0.0
 
 ### Breaking changes

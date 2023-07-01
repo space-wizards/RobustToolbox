@@ -1,6 +1,10 @@
+using System.IO.Compression;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Replays.Loading;
 using Robust.Client.Replays.Playback;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
@@ -15,6 +19,7 @@ public sealed class ReplayLoadCommand : BaseReplayCommand
     [Dependency] private readonly IResourceManager _resMan = default!;
     [Dependency] private readonly IReplayLoadManager _loadMan = default!;
     [Dependency] private readonly IBaseClient _client = default!;
+    [Dependency] private readonly IConfigurationManager _cfg = default!;
 
     public override string Command => IReplayPlaybackManager.LoadCommand;
 
@@ -38,15 +43,17 @@ public sealed class ReplayLoadCommand : BaseReplayCommand
             return;
         }
 
-        var dir = new ResPath(args[0]);
-        var file = dir / IReplayRecordingManager.MetaFile;
+        var file = new ResPath(_cfg.GetCVar(CVars.ReplayDirectory)) / args[0];
         if (!_resMan.UserData.Exists(file))
         {
             shell.WriteError(Loc.GetString("cmd-error-file-not-found", ("file", file)));
             return;
         }
 
-        _loadMan.LoadAndStartReplay(_resMan.UserData, dir);
+        var stream = _resMan.UserData.OpenRead(file);
+        var provider = new ReplayFileReaderZip(new ZipArchive(stream), ReplayConstants.ReplayZipFolder);
+
+        _loadMan.LoadAndStartReplay(provider);
     }
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
@@ -54,8 +61,11 @@ public sealed class ReplayLoadCommand : BaseReplayCommand
         if (args.Length != 1)
             return CompletionResult.Empty;
 
-        var opts = CompletionHelper.UserFilePath(args[0], _resMan.UserData);
-        return CompletionResult.FromHintOptions(opts, Loc.GetString(""));
+        var dir = new ResPath(_cfg.GetCVar(CVars.ReplayDirectory)) / args[0];
+        dir = dir.ToRootedPath();
+        var opts = CompletionHelper.UserFilePath(dir.CanonPath, _resMan.UserData);
+
+        return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-replay-load-hint"));
     }
 }
 

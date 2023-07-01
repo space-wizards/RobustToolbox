@@ -783,7 +783,7 @@ namespace Robust.Client.GameStates
                 {
                     foreach (var (uid, xform) in queuedBroadphaseUpdates)
                     {
-                        lookupSys.FindAndAddToEntityTree(uid, xform, xforms, metas, contQuery, physicsQuery, fixturesQuery, broadQuery);
+                        lookupSys.FindAndAddToEntityTree(uid, true, xform);
                     }
                 }
                 catch (Exception e)
@@ -869,13 +869,13 @@ namespace Robust.Client.GameStates
 
                 // This entity is going to get deleted, but maybe some if its children won't be, so lets detach them to
                 // null. First we will detach the parent in order to reduce the number of broadphase/lookup updates.
-                xformSys.DetachParentToNull(ent, xform, xforms, metas);
+                xformSys.DetachParentToNull(ent, xform);
 
                 // Then detach all children.
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xforms, metas, xform);
+                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
 
                     if (deleteClientChildren
                         && !deleteClientEntities // don't add duplicates
@@ -917,13 +917,13 @@ namespace Robust.Client.GameStates
                     continue; // Already deleted? or never sent to us?
 
                 // First, a single recursive map change
-                xformSys.DetachParentToNull(id, xform, xforms, metas);
+                xformSys.DetachParentToNull(id, xform);
 
                 // Then detach all children.
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xforms, metas, xform);
+                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
                 }
 
                 // Finally, delete the entity.
@@ -1002,7 +1002,7 @@ namespace Robust.Client.GameStates
                 var xform = xforms.GetComponent(ent);
                 if (xform.ParentUid.IsValid())
                 {
-                    lookupSys.RemoveFromEntityTree(ent, xform, xforms);
+                    lookupSys.RemoveFromEntityTree(ent, xform);
                     xform.Broadphase = BroadphaseData.Invalid;
 
                     // In some cursed scenarios an entity inside of a container can leave PVS without the container itself leaving PVS.
@@ -1017,7 +1017,7 @@ namespace Robust.Client.GameStates
                     }
 
                     meta._flags |= MetaDataFlags.Detached;
-                    xformSys.DetachParentToNull(ent, xform, xforms, metas);
+                    xformSys.DetachParentToNull(ent, xform);
                     DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
 
                     if (container != null)

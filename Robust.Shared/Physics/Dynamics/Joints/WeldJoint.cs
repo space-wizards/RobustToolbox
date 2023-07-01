@@ -1,10 +1,12 @@
 using System;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Shared.Physics.Dynamics.Joints;
 

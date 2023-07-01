@@ -461,7 +461,9 @@ public sealed partial class EntityLookupSystem
 
         if (mapPos.MapId == MapId.Nullspace) return false;
 
-        var worldAABB = new Box2(mapPos.Position - range, mapPos.Position + range);
+        var rangeVec = new Vector2(range, range);
+
+        var worldAABB = new Box2(mapPos.Position - rangeVec, mapPos.Position + rangeVec);
         var lookupQuery = GetEntityQuery<BroadphaseComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
 
@@ -908,8 +910,9 @@ public sealed partial class EntityLookupSystem
             angle = wAng;
         }
 
-        var center = worldMatrix.Value.Transform((Vector2) tileRef.GridIndices + 0.5f) * grid.TileSize;
-        var translatedBox = Box2.CenteredAround(center, (grid.TileSize, grid.TileSize));
+        var expand = new Vector2(0.5f, 0.5f);
+        var center = worldMatrix.Value.Transform(tileRef.GridIndices + expand) * grid.TileSize;
+        var translatedBox = Box2.CenteredAround(center, new Vector2(grid.TileSize, grid.TileSize));
 
         return new Box2Rotated(translatedBox, -angle.Value, center);
     }

@@ -111,7 +111,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 DebugTools.Assert(edge.LengthSquared() > float.Epsilon * float.Epsilon);
 
                 var temp = Vector2Helpers.Cross(edge, 1f);
-                Normals[i] = temp.Normalized;
+                Normals[i] = temp.Normalized();
             }
 
             Centroid = ComputeCentroid(Vertices, VertexCount);

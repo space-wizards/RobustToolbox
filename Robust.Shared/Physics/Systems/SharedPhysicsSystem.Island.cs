@@ -834,7 +834,7 @@ public abstract partial class SharedPhysicsSystem
             var linearVelocity = linearVelocities[offset + i];
             var angularVelocity = angularVelocities[offset + i];
 
-            var velSqr = linearVelocity.LengthSquared;
+            var velSqr = linearVelocity.LengthSquared();
             if (velSqr > maxVelSq)
             {
                 linearVelocity *= maxVel / MathF.Sqrt(velSqr);

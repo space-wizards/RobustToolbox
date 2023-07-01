@@ -135,8 +135,8 @@ namespace Robust.Shared.Maths
         [Pure]
         public static Box2 FromTwoPoints(Vector2 a, Vector2 b)
         {
-            var min = Vector2.ComponentMin(a, b);
-            var max = Vector2.ComponentMax(a, b);
+            var min = Vector2.Min(a, b);
+            var max = Vector2.Max(a, b);
 
             return new Box2(min, max);
         }
@@ -428,7 +428,7 @@ namespace Robust.Shared.Maths
                    && MathHelper.CloseToPercent(Right, other.Right)
                    && MathHelper.CloseToPercent(Top, other.Top);
         }
-        
+
         public bool EqualsApprox(Box2 other, double tolerance)
         {
             return MathHelper.CloseToPercent(Left, other.Left, tolerance)

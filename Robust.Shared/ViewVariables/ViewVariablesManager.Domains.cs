@@ -275,7 +275,7 @@ internal abstract partial class ViewVariablesManager
 
         [DataField("vector")]
         [ViewVariables(VVAccess.ReadWrite)]
-        private Vector2 Vector = (50, 50);
+        private Vector2 Vector = new(50, 50);
 
         [DataField("data")]
         [ViewVariables(VVAccess.ReadWrite)]

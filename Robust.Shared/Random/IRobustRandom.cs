@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
@@ -38,7 +39,7 @@ public interface IRobustRandom
     ///     In general, NextVector2(1) will tend to result in vectors with smaller magnitudes than
     ///     NextVector2Box(1,1), even if you ignored any vectors with a magnitude larger than one.
     /// </remarks>
-    public Vector2 NextVector2(float minMagnitude, float maxMagnitude) => NextAngle().RotateVec((NextFloat(minMagnitude, maxMagnitude), 0));
+    public Vector2 NextVector2(float minMagnitude, float maxMagnitude) => NextAngle().RotateVec(new Vector2(NextFloat(minMagnitude, maxMagnitude), 0));
     public Vector2 NextVector2(float maxMagnitude = 1) => NextVector2(0, maxMagnitude);
 
     /// <summary>

@@ -731,7 +731,7 @@ namespace Robust.Shared.Map.Components
 
             if (!_mapManager.TryGetGrid(Owner, out var grid))
             {
-                return new EntityCoordinates(_mapManager.GetMapEntityId(posWorld.MapId), (posWorld.X, posWorld.Y));
+                return new EntityCoordinates(_mapManager.GetMapEntityId(posWorld.MapId), new Vector2(posWorld.X, posWorld.Y));
             }
 
             return new EntityCoordinates(((Component) grid).Owner, WorldToLocal(posWorld.Position));

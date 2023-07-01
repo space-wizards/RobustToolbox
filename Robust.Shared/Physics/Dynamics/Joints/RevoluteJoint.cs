@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -406,7 +407,7 @@ public sealed class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
             var rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
 
             var C = cB + rB - cA - rA;
-            positionError = C.Length;
+            positionError = C.Length();
 
             float mA = _invMassA, mB = _invMassB;
             float iA = _invIA, iB = _invIB;

@@ -167,8 +167,10 @@ internal partial class MapManager
         out EntityUid uid,
         [NotNullWhen(true)] out MapGridComponent? grid)
     {
+        var rangeVec = new Vector2(0.2f, 0.2f);
+
         // Need to enlarge the AABB by at least the grid shrinkage size.
-        var aabb = new Box2(worldPos - 0.2f, worldPos + 0.2f);
+        var aabb = new Box2(worldPos - rangeVec, worldPos + rangeVec);
 
         uid = EntityUid.Invalid;
         grid = null;

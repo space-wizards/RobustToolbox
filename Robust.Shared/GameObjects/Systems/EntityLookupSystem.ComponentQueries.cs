@@ -312,7 +312,9 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace) return false;
 
         // TODO: Actual circles
-        var worldAABB = new Box2(worldPos - range, worldPos + range);
+        var rangeVec = new Vector2(range, range);
+
+        var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
         return AnyComponentsIntersecting(type, mapId, worldAABB);
     }
 
@@ -324,7 +326,9 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace) return new HashSet<Component>();
 
         // TODO: Actual circles
-        var worldAABB = new Box2(worldPos - range, worldPos + range);
+        var rangeVec = new Vector2(range, range);
+
+        var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
         return GetComponentsIntersecting(type, mapId, worldAABB);
     }
 
@@ -335,7 +339,9 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace) return new HashSet<T>();
 
         // TODO: Actual circles
-        var worldAABB = new Box2(worldPos - range, worldPos + range);
+        var rangeVec = new Vector2(range, range);
+
+        var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
         return GetComponentsIntersecting<T>(mapId, worldAABB);
     }
 

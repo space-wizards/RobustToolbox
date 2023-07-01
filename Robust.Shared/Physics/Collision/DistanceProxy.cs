@@ -362,7 +362,7 @@ internal struct Simplex
                 return 0.0f;
 
             case 2:
-                return (V._00.W - V._01.W).Length;
+                return (V._00.W - V._01.W).Length();
 
             case 3:
                 return Vector2Helpers.Cross(V._01.W - V._00.W, V._02.W - V._00.W);

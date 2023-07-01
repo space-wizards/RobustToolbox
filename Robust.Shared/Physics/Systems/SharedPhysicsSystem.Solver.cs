@@ -800,10 +800,10 @@ public abstract partial class SharedPhysicsSystem
                 Vector2 pointA = Physics.Transform.Mul(xfA, manifold.LocalPoint);
                 Vector2 pointB = Physics.Transform.Mul(xfB, manifold.Points[0].LocalPoint);
 
-                if ((pointA - pointB).LengthSquared > float.Epsilon * float.Epsilon)
+                if ((pointA - pointB).LengthSquared() > float.Epsilon * float.Epsilon)
                 {
                     normal = pointB - pointA;
-                    normal = normal.Normalized;
+                    normal = normal.Normalized();
                 }
 
                 Vector2 cA = pointA + normal * radiusA;
@@ -872,7 +872,7 @@ public abstract partial class SharedPhysicsSystem
 
                         //FPE: Fix to handle zero normalization
                         if (normal != Vector2.Zero)
-                            normal = normal.Normalized;
+                            normal = normal.Normalized();
 
                         point = (pointA + pointB) * 0.5f;
                         separation = Vector2.Dot(pointB - pointA, normal) - pc.RadiusA - pc.RadiusB;

@@ -75,4 +75,10 @@ public static class Vector2Helpers
     {
         return new Vector2i((int) MathF.Floor(vec.X), (int) MathF.Floor(vec.Y));
     }
+    
+    public static void Deconstruct(this Vector2 vec, out float x, out float y)
+    {
+        x = vec.X;
+        y = vec.Y;
+    }
 }

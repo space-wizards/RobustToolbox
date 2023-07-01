@@ -533,12 +533,12 @@ namespace Robust.Client.UserInterface.Controls
 
             void DrawVLine(float x, Color color)
             {
-                handle.DrawLine((x, 0), (x, pSizeY), color);
+                handle.DrawLine(new(x, 0), new(x, pSizeY), color);
             }
 
             void DrawHLine(float y, Color color)
             {
-                handle.DrawLine((0, y), (pSizeX, y), color);
+                handle.DrawLine(new(0, y), new(pSizeX, y), color);
             }
         }
 

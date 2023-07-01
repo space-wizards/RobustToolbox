@@ -274,7 +274,7 @@ public abstract class Joint : IEquatable<Joint>
         if (!Enabled)
             return 0.0f;
 
-        var jointErrorSquared = GetReactionForce(invDt).LengthSquared;
+        var jointErrorSquared = GetReactionForce(invDt).LengthSquared();
 
         if (MathF.Abs(jointErrorSquared) <= _breakpointSquared)
             return 0.0f;

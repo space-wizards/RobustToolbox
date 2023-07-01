@@ -270,7 +270,7 @@ namespace Robust.Client.UserInterface.Controls
         public Vector2 GetScrollValue(bool ignoreVisible = false)
         {
             if (ignoreVisible)
-                return (_hScrollBar.Value, _vScrollBar.Value);
+                return new(_hScrollBar.Value, _vScrollBar.Value);
 
             var h = _hScrollBar.Value;
             var v = _vScrollBar.Value;

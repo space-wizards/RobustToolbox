@@ -105,7 +105,7 @@ internal static class DistanceManager
             Vector2 d = simplex.GetSearchDirection();
 
             // Ensure the search direction is numerically fit.
-            if (d.LengthSquared < float.Epsilon * float.Epsilon)
+            if (d.LengthSquared() < float.Epsilon * float.Epsilon)
             {
                 // The origin is probably contained by a line segment
                 // or triangle. Thus the shapes are overlapped.
@@ -157,7 +157,7 @@ internal static class DistanceManager
 
         // Prepare output.
         simplex.GetWitnessPoints(out output.PointA, out output.PointB);
-        output.Distance = (output.PointA - output.PointB).Length;
+        output.Distance = (output.PointA - output.PointB).Length();
         output.Iterations = iter;
 
         // Cache the simplex.

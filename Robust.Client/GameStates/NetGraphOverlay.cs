@@ -253,7 +253,8 @@ namespace Robust.Client.GameStates
             handle.DrawString(_font, new Vector2(LeftMargin + width, minYoff), "8.19Kbit/s");
 
             // avg text
-            handle.DrawString(_font, avgEnd - _font.GetLineHeight(1) / 2f, "average");
+            var lineHeight = _font.GetLineHeight(1) / 2f;
+            handle.DrawString(_font, avgEnd - new Vector2(lineHeight, lineHeight), "average");
 
             // lag text info
             if(lastLagY != -1)

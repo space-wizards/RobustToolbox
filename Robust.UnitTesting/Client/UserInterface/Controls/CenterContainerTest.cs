@@ -16,7 +16,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         public void Test()
         {
             var container = new CenterContainer();
-            var child = new Control {MinSize = (50, 50)};
+            var child = new Control {MinSize = new Vector2(50, 50)};
 
             container.AddChild(child);
 

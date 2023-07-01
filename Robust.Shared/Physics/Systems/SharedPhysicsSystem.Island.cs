@@ -278,13 +278,13 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Where the magic happens.
     /// </summary>
-    public void Step(PhysicsMapComponent component, float frameTime, bool prediction)
+    public void Step(EntityUid uid, PhysicsMapComponent component, float frameTime, bool prediction)
     {
         var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
         var dtRatio = component._invDt0 * frameTime;
 
         // Integrate velocities, solve velocity constraints, and do integration.
-        Solve(component, frameTime, dtRatio, invDt, prediction);
+        Solve(uid, component, frameTime, dtRatio, invDt, prediction);
 
         // TODO: SolveTOI
 
@@ -308,7 +308,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void Solve(PhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void Solve(EntityUid uid, PhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
     {
         // Build and simulated islands from awake bodies.
         _bodyStack.EnsureCapacity(component.AwakeBodies.Count);
@@ -339,10 +339,12 @@ public abstract partial class SharedPhysicsSystem
             // when contact broke so if you want to try that then GOOD LUCK.
             if (seed.Island) continue;
 
-            if (!metaQuery.TryGetComponent(seed.Owner, out var metadata))
+            var seedUid = seed.Owner;
+
+            if (!metaQuery.TryGetComponent(seedUid, out var metadata))
             {
-                _sawmill.Error($"Found deleted entity {ToPrettyString(seed.Owner)} on map!");
-                component.RemoveSleepBody(seed);
+                _sawmill.Error($"Found deleted entity {ToPrettyString(seedUid)} on map!");
+                RemoveSleepBody(seedUid, seed, component);
                 continue;
             }
 
@@ -536,7 +538,7 @@ public abstract partial class SharedPhysicsSystem
             ReturnIsland(loneIsland);
         }
 
-        SolveIslands(component, islands, frameTime, dtRatio, invDt, prediction);
+        SolveIslands(uid, component, islands, frameTime, dtRatio, invDt, prediction);
 
         foreach (var island in islands)
         {
@@ -591,10 +593,10 @@ public abstract partial class SharedPhysicsSystem
         _awakeBodyList.Clear();
     }
 
-    private void SolveIslands(PhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void SolveIslands(EntityUid uid, PhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
     {
         var iBegin = 0;
-        var gravity = _gravity.GetGravity(component.Owner);
+        var gravity = _gravity.GetGravity(uid);
 
         var data = new SolverData(
             frameTime,

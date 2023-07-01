@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Physics.Components;
@@ -1065,7 +1066,7 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var t1Comp in comps.Values)
                 {
-                    if (t1Comp.Deleted || !_metaQuery.TryGetComponent(t1Comp.Owner, out var metaComp)) continue;
+                    if (t1Comp.Deleted || !_metaQuery.TryGetComponentInternal(t1Comp.Owner, out var metaComp)) continue;
 
                     if (metaComp.EntityPaused) continue;
 
@@ -1337,6 +1338,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public TComp1 GetComponent(EntityUid uid)
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
@@ -1346,6 +1348,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
         {
             if (uid == null)
@@ -1358,6 +1361,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
@@ -1371,12 +1375,14 @@ namespace Robust.Shared.GameObjects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public bool HasComponent(EntityUid uid)
         {
             return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public bool Resolve(EntityUid uid, [NotNullWhen(true)] ref TComp1? component, bool logMissing = true)
         {
             if (component != null)
@@ -1398,6 +1404,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public TComp1? CompOrNull(EntityUid uid)
         {
             if (TryGetComponent(uid, out var comp))
@@ -1405,6 +1412,86 @@ namespace Robust.Shared.GameObjects
 
             return null;
         }
+
+        #region Internal
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        internal TComp1 GetComponentInternal(EntityUid uid)
+        {
+            if (_traitDict.TryGetValue(uid, out var comp))
+                return (TComp1) comp;
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        internal bool TryGetComponentInternal([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
+        {
+            if (uid == null)
+            {
+                component = default;
+                return false;
+            }
+
+            return TryGetComponentInternal(uid.Value, out component);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        internal bool TryGetComponentInternal(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
+        {
+            if (_traitDict.TryGetValue(uid, out var comp))
+            {
+                component = (TComp1) comp;
+                return true;
+            }
+
+            component = default;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        internal bool HasComponentInternal(EntityUid uid)
+        {
+            return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        internal bool ResolveInternal(EntityUid uid, [NotNullWhen(true)] ref TComp1? component, bool logMissing = true)
+        {
+            if (component != null)
+            {
+                DebugTools.Assert(uid == component.Owner, "Specified Entity is not the component's Owner!");
+                return true;
+            }
+
+            if (_traitDict.TryGetValue(uid, out var comp))
+            {
+                component = (TComp1)comp;
+                return true;
+            }
+
+            if (logMissing)
+                _sawmill.Error($"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        internal TComp1? CompOrNullInternal(EntityUid uid)
+        {
+            if (TryGetComponent(uid, out var comp))
+                return comp;
+
+            return null;
+        }
+
+        #endregion
     }
 
     #region Query
@@ -1444,7 +1531,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_metaQuery.TryGetComponent(current.Key, out var metaComp) || metaComp.EntityPaused)
+                if (!_metaQuery.TryGetComponentInternal(current.Key, out var metaComp) || metaComp.EntityPaused)
                 {
                     continue;
                 }
@@ -1507,7 +1594,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_metaQuery.TryGetComponent(current.Key, out var metaComp) || metaComp.EntityPaused)
+                if (!_metaQuery.TryGetComponentInternal(current.Key, out var metaComp) || metaComp.EntityPaused)
                 {
                     continue;
                 }
@@ -1581,7 +1668,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_metaQuery.TryGetComponent(current.Key, out var metaComp) || metaComp.EntityPaused)
+                if (!_metaQuery.TryGetComponentInternal(current.Key, out var metaComp) || metaComp.EntityPaused)
                 {
                     continue;
                 }
@@ -1669,7 +1756,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_metaQuery.TryGetComponent(current.Key, out var metaComp) || metaComp.EntityPaused)
+                if (!_metaQuery.TryGetComponentInternal(current.Key, out var metaComp) || metaComp.EntityPaused)
                 {
                     continue;
                 }

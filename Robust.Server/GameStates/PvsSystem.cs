@@ -1208,7 +1208,7 @@ internal sealed partial class PvsSystem : EntitySystem
     private (Vector2 worldPos, float range, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
     {
         var xform = transformQuery.GetComponent(euid);
-        return (xform.WorldPosition, _viewSize / 2f, xform.MapID);
+        return (_transform.GetWorldPosition(xform, transformQuery), _viewSize / 2f, xform.MapID);
     }
 
     public sealed class TreePolicy<T> : PooledObjectPolicy<RobustTree<T>> where T : notnull

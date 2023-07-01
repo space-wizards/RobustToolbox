@@ -134,12 +134,14 @@ namespace Robust.Shared.GameObjects
 
                 poly.Set(vertices, 4);
 
+#pragma warning disable CS0618
                 var newFixture = new Fixture(
                     $"grid_chunk-{bounds.Left}-{bounds.Bottom}",
                     poly,
                     MapGridHelpers.CollisionGroup,
                     MapGridHelpers.CollisionGroup,
                     true) { Body = body};
+#pragma warning restore CS0618
 
                 newFixtures.Add(newFixture);
             }

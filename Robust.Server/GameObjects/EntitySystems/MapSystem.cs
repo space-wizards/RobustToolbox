@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -36,17 +36,18 @@ namespace Robust.Server.GameObjects
             // If we have any existing empty ones then cull them on setting the cvar
             if (_deleteEmptyGrids)
             {
-                var toDelete = new List<MapGridComponent>();
+                var toDelete = new ValueList<EntityUid>();
 
-                foreach (var grid in MapManager.GetAllGrids())
+                var query = AllEntityQuery<MapGridComponent>();
+                while (query.MoveNext(out var uid, out var grid))
                 {
                     if (!GridEmpty(grid)) continue;
-                    toDelete.Add(grid);
+                    toDelete.Add(uid);
                 }
 
-                foreach (var grid in toDelete)
+                foreach (var uid in toDelete)
                 {
-                    MapManager.DeleteGrid(grid.Owner);
+                    MapManager.DeleteGrid(uid);
                 }
             }
         }

@@ -720,7 +720,7 @@ namespace Robust.Shared.GameObjects
             if (!physicsQuery.TryGetComponent(uid, out var body) || !body.CanCollide)
             {
                 // TOOD optimize this. This function iterates UP through parents, while we are currently iterating down.
-                var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(xform, xformQuery);
+                var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(uid, xform, xformQuery);
 
                 // TODO BROADPHASE PARENTING this just assumes local = world
                 var relativeRotation = rotation - broadphaseXform.LocalRotation;

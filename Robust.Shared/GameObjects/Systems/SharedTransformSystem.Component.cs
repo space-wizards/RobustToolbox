@@ -17,10 +17,6 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedTransformSystem
 {
-    [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
-    [IoC.Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [IoC.Dependency] private readonly SharedPhysicsSystem _physics = default!;
-
     #region Anchoring
 
     internal void ReAnchor(
@@ -603,7 +599,7 @@ public abstract partial class SharedTransformSystem
     {
         if (oldUid == uid)
         {
-            _logger.Error($"Tried to reparent entities from the same entity, {ToPrettyString(oldUid)}");
+            Log.Error($"Tried to reparent entities from the same entity, {ToPrettyString(oldUid)}");
             return;
         }
 
@@ -1170,8 +1166,7 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityUid uid)
     {
-        var query = GetEntityQuery<TransformComponent>();
-        return GetWorldPositionRotationInvMatrix(query.GetComponent(uid), query);
+        return GetWorldPositionRotationInvMatrix(_xformQuery.GetComponent(uid));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1257,7 +1252,7 @@ public abstract partial class SharedTransformSystem
         else
         {
             if (!_mapManager.IsMap(uid))
-                _logger.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
+                Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
 
             DetachParentToNull(uid, xform);
             return;

@@ -64,7 +64,8 @@ namespace Robust.Shared.GameObjects
         internal EntityPrototype? _entityPrototype;
 
         /// <summary>
-        /// When this entity was paused, if applicable
+        /// When this entity was paused, if applicable. Note that this is the actual time, not the duration which gets
+        /// returned by <see cref="MetaDataSystem.GetPauseTime"/>.
         /// </summary>
         internal TimeSpan? PauseTime;
 

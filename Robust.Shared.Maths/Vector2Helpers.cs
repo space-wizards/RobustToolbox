@@ -65,7 +65,7 @@ public static class Vector2Helpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2 Cross(float s, in Vector2 a)
     {
-        return new Vector2(s * a.Y, -s * a.X);
+        return new(-s * a.Y, s * a.X);
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ public static class Vector2Helpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2 Cross(in Vector2 a, in float s)
     {
-        return new Vector2(-s * a.Y, s * a.X);
+        return new(s * a.Y, -s * a.X);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

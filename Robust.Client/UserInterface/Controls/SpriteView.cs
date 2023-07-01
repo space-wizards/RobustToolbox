@@ -213,7 +213,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var offset = SpriteOffset
                 ? Vector2.Zero
-                : - (-_eyeRotation).RotateVec(_sprite.Offset) * (1, -1) * EyeManager.PixelsPerMeter;
+                : - (-_eyeRotation).RotateVec(_sprite.Offset) * new Vector2(1, -1) * EyeManager.PixelsPerMeter;
 
             var position = PixelSize / 2 + offset * stretch * UIScale;
             var scale = Scale * UIScale * stretch;

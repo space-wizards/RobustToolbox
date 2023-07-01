@@ -73,7 +73,7 @@ public sealed class LiveProfileViewControl : Control
     {
         DrawSample(in data, baseline, value.StringId, value.Value);
 
-        baseline += (0, data.Font.GetLineHeight(UIScale));
+        baseline += new Vector2(0, data.Font.GetLineHeight(UIScale));
     }
 
     private void DrawSample(

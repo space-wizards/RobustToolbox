@@ -123,7 +123,7 @@ namespace Robust.Client.UserInterface.Controls
                 var globalPos = GlobalPosition;
                 _popupVBox.Measure(Vector2Helpers.Infinity);
                 var (minX, minY) = _popupVBox.DesiredSize;
-                var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
+                var box = UIBox2.FromDimensions(globalPos, new Vector2(Math.Max(minX, Width), minY));
                 UserInterfaceManager.ModalRoot.AddChild(_popup);
                 _popup.Open(box);
             }

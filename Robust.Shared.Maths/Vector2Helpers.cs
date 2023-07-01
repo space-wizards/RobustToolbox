@@ -86,6 +86,12 @@ public static class Vector2Helpers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2 Rounded(this Vector2 vec)
+    {
+        return new Vector2(MathF.Round(vec.X), MathF.Round(vec.Y));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Deconstruct(this Vector2 vec, out float x, out float y)
     {
         x = vec.X;

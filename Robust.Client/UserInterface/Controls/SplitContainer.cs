@@ -366,14 +366,14 @@ namespace Robust.Client.UserInterface.Controls
                 var width = MathF.Max(first.DesiredSize.X, second.DesiredPixelSize.X);
                 var height = first.DesiredSize.Y + _splitWidth + second.DesiredPixelSize.Y;
 
-                return (width, height);
+                return new Vector2(width, height);
             }
             else
             {
                 var width = first.DesiredSize.X + _splitWidth + second.DesiredPixelSize.X;
                 var height = MathF.Max(first.DesiredSize.Y, second.DesiredPixelSize.Y);
 
-                return (width, height);
+                return new Vector2(width, height);
             }
         }
 

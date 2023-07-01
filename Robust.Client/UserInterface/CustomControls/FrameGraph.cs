@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            return (TrackedFrames * FrameWidth, FrameHeight * 2);
+            return new Vector2(TrackedFrames * FrameWidth, FrameHeight * 2);
         }
 
         protected override void FrameUpdate(FrameEventArgs args)

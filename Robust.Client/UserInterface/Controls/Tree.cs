@@ -220,10 +220,10 @@ namespace Robust.Client.UserInterface.Controls
             if (!string.IsNullOrWhiteSpace(item.Text))
             {
                 var offset = itemSelected.GetContentOffset(Vector2.Zero);
-                var baseLine = offset + (hOffset, vOffset + font.GetAscent(UIScale));
+                var baseLine = offset + new Vector2(hOffset, vOffset + font.GetAscent(UIScale));
                 foreach (var rune in item.Text.EnumerateRunes())
                 {
-                    baseLine += (font.DrawChar(handle, rune, baseLine, UIScale, Color.White), 0);
+                    baseLine += new Vector2(font.DrawChar(handle, rune, baseLine, UIScale, Color.White), 0);
                 }
             }
 

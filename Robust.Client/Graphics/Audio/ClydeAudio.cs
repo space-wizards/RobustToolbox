@@ -177,15 +177,15 @@ namespace Robust.Client.Graphics.Audio
         private void _updateAudio()
         {
             var eye = _eyeManager.CurrentEye;
-            var (x, y) = eye.Position.Position;
-            AL.Listener(ALListener3f.Position, x, y, -5);
+            var vec = eye.Position.Position;
+            AL.Listener(ALListener3f.Position, vec.X, vec.Y, -5);
             var rot2d = eye.Rotation.ToVec();
             AL.Listener(ALListenerfv.Orientation, new []{0, 0, -1, rot2d.X, rot2d.Y, 0});
 
             // Default orientation: at: (0, 0, -1)  up: (0, 1, 0)
-            var (rotX, rotY) = eye.Rotation.ToVec();
+            var rot = eye.Rotation.ToVec();
             var at = new Vector3(0f, 0f, -1f);
-            var up = new Vector3(rotY, rotX, 0f);
+            var up = new Vector3(rot.Y, rot.X, 0f);
             AL.Listener(ALListenerfv.Orientation, ref at, ref up);
 
             _flushALDisposeQueues();

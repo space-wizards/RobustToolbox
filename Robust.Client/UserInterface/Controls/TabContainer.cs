@@ -219,7 +219,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (TabsVisible)
             {
-                headerSize = (0, _getHeaderSize() / UIScale);
+                headerSize = new Vector2(0, _getHeaderSize() / UIScale);
             }
 
             var panel = _getPanel();

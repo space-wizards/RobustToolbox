@@ -18,7 +18,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public IClydeViewport? Viewport { get; set; }
 
-        private Vector2 _viewportResolution = (1f, 1f);
+        private Vector2 _viewportResolution = new Vector2(1f, 1f);
 
         /// <summary>
         ///     This controls the render target size, *as a fraction of the control size.*

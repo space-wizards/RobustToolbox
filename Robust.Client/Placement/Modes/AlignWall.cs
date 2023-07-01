@@ -39,7 +39,7 @@ namespace Robust.Client.Placement.Modes
                                    select node).First();
 
             MouseCoords = new EntityCoordinates(MouseCoords.EntityId,
-                closestNode + (pManager.PlacementOffset.X, pManager.PlacementOffset.Y));
+                closestNode + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y));
         }
 
         public override bool IsValidPosition(EntityCoordinates position)

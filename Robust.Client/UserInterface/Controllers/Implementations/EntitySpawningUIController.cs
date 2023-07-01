@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
@@ -214,7 +215,7 @@ public sealed class EntitySpawningUIController : UIController
         _shownEntities.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
         _window.PrototypeList.TotalItemCount = _shownEntities.Count;
-        _window.PrototypeScrollContainer.SetScrollValue((0, 0));
+        _window.PrototypeScrollContainer.SetScrollValue(new Vector2(0, 0));
         UpdateVisiblePrototypes();
     }
 

@@ -560,7 +560,7 @@ namespace Robust.Client.Graphics.Clyde
             if (light.CastShadows)
                 shadowCount++;
 
-            float distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared;
+            var distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared();
             state.clyde._lightsToRenderList[count++] = (light, lightPos, distanceSquared, rot);
 
             return true;

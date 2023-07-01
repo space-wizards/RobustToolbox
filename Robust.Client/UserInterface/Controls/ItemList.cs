@@ -411,7 +411,7 @@ namespace Robust.Client.UserInterface.Controls
                     font.DrawChar(handle, rune, baseLine, UIScale, color);
                 }
 
-                baseLine += (metrics.Advance, 0);
+                baseLine += new Vector2(metrics.Advance, 0);
             }
         }
 

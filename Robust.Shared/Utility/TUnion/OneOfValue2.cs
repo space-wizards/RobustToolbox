@@ -5,11 +5,9 @@ using JetBrains.Annotations;
 
 namespace Robust.Shared.Utility.TUnion;
 
-// Unmanaged OneOfs are more compact internally.
 /// <summary>
-/// A compact tagged union type that can store any unmanaged value.
+/// A tagged union type that can store any unmanaged value.
 /// </summary>
-/// <remarks>This is a true union internally and as such only takes up max(T0, T1) + 4 bytes. You want this for return values if you can help it.</remarks>
 /// <typeparam name="T0">The type of Item1OrErr</typeparam>
 /// <typeparam name="T1">The type of Item2OrErr</typeparam>
 [StructLayout(LayoutKind.Explicit)]
@@ -18,9 +16,9 @@ public readonly struct OneOfValue<T0, T1> : IOneOf<T0, T1>
     where T0: unmanaged
     where T1: unmanaged
 {
-    [FieldOffset(0)] private readonly int _kind;
-    [FieldOffset(4)] private readonly T0 _item1;
-    [FieldOffset(4)] private readonly T1 _item2;
+    private readonly int _kind;
+    private readonly T0 _item1;
+    private readonly T1 _item2;
 
     /// <summary>
     ///     Initialize the OneOf as the first item.

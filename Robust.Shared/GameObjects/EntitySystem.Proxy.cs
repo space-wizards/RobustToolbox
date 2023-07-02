@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility.TUnion;
 
 namespace Robust.Shared.GameObjects;
 
@@ -426,6 +427,13 @@ public partial class EntitySystem
     protected bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp)
     {
         return EntityManager.TryGetComponent(uid, out comp);
+    }
+
+    protected OneOf<T, MissingComponents<T>> TryCompErr<T>(EntityUid uid)
+        where T : IComponent
+    {
+        EntityManager.TryGetComponent(uid, out T? comp);
+        return comp.OrErr(new MissingComponents<T>(uid));
     }
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Utility;
+using Robust.Shared.Utility.TUnion;
 
 namespace Robust.Shared.GameObjects
 {
@@ -15,7 +16,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="logMissing">Whether to log missing components.</param>
         /// <typeparam name="TComp">The component type to resolve.</typeparam>
         /// <returns>True if the component is not null or was resolved correctly, false if the component couldn't be resolved.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected bool Resolve<TComp>(EntityUid uid, [NotNullWhen(true)] ref TComp? component, bool logMissing = true)
             where TComp : IComponent
         {

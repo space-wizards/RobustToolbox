@@ -1,0 +1,2 @@
+﻿This could probably all do with being source generated instead of hand written. Do that before adding three, four, five,
+six, etc parameter versions of OneOf and OneOfValue.

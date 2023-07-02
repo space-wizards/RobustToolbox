@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Lower default MTU to `1000`.
 
 ### Internal
 

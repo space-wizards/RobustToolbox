@@ -58,7 +58,7 @@ namespace Robust.Shared
         /// </summary>
         /// <seealso cref="NetMtuExpand"/>
         public static readonly CVarDef<int> NetMtu =
-            CVarDef.Create("net.mtu", NetPeerConfiguration.kDefaultMTU, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu", 1000, CVar.ARCHIVE);
 
         /// <summary>
         /// If set, automatically try to detect MTU above <see cref="NetMtu"/>.

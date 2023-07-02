@@ -10,7 +10,6 @@ namespace Robust.Shared.Utility.TUnion;
 /// </summary>
 /// <typeparam name="T0">The type of Item1OrErr</typeparam>
 /// <typeparam name="T1">The type of Item2OrErr</typeparam>
-[StructLayout(LayoutKind.Explicit)]
 [PublicAPI]
 public readonly struct OneOfValue<T0, T1> : IOneOf<T0, T1>
     where T0: unmanaged

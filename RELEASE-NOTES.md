@@ -47,11 +47,26 @@ END TEMPLATE-->
 
 ### Other
 
-* Lower default MTU to `1000`.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 132.2.0
+
+### New features
+
+* Add method to clear all joints + relayed joints on an entity.
+
+### Other
+
+* Lower default MTU to `1000`.
+
+### Internal
+
+* Resolved some warnings and unnecessary component resolves.
 
 
 ## 132.1.0

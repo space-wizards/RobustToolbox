@@ -5,6 +5,7 @@ using System.Numerics;
 using NetSerializer;
 using NUnit.Framework;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
@@ -106,10 +107,17 @@ namespace Robust.UnitTesting.Shared.Serialization
         [Test]
         public void TestVector2([ValueSource(nameof(Vector2Values))] Vector2 vec)
         {
+            var serializer = new Serializer(new[] {typeof(Vector2)}, new Settings()
+            {
+                CustomTypeSerializers = new ITypeSerializer[]
+                {
+                    new Vector2Serializer(),
+                }
+            });
             var stream = new MemoryStream();
-            Primitives.WritePrimitive(stream, vec);
+            serializer.SerializeDirect(stream, vec);
             stream.Position = 0;
-            Primitives.ReadPrimitive(stream, out Vector2 read);
+            serializer.DeserializeDirect(stream, out Vector2 read);
 
             Assert.That(read, NUnit.Framework.Is.EqualTo(vec));
         }

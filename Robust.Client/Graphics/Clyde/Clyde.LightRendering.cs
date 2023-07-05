@@ -578,9 +578,9 @@ namespace Robust.Client.Graphics.Clyde
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
             var state = (this, count: 0, shadowCastingCount: 0, xformSystem, xforms, worldAABB);
 
-            foreach (var comp in lightTreeSys.GetIntersectingTrees(map, worldAABB))
+            foreach (var (uid, comp) in lightTreeSys.GetIntersectingTrees(map, worldAABB))
             {
-                var bounds = xformSystem.GetInvWorldMatrix(comp.Owner, xforms).TransformBox(worldBounds);
+                var bounds = xformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(worldBounds);
                 comp.Tree.QueryAabb(ref state, LightQuery, bounds);
             }
 
@@ -928,12 +928,12 @@ namespace Robust.Client.Graphics.Clyde
 
             try
             {
-                foreach (var comp in occluderSystem.GetIntersectingTrees(map, expandedBounds))
+                foreach (var (uid, comp) in occluderSystem.GetIntersectingTrees(map, expandedBounds))
                 {
                     if (ami >= amiMax)
                         break;
 
-                    var treeBounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(expandedBounds);
+                    var treeBounds = xforms.GetComponent(uid).InvWorldMatrix.TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
                     {

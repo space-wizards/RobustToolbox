@@ -808,7 +808,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
             if (xformQuery.TryGetComponent(rootEntity, out var xform) && IsRoot(xform, mapQuery) && !HasComp<MapComponent>(rootEntity))
             {
-                xform.LocalPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
+                _transform.SetLocalPosition(xform, data.Options.TransformMatrix.Transform(xform.LocalPosition));
                 xform.LocalRotation += data.Options.Rotation;
             }
         }
@@ -1144,7 +1144,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 var xform = Transform(entityUid);
                 if (xform.NoLocalRotation && xform.LocalRotation != 0)
                 {
-                    Logger.Error($"Encountered a no-rotation entity with non-zero local rotation: {ToPrettyString(entityUid)}");
+                    Log.Error($"Encountered a no-rotation entity with non-zero local rotation: {ToPrettyString(entityUid)}");
                     xform._localRotation = 0;
                 }
 

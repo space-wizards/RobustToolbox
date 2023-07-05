@@ -45,7 +45,7 @@ namespace Robust.Server.Prototypes
 
             ReloadPrototypes(msg.Paths);
 
-            Logger.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
+            Sawmill.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
 #endif
         }
 

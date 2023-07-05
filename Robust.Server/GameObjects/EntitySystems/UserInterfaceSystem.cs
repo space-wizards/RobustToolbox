@@ -7,7 +7,6 @@ using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects
@@ -61,7 +60,7 @@ namespace Robust.Server.GameObjects
 
             foreach (var bui in activeUis.Interfaces)
             {
-                DeactivateInterface(bui, activeUis);
+                DeactivateInterface(uid, bui, activeUis);
             }
         }
 
@@ -76,13 +75,13 @@ namespace Robust.Server.GameObjects
 
             if (!uiComp._interfaces.TryGetValue(msg.UiKey, out var ui))
             {
-                Logger.DebugS("go.comp.ui", "Got BoundInterfaceMessageWrapMessage for unknown UI key: {0}", msg.UiKey);
+                Log.Debug("Got BoundInterfaceMessageWrapMessage for unknown UI key: {0}", msg.UiKey);
                 return;
             }
 
             if (!ui.SubscribedSessions.Contains(session))
             {
-                Logger.DebugS("go.comp.ui", $"UI {msg.UiKey} got BoundInterfaceMessageWrapMessage from a client who was not subscribed: {session}", msg.UiKey);
+                Log.Debug($"UI {msg.UiKey} got BoundInterfaceMessageWrapMessage from a client who was not subscribed: {session}", msg.UiKey);
                 return;
             }
 
@@ -182,14 +181,15 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private void DeactivateInterface(BoundUserInterface ui, ActiveUserInterfaceComponent? activeUis = null)
+        private void DeactivateInterface(EntityUid entityUid, BoundUserInterface ui,
+            ActiveUserInterfaceComponent? activeUis = null)
         {
-            if (!Resolve(ui.Component.Owner, ref activeUis, false))
+            if (!Resolve(entityUid, ref activeUis, false))
                 return;
 
             activeUis.Interfaces.Remove(ui);
             if (activeUis.Interfaces.Count == 0)
-                RemCompDeferred(activeUis.Owner, activeUis);
+                RemCompDeferred(entityUid, activeUis);
         }
 
         private void ActivateInterface(BoundUserInterface ui)
@@ -404,7 +404,7 @@ namespace Robust.Server.GameObjects
             RaiseLocalEvent(owner, new BoundUIClosedEvent(bui.UiKey, owner, session));
 
             if (bui._subscribedSessions.Count == 0)
-                DeactivateInterface(bui, activeUis);
+                DeactivateInterface(bui.Component.Owner, bui, activeUis);
         }
 
         /// <summary>

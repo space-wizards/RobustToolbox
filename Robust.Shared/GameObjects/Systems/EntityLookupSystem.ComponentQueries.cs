@@ -282,7 +282,7 @@ public sealed partial class EntityLookupSystem
 
     public HashSet<T> GetComponentsInRange<T>(EntityCoordinates coordinates, float range) where T : Component
     {
-        var mapPos = coordinates.ToMap(EntityManager);
+        var mapPos = coordinates.ToMap(EntityManager, _transform);
         return GetComponentsInRange<T>(mapPos, range);
     }
     #endregion

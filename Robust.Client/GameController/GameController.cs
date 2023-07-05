@@ -200,7 +200,7 @@ namespace Robust.Client
             // Setup main loop
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_gameTiming, _runtimeLog, _prof)
+                _mainLoop = new GameLoop(_gameTiming, _runtimeLog, _prof, _logManager.GetSawmill("eng"))
                 {
                     SleepMode = displayMode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
                 };

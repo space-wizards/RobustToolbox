@@ -4,6 +4,7 @@ using System.Text;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Console.Commands;
 
@@ -156,7 +157,6 @@ internal sealed class ListMapsCommand : LocalizedCommands
 internal sealed class ListGridsCommand : LocalizedCommands
 {
     [Dependency] private readonly IEntityManager _ent = default!;
-    [Dependency] private readonly IMapManager _map = default!;
 
     public override string Command => "lsgrid";
 
@@ -166,15 +166,18 @@ internal sealed class ListGridsCommand : LocalizedCommands
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var msg = new StringBuilder();
+        var xformSystem = _ent.System<SharedTransformSystem>();
         var xformQuery = _ent.GetEntityQuery<TransformComponent>();
+        var grids = _ent.AllComponentsList<MapGridComponent>();
+        grids.Sort((x, y) => x.Uid.CompareTo(y.Uid));
 
-        foreach (var grid in _map.GetAllGrids().OrderBy(grid => grid.Owner))
+        foreach (var (uid, grid) in grids)
         {
-            var xform = xformQuery.GetComponent(grid.Owner);
-            var worldPos = xform.WorldPosition;
+            var xform = xformQuery.GetComponent(uid);
+            var worldPos = xformSystem.GetWorldPosition(xform);
 
             msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3:0.0},{4:0.0} \n",
-                grid.Owner, xform.MapID, grid.Owner, worldPos.X, worldPos.Y);
+                uid, xform.MapID, uid, worldPos.X, worldPos.Y);
         }
 
         shell.WriteLine(msg.ToString());

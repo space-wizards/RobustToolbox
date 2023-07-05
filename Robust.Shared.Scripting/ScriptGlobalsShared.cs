@@ -49,12 +49,7 @@ namespace Robust.Shared.Scripting
 
         public EntityCoordinates gpos(double x, double y, EntityUid gridId)
         {
-            if (!map.TryGetGrid(gridId, out var grid))
-            {
-                return new EntityCoordinates(EntityUid.Invalid, new Vector2((float) x, (float) y));
-            }
-
-            return new EntityCoordinates(grid.Owner, new Vector2((float) x, (float) y));
+            return new EntityCoordinates(gridId, ((float) x, (float) y));
         }
 
         public EntityUid eid(int i)

@@ -334,9 +334,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         var queryState = new QueryState<TState>(maxLength, returnOnFirstHit, state, predicate);
 
         var endPoint = ray.Position + ray.Direction * maxLength;
-        var worldBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint), Vector2.ComponentMax(ray.Position, endPoint));
         var worldBox = new Box2(Vector2.Min(ray.Position, endPoint), Vector2.Max(ray.Position, endPoint));
-        var xforms = GetEntityQuery<TransformComponent>();
 
         foreach (var (treeUid, comp) in GetIntersectingTrees(mapId, worldBox))
         {

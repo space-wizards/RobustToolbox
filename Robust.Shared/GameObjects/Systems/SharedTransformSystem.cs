@@ -183,7 +183,7 @@ namespace Robust.Shared.GameObjects
         {
             var parentUid = coordinates.EntityId;
 
-            // Nullspace coordiantes?
+            // Nullspace coordinates?
             if (!parentUid.IsValid())
                 return coordinates;
 

@@ -317,7 +317,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         // TODO PERFORMANCE
         // Given uid is the parent of its children, we already know that the child xforms will have to be relative to
-        // coordiantes.EntityId. So instead of calling GetMoverCoordinates() for each child we should just calculate it
+        // coordinates.EntityId. So instead of calling GetMoverCoordinates() for each child we should just calculate it
         // directly.
         while (children.MoveNext(out var child))
         {

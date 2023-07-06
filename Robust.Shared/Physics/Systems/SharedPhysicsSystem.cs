@@ -64,12 +64,16 @@ namespace Robust.Shared.Physics.Systems
 
         private ISawmill _sawmill = default!;
 
+        private EntityQuery<TransformComponent> _xformQuery;
+
         public override void Initialize()
         {
             base.Initialize();
 
             _sawmill = Logger.GetSawmill("physics");
             _sawmill.Level = LogLevel.Info;
+
+            _xformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);

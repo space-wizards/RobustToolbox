@@ -70,7 +70,7 @@ namespace Robust.Server.GameObjects
 
             foreach (var bui in activeUis.Interfaces)
             {
-                DeactivateInterface(bui, activeUis);
+                DeactivateInterface(uid, bui, activeUis);
             }
         }
 
@@ -186,14 +186,15 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private void DeactivateInterface(BoundUserInterface ui, ActiveUserInterfaceComponent? activeUis = null)
+        private void DeactivateInterface(EntityUid entityUid, BoundUserInterface ui,
+            ActiveUserInterfaceComponent? activeUis = null)
         {
-            if (!Resolve(ui.Owner, ref activeUis, false))
+            if (!Resolve(entityUid, ref activeUis, false))
                 return;
 
             activeUis.Interfaces.Remove(ui);
             if (activeUis.Interfaces.Count == 0)
-                RemCompDeferred(ui.Owner, activeUis);
+                RemCompDeferred(entityUid, activeUis);
         }
 
         private void ActivateInterface(BoundUserInterface ui)
@@ -408,7 +409,7 @@ namespace Robust.Server.GameObjects
             RaiseLocalEvent(owner, new BoundUIClosedEvent(bui.UiKey, owner, session));
 
             if (bui._subscribedSessions.Count == 0)
-                DeactivateInterface(bui, activeUis);
+                DeactivateInterface(bui.Owner, bui, activeUis);
         }
 
         /// <summary>

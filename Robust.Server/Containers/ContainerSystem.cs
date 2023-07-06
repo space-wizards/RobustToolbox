@@ -8,7 +8,7 @@ namespace Robust.Server.Containers
     {
         protected override void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing)
         {
-            Logger.Error($"Missing entity for container {ToPrettyString(uid)}. Missing uid: {missing}");
+            Log.Error($"Missing entity for container {ToPrettyString(uid)}. Missing uid: {missing}");
             //cont.InternalRemove(ent);
         }
     }

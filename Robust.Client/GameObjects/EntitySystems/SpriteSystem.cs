@@ -91,21 +91,53 @@ namespace Robust.Client.GameObjects
             _inertUpdateQueue.Enqueue(sprite);
         }
 
+        private void DoUpdateIsInert(SpriteComponent component)
+        {
+            component._inertUpdateQueued = false;
+            component.IsInert = true;
+
+            foreach (var layer in component.Layers)
+            {
+                // Since StateId is a struct, we can't null-check it directly.
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated || layer.Blank)
+                {
+                    continue;
+                }
+
+                var rsi = layer.RSI ?? component.BaseRSI;
+                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+                {
+                    state = GetFallbackState();
+                }
+
+                if (state.IsAnimated)
+                {
+                    component.IsInert = false;
+                    break;
+                }
+            }
+        }
+
         /// <inheritdoc />
         public override void FrameUpdate(float frameTime)
         {
             while (_inertUpdateQueue.TryDequeue(out var sprite))
             {
-                sprite.DoUpdateIsInert();
+                DoUpdateIsInert(sprite);
             }
 
             var realtime = _timing.RealTime.TotalSeconds;
             var spriteQuery = GetEntityQuery<SpriteComponent>();
             var syncQuery = GetEntityQuery<SyncSpriteComponent>();
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+
             foreach (var uid in _queuedFrameUpdate)
             {
-                if (!spriteQuery.TryGetComponent(uid, out var sprite))
+                if (!spriteQuery.TryGetComponent(uid, out var sprite) ||
+                    metaQuery.GetComponent(uid).EntityPaused)
+                {
                     continue;
+                }
 
                 if (sprite.IsInert)
                     continue;

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
@@ -48,12 +47,7 @@ namespace Robust.Shared.Scripting
 
         public EntityCoordinates gpos(double x, double y, EntityUid gridId)
         {
-            if (!map.TryGetGrid(gridId, out var grid))
-            {
-                return new EntityCoordinates(EntityUid.Invalid, ((float) x, (float) y));
-            }
-
-            return new EntityCoordinates(grid.Owner, ((float) x, (float) y));
+            return new EntityCoordinates(gridId, ((float) x, (float) y));
         }
 
         public EntityUid eid(int i)
@@ -168,7 +162,7 @@ namespace Robust.Shared.Scripting
         #region EntityManager proxy methods
         public T Comp<T>(EntityUid uid)
             => ent.GetComponent<T>(uid);
-            
+
         public bool TryComp<T>(EntityUid uid, out T? comp)
             => ent.TryGetComponent(uid, out comp);
 
@@ -195,7 +189,7 @@ namespace Robust.Shared.Scripting
 
         public EntityPrototype? Prototype(EntityUid uid)
             => ent.GetComponent<MetaDataComponent>(uid).EntityPrototype;
-            
+
         public EntityStringRepresentation ToPrettyString(EntityUid uid)
             => ent.ToPrettyString(uid);
 

@@ -27,7 +27,7 @@ public sealed class RobustClientAssetGraph
         // We use a parallelizing input to break out all the work on files coming in onto multiple threads.
         Input = new AssetPassPipe { Name = "RobustClientAssetGraphInput", Parallelize = true };
         PresetPasses = new AssetPassPipe { Name = "RobustClientAssetGraphPresetPasses" };
-        Output = new AssetPassPipe { Name = "RobustClientAssetGraphOutput" };
+        Output = new AssetPassPipe { Name = "RobustClientAssetGraphOutput", CheckDuplicates = true };
         NormalizeText = new AssetPassNormalizeText { Name = "RobustClientAssetGraphNormalizeText" };
 
         PresetPasses.AddDependency(Input);

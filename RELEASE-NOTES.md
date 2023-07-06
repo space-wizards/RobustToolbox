@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `AssetPassPipe` has a new `CheckDuplicates` property that makes it explicitly check for and drop duplicate asset files passed through.
 
 ### Bugfixes
 
@@ -52,6 +52,37 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 132.2.0
+
+### New features
+
+* Add method to clear all joints + relayed joints on an entity.
+
+### Other
+
+* Lower default MTU to `1000`.
+
+### Internal
+
+* Resolved some warnings and unnecessary component resolves.
+
+
+## 132.1.0
+
+### New features
+
+* `Robust.Shared.Physics.Events.CollisionChangeEvent` now has the `EntityUid` of the physics body.
+
+### Other
+
+* Paused entities now pause their animations. There's no guarantee they'll resume at the same point (use SyncSprite instead).
+
+### Internal
+
+* Fix ComponentTreeSystem warnings.
+* Fix some miscellaneous other warnings.
 
 
 ## 132.0.1

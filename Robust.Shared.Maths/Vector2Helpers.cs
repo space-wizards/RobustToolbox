@@ -43,12 +43,13 @@ public static class Vector2Helpers
     /// Normalizes this vector if its length > 0, otherwise sets it to 0.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float Normalize(this Vector2 vec)
+    public static float Normalize(ref this Vector2 vec)
     {
         var length = vec.Length();
 
         if (length < float.Epsilon)
         {
+            vec = Vector2.Zero;
             return 0f;
         }
 

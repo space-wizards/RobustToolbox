@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.Maths;
 using NUnit.Framework;
 
@@ -38,7 +39,7 @@ namespace Robust.UnitTesting.Shared.Maths
         [Parallelizable]
         public void TestDirectionToVec(float x, float y, Direction dir, Angle _)
         {
-            var control = new Vector2(x, y).Normalized;
+            var control = new Vector2(x, y).Normalized();
             var controlInt = new Vector2i((int)x, (int)y);
             var val = dir.ToVec();
             var intVec = dir.ToIntVec();
@@ -63,7 +64,7 @@ namespace Robust.UnitTesting.Shared.Maths
         [Parallelizable]
         public void TestVecToAngle(float x, float y, Direction dir, Angle angle)
         {
-            var target = new Vector2(x, y).Normalized;
+            var target = new Vector2(x, y).Normalized();
 
             Assert.That(target.ToWorldAngle().Reduced(), Is.Approximately(new Angle(angle)));
         }
@@ -73,7 +74,7 @@ namespace Robust.UnitTesting.Shared.Maths
         [Parallelizable]
         public void TestVector2ToDirection(float x, float y, Direction dir, Angle angle)
         {
-            var target = new Vector2(x, y).Normalized;
+            var target = new Vector2(x, y).Normalized();
 
             Assert.That(target.GetDir(), Is.EqualTo(dir));
         }

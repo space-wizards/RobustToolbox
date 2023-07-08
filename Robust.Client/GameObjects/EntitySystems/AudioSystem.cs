@@ -181,7 +181,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
         // Max distance check
         var delta = mapPos.Value.Position - listener.Position;
-        var distance = delta.Length;
+        var distance = delta.Length();
         if (distance > stream.MaxDistance)
         {
             stream.Source.SetVolumeDirect(0);

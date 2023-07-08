@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Map;
@@ -335,8 +336,8 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="MinHeight"/>
         public Vector2 MinSize
         {
-            get => (_minWidth, _minHeight);
-            set => (MinWidth, MinHeight) = Vector2.ComponentMax(Vector2.Zero, value);
+            get => new(_minWidth, _minHeight);
+            set => (MinWidth, MinHeight) = Vector2.Max(Vector2.Zero, value);
         }
 
         /// <summary>
@@ -358,7 +359,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="SetHeight"/>
         public Vector2 SetSize
         {
-            get => (_setWidth, _setHeight);
+            get => new(_setWidth, _setHeight);
             set => (SetWidth, SetHeight) = value;
         }
 
@@ -374,7 +375,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="MaxHeight"/>
         public Vector2 MaxSize
         {
-            get => (_maxWidth, _maxHeight);
+            get => new(_maxWidth, _maxHeight);
             set => (MaxWidth, MaxHeight) = value;
         }
 
@@ -565,8 +566,8 @@ namespace Robust.Client.UserInterface
             measured.Y = Math.Clamp(measured.Y, MinHeight, MaxHeight);
 
             measured = _margin.Inflate(measured);
-            measured = Vector2.ComponentMin(measured, availableSize);
-            measured = Vector2.ComponentMax(measured, Vector2.Zero);
+            measured = Vector2.Min(measured, availableSize);
+            measured = Vector2.Max(measured, Vector2.Zero);
             return measured;
         }
 
@@ -580,7 +581,7 @@ namespace Robust.Client.UserInterface
             foreach (var child in Children)
             {
                 child.Measure(availableSize);
-                min = Vector2.ComponentMax(min, child.DesiredSize);
+                min = Vector2.Max(min, child.DesiredSize);
             }
 
             return min;
@@ -640,7 +641,7 @@ namespace Robust.Client.UserInterface
 
             var arranged = ArrangeOverride(size);
 
-            size = Vector2.ComponentMin(arranged, size);
+            size = Vector2.Min(arranged, size);
 
             switch (HorizontalAlignment)
             {
@@ -708,7 +709,7 @@ namespace Robust.Client.UserInterface
             minConstraint = float.IsNaN(setH) ? 0 : setH;
             minH = MathHelper.Clamp(maxH, minConstraint, minH);
 
-            return (
+            return new Vector2(
                 Math.Clamp(avail.X, minW, maxW),
                 Math.Clamp(avail.Y, minH, maxH));
         }

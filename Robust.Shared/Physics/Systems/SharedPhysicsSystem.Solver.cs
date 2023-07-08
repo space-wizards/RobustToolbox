@@ -21,6 +21,7 @@
 */
 
 using System;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Maths;
@@ -231,17 +232,17 @@ public abstract partial class SharedPhysicsSystem
                 vcp.RelativeVelocityA = points[j] - centerA;
                 vcp.RelativeVelocityB = points[j] - centerB;
 
-                float rnA = Vector2.Cross(vcp.RelativeVelocityA, velocityConstraint.Normal);
-                float rnB = Vector2.Cross(vcp.RelativeVelocityB, velocityConstraint.Normal);
+                float rnA = Vector2Helpers.Cross(vcp.RelativeVelocityA, velocityConstraint.Normal);
+                float rnB = Vector2Helpers.Cross(vcp.RelativeVelocityB, velocityConstraint.Normal);
 
                 float kNormal = invMassA + invMassB + invIA * rnA * rnA + invIB * rnB * rnB;
 
                 vcp.NormalMass = kNormal > 0.0f ? 1.0f / kNormal : 0.0f;
 
-                Vector2 tangent = Vector2.Cross(velocityConstraint.Normal, 1.0f);
+                Vector2 tangent = Vector2Helpers.Cross(velocityConstraint.Normal, 1.0f);
 
-                float rtA = Vector2.Cross(vcp.RelativeVelocityA, tangent);
-                float rtB = Vector2.Cross(vcp.RelativeVelocityB, tangent);
+                float rtA = Vector2Helpers.Cross(vcp.RelativeVelocityA, tangent);
+                float rtB = Vector2Helpers.Cross(vcp.RelativeVelocityB, tangent);
 
                 float kTangent = invMassA + invMassB + invIA * rtA * rtA + invIB * rtB * rtB;
 
@@ -249,7 +250,7 @@ public abstract partial class SharedPhysicsSystem
 
                 // Setup a velocity bias for restitution.
                 vcp.VelocityBias = 0.0f;
-                float vRel = Vector2.Dot(velocityConstraint.Normal, linVelocityB + Vector2.Cross(angVelocityB, vcp.RelativeVelocityB) - linVelocityA - Vector2.Cross(angVelocityA, vcp.RelativeVelocityA));
+                float vRel = Vector2.Dot(velocityConstraint.Normal, linVelocityB + Vector2Helpers.Cross(angVelocityB, vcp.RelativeVelocityB) - linVelocityA - Vector2Helpers.Cross(angVelocityA, vcp.RelativeVelocityA));
                 if (vRel < -data.VelocityThreshold)
                 {
                     vcp.VelocityBias = -velocityConstraint.Restitution * vRel;
@@ -262,10 +263,10 @@ public abstract partial class SharedPhysicsSystem
                 var vcp1 = velocityConstraint.Points[0];
                 var vcp2 = velocityConstraint.Points[1];
 
-                var rn1A = Vector2.Cross(vcp1.RelativeVelocityA, velocityConstraint.Normal);
-                var rn1B = Vector2.Cross(vcp1.RelativeVelocityB, velocityConstraint.Normal);
-                var rn2A = Vector2.Cross(vcp2.RelativeVelocityA, velocityConstraint.Normal);
-                var rn2B = Vector2.Cross(vcp2.RelativeVelocityB, velocityConstraint.Normal);
+                var rn1A = Vector2Helpers.Cross(vcp1.RelativeVelocityA, velocityConstraint.Normal);
+                var rn1B = Vector2Helpers.Cross(vcp1.RelativeVelocityB, velocityConstraint.Normal);
+                var rn2A = Vector2Helpers.Cross(vcp2.RelativeVelocityA, velocityConstraint.Normal);
+                var rn2B = Vector2Helpers.Cross(vcp2.RelativeVelocityB, velocityConstraint.Normal);
 
                 var k11 = invMassA + invMassB + invIA * rn1A * rn1A + invIB * rn1B * rn1B;
                 var k22 = invMassA + invMassB + invIA * rn2A * rn2A + invIB * rn2B * rn2B;
@@ -317,15 +318,15 @@ public abstract partial class SharedPhysicsSystem
             ref var angVelocityB = ref angularVelocities[offset + indexB];
 
             var normal = velocityConstraint.Normal;
-            var tangent = Vector2.Cross(normal, 1.0f);
+            var tangent = Vector2Helpers.Cross(normal, 1.0f);
 
             for (var j = 0; j < pointCount; ++j)
             {
                 var constraintPoint = velocityConstraint.Points[j];
                 var P = normal * constraintPoint.NormalImpulse + tangent * constraintPoint.TangentImpulse;
-                angVelocityA -= invIA * Vector2.Cross(constraintPoint.RelativeVelocityA, P);
+                angVelocityA -= invIA * Vector2Helpers.Cross(constraintPoint.RelativeVelocityA, P);
                 linVelocityA -= P * invMassA;
-                angVelocityB += invIB * Vector2.Cross(constraintPoint.RelativeVelocityB, P);
+                angVelocityB += invIB * Vector2Helpers.Cross(constraintPoint.RelativeVelocityB, P);
                 linVelocityB += P * invMassB;
             }
         }
@@ -385,7 +386,7 @@ public abstract partial class SharedPhysicsSystem
             ref var wB = ref angularVelocities[offset + indexB];
 
             var normal = velocityConstraint.Normal;
-            var tangent = Vector2.Cross(normal, 1.0f);
+            var tangent = Vector2Helpers.Cross(normal, 1.0f);
             var friction = velocityConstraint.Friction;
 
             DebugTools.Assert(pointCount is 1 or 2);
@@ -397,7 +398,7 @@ public abstract partial class SharedPhysicsSystem
                 ref var velConstraintPoint = ref velocityConstraint.Points[j];
 
                 // Relative velocity at contact
-                var dv = vB + Vector2.Cross(wB, velConstraintPoint.RelativeVelocityB) - vA - Vector2.Cross(wA, velConstraintPoint.RelativeVelocityA);
+                var dv = vB + Vector2Helpers.Cross(wB, velConstraintPoint.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, velConstraintPoint.RelativeVelocityA);
 
                 // Compute tangent force
                 float vt = Vector2.Dot(dv, tangent) - velocityConstraint.TangentSpeed;
@@ -413,10 +414,10 @@ public abstract partial class SharedPhysicsSystem
                 Vector2 P = tangent * lambda;
 
                 vA -= P * mA;
-                wA -= iA * Vector2.Cross(velConstraintPoint.RelativeVelocityA, P);
+                wA -= iA * Vector2Helpers.Cross(velConstraintPoint.RelativeVelocityA, P);
 
                 vB += P * mB;
-                wB += iB * Vector2.Cross(velConstraintPoint.RelativeVelocityB, P);
+                wB += iB * Vector2Helpers.Cross(velConstraintPoint.RelativeVelocityB, P);
             }
 
             // Solve normal constraints
@@ -425,7 +426,7 @@ public abstract partial class SharedPhysicsSystem
                 ref var vcp = ref velocityConstraint.Points[0];
 
                 // Relative velocity at contact
-                Vector2 dv = vB + Vector2.Cross(wB, vcp.RelativeVelocityB) - vA - Vector2.Cross(wA, vcp.RelativeVelocityA);
+                Vector2 dv = vB + Vector2Helpers.Cross(wB, vcp.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, vcp.RelativeVelocityA);
 
                 // Compute normal impulse
                 float vn = Vector2.Dot(dv, normal);
@@ -439,10 +440,10 @@ public abstract partial class SharedPhysicsSystem
                 // Apply contact impulse
                 Vector2 P = normal * lambda;
                 vA -= P * mA;
-                wA -= iA * Vector2.Cross(vcp.RelativeVelocityA, P);
+                wA -= iA * Vector2Helpers.Cross(vcp.RelativeVelocityA, P);
 
                 vB += P * mB;
-                wB += iB * Vector2.Cross(vcp.RelativeVelocityB, P);
+                wB += iB * Vector2Helpers.Cross(vcp.RelativeVelocityB, P);
             }
             else
             {
@@ -486,8 +487,8 @@ public abstract partial class SharedPhysicsSystem
                 DebugTools.Assert(a.X >= 0.0f && a.Y >= 0.0f);
 
                 // Relative velocity at contact
-                Vector2 dv1 = vB + Vector2.Cross(wB, cp1.RelativeVelocityB) - vA - Vector2.Cross(wA, cp1.RelativeVelocityA);
-                Vector2 dv2 = vB + Vector2.Cross(wB, cp2.RelativeVelocityB) - vA - Vector2.Cross(wA, cp2.RelativeVelocityA);
+                Vector2 dv1 = vB + Vector2Helpers.Cross(wB, cp1.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, cp1.RelativeVelocityA);
+                Vector2 dv2 = vB + Vector2Helpers.Cross(wB, cp2.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, cp2.RelativeVelocityA);
 
                 // Compute normal velocity
                 float vn1 = Vector2.Dot(dv1, normal);
@@ -527,10 +528,10 @@ public abstract partial class SharedPhysicsSystem
                         Vector2 P1 = normal * d.X;
                         Vector2 P2 = normal * d.Y;
                         vA -= (P1 + P2) * mA;
-                        wA -= iA * (Vector2.Cross(cp1.RelativeVelocityA, P1) + Vector2.Cross(cp2.RelativeVelocityA, P2));
+                        wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
 
                         vB += (P1 + P2) * mB;
-                        wB += iB * (Vector2.Cross(cp1.RelativeVelocityB, P1) + Vector2.Cross(cp2.RelativeVelocityB, P2));
+                        wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
 
                         // Accumulate
                         cp1.NormalImpulse = x.X;
@@ -559,10 +560,10 @@ public abstract partial class SharedPhysicsSystem
                         Vector2 P1 = normal * d.X;
                         Vector2 P2 = normal * d.Y;
                         vA -= (P1 + P2) * mA;
-                        wA -= iA * (Vector2.Cross(cp1.RelativeVelocityA, P1) + Vector2.Cross(cp2.RelativeVelocityA, P2));
+                        wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
 
                         vB += (P1 + P2) * mB;
-                        wB += iB * (Vector2.Cross(cp1.RelativeVelocityB, P1) + Vector2.Cross(cp2.RelativeVelocityB, P2));
+                        wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
 
                         // Accumulate
                         cp1.NormalImpulse = x.X;
@@ -592,10 +593,10 @@ public abstract partial class SharedPhysicsSystem
                         Vector2 P1 = normal * d.X;
                         Vector2 P2 = normal * d.Y;
                         vA -= (P1 + P2) * mA;
-                        wA -= iA * (Vector2.Cross(cp1.RelativeVelocityA, P1) + Vector2.Cross(cp2.RelativeVelocityA, P2));
+                        wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
 
                         vB += (P1 + P2) * mB;
-                        wB += iB * (Vector2.Cross(cp1.RelativeVelocityB, P1) + Vector2.Cross(cp2.RelativeVelocityB, P2));
+                        wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
 
                         // Accumulate
                         cp1.NormalImpulse = x.X;
@@ -623,10 +624,10 @@ public abstract partial class SharedPhysicsSystem
                         Vector2 P1 = normal * d.X;
                         Vector2 P2 = normal * d.Y;
                         vA -= (P1 + P2) * mA;
-                        wA -= iA * (Vector2.Cross(cp1.RelativeVelocityA, P1) + Vector2.Cross(cp2.RelativeVelocityA, P2));
+                        wA -= iA * (Vector2Helpers.Cross(cp1.RelativeVelocityA, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityA, P2));
 
                         vB += (P1 + P2) * mB;
-                        wB += iB * (Vector2.Cross(cp1.RelativeVelocityB, P1) + Vector2.Cross(cp2.RelativeVelocityB, P2));
+                        wB += iB * (Vector2Helpers.Cross(cp1.RelativeVelocityB, P1) + Vector2Helpers.Cross(cp2.RelativeVelocityB, P2));
 
                         // Accumulate
                         cp1.NormalImpulse = x.X;
@@ -747,8 +748,8 @@ public abstract partial class SharedPhysicsSystem
                 float C = Math.Clamp(data.Baumgarte * (separation + PhysicsConstants.LinearSlop), -_maxLinearCorrection, 0.0f);
 
                 // Compute the effective mass.
-                float rnA = Vector2.Cross(rA, normal);
-                float rnB = Vector2.Cross(rB, normal);
+                float rnA = Vector2Helpers.Cross(rA, normal);
+                float rnB = Vector2Helpers.Cross(rB, normal);
                 float K = mA + mB + iA * rnA * rnA + iB * rnB * rnB;
 
                 // Compute normal impulse
@@ -757,10 +758,10 @@ public abstract partial class SharedPhysicsSystem
                 Vector2 P = normal * impulse;
 
                 centerA -= P * mA;
-                angleA -= iA * Vector2.Cross(rA, P);
+                angleA -= iA * Vector2Helpers.Cross(rA, P);
 
                 centerB += P * mB;
-                angleB += iB * Vector2.Cross(rB, P);
+                angleB += iB * Vector2Helpers.Cross(rB, P);
             }
         }
 
@@ -799,10 +800,10 @@ public abstract partial class SharedPhysicsSystem
                 Vector2 pointA = Physics.Transform.Mul(xfA, manifold.LocalPoint);
                 Vector2 pointB = Physics.Transform.Mul(xfB, manifold.Points[0].LocalPoint);
 
-                if ((pointA - pointB).LengthSquared > float.Epsilon * float.Epsilon)
+                if ((pointA - pointB).LengthSquared() > float.Epsilon * float.Epsilon)
                 {
                     normal = pointB - pointA;
-                    normal = normal.Normalized;
+                    normal = normal.Normalized();
                 }
 
                 Vector2 cA = pointA + normal * radiusA;
@@ -871,7 +872,7 @@ public abstract partial class SharedPhysicsSystem
 
                         //FPE: Fix to handle zero normalization
                         if (normal != Vector2.Zero)
-                            normal = normal.Normalized;
+                            normal = normal.Normalized();
 
                         point = (pointA + pointB) * 0.5f;
                         separation = Vector2.Dot(pointB - pointA, normal) - pc.RadiusA - pc.RadiusB;

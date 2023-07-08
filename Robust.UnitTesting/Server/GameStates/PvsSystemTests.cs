@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Server.Player;
@@ -60,8 +61,8 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         EntityUid player = default;
         EntityUid other = default;
         TransformComponent otherXform = default!;
-        var gridCoords = new EntityCoordinates(grid, (0.5f, 0.5f));
-        var mapCoords = new EntityCoordinates(map, (2, 2));
+        var gridCoords = new EntityCoordinates(grid, new Vector2(0.5f, 0.5f));
+        var mapCoords = new EntityCoordinates(map, new Vector2(2, 2));
         await server.WaitPost(() =>
         {
             player = sEntMan.SpawnEntity("", gridCoords);

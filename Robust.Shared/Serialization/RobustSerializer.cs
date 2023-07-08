@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -79,12 +80,17 @@ namespace Robust.Shared.Serialization
 
             LogSzr = _logManager.GetSawmill("szr");
             types.AddRange(AlwaysNetSerializable);
+            types.Add(typeof(Vector2));
 
             MappedStringSerializer.Initialize();
 
             var settings = new Settings
             {
-                CustomTypeSerializers = new[] {MappedStringSerializer.TypeSerializer}
+                CustomTypeSerializers = new[]
+                {
+                    MappedStringSerializer.TypeSerializer,
+                    new Vector2Serializer(),
+                }
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);

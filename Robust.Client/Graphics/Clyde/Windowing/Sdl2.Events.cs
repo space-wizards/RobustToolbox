@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Numerics;
 using Robust.Client.Input;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using TerraFX.Interop.Windows;
 using static SDL2.SDL;
 using static SDL2.SDL.SDL_EventType;
@@ -141,7 +141,7 @@ internal partial class Clyde
                 return;
 
             var eventArgs = new MouseWheelEventArgs(
-                (ev.XOffset, ev.YOffset),
+                new Vector2(ev.XOffset, ev.YOffset),
                 new ScreenCoordinates(windowReg.LastMousePos, windowReg.Id));
 
             _clyde.SendScroll(eventArgs);
@@ -165,7 +165,7 @@ internal partial class Clyde
             if (windowReg == null)
                 return;
 
-            var newPos = (ev.X, ev.Y) * windowReg.PixelRatio;
+            var newPos = new Vector2(ev.X, ev.Y) * windowReg.PixelRatio;
             // SDL2 does give us delta positions, but I'm worried about rounding errors thanks to DPI stuff.
             var delta = newPos - windowReg.LastMousePos;
             windowReg.LastMousePos = newPos;
@@ -205,10 +205,11 @@ internal partial class Clyde
                 return;
 
             windowReg.PixelRatio = windowReg.FramebufferSize / (Vector2)windowReg.WindowSize;
+            var newScale = new Vector2(ev.XScale, ev.YScale);
 
-            if (windowReg.WindowScale != (ev.XScale, ev.YScale))
+            if (!windowReg.WindowScale.Equals(newScale))
             {
-                windowReg.WindowScale = (ev.XScale, ev.YScale);
+                windowReg.WindowScale = newScale;
                 _clyde.SendWindowContentScaleChanged(new WindowContentScaleEventArgs(windowReg.Handle));
             }
 

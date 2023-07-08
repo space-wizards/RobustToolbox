@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Utility;
@@ -194,7 +195,7 @@ internal sealed partial class CollisionManager
         Vector2 v12 = poly1.Vertices[iv2];
 
         Vector2 localTangent = v12 - v11;
-        localTangent = localTangent.Normalized;
+        localTangent = localTangent.Normalized();
 
         Vector2 localNormal = new Vector2(localTangent.Y, -localTangent.X);
         Vector2 planePoint = (v11 + v12) * 0.5f;

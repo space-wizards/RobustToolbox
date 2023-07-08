@@ -11,6 +11,7 @@ using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Containers

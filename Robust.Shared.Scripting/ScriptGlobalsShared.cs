@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
@@ -47,7 +49,7 @@ namespace Robust.Shared.Scripting
 
         public EntityCoordinates gpos(double x, double y, EntityUid gridId)
         {
-            return new EntityCoordinates(gridId, ((float) x, (float) y));
+            return new EntityCoordinates(gridId, new Vector2((float) x, (float) y));
         }
 
         public EntityUid eid(int i)

@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Maths;
+﻿using System.Numerics;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -79,31 +80,31 @@ namespace Robust.Client.UserInterface.Controls
                     {
                         // There is horizontal room at the alt pos so there we go.
                         isAltPos = true;
-                        offset = (altPos.Value.X - size.X, altPos.Value.Y);
+                        offset = new Vector2(altPos.Value.X - size.X, altPos.Value.Y);
                         (_, b) = size + offset;
                     }
                     else
                     {
-                        offset -= (r - Width, 0);
+                        offset -= new Vector2(r - Width, 0);
                     }
                 }
 
                 // Clamp the bottom edge.
                 if (b > Height)
                 {
-                    offset -= (0, b - Height);
+                    offset -= new Vector2(0, b - Height);
                 }
 
                 // Try to clamp the left edge.
                 if (offset.X < 0 && !isAltPos)
                 {
-                    offset -= (offset.X, 0);
+                    offset -= new Vector2(offset.X, 0);
                 }
 
                 // Try to clamp the top edge.
                 if (offset.Y < 0)
                 {
-                    offset -= (0, offset.Y);
+                    offset -= new Vector2(0, offset.Y);
                 }
 
                 child.Arrange(UIBox2.FromDimensions(offset, size));

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
@@ -320,7 +321,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         // TODO PERFORMANCE
         // Given uid is the parent of its children, we already know that the child xforms will have to be relative to
-        // coordiantes.EntityId. So instead of calling GetMoverCoordinates() for each child we should just calculate it
+        // coordinates.EntityId. So instead of calling GetMoverCoordinates() for each child we should just calculate it
         // directly.
         while (children.MoveNext(out var child))
         {
@@ -487,8 +488,9 @@ internal sealed partial class PvsSystem : EntitySystem
                 }
 
                 var state = (i, _xformQuery, viewPos, range, visMask, gridDict, playerChunks, _chunkList, _transform);
+                var rangeVec = new Vector2(range, range);
 
-                _mapManager.FindGridsIntersecting(mapId, new Box2(viewPos - range, viewPos + range),
+                _mapManager.FindGridsIntersecting(mapId, new Box2(viewPos - rangeVec, viewPos + rangeVec),
                     ref state, static (
                         EntityUid gridUid,
                         MapGridComponent _,

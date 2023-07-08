@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.Debugging;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -261,9 +262,9 @@ namespace Robust.Shared.Physics.Systems
             Func<EntityUid, TState, bool> predicate, float maxLength = 50F, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new();
-            var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
-            var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
-                Vector2.ComponentMax(ray.Position, endPoint));
+            var endPoint = ray.Position + ray.Direction.Normalized() * maxLength;
+            var rayBox = new Box2(Vector2.Min(ray.Position, endPoint),
+                Vector2.Max(ray.Position, endPoint));
 
             foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, rayBox))
             {
@@ -366,9 +367,9 @@ namespace Robust.Shared.Physics.Systems
         public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, EntityUid? ignoredEnt = null)
         {
             var penetration = 0f;
-            var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
-            var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
-                Vector2.ComponentMax(ray.Position, endPoint));
+            var endPoint = ray.Position + ray.Direction.Normalized() * maxLength;
+            var rayBox = new Box2(Vector2.Min(ray.Position, endPoint),
+                Vector2.Max(ray.Position, endPoint));
 
             foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, rayBox))
             {
@@ -391,10 +392,10 @@ namespace Robust.Shared.Physics.Systems
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length * 2, -gridRay.Direction).Intersects(
+                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction).Intersects(
                             proxy.AABB, out _, out var exitPoint))
                     {
-                        penetration += (point - exitPoint).Length;
+                        penetration += (point - exitPoint).Length();
                     }
                     return true;
                 }, gridRay);
@@ -410,10 +411,10 @@ namespace Robust.Shared.Physics.Systems
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length * 2, -gridRay.Direction).Intersects(
+                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction).Intersects(
                             proxy.AABB, out _, out var exitPoint))
                     {
-                        penetration += (point - exitPoint).Length;
+                        penetration += (point - exitPoint).Length();
                     }
                     return true;
                 }, gridRay);

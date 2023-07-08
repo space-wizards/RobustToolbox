@@ -647,7 +647,7 @@ namespace Robust.Shared.Maths
         /// <returns></returns>
         public static bool TryGetIntersecting(Vector2 start, Vector2 end, float radius, [NotNullWhen(true)] out Vector2? point)
         {
-            var maxFraction = (end - start).Length;
+            var maxFraction = (end - start).Length();
             float b = Vector2.Dot(start, start) - radius * radius;
 
             // Solve quadratic equation.

@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
@@ -835,7 +836,7 @@ public abstract partial class SharedPhysicsSystem
             var linearVelocity = linearVelocities[offset + i];
             var angularVelocity = angularVelocities[offset + i];
 
-            var velSqr = linearVelocity.LengthSquared;
+            var velSqr = linearVelocity.LengthSquared();
             if (velSqr > maxVelSq)
             {
                 linearVelocity *= maxVel / MathF.Sqrt(velSqr);

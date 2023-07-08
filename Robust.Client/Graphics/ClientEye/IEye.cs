@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Numerics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Prototypes;
 
@@ -28,7 +29,7 @@ public sealed class EntitySpawnButton : Control
             {
                 (EntityTextureRects = new LayeredTextureRect
                 {
-                    MinSize = (32, 32),
+                    MinSize = new Vector2(32, 32),
                     HorizontalAlignment = HAlignment.Center,
                     VerticalAlignment = VAlignment.Center,
                     Stretch = TextureRect.StretchMode.KeepAspectCentered,

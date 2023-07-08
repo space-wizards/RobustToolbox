@@ -427,6 +427,7 @@ Types:
     AddressFamily: { }
   System.Numerics:
     BitOperations: { All: True }
+    Vector2: { All: True }
   System.Reflection:
     Assembly:
       Methods:

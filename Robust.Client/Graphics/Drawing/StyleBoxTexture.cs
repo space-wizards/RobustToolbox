@@ -38,6 +38,7 @@ namespace Robust.Client.Graphics
 
             Texture = copy.Texture;
             Modulate = copy.Modulate;
+            TextureScale = copy.TextureScale;
         }
 
         public float ExpandMarginLeft { get; set; }
@@ -171,7 +172,7 @@ namespace Robust.Client.Graphics
             }
         }
 
-        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
+        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box, float uiScale)
         {
             if (Texture == null)
             {
@@ -184,8 +185,8 @@ namespace Robust.Client.Graphics
                 box.Right + ExpandMarginRight,
                 box.Bottom + ExpandMarginBottom);
 
-            var scaledMargin = new UIBox2(PatchMarginLeft * TextureScale.X, PatchMarginTop * TextureScale.Y,
-                    PatchMarginRight * TextureScale.X, PatchMarginBottom * TextureScale.Y);
+            var scaledMargin = new UIBox2(PatchMarginLeft * TextureScale.X * uiScale, PatchMarginTop * TextureScale.Y * uiScale,
+                    PatchMarginRight * TextureScale.X * uiScale, PatchMarginBottom * TextureScale.Y * uiScale);
 
             if (PatchMarginLeft > 0)
             {
@@ -204,7 +205,7 @@ namespace Robust.Client.Graphics
                         new UIBox2(0, scaledMargin.Top, scaledMargin.Left, box.Height - scaledMargin.Bottom)
                             .Translated(box.TopLeft);
                     DrawStretchingArea(handle, leftBox,
-                        new UIBox2(0, PatchMarginTop, PatchMarginLeft, Texture.Height - PatchMarginBottom));
+                        new UIBox2(0, PatchMarginTop, PatchMarginLeft, Texture.Height - PatchMarginBottom), uiScale);
                 }
 
                 if (PatchMarginBottom > 0)
@@ -239,7 +240,7 @@ namespace Robust.Client.Graphics
                     DrawStretchingArea(handle, rightBox,
                         new UIBox2(Texture.Width - PatchMarginRight, PatchMarginTop,
                             Texture.Width,
-                            Texture.Height - PatchMarginBottom));
+                            Texture.Height - PatchMarginBottom), uiScale);
                 }
 
                 if (PatchMarginBottom > 0)
@@ -261,7 +262,7 @@ namespace Robust.Client.Graphics
                     new UIBox2(scaledMargin.Left, 0, box.Width - scaledMargin.Right, scaledMargin.Top)
                         .Translated(box.TopLeft);
                 DrawStretchingArea(handle, topBox,
-                    new UIBox2(PatchMarginLeft, 0, Texture.Width - PatchMarginRight, PatchMarginTop));
+                    new UIBox2(PatchMarginLeft, 0, Texture.Width - PatchMarginRight, PatchMarginTop), uiScale);
             }
 
             if (PatchMarginBottom > 0)
@@ -275,7 +276,7 @@ namespace Robust.Client.Graphics
                 DrawStretchingArea(handle, bottomBox,
                     new UIBox2(PatchMarginLeft, Texture.Height - PatchMarginBottom,
                         Texture.Width - PatchMarginRight,
-                        Texture.Height));
+                        Texture.Height), uiScale);
             }
 
             // Draw center
@@ -284,11 +285,11 @@ namespace Robust.Client.Graphics
                     box.Height - scaledMargin.Bottom).Translated(box.TopLeft);
 
                 DrawStretchingArea(handle, centerBox, new UIBox2(PatchMarginLeft, PatchMarginTop, Texture.Width - PatchMarginRight,
-                    Texture.Height - PatchMarginBottom));
+                    Texture.Height - PatchMarginBottom), uiScale);
             }
         }
 
-        private void DrawStretchingArea(DrawingHandleScreen handle, UIBox2 area, UIBox2 texCoords)
+        private void DrawStretchingArea(DrawingHandleScreen handle, UIBox2 area, UIBox2 texCoords, float uiScale)
         {
             if (Mode == StretchMode.Stretch)
             {
@@ -301,8 +302,8 @@ namespace Robust.Client.Graphics
             // TODO: this is an insanely expensive way to do tiling, seriously.
             // This should 100% be implemented in a shader instead.
 
-            var sectionWidth = texCoords.Width * TextureScale.X;
-            var sectionHeight = texCoords.Height * TextureScale.Y;
+            var sectionWidth = texCoords.Width * TextureScale.X * uiScale;
+            var sectionHeight = texCoords.Height * TextureScale.Y * uiScale;
             var invScale = Vector2.One / TextureScale;
 
             for (var x = area.Left; area.Right - x > 0; x += sectionWidth)
@@ -328,13 +329,13 @@ namespace Robust.Client.Graphics
             switch (margin)
             {
                 case Margin.Top:
-                    return PatchMarginTop;
+                    return PatchMarginTop * TextureScale.Y;
                 case Margin.Bottom:
-                    return PatchMarginBottom;
+                    return PatchMarginBottom * TextureScale.Y;
                 case Margin.Right:
-                    return PatchMarginRight;
+                    return PatchMarginRight * TextureScale.X;
                 case Margin.Left:
-                    return PatchMarginLeft;
+                    return PatchMarginLeft * TextureScale.X;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(margin), margin, null);
             }

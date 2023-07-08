@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
@@ -187,7 +187,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (background != null)
             {
-                background.Draw(handle, PixelSizeBox);
+                background.Draw(handle, PixelSizeBox, UIScale);
                 var (bho, bvo) = background.GetContentOffset(Vector2.Zero);
                 vOffset += bvo;
                 hOffset += bho;
@@ -214,7 +214,8 @@ namespace Robust.Client.UserInterface.Controls
             var selected = item.Index == _selectedIndex;
             if (selected)
             {
-                itemSelected.Draw(handle, UIBox2.FromDimensions(hOffset, vOffset, PixelWidth - hOffset, itemHeight));
+                var imageTarget = UIBox2.FromDimensions(hOffset, vOffset, PixelWidth - hOffset, itemHeight);
+                itemSelected.Draw(handle, imageTarget, UIScale);
             }
 
             if (!string.IsNullOrWhiteSpace(item.Text))

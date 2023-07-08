@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -124,7 +124,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var style = _getStyleBox();
             var font = _getFont();
-            style?.Draw(handle, PixelSizeBox);
+            style?.Draw(handle, PixelSizeBox, UIScale);
             var contentBox = _getContentBox();
 
             var entryOffset = -_scrollBar.Value;
@@ -171,7 +171,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
 
-            _scrollBar.Page = PixelSize.Y - styleBoxSize;
+            _scrollBar.Page = Height - styleBoxSize;
             _invalidateEntries();
         }
 
@@ -231,7 +231,7 @@ namespace Robust.Client.UserInterface.Controls
         private UIBox2 _getContentBox()
         {
             var style = _getStyleBox();
-            var box = style?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
+            var box = style?.GetContentBox(PixelSizeBox, UIScale) ?? PixelSizeBox;
             box.Right = Math.Max(box.Left, box.Right - _scrollBar.DesiredPixelSize.X);
             return box;
         }

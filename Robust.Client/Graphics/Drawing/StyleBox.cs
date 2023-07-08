@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
@@ -170,7 +170,7 @@ namespace Robust.Client.Graphics
         /// </summary>
         /// <param name="handle"></param>
         /// <param name="box"></param>
-        public void Draw(DrawingHandleScreen handle, UIBox2 box)
+        public void Draw(DrawingHandleScreen handle, UIBox2 box, float uiScale)
         {
             box = new UIBox2(
                 box.Left + PaddingLeft,
@@ -179,7 +179,7 @@ namespace Robust.Client.Graphics
                 box.Bottom - PaddingBottom
             );
 
-            DoDraw(handle, box);
+            DoDraw(handle, box, uiScale);
         }
 
         /// <summary>
@@ -241,16 +241,19 @@ namespace Robust.Client.Graphics
 
         /// <summary>
         ///     Gets the box considered the "contents" of this style box, when drawn at a specific size.
+        ///     If <paramRef name="uiScale"/> is not 1.0, it should be set to the value of the UIScale
+        ///     property in the of the containing control and the <paramRef name="baseBox"/> should
+        ///     have units of pixels (and the output will have pixel units.)
         /// </summary>
         /// <exception cref="ArgumentException">
         ///     <paramref name="baseBox"/> is too small and the resultant box would have negative dimensions.
         /// </exception>
-        public UIBox2 GetContentBox(UIBox2 baseBox)
+        public UIBox2 GetContentBox(UIBox2 baseBox, float uiScale = 1.0f)
         {
-            var left = baseBox.Left + GetContentMargin(Margin.Left);
-            var top = baseBox.Top + GetContentMargin(Margin.Top);
-            var right = baseBox.Right - GetContentMargin(Margin.Right);
-            var bottom = baseBox.Bottom - GetContentMargin(Margin.Bottom);
+            var left = baseBox.Left + GetContentMargin(Margin.Left) * uiScale;
+            var top = baseBox.Top + GetContentMargin(Margin.Top) * uiScale;
+            var right = baseBox.Right - GetContentMargin(Margin.Right) * uiScale;
+            var bottom = baseBox.Bottom - GetContentMargin(Margin.Bottom) * uiScale;
 
             return new UIBox2(left, top, right, bottom);
         }
@@ -258,19 +261,23 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///     Gets the draw box, positioned at <paramref name="position"/>,
         ///     that envelops a box with the given dimensions perfectly given this box's content margins.
+        ///     If <paramref name="uiScale"/> is not 1.0, it should be set to the UIScale property in the
+        ///     control which contains this style box and the input (and output) coordinates are in
+        ///     pixel units.
         /// </summary>
         /// <remarks>
         ///     It's basically a reverse <see cref="GetContentBox"/>.
         /// </remarks>
         /// <param name="position">The position at which the new box should be drawn.</param>
         /// <param name="dimensions">The dimensions of the content box inside this new box.</param>
+        /// <param name="uiScale">Scales the content margin border size</param>
         /// <returns>
         ///     A box that, when ran through <see cref="GetContentBox"/>,
         ///     has a content box of size <paramref name="dimensions"/>
         /// </returns>
-        public UIBox2 GetEnvelopBox(Vector2 position, Vector2 dimensions)
+        public UIBox2 GetEnvelopBox(Vector2 position, Vector2 dimensions, float uiScale = 1.0f)
         {
-            return UIBox2.FromDimensions(position, dimensions + MinimumSize);
+            return UIBox2.FromDimensions(position, dimensions + MinimumSize * uiScale);
         }
 
         public void SetContentMarginOverride(Margin margin, float value)
@@ -319,7 +326,7 @@ namespace Robust.Client.Graphics
             }
         }
 
-        protected abstract void DoDraw(DrawingHandleScreen handle, UIBox2 box);
+        protected abstract void DoDraw(DrawingHandleScreen handle, UIBox2 box, float uiScale);
 
         protected virtual float GetDefaultContentMargin(Margin margin)
         {

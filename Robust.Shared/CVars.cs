@@ -1182,6 +1182,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DiscordEnabled =
             CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
 
+        public static readonly CVarDef<string> DiscordRichPresenceApplicationId =
+            CVarDef.Create("discord.rich_application_id", "560499552273170473", CVar.CLIENTONLY);
+
         /*
          * RES
          */

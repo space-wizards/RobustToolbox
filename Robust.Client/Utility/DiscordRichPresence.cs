@@ -31,7 +31,7 @@ namespace Robust.Client.Utility
                 Assets = new Assets
                 {
                     LargeImageKey = "logo",
-                    LargeImageText = "I think coolsville SUCKS"
+                    LargeImageText = _loc.GetString("discord-rpc-in-main-menu-logo-text")
                 }
             };
             _configurationManager.OnValueChanged(CVars.DiscordEnabled, newValue =>
@@ -67,7 +67,7 @@ namespace Robust.Client.Utility
             _stop();
 
             // Create the client
-            _client = new DiscordRpcClient("560499552273170473")
+            _client = new DiscordRpcClient(_configurationManager.GetCVar(CVars.DiscordRichPresenceApplicationId))
             {
                 Logger = new NativeLogger(_logManager.GetSawmill("discord"))
             };

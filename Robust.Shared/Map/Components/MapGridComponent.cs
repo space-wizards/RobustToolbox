@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -44,6 +45,10 @@ namespace Robust.Shared.Map.Components
         /// </summary>
         [DataField("tileSize")]
         public ushort TileSize { get; internal set; } = 1;
+
+        public Vector2 TileSizeVector => new(TileSize, TileSize);
+
+        public Vector2 TileSizeHalfVector => new(TileSize / 2f, TileSize / 2f);
 
         [ViewVariables] internal readonly List<(GameTick tick, Vector2i indices)> ChunkDeletionHistory = new();
 
@@ -730,7 +735,7 @@ namespace Robust.Shared.Map.Components
 
             if (!_mapManager.TryGetGrid(Owner, out var grid))
             {
-                return new EntityCoordinates(_mapManager.GetMapEntityId(posWorld.MapId), (posWorld.X, posWorld.Y));
+                return new EntityCoordinates(_mapManager.GetMapEntityId(posWorld.MapId), new Vector2(posWorld.X, posWorld.Y));
             }
 
             return new EntityCoordinates(((Component) grid).Owner, WorldToLocal(posWorld.Position));
@@ -826,7 +831,7 @@ namespace Robust.Shared.Map.Components
         public EntityCoordinates GridTileToLocal(Vector2i gridTile)
         {
             return new(Owner,
-                (gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f)));
+                new Vector2(gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f)));
         }
 
         public Vector2 GridTileToWorldPos(Vector2i gridTile)

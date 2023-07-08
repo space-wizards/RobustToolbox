@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
@@ -410,7 +411,7 @@ namespace Robust.Client.UserInterface.Controls
                     font.DrawChar(handle, rune, baseLine, UIScale, color);
                 }
 
-                baseLine += (metrics.Advance, 0);
+                baseLine += new Vector2(metrics.Advance, 0);
             }
         }
 

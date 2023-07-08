@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -107,10 +108,10 @@ namespace Robust.Shared.Physics.Collision.Shapes
             {
                 var next = i + 1 < vertexCount ? i + 1 : 0;
                 var edge = Vertices[next] - Vertices[i];
-                DebugTools.Assert(edge.LengthSquared > float.Epsilon * float.Epsilon);
+                DebugTools.Assert(edge.LengthSquared() > float.Epsilon * float.Epsilon);
 
-                var temp = Vector2.Cross(edge, 1f);
-                Normals[i] = temp.Normalized;
+                var temp = Vector2Helpers.Cross(edge, 1f);
+                Normals[i] = temp.Normalized();
             }
 
             Centroid = ComputeCentroid(Vertices, VertexCount);
@@ -155,7 +156,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 var e1 = p2 - p1;
                 var e2 = p3 - p1;
 
-                float D = Vector2.Cross(e1, e2);
+                float D = Vector2Helpers.Cross(e1, e2);
 
                 float triangleArea = 0.5f * D;
                 area += triangleArea;
@@ -273,8 +274,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
             for (var i = 1; i < VertexCount; ++i)
             {
                 var v = Transform.Mul(transform, Vertices[i]);
-                lower = Vector2.ComponentMin(lower, v);
-                upper = Vector2.ComponentMax(upper, v);
+                lower = Vector2.Min(lower, v);
+                upper = Vector2.Max(upper, v);
             }
 
             var r = new Vector2(Radius, Radius);

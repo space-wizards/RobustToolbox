@@ -1,4 +1,5 @@
-﻿using NUnit.Framework.Constraints;
+﻿using System.Numerics;
+using NUnit.Framework.Constraints;
 using Robust.Shared.Maths;
 
 namespace Robust.UnitTesting
@@ -16,7 +17,7 @@ namespace Robust.UnitTesting
 
         public override ConstraintResult ApplyTo<TActual>(TActual actual)
         {
-            if (!(Expected is IApproxEquatable<TActual> equatable))
+            if (Expected is not IApproxEquatable<TActual> equatable)
             {
                 if (Expected is float f1 && actual is float f2)
                 {
@@ -36,6 +37,16 @@ namespace Robust.UnitTesting
                     }
 
                     return new ConstraintResult(this, actual, MathHelper.CloseToPercent(d1, d2));
+                }
+
+                if (Expected is Vector2 exp && actual is Vector2 act)
+                {
+                    if (Tolerance != null)
+                    {
+                        return new ConstraintResult(this, actual, exp.EqualsApprox(act, Tolerance.Value));
+                    }
+
+                    return new ConstraintResult(this, actual, exp.EqualsApprox(act));
                 }
 
                 return new ConstraintResult(this, actual, false);

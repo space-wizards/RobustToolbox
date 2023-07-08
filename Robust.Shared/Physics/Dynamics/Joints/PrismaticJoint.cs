@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Numerics;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -29,6 +30,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Shared.Physics.Dynamics.Joints;
 // Linear constraint (point-to-line)
@@ -129,8 +131,8 @@ public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
         set
         {
             _localAxisA = value;
-            _localXAxisA = value.Normalized;
-            _localYAxisA = Vector2.Cross(1f, _localXAxisA);
+            _localXAxisA = value.Normalized();
+            _localYAxisA = Vector2Helpers.Cross(1f, _localXAxisA);
         }
     }
 
@@ -296,8 +298,8 @@ public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
         // Compute motor Jacobian and effective mass.
         {
             _axis = Transform.Mul(qA, _localXAxisA);
-            _a1 = Vector2.Cross(d + rA, _axis);
-            _a2 = Vector2.Cross(rB, _axis);
+            _a1 = Vector2Helpers.Cross(d + rA, _axis);
+            _a2 = Vector2Helpers.Cross(rB, _axis);
 
             _axialMass = mA + mB + iA * _a1 * _a1 + iB * _a2 * _a2;
             if (_axialMass > 0.0f)
@@ -310,8 +312,8 @@ public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
         {
             _perp = Transform.Mul(qA, _localYAxisA);
 
-            _s1 = Vector2.Cross(d + rA, _perp);
-            _s2 = Vector2.Cross(rB, _perp);
+            _s1 = Vector2Helpers.Cross(d + rA, _perp);
+            _s2 = Vector2Helpers.Cross(rB, _perp);
 
             float k11 = mA + mB + iA * _s1 * _s1 + iB * _s2 * _s2;
             float k12 = iA * _s1 + iB * _s2;
@@ -498,12 +500,12 @@ public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
         Vector2 d = cB + rB - cA - rA;
 
         Vector2 axis = Transform.Mul(qA, _localXAxisA);
-        float a1 = Vector2.Cross(d + rA, axis);
-        float a2 = Vector2.Cross(rB, axis);
+        float a1 = Vector2Helpers.Cross(d + rA, axis);
+        float a2 = Vector2Helpers.Cross(rB, axis);
         Vector2 perp = Transform.Mul(qA, _localYAxisA);
 
-        float s1 = Vector2.Cross(d + rA, perp);
-        float s2 = Vector2.Cross(rB, perp);
+        float s1 = Vector2Helpers.Cross(d + rA, perp);
+        float s2 = Vector2Helpers.Cross(rB, perp);
 
         Vector3 impulse;
         Vector2 C1;

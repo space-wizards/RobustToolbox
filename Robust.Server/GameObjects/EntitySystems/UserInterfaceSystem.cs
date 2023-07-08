@@ -175,7 +175,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                var distanceSquared = (uiPos - _xformSys.GetWorldPosition(xform, query)).LengthSquared;
+                var distanceSquared = (uiPos - _xformSys.GetWorldPosition(xform, query)).LengthSquared();
                 if (distanceSquared > ui.InteractionRangeSqrd)
                     CloseUi(ui, session, activeUis);
             }

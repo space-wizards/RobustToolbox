@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -239,7 +240,7 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         var length = xformA.WorldMatrix.Transform(anchorA.Value) - xformB.WorldMatrix.Transform(anchorB.Value);
 
-        var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, length.Length);
+        var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, length.Length());
         id ??= GetJointId(joint);
         joint.ID = id;
         AddJoint(joint);

@@ -12,6 +12,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map.Components;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 
 namespace Robust.Shared.GameObjects;
 

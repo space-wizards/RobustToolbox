@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Server.GameStates;
@@ -208,13 +209,13 @@ public sealed class Broadphase_Test
         var gridA = gridAComp.Owner;
         var gridB = gridBComp.Owner;
         var gridC = gridCComp.Owner;
-        xforms.SetLocalPosition(gridC, (10, 10));
+        xforms.SetLocalPosition(gridC, new Vector2(10, 10));
         gridAComp.SetTile(Vector2i.Zero, new Tile(1));
         gridBComp.SetTile(Vector2i.Zero, new Tile(1));
         gridCComp.SetTile(Vector2i.Zero, new Tile(1));
 
         // set up test entities
-        var parent = entManager.SpawnEntity(null, new EntityCoordinates(mapA, (200,200)));
+        var parent = entManager.SpawnEntity(null, new EntityCoordinates(mapA, new Vector2(200,200)));
         var parentXform = entManager.GetComponent<TransformComponent>(parent);
         var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var childXform = entManager.GetComponent<TransformComponent>(child);
@@ -256,7 +257,7 @@ public sealed class Broadphase_Test
         // - grid to map without a map change
 
         // Move to map B (map to map with a map change)
-        xforms.SetCoordinates(parent, new EntityCoordinates(mapB, (200, 200)));
+        xforms.SetCoordinates(parent, new EntityCoordinates(mapB, new Vector2(200, 200)));
         AssertMap(mapB, mapA);
 
         // Move to gridA on mapA (map to grid with a map change)
@@ -286,7 +287,7 @@ public sealed class Broadphase_Test
         AssertGrid(gridB, mapB, mapA);
 
         // move to mapA (grid to map with a map change)
-        xforms.SetCoordinates(parent, new EntityCoordinates(mapA, (200, 200)));
+        xforms.SetCoordinates(parent, new EntityCoordinates(mapA, new Vector2(200, 200)));
         AssertMap(mapA, mapB);
 
         // move to gridA on mapA (map to grid without a map change)
@@ -298,7 +299,7 @@ public sealed class Broadphase_Test
         AssertGrid(gridC, mapA, mapB);
 
         // move to gridC on mapA (grid to map without a map change)
-        xforms.SetCoordinates(parent, new EntityCoordinates(mapA, (200, 200)));
+        xforms.SetCoordinates(parent, new EntityCoordinates(mapA, new Vector2(200, 200)));
         AssertMap(mapA, mapB);
 
         // Finally, we check if the broadphase updates if the whole grid moves, instead of just the entity
@@ -307,7 +308,7 @@ public sealed class Broadphase_Test
         AssertGrid(gridC, mapA, mapB);
 
         // then move the grid to a new map:
-        xforms.SetCoordinates(gridC, new EntityCoordinates(mapB, (200,200)));
+        xforms.SetCoordinates(gridC, new EntityCoordinates(mapB, new Vector2(200,200)));
         AssertGrid(gridC, mapB, mapA);
     }
 

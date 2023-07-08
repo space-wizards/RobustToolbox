@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.Intrinsics.X86;
 using NUnit.Framework;
 using Robust.Shared.Maths;
@@ -47,12 +48,12 @@ namespace Robust.UnitTesting.Shared.Maths
         private static IEnumerable<(Box2 baseBox, Vector2 origin, Angle rotation, Box2 expected)> CalcBoundingBoxData =>
             new (Box2, Vector2, Angle, Box2)[]
             {
-                (new Box2(0, 0, 1, 1), (0, 0), 0, new Box2(0, 0, 1, 1)),
-                (new Box2(0, 0, 1, 1), (0, 0), Math.PI, new Box2(-1, -1, 0, 0)),
-                (new Box2(0, 0, 1, 1), (1, 0), Math.PI, new Box2(1, -1, 2, 0)),
-                (new Box2(0, 0, 1, 1), (1, 1), Math.PI, new Box2(1, 1, 2, 2)),
-                (new Box2(1, 1, 2, 2), (1, 1), Math.PI/4, new Box2(1 - Cos45Deg, 1, 1 + Cos45Deg, 1 + Sqrt2)),
-                (new Box2(-1, 1, 1, 2), (0, 0), -Math.PI/2, new Box2(1, -1, 2, 1)),
+                (new Box2(0, 0, 1, 1), new Vector2(0, 0), 0, new Box2(0, 0, 1, 1)),
+                (new Box2(0, 0, 1, 1), new Vector2(0, 0), Math.PI, new Box2(-1, -1, 0, 0)),
+                (new Box2(0, 0, 1, 1), new Vector2(1, 0), Math.PI, new Box2(1, -1, 2, 0)),
+                (new Box2(0, 0, 1, 1), new Vector2(1, 1), Math.PI, new Box2(1, 1, 2, 2)),
+                (new Box2(1, 1, 2, 2), new Vector2(1, 1), Math.PI/4, new Box2(1 - Cos45Deg, 1, 1 + Cos45Deg, 1 + Sqrt2)),
+                (new Box2(-1, 1, 1, 2), new Vector2(0, 0), -Math.PI/2, new Box2(1, -1, 2, 1)),
             };
 
         [Test]
@@ -77,8 +78,8 @@ namespace Robust.UnitTesting.Shared.Maths
         private static IEnumerable<Vector2> InboundPoints => new Vector2[]
         {
             IntersectionBoxCenter, // center of box
-            IntersectionBoxCenter - (-0.7f, 0.0f), // lowest point of box (just short of sqrt(0.5) below center)
-            IntersectionBoxCenter + (0.353f, 0.353f), // close to upper-right flat-edge of box, just shy of 0.5 units from the center
+            IntersectionBoxCenter - new Vector2(-0.7f, 0.0f), // lowest point of box (just short of sqrt(0.5) below center)
+            IntersectionBoxCenter + new Vector2(0.353f, 0.353f), // close to upper-right flat-edge of box, just shy of 0.5 units from the center
         };
 
         [Test]

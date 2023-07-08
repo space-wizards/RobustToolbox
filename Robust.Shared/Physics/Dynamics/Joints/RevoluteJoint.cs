@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -251,10 +252,10 @@ public sealed class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
             var P = new Vector2(_impulse.X, _impulse.Y);
 
             vA -= P * mA;
-            wA -= iA * (Vector2.Cross(_rA, P) + axialImpulse);
+            wA -= iA * (Vector2Helpers.Cross(_rA, P) + axialImpulse);
 
             vB += P * mB;
-            wB += iB * (Vector2.Cross(_rB, P) + axialImpulse);
+            wB += iB * (Vector2Helpers.Cross(_rB, P) + axialImpulse);
         }
         else
         {
@@ -334,17 +335,17 @@ public sealed class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
 
         // Solve point-to-point constraint
         {
-            var Cdot = vB + Vector2.Cross(wB, _rB) - vA - Vector2.Cross(wA, _rA);
+            var Cdot = vB + Vector2Helpers.Cross(wB, _rB) - vA - Vector2Helpers.Cross(wA, _rA);
             var impulse = _K.Solve(-Cdot);
 
             _impulse.X += impulse.X;
             _impulse.Y += impulse.Y;
 
             vA -= impulse * mA;
-            wA -= iA * Vector2.Cross(_rA, impulse);
+            wA -= iA * Vector2Helpers.Cross(_rA, impulse);
 
             vB += impulse * mB;
-            wB += iB * Vector2.Cross(_rB, impulse);
+            wB += iB * Vector2Helpers.Cross(_rB, impulse);
         }
 
         linearVelocities[offset + _indexA] = vA;
@@ -406,7 +407,7 @@ public sealed class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
             var rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
 
             var C = cB + rB - cA - rA;
-            positionError = C.Length;
+            positionError = C.Length();
 
             float mA = _invMassA, mB = _invMassB;
             float iA = _invIA, iB = _invIB;
@@ -422,10 +423,10 @@ public sealed class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
             var impulse = -K.Solve(C);
 
             cA -= impulse * mA;
-            aA -= iA * Vector2.Cross(rA, impulse);
+            aA -= iA * Vector2Helpers.Cross(rA, impulse);
 
             cB += impulse * mB;
-            aB += iB * Vector2.Cross(rB, impulse);
+            aB += iB * Vector2Helpers.Cross(rB, impulse);
         }
 
         positions[_indexA] = cA;

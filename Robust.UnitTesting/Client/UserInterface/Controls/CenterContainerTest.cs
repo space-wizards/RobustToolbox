@@ -1,3 +1,4 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -15,7 +16,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         public void Test()
         {
             var container = new CenterContainer();
-            var child = new Control {MinSize = (50, 50)};
+            var child = new Control {MinSize = new Vector2(50, 50)};
 
             container.AddChild(child);
 

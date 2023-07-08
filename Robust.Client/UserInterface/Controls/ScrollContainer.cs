@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.Contracts;
+using System.Numerics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -109,7 +110,7 @@ namespace Robust.Client.UserInterface.Controls
             foreach (var child in Children)
             {
                 child.Measure(constraint);
-                size = Vector2.ComponentMax(size, child.DesiredSize);
+                size = Vector2.Max(size, child.DesiredSize);
             }
 
             // Unlike WPF/Avalonia we default to reporting ZERO here instead of available size. This is to fix a bunch
@@ -143,7 +144,7 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                maxChildMinSize = Vector2.ComponentMax(child.DesiredSize, maxChildMinSize);
+                maxChildMinSize = Vector2.Max(child.DesiredSize, maxChildMinSize);
             }
 
             var (cWidth, cHeight) = maxChildMinSize;
@@ -205,7 +206,7 @@ namespace Robust.Client.UserInterface.Controls
                 _hScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
             }
 
-            var realFinalSize = (
+            var realFinalSize = new Vector2(
                 _hScrollEnabled ? Math.Max(cWidth, sWidth) : sWidth,
                 _vScrollEnabled ? Math.Max(cHeight, sHeight) : sHeight);
 
@@ -269,7 +270,7 @@ namespace Robust.Client.UserInterface.Controls
         public Vector2 GetScrollValue(bool ignoreVisible = false)
         {
             if (ignoreVisible)
-                return (_hScrollBar.Value, _vScrollBar.Value);
+                return new(_hScrollBar.Value, _vScrollBar.Value);
 
             var h = _hScrollBar.Value;
             var v = _vScrollBar.Value;

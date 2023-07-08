@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
@@ -87,7 +88,7 @@ internal sealed partial class UITestControl
 
             foreach (var e in AddEntries())
             {
-                e.View.Scale = (1, 0.75f);
+                e.View.Scale = new(1, 0.75f);
                 e.View.EyeRotation = Angle.FromDegrees(45);
                 e.View.SpriteOffset = true;
                 e.View.WorldRotation = null;
@@ -102,9 +103,9 @@ internal sealed partial class UITestControl
 
             foreach (var e in AddEntries())
             {
-                e.View.SetSize = (64, 64);
+                e.View.SetSize = new(64, 64);
                 e.View.Stretch = SpriteView.StretchMode.None;
-                e.View.Scale = (1, 0.75f);
+                e.View.Scale = new(1, 0.75f);
                 e.View.EyeRotation = Angle.FromDegrees(45);
                 e.View.SpriteOffset = true;
                 e.View.WorldRotation = null;
@@ -119,9 +120,9 @@ internal sealed partial class UITestControl
 
             foreach (var e in AddEntries())
             {
-                e.View.SetSize = (64, 64);
+                e.View.SetSize = new(64, 64);
                 e.View.Stretch = SpriteView.StretchMode.Fit;
-                e.View.Scale = (1, 0.75f);
+                e.View.Scale = new(1, 0.75f);
                 e.View.EyeRotation = Angle.FromDegrees(45);
                 e.View.SpriteOffset = true;
                 e.View.WorldRotation = null;
@@ -136,9 +137,9 @@ internal sealed partial class UITestControl
 
             foreach (var e in AddEntries())
             {
-                e.View.SetSize = (300, 300);
+                e.View.SetSize = new(300, 300);
                 e.View.Stretch = SpriteView.StretchMode.Fill;
-                e.View.Scale = (1, 0.75f);
+                e.View.Scale = new(1, 0.75f);
                 e.View.EyeRotation = Angle.FromDegrees(45);
                 e.View.SpriteOffset = true;
                 e.View.WorldRotation = null;
@@ -153,9 +154,9 @@ internal sealed partial class UITestControl
 
             foreach (var e in AddEntries())
             {
-                e.View.SetSize = (300, 300);
+                e.View.SetSize = new(300, 300);
                 e.View.Stretch = SpriteView.StretchMode.Fill;
-                e.View.Scale = (1, 0.75f);
+                e.View.Scale = new(1, 0.75f);
                 e.View.EyeRotation = Angle.FromDegrees(45);
             }
         }
@@ -192,7 +193,7 @@ internal sealed partial class UITestControl
 
             entry = AddEntry("Offset", (e, time) =>
             {
-                e.Sprite.Offset = (MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
+                e.Sprite.Offset = new Vector2(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);
@@ -200,7 +201,7 @@ internal sealed partial class UITestControl
             entry = AddEntry("Scaled", (e, time) =>
             {
                 var theta = (float) Angle.FromDegrees(_degreesPerSecond * time).Theta;
-                e.Sprite.Scale = Vector2.One + (0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
+                e.Sprite.Scale = Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);
@@ -214,8 +215,8 @@ internal sealed partial class UITestControl
             entry = AddEntry("Combination", (e, time) =>
             {
                 var theta = (float) Angle.FromDegrees(_degreesPerSecond * time * 2).Theta;
-                e.Sprite.Scale = Vector2.One + (0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
-                e.Sprite.Offset = (MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
+                e.Sprite.Scale = Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
+                e.Sprite.Offset = new(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
                 e.Sprite.Rotation = Angle.FromDegrees(0.5 * time * _degreesPerSecond);
                 e.Transform.LocalRotation = Angle.FromDegrees(0.25 * time * _degreesPerSecond);
                 e.View.InvalidateMeasure();

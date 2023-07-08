@@ -1,10 +1,12 @@
 using System;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Shared.Physics.Dynamics.Joints;
 
@@ -198,10 +200,10 @@ public sealed class WeldJoint : Joint, IEquatable<WeldJoint>
             var P = new Vector2(_impulse.X, _impulse.Y);
 
             vA -= P * mA;
-            wA -= iA * (Vector2.Cross(_rA, P) + _impulse.Z);
+            wA -= iA * (Vector2Helpers.Cross(_rA, P) + _impulse.Z);
 
             vB += P * mB;
-            wB += iB * (Vector2.Cross(_rB, P) + _impulse.Z);
+            wB += iB * (Vector2Helpers.Cross(_rB, P) + _impulse.Z);
         }
         else
         {
@@ -239,7 +241,7 @@ public sealed class WeldJoint : Joint, IEquatable<WeldJoint>
             wA -= iA * impulse2;
             wB += iB * impulse2;
 
-            var Cdot1 = vB + Vector2.Cross(wB, _rB) - vA - Vector2.Cross(wA, _rA);
+            var Cdot1 = vB + Vector2Helpers.Cross(wB, _rB) - vA - Vector2Helpers.Cross(wA, _rA);
 
             var impulse1 = -_mass.Mul22(Cdot1);
             _impulse.X += impulse1.X;
@@ -248,14 +250,14 @@ public sealed class WeldJoint : Joint, IEquatable<WeldJoint>
             var P = impulse1;
 
             vA -= P * mA;
-            wA -= iA * Vector2.Cross(_rA, P);
+            wA -= iA * Vector2Helpers.Cross(_rA, P);
 
             vB += P * mB;
-            wB += iB * Vector2.Cross(_rB, P);
+            wB += iB * Vector2Helpers.Cross(_rB, P);
         }
         else
         {
-            var Cdot1 = vB + Vector2.Cross(wB, _rB) - vA - Vector2.Cross(wA, _rA);
+            var Cdot1 = vB + Vector2Helpers.Cross(wB, _rB) - vA - Vector2Helpers.Cross(wA, _rA);
             float Cdot2 = wB - wA;
             var Cdot = new Vector3(Cdot1.X, Cdot1.Y, Cdot2);
 
@@ -265,10 +267,10 @@ public sealed class WeldJoint : Joint, IEquatable<WeldJoint>
             var P = new Vector2(impulse.X, impulse.Y);
 
             vA -= P * mA;
-            wA -= iA * (Vector2.Cross(_rA, P) + impulse.Z);
+            wA -= iA * (Vector2Helpers.Cross(_rA, P) + impulse.Z);
 
             vB += P * mB;
-            wB += iB * (Vector2.Cross(_rB, P) + impulse.Z);
+            wB += iB * (Vector2Helpers.Cross(_rB, P) + impulse.Z);
         }
 
         linearVelocities[offset + _indexA] = vA;
@@ -312,23 +314,23 @@ public sealed class WeldJoint : Joint, IEquatable<WeldJoint>
         {
             var C1 =  cB + rB - cA - rA;
 
-            positionError = C1.Length;
+            positionError = C1.Length();
             angularError = 0.0f;
 
             var P = -K.Solve22(C1);
 
             cA -= P * mA;
-            aA -= iA * Vector2.Cross(rA, P);
+            aA -= iA * Vector2Helpers.Cross(rA, P);
 
             cB += P * mB;
-            aB += iB * Vector2.Cross(rB, P);
+            aB += iB * Vector2Helpers.Cross(rB, P);
         }
         else
         {
             var C1 =  cB + rB - cA - rA;
             float C2 = aB - aA - ReferenceAngle;
 
-            positionError = C1.Length;
+            positionError = C1.Length();
             angularError = Math.Abs(C2);
 
             Vector3 C = new(C1.X, C1.Y, C2);
@@ -347,10 +349,10 @@ public sealed class WeldJoint : Joint, IEquatable<WeldJoint>
             var P = new Vector2(impulse.X, impulse.Y);
 
             cA -= P * mA;
-            aA -= iA * (Vector2.Cross(rA, P) + impulse.Z);
+            aA -= iA * (Vector2Helpers.Cross(rA, P) + impulse.Z);
 
             cB += P * mB;
-            aB += iB * (Vector2.Cross(rB, P) + impulse.Z);
+            aB += iB * (Vector2Helpers.Cross(rB, P) + impulse.Z);
         }
 
         positions[_indexA] = cA;

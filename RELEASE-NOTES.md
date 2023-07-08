@@ -54,6 +54,62 @@ END TEMPLATE-->
 *None yet*
 
 
+## 134.0.0
+
+### Breaking changes
+
+* Several methods were moved out of the `UserInterface` components and into the UI system. 
+* The BUI constructor arguments have changed and now require an EntityUid to be given instead of a component.
+
+
+## 133.0.0
+
+### Breaking changes
+
+* Replace Robust's Vector2 with System.Numerics.Vector2.
+
+### New features
+
+* `AssetPassPipe` has a new `CheckDuplicates` property that makes it explicitly check for and drop duplicate asset files passed through.
+
+### Bugfixes
+
+* Static entities that are parented to other entities will no longer collide with their parent.
+* Fix some miscellaneous doc comments and typos (e.g. PvsSystem and EntityManager).
+* Fix ContentGetDirectoryEntries.
+
+
+## 132.2.0
+
+### New features
+
+* Add method to clear all joints + relayed joints on an entity.
+
+### Other
+
+* Lower default MTU to `1000`.
+
+### Internal
+
+* Resolved some warnings and unnecessary component resolves.
+
+
+## 132.1.0
+
+### New features
+
+* `Robust.Shared.Physics.Events.CollisionChangeEvent` now has the `EntityUid` of the physics body.
+
+### Other
+
+* Paused entities now pause their animations. There's no guarantee they'll resume at the same point (use SyncSprite instead).
+
+### Internal
+
+* Fix ComponentTreeSystem warnings.
+* Fix some miscellaneous other warnings.
+
+
 ## 132.0.1
 
 ### Bugfixes

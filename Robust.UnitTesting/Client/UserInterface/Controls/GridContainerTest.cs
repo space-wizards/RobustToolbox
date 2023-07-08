@@ -1,3 +1,4 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -16,11 +17,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         public void TestBasic(bool limitByCount)
         {
             var grid = limitByCount ? new GridContainer {Columns = 2} : new GridContainer {MaxGridWidth = 125};
-            var child1 = new Control {MinSize = (50, 50)};
-            var child2 = new Control {MinSize = (50, 50)};
-            var child3 = new Control {MinSize = (50, 50)};
-            var child4 = new Control {MinSize = (50, 50)};
-            var child5 = new Control {MinSize = (50, 50)};
+            var child1 = new Control {MinSize = new Vector2(50, 50)};
+            var child2 = new Control {MinSize = new Vector2(50, 50)};
+            var child3 = new Control {MinSize = new Vector2(50, 50)};
+            var child4 = new Control {MinSize = new Vector2(50, 50)};
+            var child5 = new Control {MinSize = new Vector2(50, 50)};
 
             grid.AddChild(child1);
             grid.AddChild(child2);
@@ -46,11 +47,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             var grid = limitByCount
                 ? new GridContainer {Rows = 2}
                 : new GridContainer {MaxGridHeight = 125};
-            var child1 = new Control {MinSize = (50, 50)};
-            var child2 = new Control {MinSize = (50, 50)};
-            var child3 = new Control {MinSize = (50, 50)};
-            var child4 = new Control {MinSize = (50, 50)};
-            var child5 = new Control {MinSize = (50, 50)};
+            var child1 = new Control {MinSize = new Vector2(50, 50)};
+            var child2 = new Control {MinSize = new Vector2(50, 50)};
+            var child3 = new Control {MinSize = new Vector2(50, 50)};
+            var child4 = new Control {MinSize = new Vector2(50, 50)};
+            var child5 = new Control {MinSize = new Vector2(50, 50)};
 
             grid.AddChild(child1);
             grid.AddChild(child2);
@@ -77,11 +78,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             // Note that when limiting by count, the behavior is different - rows and columns are individually
             // expanded based on the max size of their elements
             var grid = new GridContainer {MaxGridWidth = 125};
-            var child1 = new Control {MinSize = (12, 24)};
-            var child2 = new Control {MinSize = (30, 50)};
-            var child3 = new Control {MinSize = (40, 20)};
-            var child4 = new Control {MinSize = (20, 12)};
-            var child5 = new Control {MinSize = (50, 10)};
+            var child1 = new Control {MinSize = new Vector2(12, 24)};
+            var child2 = new Control {MinSize = new Vector2(30, 50)};
+            var child3 = new Control {MinSize = new Vector2(40, 20)};
+            var child4 = new Control {MinSize = new Vector2(20, 12)};
+            var child5 = new Control {MinSize = new Vector2(50, 10)};
 
             grid.AddChild(child1);
             grid.AddChild(child2);
@@ -104,11 +105,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         public void TestUnevenLimitSizeRows()
         {
             var grid = new GridContainer {MaxGridHeight = 125};
-            var child1 = new Control {MinSize = (12, 2)};
-            var child2 = new Control {MinSize = (5, 23)};
-            var child3 = new Control {MinSize = (42, 4)};
-            var child4 = new Control {MinSize = (2, 50)};
-            var child5 = new Control {MinSize = (50, 34)};
+            var child1 = new Control {MinSize = new Vector2(12, 2)};
+            var child2 = new Control {MinSize = new Vector2(5, 23)};
+            var child3 = new Control {MinSize = new Vector2(42, 4)};
+            var child4 = new Control {MinSize = new Vector2(2, 50)};
+            var child5 = new Control {MinSize = new Vector2(50, 34)};
 
             grid.AddChild(child1);
             grid.AddChild(child2);
@@ -134,11 +135,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             var grid = limitByCount
                 ? new GridContainer {Columns = 2, ExpandBackwards = true}
                 : new GridContainer {MaxGridWidth = 125, ExpandBackwards = true};
-            var child1 = new Control {MinSize = (50, 50)};
-            var child2 = new Control {MinSize = (50, 50)};
-            var child3 = new Control {MinSize = (50, 50)};
-            var child4 = new Control {MinSize = (50, 50)};
-            var child5 = new Control {MinSize = (50, 50)};
+            var child1 = new Control {MinSize = new Vector2(50, 50)};
+            var child2 = new Control {MinSize = new Vector2(50, 50)};
+            var child3 = new Control {MinSize = new Vector2(50, 50)};
+            var child4 = new Control {MinSize = new Vector2(50, 50)};
+            var child5 = new Control {MinSize = new Vector2(50, 50)};
 
             grid.AddChild(child1);
             grid.AddChild(child2);
@@ -164,11 +165,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             var grid = limitByCount
                 ? new GridContainer {Rows = 2, ExpandBackwards = true}
                 : new GridContainer {MaxGridHeight = 125, ExpandBackwards = true};
-            var child1 = new Control {MinSize = (50, 50)};
-            var child2 = new Control {MinSize = (50, 50)};
-            var child3 = new Control {MinSize = (50, 50)};
-            var child4 = new Control {MinSize = (50, 50)};
-            var child5 = new Control {MinSize = (50, 50)};
+            var child1 = new Control {MinSize = new Vector2(50, 50)};
+            var child2 = new Control {MinSize = new Vector2(50, 50)};
+            var child3 = new Control {MinSize = new Vector2(50, 50)};
+            var child4 = new Control {MinSize = new Vector2(50, 50)};
+            var child5 = new Control {MinSize = new Vector2(50, 50)};
 
             grid.AddChild(child1);
             grid.AddChild(child2);
@@ -195,13 +196,13 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             // pre-expanded size should be used to determine the size of each "cell", and then expansion
             // happens within the defined control size
             var grid = limitByCount
-                ? new GridContainer {Columns = 2, SetSize = (200, 200)}
-                : new GridContainer {MaxGridWidth = 125, SetSize = (200, 200)};
-            var child1 = new Control {MinSize = (50, 50), HorizontalExpand = true};
-            var child2 = new Control {MinSize = (50, 50)};
-            var child3 = new Control {MinSize = (50, 50)};
-            var child4 = new Control {MinSize = (50, 50), VerticalExpand = true};
-            var child5 = new Control {MinSize = (50, 50)};
+                ? new GridContainer {Columns = 2, SetSize = new Vector2(200, 200)}
+                : new GridContainer {MaxGridWidth = 125, SetSize = new Vector2(200, 200)};
+            var child1 = new Control {MinSize = new Vector2(50, 50), HorizontalExpand = true};
+            var child2 = new Control {MinSize = new Vector2(50, 50)};
+            var child3 = new Control {MinSize = new Vector2(50, 50)};
+            var child4 = new Control {MinSize = new Vector2(50, 50), VerticalExpand = true};
+            var child5 = new Control {MinSize = new Vector2(50, 50)};
 
             grid.AddChild(child1);
             grid.AddChild(child2);
@@ -228,13 +229,13 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         public void TestExpandRows(bool limitByCount)
         {
             var grid = limitByCount
-                ? new GridContainer {Rows = 2, SetSize = (200, 200)}
-                : new GridContainer {MaxGridHeight = 125, SetSize = (200, 200)};
-            var child1 = new Control {MinSize = (50, 50), VerticalExpand = true};
-            var child2 = new Control {MinSize = (50, 50)};
-            var child3 = new Control {MinSize = (50, 50)};
-            var child4 = new Control {MinSize = (50, 50), HorizontalExpand = true};
-            var child5 = new Control {MinSize = (50, 50)};
+                ? new GridContainer {Rows = 2, SetSize = new Vector2(200, 200)}
+                : new GridContainer {MaxGridHeight = 125, SetSize = new Vector2(200, 200)};
+            var child1 = new Control {MinSize = new Vector2(50, 50), VerticalExpand = true};
+            var child2 = new Control {MinSize = new Vector2(50, 50)};
+            var child3 = new Control {MinSize = new Vector2(50, 50)};
+            var child4 = new Control {MinSize = new Vector2(50, 50), HorizontalExpand = true};
+            var child5 = new Control {MinSize = new Vector2(50, 50)};
 
             grid.AddChild(child1);
             grid.AddChild(child2);
@@ -263,11 +264,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             var grid = limitByCount
                 ? new GridContainer {Columns = 2}
                 : new GridContainer {MaxGridWidth = 125};
-            var child1 = new Control {MinSize = (50, 50)};
-            var child2 = new Control {MinSize = (50, 50)};
-            var child3 = new Control {MinSize = (50, 50)};
-            var child4 = new Control {MinSize = (50, 50)};
-            var child5 = new Control {MinSize = (50, 50)};
+            var child1 = new Control {MinSize = new Vector2(50, 50)};
+            var child2 = new Control {MinSize = new Vector2(50, 50)};
+            var child3 = new Control {MinSize = new Vector2(50, 50)};
+            var child4 = new Control {MinSize = new Vector2(50, 50)};
+            var child5 = new Control {MinSize = new Vector2(50, 50)};
 
             grid.AddChild(child1);
             grid.AddChild(child2);
@@ -275,7 +276,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             grid.AddChild(child4);
             grid.AddChild(child5);
 
-            grid.Measure((250, 250));
+            grid.Measure(new Vector2(250, 250));
 
             Assert.That(grid.Rows, Is.EqualTo(3));
 
@@ -295,11 +296,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             var grid = limitByCount
                 ? new GridContainer {Rows = 2}
                 : new GridContainer {MaxGridHeight = 125};
-            var child1 = new Control {MinSize = (50, 50)};
-            var child2 = new Control {MinSize = (50, 50)};
-            var child3 = new Control {MinSize = (50, 50)};
-            var child4 = new Control {MinSize = (50, 50)};
-            var child5 = new Control {MinSize = (50, 50)};
+            var child1 = new Control {MinSize = new Vector2(50, 50)};
+            var child2 = new Control {MinSize = new Vector2(50, 50)};
+            var child3 = new Control {MinSize = new Vector2(50, 50)};
+            var child4 = new Control {MinSize = new Vector2(50, 50)};
+            var child5 = new Control {MinSize = new Vector2(50, 50)};
 
             grid.AddChild(child1);
             grid.AddChild(child2);
@@ -307,7 +308,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             grid.AddChild(child4);
             grid.AddChild(child5);
 
-            grid.Measure((250, 250));
+            grid.Measure(new Vector2(250, 250));
 
             Assert.That(grid.Columns, Is.EqualTo(3));
 

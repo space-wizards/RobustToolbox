@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
@@ -20,13 +21,13 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            var styleSize = (_getStyleBox()?.MinimumSize ?? Vector2.Zero);
-            var measureSize = Vector2.ComponentMax(availableSize - styleSize, Vector2.Zero);
+            var styleSize = _getStyleBox()?.MinimumSize ?? Vector2.Zero;
+            var measureSize = Vector2.Max(availableSize - styleSize, Vector2.Zero);
             var childSize = Vector2.Zero;
             foreach (var child in Children)
             {
                 child.Measure(measureSize);
-                childSize = Vector2.ComponentMax(childSize, child.DesiredSize);
+                childSize = Vector2.Max(childSize, child.DesiredSize);
             }
 
             return styleSize + childSize;

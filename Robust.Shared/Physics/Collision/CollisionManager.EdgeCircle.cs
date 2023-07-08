@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Utility;
@@ -133,7 +134,7 @@ internal sealed partial class CollisionManager
 		        n = new Vector2(-n.X, -n.Y);
 	        }
 
-	        n = n.Normalized;
+	        n = n.Normalized();
 
 	        cf.IndexA = 0;
 	        cf.TypeA = (byte) ContactFeatureType.Face;

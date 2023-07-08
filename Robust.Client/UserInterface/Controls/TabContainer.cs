@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Localization;
@@ -218,7 +219,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (TabsVisible)
             {
-                headerSize = (0, _getHeaderSize() / UIScale);
+                headerSize = new Vector2(0, _getHeaderSize() / UIScale);
             }
 
             var panel = _getPanel();
@@ -232,7 +233,7 @@ namespace Robust.Client.UserInterface.Controls
                 if (child.Visible)
                 {
                     child.Measure(contentsSize);
-                    total = Vector2.ComponentMax(child.DesiredSize, total);
+                    total = Vector2.Max(child.DesiredSize, total);
                 }
             }
 

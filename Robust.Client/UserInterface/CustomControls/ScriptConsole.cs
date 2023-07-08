@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
@@ -54,7 +55,7 @@ namespace Robust.Client.UserInterface.CustomControls
             InputBar.OnTextChanged += _ => Suggestions.TextChanged();
             InputBar.OnTextEntered += _ => Run();
             RunButton.OnPressed += _ => Run();
-            MinSize = (550, 300);
+            MinSize = new Vector2(550, 300);
         }
 
         protected abstract void Complete();

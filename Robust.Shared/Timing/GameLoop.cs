@@ -98,6 +98,7 @@ namespace Robust.Shared.Timing
         // ReSharper disable once NotAccessedField.Local
         private readonly IRuntimeLog _runtimeLog;
         private readonly ProfManager _prof;
+        private readonly ISawmill _sawmill;
 
 #if EXCEPTION_TOLERANCE
         private int _tickExceptions;
@@ -105,11 +106,12 @@ namespace Robust.Shared.Timing
         private const int MaxSoftLockExceptions = 10;
 #endif
 
-        public GameLoop(IGameTiming timing, IRuntimeLog runtimeLog, ProfManager prof)
+        public GameLoop(IGameTiming timing, IRuntimeLog runtimeLog, ProfManager prof, ISawmill sawmill)
         {
             _timing = timing;
             _runtimeLog = runtimeLog;
             _prof = prof;
+            _sawmill = sawmill;
         }
 
         /// <summary>
@@ -154,7 +156,7 @@ namespace Robust.Shared.Timing
                     // announce we are falling behind
                     if ((_timing.RealTime - _lastKeepUp).TotalSeconds >= 15.0)
                     {
-                        Logger.WarningS("eng", "MainLoop: Cannot keep up!");
+                        _sawmill.Warning("MainLoop: Cannot keep up!");
                         _lastKeepUp = _timing.RealTime;
                     }
                 }
@@ -227,7 +229,7 @@ namespace Robust.Shared.Timing
 
                         if (_tickExceptions > MaxSoftLockExceptions && DetectSoftLock)
                         {
-                            Logger.FatalS("eng",
+                            _sawmill.Fatal(
                                 "MainLoop: 10 consecutive exceptions inside GameLoop Tick, shutting down!");
                             Running = false;
                         }

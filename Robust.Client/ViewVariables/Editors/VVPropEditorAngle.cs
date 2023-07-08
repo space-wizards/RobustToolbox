@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Numerics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;

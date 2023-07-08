@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -312,7 +313,7 @@ namespace Robust.Client.GameObjects
 
         public const string LogCategory = "go.comp.sprite";
 
-        [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; private set; }
+        [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; internal set; }
 
         void ISerializationHooks.AfterDeserialization()
         {
@@ -1395,33 +1396,6 @@ namespace Robust.Client.GameObjects
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             var ev = new SpriteUpdateInertEvent();
             entities.EventBus.RaiseComponentEvent(this, ref ev);
-        }
-
-        internal void DoUpdateIsInert()
-        {
-            _inertUpdateQueued = false;
-            IsInert = true;
-
-            foreach (var layer in Layers)
-            {
-                // Since StateId is a struct, we can't null-check it directly.
-                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated || layer.Blank)
-                {
-                    continue;
-                }
-
-                var rsi = layer.RSI ?? BaseRSI;
-                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
-                {
-                    state = GetFallbackState(resourceCache);
-                }
-
-                if (state.IsAnimated)
-                {
-                    IsInert = false;
-                    break;
-                }
-            }
         }
 
         [Obsolete("Use SpriteSystem instead.")]

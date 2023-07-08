@@ -1,3 +1,4 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -45,7 +46,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var gridB = mapMan.GetGrid(gridIdB);
 
             // Arrange
-            var initialPos = new EntityCoordinates(gridA.Owner, (0, 0));
+            var initialPos = new EntityCoordinates(gridA.Owner, new Vector2(0, 0));
             var parent = entMan.SpawnEntity(null, initialPos);
             var child = entMan.SpawnEntity(null, initialPos);
             var parentTrans = entMan.GetComponent<TransformComponent>(parent);
@@ -83,7 +84,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var gridB = mapMan.GetGrid(gridIdB);
 
             // Arrange
-            var initalPos = new EntityCoordinates(gridA.Owner, (0, 0));
+            var initalPos = new EntityCoordinates(gridA.Owner, new Vector2(0, 0));
             var node1 = entMan.SpawnEntity(null, initalPos);
             var node2 = entMan.SpawnEntity(null, initalPos);
             var node3 = entMan.SpawnEntity(null, initalPos);

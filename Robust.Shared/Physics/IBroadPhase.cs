@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;

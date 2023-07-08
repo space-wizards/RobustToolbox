@@ -391,6 +391,18 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if the player should get the component state.</returns>
         bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
 
+        /// <summary>
+        /// Returns all instances of a component in an array.
+        /// Use sparingly.
+        /// </summary>
+        (EntityUid Uid, T Component)[] AllComponents<T>() where T : Component;
+
+        /// <summary>
+        /// Returns all instances of a component in a List.
+        /// Use sparingly.
+        /// </summary>
+        List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : Component;
+
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
             where TComp1 : Component;
 

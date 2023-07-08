@@ -21,6 +21,7 @@
 */
 
 using System;
+using System.Numerics;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -208,9 +209,9 @@ public sealed class FrictionJoint : Joint, IEquatable<FrictionJoint>
 
             Vector2 P = new Vector2(_linearImpulse.X, _linearImpulse.Y);
             vA -= P * mA;
-            wA -= iA * (Vector2.Cross(_rA, P) + _angularImpulse);
+            wA -= iA * (Vector2Helpers.Cross(_rA, P) + _angularImpulse);
             vB += P * mB;
-            wB += iB * (Vector2.Cross(_rB, P) + _angularImpulse);
+            wB += iB * (Vector2Helpers.Cross(_rB, P) + _angularImpulse);
         }
         else
         {
@@ -257,7 +258,7 @@ public sealed class FrictionJoint : Joint, IEquatable<FrictionJoint>
 
         // Solve linear friction
         {
-            Vector2 Cdot = vB + Vector2.Cross(wB, _rB) - vA - Vector2.Cross(wA, _rA);
+            Vector2 Cdot = vB + Vector2Helpers.Cross(wB, _rB) - vA - Vector2Helpers.Cross(wA, _rA);
 
             Vector2 impulse = -Transform.Mul(_linearMass, Cdot);
             Vector2 oldImpulse = _linearImpulse;
@@ -265,19 +266,19 @@ public sealed class FrictionJoint : Joint, IEquatable<FrictionJoint>
 
             float maxImpulse = h * MaxForce;
 
-            if (_linearImpulse.LengthSquared > maxImpulse * maxImpulse)
+            if (_linearImpulse.LengthSquared() > maxImpulse * maxImpulse)
             {
-                _linearImpulse = _linearImpulse.Normalized;
+                _linearImpulse = _linearImpulse.Normalized();
                 _linearImpulse *= maxImpulse;
             }
 
             impulse = _linearImpulse - oldImpulse;
 
             vA -= impulse * mA;
-            wA -= iA * Vector2.Cross(_rA, impulse);
+            wA -= iA * Vector2Helpers.Cross(_rA, impulse);
 
             vB += impulse * mB;
-            wB += iB * Vector2.Cross(_rB, impulse);
+            wB += iB * Vector2Helpers.Cross(_rB, impulse);
         }
 
         linearVelocities[offset + _indexA] = vA;

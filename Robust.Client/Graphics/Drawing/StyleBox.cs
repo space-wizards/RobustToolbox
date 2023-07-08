@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 
@@ -246,7 +247,7 @@ namespace Robust.Client.Graphics
         /// </summary>
         public Vector2 GetContentOffset(Vector2 basePosition)
         {
-            return basePosition + (GetContentMargin(Margin.Left), GetContentMargin(Margin.Top));
+            return basePosition + new Vector2(GetContentMargin(Margin.Left), GetContentMargin(Margin.Top));
         }
 
         /// <summary>

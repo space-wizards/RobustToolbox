@@ -50,11 +50,9 @@ public abstract partial class SharedJointSystem
 
     private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ComponentShutdown args)
     {
-        var jointQuery = GetEntityQuery<JointComponent>();
-
         foreach (var relay in component.Relayed)
         {
-            if (Deleted(relay) || !jointQuery.TryGetComponent(relay, out var joint))
+            if (Deleted(relay) || !_jointsQuery.TryGetComponent(relay, out var joint))
                 continue;
 
             RefreshRelay(relay, joint);
@@ -95,7 +93,6 @@ public abstract partial class SharedJointSystem
                 _physics.WakeBody(relay.Value);
                 Dirty(relayTarget);
             }
-
         }
 
         Dirty(component);

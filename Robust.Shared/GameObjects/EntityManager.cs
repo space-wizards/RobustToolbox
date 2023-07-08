@@ -557,7 +557,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    xformSys.DetachParentToNull(uid, transform, xformQuery, metaQuery);
+                    xformSys.DetachParentToNull(uid, transform);
                 }
                 catch (Exception e)
                 {

@@ -1,4 +1,5 @@
-using System.Diagnostics.Contracts;
+﻿using System.Diagnostics.Contracts;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
@@ -82,7 +83,7 @@ namespace Robust.Client.UserInterface.Controls
             var bgSize = _getBackground()?.MinimumSize ?? Vector2.Zero;
             var fgSize = _getForeground()?.MinimumSize ?? Vector2.Zero;
 
-            return Vector2.ComponentMax(bgSize, fgSize);
+            return Vector2.Max(bgSize, fgSize);
         }
     }
 }

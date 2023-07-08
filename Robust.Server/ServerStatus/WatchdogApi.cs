@@ -156,7 +156,7 @@ namespace Robust.Server.ServerStatus
             }
             catch (HttpRequestException e)
             {
-                Logger.WarningS("watchdogApi", "Failed to send ping to watchdog:\n{0}", e);
+                _sawmill.Warning("Failed to send ping to watchdog:\n{0}", e);
             }
         }
 

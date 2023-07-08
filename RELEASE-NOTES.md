@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 135.0.0
+
+### Breaking changes
+
+* Style boxes now scale with the current UI scale. This affects how the the margins, padding, and style box textures are drawn and how controls are arranged. Various style box methods now need to be provided with the current UI scale.
+
+
 ## 134.0.0
 
 ### Breaking changes

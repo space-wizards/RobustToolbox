@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 134.0.0
+
+### Breaking changes
+
+* Several methods were moved out of the `UserInterface` components and into the UI system. 
+* The BUI constructor arguments have changed and now require an EntityUid to be given instead of a component.
+
+
 ## 133.0.0
 
 ### Breaking changes
@@ -66,7 +74,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Block some parent-child physics collisions.
+* Static entities that are parented to other entities will no longer collide with their parent.
 * Fix some miscellaneous doc comments and typos (e.g. PvsSystem and EntityManager).
 * Fix ContentGetDirectoryEntries.
 

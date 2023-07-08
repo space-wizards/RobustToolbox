@@ -35,13 +35,12 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
-            var pixelSize = finalSize * UIScale;
-            var ourSize = UIBox2.FromDimensions(Vector2.Zero, pixelSize);
-            var contentBox = _getStyleBox()?.GetContentBox(ourSize, UIScale) ?? ourSize;
+            var ourSize = UIBox2.FromDimensions(Vector2.Zero, finalSize);
+            var contentBox = _getStyleBox()?.GetContentBox(ourSize) ?? ourSize;
 
             foreach (var child in Children)
             {
-                child.ArrangePixel((UIBox2i) contentBox);
+                child.Arrange(contentBox);
             }
 
             return finalSize;

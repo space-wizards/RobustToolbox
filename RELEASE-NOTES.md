@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `AssetPassPipe` has a new `CheckDuplicates` property that makes it explicitly check for and drop duplicate asset files passed through.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,23 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 133.0.0
+
+### Breaking changes
+
+* Replace Robust's Vector2 with System.Numerics.Vector2.
+
+### New features
+
+* `AssetPassPipe` has a new `CheckDuplicates` property that makes it explicitly check for and drop duplicate asset files passed through.
+
+### Bugfixes
+
+* Block some parent-child physics collisions.
+* Fix some miscellaneous doc comments and typos (e.g. PvsSystem and EntityManager).
+* Fix ContentGetDirectoryEntries.
 
 
 ## 132.2.0

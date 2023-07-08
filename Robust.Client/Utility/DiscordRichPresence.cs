@@ -30,7 +30,7 @@ namespace Robust.Client.Utility
                 State = _loc.GetString("discord-rpc-in-main-menu"),
                 Assets = new Assets
                 {
-                    LargeImageKey = "logo",
+                    LargeImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceSecondIconId),
                     LargeImageText = _loc.GetString("discord-rpc-in-main-menu-logo-text")
                 }
             };
@@ -67,7 +67,7 @@ namespace Robust.Client.Utility
             _stop();
 
             // Create the client
-            _client = new DiscordRpcClient(_configurationManager.GetCVar(CVars.DiscordRichPresenceApplicationId))
+            _client = new DiscordRpcClient("560499552273170473")
             {
                 Logger = new NativeLogger(_logManager.GetSawmill("discord"))
             };
@@ -101,9 +101,9 @@ namespace Robust.Client.Utility
                 State = _loc.GetString("discord-rpc-players", ("players", users), ("maxplayers", maxUsers)),
                 Assets = new Assets
                 {
-                    LargeImageKey = "devstation",
+                    LargeImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceMainIconId),
                     LargeImageText = _loc.GetString("discord-rpc-character", ("username", username)),
-                    SmallImageKey = "logo"
+                    SmallImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceSecondIconId)
                 }
             };
             _client?.SetPresence(_activePresence);

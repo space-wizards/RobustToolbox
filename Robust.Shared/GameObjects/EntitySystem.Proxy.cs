@@ -635,14 +635,14 @@ public partial class EntitySystem
 
     #region Entity Spawning
 
-    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, EntityCoordinates)" />
+    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, EntityCoordinates, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
     {
         return EntityManager.SpawnEntity(prototype, coordinates);
     }
 
-    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, MapCoordinates)" />
+    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, MapCoordinates, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? prototype, MapCoordinates coordinates)
     {

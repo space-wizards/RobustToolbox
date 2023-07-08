@@ -272,7 +272,7 @@ public abstract partial class SharedTransformSystem
         }
         else
         {
-            // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordiantes)
+            // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordinates)
             // in that case, we attempt to attach to a grid.
             var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
             _mapManager.TryFindGridAt(pos, out _, out grid);

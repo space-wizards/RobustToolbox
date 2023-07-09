@@ -148,7 +148,6 @@ namespace Robust.Client.UserInterface
 
         internal void DoStyleUpdate()
         {
-            _stylingDirty = false;
             _styleProperties.Clear();
 
             if (_stylesheetUpdateNeeded)
@@ -229,6 +228,7 @@ namespace Robust.Client.UserInterface
             }
 
             StylePropertiesChanged();
+            _stylingDirty = false;
         }
 
         protected virtual void StylePropertiesChanged()

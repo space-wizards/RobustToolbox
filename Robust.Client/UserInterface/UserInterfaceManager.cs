@@ -252,7 +252,7 @@ namespace Robust.Client.UserInterface
                 {
                     if (total >= ControlUpdateLimit)
                     {
-                        _sawmillUI.Warning($"Hit style update limit. Queued: {_measureUpdateQueue.Count}. Next in queue: {_measureUpdateQueue.Peek()}. Parent: {_measureUpdateQueue.Peek().Parent}");
+                        _sawmillUI.Warning($"Hit measure update limit. Queued: {_measureUpdateQueue.Count}. Next in queue: {_measureUpdateQueue.Peek()}. Parent: {_measureUpdateQueue.Peek().Parent}");
                         break;
                     }
 
@@ -277,7 +277,7 @@ namespace Robust.Client.UserInterface
                 {
                     if (total >= ControlUpdateLimit)
                     {
-                        _sawmillUI.Warning($"Hit style update limit. Queued: {_arrangeUpdateQueue.Count}. Next in queue: {_arrangeUpdateQueue.Peek()}. Parent: {_arrangeUpdateQueue.Peek().Parent}");
+                        _sawmillUI.Warning($"Hit arrange update limit. Queued: {_arrangeUpdateQueue.Count}. Next in queue: {_arrangeUpdateQueue.Peek()}. Parent: {_arrangeUpdateQueue.Peek().Parent}");
                         break;
                     }
                     var control = _arrangeUpdateQueue.Dequeue();

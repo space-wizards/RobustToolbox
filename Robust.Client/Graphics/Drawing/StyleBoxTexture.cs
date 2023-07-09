@@ -45,7 +45,7 @@ namespace Robust.Client.Graphics
         /// Left expansion size, in virtual pixels.
         /// </summary>
         /// <remarks>
-        /// This expands the size of the area where the left patches get drawn. This will cause the drawn texture to
+        /// This expands the size of the area where the patches get drawn. This will cause the drawn texture to
         /// extend beyond the box passed to the <see cref="StyleBox.Draw"/> function. This is not affected by
         /// <see cref="TextureScale"/>.
         /// </remarks>
@@ -55,7 +55,7 @@ namespace Robust.Client.Graphics
         /// Top expansion size, in virtual pixels.
         /// </summary>
         /// <remarks>
-        /// This expands the size of the area where the left patches get drawn. This will cause the drawn texture to
+        /// This expands the size of the area where the patches get drawn. This will cause the drawn texture to
         /// extend beyond the box passed to the <see cref="StyleBox.Draw"/> function. This is not affected by
         /// <see cref="TextureScale"/>.
         /// </remarks>
@@ -65,7 +65,7 @@ namespace Robust.Client.Graphics
         /// Bottom expansion size, in virtual pixels.
         /// </summary>
         /// <remarks>
-        /// This expands the size of the area where the left patches get drawn. This will cause the drawn texture to
+        /// This expands the size of the area where the patches get drawn. This will cause the drawn texture to
         /// extend beyond the box passed to the <see cref="StyleBox.Draw"/> function. This is not affected by
         /// <see cref="TextureScale"/>.
         /// </remarks>
@@ -75,7 +75,7 @@ namespace Robust.Client.Graphics
         /// Right expansion size, in virtual pixels.
         /// </summary>
         /// <remarks>
-        /// This expands the size of the area where the left patches get drawn. This will cause the drawn texture to
+        /// This expands the size of the area where the patches get drawn. This will cause the drawn texture to
         /// extend beyond the box passed to the <see cref="StyleBox.Draw"/> function. This is not affected by
         /// <see cref="TextureScale"/>.
         /// </remarks>

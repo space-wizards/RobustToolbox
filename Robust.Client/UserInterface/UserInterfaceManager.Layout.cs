@@ -161,7 +161,7 @@ internal sealed partial class UserInterfaceManager
         }
 
         /// <summary>
-        /// Queues a control so that it gets rearranged in the next frame update. Does not queue an measure update.
+        /// Queues a control so that it gets rearranged in the next frame update. Does not queue a measure update.
         /// </summary>
         public void QueueArrangeUpdate(Control control)
         {

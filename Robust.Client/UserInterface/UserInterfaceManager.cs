@@ -56,8 +56,8 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IRuntimeLog _runtime = default!;
 
         /// <summary>
-        /// Upper limit on the number of times that controls can be measured / arranged each tick before deferring to
-        /// the next loop. This is just meant to prevent infinite loops from locking up the UI completely.
+        /// Upper limit on the number of times that controls can be measured / arranged each tick before being deferred
+        /// to the next frame update. This is just meant to prevent infinite loops from completely locking up the UI.
         /// </summary>
         public const int ControlUpdateLimit = 25_000;
 

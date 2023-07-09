@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 136.0.0
+
+### New features
+
+* Several more style box properties now scale with UI scale. Signature of some stylebox methods have been changed.
+
+### Bugfixes
+
+* Fixed OutputPanel scroll-bar not functioning properly. 
+
+
 ## 135.0.0
 
 ### Breaking changes

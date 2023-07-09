@@ -289,9 +289,8 @@ namespace Robust.Client.UserInterface.Controls
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
             var style = _getStyleBox();
-
-            _renderBox.Arrange(
-                (UIBox2i) style.GetContentBox(UIBox2.FromDimensions(Vector2.Zero, finalSize)));
+            var box = UIBox2.FromDimensions(Vector2.Zero, finalSize);
+            _renderBox.Arrange(style.GetContentBox(box, 1));
 
             return finalSize;
         }

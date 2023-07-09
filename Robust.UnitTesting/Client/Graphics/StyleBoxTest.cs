@@ -16,7 +16,7 @@ namespace Robust.UnitTesting.Client.Graphics
             var styleBox = new StyleBoxFlat();
 
             Assert.That(
-                styleBox.GetEnvelopBox(Vector2.Zero, new Vector2(50, 50)),
+                styleBox.GetEnvelopBox(Vector2.Zero, new Vector2(50, 50), 1),
                 Is.EqualTo(new UIBox2(0, 0, 50, 50)));
 
             styleBox.ContentMarginLeftOverride = 3;
@@ -25,11 +25,11 @@ namespace Robust.UnitTesting.Client.Graphics
             styleBox.ContentMarginBottomOverride = 11;
 
             Assert.That(
-                styleBox.GetEnvelopBox(Vector2.Zero, new Vector2(50, 50)),
+                styleBox.GetEnvelopBox(Vector2.Zero, new Vector2(50, 50), 1),
                 Is.EqualTo(new UIBox2(0, 0, 60, 66)));
 
             Assert.That(
-                styleBox.GetEnvelopBox(new Vector2(10, 10), new Vector2(50, 50)),
+                styleBox.GetEnvelopBox(new Vector2(10, 10), new Vector2(50, 50), 1),
                 Is.EqualTo(new UIBox2(10, 10, 70, 76)));
 
             Assert.That(

@@ -171,7 +171,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
 
-            _scrollBar.Page = Height - styleBoxSize;
+            _scrollBar.Page = UIScale * (Height - styleBoxSize);
             _invalidateEntries();
         }
 
@@ -224,6 +224,7 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private float _getScrollSpeed()
         {
+            // The scroll speed depends on the UI scale because the scroll bar is working with physical pixels.
             return GetScrollSpeed(_getFont(), UIScale);
         }
 

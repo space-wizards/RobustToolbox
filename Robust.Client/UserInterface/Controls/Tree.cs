@@ -117,7 +117,7 @@ namespace Robust.Client.UserInterface.Controls
             var background = _getBackground();
             if (background != null)
             {
-                position -= background.GetContentOffset(Vector2.Zero);
+                position -= background.GetContentOffset(Vector2.Zero, UIScale);
             }
 
             var vOffset = -_scrollBar.Value;
@@ -188,7 +188,7 @@ namespace Robust.Client.UserInterface.Controls
             if (background != null)
             {
                 background.Draw(handle, PixelSizeBox, UIScale);
-                var (bho, bvo) = background.GetContentOffset(Vector2.Zero);
+                var (bho, bvo) = background.GetContentOffset(Vector2.Zero, UIScale);
                 vOffset += bvo;
                 hOffset += bho;
             }
@@ -220,7 +220,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (!string.IsNullOrWhiteSpace(item.Text))
             {
-                var offset = itemSelected.GetContentOffset(Vector2.Zero);
+                var offset = itemSelected.GetContentOffset(Vector2.Zero, UIScale);
                 var baseLine = offset + new Vector2(hOffset, vOffset + font.GetAscent(UIScale));
                 foreach (var rune in item.Text.EnumerateRunes())
                 {

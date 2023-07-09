@@ -49,7 +49,8 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
-            var contentBox = ActualStyleBox.GetContentBox(UIBox2.FromDimensions(Vector2.Zero, finalSize));
+            var box = UIBox2.FromDimensions(Vector2.Zero, finalSize);
+            var contentBox = ActualStyleBox.GetContentBox(box, 1);
 
             foreach (var child in Children)
             {

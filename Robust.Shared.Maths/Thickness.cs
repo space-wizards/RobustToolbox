@@ -40,6 +40,11 @@ namespace Robust.Shared.Maths
             Right = right;
             Bottom = bottom;
         }
+        
+        public Thickness Scale(float scale)
+        {
+            return new Thickness(Left * scale, Top * scale, Right * scale, Bottom * scale);
+        }
 
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
         public readonly bool Equals(Thickness other)

@@ -286,7 +286,7 @@ namespace Robust.Client.UserInterface
                         continue;
 
                     RunArrange(control);
-                    if (!control.IsArrangeValid)
+                    if (!control.IsArrangeValid && control.IsInsideTree)
                         _sawmillUI.Warning($"Control's arrangement is invalid after arranging. Control: {control}. Parent: {control.Parent}.");
                     total += 1;
                 }

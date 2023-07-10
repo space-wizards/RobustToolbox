@@ -54,9 +54,9 @@ namespace Robust.Server.GameObjects
             base.Initialize();
         }
 
-        EntityUid IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid uid)
+        EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype, EntityUid uid)
         {
-            return AllocEntity(prototypeName, out _, uid);
+            return AllocEntity(prototype, out _, uid);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)

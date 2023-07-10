@@ -107,6 +107,18 @@ internal partial class MapManager
         state = state2.state;
     }
 
+    public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false,
+        bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), callback, approx, includeMap);
+    }
+
+    public void FindGridsIntersecting<TState>(MapId mapId, Box2Rotated worldBounds, ref TState state, GridCallback<TState> callback,
+        bool approx = false, bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), ref state, callback, approx, includeMap);
+    }
+
     private static bool IsIntersecting(
         Box2 aabb,
         EntityUid gridUid,

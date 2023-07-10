@@ -148,7 +148,6 @@ namespace Robust.Client.UserInterface
 
         internal void DoStyleUpdate()
         {
-            _stylingDirty = false;
             _styleProperties.Clear();
 
             if (_stylesheetUpdateNeeded)
@@ -229,6 +228,10 @@ namespace Robust.Client.UserInterface
             }
 
             StylePropertiesChanged();
+
+            // Setting this at the end of the function to prevent style updates from ever re-queueing a style update,
+            // which would cause an infinite loop.
+            _stylingDirty = false;
         }
 
         protected virtual void StylePropertiesChanged()

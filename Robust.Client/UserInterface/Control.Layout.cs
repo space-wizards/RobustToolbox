@@ -32,6 +32,7 @@ namespace Robust.Client.UserInterface
         private VAlignment _verticalAlignment = VAlignment.Stretch;
         private Thickness _margin;
         private bool _measuring;
+        private bool _arranging;
 
         /// <summary>
         /// The desired minimum size this control needs for layout to avoid cutting off content or such.
@@ -469,13 +470,12 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public void InvalidateMeasure()
         {
-            if (!IsMeasureValid)
+            if (!IsMeasureValid || _measuring)
                 return;
 
             IsMeasureValid = false;
-            IsArrangeValid = false;
-
             UserInterfaceManagerInternal.QueueMeasureUpdate(this);
+            InvalidateArrange();
         }
 
         /// <summary>
@@ -484,7 +484,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public void InvalidateArrange()
         {
-            if (!IsArrangeValid)
+            if (!IsArrangeValid || _arranging)
             {
                 // Already queued for a layout update, don't bother.
                 return;
@@ -508,7 +508,16 @@ namespace Robust.Client.UserInterface
             if (!IsMeasureValid || PreviousMeasure != availableSize)
             {
                 IsMeasureValid = true;
-                var desired = MeasureCore(availableSize);
+                _measuring = true;
+                Vector2 desired;
+                try
+                {
+                    desired = MeasureCore(availableSize);
+                }
+                finally
+                {
+                    _measuring = false;
+                }
 
                 if (desired.X < 0 || desired.Y < 0 || !float.IsFinite(desired.X) || !float.IsFinite(desired.Y))
                     throw new InvalidOperationException("Invalid size returned from Measure()");
@@ -540,16 +549,7 @@ namespace Robust.Client.UserInterface
 
             var constrained = ApplySizeConstraints(this, withoutMargin);
 
-            Vector2 measured;
-            try
-            {
-                _measuring = true;
-                measured = MeasureOverride(constrained);
-            }
-            finally
-            {
-                _measuring = false;
-            }
+            var measured = MeasureOverride(constrained);
 
             if (!float.IsNaN(SetWidth))
             {
@@ -604,14 +604,22 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public void Arrange(UIBox2 finalRect)
         {
-            if (!IsMeasureValid)
-                Measure(PreviousMeasure ?? finalRect.Size);
-
-            if (!IsArrangeValid || PreviousArrange != finalRect)
+            _arranging = true;
+            try
             {
-                IsArrangeValid = true;
-                ArrangeCore(finalRect);
-                PreviousArrange = finalRect;
+                if (!IsMeasureValid)
+                    Measure(PreviousMeasure ?? finalRect.Size);
+
+                if (!IsArrangeValid || PreviousArrange != finalRect)
+                {
+                    IsArrangeValid = true;
+                    ArrangeCore(finalRect);
+                    PreviousArrange = finalRect;
+                }
+            }
+            finally
+            {
+                _arranging = false;
             }
         }
 

@@ -223,23 +223,8 @@ namespace Robust.Client.UserInterface.Controls
                 var first = GetChild(0);
                 var second = GetChild(1);
 
-                var firstDesiredSize = firstMinSize ?? (Vertical ? first.DesiredSize.Y : first.DesiredSize.X);
-                var secondDesiredSize = secondMinSize ??  (Vertical ? second.DesiredSize.Y : second.DesiredSize.X);
-                var firstOrientedMinSize = Vertical ? first.MinSize.Y : first.MinSize.X;
-                var secondOrientedMinSize = Vertical ? second.MinSize.Y : second.MinSize.X;
-
-                if (firstOrientedMinSize > firstDesiredSize && firstOrientedMinSize != 0)
-                {
-                    first.Measure(controlSize);
-                }
-
-                if (secondOrientedMinSize > secondDesiredSize && secondOrientedMinSize != 0)
-                {
-                    second.Measure(controlSize);
-                }
-
-                firstMinSize = Vertical ? first.DesiredSize.Y : first.DesiredSize.X;
-                secondMinSize = Vertical ? second.DesiredSize.Y : second.DesiredSize.X;
+                firstMinSize ??= (Vertical ? first.DesiredSize.Y : first.DesiredSize.X);
+                secondMinSize ??= (Vertical ? second.DesiredSize.Y : second.DesiredSize.X);
                 var size = Vertical ? controlSize.Y : controlSize.X;
 
                 _splitStart = MathHelper.Clamp(_splitStart, firstMinSize.Value,

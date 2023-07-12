@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Audio.Midi;
 using Robust.Shared.GameObjects;
@@ -30,11 +32,6 @@ public interface IMidiRenderer : IDisposable
     ///     This controls whether the midi file being played will loop or not.
     /// </summary>
     bool LoopMidi { get; set; }
-
-    /// <summary>
-    ///     This increases all note on velocities to 127.
-    /// </summary>
-    bool VolumeBoost { get; set; }
 
     /// <summary>
     ///     The midi program (instrument) the renderer is using.
@@ -93,6 +90,32 @@ public interface IMidiRenderer : IDisposable
     ///     Gets the Time Scale of the sequencer in ticks per second. Default is 1000 for 1 tick per millisecond.
     /// </summary>
     double SequencerTimeScale { get; }
+
+    /// <summary>
+    ///     Whether this renderer will subscribe to another and copy its events.
+    ///     Requires <see cref="MasterChannels"/> to have channels in it.
+    /// </summary>
+    IMidiRenderer? Master { get; set; }
+
+    // NOTE: Why are the two properties below BitArray, you ask?
+    // Well see, MIDI 2.0 supports up to 256(!) channels as opposed to MIDI 1.0's meekly 16 channels...
+    // I'd like us to support MIDI 2.0 one day so I'm just future-proofing here. Also BitArray is cool!
+
+    /// <summary>
+    ///     Channels to copy from the <see cref="Master"/> renderer.
+    /// </summary>
+    BitArray MasterChannels { get; }
+
+    /// <summary>
+    ///     Allows you to filter out note events from certain channels.
+    ///     Only NoteOn will be filtered.
+    /// </summary>
+    BitArray FilteredChannels { get; }
+
+    /// <summary>
+    ///     Allows you to override all NoteOn velocities. Set to null to disable.
+    /// </summary>
+    byte? VelocityOverride { get; set; }
 
     /// <summary>
     ///     Start listening for midi input.
@@ -177,7 +200,7 @@ public interface IMidiRenderer : IDisposable
     /// <summary>
     ///     Apply a certain state to the renderer.
     /// </summary>
-    void ApplyState(MidiRendererState state);
+    void ApplyState(MidiRendererState state, bool filterByMasterChannels = false);
 
     /// <summary>
     ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.

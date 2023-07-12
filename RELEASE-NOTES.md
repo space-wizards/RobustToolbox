@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 136.0.1
+
+### Bugfixes
+
+* Fixed debugging on Linux when CEF is enabled.
+
+
 ## 136.0.0
 
 ### New features
@@ -62,7 +69,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed OutputPanel scroll-bar not functioning properly. 
+* Fixed OutputPanel scroll-bar not functioning properly.
 
 
 ## 135.0.0
@@ -76,7 +83,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Several methods were moved out of the `UserInterface` components and into the UI system. 
+* Several methods were moved out of the `UserInterface` components and into the UI system.
 * The BUI constructor arguments have changed and now require an EntityUid to be given instead of a component.
 
 

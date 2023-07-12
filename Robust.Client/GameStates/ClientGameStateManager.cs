@@ -532,7 +532,6 @@ namespace Robust.Client.GameStates
 
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
-                    comp.HandleComponentState(compState, null);
                     comp.LastModifiedTick = _timing.LastRealTick;
                 }
 
@@ -561,7 +560,6 @@ namespace Robust.Client.GameStates
 
                         var stateEv = new ComponentHandleState(state, null);
                         _entities.EventBus.RaiseComponentEvent(comp, ref stateEv);
-                        comp.HandleComponentState(state, null);
                         comp.ClearCreationTick(); // don't undo the re-adding.
                         comp.LastModifiedTick = _timing.LastRealTick;
                     }
@@ -1172,7 +1170,6 @@ namespace Robust.Client.GameStates
                 {
                     var handleState = new ComponentHandleState(cur, next);
                     bus.RaiseComponentEvent(comp, ref handleState);
-                    comp.HandleComponentState(cur, next);
                 }
                 catch (Exception e)
                 {
@@ -1223,7 +1220,7 @@ namespace Robust.Client.GameStates
                 return;
 
             using var _ = _timing.StartStateApplicationArea();
-            ResetEnt(meta, false);
+            ResetEnt(uid, meta, false);
         }
 
         /// <summary>
@@ -1301,23 +1298,23 @@ namespace Robust.Client.GameStates
         {
             using var _ = _timing.StartStateApplicationArea();
 
-            foreach (var meta in _entities.EntityQuery<MetaDataComponent>(true))
+            var query = _entityManager.AllEntityQueryEnumerator<MetaDataComponent>();
+
+            while (query.MoveNext(out var uid, out var meta))
             {
-                ResetEnt(meta);
+                ResetEnt(uid, meta);
             }
         }
 
         /// <summary>
         ///     Reset a given entity to the most recent server state.
         /// </summary>
-        private void ResetEnt(MetaDataComponent meta, bool skipDetached = true)
+        private void ResetEnt(EntityUid uid, MetaDataComponent meta, bool skipDetached = true)
         {
             if (skipDetached && (meta.Flags & MetaDataFlags.Detached) != 0)
                 return;
 
             meta.Flags &= ~MetaDataFlags.Detached;
-
-            var uid = meta.Owner;
 
             if (!_processor.TryGetLastServerStates(uid, out var lastState))
                 return;
@@ -1334,7 +1331,6 @@ namespace Robust.Client.GameStates
 
                 var handleState = new ComponentHandleState(state, null);
                 _entityManager.EventBus.RaiseComponentEvent(comp, ref handleState);
-                comp.HandleComponentState(state, null);
             }
 
             // ensure we don't have any extra components

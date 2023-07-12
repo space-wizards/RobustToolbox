@@ -144,29 +144,6 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            base.HandleComponentState(curState, nextState);
-
-            if (curState is not EyeComponentState state)
-            {
-                return;
-            }
-
-            DrawFov = state.DrawFov;
-            // TODO: Should be a way for content to override lerping and lerp the zoom
-            Zoom = state.Zoom;
-            Offset = state.Offset;
-            VisibilityMask = state.VisibilityMask;
-        }
-
-        protected override void OnRemove()
-        {
-            base.OnRemove();
-
-            Current = false;
-        }
-
         /// <summary>
         /// Updates the Eye of this entity with the transform position. This has to be called every frame to
         /// keep the view following the entity.

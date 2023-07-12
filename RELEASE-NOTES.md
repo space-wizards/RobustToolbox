@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed debugging on Linux when CEF is enabled.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 136.0.1
+
+### Bugfixes
+
+* Fixed debugging on Linux when CEF is enabled.
 
 
 ## 136.0.0

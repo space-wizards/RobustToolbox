@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using NFluidsynth;
 using Robust.Client.Graphics;
 using Robust.Shared.Asynchronous;
@@ -11,7 +10,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Client.Audio.Midi;
 
@@ -193,9 +191,6 @@ internal sealed class MidiRenderer : IMidiRenderer
     public EntityCoordinates? TrackingCoordinates { get; set; } = null;
 
     [ViewVariables]
-    public BitArray MasterChannels { get; } = new(RobustMidiEvent.MaxChannels);
-
-    [ViewVariables]
     public BitArray FilteredChannels { get; } = new(RobustMidiEvent.MaxChannels);
 
     [ViewVariables(VVAccess.ReadWrite)]
@@ -212,7 +207,7 @@ internal sealed class MidiRenderer : IMidiRenderer
 
             if (_master is { Disposed: false })
             {
-                _master.OnMidiEvent -= MasterMidiEventHandler;
+                _master.OnMidiEvent -= SendMidiEvent;
             }
 
             _master = value;
@@ -220,7 +215,7 @@ internal sealed class MidiRenderer : IMidiRenderer
             if (_master == null)
                 return;
 
-            _master.OnMidiEvent += MasterMidiEventHandler;
+            _master.OnMidiEvent += SendMidiEvent;
             ApplyState(_master.RendererState, true);
         }
     }
@@ -385,12 +380,6 @@ internal sealed class MidiRenderer : IMidiRenderer
         return 0;
     }
 
-    private void MasterMidiEventHandler(RobustMidiEvent ev)
-    {
-        if(MasterChannels[ev.Channel])
-            SendMidiEvent(ev);
-    }
-
     public void StopAllNotes()
     {
         for (byte i = 0; i < ChannelCount; i++)
@@ -474,7 +463,7 @@ internal sealed class MidiRenderer : IMidiRenderer
         if (!Source.IsPlaying) Source.StartPlaying();
     }
 
-    public void ApplyState(MidiRendererState state, bool filterByMasterChannels = false)
+    public void ApplyState(MidiRendererState state, bool filterChannels = false)
     {
         lock (_playerStateLock)
         {
@@ -482,7 +471,7 @@ internal sealed class MidiRenderer : IMidiRenderer
 
             for (var channel = 0; channel < ChannelCount; channel++)
             {
-                if (filterByMasterChannels && !MasterChannels[channel])
+                if (filterChannels && !FilteredChannels[channel])
                     continue;
 
                 _synth.AllNotesOff(channel);

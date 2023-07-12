@@ -93,18 +93,13 @@ public interface IMidiRenderer : IDisposable
 
     /// <summary>
     ///     Whether this renderer will subscribe to another and copy its events.
-    ///     Requires <see cref="MasterChannels"/> to have channels in it.
+    ///     See <see cref="FilteredChannels"/> to filter specific channels.
     /// </summary>
     IMidiRenderer? Master { get; set; }
 
-    // NOTE: Why are the two properties below BitArray, you ask?
+    // NOTE: Why is the properties below BitArray, you ask?
     // Well see, MIDI 2.0 supports up to 256(!) channels as opposed to MIDI 1.0's meekly 16 channels...
     // I'd like us to support MIDI 2.0 one day so I'm just future-proofing here. Also BitArray is cool!
-
-    /// <summary>
-    ///     Channels to copy from the <see cref="Master"/> renderer.
-    /// </summary>
-    BitArray MasterChannels { get; }
 
     /// <summary>
     ///     Allows you to filter out note events from certain channels.
@@ -200,7 +195,7 @@ public interface IMidiRenderer : IDisposable
     /// <summary>
     ///     Apply a certain state to the renderer.
     /// </summary>
-    void ApplyState(MidiRendererState state, bool filterByMasterChannels = false);
+    void ApplyState(MidiRendererState state, bool filterChannels = false);
 
     /// <summary>
     ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.

@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map.Components;
 using System.Linq;
+using Robust.Shared.Network;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -15,11 +17,20 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
+        [Dependency] private readonly IMapManagerInternal _mapInternal = default!;
+        [Dependency] private readonly INetManager _netManager = default!;
+        [Dependency] private readonly FixtureSystem _fixtures = default!;
+        [Dependency] private readonly SharedGridFixtureSystem _gridFixtures = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
+
+        private EntityQuery<TransformComponent> _xformQuery;
 
         public override void Initialize()
         {
             base.Initialize();
+
+            _xformQuery = GetEntityQuery<TransformComponent>();
 
             InitializeMap();
             InitializeGrid();

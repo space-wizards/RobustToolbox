@@ -276,5 +276,5 @@ namespace Robust.Shared.Map
     /// <param name="newTile">New version of the tile.</param>
     /// <param name="oldTile">Old version of the tile.</param>
     /// <param name="chunkShapeChanged">If changing this tile changed the shape of the chunk.</param>
-    internal delegate void TileModifiedDelegate(MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile, bool chunkShapeChanged);
+    internal delegate void TileModifiedDelegate(EntityUid uid, MapGridComponent grid, MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile, bool chunkShapeChanged);
 }

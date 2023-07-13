@@ -80,7 +80,6 @@ namespace Robust.Shared.GameObjects
         public event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
         private string _xformName = string.Empty;
-        private string _metaName = string.Empty;
 
         private SharedMapSystem _mapSystem = default!;
 
@@ -109,7 +108,6 @@ namespace Robust.Shared.GameObjects
 
             InitializeComponents();
             _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
-            _metaName = _componentFactory.GetComponentName(typeof(MetaDataComponent));
             _sawmill = LogManager.GetSawmill("entity");
             _resolveSawmill = LogManager.GetSawmill("resolve");
 

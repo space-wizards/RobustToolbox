@@ -215,6 +215,10 @@ namespace Robust.Shared.Map
             public List<EntityUid>? Center;
         }
 
+        /// <summary>
+        /// Sets the tile without any callbacks.
+        /// Do not call this unless you know what you are doing.
+        /// </summary>
         internal bool TrySetTile(ushort xIndex, ushort yIndex, Tile tile, out Tile oldTile, out bool shapeChanged)
         {
             if (xIndex >= Tiles.Length)

@@ -171,13 +171,12 @@ internal partial class MapManager
 
         uid = EntityUid.Invalid;
         grid = null;
-        var state = (uid, grid, worldPos, xformQuery, _mapSystem, _transformSystem);
+        var state = (uid, grid, worldPos, _mapSystem, _transformSystem);
 
         FindGridsIntersecting(mapId, aabb, ref state, static (EntityUid iUid, MapGridComponent iGrid, ref (
             EntityUid uid,
             MapGridComponent? grid,
             Vector2 worldPos,
-            EntityQuery<TransformComponent> xformQuery,
             SharedMapSystem mapSystem,
             SharedTransformSystem xformSystem) tuple) =>
         {
@@ -186,7 +185,7 @@ internal partial class MapManager
             // (though now we need some extra calcs up front).
 
             // Doesn't use WorldBounds because it's just an AABB.
-            var matrix = tuple.xformSystem.GetInvWorldMatrix(iUid, tuple.xformQuery);
+            var matrix = tuple.xformSystem.GetInvWorldMatrix(iUid);
             var localPos = matrix.Transform(tuple.worldPos);
 
             // NOTE:
@@ -194,7 +193,8 @@ internal partial class MapManager
             // you account for the fact that fixtures are shrunk slightly!
             var chunkIndices = SharedMapSystem.GetChunkIndices(localPos, iGrid.ChunkSize);
 
-            if (!tuple.mapSystem.HasChunk(iUid, iGrid, chunkIndices)) return true;
+            if (!tuple.mapSystem.HasChunk(iUid, iGrid, chunkIndices))
+                return true;
 
             var chunk = tuple.mapSystem.GetOrAddChunk(iUid, iGrid, chunkIndices);
             var chunkRelative = SharedMapSystem.GetChunkRelative(localPos, iGrid.ChunkSize);

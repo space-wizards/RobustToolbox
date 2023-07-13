@@ -12,7 +12,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using Vector2 = Robust.Shared.Maths.Vector2;
+using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.UserInterface.Controls;
 
@@ -1171,19 +1171,19 @@ public sealed class TextEdit : Control
         // Arrow shapes/data for the debug overlay.
         private static readonly (Vector2, Vector2)[] ArrowUp =
         {
-            ((8, 14), (8, 2)),
-            ((4, 7), (8, 2)),
-            ((12, 7), (8, 2)),
+            (new(8, 14), new(8, 2)),
+            (new(4, 7), new(8, 2)),
+            (new(12, 7), new(8, 2)),
         };
 
         private static readonly (Vector2, Vector2)[] ArrowDown =
         {
-            ((8, 14), (8, 2)),
-            ((4, 9), (8, 14)),
-            ((12, 9), (8, 14)),
+            (new(8, 14), new(8, 2)),
+            (new(4, 9), new(8, 14)),
+            (new(12, 9), new(8, 14)),
         };
 
-        private static readonly Vector2 ArrowSize = (16, 16);
+        private static readonly Vector2 ArrowSize = new(16, 16);
 
         private readonly TextEdit _master;
 
@@ -1209,8 +1209,8 @@ public sealed class TextEdit : Control
             if (_master.DebugOverlay && _master._horizontalCursorPos is { } hPos)
             {
                 handle.DrawLine(
-                    (hPos + drawBox.Left, drawBox.Top),
-                    (hPos + drawBox.Left, drawBox.Bottom),
+                    new(hPos + drawBox.Left, drawBox.Top),
+                    new(hPos + drawBox.Left, drawBox.Bottom),
                     Color.Purple);
             }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map.Components;
@@ -15,7 +16,7 @@ namespace Robust.Shared.Map
             var grid = mapManager.GetGrid(gridId);
             var tile = grid.TileSize;
 
-            return new EntityCoordinates(gridId, (vector.X * tile, vector.Y * tile));
+            return new EntityCoordinates(gridId, new Vector2(vector.X * tile, vector.Y * tile));
         }
 
         public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coords, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
@@ -56,7 +57,7 @@ namespace Robust.Shared.Map
 
                     // figure out closest intersect
                     var gridIntersect = gridSearchBox.Intersect(gridXform.WorldMatrix.TransformBox(grid.LocalAABB));
-                    var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared;
+                    var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared();
 
                     if (gridDist >= distance)
                         continue;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -85,7 +86,7 @@ namespace Robust.Client.GameObjects
                     {
                         var lerpDest = transform.NextPosition.Value;
                         var lerpSource = transform.PrevPosition;
-                        var distance = (lerpDest - lerpSource).LengthSquared;
+                        var distance = (lerpDest - lerpSource).LengthSquared();
 
                         if (distance is > MinInterpolationDistanceSquared and < MaxInterpolationDistanceSquared)
                         {

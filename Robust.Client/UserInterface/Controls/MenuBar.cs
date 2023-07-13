@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 
@@ -37,7 +38,7 @@ namespace Robust.Client.UserInterface.Controls
                     (_popupVBox = new BoxContainer
                     {
                         Orientation = LayoutOrientation.Vertical,
-                        MinSize = (300, 0)
+                        MinSize = new Vector2(300, 0)
                     })
                 }
             };
@@ -76,7 +77,7 @@ namespace Robust.Client.UserInterface.Controls
             ConstructMenu(menu, _popupVBox);
 
             var globalPos = button.GlobalPosition;
-            globalPos += (_isSubmenu ? button.Width : 0, _isSubmenu ? 0 : button.Height);
+            globalPos += new Vector2(_isSubmenu ? button.Width : 0, _isSubmenu ? 0 : button.Height);
             _popup.Open(UIBox2.FromDimensions(globalPos, _popupVBox.Size));
 
             // Set this after running open so that if this is called from MouseEntered,
@@ -129,7 +130,7 @@ namespace Robust.Client.UserInterface.Controls
                         break;
 
                     case MenuSeparator _:
-                        var control = new Control {MinSize = (0, 6)};
+                        var control = new Control {MinSize = new Vector2(0, 6)};
                         container.AddChild(control);
                         break;
 
@@ -266,9 +267,10 @@ namespace Robust.Client.UserInterface.Controls
 
             public SubMenuTopButton(Menu menu) : base(menu)
             {
-                Button = new Button {
+                Button = new Button
+                {
                     Text = menu.Title,
-                    MinSize = (300, 0),
+                    MinSize = new Vector2(300, 0),
                     MouseFilter = MouseFilterMode.Pass
                 };
 

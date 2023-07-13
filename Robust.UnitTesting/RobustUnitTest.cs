@@ -26,6 +26,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using EyeComponent = Robust.Server.GameObjects.EyeComponent;
 
 namespace Robust.UnitTesting
 {
@@ -126,6 +127,11 @@ namespace Robust.UnitTesting
             // Required components for the engine to work
             // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?
             var compFactory = deps.Resolve<IComponentFactory>();
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(EyeComponent)))
+            {
+                compFactory.RegisterClass<EyeComponent>();
+            }
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MapComponent)))
             {

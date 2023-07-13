@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
@@ -15,18 +16,18 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var style = _getStyleBox();
-            style?.Draw(handle, PixelSizeBox);
+            style?.Draw(handle, PixelSizeBox, UIScale);
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            var styleSize = (_getStyleBox()?.MinimumSize ?? Vector2.Zero) / UIScale;
-            var measureSize = Vector2.ComponentMax(availableSize - styleSize, Vector2.Zero);
+            var styleSize = _getStyleBox()?.MinimumSize ?? Vector2.Zero;
+            var measureSize = Vector2.Max(availableSize - styleSize, Vector2.Zero);
             var childSize = Vector2.Zero;
             foreach (var child in Children)
             {
                 child.Measure(measureSize);
-                childSize = Vector2.ComponentMax(childSize, child.DesiredSize);
+                childSize = Vector2.Max(childSize, child.DesiredSize);
             }
 
             return styleSize + childSize;
@@ -34,13 +35,12 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
-            var pixelSize = finalSize * UIScale;
-            var ourSize = UIBox2.FromDimensions(Vector2.Zero, pixelSize);
-            var contentBox = _getStyleBox()?.GetContentBox(ourSize) ?? ourSize;
+            var ourSize = UIBox2.FromDimensions(Vector2.Zero, finalSize);
+            var contentBox = _getStyleBox()?.GetContentBox(ourSize, 1) ?? ourSize;
 
             foreach (var child in Children)
             {
-                child.ArrangePixel((UIBox2i) contentBox);
+                child.Arrange(contentBox);
             }
 
             return finalSize;

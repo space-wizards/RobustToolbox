@@ -966,6 +966,34 @@ namespace Robust.Shared.GameObjects
 
         #region Join Functions
 
+        public (EntityUid Uid, T Component)[] AllComponents<T>() where T : Component
+        {
+            var query = AllEntityQueryEnumerator<T>();
+            var comps = new (EntityUid Uid, T Component)[Count<T>()];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out var comp))
+            {
+                comps[i] = (uid, comp);
+                i++;
+            }
+
+            return comps;
+        }
+
+        public List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : Component
+        {
+            var query = AllEntityQueryEnumerator<T>();
+            var comps = new List<(EntityUid Uid, T Component)>(Count<T>());
+
+            while (query.MoveNext(out var uid, out var comp))
+            {
+                comps.Add((uid, comp));
+            }
+
+            return comps;
+        }
+
         public AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
         where TComp1 : Component
         {

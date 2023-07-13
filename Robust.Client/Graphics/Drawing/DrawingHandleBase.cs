@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Maths;
@@ -99,7 +100,7 @@ namespace Robust.Client.Graphics
             Color colorLinear = Color.FromSrgb(color);
             for (var i = 0; i < output.Length; i++)
             {
-                output[i] = new DrawVertexUV2DColor(input[i], (0.5f, 0.5f), colorLinear);
+                output[i] = new DrawVertexUV2DColor(input[i], new Vector2(0.5f, 0.5f), colorLinear);
             }
         }
 

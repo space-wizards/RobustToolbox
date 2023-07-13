@@ -54,6 +54,71 @@ END TEMPLATE-->
 *None yet*
 
 
+## 136.0.1
+
+### Bugfixes
+
+* Fixed debugging on Linux when CEF is enabled.
+
+
+## 136.0.0
+
+### New features
+
+* Several more style box properties now scale with UI scale. Signature of some stylebox methods have been changed.
+
+### Bugfixes
+
+* Fixed OutputPanel scroll-bar not functioning properly.
+
+
+## 135.0.0
+
+### Breaking changes
+
+* Style boxes now scale with the current UI scale. This affects how the the margins, padding, and style box textures are drawn and how controls are arranged. Various style box methods now need to be provided with the current UI scale.
+
+
+## 134.0.0
+
+### Breaking changes
+
+* Several methods were moved out of the `UserInterface` components and into the UI system.
+* The BUI constructor arguments have changed and now require an EntityUid to be given instead of a component.
+
+
+## 133.0.0
+
+### Breaking changes
+
+* Replace Robust's Vector2 with System.Numerics.Vector2.
+
+### New features
+
+* `AssetPassPipe` has a new `CheckDuplicates` property that makes it explicitly check for and drop duplicate asset files passed through.
+
+### Bugfixes
+
+* Static entities that are parented to other entities will no longer collide with their parent.
+* Fix some miscellaneous doc comments and typos (e.g. PvsSystem and EntityManager).
+* Fix ContentGetDirectoryEntries.
+
+
+## 132.2.0
+
+### New features
+
+* Add method to clear all joints + relayed joints on an entity.
+
+### Other
+
+* Lower default MTU to `1000`.
+
+### Internal
+
+* Resolved some warnings and unnecessary component resolves.
+
+
 ## 132.1.0
 
 ### New features

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
@@ -460,7 +461,9 @@ public sealed partial class EntityLookupSystem
 
         if (mapPos.MapId == MapId.Nullspace) return false;
 
-        var worldAABB = new Box2(mapPos.Position - range, mapPos.Position + range);
+        var rangeVec = new Vector2(range, range);
+
+        var worldAABB = new Box2(mapPos.Position - rangeVec, mapPos.Position + rangeVec);
         var lookupQuery = GetEntityQuery<BroadphaseComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
 
@@ -540,7 +543,8 @@ public sealed partial class EntityLookupSystem
     {
         if (coordinates.MapId == MapId.Nullspace) return false;
 
-        var worldAABB = new Box2(coordinates.Position - float.Epsilon, coordinates.Position + float.Epsilon);
+        var rangeVec = new Vector2(float.Epsilon, float.Epsilon);
+        var worldAABB = new Box2(coordinates.Position - rangeVec, coordinates.Position + rangeVec);
         return AnyEntitiesIntersecting(coordinates.MapId, worldAABB, flags);
     }
 
@@ -549,7 +553,8 @@ public sealed partial class EntityLookupSystem
         // TODO: Actual circles
         if (coordinates.MapId == MapId.Nullspace) return false;
 
-        var worldAABB = new Box2(coordinates.Position - range, coordinates.Position + range);
+        var rangeVec = new Vector2(range, range);
+        var worldAABB = new Box2(coordinates.Position - rangeVec, coordinates.Position + rangeVec);
         return AnyEntitiesIntersecting(coordinates.MapId, worldAABB, flags);
     }
 
@@ -557,7 +562,8 @@ public sealed partial class EntityLookupSystem
     {
         if (coordinates.MapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
-        var worldAABB = new Box2(coordinates.Position - float.Epsilon, coordinates.Position + float.Epsilon);
+        var rangeVec = new Vector2(float.Epsilon, float.Epsilon);
+        var worldAABB = new Box2(coordinates.Position - rangeVec, coordinates.Position + rangeVec);
         return GetEntitiesIntersecting(coordinates.MapId, worldAABB, flags);
     }
 
@@ -578,7 +584,8 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
         // TODO: Actual circles
-        var worldAABB = new Box2(worldPos - range, worldPos + range);
+        var rangeVec = new Vector2(range, range);
+        var worldAABB = new Box2(worldPos - rangeVec, worldPos + rangeVec);
         return GetEntitiesIntersecting(mapId, worldAABB, flags);
     }
 
@@ -903,8 +910,9 @@ public sealed partial class EntityLookupSystem
             angle = wAng;
         }
 
-        var center = worldMatrix.Value.Transform((Vector2) tileRef.GridIndices + 0.5f) * grid.TileSize;
-        var translatedBox = Box2.CenteredAround(center, (grid.TileSize, grid.TileSize));
+        var expand = new Vector2(0.5f, 0.5f);
+        var center = worldMatrix.Value.Transform(tileRef.GridIndices + expand) * grid.TileSize;
+        var translatedBox = Box2.CenteredAround(center, new Vector2(grid.TileSize, grid.TileSize));
 
         return new Box2Rotated(translatedBox, -angle.Value, center);
     }

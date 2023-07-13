@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Text;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
@@ -107,7 +108,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (windowReg == null)
                     return;
 
-                var newPos = ((float) ev.XPos, (float) ev.YPos) * windowReg.PixelRatio;
+                var newPos = new Vector2((float) ev.XPos, (float) ev.YPos) * windowReg.PixelRatio;
                 var delta = newPos - windowReg.LastMousePos;
                 windowReg.LastMousePos = newPos;
 
@@ -178,7 +179,7 @@ namespace Robust.Client.Graphics.Clyde
                     return;
 
                 var eventArgs = new MouseWheelEventArgs(
-                    ((float) ev.XOffset, (float) ev.YOffset),
+                    new((float) ev.XOffset, (float) ev.YOffset),
                     new ScreenCoordinates(windowReg.LastMousePos, windowReg.Id));
                 _clyde.SendScroll(eventArgs);
             }
@@ -235,7 +236,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (windowReg == null)
                     return;
 
-                windowReg.WindowScale = (ev.XScale, ev.YScale);
+                windowReg.WindowScale = new Vector2(ev.XScale, ev.YScale);
                 _clyde.SendWindowContentScaleChanged(new WindowContentScaleEventArgs(windowReg.Handle));
             }
 

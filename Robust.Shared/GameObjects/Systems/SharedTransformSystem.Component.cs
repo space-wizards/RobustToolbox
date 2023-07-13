@@ -12,6 +12,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map.Components;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 
 namespace Robust.Shared.GameObjects;
 
@@ -255,7 +256,7 @@ public abstract partial class SharedTransformSystem
             parentXform._children.Add(uid);
         }
 
-        InitializeGridUid(uid, component, xformQuery, GetEntityQuery<MapGridComponent>());
+        InitializeGridUid(uid, component);
         component.MatricesDirty = true;
 
         DebugTools.Assert(component._gridUid == uid || !HasComp<MapGridComponent>(uid));
@@ -271,7 +272,7 @@ public abstract partial class SharedTransformSystem
         }
         else
         {
-            // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordiantes)
+            // Entity may not be directly parented to the grid (e.g., spawned using some relative entity coordinates)
             // in that case, we attempt to attach to a grid.
             var pos = new MapCoordinates(GetWorldPosition(component), component.MapID);
             _mapManager.TryFindGridAt(pos, out _, out grid);
@@ -289,9 +290,7 @@ public abstract partial class SharedTransformSystem
 
     internal void InitializeGridUid(
         EntityUid uid,
-        TransformComponent xform,
-        EntityQuery<TransformComponent> xformQuery,
-        EntityQuery<MapGridComponent> gridQuery)
+        TransformComponent xform)
     {
         // Dont set pre-init, as the map grid component might not have been added yet.
         if (xform._gridInitialized || xform.LifeStage < ComponentLifeStage.Initializing)
@@ -299,7 +298,7 @@ public abstract partial class SharedTransformSystem
 
         xform._gridInitialized = true;
         DebugTools.Assert(xform.GridUid == null);
-        if (gridQuery.HasComponent(uid))
+        if (_gridQuery.HasComponent(uid))
         {
             xform._gridUid = uid;
             return;
@@ -308,8 +307,8 @@ public abstract partial class SharedTransformSystem
         if (!xform._parent.IsValid())
             return;
 
-        var parentXform = xformQuery.GetComponent(xform._parent);
-        InitializeGridUid(xform._parent, parentXform, xformQuery, gridQuery);
+        var parentXform = _xformQuery.GetComponent(xform._parent);
+        InitializeGridUid(xform._parent, parentXform);
         xform._gridUid = parentXform._gridUid;
     }
 
@@ -540,11 +539,11 @@ public abstract partial class SharedTransformSystem
                 xform.ChangeMapId(newParent.MapID, xformQuery);
 
                 if (!xform._gridInitialized)
-                    InitializeGridUid(uid, xform, xformQuery, GetEntityQuery<MapGridComponent>());
+                    InitializeGridUid(uid, xform);
                 else
                 {
                     if (!newParent._gridInitialized)
-                        InitializeGridUid(value.EntityId, newParent, xformQuery, GetEntityQuery<MapGridComponent>());
+                        InitializeGridUid(value.EntityId, newParent);
                     SetGridId(uid, xform, newParent.GridUid);
                 }
             }
@@ -552,7 +551,7 @@ public abstract partial class SharedTransformSystem
             {
                 xform.ChangeMapId(MapId.Nullspace, xformQuery);
                 if (!xform._gridInitialized)
-                    InitializeGridUid(uid, xform, xformQuery, GetEntityQuery<MapGridComponent>());
+                    InitializeGridUid(uid, xform);
                 else
                     SetGridId(uid, xform, null, xformQuery);
             }
@@ -654,7 +653,7 @@ public abstract partial class SharedTransformSystem
 
         if (!parent.IsValid())
         {
-            DetachParentToNull(uid, xform, xformQuery, GetEntityQuery<MetaDataComponent>());
+            DetachParentToNull(uid, xform);
             return;
         }
 
@@ -804,8 +803,7 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 GetWorldPosition(EntityUid uid)
     {
-        var query = GetEntityQuery<TransformComponent>();
-        return GetWorldPosition(query.GetComponent(uid), query);
+        return GetWorldPosition(_xformQuery.GetComponent(uid));
     }
 
     // Temporary until it's moved here
@@ -813,24 +811,11 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 GetWorldPosition(TransformComponent component)
     {
-        return GetWorldPosition(component, GetEntityQuery<TransformComponent>());
-    }
-
-    [Pure]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector2 GetWorldPosition(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
-    {
-        return GetWorldPosition(xformQuery.GetComponent(uid), xformQuery);
-    }
-
-    [Pure]
-    public Vector2 GetWorldPosition(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
-    {
         Vector2 pos = component._localPosition;
 
         while (component.ParentUid != component.MapUid && component.ParentUid.IsValid())
         {
-            component = xformQuery.GetComponent(component.ParentUid);
+            component = _xformQuery.GetComponent(component.ParentUid);
             pos = component._localRotation.RotateVec(pos) + component._localPosition;
         }
 
@@ -838,19 +823,38 @@ public abstract partial class SharedTransformSystem
     }
 
     [Pure]
-    public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 GetWorldPosition(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
+    {
+        return GetWorldPosition(xformQuery.GetComponent(uid));
+    }
+
+    [Pure]
+    public Vector2 GetWorldPosition(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
+    {
+        return GetWorldPosition(component);
+    }
+
+    [Pure]
+    public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(TransformComponent component)
     {
         Vector2 pos = component._localPosition;
         Angle angle = component._localRotation;
 
         while (component.ParentUid != component.MapUid && component.ParentUid.IsValid())
         {
-            component = xformQuery.GetComponent(component.ParentUid);
+            component = _xformQuery.GetComponent(component.ParentUid);
             pos = component._localRotation.RotateVec(pos) + component._localPosition;
             angle += component._localRotation;
         }
 
         return (pos, angle);
+    }
+
+    [Pure]
+    public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
+    {
+        return GetWorldPositionRotation(component);
     }
 
     /// <summary>
@@ -1297,46 +1301,51 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region State Handling
+
     public void DetachParentToNull(EntityUid uid, TransformComponent xform)
     {
+        _xformQuery.TryGetComponent(xform.ParentUid, out var oldXform);
+        DetachParentToNull(uid, xform, oldXform);
+    }
+
+    public void DetachParentToNull(EntityUid uid, TransformComponent xform, TransformComponent? oldXform)
+    {
         if (xform._parent.IsValid())
-            DetachParentToNull(uid, xform, GetEntityQuery<TransformComponent>(), GetEntityQuery<MetaDataComponent>());
+        {
+            DebugTools.Assert(uid == xform.Owner);
+            var oldParent = xform._parent;
+            if (!oldParent.IsValid())
+            {
+                DebugTools.Assert(!xform.Anchored);
+                DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0);
+                return;
+            }
+
+            // Before making any changes to physics or transforms, remove from the current broadphase
+            _lookup.RemoveFromEntityTree(uid, xform);
+
+            // Stop any active lerps
+            xform.NextPosition = null;
+            xform.NextRotation = null;
+            xform.LerpParent = EntityUid.Invalid;
+
+            if (xform.Anchored && _metaQuery.TryGetComponent(xform.GridUid, out var meta) && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
+            {
+                var grid = Comp<MapGridComponent>(xform.GridUid.Value);
+                var tileIndices = grid.TileIndicesFor(xform.Coordinates);
+                grid.RemoveFromSnapGridCell(tileIndices, uid);
+                xform._anchored = false;
+                var anchorStateChangedEvent = new AnchorStateChangedEvent(xform, true);
+                RaiseLocalEvent(uid, ref anchorStateChangedEvent, true);
+            }
+
+            SetCoordinates(uid, xform, default, Angle.Zero, oldParent: oldXform);
+            DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0);
+        }
         else
             DebugTools.Assert(!xform.Anchored);
     }
 
-    public void DetachParentToNull(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery, TransformComponent? oldXform = null)
-    {
-        DebugTools.Assert(uid == xform.Owner);
-        var oldParent = xform._parent;
-        if (!oldParent.IsValid())
-        {
-            DebugTools.Assert(!xform.Anchored);
-            DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0);
-            return;
-        }
-
-        // Before making any changes to physics or transforms, remove from the current broadphase
-        _lookup.RemoveFromEntityTree(uid, xform, xformQuery);
-
-        // Stop any active lerps
-        xform.NextPosition = null;
-        xform.NextRotation = null;
-        xform.LerpParent = EntityUid.Invalid;
-
-        if (xform.Anchored && metaQuery.TryGetComponent(xform.GridUid, out var meta) && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
-        {
-            var grid = Comp<MapGridComponent>(xform.GridUid.Value);
-            var tileIndices = grid.TileIndicesFor(xform.Coordinates);
-            grid.RemoveFromSnapGridCell(tileIndices, uid);
-            xform._anchored = false;
-            var anchorStateChangedEvent = new AnchorStateChangedEvent(xform, true);
-            RaiseLocalEvent(uid, ref anchorStateChangedEvent, true);
-        }
-
-        SetCoordinates(uid, xform, default, Angle.Zero, oldParent: oldXform);
-        DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0);
-    }
     #endregion
 
     private void OnGridAdd(EntityUid uid, TransformComponent component, GridAddEvent args)

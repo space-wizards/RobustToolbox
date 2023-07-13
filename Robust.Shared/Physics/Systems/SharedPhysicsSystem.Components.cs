@@ -23,6 +23,7 @@
 */
 
 using System;
+using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -135,7 +136,7 @@ public partial class SharedPhysicsSystem
         }
 
         body.Force += force;
-        body.Torque += Vector2.Cross(point - body._localCenter, force);
+        body.Torque += Vector2Helpers.Cross(point - body._localCenter, force);
         Dirty(body);
     }
 
@@ -179,7 +180,7 @@ public partial class SharedPhysicsSystem
         }
 
         SetLinearVelocity(uid, body.LinearVelocity + impulse * body._invMass, body: body);
-        SetAngularVelocity(uid, body.AngularVelocity + body.InvI * Vector2.Cross(point - body._localCenter, impulse), body: body);
+        SetAngularVelocity(uid, body.AngularVelocity + body.InvI * Vector2Helpers.Cross(point - body._localCenter, impulse), body: body);
     }
 
     #endregion
@@ -299,7 +300,7 @@ public partial class SharedPhysicsSystem
         body._localCenter = localCenter;
 
         // Update center of mass velocity.
-        body.LinearVelocity += Vector2.Cross(body.AngularVelocity, localCenter - oldCenter);
+        body.LinearVelocity += Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
         Dirty(body);
     }
 

@@ -555,7 +555,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    xformSys.DetachParentToNull(uid, transform, xformQuery, metaQuery);
+                    xformSys.DetachParentToNull(uid, transform);
                 }
                 catch (Exception e)
                 {
@@ -673,29 +673,20 @@ namespace Robust.Shared.GameObjects
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
         private protected EntityUid AllocEntity(
-            string? prototypeName,
+            EntityPrototype? prototype,
             out MetaDataComponent metadata,
             EntityUid uid = default)
         {
-            EntityPrototype? prototype = null;
-            if (!string.IsNullOrWhiteSpace(prototypeName))
-            {
-                // If the prototype doesn't exist then we throw BEFORE we allocate the entity.
-                prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            }
-
             var entity = AllocEntity(out metadata, uid);
-
             metadata._entityPrototype = prototype;
-            Dirty(metadata, metadata);
-
+            Dirty(entity, metadata, metadata);
             return entity;
         }
 
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(out MetaDataComponent metadata, EntityUid uid = default)
+        private EntityUid AllocEntity(out MetaDataComponent metadata, EntityUid uid = default)
         {
             if (uid == default)
             {
@@ -733,7 +724,9 @@ namespace Robust.Shared.GameObjects
             if (prototypeName == null)
                 return AllocEntity(out _, uid);
 
-            var entity = AllocEntity(prototypeName, out var metadata, uid);
+            PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype);
+
+            var entity = AllocEntity(prototype, out var metadata, uid);
             try
             {
                 EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, context);

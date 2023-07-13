@@ -37,7 +37,7 @@ namespace Robust.Client.Console
             var mainVBox = new BoxContainer
             {
                 Orientation = LayoutOrientation.Vertical,
-                MinSize = (500, 300),
+                MinSize = new(500, 300),
                 Children =
                 {
                     (_watchesVBox = new BoxContainer
@@ -69,7 +69,7 @@ namespace Robust.Client.Console
 
             Contents.AddChild(mainVBox);
 
-            SetSize = (300, 300);
+            SetSize = new(300, 300);
         }
 
         private void AddWatch()

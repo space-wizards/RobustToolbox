@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -106,6 +107,18 @@ internal partial class MapManager
         state = state2.state;
     }
 
+    public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false,
+        bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), callback, approx, includeMap);
+    }
+
+    public void FindGridsIntersecting<TState>(MapId mapId, Box2Rotated worldBounds, ref TState state, GridCallback<TState> callback,
+        bool approx = false, bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), ref state, callback, approx, includeMap);
+    }
+
     private static bool IsIntersecting(
         Box2 aabb,
         EntityUid gridUid,
@@ -166,8 +179,10 @@ internal partial class MapManager
         out EntityUid uid,
         [NotNullWhen(true)] out MapGridComponent? grid)
     {
+        var rangeVec = new Vector2(0.2f, 0.2f);
+
         // Need to enlarge the AABB by at least the grid shrinkage size.
-        var aabb = new Box2(worldPos - 0.2f, worldPos + 0.2f);
+        var aabb = new Box2(worldPos - rangeVec, worldPos + rangeVec);
 
         uid = EntityUid.Invalid;
         grid = null;

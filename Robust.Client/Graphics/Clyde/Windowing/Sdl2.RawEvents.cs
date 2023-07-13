@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Robust.Shared.Maths;
 using TerraFX.Interop.Windows;
 using static SDL2.SDL;
 using static SDL2.SDL.SDL_EventType;

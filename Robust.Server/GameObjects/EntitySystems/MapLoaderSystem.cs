@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using Robust.Server.Maps;
 using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
@@ -423,12 +424,16 @@ public sealed class MapLoaderSystem : EntitySystem
                 }
 
                 var entities = (SequenceDataNode) metaDef["entities"];
+                EntityPrototype? proto = null;
+
+                if (type != null)
+                    _prototypeManager.TryIndex(type, out proto);
 
                 foreach (var entityDef in entities.Cast<MappingDataNode>())
                 {
                     var uid = entityDef.Get<ValueDataNode>("uid").AsInt();
 
-                    var entity = _serverEntityManager.AllocEntity(type);
+                    var entity = _serverEntityManager.AllocEntity(proto);
                     data.Entities.Add(entity);
                     data.UidEntityMap.Add(uid, entity);
                     data.EntitiesToDeserialize.Add(entity, entityDef);
@@ -461,11 +466,13 @@ public sealed class MapLoaderSystem : EntitySystem
                     }
                     else if (ev.RenamedPrototypes.TryGetValue(typeNode.Value, out var newType))
                     {
-                        entity = _serverEntityManager.AllocEntity(newType);
+                        _prototypeManager.TryIndex<EntityPrototype>(newType, out var prototype);
+                        entity = _serverEntityManager.AllocEntity(prototype);
                     }
                     else
                     {
-                        entity = _serverEntityManager.AllocEntity(typeNode.Value);
+                        _prototypeManager.TryIndex<EntityPrototype>(typeNode.Value, out var prototype);
+                        entity = _serverEntityManager.AllocEntity(prototype);
                     }
                 }
                 else

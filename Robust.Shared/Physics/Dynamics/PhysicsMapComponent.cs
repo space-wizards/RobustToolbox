@@ -21,106 +21,70 @@
 */
 
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Systems;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using PhysicsComponent = Robust.Shared.Physics.Components.PhysicsComponent;
 
-namespace Robust.Shared.Physics.Dynamics
+namespace Robust.Shared.Physics.Dynamics;
+
+[RegisterComponent, NetworkedComponent]
+public sealed class PhysicsMapComponent : Component
 {
-    [RegisterComponent, NetworkedComponent]
-    public sealed class PhysicsMapComponent : Component
+    public bool AutoClearForces;
+
+    /// <summary>
+    /// When substepping the client needs to know about the first position to use for lerping.
+    /// </summary>
+    public readonly Dictionary<EntityUid, (EntityUid ParentUid, Vector2 LocalPosition, Angle LocalRotation)>
+        LerpData = new();
+
+    /// <summary>
+    /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
+    /// </summary>
+    [ViewVariables]
+    public readonly Dictionary<FixtureProxy, Box2> MoveBuffer = new();
+
+    /// <summary>
+    ///     All awake bodies on this map.
+    /// </summary>
+    [ViewVariables]
+    public readonly HashSet<PhysicsComponent> AwakeBodies = new();
+
+    /// <summary>
+    ///     Store last tick's invDT
+    /// </summary>
+    internal float _invDt0;
+}
+
+[ByRefEvent]
+public readonly struct PhysicsUpdateBeforeMapSolveEvent
+{
+    public readonly bool Prediction;
+    public readonly PhysicsMapComponent MapComponent;
+    public readonly float DeltaTime;
+
+    public PhysicsUpdateBeforeMapSolveEvent(bool prediction, PhysicsMapComponent mapComponent, float deltaTime)
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-
-        public bool AutoClearForces;
-
-        /// <summary>
-        /// When substepping the client needs to know about the first position to use for lerping.
-        /// </summary>
-        public readonly Dictionary<EntityUid, (EntityUid ParentUid, Vector2 LocalPosition, Angle LocalRotation)>
-            LerpData = new();
-
-        /// <summary>
-        /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
-        /// </summary>
-        [ViewVariables]
-        public readonly Dictionary<FixtureProxy, Box2> MoveBuffer = new();
-
-        /// <summary>
-        ///     All awake bodies on this map.
-        /// </summary>
-        [ViewVariables]
-        public readonly HashSet<PhysicsComponent> AwakeBodies = new();
-
-        /// <summary>
-        ///     Store last tick's invDT
-        /// </summary>
-        internal float _invDt0;
-
-        #region AddRemove
-
-        public void AddAwakeBody(PhysicsComponent body)
-        {
-            if (!body.CanCollide)
-            {
-                Logger.ErrorS("physics", $"Tried to add non-colliding {_entityManager.ToPrettyString(body.Owner)} as an awake body to map!");
-                DebugTools.Assert(false);
-                return;
-            }
-
-            if (body.BodyType == BodyType.Static)
-            {
-                Logger.ErrorS("physics", $"Tried to add static body {_entityManager.ToPrettyString(body.Owner)} as an awake body to map!");
-                DebugTools.Assert(false);
-                return;
-            }
-
-            DebugTools.Assert(body.Awake);
-            AwakeBodies.Add(body);
-        }
-
-        public void RemoveSleepBody(PhysicsComponent body)
-        {
-            AwakeBodies.Remove(body);
-        }
-
-        #endregion
+        Prediction = prediction;
+        MapComponent = mapComponent;
+        DeltaTime = deltaTime;
     }
+}
 
-    [ByRefEvent]
-    public readonly struct PhysicsUpdateBeforeMapSolveEvent
+[ByRefEvent]
+public readonly struct PhysicsUpdateAfterMapSolveEvent
+{
+    public readonly bool Prediction;
+    public readonly PhysicsMapComponent MapComponent;
+    public readonly float DeltaTime;
+
+    public PhysicsUpdateAfterMapSolveEvent(bool prediction, PhysicsMapComponent mapComponent, float deltaTime)
     {
-        public readonly bool Prediction;
-        public readonly PhysicsMapComponent MapComponent;
-        public readonly float DeltaTime;
-
-        public PhysicsUpdateBeforeMapSolveEvent(bool prediction, PhysicsMapComponent mapComponent, float deltaTime)
-        {
-            Prediction = prediction;
-            MapComponent = mapComponent;
-            DeltaTime = deltaTime;
-        }
-    }
-
-    [ByRefEvent]
-    public readonly struct PhysicsUpdateAfterMapSolveEvent
-    {
-        public readonly bool Prediction;
-        public readonly PhysicsMapComponent MapComponent;
-        public readonly float DeltaTime;
-
-        public PhysicsUpdateAfterMapSolveEvent(bool prediction, PhysicsMapComponent mapComponent, float deltaTime)
-        {
-            Prediction = prediction;
-            MapComponent = mapComponent;
-            DeltaTime = deltaTime;
-        }
+        Prediction = prediction;
+        MapComponent = mapComponent;
+        DeltaTime = deltaTime;
     }
 }

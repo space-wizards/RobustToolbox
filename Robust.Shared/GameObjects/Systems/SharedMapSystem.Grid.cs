@@ -489,7 +489,7 @@ public abstract partial class SharedMapSystem
         }
     }
 
-    internal void RemoveChunk(EntityUid uid, MapGridComponent grid, Vector2i origin)
+    private void RemoveChunk(EntityUid uid, MapGridComponent grid, Vector2i origin)
     {
         if (!grid.Chunks.TryGetValue(origin, out var chunk))
             return;
@@ -507,7 +507,7 @@ public abstract partial class SharedMapSystem
     /// <summary>
     /// Regenerates the chunk local bounds of this chunk.
     /// </summary>
-    internal void RegenerateCollision(EntityUid uid, MapGridComponent grid, MapChunk mapChunk)
+    private void RegenerateCollision(EntityUid uid, MapGridComponent grid, MapChunk mapChunk)
     {
         RegenerateCollision(uid, grid, new HashSet<MapChunk> { mapChunk });
     }
@@ -578,7 +578,7 @@ public abstract partial class SharedMapSystem
         _physics.WakeBody(uid);
         OnGridBoundsChange(uid, grid);
         var ev = new RegenerateGridBoundsEvent(uid, chunkRectangles, removedChunks);
-        RaiseLocalEvent(uid, ref ev);
+        RaiseLocalEvent(ref ev);
     }
 
     #region TileAccess

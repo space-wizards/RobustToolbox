@@ -25,7 +25,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly SharedMapSystem _map = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
 
-        protected ISawmill Sawmill = default!;
         private bool _enabled;
         private float _fixtureEnlargement;
 
@@ -35,7 +34,6 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
-            Sawmill = Logger.GetSawmill("physics");
 
             _cfg.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
             _cfg.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
@@ -76,23 +74,24 @@ namespace Robust.Shared.GameObjects
             Dictionary<MapChunk, List<Box2i>> mapChunks,
             List<MapChunk> removedChunks)
         {
-            if (!_enabled) return;
+            if (!_enabled)
+                return;
 
             if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
             {
-                Sawmill.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(body)}");
+                Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(body)}");
                 return;
             }
 
             if (!EntityManager.TryGetComponent(uid, out FixturesComponent? manager))
             {
-                Sawmill.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(manager)}");
+                Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(manager)}");
                 return;
             }
 
             if (!EntityManager.TryGetComponent(uid, out TransformComponent? xform))
             {
-                Sawmill.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(TransformComponent)}");
+                Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(TransformComponent)}");
                 return;
             }
 

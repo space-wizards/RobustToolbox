@@ -29,7 +29,7 @@ public sealed partial class EntityLookupSystem
         LookupFlags flags)
     {
         var lookup = _broadQuery.GetComponent(lookupUid);
-        var invMatrix = _transform.GetInvWorldMatrix(lookupUid, _xformQuery);
+        var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
         var localAABB = invMatrix.TransformBox(worldAABB);
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
@@ -80,7 +80,7 @@ public sealed partial class EntityLookupSystem
         LookupFlags flags)
     {
         var lookup = _broadQuery.GetComponent(lookupUid);
-        var invMatrix = _transform.GetInvWorldMatrix(lookupUid, _xformQuery);
+        var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
         // We don't just use CalcBoundingBox because the transformed bounds might be tighter.
         var localAABB = invMatrix.TransformBox(worldBounds);
 
@@ -194,7 +194,7 @@ public sealed partial class EntityLookupSystem
         EntityUid? ignored = null)
     {
         var lookup = _broadQuery.GetComponent(lookupUid);
-        var localAABB =_transform.GetInvWorldMatrix(lookupUid).TransformBox(worldBounds);
+        var localAABB = _transform.GetInvWorldMatrix(lookupUid).TransformBox(worldBounds);
         var state = (ignored, found: false);
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
@@ -315,7 +315,7 @@ public sealed partial class EntityLookupSystem
     {
         foreach (var entity in GetEntitiesInRange(coordinates, range * 2, flags))
         {
-            var angle = new Angle(_transform.GetWorldPosition(entity, _xformQuery) - coordinates.Position);
+            var angle = new Angle(_transform.GetWorldPosition(entity) - coordinates.Position);
             if (angle.Degrees < direction.Degrees + arcWidth / 2 &&
                 angle.Degrees > direction.Degrees - arcWidth / 2)
                 yield return entity;

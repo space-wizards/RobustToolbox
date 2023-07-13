@@ -35,6 +35,9 @@ namespace Robust.Shared.Map.Components
 
         [DataField("chunkSize")] internal ushort ChunkSize = 16;
 
+        [ViewVariables]
+        public int ChunkCount => Chunks.Count;
+
         /// <summary>
         ///     The length of the side of a square tile in world units.
         /// </summary>

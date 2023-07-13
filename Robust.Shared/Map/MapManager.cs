@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -20,9 +21,19 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
     private ISawmill _sawmill = default!;
 
+    private SharedMapSystem _mapSystem = default!;
+    private SharedTransformSystem _transformSystem = default!;
+    private EntityQuery<PhysicsComponent> _physicsQuery;
+    private EntityQuery<TransformComponent> _xformQuery;
+
     /// <inheritdoc />
     public void Initialize()
     {
+        _mapSystem = EntityManager.System<SharedMapSystem>();
+        _transformSystem = EntityManager.System<SharedTransformSystem>();
+        _physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
+        _xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+
         _sawmill = Logger.GetSawmill("map");
 
 #if DEBUG
@@ -52,9 +63,12 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 #endif
         _sawmill.Debug("Stopping...");
 
-        foreach (var mapComp in EntityManager.EntityQuery<MapComponent>())
+        // TODO: AllEntityQuery instead???
+        var query = EntityManager.EntityQueryEnumerator<MapComponent>();
+
+        while (query.MoveNext(out var uid, out _))
         {
-            EntityManager.DeleteEntity(mapComp.Owner);
+            EntityManager.DeleteEntity(uid);
         }
     }
 
@@ -65,9 +79,11 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
         // Don't just call Shutdown / Startup because we don't want to touch the subscriptions on gridtrees
         // Restart can be called any time during a game, whereas shutdown / startup are typically called upon connection.
-        foreach (var mapComp in EntityManager.EntityQuery<MapComponent>())
+        var query = EntityManager.EntityQueryEnumerator<MapComponent>();
+
+        while (query.MoveNext(out var uid, out _))
         {
-            EntityManager.DeleteEntity(mapComp.Owner);
+            EntityManager.DeleteEntity(uid);
         }
     }
 

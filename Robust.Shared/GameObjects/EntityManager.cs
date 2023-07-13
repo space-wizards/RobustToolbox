@@ -79,6 +79,8 @@ namespace Robust.Shared.GameObjects
         private string _xformName = string.Empty;
         private string _metaName = string.Empty;
 
+        private SharedMapSystem _mapSystem = default!;
+
         private ISawmill _sawmill = default!;
         private ISawmill _resolveSawmill = default!;
 
@@ -103,6 +105,7 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeComponents();
+            _mapSystem = System<SharedMapSystem>();
             _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
             _metaName = _componentFactory.GetComponentName(typeof(MetaDataComponent));
             _sawmill = LogManager.GetSawmill("entity");
@@ -337,7 +340,7 @@ namespace Robust.Shared.GameObjects
             EntityCoordinates coords;
             if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var gridUid, out var grid))
             {
-                coords = new EntityCoordinates(gridUid, grid.WorldToLocal(coordinates.Position));
+                coords = new EntityCoordinates(gridUid, _mapSystem.WorldToLocal(gridUid, grid, coordinates.Position));
                 _xforms.SetCoordinates(newEntity, transform, coords, unanchor: false);
             }
             else

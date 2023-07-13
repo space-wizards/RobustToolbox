@@ -21,6 +21,8 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
         [Dependency] private readonly IClyde _displayManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
+        private SharedMapSystem _mapSystem;
+
         private readonly StringBuilder _textBuilder = new();
         private readonly char[] _textBuffer = new char[1024];
 
@@ -29,6 +31,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
         public DebugCoordsPanel()
         {
             IoCManager.InjectDependencies(this);
+            _mapSystem = _entityManager.System<SharedMapSystem>();
 
             HorizontalAlignment = HAlignment.Left;
 
@@ -62,18 +65,17 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             var screenSize = _displayManager.ScreenSize;
             var screenScale = _displayManager.MainWindow.ContentScale;
 
-            MapCoordinates mouseWorldMap;
             EntityCoordinates mouseGridPos;
             TileRef tile;
 
-            mouseWorldMap = _eyeManager.ScreenToMap(mouseScreenPos);
+            var mouseWorldMap = _eyeManager.ScreenToMap(mouseScreenPos);
             if (mouseWorldMap == MapCoordinates.Nullspace)
                 return;
 
-            if (_mapManager.TryFindGridAt(mouseWorldMap, out _, out var mouseGrid))
+            if (_mapManager.TryFindGridAt(mouseWorldMap, out var mouseGridUid, out var mouseGrid))
             {
-                mouseGridPos = mouseGrid.MapToGrid(mouseWorldMap);
-                tile = mouseGrid.GetTileRef(mouseGridPos);
+                mouseGridPos = _mapSystem.MapToGrid(mouseGridUid, mouseWorldMap);
+                tile = _mapSystem.GetTileRef(mouseGridUid, mouseGrid, mouseGridPos);
             }
             else
             {

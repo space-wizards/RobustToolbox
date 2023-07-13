@@ -191,10 +191,12 @@ namespace Robust.Shared.Map
             if(!IsValid(entityManager))
                 return new Vector2i();
 
+            var mapSystem = entityManager.System<SharedMapSystem>();
             var gridIdOpt = GetGridUid(entityManager);
             if (gridIdOpt is { } gridId && gridId.IsValid())
             {
-                return mapManager.GetGrid(gridId).GetTileRef(this).GridIndices;
+                var grid = mapManager.GetGrid(gridId);
+                return mapSystem.GetTileRef(gridId, grid, this).GridIndices;
             }
 
             var vec = ToMapPos(entityManager, transformSystem);

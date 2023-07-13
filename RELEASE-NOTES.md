@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 137.0.0
+
+### Breaking changes
+
+* Component network state handler methods have been fully deprecated and replaced with the eventbus event equivalents (ComponentGetState and ComponentHandleState).
+
+
 ## 136.0.1
 
 ### Bugfixes

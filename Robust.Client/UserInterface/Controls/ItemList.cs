@@ -448,7 +448,8 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (item.Selected && SelectMode != ItemListSelectMode.Button)
                     {
-                        ClearSelected();
+                        if(SelectMode != ItemListSelectMode.Multiple)
+                            ClearSelected();
                         item.Selected = false;
                         return;
                     }

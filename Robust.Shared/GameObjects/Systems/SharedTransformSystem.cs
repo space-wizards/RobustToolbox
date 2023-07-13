@@ -255,7 +255,7 @@ namespace Robust.Shared.GameObjects
                 return GetWorldPosition(xform).Floored();
 
             // We're on a grid, need to convert the coordinates to grid tiles.
-            return _mapManager.GetGrid(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);
+            return _map.CoordinatesToTile(xform.GridUid.Value, Comp<MapGridComponent>(xform.GridUid.Value), xform.Coordinates);
         }
     }
 

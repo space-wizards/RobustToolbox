@@ -21,6 +21,7 @@ namespace Robust.Shared.GameObjects
     public abstract class SharedGridFixtureSystem : EntitySystem
     {
         [Dependency] private readonly FixtureSystem _fixtures = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
 
         protected ISawmill Sawmill = default!;
@@ -48,7 +49,7 @@ namespace Robust.Shared.GameObjects
 
             // This will also check for grid splits if applicable.
             var grid = Comp<MapGridComponent>(ev.EntityUid);
-            grid.RegenerateCollision(grid.GetMapChunks().Values.ToHashSet());
+            _map.RegenerateCollision(ev.EntityUid, grid, _map.GetMapChunks(ev.EntityUid, grid).Values.ToHashSet());
         }
 
         public override void Shutdown()

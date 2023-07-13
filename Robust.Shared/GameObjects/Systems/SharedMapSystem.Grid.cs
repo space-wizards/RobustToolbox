@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Systems;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Map.Events;
@@ -241,7 +240,7 @@ public abstract partial class SharedMapSystem
                         if (chunk.GetTile(x, y) == tile)
                             continue;
 
-                        chunk.SetTile(x, y, tile);
+                        SetChunkTile(uid, component, chunk, x, y, tile);
                         modified.Add((new Vector2i(chunk.X * component.ChunkSize + x, chunk.Y * component.ChunkSize + y), tile));
                     }
                 }
@@ -285,7 +284,7 @@ public abstract partial class SharedMapSystem
                         if (chunk.GetTile(x, y) == tile)
                             continue;
 
-                        chunk.SetTile(x, y, tile);
+                        SetChunkTile(uid, component, chunk, x, y, tile);
                         modified.Add((new Vector2i(chunk.X * component.ChunkSize + x, chunk.Y * component.ChunkSize + y), tile));
                     }
                 }
@@ -389,7 +388,6 @@ public abstract partial class SharedMapSystem
 
         foreach (var chunk in component.Chunks.Values)
         {
-            chunk.TileModified += OnTileModified;
             chunk.LastTileModifiedTick = curTick;
         }
 
@@ -584,19 +582,16 @@ public abstract partial class SharedMapSystem
 
     #region TileAccess
 
-    /// <inheritdoc />
     public TileRef GetTileRef(EntityUid uid, MapGridComponent grid, MapCoordinates coords)
     {
-        return GetTileRef(uid, grid, CoordinatesToTile(coords));
+        return GetTileRef(uid, grid, CoordinatesToTile(uid, grid, coords));
     }
 
-    /// <inheritdoc />
     public TileRef GetTileRef(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
     {
         return GetTileRef(uid, grid, CoordinatesToTile(uid, grid, coords));
     }
 
-    /// <inheritdoc />
     public TileRef GetTileRef(EntityUid uid, MapGridComponent grid, Vector2i tileCoordinates)
     {
         var chunkIndices = GridTileToChunkIndices(uid, grid, tileCoordinates);
@@ -630,7 +625,6 @@ public abstract partial class SharedMapSystem
         return new TileRef(uid, indices, mapChunk.GetTile(xIndex, yIndex));
     }
 
-    /// <inheritdoc />
     public IEnumerable<TileRef> GetAllTiles(EntityUid uid, MapGridComponent grid, bool ignoreEmpty = true)
     {
         foreach (var kvChunk in grid.Chunks)
@@ -652,30 +646,26 @@ public abstract partial class SharedMapSystem
         }
     }
 
-    /// <inheritdoc />
     public GridTileEnumerator GetAllTilesEnumerator(EntityUid uid, MapGridComponent grid, bool ignoreEmpty = true)
     {
         return new GridTileEnumerator(uid, grid.Chunks.GetEnumerator(), grid.ChunkSize, ignoreEmpty);
     }
 
-    /// <inheritdoc />
     public void SetTile(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, Tile tile)
     {
         var localTile = CoordinatesToTile(uid, grid, coords);
         SetTile(uid, grid, new Vector2i(localTile.X, localTile.Y), tile);
     }
 
-    /// <inheritdoc />
     public void SetTile(EntityUid uid, MapGridComponent grid, Vector2i gridIndices, Tile tile)
     {
         var (chunk, chunkTile) = ChunkAndOffsetForTile(uid, grid, gridIndices);
-        chunk.SetTile((ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
+        SetChunkTile(uid, grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
         // Ideally we'd to this here for consistency but apparently tile modified does it or something.
         // Yeah it's noodly.
         // RegenerateCollision(chunk);
     }
 
-    /// <inheritdoc />
     public void SetTiles(EntityUid uid, MapGridComponent grid, List<(Vector2i GridIndices, Tile Tile)> tiles)
     {
         if (tiles.Count == 0)
@@ -688,7 +678,7 @@ public abstract partial class SharedMapSystem
             var (chunk, chunkTile) = ChunkAndOffsetForTile(uid, grid, gridIndices);
             chunks.Add(chunk);
             chunk.SuppressCollisionRegeneration = true;
-            chunk.SetTile((ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
+            SetChunkTile(uid, grid, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
         }
 
         foreach (var chunk in chunks)
@@ -706,7 +696,6 @@ public abstract partial class SharedMapSystem
         return GetLocalTilesIntersecting(uid, grid, localAABB, ignoreEmpty, predicate);
     }
 
-    /// <inheritdoc />
     public IEnumerable<TileRef> GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2Rotated worldArea, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
@@ -719,7 +708,6 @@ public abstract partial class SharedMapSystem
         }
     }
 
-    /// <inheritdoc />
     public IEnumerable<TileRef> GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Box2 worldArea, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
@@ -833,7 +821,6 @@ public abstract partial class SharedMapSystem
 
     #region ChunkAccess
 
-    /// <inheritdoc />
     internal MapChunk GetOrAddChunk(EntityUid uid, MapGridComponent grid, int xIndex, int yIndex)
     {
         return GetOrAddChunk(uid, grid, new Vector2i(xIndex, yIndex));
@@ -849,11 +836,10 @@ public abstract partial class SharedMapSystem
         if (grid.Chunks.TryGetValue(chunkIndices, out var output))
             return output;
 
-        var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, grid.ChunkSize);
-        newChunk.LastTileModifiedTick = _timing.CurTick;
-
-        if (grid.Initialized)
-            newChunk.TileModified += OnTileModified;
+        var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, grid.ChunkSize)
+        {
+            LastTileModifiedTick = _timing.CurTick
+        };
 
         return grid.Chunks[chunkIndices] = newChunk;
     }
@@ -868,14 +854,12 @@ public abstract partial class SharedMapSystem
         return grid.Chunks;
     }
 
-    /// <inheritdoc />
     internal ChunkEnumerator GetMapChunks(EntityUid uid, MapGridComponent grid, Box2 worldAABB)
     {
         var localAABB = _transform.GetInvWorldMatrix(uid).TransformBox(worldAABB);
         return new ChunkEnumerator(grid.Chunks, localAABB, grid.ChunkSize);
     }
 
-    /// <inheritdoc />
     internal ChunkEnumerator GetMapChunks(EntityUid uid, MapGridComponent grid, Box2Rotated worldArea)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
@@ -892,7 +876,6 @@ public abstract partial class SharedMapSystem
 
     #region SnapGridAccess
 
-    /// <inheritdoc />
     public int AnchoredEntityCount(EntityUid uid, MapGridComponent grid, Vector2i pos)
     {
         var gridChunkPos = GridTileToChunkIndices(uid, grid, pos);
@@ -904,19 +887,16 @@ public abstract partial class SharedMapSystem
         return chunk.GetSnapGrid((ushort)x, (ushort)y)?.Count ?? 0; // ?
     }
 
-    /// <inheritdoc />
     public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, MapCoordinates coords)
     {
         return GetAnchoredEntities(uid, grid, TileIndicesFor(uid, grid, coords));
     }
 
-    /// <inheritdoc />
     public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
     {
         return GetAnchoredEntities(uid, grid, TileIndicesFor(uid, grid, coords));
     }
 
-    /// <inheritdoc />
     public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Vector2i pos)
     {
         // Because some content stuff checks neighboring tiles (which may not actually exist) we won't just
@@ -954,7 +934,6 @@ public abstract partial class SharedMapSystem
         }
     }
 
-    /// <inheritdoc />
     public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2 worldAABB)
     {
         foreach (var tile in GetTilesIntersecting(uid, grid, worldAABB))
@@ -966,7 +945,6 @@ public abstract partial class SharedMapSystem
         }
     }
 
-    /// <inheritdoc />
     public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Box2Rotated worldBounds)
     {
         foreach (var tile in GetTilesIntersecting(uid, grid, worldBounds))
@@ -978,7 +956,6 @@ public abstract partial class SharedMapSystem
         }
     }
 
-    /// <inheritdoc />
     public Vector2i TileIndicesFor(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
     {
 #if DEBUG
@@ -989,7 +966,6 @@ public abstract partial class SharedMapSystem
         return SnapGridLocalCellFor(uid, grid, LocalToGrid(uid, grid, coords));
     }
 
-    /// <inheritdoc />
     public Vector2i TileIndicesFor(EntityUid uid, MapGridComponent grid, MapCoordinates worldPos)
     {
 #if DEBUG
@@ -1016,7 +992,6 @@ public abstract partial class SharedMapSystem
         return snapgrid?.Contains(euid) == true;
     }
 
-    /// <inheritdoc />
     public bool AddToSnapGridCell(EntityUid gridUid, MapGridComponent grid, Vector2i pos, EntityUid euid)
     {
         var (chunk, chunkTile) = ChunkAndOffsetForTile(gridUid, grid, pos);
@@ -1028,20 +1003,17 @@ public abstract partial class SharedMapSystem
         return true;
     }
 
-    /// <inheritdoc />
     public bool AddToSnapGridCell(EntityUid gridUid, MapGridComponent grid, EntityCoordinates coords, EntityUid euid)
     {
         return AddToSnapGridCell(gridUid, grid, TileIndicesFor(gridUid, grid, coords), euid);
     }
 
-    /// <inheritdoc />
     public void RemoveFromSnapGridCell(EntityUid gridUid, MapGridComponent grid, Vector2i pos, EntityUid euid)
     {
         var (chunk, chunkTile) = ChunkAndOffsetForTile(gridUid, grid, pos);
         chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, euid);
     }
 
-    /// <inheritdoc />
     public void RemoveFromSnapGridCell(EntityUid gridUid, MapGridComponent grid, EntityCoordinates coords, EntityUid euid)
     {
         RemoveFromSnapGridCell(gridUid, grid, TileIndicesFor(gridUid, grid, coords), euid);
@@ -1055,33 +1027,28 @@ public abstract partial class SharedMapSystem
         return (chunk, chunkTile);
     }
 
-    /// <inheritdoc />
     public IEnumerable<EntityUid> GetInDir(EntityUid uid, MapGridComponent grid, EntityCoordinates position, Direction dir)
     {
         var pos = GetDirection(TileIndicesFor(uid, grid, position), dir);
         return GetAnchoredEntities(uid, grid, pos);
     }
 
-    /// <inheritdoc />
     public IEnumerable<EntityUid> GetOffset(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, Vector2i offset)
     {
         var pos = TileIndicesFor(uid, grid, coords) + offset;
         return GetAnchoredEntities(uid, grid, pos);
     }
 
-    /// <inheritdoc />
     public IEnumerable<EntityUid> GetLocal(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
     {
         return GetAnchoredEntities(uid, grid, TileIndicesFor(uid, grid, coords));
     }
 
-    /// <inheritdoc />
     public EntityCoordinates DirectionToGrid(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, Direction direction)
     {
         return GridTileToLocal(uid, grid, GetDirection(TileIndicesFor(uid, grid, coords), direction));
     }
 
-    /// <inheritdoc />
     public IEnumerable<EntityUid> GetCardinalNeighborCells(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
     {
         var position = TileIndicesFor(uid, grid, coords);
@@ -1097,7 +1064,6 @@ public abstract partial class SharedMapSystem
             yield return cell;
     }
 
-    /// <inheritdoc />
     public IEnumerable<EntityUid> GetCellsInSquareArea(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, int n)
     {
         var position = TileIndicesFor(uid, grid, coords);
@@ -1118,14 +1084,12 @@ public abstract partial class SharedMapSystem
 
     #region Transforms
 
-    /// <inheritdoc />
     public Vector2 WorldToLocal(EntityUid uid, MapGridComponent grid, Vector2 posWorld)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
         return matrix.Transform(posWorld);
     }
 
-    /// <inheritdoc />
     public EntityCoordinates MapToGrid(EntityUid uid, MapCoordinates posWorld)
     {
         var mapId = _xformQuery.GetComponent(uid).MapID;
@@ -1143,7 +1107,6 @@ public abstract partial class SharedMapSystem
         return new EntityCoordinates(uid, WorldToLocal(uid, grid, posWorld.Position));
     }
 
-    /// <inheritdoc />
     public Vector2 LocalToWorld(EntityUid uid, MapGridComponent grid, Vector2 posLocal)
     {
         var matrix = _transform.GetWorldMatrix(uid);
@@ -1164,8 +1127,7 @@ public abstract partial class SharedMapSystem
         return new Vector2i((int) Math.Floor(position.X / grid.TileSize), (int) Math.Floor(position.Y / grid.TileSize));
     }
 
-    /// <inheritdoc />
-    public Vector2i CoordinatesToTile(EntityUid uid, MapGridComponent grid, MapCoordinates coords)
+        public Vector2i CoordinatesToTile(EntityUid uid, MapGridComponent grid, MapCoordinates coords)
     {
 #if DEBUG
         var mapId = _xformQuery.GetComponent(uid).MapID;

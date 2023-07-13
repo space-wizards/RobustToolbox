@@ -54,7 +54,7 @@ internal sealed class TeleportCommand : LocalizedCommands
 
         if (_map.TryFindGridAt(mapId, position, out var gridUid, out var grid))
         {
-            var gridPos = grid.WorldToLocal(position);
+            var gridPos = xformSystem.GetInvWorldMatrix(gridUid).Transform(position);
 
             xformSystem.SetCoordinates(entity, transform, new EntityCoordinates(gridUid, gridPos));
         }

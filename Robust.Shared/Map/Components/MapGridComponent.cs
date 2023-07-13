@@ -21,7 +21,7 @@ namespace Robust.Shared.Map.Components
     public sealed class MapGridComponent : Component
     {
         [Dependency] private readonly IEntityManager _entManager = default!;
-        private SharedMapSystem _mapSystem => _entManager.System<SharedMapSystem>();
+        private SharedMapSystem MapSystem => _entManager.System<SharedMapSystem>();
 
         // This field is used for deserialization internally in the map loader.
         // If you want to remove this, you would have to restructure the map save file.
@@ -77,17 +77,17 @@ namespace Robust.Shared.Map.Components
 
         public TileRef GetTileRef(MapCoordinates coords)
         {
-            return _mapSystem.GetTileRef(Owner, this, coords);
+            return MapSystem.GetTileRef(Owner, this, coords);
         }
 
         public TileRef GetTileRef(EntityCoordinates coords)
         {
-            return _mapSystem.GetTileRef(Owner, this, coords);
+            return MapSystem.GetTileRef(Owner, this, coords);
         }
 
         public TileRef GetTileRef(Vector2i tileCoordinates)
         {
-            return _mapSystem.GetTileRef(Owner, this, tileCoordinates);
+            return MapSystem.GetTileRef(Owner, this, tileCoordinates);
         }
 
         /// <summary>
@@ -99,62 +99,62 @@ namespace Robust.Shared.Map.Components
         /// <returns>A reference to a tile.</returns>
         internal TileRef GetTileRef(MapChunk mapChunk, ushort xIndex, ushort yIndex)
         {
-            return _mapSystem.GetTileRef(Owner, this, mapChunk, xIndex, yIndex);
+            return MapSystem.GetTileRef(Owner, this, mapChunk, xIndex, yIndex);
         }
 
         public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
         {
-            return _mapSystem.GetAllTiles(Owner, this, ignoreEmpty);
+            return MapSystem.GetAllTiles(Owner, this, ignoreEmpty);
         }
 
         public GridTileEnumerator GetAllTilesEnumerator(bool ignoreEmpty = true)
         {
-            return _mapSystem.GetAllTilesEnumerator(Owner, this, ignoreEmpty);
+            return MapSystem.GetAllTilesEnumerator(Owner, this, ignoreEmpty);
         }
 
         public void SetTile(EntityCoordinates coords, Tile tile)
         {
-            _mapSystem.SetTile(Owner, this, coords, tile);
+            MapSystem.SetTile(Owner, this, coords, tile);
         }
 
         public void SetTile(Vector2i gridIndices, Tile tile)
         {
-            _mapSystem.SetTile(Owner, this, gridIndices, tile);
+            MapSystem.SetTile(Owner, this, gridIndices, tile);
         }
 
         public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
         {
-            _mapSystem.SetTiles(Owner, this, tiles);
+            MapSystem.SetTiles(Owner, this, tiles);
         }
 
         public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2Rotated localArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
-            return _mapSystem.GetLocalTilesIntersecting(Owner, this, localArea, ignoreEmpty, predicate);
+            return MapSystem.GetLocalTilesIntersecting(Owner, this, localArea, ignoreEmpty, predicate);
         }
 
         public IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
-            return _mapSystem.GetTilesIntersecting(Owner, this, worldArea, ignoreEmpty, predicate);
+            return MapSystem.GetTilesIntersecting(Owner, this, worldArea, ignoreEmpty, predicate);
         }
 
         public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
-            return _mapSystem.GetTilesIntersecting(Owner, this, worldArea, ignoreEmpty, predicate);
+            return MapSystem.GetTilesIntersecting(Owner, this, worldArea, ignoreEmpty, predicate);
         }
 
         public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
-            return _mapSystem.GetLocalTilesIntersecting(Owner, this, localArea, ignoreEmpty, predicate);
+            return MapSystem.GetLocalTilesIntersecting(Owner, this, localArea, ignoreEmpty, predicate);
         }
 
         public IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
-            return _mapSystem.GetTilesIntersecting(Owner, this, worldArea, ignoreEmpty, predicate);
+            return MapSystem.GetTilesIntersecting(Owner, this, worldArea, ignoreEmpty, predicate);
         }
 
         #endregion TileAccess
@@ -163,42 +163,42 @@ namespace Robust.Shared.Map.Components
 
         internal MapChunk GetOrAddChunk(int xIndex, int yIndex)
         {
-            return _mapSystem.GetOrAddChunk(Owner, this, xIndex, yIndex);
+            return MapSystem.GetOrAddChunk(Owner, this, xIndex, yIndex);
         }
 
         internal bool TryGetChunk(Vector2i chunkIndices, [NotNullWhen(true)] out MapChunk? chunk)
         {
-            return _mapSystem.TryGetChunk(Owner, this, chunkIndices, out chunk);
+            return MapSystem.TryGetChunk(Owner, this, chunkIndices, out chunk);
         }
 
         internal MapChunk GetOrAddChunk(Vector2i chunkIndices)
         {
-            return _mapSystem.GetOrAddChunk(Owner, this, chunkIndices);
+            return MapSystem.GetOrAddChunk(Owner, this, chunkIndices);
         }
 
         public bool HasChunk(Vector2i chunkIndices)
         {
-            return _mapSystem.HasChunk(Owner, this, chunkIndices);
+            return MapSystem.HasChunk(Owner, this, chunkIndices);
         }
 
         internal IReadOnlyDictionary<Vector2i, MapChunk> GetMapChunks()
         {
-            return _mapSystem.GetMapChunks(Owner, this);
+            return MapSystem.GetMapChunks(Owner, this);
         }
 
         internal ChunkEnumerator GetMapChunks(Box2 worldAABB)
         {
-            return _mapSystem.GetMapChunks(Owner, this, worldAABB);
+            return MapSystem.GetMapChunks(Owner, this, worldAABB);
         }
 
         internal ChunkEnumerator GetMapChunks(Box2Rotated worldArea)
         {
-            return _mapSystem.GetMapChunks(Owner, this, worldArea);
+            return MapSystem.GetMapChunks(Owner, this, worldArea);
         }
 
         internal ChunkEnumerator GetLocalMapChunks(Box2 localAABB)
         {
-            return _mapSystem.GetLocalMapChunks(Owner, this, localAABB);
+            return MapSystem.GetLocalMapChunks(Owner, this, localAABB);
         }
 
         #endregion ChunkAccess
@@ -207,189 +207,189 @@ namespace Robust.Shared.Map.Components
 
         public IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords)
         {
-            return _mapSystem.GetAnchoredEntities(Owner, this, coords);
+            return MapSystem.GetAnchoredEntities(Owner, this, coords);
         }
 
         public IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords)
         {
-            return _mapSystem.GetAnchoredEntities(Owner, this, coords);
+            return MapSystem.GetAnchoredEntities(Owner, this, coords);
         }
 
         public IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos)
         {
-            return _mapSystem.GetAnchoredEntities(Owner, this, pos);
+            return MapSystem.GetAnchoredEntities(Owner, this, pos);
         }
 
         public AnchoredEntitiesEnumerator GetAnchoredEntitiesEnumerator(Vector2i pos)
         {
-            return _mapSystem.GetAnchoredEntitiesEnumerator(Owner, this, pos);
+            return MapSystem.GetAnchoredEntitiesEnumerator(Owner, this, pos);
         }
 
         public IEnumerable<EntityUid> GetLocalAnchoredEntities(Box2 localAABB)
         {
-            return _mapSystem.GetLocalAnchoredEntities(Owner, this, localAABB);
+            return MapSystem.GetLocalAnchoredEntities(Owner, this, localAABB);
         }
 
         public IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB)
         {
-            return _mapSystem.GetAnchoredEntities(Owner, this, worldAABB);
+            return MapSystem.GetAnchoredEntities(Owner, this, worldAABB);
         }
 
         public IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds)
         {
-            return _mapSystem.GetAnchoredEntities(Owner, this, worldBounds);
+            return MapSystem.GetAnchoredEntities(Owner, this, worldBounds);
         }
 
         public Vector2i TileIndicesFor(EntityCoordinates coords)
         {
-            return _mapSystem.TileIndicesFor(Owner, this, coords);
+            return MapSystem.TileIndicesFor(Owner, this, coords);
         }
 
         public Vector2i TileIndicesFor(MapCoordinates worldPos)
         {
-            return _mapSystem.TileIndicesFor(Owner, this, worldPos);
+            return MapSystem.TileIndicesFor(Owner, this, worldPos);
         }
 
         public bool IsAnchored(EntityCoordinates coords, EntityUid euid)
         {
-            return _mapSystem.IsAnchored(Owner, this, coords, euid);
+            return MapSystem.IsAnchored(Owner, this, coords, euid);
         }
 
         public bool AddToSnapGridCell(EntityUid gridUid, MapGridComponent grid, Vector2i pos, EntityUid euid)
         {
-            return _mapSystem.AddToSnapGridCell(gridUid, grid, pos, euid);
+            return MapSystem.AddToSnapGridCell(gridUid, grid, pos, euid);
         }
 
         public bool AddToSnapGridCell(EntityUid gridUid, MapGridComponent grid, EntityCoordinates coords, EntityUid euid)
         {
-            return _mapSystem.AddToSnapGridCell(gridUid, grid, coords, euid);
+            return MapSystem.AddToSnapGridCell(gridUid, grid, coords, euid);
         }
 
         public void RemoveFromSnapGridCell(EntityUid gridUid, MapGridComponent grid, Vector2i pos, EntityUid euid)
         {
-            _mapSystem.RemoveFromSnapGridCell(gridUid, grid, pos, euid);
+            MapSystem.RemoveFromSnapGridCell(gridUid, grid, pos, euid);
         }
 
         public void RemoveFromSnapGridCell(EntityUid gridUid, MapGridComponent grid, EntityCoordinates coords, EntityUid euid)
         {
-            _mapSystem.RemoveFromSnapGridCell(gridUid, grid, coords, euid);
+            MapSystem.RemoveFromSnapGridCell(gridUid, grid, coords, euid);
         }
 
         public IEnumerable<EntityUid> GetInDir(EntityCoordinates position, Direction dir)
         {
-            return _mapSystem.GetInDir(Owner, this, position, dir);
+            return MapSystem.GetInDir(Owner, this, position, dir);
         }
 
         public IEnumerable<EntityUid> GetOffset(EntityCoordinates coords, Vector2i offset)
         {
-            return _mapSystem.GetOffset(Owner, this, coords, offset);
+            return MapSystem.GetOffset(Owner, this, coords, offset);
         }
 
         public IEnumerable<EntityUid> GetLocal(EntityCoordinates coords)
         {
-            return _mapSystem.GetLocal(Owner, this, coords);
+            return MapSystem.GetLocal(Owner, this, coords);
         }
 
         public EntityCoordinates DirectionToGrid(EntityCoordinates coords, Direction direction)
         {
-            return _mapSystem.DirectionToGrid(Owner, this, coords, direction);
+            return MapSystem.DirectionToGrid(Owner, this, coords, direction);
         }
 
         public IEnumerable<EntityUid> GetCardinalNeighborCells(EntityCoordinates coords)
         {
-            return _mapSystem.GetCardinalNeighborCells(Owner, this, coords);
+            return MapSystem.GetCardinalNeighborCells(Owner, this, coords);
         }
 
         public IEnumerable<EntityUid> GetCellsInSquareArea(EntityCoordinates coords, int n)
         {
-            return _mapSystem.GetCellsInSquareArea(Owner, this, coords, n);
+            return MapSystem.GetCellsInSquareArea(Owner, this, coords, n);
         }
 
         #endregion
 
         public Vector2 WorldToLocal(Vector2 posWorld)
         {
-            return _mapSystem.WorldToLocal(Owner, this, posWorld);
+            return MapSystem.WorldToLocal(Owner, this, posWorld);
         }
 
         public EntityCoordinates MapToGrid(MapCoordinates posWorld)
         {
-            return _mapSystem.MapToGrid(Owner, posWorld);
+            return MapSystem.MapToGrid(Owner, posWorld);
         }
 
         public Vector2 LocalToWorld(Vector2 posLocal)
         {
-            return _mapSystem.LocalToWorld(Owner, this, posLocal);
+            return MapSystem.LocalToWorld(Owner, this, posLocal);
         }
 
         public Vector2i WorldToTile(Vector2 posWorld)
         {
-            return _mapSystem.WorldToTile(Owner, this, posWorld);
+            return MapSystem.WorldToTile(Owner, this, posWorld);
         }
 
         public Vector2i LocalToTile(EntityCoordinates coordinates)
         {
-            return _mapSystem.LocalToTile(Owner, this, coordinates);
+            return MapSystem.LocalToTile(Owner, this, coordinates);
         }
 
         public Vector2i CoordinatesToTile(MapCoordinates coords)
         {
-            return _mapSystem.CoordinatesToTile(Owner, this, coords);
+            return MapSystem.CoordinatesToTile(Owner, this, coords);
         }
 
         public Vector2i CoordinatesToTile(EntityCoordinates coords)
         {
-            return _mapSystem.CoordinatesToTile(Owner, this, coords);
+            return MapSystem.CoordinatesToTile(Owner, this, coords);
         }
 
         public Vector2i LocalToChunkIndices(EntityCoordinates gridPos)
         {
-            return _mapSystem.LocalToChunkIndices(Owner, this, gridPos);
+            return MapSystem.LocalToChunkIndices(Owner, this, gridPos);
         }
 
         public Vector2 LocalToGrid(EntityCoordinates position)
         {
-            return _mapSystem.LocalToGrid(Owner, this, position);
+            return MapSystem.LocalToGrid(Owner, this, position);
         }
 
         public bool CollidesWithGrid(Vector2i indices)
         {
-            return _mapSystem.CollidesWithGrid(Owner, this, indices);
+            return MapSystem.CollidesWithGrid(Owner, this, indices);
         }
 
         public Vector2i GridTileToChunkIndices(Vector2i gridTile)
         {
-            return _mapSystem.GridTileToChunkIndices(Owner, this, gridTile);
+            return MapSystem.GridTileToChunkIndices(Owner, this, gridTile);
         }
 
         public EntityCoordinates GridTileToLocal(Vector2i gridTile)
         {
-            return _mapSystem.GridTileToLocal(Owner, this, gridTile);
+            return MapSystem.GridTileToLocal(Owner, this, gridTile);
         }
 
         public Vector2 GridTileToWorldPos(Vector2i gridTile)
         {
-            return _mapSystem.GridTileToWorldPos(Owner, this, gridTile);
+            return MapSystem.GridTileToWorldPos(Owner, this, gridTile);
         }
 
         public MapCoordinates GridTileToWorld(Vector2i gridTile)
         {
-            return _mapSystem.GridTileToWorld(Owner, this, gridTile);
+            return MapSystem.GridTileToWorld(Owner, this, gridTile);
         }
 
         public bool TryGetTileRef(Vector2i indices, out TileRef tile)
         {
-            return _mapSystem.TryGetTileRef(Owner, this, indices, out tile);
+            return MapSystem.TryGetTileRef(Owner, this, indices, out tile);
         }
 
         public bool TryGetTileRef(EntityCoordinates coords, out TileRef tile)
         {
-            return _mapSystem.TryGetTileRef(Owner, this, coords, out tile);
+            return MapSystem.TryGetTileRef(Owner, this, coords, out tile);
         }
 
         public bool TryGetTileRef(Vector2 worldPos, out TileRef tile)
         {
-            return _mapSystem.TryGetTileRef(Owner, this, worldPos, out tile);
+            return MapSystem.TryGetTileRef(Owner, this, worldPos, out tile);
         }
     }
 

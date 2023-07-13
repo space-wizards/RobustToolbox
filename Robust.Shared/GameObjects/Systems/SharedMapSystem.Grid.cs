@@ -577,7 +577,8 @@ public abstract partial class SharedMapSystem
 
         _physics.WakeBody(uid);
         OnGridBoundsChange(uid, grid);
-        _gridFixtures.RegenerateCollision(uid, chunkRectangles, removedChunks);
+        var ev = new RegenerateGridBoundsEvent(uid, chunkRectangles, removedChunks);
+        RaiseLocalEvent(uid, ref ev);
     }
 
     #region TileAccess

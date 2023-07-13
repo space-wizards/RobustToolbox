@@ -12,7 +12,6 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
-    [UsedImplicitly]
     public abstract partial class SharedMapSystem : EntitySystem
     {
         [Dependency] private readonly IGameTiming _timing = default!;
@@ -20,7 +19,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManagerInternal _mapInternal = default!;
         [Dependency] private readonly INetManager _netManager = default!;
         [Dependency] private readonly FixtureSystem _fixtures = default!;
-        [Dependency] private readonly SharedGridFixtureSystem _gridFixtures = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 

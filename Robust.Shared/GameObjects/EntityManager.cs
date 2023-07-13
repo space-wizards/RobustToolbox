@@ -38,6 +38,9 @@ namespace Robust.Shared.GameObjects
         // positions on spawn....
         private SharedTransformSystem _xforms = default!;
 
+        private EntityQuery<MetaDataComponent> _metaQuery;
+        private EntityQuery<TransformComponent> _xformQuery;
+
         #endregion Dependencies
 
         /// <inheritdoc />
@@ -118,7 +121,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public bool IsDefault(EntityUid uid)
         {
-            if (!TryGetComponent<MetaDataComponent>(uid, out var metadata) || metadata.EntityPrototype == null)
+            if (!_metaQuery.TryGetComponent(uid, out var metadata) || metadata.EntityPrototype == null)
                 return false;
 
             var prototype = metadata.EntityPrototype;
@@ -227,6 +230,8 @@ namespace Robust.Shared.GameObjects
             _eventBus.CalcOrdering();
             _mapSystem = System<SharedMapSystem>();
             _xforms = System<SharedTransformSystem>();
+            _metaQuery = GetEntityQuery<MetaDataComponent>();
+            _xformQuery = GetEntityQuery<TransformComponent>();
         }
 
         public virtual void Shutdown()
@@ -313,7 +318,7 @@ namespace Robust.Shared.GameObjects
 
             if (coordinates.IsValid(this))
             {
-                _xforms.SetCoordinates(newEntity, GetComponent<TransformComponent>(newEntity), coordinates, unanchor: false);
+                _xforms.SetCoordinates(newEntity, _xformQuery.GetComponent(newEntity), coordinates, unanchor: false);
             }
 
             return newEntity;
@@ -323,7 +328,7 @@ namespace Robust.Shared.GameObjects
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
             var newEntity = CreateEntity(prototypeName, default, overrides);
-            var transform = GetComponent<TransformComponent>(newEntity);
+            var transform = _xformQuery.GetComponent(newEntity);
 
             if (coordinates.MapId == MapId.Nullspace)
             {
@@ -750,7 +755,7 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+            EntityPrototype.LoadEntity(_metaQuery.GetComponent(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
         }
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
@@ -762,12 +767,12 @@ namespace Robust.Shared.GameObjects
         {
             try
             {
-                var meta = GetComponent<MetaDataComponent>(entity);
+                var meta = _metaQuery.GetComponent(entity);
                 InitializeEntity(entity, meta);
                 StartEntity(entity);
 
                 // If the map we're initializing the entity on is initialized, run map init on it.
-                if (_mapManager.IsMapInitialized(mapId ?? GetComponent<TransformComponent>(entity).MapID))
+                if (_mapManager.IsMapInitialized(mapId ?? _xformQuery.GetComponent(entity).MapID))
                     RunMapInit(entity, meta);
             }
             catch (Exception e)

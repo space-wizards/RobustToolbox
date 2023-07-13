@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -40,6 +41,12 @@ namespace Robust.Shared.GameObjects
             _cfg.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
 
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
+            SubscribeLocalEvent<RegenerateGridBoundsEvent>(OnGridBoundsRegenerate);
+        }
+
+        private void OnGridBoundsRegenerate(ref RegenerateGridBoundsEvent ev)
+        {
+            RegenerateCollision(ev.Entity, ev.ChunkRectangles, ev.RemovedChunks);
         }
 
         protected virtual void OnGridInit(GridInitializeEvent ev)

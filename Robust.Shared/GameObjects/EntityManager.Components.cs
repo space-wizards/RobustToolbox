@@ -1443,6 +1443,9 @@ namespace Robust.Shared.GameObjects
 
         #region Internal
 
+        /// <summary>
+        /// Elides the component.Deleted check of <see cref="GetComponent"/>
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         internal TComp1 GetComponentInternal(EntityUid uid)
@@ -1453,6 +1456,9 @@ namespace Robust.Shared.GameObjects
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
 
+        /// <summary>
+        /// Elides the component.Deleted check of <see cref="TryGetComponent(System.Nullable{Robust.Shared.GameObjects.EntityUid},out TComp1?)"/>
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         internal bool TryGetComponentInternal([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out TComp1? component)
@@ -1466,6 +1472,9 @@ namespace Robust.Shared.GameObjects
             return TryGetComponentInternal(uid.Value, out component);
         }
 
+        /// <summary>
+        /// Elides the component.Deleted check of <see cref="TryGetComponent(System.Nullable{Robust.Shared.GameObjects.EntityUid},out TComp1?)"/>
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         internal bool TryGetComponentInternal(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
@@ -1480,6 +1489,9 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        /// <summary>
+        /// Elides the component.Deleted check of <see cref="HasComponent"/>
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         internal bool HasComponentInternal(EntityUid uid)
@@ -1487,6 +1499,9 @@ namespace Robust.Shared.GameObjects
             return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
+        /// <summary>
+        /// Elides the component.Deleted check of <see cref="Resolve"/>
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         internal bool ResolveInternal(EntityUid uid, [NotNullWhen(true)] ref TComp1? component, bool logMissing = true)
@@ -1508,7 +1523,9 @@ namespace Robust.Shared.GameObjects
 
             return false;
         }
-
+        /// <summary>
+        /// Elides the component.Deleted check of <see cref="CompOrNull"/>
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         internal TComp1? CompOrNullInternal(EntityUid uid)

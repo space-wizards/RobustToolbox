@@ -638,9 +638,9 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
-            var chunk = grid.GetOrAddChunk(chunkIndex);
             var mapSystem = _entManager.System<SharedMapSystem>();
+            var chunkIndex = mapSystem.LocalToChunkIndices(gridUid, grid, grid.MapToGrid(mousePos));
+            var chunk = mapSystem.GetOrAddChunk(gridUid, grid, chunkIndex);
 
             shell.WriteLine($"worldBounds: {mapSystem.CalcWorldAABB(gridUid, grid, chunk)} localBounds: {chunk.CachedBounds}");
         }

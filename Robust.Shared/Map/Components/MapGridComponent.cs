@@ -90,18 +90,6 @@ namespace Robust.Shared.Map.Components
             return MapSystem.GetTileRef(Owner, this, tileCoordinates);
         }
 
-        /// <summary>
-        ///     Returns the tile at the given chunk indices.
-        /// </summary>
-        /// <param name="mapChunk"></param>
-        /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
-        /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
-        /// <returns>A reference to a tile.</returns>
-        internal TileRef GetTileRef(MapChunk mapChunk, ushort xIndex, ushort yIndex)
-        {
-            return MapSystem.GetTileRef(Owner, this, mapChunk, xIndex, yIndex);
-        }
-
         public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
         {
             return MapSystem.GetAllTiles(Owner, this, ignoreEmpty);
@@ -161,24 +149,9 @@ namespace Robust.Shared.Map.Components
 
         #region ChunkAccess
 
-        internal MapChunk GetOrAddChunk(int xIndex, int yIndex)
-        {
-            return MapSystem.GetOrAddChunk(Owner, this, xIndex, yIndex);
-        }
-
         internal bool TryGetChunk(Vector2i chunkIndices, [NotNullWhen(true)] out MapChunk? chunk)
         {
             return MapSystem.TryGetChunk(Owner, this, chunkIndices, out chunk);
-        }
-
-        internal MapChunk GetOrAddChunk(Vector2i chunkIndices)
-        {
-            return MapSystem.GetOrAddChunk(Owner, this, chunkIndices);
-        }
-
-        public bool HasChunk(Vector2i chunkIndices)
-        {
-            return MapSystem.HasChunk(Owner, this, chunkIndices);
         }
 
         internal IReadOnlyDictionary<Vector2i, MapChunk> GetMapChunks()
@@ -186,19 +159,9 @@ namespace Robust.Shared.Map.Components
             return MapSystem.GetMapChunks(Owner, this);
         }
 
-        internal ChunkEnumerator GetMapChunks(Box2 worldAABB)
-        {
-            return MapSystem.GetMapChunks(Owner, this, worldAABB);
-        }
-
         internal ChunkEnumerator GetMapChunks(Box2Rotated worldArea)
         {
             return MapSystem.GetMapChunks(Owner, this, worldArea);
-        }
-
-        internal ChunkEnumerator GetLocalMapChunks(Box2 localAABB)
-        {
-            return MapSystem.GetLocalMapChunks(Owner, this, localAABB);
         }
 
         #endregion ChunkAccess
@@ -206,11 +169,6 @@ namespace Robust.Shared.Map.Components
         #region SnapGridAccess
 
         public IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords)
-        {
-            return MapSystem.GetAnchoredEntities(Owner, this, coords);
-        }
-
-        public IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords)
         {
             return MapSystem.GetAnchoredEntities(Owner, this, coords);
         }
@@ -235,11 +193,6 @@ namespace Robust.Shared.Map.Components
             return MapSystem.GetAnchoredEntities(Owner, this, worldAABB);
         }
 
-        public IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds)
-        {
-            return MapSystem.GetAnchoredEntities(Owner, this, worldBounds);
-        }
-
         public Vector2i TileIndicesFor(EntityCoordinates coords)
         {
             return MapSystem.TileIndicesFor(Owner, this, coords);
@@ -250,49 +203,14 @@ namespace Robust.Shared.Map.Components
             return MapSystem.TileIndicesFor(Owner, this, worldPos);
         }
 
-        public bool IsAnchored(EntityCoordinates coords, EntityUid euid)
-        {
-            return MapSystem.IsAnchored(Owner, this, coords, euid);
-        }
-
-        public bool AddToSnapGridCell(EntityUid gridUid, MapGridComponent grid, Vector2i pos, EntityUid euid)
-        {
-            return MapSystem.AddToSnapGridCell(gridUid, grid, pos, euid);
-        }
-
-        public bool AddToSnapGridCell(EntityUid gridUid, MapGridComponent grid, EntityCoordinates coords, EntityUid euid)
-        {
-            return MapSystem.AddToSnapGridCell(gridUid, grid, coords, euid);
-        }
-
-        public void RemoveFromSnapGridCell(EntityUid gridUid, MapGridComponent grid, Vector2i pos, EntityUid euid)
-        {
-            MapSystem.RemoveFromSnapGridCell(gridUid, grid, pos, euid);
-        }
-
-        public void RemoveFromSnapGridCell(EntityUid gridUid, MapGridComponent grid, EntityCoordinates coords, EntityUid euid)
-        {
-            MapSystem.RemoveFromSnapGridCell(gridUid, grid, coords, euid);
-        }
-
         public IEnumerable<EntityUid> GetInDir(EntityCoordinates position, Direction dir)
         {
             return MapSystem.GetInDir(Owner, this, position, dir);
         }
 
-        public IEnumerable<EntityUid> GetOffset(EntityCoordinates coords, Vector2i offset)
-        {
-            return MapSystem.GetOffset(Owner, this, coords, offset);
-        }
-
         public IEnumerable<EntityUid> GetLocal(EntityCoordinates coords)
         {
             return MapSystem.GetLocal(Owner, this, coords);
-        }
-
-        public EntityCoordinates DirectionToGrid(EntityCoordinates coords, Direction direction)
-        {
-            return MapSystem.DirectionToGrid(Owner, this, coords, direction);
         }
 
         public IEnumerable<EntityUid> GetCardinalNeighborCells(EntityCoordinates coords)
@@ -332,24 +250,9 @@ namespace Robust.Shared.Map.Components
             return MapSystem.LocalToTile(Owner, this, coordinates);
         }
 
-        public Vector2i CoordinatesToTile(MapCoordinates coords)
-        {
-            return MapSystem.CoordinatesToTile(Owner, this, coords);
-        }
-
         public Vector2i CoordinatesToTile(EntityCoordinates coords)
         {
             return MapSystem.CoordinatesToTile(Owner, this, coords);
-        }
-
-        public Vector2i LocalToChunkIndices(EntityCoordinates gridPos)
-        {
-            return MapSystem.LocalToChunkIndices(Owner, this, gridPos);
-        }
-
-        public Vector2 LocalToGrid(EntityCoordinates position)
-        {
-            return MapSystem.LocalToGrid(Owner, this, position);
         }
 
         public bool CollidesWithGrid(Vector2i indices)
@@ -385,11 +288,6 @@ namespace Robust.Shared.Map.Components
         public bool TryGetTileRef(EntityCoordinates coords, out TileRef tile)
         {
             return MapSystem.TryGetTileRef(Owner, this, coords, out tile);
-        }
-
-        public bool TryGetTileRef(Vector2 worldPos, out TileRef tile)
-        {
-            return MapSystem.TryGetTileRef(Owner, this, worldPos, out tile);
         }
     }
 

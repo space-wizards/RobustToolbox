@@ -17,7 +17,6 @@ public enum MidiRendererStatus : byte
 
 public interface IMidiRenderer : IDisposable
 {
-
     /// <summary>
     ///     The buffered audio source of this renderer.
     /// </summary>
@@ -32,6 +31,12 @@ public interface IMidiRenderer : IDisposable
     ///     This controls whether the midi file being played will loop or not.
     /// </summary>
     bool LoopMidi { get; set; }
+
+    /// <summary>
+    ///     This increases all note on velocities to 127.
+    /// </summary>
+    [Obsolete($"Use {nameof(VelocityOverride)} instead, you can set it to 127 to achieve the same effect.")]
+    bool VolumeBoost { get; set; }
 
     /// <summary>
     ///     The midi program (instrument) the renderer is using.

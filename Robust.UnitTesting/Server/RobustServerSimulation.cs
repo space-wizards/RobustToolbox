@@ -305,7 +305,6 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
-            entitySystemMan.LoadExtraSystemType<MapSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
 

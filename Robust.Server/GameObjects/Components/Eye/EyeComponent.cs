@@ -87,10 +87,5 @@ namespace Robust.Server.GameObjects
                 Dirty();
             }
         }
-
-        public override ComponentState GetComponentState()
-        {
-            return new EyeComponentState(DrawFov, Zoom, Offset, VisibilityMask);
-        }
     }
 }

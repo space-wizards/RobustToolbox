@@ -33,6 +33,8 @@ namespace Robust.Shared.GameObjects
         private const int EntityCapacity = 1024;
         private const int NetComponentCapacity = 8;
 
+        private static readonly ComponentState DefaultComponentState = new();
+
         private readonly Dictionary<EntityUid, Dictionary<ushort, Component>> _netComponents
             = new(EntityCapacity);
 
@@ -1301,7 +1303,7 @@ namespace Robust.Shared.GameObjects
             var getState = new ComponentGetState(session, fromTick);
             eventBus.RaiseComponentEvent(component, ref getState);
 
-            return getState.State ?? component.GetComponentState();
+            return getState.State ?? DefaultComponentState;
         }
 
         public bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)

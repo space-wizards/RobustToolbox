@@ -35,15 +35,18 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Obsoleted unused `IMidiRenderer.VolumeBoost` property. Use `IMidiRenderer.VelocityOverride` instead.
 
 ### New features
 
-*None yet*
+* Added `Master` property to `IMidiRenderer`, which allows it to copy all MIDI events from another renderer.
+* Added `FilteredChannels` property to `IMidiRenderer`, which allows it to filter out notes from certain channels.
+* Added `SystemReset` helper property to `IMidiRenderer`, which allows you to easily send it a SystemReset MIDI message.
 
 ### Bugfixes
 
-*None yet*
+* Fixed some cases were `MidiRenderer` would not respect the `MidiBank` and `MidiProgram.
+* Fixed `ItemList` item selection unselecting everything when in `Multiple` mode.
 
 ### Other
 

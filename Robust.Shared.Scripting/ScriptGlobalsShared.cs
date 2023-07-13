@@ -162,10 +162,10 @@ namespace Robust.Shared.Scripting
         public abstract void show(object obj);
 
         #region EntityManager proxy methods
-        public T Comp<T>(EntityUid uid)
+        public T Comp<T>(EntityUid uid) where T : Component
             => ent.GetComponent<T>(uid);
 
-        public bool TryComp<T>(EntityUid uid, out T? comp)
+        public bool TryComp<T>(EntityUid uid, out T? comp) where T : Component
             => ent.TryGetComponent(uid, out comp);
 
         public bool HasComp<T>(EntityUid uid)

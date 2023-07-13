@@ -398,7 +398,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.GetComponent&lt;T&gt;"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T Comp<T>(EntityUid uid) where T : class, IComponent
+    protected T Comp<T>(EntityUid uid) where T : Component
     {
         return EntityManager.GetComponent<T>(uid);
     }

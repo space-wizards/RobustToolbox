@@ -1256,7 +1256,7 @@ public abstract partial class SharedMapSystem
             rotation, worldPos).CalcBoundingBox();
     }
 
-    internal void OnTileModified(EntityUid uid, MapGridComponent grid, MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile,
+    private void OnTileModified(EntityUid uid, MapGridComponent grid, MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile,
         bool shapeChanged)
     {
         // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.

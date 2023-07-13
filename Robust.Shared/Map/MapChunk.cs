@@ -214,6 +214,44 @@ namespace Robust.Shared.Map
         {
             public List<EntityUid>? Center;
         }
+
+        internal bool TrySetTile(ushort xIndex, ushort yIndex, Tile tile, out Tile oldTile, out bool shapeChanged)
+        {
+            if (xIndex >= Tiles.Length)
+                throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
+
+            if (yIndex >= Tiles.Length)
+                throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
+
+            // same tile, no point to continue
+            if (Tiles[xIndex, yIndex] == tile)
+            {
+                oldTile = Tile.Empty;
+                shapeChanged = false;
+                return false;
+            }
+
+            oldTile = Tiles[xIndex, yIndex];
+            var oldFilledTiles = FilledTiles;
+
+            if (oldTile.IsEmpty != tile.IsEmpty)
+            {
+                if (oldTile.IsEmpty)
+                {
+                    FilledTiles += 1;
+                }
+                else
+                {
+                    FilledTiles -= 1;
+                }
+            }
+
+            shapeChanged = oldFilledTiles != FilledTiles;
+            DebugTools.Assert(FilledTiles >= 0);
+
+            Tiles[xIndex, yIndex] = tile;
+            return true;
+        }
     }
 
     /// <summary>

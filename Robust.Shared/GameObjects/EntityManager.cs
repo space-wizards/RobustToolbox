@@ -105,7 +105,6 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeComponents();
-            _mapSystem = System<SharedMapSystem>();
             _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
             _metaName = _componentFactory.GetComponentName(typeof(MetaDataComponent));
             _sawmill = LogManager.GetSawmill("entity");
@@ -226,7 +225,8 @@ namespace Robust.Shared.GameObjects
             _entitySystemManager.Initialize();
             Started = true;
             _eventBus.CalcOrdering();
-            _xforms = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
+            _mapSystem = System<SharedMapSystem>();
+            _xforms = System<SharedTransformSystem>();
         }
 
         public virtual void Shutdown()

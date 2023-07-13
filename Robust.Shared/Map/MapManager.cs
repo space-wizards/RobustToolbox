@@ -29,8 +29,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     /// <inheritdoc />
     public void Initialize()
     {
-        _mapSystem = EntityManager.System<SharedMapSystem>();
-        _transformSystem = EntityManager.System<SharedTransformSystem>();
         _physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
         _xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
@@ -47,6 +45,9 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     /// <inheritdoc />
     public void Startup()
     {
+        _transformSystem = EntityManager.System<SharedTransformSystem>();
+        _mapSystem = EntityManager.System<SharedMapSystem>();
+
 #if DEBUG
         DebugTools.Assert(_dbgGuardInit);
         _dbgGuardRunning = true;

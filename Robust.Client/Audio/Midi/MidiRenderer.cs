@@ -70,8 +70,8 @@ internal sealed class MidiRenderer : IMidiRenderer
             {
                 for (byte i = 0; i < ChannelCount; i++)
                 {
-                    // Channel 9 is the percussion channel. Let's not change its instrument...
-                    if (i == 9)
+                    // Don't change percussion channel instrument.
+                    if (i == RobustMidiEvent.PercussionChannel)
                         continue;
 
                     SendMidiEvent(RobustMidiEvent.ProgramChange(i, value, SequencerTick));
@@ -96,8 +96,8 @@ internal sealed class MidiRenderer : IMidiRenderer
             {
                 for (byte i = 0; i < ChannelCount; i++)
                 {
-                    // Channel 9 is the percussion channel. Let's not change its bank...
-                    if (i == 9)
+                    // Don't change percussion channel bank.
+                    if (i == RobustMidiEvent.PercussionChannel)
                         continue;
 
                     SendMidiEvent(RobustMidiEvent.BankSelect(i, value, SequencerTick));
@@ -130,8 +130,8 @@ internal sealed class MidiRenderer : IMidiRenderer
     [ViewVariables(VVAccess.ReadWrite)]
     public bool DisablePercussionChannel
     {
-        get => FilteredChannels[9];
-        set => FilteredChannels[9] = value;
+        get => FilteredChannels[RobustMidiEvent.PercussionChannel];
+        set => FilteredChannels[RobustMidiEvent.PercussionChannel] = value;
     }
 
     [ViewVariables(VVAccess.ReadWrite)]
@@ -388,6 +388,11 @@ internal sealed class MidiRenderer : IMidiRenderer
         }
     }
 
+    public void SystemReset()
+    {
+        SendMidiEvent(RobustMidiEvent.SystemReset(SequencerTick));
+    }
+
     public void ClearAllEvents()
     {
         _sequencer.RemoveEvents(SequencerClientId.Wildcard, SequencerClientId.Wildcard, -1);
@@ -541,10 +546,6 @@ internal sealed class MidiRenderer : IMidiRenderer
 
                     case RobustMidiCommand.NoteOn:
                         if (FilteredChannels[midiEvent.Channel])
-                            break;
-
-                        // Channel 9 is the percussion channel. We only block NoteOn events to it.
-                        if (DisablePercussionChannel && midiEvent.Channel == 9)
                             break;
 
                         var velocity = VelocityOverride ?? midiEvent.Velocity;

@@ -139,6 +139,11 @@ public interface IMidiRenderer : IDisposable
     void StopAllNotes();
 
     /// <summary>
+    ///     Reset renderer back to a clean state.
+    /// </summary>
+    void SystemReset();
+
+    /// <summary>
     /// Clears all scheduled events.
     /// </summary>
     void ClearAllEvents();

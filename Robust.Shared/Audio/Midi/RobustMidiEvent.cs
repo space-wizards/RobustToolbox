@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Audio.Midi
@@ -10,6 +11,7 @@ namespace Robust.Shared.Audio.Midi
     public readonly struct RobustMidiEvent
     {
         public const int MaxChannels = 16;
+        public const int PercussionChannel = 9;
 
         #region Data
 

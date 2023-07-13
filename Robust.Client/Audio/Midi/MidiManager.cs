@@ -416,7 +416,12 @@ internal sealed partial class MidiManager : IMidiManager
                 {
                     var renderer = _renderers[i];
                     if (!renderer.Disposed)
+                    {
+                        if (renderer.Master is { Disposed: true })
+                            renderer.Master = null;
+
                         renderer.Render();
+                    }
                     else
                     {
                         renderer.InternalDispose();

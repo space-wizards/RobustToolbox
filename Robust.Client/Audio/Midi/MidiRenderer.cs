@@ -101,6 +101,9 @@ internal sealed class MidiRenderer : IMidiRenderer
                         continue;
 
                     SendMidiEvent(RobustMidiEvent.BankSelect(i, value, SequencerTick));
+
+                    // Re-select program.
+                    SendMidiEvent(RobustMidiEvent.ProgramChange(i, _midiProgram, SequencerTick));
                 }
             }
 
@@ -207,7 +210,14 @@ internal sealed class MidiRenderer : IMidiRenderer
 
             if (_master is { Disposed: false })
             {
-                _master.OnMidiEvent -= SendMidiEvent;
+                try
+                {
+                    _master.OnMidiEvent -= SendMidiEvent;
+                }
+                catch
+                {
+                    // ignored
+                }
             }
 
             _master = value;
@@ -217,6 +227,7 @@ internal sealed class MidiRenderer : IMidiRenderer
 
             _master.OnMidiEvent += SendMidiEvent;
             ApplyState(_master.RendererState, true);
+            MidiBank = _midiBank;
         }
     }
 
@@ -527,7 +538,12 @@ internal sealed class MidiRenderer : IMidiRenderer
         }
     }
 
-    public void SendMidiEvent(RobustMidiEvent midiEvent)
+    private void SendMidiEvent(RobustMidiEvent midiEvent)
+    {
+        SendMidiEvent(midiEvent, true);
+    }
+
+    public void SendMidiEvent(RobustMidiEvent midiEvent, bool raiseEvent)
     {
         if (Disposed)
             return;
@@ -606,8 +622,8 @@ internal sealed class MidiRenderer : IMidiRenderer
                                 // Reset the instrument to the one we were using.
                                 if (DisableProgramChangeEvent)
                                 {
-                                    MidiProgram = _midiProgram;
                                     MidiBank = _midiBank;
+                                    MidiProgram = _midiProgram;
                                 }
 
                                 break;
@@ -636,7 +652,10 @@ internal sealed class MidiRenderer : IMidiRenderer
             //_midiSawmill.Error("Exception while sending midi event of type {0}: {1}", midiEvent.Type, e, midiEvent);
         }
 
-        _taskManager.RunOnMainThread(() => OnMidiEvent?.Invoke(midiEvent));
+        if (raiseEvent)
+        {
+            _taskManager.RunOnMainThread(() => OnMidiEvent?.Invoke(midiEvent));
+        }
     }
 
     public void ScheduleMidiEvent(RobustMidiEvent midiEvent, uint time, bool absolute = false)

@@ -187,7 +187,8 @@ public interface IMidiRenderer : IDisposable
     ///     Send a midi event for the renderer to play.
     /// </summary>
     /// <param name="midiEvent">The midi event to be played</param>
-    void SendMidiEvent(RobustMidiEvent midiEvent);
+    /// <param name="raiseEvent">Whether to raise an event for this event.</param>
+    void SendMidiEvent(RobustMidiEvent midiEvent, bool raiseEvent = true);
 
     /// <summary>
     ///     Schedule a MIDI event to be played at a later time.

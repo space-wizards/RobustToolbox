@@ -107,15 +107,12 @@ internal sealed partial class PvsSystem : EntitySystem
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
-    private ISawmill _sawmill = default!;
-
     public override void Initialize()
     {
         base.Initialize();
 
         _eyeQuery = GetEntityQuery<EyeComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
-        _sawmill = Logger.GetSawmill("PVS");
 
         _entityPvsCollection = RegisterPVSCollection<EntityUid>();
 
@@ -182,7 +179,7 @@ internal sealed partial class PvsSystem : EntitySystem
                 sb.Append($" Entity last sent: {lastSeenTick.Value}");
         }
 
-        _sawmill.Warning(sb.ToString());
+        Log.Warning(sb.ToString());
 
         sessionData.LastSeenAt.Clear();
 
@@ -231,7 +228,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private PVSCollection<TIndex> RegisterPVSCollection<TIndex>() where TIndex : IComparable<TIndex>, IEquatable<TIndex>
     {
-        var collection = new PVSCollection<TIndex>(_sawmill, EntityManager, _transform);
+        var collection = new PVSCollection<TIndex>(Log, EntityManager, _transform);
         _pvsCollections.Add(collection);
         return collection;
     }
@@ -334,12 +331,12 @@ internal sealed partial class PvsSystem : EntitySystem
         if (e.NewStatus == SessionStatus.InGame)
         {
             if (!PlayerData.TryAdd(e.Session, new()))
-                _sawmill.Error($"Attempted to add player to _playerVisibleSets, but they were already present? Session:{e.Session}");
+                Log.Error($"Attempted to add player to _playerVisibleSets, but they were already present? Session:{e.Session}");
 
             foreach (var pvsCollection in _pvsCollections)
             {
                 if (!pvsCollection.AddPlayer(e.Session))
-                    _sawmill.Error($"Attempted to add player to pvsCollection, but they were already present? Session:{e.Session}");
+                    Log.Error($"Attempted to add player to pvsCollection, but they were already present? Session:{e.Session}");
             }
             return;
         }
@@ -353,7 +350,7 @@ internal sealed partial class PvsSystem : EntitySystem
         foreach (var pvsCollection in _pvsCollections)
         {
             if (!pvsCollection.RemovePlayer(e.Session))
-                _sawmill.Error($"Attempted to remove player from pvsCollection, but they were already removed? Session:{e.Session}");
+                Log.Error($"Attempted to remove player from pvsCollection, but they were already removed? Session:{e.Session}");
         }
 
         if (data.Overflow != null)
@@ -822,7 +819,7 @@ internal sealed partial class PvsSystem : EntitySystem
 #if DEBUG
                 // This happens relatively frequently for the current TickBuffer value, and doesn't really provide any
                 // useful info when not debugging/testing locally. Hence only enable on DEBUG.
-                _sawmill.Debug($"Client {session} exceeded tick buffer.");
+                Log.Debug($"Client {session} exceeded tick buffer.");
 #endif
             }
             else if (oldEntry.Value.Value != lastAcked)
@@ -980,7 +977,7 @@ internal sealed partial class PvsSystem : EntitySystem
         if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
         {
             var rep = new EntityStringRepresentation(uid, metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
-            _sawmill.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Trace:\n{Environment.StackTrace}");
+            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Trace:\n{Environment.StackTrace}");
             return;
         }
 
@@ -1110,7 +1107,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
             if (component.Deleted || !component.Initialized)
             {
-                _sawmill.Error("Entity manager returned deleted or uninitialized components while sending entity data");
+                Log.Error("Entity manager returned deleted or uninitialized components while sending entity data");
                 continue;
             }
 

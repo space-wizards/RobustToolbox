@@ -18,6 +18,8 @@ namespace Robust.Shared.GameObjects
 {
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
+    public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : Component;
+
     /// <inheritdoc />
     [Virtual]
     public partial class EntityManager : IEntityManager

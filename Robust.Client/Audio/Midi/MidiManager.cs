@@ -238,7 +238,7 @@ internal sealed partial class MidiManager : IMidiManager
 
             var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _clydeAudio, _taskManager, _midiSawmill);
 
-            _midiSawmill.Debug($"Loading soundfont {FallbackSoundfont}");
+            _midiSawmill.Debug($"Loading fallback soundfont {FallbackSoundfont}");
             // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
             renderer.LoadSoundfont(FallbackSoundfont);
 
@@ -252,8 +252,8 @@ internal sealed partial class MidiManager : IMidiManager
 
                     try
                     {
+                        _midiSawmill.Debug($"Loading OS soundfont {filepath}");
                         renderer.LoadSoundfont(filepath);
-                        _midiSawmill.Debug($"Loaded Linux soundfont {filepath}");
                     }
                     catch (Exception)
                     {
@@ -267,7 +267,7 @@ internal sealed partial class MidiManager : IMidiManager
             {
                 if (File.Exists(OsxSoundfont) && SoundFont.IsSoundFont(OsxSoundfont))
                 {
-                    _midiSawmill.Debug($"Loading soundfont {OsxSoundfont}");
+                    _midiSawmill.Debug($"Loading OS soundfont {OsxSoundfont}");
                     renderer.LoadSoundfont(OsxSoundfont);
                 }
             }
@@ -275,7 +275,7 @@ internal sealed partial class MidiManager : IMidiManager
             {
                 if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
                 {
-                    _midiSawmill.Debug($"Loading soundfont {WindowsSoundfont}");
+                    _midiSawmill.Debug($"Loading OS soundfont {WindowsSoundfont}");
                     renderer.LoadSoundfont(WindowsSoundfont);
                 }
             }
@@ -286,27 +286,31 @@ internal sealed partial class MidiManager : IMidiManager
             {
                 if (File.Exists(soundfontOverride) && SoundFont.IsSoundFont(soundfontOverride))
                 {
-                    _midiSawmill.Debug($"Loading soundfont {soundfontOverride} from environment variable.");
+                    _midiSawmill.Debug($"Loading environment variable soundfont {soundfontOverride}");
                     renderer.LoadSoundfont(soundfontOverride);
                 }
             }
 
             // Load content-specific custom soundfonts, which should override the system/fallback soundfont.
-            _midiSawmill.Debug($"Loading soundfonts from {ContentCustomSoundfontDirectory}");
+            _midiSawmill.Debug($"Loading soundfonts from content directory {ContentCustomSoundfontDirectory}");
             foreach (var file in _resourceManager.ContentFindFiles(ContentCustomSoundfontDirectory))
             {
                 if (file.Extension != "sf2" && file.Extension != "dls" && file.Extension != "sf3") continue;
-                _midiSawmill.Debug($"Loading soundfont {file}");
+                _midiSawmill.Debug($"Loading content soundfont {file}");
                 renderer.LoadSoundfont(file.ToString());
             }
 
+            var userDataPath = _resourceManager.UserData.RootDir == null
+                ? CustomSoundfontDirectory
+                : new ResPath(_resourceManager.UserData.RootDir) / CustomSoundfontDirectory.ToRelativePath();
+
             // Load every soundfont from the user data directory last, since those may override any other soundfont.
-            _midiSawmill.Debug($"Loading soundfonts from {{USERDATA}} {CustomSoundfontDirectory}");
+            _midiSawmill.Debug($"Loading soundfonts from user data directory {userDataPath}");
             var enumerator = _resourceManager.UserData.Find($"{CustomSoundfontDirectory.ToRelativePath()}/*").Item1;
             foreach (var file in enumerator)
             {
                 if (file.Extension != "sf2" && file.Extension != "dls" && file.Extension != "sf3") continue;
-                _midiSawmill.Debug($"Loading soundfont {{USERDATA}} {file}");
+                _midiSawmill.Debug($"Loading user soundfont {{USERDATA}} {file}");
                 renderer.LoadSoundfont(file.ToString());
             }
 

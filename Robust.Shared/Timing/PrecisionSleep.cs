@@ -69,9 +69,8 @@ internal sealed unsafe class PrecisionSleepWindowsHighResolution : PrecisionSlee
     public override void Sleep(TimeSpan time)
     {
         LARGE_INTEGER due;
-        Windows.GetSystemTimeAsFileTime((FILETIME*)(&due));
-
-        due.QuadPart += time.Ticks;
+        // negative = relative time.
+        due.QuadPart = -time.Ticks;
 
         var success = Windows.SetWaitableTimer(
             _timerHandle,

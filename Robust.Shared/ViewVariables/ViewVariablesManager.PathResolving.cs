@@ -78,41 +78,26 @@ internal abstract partial class ViewVariablesManager
             if (specifiers.Count > 1)
                 return null;
 
-            VVAccess? access = null;
+            Type? declaringType = null;
 
-            if (specifiers.Count == 1 || ResolveTypeHandlers(path, nextSegmentClean) is not {} customPath)
+            if (specifiers.Count == 1 && _reflectionMan.GetType(specifiers[0].Value[1..^1]) is {} t)
             {
-                Type? declaringType = null;
-
-                if (specifiers.Count == 1 && _reflectionMan.GetType(specifiers[0].Value[1..^1]) is {} t)
-                {
-                    declaringType = t;
-                }
-
-                var memberInfo = obj.GetType().GetSingleMember(nextSegmentClean, declaringType);
-
-                if (memberInfo == null || !ViewVariablesUtility.TryGetViewVariablesAccess(memberInfo, out access))
-                    return null;
-
-                path = memberInfo switch
-                {
-                    FieldInfo or PropertyInfo => new ViewVariablesFieldOrPropertyPath(obj, memberInfo, _entMan),
-                    MethodInfo methodInfo => new ViewVariablesMethodPath(obj, methodInfo),
-                    _ => throw new InvalidOperationException("Invalid member! Must be a property, field or method.")
-                };
-            }
-            else
-            {
-                path = customPath;
-                access = VVAccess.ReadWrite;
+                declaringType = t;
             }
 
+            // TODO: Set access properly!
+            VVAccess? access = VVAccess.ReadWrite;
+
+            path = ResolveByCache(path, nextSegmentClean, declaringType);
             UpdateParentComp(path, ref oldComp);
+
+            if (path == null)
+                return null;
 
             // After this, obj is essentially the parent.
             foreach (Match match in indexers)
             {
-                path = ResolveIndexing(path, ParseArguments(match.Value[1..^1]), access.Value);
+                path = IndexByCache(path!, ParseArguments(match.Value[1..^1]), access.Value);
                 UpdateParentComp(path, ref oldComp);
             }
 
@@ -131,74 +116,5 @@ internal abstract partial class ViewVariablesManager
             newPath.ParentComponent ??= oldPath;
 
         oldPath = newPath?.ParentComponent;
-    }
-
-    private ViewVariablesPath? ResolveIndexing(ViewVariablesPath? path, string[] arguments, VVAccess access)
-    {
-        if (path?.Get() is not {} obj || arguments.Length == 0)
-            return null;
-
-        var type = obj.GetType();
-
-        // Multidimensional arrays... More like, painful arrays.
-        if (type.IsArray && type.GetArrayRank() > 1)
-        {
-            var getter = type.GetSingleMember("Get") as MethodInfo;
-            var setter = type.GetSingleMember("Set") as MethodInfo;
-
-            if (getter == null && setter == null)
-                return null;
-
-            var p = DeserializeArguments(
-                getter?.GetParameters().Select(p => p.ParameterType).ToArray()
-                ?? setter!.GetParameters()[1..].Select(p => p.ParameterType).ToArray(),
-                0, arguments);
-
-            object? Get()
-            {
-                return getter?.Invoke(obj, p);
-            }
-
-            void Set(object? value)
-            {
-                if(p != null && access == VVAccess.ReadWrite)
-                    setter?.Invoke(obj, new[] {value}.Concat(p).ToArray());
-            }
-
-            return new ViewVariablesFakePath(Get, Set, null, getter?.ReturnType ?? setter!.GetParameters()[0].ParameterType);
-        }
-
-        // No indexer.
-        if (type.GetIndexer() is not {} indexer)
-            return null;
-
-        var parametersInfo = indexer.GetIndexParameters();
-
-        var parameters = DeserializeArguments(
-            parametersInfo.Select(p => p.ParameterType).ToArray(),
-            parametersInfo.Count(p => p.IsOptional),
-            arguments);
-
-        if (parameters == null)
-            return null;
-
-        return new ViewVariablesIndexedPath(obj, indexer, parameters, access);
-    }
-
-    private ViewVariablesPath? ResolveTypeHandlers(ViewVariablesPath path, string relativePath)
-    {
-        if (path.Get() is not {} obj
-            || string.IsNullOrEmpty(relativePath)
-            || relativePath.Contains('/'))
-            return null;
-
-        foreach (var handler in GetAllTypeHandlers(obj.GetType()))
-        {
-            if (handler.HandlePath(path, relativePath) is {} newPath)
-                return newPath;
-        }
-
-        // Not handled by a custom type handler!
-        return null;
     }
 }

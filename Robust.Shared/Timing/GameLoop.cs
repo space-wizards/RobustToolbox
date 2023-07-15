@@ -122,7 +122,7 @@ namespace Robust.Shared.Timing
             _prof = prof;
             _sawmill = sawmill;
 
-            _precisionSleep = options.Precise ? new PrecisionSleepUniversal() : PrecisionSleep.Create();
+            _precisionSleep = options.Precise ? PrecisionSleep.Create() : new PrecisionSleepUniversal();
         }
 
         /// <summary>

@@ -24,6 +24,9 @@ internal abstract class PrecisionSleep : IDisposable
         if (OperatingSystem.IsWindows() && Environment.OSVersion.Version.Build >= 17134)
             return new PrecisionSleepWindowsHighResolution();
 
+        if (OperatingSystem.IsLinux())
+            return new PrecisionSleepLinuxNanosleep();
+
         return new PrecisionSleepUniversal();
     }
 
@@ -106,5 +109,47 @@ internal sealed unsafe class PrecisionSleepWindowsHighResolution : PrecisionSlee
     ~PrecisionSleepWindowsHighResolution()
     {
         DisposeCore();
+    }
+}
+
+/// <summary>
+/// High-precision implementation of <see cref="PrecisionSleep"/> that is available on Linux.
+/// </summary>
+internal sealed unsafe class PrecisionSleepLinuxNanosleep : PrecisionSleep
+{
+    public override void Sleep(TimeSpan time)
+    {
+        timespec timeSpec;
+        timeSpec.tv_sec = Math.DivRem(time.Ticks, TimeSpan.TicksPerSecond, out var ticksRem);
+        timeSpec.tv_nsec = ticksRem * TimeSpan.NanosecondsPerTick;
+
+        while (true)
+        {
+            timespec rem;
+            var result = nanosleep(&timeSpec, &rem);
+            if (result == 0)
+                return;
+
+            var error = Marshal.GetLastSystemError();
+            if (error != 4) // EINTR
+                throw new Exception($"nanosleep failed: {error}");
+
+            timeSpec = rem;
+        }
+    }
+
+    [DllImport("libc.so.6", SetLastError=true)]
+    private static extern int nanosleep(timespec* req, timespec* rem);
+
+    private struct timespec
+    {
+        public long tv_sec;
+        public long tv_nsec;
+    }
+
+    private struct timeval
+    {
+        public long tv_sec;
+        public long tv_usec;
     }
 }

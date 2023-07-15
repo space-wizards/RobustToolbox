@@ -560,6 +560,11 @@ namespace Robust.Client
             {
                 _taskManager.ProcessPendingTasks(); // tasks like connect
             }
+
+            using (_prof.Group("Content post engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.InputPostEngine, frameEventArgs);
+            }
         }
 
         private void Tick(FrameEventArgs frameEventArgs)

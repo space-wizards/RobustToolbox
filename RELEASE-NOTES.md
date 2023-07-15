@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added BQL `paused` selector.
+* `ModUpdateLevel.PostInput` allows running content code after network and async task processing.
 
 ### Bugfixes
 

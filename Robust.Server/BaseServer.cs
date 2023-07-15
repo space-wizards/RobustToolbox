@@ -670,6 +670,8 @@ namespace Robust.Server
 
             _network.ProcessPackets();
             _taskManager.ProcessPendingTasks();
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.InputPostEngine, args);
         }
 
         private void Update(FrameEventArgs frameEventArgs)

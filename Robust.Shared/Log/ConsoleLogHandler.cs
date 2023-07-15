@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.Unicode;
 using System.Timers;
+using JetBrains.Annotations;
 using Serilog.Events;
 using TerraFX.Interop.Windows;
 
@@ -84,9 +85,7 @@ namespace Robust.Shared.Log
             };
         }
 
-#if DEBUG
         [UsedImplicitly]
-#endif
         public static void TryDetachFromConsoleWindow()
         {
             if (OperatingSystem.IsWindows())

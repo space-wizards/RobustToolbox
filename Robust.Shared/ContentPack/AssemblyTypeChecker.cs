@@ -59,7 +59,7 @@ namespace Robust.Shared.ContentPack
             _config = Task.Run(() => LoadConfig(sawmill));
         }
 
-        private Resolver CreateResolver()
+        internal Resolver CreateResolver()
         {
             var dotnetDir = Path.GetDirectoryName(typeof(int).Assembly.Location)!;
             var ourPath = typeof(AssemblyTypeChecker).Assembly.Location;
@@ -101,6 +101,19 @@ namespace Robust.Shared.ContentPack
         /// <returns></returns>
         public bool CheckAssembly(Stream assembly)
         {
+            using var resolver = CreateResolver();
+
+            return CheckAssembly(assembly, resolver);
+        }
+
+        /// <summary>
+        ///     Check the assembly for any illegal types. Any types not on the white list
+        ///     will cause the assembly to be rejected.
+        /// </summary>
+        /// <param name="assembly">Assembly to load.</param>
+        /// <returns></returns>
+        public bool CheckAssembly(Stream assembly, Resolver resolver)
+        {
             if (WouldNoOp)
             {
                 // This method is a no-op in this case so don't bother
@@ -110,8 +123,7 @@ namespace Robust.Shared.ContentPack
             _sawmill.Debug("Checking assembly...");
             var fullStopwatch = Stopwatch.StartNew();
 
-            var resolver = CreateResolver();
-            using var peReader = ModLoader.MakePEReader(assembly, leaveOpen: true);
+            using var peReader = ModLoader.MakePEReader(assembly, leaveOpen: true, PEStreamOptions.PrefetchEntireImage);
             var reader = peReader.GetMetadataReader();
 
             var asmName = reader.GetString(reader.GetAssemblyDefinition().Name);
@@ -856,7 +868,7 @@ namespace Robust.Shared.ContentPack
             return handle.IsNil ? null : reader.GetString(handle);
         }
 
-        private sealed class Resolver : IResolver
+        internal sealed class Resolver : IResolver, IDisposable
         {
             private readonly ConcurrentDictionary<string, PEReader?> _dictionary = new();
             private readonly AssemblyTypeChecker _parent;
@@ -909,6 +921,14 @@ namespace Robust.Shared.ContentPack
             public PEReader? Resolve(string simpleName)
             {
                 return _dictionary.GetOrAdd(simpleName, ResolveCore);
+            }
+
+            public void Dispose()
+            {
+                foreach (var reader in _dictionary.Values)
+                {
+                    reader?.Dispose();
+                }
             }
         }
 

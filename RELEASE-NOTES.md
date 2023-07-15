@@ -50,6 +50,7 @@ END TEMPLATE-->
 
 * BQL `with` now includes paused entities.
 * The game loop now times more accurately and avoids sleeping more than necessary.
+* Sandboxing (and thus, client startup) should be much faster when ran from the launcher.
 
 ### Internal
 

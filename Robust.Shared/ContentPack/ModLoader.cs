@@ -118,13 +118,14 @@ namespace Robust.Shared.ContentPack
                 var checkerSw = Stopwatch.StartNew();
 
                 var typeChecker = MakeTypeChecker();
+                var resolver = typeChecker.CreateResolver();
 
                 Parallel.ForEach(files, pair =>
                 {
                     var (name, (path, _)) = pair;
 
                     using var stream = _res.ContentFileRead(path);
-                    if (!typeChecker.CheckAssembly(stream))
+                    if (!typeChecker.CheckAssembly(stream, resolver))
                     {
                         throw new TypeCheckFailedException($"Assembly {name} failed type checks.");
                     }
@@ -426,12 +427,15 @@ namespace Robust.Shared.ContentPack
             };
         }
 
-        internal static PEReader MakePEReader(Stream stream, bool leaveOpen=false)
+        internal static PEReader MakePEReader(Stream stream, bool leaveOpen=false, PEStreamOptions options=PEStreamOptions.Default)
         {
             if (!stream.CanSeek)
                 stream = leaveOpen ? stream.CopyToMemoryStream() : stream.ConsumeToMemoryStream();
 
-            return new PEReader(stream, leaveOpen ? PEStreamOptions.LeaveOpen : default);
+            if (leaveOpen)
+                options |= PEStreamOptions.LeaveOpen;
+
+            return new PEReader(stream, options);
         }
     }
 }

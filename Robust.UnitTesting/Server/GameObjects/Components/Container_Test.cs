@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Robust.Server.Containers;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
@@ -269,7 +270,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void Container_Serialize()
         {
             var sim = SimulationFactory();
-            var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
+            var entManager = sim.Resolve<IEntityManager>();
+            var containerSys = entManager.System<ContainerSystem>();
 
             var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
@@ -279,10 +281,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             container.ShowContents = true;
             container.Insert(childEnt);
 
-            var containerMan = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity);
-            var state = (ContainerManagerComponent.ContainerManagerComponentState)containerMan.GetComponentState();
+            var containerMan = entManager.GetComponent<IContainerManager>(entity);
+            var getState = new ComponentGetState();
+            entManager.EventBus.RaiseComponentEvent(containerMan, ref getState);
+            var state = (ContainerManagerComponent.ContainerManagerComponentState)getState.State!;
 
-            Assert.That(state.Containers.Count, Is.EqualTo(1));
+            Assert.That(state.Containers, Has.Count.EqualTo(1));
             var cont = state.Containers.Values.First();
             Assert.That(cont.Id, Is.EqualTo("dummy"));
             Assert.That(cont.OccludesLight, Is.True);

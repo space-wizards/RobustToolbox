@@ -42,6 +42,7 @@ END TEMPLATE-->
 * Added `Master` property to `IMidiRenderer`, which allows it to copy all MIDI events from another renderer.
 * Added `FilteredChannels` property to `IMidiRenderer`, which allows it to filter out notes from certain channels.
 * Added `SystemReset` helper property to `IMidiRenderer`, which allows you to easily send it a SystemReset MIDI message.
+* Added BQL `paused` selector.
 
 ### Bugfixes
 
@@ -50,11 +51,18 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* BQL `with` now includes paused entities.
 
 ### Internal
 
 *None yet*
+
+
+## 137.0.0
+
+### Breaking changes
+
+* Component network state handler methods have been fully deprecated and replaced with the eventbus event equivalents (ComponentGetState and ComponentHandleState).
 
 
 ## 136.0.1

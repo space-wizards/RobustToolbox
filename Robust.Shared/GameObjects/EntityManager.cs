@@ -75,7 +75,6 @@ namespace Robust.Shared.GameObjects
         public event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
         private string _xformName = string.Empty;
-        private string _metaName = string.Empty;
 
         private ISawmill _sawmill = default!;
         private ISawmill _resolveSawmill = default!;
@@ -102,7 +101,6 @@ namespace Robust.Shared.GameObjects
 
             InitializeComponents();
             _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
-            _metaName = _componentFactory.GetComponentName(typeof(MetaDataComponent));
             _sawmill = LogManager.GetSawmill("entity");
             _resolveSawmill = LogManager.GetSawmill("resolve");
 
@@ -114,7 +112,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public bool IsDefault(EntityUid uid)
         {
-            if (!TryGetComponent<MetaDataComponent>(uid, out var metadata) || metadata.EntityPrototype == null)
+            if (!_metaQuery.TryGetComponent(uid, out var metadata) || metadata.EntityPrototype == null)
                 return false;
 
             var prototype = metadata.EntityPrototype;

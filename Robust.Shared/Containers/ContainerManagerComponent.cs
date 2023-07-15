@@ -55,28 +55,6 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
-        {
-            // naive implementation that just sends the full state of the component
-            Dictionary<string, ContainerManagerComponentState.ContainerData> containerSet = new(Containers.Count);
-
-            foreach (var container in Containers.Values)
-            {
-                var uidArr = new EntityUid[container.ContainedEntities.Count];
-
-                for (var index = 0; index < container.ContainedEntities.Count; index++)
-                {
-                    uidArr[index] = container.ContainedEntities[index];
-                }
-
-                var sContainer = new ContainerManagerComponentState.ContainerData(container.ContainerType, container.ID, container.ShowContents, container.OccludesLight, uidArr);
-                containerSet.Add(container.ID, sContainer);
-            }
-
-            return new ContainerManagerComponentState(containerSet);
-        }
-
-        /// <inheritdoc />
         public T MakeContainer<T>(string id)
             where T : IContainer
         {

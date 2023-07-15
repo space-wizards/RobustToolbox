@@ -510,7 +510,12 @@ namespace Robust.Server
         {
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_time, _runtimeLog, _prof, _log.GetSawmill("eng"))
+                _mainLoop = new GameLoop(
+                    _time,
+                    _runtimeLog,
+                    _prof,
+                    _log.GetSawmill("eng"),
+                    GameLoopOptions.FromCVars(_config))
                 {
                     SleepMode = SleepMode.Delay,
                     DetectSoftLock = true,

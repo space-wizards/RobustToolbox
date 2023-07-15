@@ -49,6 +49,7 @@ END TEMPLATE-->
 ### Other
 
 * BQL `with` now includes paused entities.
+* The game loop now times more accurately and avoids sleeping more than necessary.
 
 ### Internal
 

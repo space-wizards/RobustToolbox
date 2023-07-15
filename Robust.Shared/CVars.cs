@@ -319,6 +319,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> SysGCCollectStart =
             CVarDef.Create("sys.gc_collect_start", true);
 
+        /// <summary>
+        /// Use precise sleeping methods in the game loop.
+        /// </summary>
+        public static readonly CVarDef<bool> SysPreciseSleep =
+            CVarDef.Create("sys.precise_sleep", true);
+
         /*
          * METRICS
          */

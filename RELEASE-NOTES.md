@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added BQL `paused` selector.
 
 ### Bugfixes
 
@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* BQL `with` now includes paused entities.
 
 ### Internal
 

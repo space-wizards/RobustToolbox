@@ -895,12 +895,10 @@ namespace Robust.Shared.ContentPack
                 {
                     var path = Path.Combine(diskLoadPath, dllName);
 
-                    if (!File.Exists(path))
-                    {
+                    if (!FileHelper.TryOpenFileRead(path, out var fileStream))
                         continue;
-                    }
 
-                    return ModLoader.MakePEReader(File.OpenRead(path));
+                    return ModLoader.MakePEReader(fileStream);
                 }
 
                 foreach (var resLoadPath in _resLoadPaths)

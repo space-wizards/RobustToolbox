@@ -35,8 +35,8 @@ internal sealed partial class MidiManager : IMidiManager
     private float _occlusionUpdateDelay;
     private float _positionUpdateDelay;
 
-    private TimeSpan _nextOcclusionUpdate = TimeSpan.Zero;
-    private TimeSpan _nextPositionUpdate = TimeSpan.Zero;
+    [ViewVariables] private TimeSpan _nextOcclusionUpdate = TimeSpan.Zero;
+    [ViewVariables] private TimeSpan _nextPositionUpdate = TimeSpan.Zero;
 
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCacheInternal _resourceManager = default!;
@@ -74,11 +74,10 @@ internal sealed partial class MidiManager : IMidiManager
         }
     }
 
-    [ViewVariables]
-    private readonly List<IMidiRenderer> _renderers = new();
+    [ViewVariables] private readonly List<IMidiRenderer> _renderers = new();
 
     private bool _alive = true;
-    private Settings? _settings;
+    [ViewVariables] private Settings? _settings;
     private Thread? _midiThread;
     private ISawmill _midiSawmill = default!;
     private float _volume = 0f;
@@ -201,6 +200,8 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["player.reset-synth"].IntValue = 0;
             _settings["synth.midi-bank-select"].StringValue = "gm";
             //_settings["synth.verbose"].IntValue = 1; // Useful for debugging.
+
+            _parallel.AddAndInvokeParallelCountChanged(UpdateParallelCount);
         }
         catch (Exception e)
         {
@@ -216,6 +217,18 @@ internal sealed partial class MidiManager : IMidiManager
         _cfgMan.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
 
         FluidsynthInitialized = true;
+    }
+
+    private void UpdateParallelCount()
+    {
+        if (_settings == null)
+            return;
+
+        _settings["synth.polyphony"].IntValue = Math.Min(1024 + (int)(Math.Log2(_parallel.ParallelProcessCount) * 2048), 65535);
+        _settings["synth.cpu-cores"].IntValue = Math.Min(_parallel.ParallelProcessCount, 256);
+
+        _midiSawmill.Debug($"Synth Cores: {_settings["synth.cpu-cores"].IntValue}");
+        _midiSawmill.Debug($"Synth Polyphony: {_settings["synth.polyphony"].IntValue}");
     }
 
     private void OnRaycastLengthChanged(float value)

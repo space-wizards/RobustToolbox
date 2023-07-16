@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NFluidsynth;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
@@ -379,19 +380,20 @@ internal sealed partial class MidiManager : IMidiManager
             if (_renderers.Count == 0)
                 return;
 
+            var transSystem = _entityManager.System<TransformSystem>();
             var transQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
             var opts = new ParallelOptions { MaxDegreeOfParallelism = _parallel.ParallelProcessCount };
 
             if (_renderers.Count > _minRendererParallel)
             {
-                Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, transQuery, physicsQuery));
+                Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, transQuery, physicsQuery, transSystem));
             }
             else
             {
                 foreach (var renderer in _renderers)
                 {
-                    UpdateRenderer(renderer, transQuery, physicsQuery);
+                    UpdateRenderer(renderer, transQuery, physicsQuery, transSystem);
                 }
             }
 
@@ -405,7 +407,8 @@ internal sealed partial class MidiManager : IMidiManager
 
         _volumeDirty = false;
     }
-    private void UpdateRenderer(IMidiRenderer renderer, EntityQuery<TransformComponent> transQuery, EntityQuery<PhysicsComponent> physicsQuery)
+    private void UpdateRenderer(IMidiRenderer renderer, EntityQuery<TransformComponent> transQuery,
+        EntityQuery<PhysicsComponent> physicsQuery, TransformSystem transformSystem)
     {
         try
         {
@@ -421,44 +424,33 @@ internal sealed partial class MidiManager : IMidiManager
                 return;
             }
 
-            MapCoordinates? mapPos = null;
-
             if (_nextPositionUpdate < _timing.RealTime)
             {
-                var trackingEntity =
-                    renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
-                if (trackingEntity)
+                if (renderer.TrackingEntity is {} trackedEntity && !_entityManager.Deleted(trackedEntity))
                 {
-                    renderer.TrackingCoordinates = transQuery.GetComponent(renderer.TrackingEntity!.Value).Coordinates;
-                    mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
+                    renderer.TrackingCoordinates = transQuery.GetComponent(renderer.TrackingEntity!.Value).MapPosition;
                 }
-
-                if (mapPos != null && !renderer.Source.SetPosition(mapPos.Value.Position))
+                else if (renderer.TrackingCoordinates == null)
                 {
                     return;
                 }
 
-                if (trackingEntity)
+                if (!renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.Position))
                 {
-                    var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value,
-                        xformQuery: transQuery, physicsQuery: physicsQuery);
-                    renderer.Source.SetVelocity(vel);
+                    return;
                 }
-            }
-            else
-            {
-                if (renderer.TrackingCoordinates != null)
-                {
-                    mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
-                }
+
+                var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value,
+                    xformQuery: transQuery, physicsQuery: physicsQuery);
+                renderer.Source.SetVelocity(vel);
             }
 
-            if (mapPos != null && mapPos.Value.MapId == _eyeManager.CurrentMap)
+            if (renderer.TrackingCoordinates != null && renderer.TrackingCoordinates.Value.MapId == _eyeManager.CurrentMap)
             {
                 if (_nextOcclusionUpdate >= _timing.RealTime)
                     return;
 
-                var pos = mapPos.Value;
+                var pos = renderer.TrackingCoordinates.Value;
 
                 var sourceRelative = pos.Position - _eyeManager.CurrentEye.Position.Position;
                 var occlusion = 0f;

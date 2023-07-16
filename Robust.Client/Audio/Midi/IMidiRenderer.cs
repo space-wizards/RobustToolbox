@@ -184,7 +184,7 @@ public interface IMidiRenderer : IDisposable
     ///     This is only used if <see cref="Mono"/> is set to True
     ///     and <see cref="TrackingEntity"/> is null.
     /// </summary>
-    EntityCoordinates? TrackingCoordinates { get; set; }
+    MapCoordinates? TrackingCoordinates { get; set; }
 
     MidiRendererState RendererState { get; }
 

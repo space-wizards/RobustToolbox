@@ -200,7 +200,7 @@ internal sealed class MidiRenderer : IMidiRenderer
     public EntityUid? TrackingEntity { get; set; } = null;
 
     [ViewVariables(VVAccess.ReadWrite)]
-    public EntityCoordinates? TrackingCoordinates { get; set; } = null;
+    public MapCoordinates? TrackingCoordinates { get; set; } = null;
 
     [ViewVariables]
     public BitArray FilteredChannels { get; } = new(RobustMidiEvent.MaxChannels);

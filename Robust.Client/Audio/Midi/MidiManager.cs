@@ -175,7 +175,7 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["synth.threadsafe-api"].IntValue = 1;
             _settings["synth.gain"].DoubleValue = 1.0d;
             _settings["synth.polyphony"].IntValue = 1024;
-            _settings["synth.cpu-cores"].IntValue = 2;
+            _settings["synth.cpu-cores"].IntValue = _parallel.ParallelProcessCount;
             _settings["synth.midi-channels"].IntValue = 16;
             _settings["synth.overflow.age"].DoubleValue = 3000;
             _settings["audio.driver"].StringValue = "file";

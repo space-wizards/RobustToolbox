@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
@@ -49,7 +51,7 @@ namespace Robust.Shared.Reflection
         internal static MemberInfo? GetSingleMember(this Type type, string member, Type? declaringType = null)
         {
             var members = type
-                .GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .GetAllMembers()
                 .Where(m => m.Name == member)
                 .ToArray();
 
@@ -65,17 +67,15 @@ namespace Robust.Shared.Reflection
                 : members[0];
         }
 
-        internal static PropertyInfo? GetIndexer(this Type type)
+        internal static IEnumerable<PropertyInfo> GetAllIndexers(this Type type)
         {
-            foreach (var pInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (var pInfo in type.GetAllProperties())
             {
                 if (pInfo.GetIndexParameters().Length == 0)
                     continue;
 
-                return pInfo;
+                yield return pInfo;
             }
-
-            return null;
         }
     }
 }

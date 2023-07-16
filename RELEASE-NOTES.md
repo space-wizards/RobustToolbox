@@ -36,29 +36,41 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Obsoleted unused `IMidiRenderer.VolumeBoost` property. Use `IMidiRenderer.VelocityOverride` instead.
+* `IMidiRenderer.TrackedCoordinates` is now a `MapCoordinates`.
 
 ### New features
 
 * Added `Master` property to `IMidiRenderer`, which allows it to copy all MIDI events from another renderer.
 * Added `FilteredChannels` property to `IMidiRenderer`, which allows it to filter out notes from certain channels.
 * Added `SystemReset` helper property to `IMidiRenderer`, which allows you to easily send it a SystemReset MIDI message.
-* Added BQL `paused` selector.
-* `ModUpdateLevel.PostInput` allows running content code after network and async task processing.
 
 ### Bugfixes
 
 * Fixed some cases were `MidiRenderer` would not respect the `MidiBank` and `MidiProgram.
+* Fixed user soundfonts not loading.
 * Fixed `ItemList` item selection unselecting everything when in `Multiple` mode.
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 137.1.0
+
+### New features
+
+* Added BQL `paused` selector.
+* `ModUpdateLevel.PostInput` allows running content code after network and async task processing.
 
 ### Other
 
 * BQL `with` now includes paused entities.
 * The game loop now times more accurately and avoids sleeping more than necessary.
 * Sandboxing (and thus, client startup) should be much faster when ran from the launcher.
-
-### Internal
-
-*None yet*
 
 
 ## 137.0.0

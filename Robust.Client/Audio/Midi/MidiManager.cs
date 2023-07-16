@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using NFluidsynth;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -10,13 +11,16 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -25,6 +29,7 @@ namespace Robust.Client.Audio.Midi;
 internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
+    public const int MinRendererCountForParallelExecution = 3;
 
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCacheInternal _resourceManager = default!;
@@ -33,6 +38,8 @@ internal sealed partial class MidiManager : IMidiManager
     [Dependency] private readonly IClydeAudio _clydeAudio = default!;
     [Dependency] private readonly ITaskManager _taskManager = default!;
     [Dependency] private readonly ILogManager _logger = default!;
+    [Dependency] private readonly IParallelManager _parallel = default!;
+    [Dependency] private readonly IRuntimeLog _runtime = default!;
 
     private SharedPhysicsSystem _broadPhaseSystem = default!;
 
@@ -115,7 +122,7 @@ internal sealed partial class MidiManager : IMidiManager
     private bool _failedInitialize;
 
     private NFluidsynth.Logger.LoggerDelegate _loggerDelegate = default!;
-    private ISawmill _sawmill = default!;
+    private ISawmill _fluidsynthSawmill = default!;
     private float _maxCastLength;
 
     [ViewVariables(VVAccess.ReadWrite)]
@@ -143,7 +150,7 @@ internal sealed partial class MidiManager : IMidiManager
 #else
         _midiSawmill.Level = LogLevel.Error;
 #endif
-        _sawmill = _logger.GetSawmill("midi.fluidsynth");
+        _fluidsynthSawmill = _logger.GetSawmill("midi.fluidsynth");
         _loggerDelegate = LoggerDelegate;
 
         if (!_resourceManager.UserData.Exists(CustomSoundfontDirectory))
@@ -211,7 +218,7 @@ internal sealed partial class MidiManager : IMidiManager
             NFluidsynth.Logger.LogLevel.Debug => LogLevel.Debug,
             _ => LogLevel.Debug
         };
-        _sawmill.Log(rLevel, message);
+        _fluidsynthSawmill.Log(rLevel, message);
     }
 
     public IMidiRenderer? GetNewRenderer(bool mono = true)
@@ -338,73 +345,97 @@ internal sealed partial class MidiManager : IMidiManager
         // Update positions of streams every frame.
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
 
+        var transQuery = _entityManager.GetEntityQuery<TransformComponent>();
+        var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
+
         lock (_renderers)
         {
-            foreach (var renderer in _renderers)
+            var opts = new ParallelOptions { MaxDegreeOfParallelism = _parallel.ParallelProcessCount };
+
+            try
             {
-                if (renderer.Disposed)
-                    continue;
-
-                if(_volumeDirty)
-                    renderer.Source.SetVolume(Volume);
-
-                if (!renderer.Mono)
+                if (_renderers.Count > MinRendererCountForParallelExecution)
                 {
-                    renderer.Source.SetGlobal();
-                    continue;
-                }
-
-                MapCoordinates? mapPos = null;
-                var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
-                if (trackingEntity)
-                {
-                    renderer.TrackingCoordinates = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity!.Value).Coordinates;
-                }
-
-                if (renderer.TrackingCoordinates != null)
-                {
-                    mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
-                }
-
-                if (mapPos != null && mapPos.Value.MapId == _eyeManager.CurrentMap)
-                {
-                    var pos = mapPos.Value;
-
-                    var sourceRelative = pos.Position - _eyeManager.CurrentEye.Position.Position;
-                    var occlusion = 0f;
-                    if (sourceRelative.Length() > 0)
-                    {
-                        occlusion = _broadPhaseSystem.IntersectRayPenetration(
-                            pos.MapId,
-                            new CollisionRay(
-                                _eyeManager.CurrentEye.Position.Position,
-                                sourceRelative.Normalized(),
-                                OcclusionCollisionMask),
-                            MathF.Min(sourceRelative.Length(), _maxCastLength),
-                            renderer.TrackingEntity);
-                    }
-
-                    renderer.Source.SetOcclusion(occlusion);
-
-                    if (!renderer.Source.SetPosition(pos.Position))
-                    {
-                        return;
-                    }
-
-                    if (trackingEntity)
-                    {
-                        var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value);
-                        renderer.Source.SetVelocity(vel);
-                    }
+                    Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, transQuery, physicsQuery));
                 }
                 else
                 {
-                    renderer.Source.SetOcclusion(float.MaxValue);
+                    foreach (var renderer in _renderers)
+                    {
+                        UpdateRenderer(renderer, transQuery, physicsQuery);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _runtime.LogException(ex, _midiSawmill.Name);
             }
         }
 
         _volumeDirty = false;
+    }
+    private void UpdateRenderer(IMidiRenderer renderer, EntityQuery<TransformComponent> transQuery, EntityQuery<PhysicsComponent> physicsQuery)
+    {
+        if (renderer.Disposed)
+            return;
+
+        if(_volumeDirty)
+            renderer.Source.SetVolume(Volume);
+
+        if (!renderer.Mono)
+        {
+            renderer.Source.SetGlobal();
+            return;
+        }
+
+        MapCoordinates? mapPos = null;
+        var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
+        if (trackingEntity)
+        {
+            renderer.TrackingCoordinates = transQuery.GetComponent(renderer.TrackingEntity!.Value).Coordinates;
+        }
+
+        if (renderer.TrackingCoordinates != null)
+        {
+            mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
+        }
+
+        if (mapPos != null && mapPos.Value.MapId == _eyeManager.CurrentMap)
+        {
+            var pos = mapPos.Value;
+
+            var sourceRelative = pos.Position - _eyeManager.CurrentEye.Position.Position;
+            var occlusion = 0f;
+            if (sourceRelative.Length() > 0)
+            {
+                occlusion = _broadPhaseSystem.IntersectRayPenetration(
+                    pos.MapId,
+                    new CollisionRay(
+                        _eyeManager.CurrentEye.Position.Position,
+                        sourceRelative.Normalized(),
+                        OcclusionCollisionMask),
+                    MathF.Min(sourceRelative.Length(), _maxCastLength),
+                    renderer.TrackingEntity);
+            }
+
+            renderer.Source.SetOcclusion(occlusion);
+
+            if (!renderer.Source.SetPosition(pos.Position))
+            {
+                return;
+            }
+
+            if (trackingEntity)
+            {
+                var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value,
+                    xformQuery:transQuery, physicsQuery:physicsQuery);
+                renderer.Source.SetVelocity(vel);
+            }
+        }
+        else
+        {
+            renderer.Source.SetOcclusion(float.MaxValue);
+        }
     }
 
     /// <summary>

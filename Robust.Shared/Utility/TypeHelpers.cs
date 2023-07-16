@@ -10,20 +10,32 @@ namespace Robust.Shared.Utility
     public static class TypeHelpers
     {
         /// <summary>
+        ///     Returns absolutely all members, privates, readonlies, and ones from parents.
+        /// </summary>
+        public static IEnumerable<MemberInfo> GetAllMembers(this Type t)
+        {
+            foreach (var p in GetClassHierarchy(t))
+            {
+                foreach (var member in p.GetMembers(BindingFlags.NonPublic | BindingFlags.Instance
+                            | BindingFlags.DeclaredOnly | BindingFlags.Public))
+                {
+                    yield return member;
+                }
+            }
+        }
+
+        /// <summary>
         ///     Returns absolutely all fields, privates, readonlies, and ones from parents.
         /// </summary>
         public static IEnumerable<FieldInfo> GetAllFields(this Type t)
         {
-            // We need to fetch the entire class hierarchy and SelectMany(),
+            // We need to fetch the entire class hierarchy
             // Because BindingFlags.FlattenHierarchy doesn't read privates,
             // Even when you pass BindingFlags.NonPublic.
             foreach (var p in GetClassHierarchy(t))
             {
-                foreach (var field in p.GetFields(
-                    BindingFlags.NonPublic |
-                    BindingFlags.Instance |
-                    BindingFlags.DeclaredOnly |
-                    BindingFlags.Public))
+                foreach (var field in p.GetFields(BindingFlags.NonPublic | BindingFlags.Instance
+                            | BindingFlags.DeclaredOnly | BindingFlags.Public))
                 {
                     yield return field;
                 }
@@ -35,12 +47,14 @@ namespace Robust.Shared.Utility
         /// </summary>
         public static IEnumerable<PropertyInfo> GetAllProperties(this Type t)
         {
-            return GetClassHierarchy(t).SelectMany(p =>
-                p.GetProperties(
-                    BindingFlags.NonPublic |
-                    BindingFlags.Instance |
-                    BindingFlags.DeclaredOnly |
-                    BindingFlags.Public));
+            foreach (var p in GetClassHierarchy(t))
+            {
+                foreach (var property in p.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance
+                             | BindingFlags.DeclaredOnly | BindingFlags.Public))
+                {
+                    yield return property;
+                }
+            }
         }
 
         /// <summary>

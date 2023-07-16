@@ -1258,6 +1258,15 @@ namespace Robust.Shared
         public static readonly CVarDef<float> MidiVolume =
             CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        public static readonly CVarDef<int> MidiMinRendererParallel =
+            CVarDef.Create("midi.min_renderers_parallel_update", 3, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<float> MidiPositionUpdateDelay =
+            CVarDef.Create("midi.occlusion_update_delay", 0.25f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<float> MidiOcclusionUpdateDelay =
+            CVarDef.Create("midi.occlusion_update_delay", 0.75f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         /*
          * HUB
          * CVars related to public master server hub

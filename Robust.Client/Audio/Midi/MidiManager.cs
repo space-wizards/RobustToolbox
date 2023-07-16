@@ -21,6 +21,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Threading;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -29,7 +30,13 @@ namespace Robust.Client.Audio.Midi;
 internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
-    public const int MinRendererCountForParallelExecution = 3;
+
+    private int _minRendererParallel;
+    private float _occlusionUpdateDelay;
+    private float _positionUpdateDelay;
+
+    private TimeSpan _nextOcclusionUpdate = TimeSpan.Zero;
+    private TimeSpan _nextPositionUpdate = TimeSpan.Zero;
 
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCacheInternal _resourceManager = default!;
@@ -40,6 +47,7 @@ internal sealed partial class MidiManager : IMidiManager
     [Dependency] private readonly ILogManager _logger = default!;
     [Dependency] private readonly IParallelManager _parallel = default!;
     [Dependency] private readonly IRuntimeLog _runtime = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
 
     private SharedPhysicsSystem _broadPhaseSystem = default!;
 
@@ -137,12 +145,20 @@ internal sealed partial class MidiManager : IMidiManager
     {
         if (FluidsynthInitialized || _failedInitialize) return;
 
-        _volume = _cfgMan.GetCVar(CVars.MidiVolume);
         _cfgMan.OnValueChanged(CVars.MidiVolume, value =>
         {
             _volume = value;
             _volumeDirty = true;
         }, true);
+
+        _cfgMan.OnValueChanged(CVars.MidiMinRendererParallel,
+            value => _minRendererParallel = value, true);
+
+        _cfgMan.OnValueChanged(CVars.MidiOcclusionUpdateDelay,
+            value => _occlusionUpdateDelay = value, true);
+
+        _cfgMan.OnValueChanged(CVars.MidiPositionUpdateDelay,
+            value => _positionUpdateDelay = value, true);
 
         _midiSawmill = _logger.GetSawmill("midi");
 #if DEBUG
@@ -345,16 +361,18 @@ internal sealed partial class MidiManager : IMidiManager
         // Update positions of streams every frame.
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
 
-        var transQuery = _entityManager.GetEntityQuery<TransformComponent>();
-        var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
-
         lock (_renderers)
         {
+            if (_renderers.Count == 0)
+                return;
+
+            var transQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
             var opts = new ParallelOptions { MaxDegreeOfParallelism = _parallel.ParallelProcessCount };
 
             try
             {
-                if (_renderers.Count > MinRendererCountForParallelExecution)
+                if (_renderers.Count > _minRendererParallel)
                 {
                     Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, transQuery, physicsQuery));
                 }
@@ -371,6 +389,12 @@ internal sealed partial class MidiManager : IMidiManager
                 _runtime.LogException(ex, _midiSawmill.Name);
             }
         }
+
+        if (_nextOcclusionUpdate < _timing.RealTime)
+            _nextOcclusionUpdate = _timing.RealTime.Add(TimeSpan.FromSeconds(_occlusionUpdateDelay));
+
+        if (_nextPositionUpdate < _timing.RealTime)
+            _nextPositionUpdate = _timing.RealTime.Add(TimeSpan.FromSeconds(_positionUpdateDelay));
 
         _volumeDirty = false;
     }
@@ -389,19 +413,41 @@ internal sealed partial class MidiManager : IMidiManager
         }
 
         MapCoordinates? mapPos = null;
-        var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
-        if (trackingEntity)
-        {
-            renderer.TrackingCoordinates = transQuery.GetComponent(renderer.TrackingEntity!.Value).Coordinates;
-        }
 
-        if (renderer.TrackingCoordinates != null)
+        if (_nextPositionUpdate < _timing.RealTime)
         {
-            mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
+            var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
+            if (trackingEntity)
+            {
+                renderer.TrackingCoordinates = transQuery.GetComponent(renderer.TrackingEntity!.Value).Coordinates;
+                mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
+            }
+
+            if (mapPos != null && !renderer.Source.SetPosition(mapPos.Value.Position))
+            {
+                return;
+            }
+
+            if (trackingEntity)
+            {
+                var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value,
+                    xformQuery:transQuery, physicsQuery:physicsQuery);
+                renderer.Source.SetVelocity(vel);
+            }
+        }
+        else
+        {
+            if (renderer.TrackingCoordinates != null)
+            {
+                mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
+            }
         }
 
         if (mapPos != null && mapPos.Value.MapId == _eyeManager.CurrentMap)
         {
+            if (_nextOcclusionUpdate >= _timing.RealTime)
+                return;
+
             var pos = mapPos.Value;
 
             var sourceRelative = pos.Position - _eyeManager.CurrentEye.Position.Position;
@@ -419,18 +465,6 @@ internal sealed partial class MidiManager : IMidiManager
             }
 
             renderer.Source.SetOcclusion(occlusion);
-
-            if (!renderer.Source.SetPosition(pos.Position))
-            {
-                return;
-            }
-
-            if (trackingEntity)
-            {
-                var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value,
-                    xformQuery:transQuery, physicsQuery:physicsQuery);
-                renderer.Source.SetVelocity(vel);
-            }
         }
         else
         {

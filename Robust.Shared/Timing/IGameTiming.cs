@@ -78,7 +78,8 @@ namespace Robust.Shared.Timing
         GameTick CurTick { get; set; }
 
         /// <summary>
-        ///     Timespan for the last tick.
+        ///     Time, relative to <see cref="RealTime"/>, the last tick started at.
+        ///     If we're currently in simulation, that's THIS tick.
         /// </summary>
         TimeSpan LastTick { get; set; }
 

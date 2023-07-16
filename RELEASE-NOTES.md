@@ -43,6 +43,7 @@ END TEMPLATE-->
 * Added `FilteredChannels` property to `IMidiRenderer`, which allows it to filter out notes from certain channels.
 * Added `SystemReset` helper property to `IMidiRenderer`, which allows you to easily send it a SystemReset MIDI message.
 * Added BQL `paused` selector.
+* `ModUpdateLevel.PostInput` allows running content code after network and async task processing.
 
 ### Bugfixes
 
@@ -52,6 +53,8 @@ END TEMPLATE-->
 ### Other
 
 * BQL `with` now includes paused entities.
+* The game loop now times more accurately and avoids sleeping more than necessary.
+* Sandboxing (and thus, client startup) should be much faster when ran from the launcher.
 
 ### Internal
 

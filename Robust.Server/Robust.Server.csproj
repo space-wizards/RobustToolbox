@@ -9,6 +9,7 @@
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <!-- Try to fix sporadic errors against Robust.Packaging, apparently?? -->
     <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
+    <RobustILLink>true</RobustILLink>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
@@ -40,5 +41,14 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <!-- ILLink configuration -->
+  <ItemGroup>
+    <RobustLinkRoots Include="Robust.Server" />
+    <RobustLinkRoots Include="Robust.Shared" />
+    <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
+  </ItemGroup>
+
   <Import Project="..\MSBuild\Robust.Properties.targets" />
+
+  <Import Project="..\MSBuild\Robust.Trimming.targets" />
 </Project>

@@ -510,7 +510,12 @@ namespace Robust.Server
         {
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_time, _runtimeLog, _prof, _log.GetSawmill("eng"))
+                _mainLoop = new GameLoop(
+                    _time,
+                    _runtimeLog,
+                    _prof,
+                    _log.GetSawmill("eng"),
+                    GameLoopOptions.FromCVars(_config))
                 {
                     SleepMode = SleepMode.Delay,
                     DetectSoftLock = true,
@@ -670,6 +675,8 @@ namespace Robust.Server
 
             _network.ProcessPackets();
             _taskManager.ProcessPendingTasks();
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.InputPostEngine, args);
         }
 
         private void Update(FrameEventArgs frameEventArgs)

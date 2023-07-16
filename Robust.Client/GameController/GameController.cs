@@ -200,7 +200,12 @@ namespace Robust.Client
             // Setup main loop
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_gameTiming, _runtimeLog, _prof, _logManager.GetSawmill("eng"))
+                _mainLoop = new GameLoop(
+                    _gameTiming,
+                    _runtimeLog,
+                    _prof,
+                    _logManager.GetSawmill("eng"),
+                    GameLoopOptions.FromCVars(_configurationManager))
                 {
                     SleepMode = displayMode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
                 };
@@ -559,6 +564,11 @@ namespace Robust.Client
             using (_prof.Group("Async"))
             {
                 _taskManager.ProcessPendingTasks(); // tasks like connect
+            }
+
+            using (_prof.Group("Content post engine"))
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.InputPostEngine, frameEventArgs);
             }
         }
 

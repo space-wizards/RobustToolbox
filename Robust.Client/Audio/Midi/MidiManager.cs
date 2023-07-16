@@ -190,7 +190,7 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["synth.lock-memory"].IntValue = 0;
             _settings["synth.threadsafe-api"].IntValue = 1;
             _settings["synth.gain"].DoubleValue = 1.0d;
-            _settings["synth.polyphony"].IntValue = 1024;
+            _settings["synth.polyphony"].IntValue = Math.Min(1024 + (int)(Math.Log2(_parallel.ParallelProcessCount) * 2048), 65535);
             _settings["synth.cpu-cores"].IntValue = _parallel.ParallelProcessCount;
             _settings["synth.midi-channels"].IntValue = 16;
             _settings["synth.overflow.age"].DoubleValue = 3000;

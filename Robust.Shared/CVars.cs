@@ -1268,10 +1268,10 @@ namespace Robust.Shared
             CVarDef.Create("midi.min_renderers_parallel_update", 3, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<float> MidiPositionUpdateDelay =
-            CVarDef.Create("midi.position_update_delay", 0.25f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("midi.position_update_delay", 0.125f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<float> MidiOcclusionUpdateDelay =
-            CVarDef.Create("midi.occlusion_update_delay", 0.75f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("midi.occlusion_update_delay", 0.25f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * HUB

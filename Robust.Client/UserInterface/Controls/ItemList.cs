@@ -88,9 +88,9 @@ namespace Robust.Client.UserInterface.Controls
                 _scrollBar.MoveToEnd();
         }
 
-        public Item AddItem(string text, Texture? icon = null, bool selectable = true)
+        public Item AddItem(string text, Texture? icon = null, bool selectable = true, object? metadata = null)
         {
-            var item = new Item(this) {Text = text, Icon = icon, Selectable = selectable};
+            var item = new Item(this) {Text = text, Icon = icon, Selectable = selectable, Metadata = metadata};
             Add(item);
             return item;
         }
@@ -448,7 +448,8 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (item.Selected && SelectMode != ItemListSelectMode.Button)
                     {
-                        ClearSelected();
+                        if(SelectMode != ItemListSelectMode.Multiple)
+                            ClearSelected();
                         item.Selected = false;
                         return;
                     }

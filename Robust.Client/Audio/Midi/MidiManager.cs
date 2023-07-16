@@ -9,6 +9,7 @@ using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio.Midi;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -189,8 +190,6 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["synth.lock-memory"].IntValue = 0;
             _settings["synth.threadsafe-api"].IntValue = 1;
             _settings["synth.gain"].DoubleValue = 1.0d;
-            _settings["synth.polyphony"].IntValue = Math.Min(1024 + (int)(Math.Log2(_parallel.ParallelProcessCount) * 2048), 65535);
-            _settings["synth.cpu-cores"].IntValue = _parallel.ParallelProcessCount;
             _settings["synth.midi-channels"].IntValue = 16;
             _settings["synth.overflow.age"].DoubleValue = 3000;
             _settings["audio.driver"].StringValue = "file";
@@ -198,6 +197,7 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["audio.period-size"].IntValue = 4096;
             _settings["midi.autoconnect"].IntValue = 1;
             _settings["player.reset-synth"].IntValue = 0;
+            _settings["synth.midi-channels"].IntValue = Math.Clamp(RobustMidiEvent.MaxChannels, 16, 256);
             _settings["synth.midi-bank-select"].StringValue = "gm";
             //_settings["synth.verbose"].IntValue = 1; // Useful for debugging.
 
@@ -224,8 +224,8 @@ internal sealed partial class MidiManager : IMidiManager
         if (_settings == null)
             return;
 
-        _settings["synth.polyphony"].IntValue = Math.Min(1024 + (int)(Math.Log2(_parallel.ParallelProcessCount) * 2048), 65535);
-        _settings["synth.cpu-cores"].IntValue = Math.Min(_parallel.ParallelProcessCount, 256);
+        _settings["synth.polyphony"].IntValue = Math.Clamp(1024 + (int)(Math.Log2(_parallel.ParallelProcessCount) * 2048), 1, 65535);
+        _settings["synth.cpu-cores"].IntValue = Math.Clamp(_parallel.ParallelProcessCount, 1, 256);
 
         _midiSawmill.Debug($"Synth Cores: {_settings["synth.cpu-cores"].IntValue}");
         _midiSawmill.Debug($"Synth Polyphony: {_settings["synth.polyphony"].IntValue}");

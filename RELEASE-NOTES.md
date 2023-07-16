@@ -39,8 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added BQL `paused` selector.
-* `ModUpdateLevel.PostInput` allows running content code after network and async task processing.
+*None yet*
 
 ### Bugfixes
 
@@ -48,13 +47,25 @@ END TEMPLATE-->
 
 ### Other
 
-* BQL `with` now includes paused entities.
-* The game loop now times more accurately and avoids sleeping more than necessary.
-* Sandboxing (and thus, client startup) should be much faster when ran from the launcher.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 137.1.0
+
+### New features
+
+* Added BQL `paused` selector.
+* `ModUpdateLevel.PostInput` allows running content code after network and async task processing.
+
+### Other
+
+* BQL `with` now includes paused entities.
+* The game loop now times more accurately and avoids sleeping more than necessary.
+* Sandboxing (and thus, client startup) should be much faster when ran from the launcher.
 
 
 ## 137.0.0

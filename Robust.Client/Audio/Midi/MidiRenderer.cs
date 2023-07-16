@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using JetBrains.Annotations;
 using NFluidsynth;
 using Robust.Client.Graphics;
 using Robust.Shared.Asynchronous;
@@ -238,6 +239,9 @@ internal sealed class MidiRenderer : IMidiRenderer
             MidiBank = _midiBank;
         }
     }
+
+    [ViewVariables, UsedImplicitly]
+    private double CpuLoad => !_synth.Disposed ? _synth.CpuLoad : 0;
 
     public event Action<RobustMidiEvent>? OnMidiEvent;
     public event Action? OnMidiPlayerFinished;

@@ -380,20 +380,19 @@ internal sealed partial class MidiManager : IMidiManager
             if (_renderers.Count == 0)
                 return;
 
-            var transSystem = _entityManager.System<TransformSystem>();
             var transQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
             var opts = new ParallelOptions { MaxDegreeOfParallelism = _parallel.ParallelProcessCount };
 
             if (_renderers.Count > _minRendererParallel)
             {
-                Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, transQuery, physicsQuery, transSystem));
+                Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, transQuery, physicsQuery));
             }
             else
             {
                 foreach (var renderer in _renderers)
                 {
-                    UpdateRenderer(renderer, transQuery, physicsQuery, transSystem);
+                    UpdateRenderer(renderer, transQuery, physicsQuery);
                 }
             }
 
@@ -408,7 +407,7 @@ internal sealed partial class MidiManager : IMidiManager
         _volumeDirty = false;
     }
     private void UpdateRenderer(IMidiRenderer renderer, EntityQuery<TransformComponent> transQuery,
-        EntityQuery<PhysicsComponent> physicsQuery, TransformSystem transformSystem)
+        EntityQuery<PhysicsComponent> physicsQuery)
     {
         try
         {

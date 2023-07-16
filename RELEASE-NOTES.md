@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 138.0.0
+
+### Breaking changes
+
 * Obsoleted unused `IMidiRenderer.VolumeBoost` property. Use `IMidiRenderer.VelocityOverride` instead.
 * `IMidiRenderer.TrackedCoordinates` is now a `MapCoordinates`.
 
@@ -49,14 +72,6 @@ END TEMPLATE-->
 * Fixed some cases were `MidiRenderer` would not respect the `MidiBank` and `MidiProgram.
 * Fixed user soundfonts not loading.
 * Fixed `ItemList` item selection unselecting everything when in `Multiple` mode.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
 
 
 ## 137.1.0

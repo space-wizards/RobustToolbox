@@ -42,15 +42,13 @@ internal abstract partial class ViewVariablesManager
 
     private void RepopulateCache(ViewVariablesTypeCache cache)
     {
-        const BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-
         var type = cache.Type;
 
         cache.Members.Clear();
         cache.InheritedMembers.Clear();
         cache.Indexers.Clear();
 
-        foreach (var memberInfo in type.GetMembers(bindingFlags))
+        foreach (var memberInfo in type.GetAllMembers())
         {
             if (!ViewVariablesUtility.TryGetViewVariablesAccess(memberInfo, out var access))
                 continue;
@@ -79,11 +77,8 @@ internal abstract partial class ViewVariablesManager
             }
         }
 
-        foreach (var propertyInfo in type.GetProperties(bindingFlags))
+        foreach (var propertyInfo in type.GetAllIndexers())
         {
-            if (propertyInfo.GetIndexParameters() is not { Length: > 0 })
-                continue;
-
             cache.Indexers.Add(new ViewVariablesTypeCache.Indexer(propertyInfo));
         }
 
@@ -104,10 +99,13 @@ internal abstract partial class ViewVariablesManager
     {
         var cache = GetCache(path.Type);
 
-        foreach (var handler in GetAllTypeHandlers(cache.Type))
+        if (declaringType != null)
         {
-            if (handler.HandlePath(path, relativePath) is {} handledSubpath)
-                return handledSubpath;
+            foreach (var handler in GetAllTypeHandlers(cache.Type))
+            {
+                if (handler.HandlePath(path, relativePath) is {} handledSubpath)
+                    return handledSubpath;
+            }
         }
 
         var obj = path.Get();

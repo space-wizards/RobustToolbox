@@ -29,8 +29,8 @@ public abstract class ViewVariablesTypeHandler
 
 public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
 {
-    private readonly List<TypeHandlerData> _handlers = new();
-    private readonly Dictionary<string, PathHandler> _paths = new();
+    [ViewVariables] private readonly List<TypeHandlerData> _handlers = new();
+    [ViewVariables] private readonly Dictionary<string, PathHandler> _paths = new();
 
     internal ViewVariablesTypeHandler()
     {
@@ -273,11 +273,11 @@ public sealed class ViewVariablesTypeHandler<T> : ViewVariablesTypeHandler
 
     private sealed class TypeHandlerData
     {
-        public readonly HandleTypePath Handle;
-        public readonly ListTypeCustomPaths List;
+        [ViewVariables] public readonly HandleTypePath Handle;
+        [ViewVariables] public readonly ListTypeCustomPaths List;
 
-        public readonly object? OriginalHandle;
-        public readonly object? OriginalList;
+        [ViewVariables] public readonly object? OriginalHandle;
+        [ViewVariables] public readonly object? OriginalList;
 
         public TypeHandlerData(HandleTypePath handle, ListTypeCustomPaths list,
             object? origHandle = null, object? origList = null)

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Reflection;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.ViewVariables;
 
@@ -71,6 +72,9 @@ internal abstract partial class ViewVariablesManager
             obj = priorObj;
         }
 
+        var list = ListByCache(resolved).ToList();
+        return Full(path, list);
+
         // We need a place to store all the relative paths we find! TODO: Perhaps just yield instead?
         var paths = new List<string>();
 
@@ -87,7 +91,7 @@ internal abstract partial class ViewVariablesManager
         var uniqueMemberNames = new HashSet<string>(paths);
 
         // For member hiding handling purposes, we handle the members declared by the object's type itself first.
-        foreach (var memberInfo in type.GetMembers(MembersBindings).OrderBy(m => m.DeclaringType == type))
+        foreach (var memberInfo in type.GetAllMembers().OrderBy(m => m.DeclaringType == type))
         {
             // Ignore the member if it's not a VV member.
             if (!ViewVariablesUtility.TryGetViewVariablesAccess(memberInfo, out var memberAccess))

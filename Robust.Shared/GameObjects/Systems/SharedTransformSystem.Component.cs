@@ -418,6 +418,16 @@ public abstract partial class SharedTransformSystem
 
     #region Local Rotation
 
+    public void SetLocalRotationNoLerp(EntityUid uid, Angle angle)
+    {
+        SetLocalRotationNoLerp(_xformQuery.GetComponent(uid), angle);
+    }
+
+    public virtual void SetLocalRotationNoLerp(TransformComponent xform, Angle angle)
+    {
+        xform.LocalRotation = angle;
+    }
+
     public void SetLocalRotation(EntityUid uid, Angle value, TransformComponent? xform = null)
     {
         if (!Resolve(uid, ref xform)) return;

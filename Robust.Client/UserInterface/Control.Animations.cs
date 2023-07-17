@@ -55,12 +55,12 @@ namespace Robust.Client.UserInterface
                     continue;
 
                 toRemove.Add(key);
-                AnimationCompleted?.Invoke(key);
             }
 
             foreach (var key in toRemove)
             {
                 _playingAnimations.Remove(key);
+                AnimationCompleted?.Invoke(key);
             }
         }
     }

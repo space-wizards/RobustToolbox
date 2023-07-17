@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -31,7 +32,8 @@ internal abstract partial class ViewVariablesManager
             return cached;
 
         var handler = (ViewVariablesTypeHandler)Activator.CreateInstance(typeof(ViewVariablesTypeHandler<>).MakeGenericType(type), true)!;
-        var cache = new ViewVariablesTypeCache(type, handler);
+        var baseCache = type.BaseType != null ? GetCache(type.BaseType) : null;
+        var cache = new ViewVariablesTypeCache(type, handler, baseCache);
 
         RepopulateCache(cache);
 
@@ -42,13 +44,20 @@ internal abstract partial class ViewVariablesManager
 
     private void RepopulateCache(ViewVariablesTypeCache cache)
     {
+        const BindingFlags flags = BindingFlags.Instance
+                                   | BindingFlags.Public
+                                   | BindingFlags.NonPublic
+                                   | BindingFlags.DeclaredOnly;
+
         var type = cache.Type;
 
+        if(cache.BaseTypeCache != null)
+            RepopulateCache(cache.BaseTypeCache);
+
         cache.Members.Clear();
-        cache.InheritedMembers.Clear();
         cache.Indexers.Clear();
 
-        foreach (var memberInfo in type.GetAllMembers())
+        foreach (var memberInfo in type.GetMembers(flags))
         {
             if (!ViewVariablesUtility.TryGetViewVariablesAccess(memberInfo, out var access))
                 continue;
@@ -59,34 +68,25 @@ internal abstract partial class ViewVariablesManager
 
             var member = new ViewVariablesTypeCache.Member(memberInfo);
 
-            if (memberInfo.DeclaringType is not {} declaringType || declaringType == type)
-            {
-                if (cache.Members.ContainsKey(memberInfo.Name))
-                    throw new Exception("// TODO VV: deal with this later");
+            if (cache.Members.ContainsKey(memberInfo.Name))
+                throw new Exception("// TODO VV: deal with this later");
 
-                cache.Members[memberInfo.Name] = member;
-            }
-            else
-            {
-                var typeMembers = cache.InheritedMembers.GetOrNew(declaringType);
-
-                if (typeMembers.ContainsKey(memberInfo.Name))
-                    throw new Exception("// TODO VV: Deal with this later");
-
-                typeMembers[memberInfo.Name] = member;
-            }
+            cache.Members[memberInfo.Name] = member;
         }
 
-        foreach (var propertyInfo in type.GetAllIndexers())
+        foreach (var propertyInfo in type.GetProperties(flags))
         {
+            if (propertyInfo.GetIndexParameters().Length == 0)
+                continue;
+
             cache.Indexers.Add(new ViewVariablesTypeCache.Indexer(propertyInfo));
         }
 
         // Multidimensional arrays... More like, painful arrays.
         if (type.IsArray && type.GetArrayRank() > 1)
         {
-            var getter = type.GetSingleMember("Get") as MethodInfo;
-            var setter = type.GetSingleMember("Set") as MethodInfo;
+            var getter = type.GetSingleMember("Get", type) as MethodInfo;
+            var setter = type.GetSingleMember("Set", type) as MethodInfo;
 
             if (getter != null || setter != null)
             {
@@ -99,57 +99,26 @@ internal abstract partial class ViewVariablesManager
     {
         var cache = GetCache(path.Type);
 
-        if (declaringType != null)
+        // Only use type handlers if declaring type is null.
+        // This is because when declaring type is set, we want to get a path from a specific type in the hierarchy.
+        if (declaringType == null)
         {
-            foreach (var handler in GetAllTypeHandlers(cache.Type))
+            foreach (var handler in cache.GetAllHandlers())
             {
-                if (handler.HandlePath(path, relativePath) is {} handledSubpath)
-                    return handledSubpath;
+                if (handler.HandlePath(path, relativePath) is {} handled)
+                    return handled;
             }
         }
 
         var obj = path.Get();
-        MemberInfo? info = null;
 
-        if ((declaringType == cache.Type || declaringType == null) && cache.Members.TryGetValue(relativePath, out var member))
-        {
-            info = member.Info;
-        }
-        else if (declaringType != null
-                 && cache.InheritedMembers.TryGetValue(declaringType, out var inheritedMembers)
-                 && inheritedMembers.TryGetValue(relativePath, out var inheritedMember))
-        {
-            info = inheritedMember.Info;
-        }
-        else if (declaringType == null)
-        {
-            foreach (var (_, members) in cache.InheritedMembers)
-            {
-                foreach (var (name, m) in members)
-                {
-                    if (name != relativePath)
-                        continue;
-
-                    info = m.Info;
-                    break;
-                }
-
-                if (info != null)
-                    break;
-            }
-
-            if (info == null)
-                return null;
-        }
-        else
-        {
+        if (!cache.TryGetMember(relativePath, out var member, declaringType))
             return null;
-        }
 
-        ViewVariablesPath subpath = info switch
+        ViewVariablesPath subpath = member.Info switch
         {
             // TODO Deal with this entity manager bullshit like, ????
-            FieldInfo or PropertyInfo => new ViewVariablesFieldOrPropertyPath(obj, info, _entMan),
+            FieldInfo or PropertyInfo => new ViewVariablesFieldOrPropertyPath(obj, member.Info, _entMan),
             MethodInfo methodInfo => new ViewVariablesMethodPath(obj, methodInfo),
             _ => throw new InvalidOperationException("Invalid member! Must be a property, field or method.")
         };
@@ -340,21 +309,82 @@ public sealed class ViewVariablesTypeCache
     [ViewVariables] public readonly Type Type;
     [ViewVariables] internal readonly ViewVariablesTypeHandler Handler;
     [ViewVariables] internal readonly Dictionary<string, Member> Members = new();
-    [ViewVariables] internal readonly Dictionary<Type, Dictionary<string, Member>> InheritedMembers = new();
+    [ViewVariables] internal readonly ViewVariablesTypeCache? BaseTypeCache;
     [ViewVariables] internal readonly List<Indexer> Indexers = new();
 
-    internal ViewVariablesTypeCache(Type type, ViewVariablesTypeHandler handler)
+    internal ViewVariablesTypeCache(Type type, ViewVariablesTypeHandler handler, ViewVariablesTypeCache? baseTypeCache)
     {
         Type = type;
         Handler = handler;
+        BaseTypeCache = baseTypeCache;
+    }
+
+    internal IEnumerable<ViewVariablesTypeHandler> GetAllHandlers()
+    {
+        var cache = this;
+        while (cache != null)
+        {
+            yield return cache.Handler;
+            cache = cache.BaseTypeCache;
+        }
+    }
+
+    internal IEnumerable<Member> GetAllMembers()
+    {
+        var cache = this;
+        while (cache != null)
+        {
+            foreach (var (_, member) in cache.Members)
+            {
+                yield return member;
+            }
+
+            cache = cache.BaseTypeCache;
+        }
+    }
+
+    internal IEnumerable<Indexer> GetAllIndexers()
+    {
+        var cache = this;
+        while (cache != null)
+        {
+            foreach (var indexer in cache.Indexers)
+            {
+                yield return indexer;
+            }
+
+            cache = cache.BaseTypeCache;
+        }
+    }
+
+    internal bool TryGetMember(string name, [MaybeNullWhen(false)] out Member member, Type? declaringType = null)
+    {
+        var cache = this;
+        while (cache != null)
+        {
+            if ((declaringType == null || declaringType == cache.Type)
+                && cache.Members.TryGetValue(name, out member))
+                return true;
+
+            cache = cache.BaseTypeCache;
+        }
+
+        member = default;
+        return false;
     }
 
     internal readonly struct Member
     {
         [ViewVariables] public readonly MemberInfo Info;
+        [ViewVariables] public string Name => Info.Name;
+        [ViewVariables] public Type UnderlyingType => Info.GetUnderlyingType();
+        [ViewVariables] public Type DeclaringType => Info.DeclaringType!;
 
         public Member(MemberInfo info)
         {
+            DebugTools.AssertNotNull(info);
+            DebugTools.AssertNotNull(info.DeclaringType);
+
             Info = info;
         }
     }
@@ -364,9 +394,13 @@ public sealed class ViewVariablesTypeCache
         [ViewVariables] public readonly PropertyInfo? Info;
         [ViewVariables] public readonly MethodInfo? Get;
         [ViewVariables] public readonly MethodInfo? Set;
+        [ViewVariables] public Type UnderlyingType => Info?.GetUnderlyingType() ?? Get?.GetUnderlyingType() ?? Set!.GetUnderlyingType();
+        [ViewVariables] public Type DeclaringType => Info?.DeclaringType ?? Get?.DeclaringType ?? Set!.DeclaringType!;
 
         public Indexer(PropertyInfo info)
         {
+            DebugTools.AssertNotNull(info);
+            DebugTools.AssertNotNull(info.DeclaringType);
             Info = info;
             Get = null;
             Set = null;
@@ -374,7 +408,8 @@ public sealed class ViewVariablesTypeCache
 
         public Indexer(MethodInfo? get, MethodInfo? set)
         {
-            DebugTools.Assert(get == null && set == null);
+            DebugTools.Assert(get != null || set != null);
+            DebugTools.Assert(get?.DeclaringType != null || set?.DeclaringType != null);
             Info = null;
             Get = get;
             Set = set;

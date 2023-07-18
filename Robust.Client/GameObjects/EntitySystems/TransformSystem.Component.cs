@@ -22,6 +22,13 @@ public sealed partial class TransformSystem
         base.SetLocalPositionNoLerp(xform, value);
     }
 
+    public override void SetLocalRotationNoLerp(TransformComponent xform, Angle angle)
+    {
+        xform.NextRotation = null;
+        xform.LerpParent = EntityUid.Invalid;
+        base.SetLocalRotationNoLerp(xform, angle);
+    }
+
     public override void SetLocalRotation(TransformComponent xform, Angle angle)
     {
         xform.PrevRotation = xform._localRotation;

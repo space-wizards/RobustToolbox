@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 138.1.0
+
+### New features
+
+* Add rotation methods to TransformSystem for no lerp.
+
+### Bugfixes
+
+* Fix AnimationCompleted ordering.
+
+
 ## 138.0.0
 
 ### Breaking changes

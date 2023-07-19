@@ -23,8 +23,13 @@ namespace Robust.Client.UserInterface.Controls
 
         public void SetMessage(FormattedMessage message)
         {
+            SetMessage(message, false);
+        }
+
+        public void SetMessage(FormattedMessage message, bool safeMode)
+        {
             _message = message;
-            _entry = new RichTextEntry(_message, this, _tagManager);
+            _entry = new RichTextEntry(_message, this, _tagManager, safeMode);
             InvalidateMeasure();
         }
 

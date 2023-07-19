@@ -14,12 +14,15 @@ namespace Robust.Client.UserInterface.RichText;
 public sealed class FontTag : IMarkupTag
 {
     public const string DefaultFont = "Default";
+    public const int DefaultSize = 12;
 
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     public string Name => "font";
+    public bool IsUnsafe => false;
 
+    /// <inheritdoc/>
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
         string fontId = node.Value.StringValue ?? DefaultFont;
@@ -28,6 +31,7 @@ public sealed class FontTag : IMarkupTag
         context.Font.Push(font);
     }
 
+    /// <inheritdoc/>
     public void PopDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
         context.Font.Pop();
@@ -44,7 +48,7 @@ public sealed class FontTag : IMarkupTag
         IPrototypeManager prototypeManager,
         string fontId)
     {
-        var size = 12;
+        var size = DefaultSize;
 
         if (contextFontStack.TryPeek(out var previousFont))
         {
@@ -69,6 +73,6 @@ public sealed class FontTag : IMarkupTag
             prototype = prototypeManager.Index<FontPrototype>(DefaultFont);
 
         var fontResource = cache.GetResource<FontResource>(prototype.Path);
-        return new VectorFont(fontResource, size);
+        return new VectorFont(fontId, fontResource, size);
     }
 }

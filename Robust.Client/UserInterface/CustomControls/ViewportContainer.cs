@@ -1,6 +1,7 @@
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -13,8 +14,9 @@ namespace Robust.Client.UserInterface.CustomControls
     [Virtual]
     public class ViewportContainer : Control, IViewportControl
     {
-        private readonly IClyde _displayManager;
-        private readonly IInputManager _inputManager;
+        [Dependency] private readonly IClyde _displayManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IInputManager _inputManager = default!;
 
         public IClydeViewport? Viewport { get; set; }
 
@@ -36,8 +38,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public ViewportContainer()
         {
-            _displayManager = IoCManager.Resolve<IClyde>();
-            _inputManager = IoCManager.Resolve<IInputManager>();
+            IoCManager.InjectDependencies(this);
             MouseFilter = MouseFilterMode.Stop;
             Resized();
         }
@@ -99,8 +100,7 @@ namespace Robust.Client.UserInterface.CustomControls
         // -- Handlers: In --
 
         // -- Utils / S2M-M2S Base --
-
-        public MapCoordinates LocalPixelToMap(Vector2 point)
+        public MapCoordinates LocalCoordsToMap(Vector2 point)
         {
             if (Viewport == null)
                 return default;
@@ -109,6 +109,19 @@ namespace Robust.Client.UserInterface.CustomControls
             point *= _viewportResolution;
 
             return Viewport.LocalToWorld(point);
+        }
+
+        public MapCoordinates LocalPixelToMap(Vector2 point)
+        {
+            if (Viewport == null)
+                return default;
+
+            // pre-scaler
+            point *= _viewportResolution;
+            var ev = new PixelToMapEvent(point, this, Viewport);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref ev);
+
+            return Viewport.LocalToWorld(ev.VisiblePosition);
         }
 
         public Vector2 WorldToLocalPixel(Vector2 point)
@@ -127,6 +140,12 @@ namespace Robust.Client.UserInterface.CustomControls
         // -- Utils / S2M-M2S Extended --
 
         public MapCoordinates ScreenToMap(Vector2 point)
+        {
+            return LocalCoordsToMap(point - GlobalPixelPosition);
+        }
+
+        /// <inheritdoc/>
+        public MapCoordinates PixelToMap(Vector2 point)
         {
             return LocalPixelToMap(point - GlobalPixelPosition);
         }

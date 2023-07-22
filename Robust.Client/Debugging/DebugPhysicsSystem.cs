@@ -371,7 +371,7 @@ namespace Robust.Client.Debugging
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.ShapeInfo) != 0x0)
             {
                 var hoverBodies = new List<PhysicsComponent>();
-                var bounds = Box2.UnitCentered.Translated(_eyeManager.ScreenToMap(mousePos.Position).Position);
+                var bounds = Box2.UnitCentered.Translated(_eyeManager.PixelToMap(mousePos.Position).Position);
 
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, bounds))
                 {
@@ -404,7 +404,7 @@ namespace Robust.Client.Debugging
 
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.Distance) != 0x0)
             {
-                var mapPos = _eyeManager.ScreenToMap(mousePos);
+                var mapPos = _eyeManager.PixelToMap(mousePos);
 
                 if (mapPos.MapId != args.MapId)
                     return;

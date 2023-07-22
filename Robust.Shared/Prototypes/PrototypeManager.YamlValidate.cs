@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using BindingFlags = System.Reflection.BindingFlags;
 
 namespace Robust.Shared.Prototypes;
 
 public partial class PrototypeManager
 {
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path)
+    public (Dictionary<string, HashSet<ErrorNode>> YamlErrors, List<string> staticIdErrors)
+        ValidateDirectory(ResPath path, bool validateStaticIds = true)
     {
         var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
@@ -78,7 +82,47 @@ public partial class PrototypeManager
             }
         }
 
-        return dict;
+        var staticIdErrors = new List<string>();
+        if (!validateStaticIds)
+            return (dict, staticIdErrors);
+
+        const BindingFlags flags =
+            BindingFlags.Static
+            | BindingFlags.DeclaredOnly
+            | BindingFlags.NonPublic
+            | BindingFlags.Public;
+
+        foreach (var t in _reflectionManager.FindAllTypes())
+        {
+            foreach (var field in t.GetFields(flags))
+            {
+                DebugTools.Assert(field.IsStatic);
+
+                var attrib = field.GetCustomAttribute(typeof(PrototypeIdAttribute<>), false);
+                if (attrib == null)
+                    continue;
+
+                var prototypeKind = attrib.GetType().GetGenericArguments().First();
+                if (field.GetValue(null) is not string id)
+                {
+                    staticIdErrors.Add($"Static prototype id failed validation. Field is not a string. Field: {field} in {t.FullName}");
+                    continue;
+                }
+
+                if (!prototypes.TryGetValue(prototypeKind, out var instances))
+                {
+                    staticIdErrors.Add($"Static prototype id failed validation. Unknown prototype kind. Field: {field} in {t.FullName}");
+                    continue;
+                }
+
+                if (!instances.ContainsKey(id))
+                {
+                    staticIdErrors.Add($"Static prototype id failed validation. Unknown prototype {id}. Field: {field} in {t.FullName}");
+                }
+            }
+        }
+
+        return (dict, staticIdErrors);
     }
 
     private sealed class PrototypeValidationData

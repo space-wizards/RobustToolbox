@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -203,7 +204,15 @@ public interface IPrototypeManager
     /// </summary>
     void LoadDirectory(ResPath path, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 
-    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path);
+    /// <summary>
+    /// Validate all prototypes defined in yaml files contained in the given directory.
+    /// </summary>
+    /// <param name="path">The directory containing the yaml files that need validating.</param>
+    /// <param name="validateStaticIds">If true, this will also check to make sure that any static fields with the
+    /// <see cref="PrototypeIdAttribute{T}"/> point to a valid prototype id defined somewhere in that folder. </param>
+    /// <returns></returns>
+    (Dictionary<string, HashSet<ErrorNode>> YamlErrors, List<string> staticIdErrors)
+        ValidateDirectory(ResPath path, bool validateStaticIds = true);
 
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 

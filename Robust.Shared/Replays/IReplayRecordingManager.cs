@@ -113,10 +113,9 @@ public interface IReplayRecordingManager
     void StopRecording();
 
     /// <summary>
-    /// Returns information about the currently ongoing replay recording, including the currently elapsed time and the
-    /// compressed replay size.
+    /// Returns information about the currently ongoing replay recording.
     /// </summary>
-    (float Minutes, int Ticks, float Size, float UncompressedSize) GetReplayStats();
+    ReplayRecordingStats GetReplayStats();
 
     /// <summary>
     /// Returns a task that will wait for all the current writing tasks to finish.
@@ -134,6 +133,15 @@ public interface IReplayRecordingManager
 /// <param name="Path">The path to the replay in <paramref name="Directory"/>.</param>
 /// <param name="State">The state object passed to <see cref="IReplayRecordingManager.TryStartRecording"/>.</param>
 public record ReplayRecordingFinished(IWritableDirProvider Directory, ResPath Path, object? State);
+
+/// <summary>
+/// Statistics for an active replay recording.
+/// </summary>
+/// <param name="Time">The simulation time the replay has been recording for.</param>
+/// <param name="Ticks">The amount of simulation ticks the replay has recorded.</param>
+/// <param name="Size">The total compressed size of the replay data blobs.</param>
+/// <param name="UncompressedSize">The total uncompressed size of the replay data blobs.</param>
+public record struct ReplayRecordingStats(TimeSpan Time, uint Ticks, long Size, long UncompressedSize);
 
 /// <summary>
 /// Engine-internal functions for <see cref="IReplayRecordingManager"/>.

@@ -36,6 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * `IReplayRecordingManager.RecordingFinished` now takes a `ReplayRecordingFinished` object as argument.
+* `IReplayRecordingManager.GetReplayStats` now returns a `ReplayRecordingStats` struct instead of a tuple. The units have also been normalized
 
 ### New features
 

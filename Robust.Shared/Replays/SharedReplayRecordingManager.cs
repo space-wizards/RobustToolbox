@@ -421,17 +421,17 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         return info;
     }
 
-    public (float Minutes, int Ticks, float Size, float UncompressedSize) GetReplayStats()
+    public ReplayRecordingStats GetReplayStats()
     {
         if (_recState == null)
             throw new InvalidOperationException("Not recording replay!");
 
-        var time = (Timing.CurTime - _recState.StartTime).TotalMinutes;
+        var time = Timing.CurTime - _recState.StartTime;
         var tick = Timing.CurTick.Value - _recState.StartTick.Value;
-        var size = _recState.CompressedSize / (1024f * 1024f);
-        var altSize = _recState.UncompressedSize / (1024f * 1024f);
+        var size = _recState.CompressedSize;
+        var altSize = _recState.UncompressedSize;
 
-        return ((float)time, (int)tick, size, altSize);
+        return new ReplayRecordingStats(time, tick, size, altSize);
     }
 
     /// <summary>
@@ -456,8 +456,8 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         public readonly TimeSpan? EndTime;
 
         public int Index;
-        public int CompressedSize;
-        public int UncompressedSize;
+        public long CompressedSize;
+        public long UncompressedSize;
 
         public RecordingState(
             ZipArchive zip,

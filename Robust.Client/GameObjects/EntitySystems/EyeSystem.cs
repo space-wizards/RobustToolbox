@@ -1,15 +1,42 @@
+using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.GameObjects;
 
 public sealed class EyeSystem : SharedEyeSystem
 {
+    [Dependency] private readonly IEyeManager _eyeManager = default!;
+
     public override void Initialize()
     {
         base.Initialize();
+        SubscribeLocalEvent<EyeComponent, ComponentInit>(OnInit);
         SubscribeLocalEvent<EyeComponent, ComponentRemove>(OnRemove);
         SubscribeLocalEvent<EyeComponent, ComponentHandleState>(OnHandleState);
+    }
+
+    private void OnInit(EntityUid uid, EyeComponent component, ComponentInit args)
+    {
+        component._eye = new Eye
+        {
+            Position = Transform(uid).MapPosition,
+            Zoom = component._setZoomOnInitialize,
+            DrawFov = component._setDrawFovOnInitialize
+        };
+
+        if ((_eyeManager.CurrentEye == component._eye) != component._setCurrentOnInitialize)
+        {
+            if (component._setCurrentOnInitialize)
+            {
+                _eyeManager.ClearCurrentEye();
+            }
+            else
+            {
+                _eyeManager.CurrentEye = component._eye;
+            }
+        }
     }
 
     private void OnRemove(EntityUid uid, EyeComponent component, ComponentRemove args)

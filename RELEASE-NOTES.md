@@ -47,11 +47,36 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Pressing `^C` twice on the server will now cause it to hard-exit immediately.
 
 ### Internal
 
 *None yet*
+
+
+## 140.0.0
+
+### Breaking changes
+
+* `IReplayRecordingManager.RecordingFinished` now takes a `ReplayRecordingFinished` object as argument.
+* `IReplayRecordingManager.GetReplayStats` now returns a `ReplayRecordingStats` struct instead of a tuple. The units have also been normalized
+
+### New features
+
+* `IReplayRecordingManager` can now track a "state" object for an active recording.
+* If the path given to `IReplayRecordingManager.TryStartRecording` is rooted, the base replay directory is ignored.
+
+### Other
+
+* `IReplayRecordingManager` no longer considers itself recording inside `RecordingFinished`.
+* `IReplayRecordingManager.Initialize()` was moved to an engine-internal interface.
+
+
+## 139.0.0
+
+### Breaking changes
+
+* Remove Component.Startup(), fully replacing it with the Eventbus.
 
 
 ## 138.1.0

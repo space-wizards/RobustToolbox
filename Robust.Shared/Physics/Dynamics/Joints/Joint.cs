@@ -179,7 +179,7 @@ public abstract class Joint : IEquatable<Joint>
 
     [DataField("breakpoint")]
     private float _breakpoint = float.MaxValue;
-    private double _breakpointSquared = Double.MaxValue;
+    private double _breakpointSquared = double.MaxValue;
 
     // TODO: Later nerd
     // serializer.DataField(this, x => x.BodyA, "bodyA", EntityUid.Invalid);
@@ -191,10 +191,10 @@ public abstract class Joint : IEquatable<Joint>
         IoCManager.Resolve(ref entMan);
 
         if (entMan.TryGetComponent(BodyAUid, out PhysicsComponent? physics))
-            entMan.Dirty(physics);
+            entMan.Dirty(BodyAUid, physics);
 
         if (entMan.TryGetComponent(BodyBUid, out physics))
-            entMan.Dirty(physics);
+            entMan.Dirty(BodyBUid, physics);
     }
 
     protected Joint() {}

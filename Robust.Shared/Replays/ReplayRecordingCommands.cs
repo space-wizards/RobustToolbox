@@ -99,11 +99,15 @@ internal sealed class ReplayStatsCommand : LocalizedCommands
     {
         if (_replay.IsRecording)
         {
-            var (time, tick, size, _) = _replay.GetReplayStats();
+            var stats = _replay.GetReplayStats();
+            var sizeMb = stats.Size / (1024f * 1024f);
+            var minutes = stats.Time.TotalMinutes;
+
             shell.WriteLine(Loc.GetString("cmd-replay-recording-stats-result",
-                ("time", time.ToString("F1")),
-                ("ticks", tick), ("size", size.ToString("F1")),
-                ("rate", (size/time).ToString("F2"))));
+                ("time", minutes.ToString("F1")),
+                ("ticks", stats.Ticks),
+                ("size", sizeMb.ToString("F1")),
+                ("rate", (sizeMb / minutes).ToString("F2"))));
         }
         else
             shell.WriteLine(Loc.GetString("cmd-replay-recording-stop-not-recording"));

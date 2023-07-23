@@ -69,6 +69,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         private EntityQuery<BroadphaseComponent> _broadQuery;

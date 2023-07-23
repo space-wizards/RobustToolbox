@@ -19,6 +19,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
         private EntityQuery<MapGridComponent> _gridQuery;
@@ -254,7 +255,7 @@ namespace Robust.Shared.GameObjects
                 return GetWorldPosition(xform).Floored();
 
             // We're on a grid, need to convert the coordinates to grid tiles.
-            return _mapManager.GetGrid(xform.GridUid.Value).CoordinatesToTile(xform.Coordinates);
+            return _map.CoordinatesToTile(xform.GridUid.Value, Comp<MapGridComponent>(xform.GridUid.Value), xform.Coordinates);
         }
     }
 

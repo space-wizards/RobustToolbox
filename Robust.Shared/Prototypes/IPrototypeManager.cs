@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -208,11 +209,12 @@ public interface IPrototypeManager
     /// Validate all prototypes defined in yaml files contained in the given directory.
     /// </summary>
     /// <param name="path">The directory containing the yaml files that need validating.</param>
-    /// <param name="validateStaticIds">If true, this will also check to make sure that any static fields with the
-    /// <see cref="PrototypeIdAttribute{T}"/> point to a valid prototype id defined somewhere in that folder. </param>
-    /// <returns></returns>
+    /// <param name="validateAssemblyIds">If true, this will use reflection to validate that all hard coded prototype
+    /// ids exist somewhere in the given folder. This will validate any field that has either a
+    /// <see cref="PrototypeIdAttribute{T}"/> attribute, or a <see cref="DataFieldAttribute"/> with a
+    /// <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.</param>
     (Dictionary<string, HashSet<ErrorNode>> YamlErrors, List<string> staticIdErrors)
-        ValidateDirectory(ResPath path, bool validateStaticIds = true);
+        ValidateDirectory(ResPath path, bool validateAssemblyIds = true);
 
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 

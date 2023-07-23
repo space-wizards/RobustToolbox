@@ -90,8 +90,7 @@ public partial class PrototypeManager
             return (dict, staticIdErrors);
 
         const BindingFlags flags =
-            BindingFlags.DeclaredOnly
-            | BindingFlags.Static
+            BindingFlags.Static
             | BindingFlags.Instance
             | BindingFlags.NonPublic
             | BindingFlags.Public;
@@ -112,7 +111,7 @@ public partial class PrototypeManager
                 }
                 else
                 {
-                    // Maybe this is a data-field with a prototype id serializer
+                    // Check if this is a data-field with a prototype id serializer
                     if (!field.TryGetCustomAttribute(out dataDef)
                         || dataDef.CustomTypeSerializer == null
                         || !dataDef.CustomTypeSerializer.IsGenericType
@@ -126,7 +125,11 @@ public partial class PrototypeManager
 
                 if (!field.IsStatic && obj == null)
                 {
-                    // This is an  instance field. So we will create an instance and try to get the default value.
+                    // This is an instanced field. So we will attempt to get an instance and get the default values.
+
+                    if (t.IsAbstract)
+                        continue; // TODO somehow validate private instanced fields on abstract classes.
+
                     try
                     {
                         obj = Activator.CreateInstance(t);

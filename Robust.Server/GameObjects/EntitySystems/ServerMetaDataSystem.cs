@@ -70,7 +70,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         foreach (var (_, comp) in EntityManager.GetNetComponents(uid))
         {
             if (comp.SessionSpecific || comp.SendOnlyToOwner)
-                Dirty(comp);
+                Dirty(uid, comp);
         }
     }
 

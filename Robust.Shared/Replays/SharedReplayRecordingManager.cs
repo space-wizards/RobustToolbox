@@ -21,13 +21,14 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Network;
 using YamlDotNet.RepresentationModel;
 using static Robust.Shared.Replays.ReplayConstants;
 
 namespace Robust.Shared.Replays;
 
-internal abstract partial class SharedReplayRecordingManager : IReplayRecordingManager
+internal abstract partial class SharedReplayRecordingManager : IReplayRecordingManagerInternal
 {
     // date format for default replay names. Like the sortable template, but without colons.
     public const string DefaultReplayNameFormat = "yyyy-MM-dd_HH-mm-ss";
@@ -38,10 +39,11 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     [Dependency] private readonly IRobustSerializer _serializer = default!;
     [Dependency] private readonly INetManager _netMan = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
+    [Dependency] private readonly ITaskManager _taskManager = default!;
 
     public event Action<MappingDataNode, List<object>>? RecordingStarted;
     public event Action<MappingDataNode>? RecordingStopped;
-    public event Action<IWritableDirProvider, ResPath>? RecordingFinished;
+    public event Action<ReplayRecordingFinished>? RecordingFinished;
 
     private ISawmill _sawmill = default!;
     private List<object> _queuedMessages = new();
@@ -53,9 +55,9 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     private bool _enabled;
 
     public bool IsRecording => _recState != null;
+    public object? ActiveRecordingState => _recState?.State;
     private RecordingState? _recState;
 
-    /// <inheritdoc/>
     public virtual void Initialize()
     {
         _sawmill = _logManager.GetSawmill("replay");
@@ -64,6 +66,18 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         NetConf.OnValueChanged(CVars.ReplayMaxUncompressedSize, (v) => _maxUncompressedSize = v * 1024, true);
         NetConf.OnValueChanged(CVars.ReplayTickBatchSize, (v) => _tickBatchSize = v * 1024, true);
         NetConf.OnValueChanged(CVars.NetPVSCompressLevel, OnCompressionChanged);
+    }
+
+    public void Shutdown()
+    {
+        if (IsRecording)
+        {
+            StopRecording();
+
+            DebugTools.Assert(!IsRecording);
+        }
+
+        _taskManager.BlockWaitOnTask(WaitWriteTasks());
     }
 
     public virtual bool CanStartRecording()
@@ -137,7 +151,8 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         IWritableDirProvider directory,
         string? name = null,
         bool overwrite = false,
-        TimeSpan? duration = null)
+        TimeSpan? duration = null,
+        object? state = null)
     {
         if (!CanStartRecording())
             return false;
@@ -152,7 +167,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             filePath = filePath.WithName(filePath.Filename + ".zip");
 
         var basePath = new ResPath(NetConf.GetCVar(CVars.ReplayDirectory)).ToRootedPath();
-        filePath = basePath / filePath.ToRelativePath();
+        filePath = basePath / filePath;
 
         // Make sure to create parent directory.
         directory.CreateDir(filePath.Directory);
@@ -203,7 +218,8 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             commandQueue.Writer,
             writeTask,
             directory,
-            filePath
+            filePath,
+            state
         );
 
         try
@@ -348,8 +364,10 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         var document = new YamlDocument(yamlMetadata.ToYaml());
         WriteYaml(recState, ReplayZipFolder / FileMetaFinal, document);
         UpdateWriteTasks();
-        RecordingFinished?.Invoke(recState.DestDir, recState.DestPath);
         Reset();
+
+        var finishedData = new ReplayRecordingFinished(recState.DestDir, recState.DestPath, recState.State);
+        RecordingFinished?.Invoke(finishedData);
     }
 
     private void WriteContentBundleInfo(RecordingState recState)
@@ -428,6 +446,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         public readonly Task WriteTask;
         public readonly IWritableDirProvider DestDir;
         public readonly ResPath DestPath;
+        public readonly object? State;
 
         // Tick and time when the recording was started.
         public readonly GameTick StartTick;
@@ -450,11 +469,13 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             ChannelWriter<Action> writeCommandChannel,
             Task writeTask,
             IWritableDirProvider destDir,
-            ResPath destPath)
+            ResPath destPath,
+            object? state)
         {
             WriteTask = writeTask;
             DestDir = destDir;
             DestPath = destPath;
+            State = state;
             Zip = zip;
             Buffer = buffer;
             CompressionContext = compressionContext;

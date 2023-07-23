@@ -12,11 +12,6 @@ namespace Robust.Shared.Replays;
 public interface IReplayRecordingManager
 {
     /// <summary>
-    /// Initializes the replay manager.
-    /// </summary>
-    void Initialize();
-
-    /// <summary>
     /// Whether or not a replay recording can currently be started.
     /// </summary>
     bool CanStartRecording();
@@ -52,6 +47,14 @@ public interface IReplayRecordingManager
     bool IsRecording { get; }
 
     /// <summary>
+    /// Gets the <c>state</c> object passed into <see cref="TryStartRecording"/> for the current recording.
+    /// </summary>
+    /// <remarks>
+    /// Returns <see langword="null"/> if there is no active replay recording.
+    /// </remarks>
+    public object? ActiveRecordingState { get; }
+
+    /// <summary>
     /// Processes pending write tasks and saves the replay data for the current tick. This should be called even if a
     /// replay is not currently being recorded.
     /// </summary>
@@ -62,20 +65,20 @@ public interface IReplayRecordingManager
     /// to the recording's metadata file, as well as to provide serializable messages that get replayed when the replay
     /// is initially loaded. E.g., this should contain networked events that would get sent to a newly connected client.
     /// </summary>
-    event Action<MappingDataNode, List<object>>? RecordingStarted;
+    event Action<MappingDataNode, List<object>> RecordingStarted;
 
     /// <summary>
     /// This gets invoked whenever a replay recording is stopping. Subscribers can use this to add extra yaml data to the
     /// recording's metadata file.
     /// </summary>
-    event Action<MappingDataNode>? RecordingStopped;
+    event Action<MappingDataNode> RecordingStopped;
 
     /// <summary>
     /// This gets invoked after a replay recording has finished and provides information about where the replay data
     /// was saved. Note that this only means that all write tasks have started, however some of the file tasks may not
     /// have finished yet. See <see cref="WaitWriteTasks"/>.
     /// </summary>
-    event Action<IWritableDirProvider, ResPath>? RecordingFinished;
+    event Action<ReplayRecordingFinished> RecordingFinished;
 
     /// <summary>
     /// Tries to starts a replay recording.
@@ -93,12 +96,16 @@ public interface IReplayRecordingManager
     /// <param name="duration">
     /// Optional time limit for the recording.
     /// </param>
+    /// <param name="state">
+    /// An arbitrary object that is available in <see cref="ActiveRecordingState"/> and <see cref="RecordingFinished"/>.
+    /// </param>
     /// <returns>Returns true if the recording was successfully started.</returns>
     bool TryStartRecording(
         IWritableDirProvider directory,
         string? name = null,
         bool overwrite = false,
-        TimeSpan? duration = null);
+        TimeSpan? duration = null,
+        object? state = null);
 
     /// <summary>
     /// Stops an ongoing replay recording.
@@ -118,4 +125,28 @@ public interface IReplayRecordingManager
     /// Thrown if we are currently recording (<see cref="IsRecording"/> true).
     /// </exception>
     Task WaitWriteTasks();
+}
+
+/// <summary>
+/// Event data for <see cref="IReplayRecordingManager.RecordingFinished"/>.
+/// </summary>
+/// <param name="Directory">The writable dir provider in which the replay is being recorded.</param>
+/// <param name="Path">The path to the replay in <paramref name="Directory"/>.</param>
+/// <param name="State">The state object passed to <see cref="IReplayRecordingManager.TryStartRecording"/>.</param>
+public record ReplayRecordingFinished(IWritableDirProvider Directory, ResPath Path, object? State);
+
+/// <summary>
+/// Engine-internal functions for <see cref="IReplayRecordingManager"/>.
+/// </summary>
+internal interface IReplayRecordingManagerInternal : IReplayRecordingManager
+{
+    /// <summary>
+    /// Initializes the replay manager.
+    /// </summary>
+    void Initialize();
+
+    /// <summary>
+    /// Shut down any active replay recording, at engine shutdown.
+    /// </summary>
+    void Shutdown();
 }

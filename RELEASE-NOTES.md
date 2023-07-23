@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Pressing `^C` twice on the server will now cause it to hard-exit immediately.
 
 ### Internal
 

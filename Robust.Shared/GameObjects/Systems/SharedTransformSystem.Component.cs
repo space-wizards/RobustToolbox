@@ -474,7 +474,7 @@ public abstract partial class SharedTransformSystem
             Unanchor(uid, xform);
 
         // Set new values
-        Dirty(xform);
+        Dirty(uid, xform);
         xform.MatricesDirty = true;
         xform._localPosition = value.Position;
 

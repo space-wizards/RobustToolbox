@@ -79,7 +79,7 @@ public abstract partial class SharedJointSystem
             if (relayTarget.Relayed.Remove(uid))
             {
                 // TODO: Comp cleanup.
-                Dirty(relayTarget);
+                Dirty(component.Relay.Value, relayTarget);
             }
         }
 
@@ -91,10 +91,10 @@ public abstract partial class SharedJointSystem
             if (relayTarget.Relayed.Add(uid))
             {
                 _physics.WakeBody(relay.Value);
-                Dirty(relayTarget);
+                Dirty(relay.Value, relayTarget);
             }
         }
 
-        Dirty(component);
+        Dirty(uid, component);
     }
 }

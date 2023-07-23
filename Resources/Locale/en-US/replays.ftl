@@ -22,7 +22,7 @@ cmd-replay-skip-hint = Ticks or timespan (HH:MM:SS).
 
 cmd-replay-set-time-desc = Jump forwards or backwards to some specific time.
 cmd-replay-set-time-help = replay_set <tick or time>
-cmd-replay-set-time-hint = Tick or timespan (HH:MM:SS), starting from 
+cmd-replay-set-time-hint = Tick or timespan (HH:MM:SS), starting from
 
 cmd-replay-error-time = "{$time}" is not an integer or timespan.
 cmd-replay-error-args = Wrong number of arguments.
@@ -33,7 +33,7 @@ cmd-replay-error-run-level = You cannot load a replay while connected to a serve
 # Recording commands
 
 cmd-replay-recording-start-desc = Starts a replay recording, optionally with some time limit.
-cmd-replay-recording-start-help = Usage: replay_recording_start [name] [overwrite] [time limit] 
+cmd-replay-recording-start-help = Usage: replay_recording_start [name] [overwrite] [time limit]
 cmd-replay-recording-start-success = Started recording a replay.
 cmd-replay-recording-start-already-recording = Already recording a replay.
 cmd-replay-recording-start-error = An error occurred while trying to start the recording.
@@ -48,7 +48,7 @@ cmd-replay-recording-stop-not-recording = Not currently recording a replay.
 
 cmd-replay-recording-stats-desc = Displays information about the current replay recording.
 cmd-replay-recording-stats-help = Usage: replay_recording_stats
-cmd-replay-recording-stats-result = Duration: {$time} min, Ticks: {$ticks}, Size: {$size} mb, rate: {$rate} mb/min.
+cmd-replay-recording-stats-result = Duration: {$time} min, Ticks: {$ticks}, Size: {$size} MB, rate: {$rate} MB/min.
 
 
 # Time Control UI

@@ -49,8 +49,6 @@ namespace Robust.Shared.GameObjects
         private UniqueIndexHkm<EntityUid, Component> _entCompIndex =
             new(ComponentCollectionCapacity);
 
-        private EntityQuery<MetaDataComponent> _metaQuery;
-
         /// <inheritdoc />
         public event Action<AddedComponentEventArgs>? ComponentAdded;
 
@@ -68,7 +66,6 @@ namespace Robust.Shared.GameObjects
             FillComponentDict();
             _componentFactory.ComponentAdded += OnComponentAdded;
             _componentFactory.ComponentReferenceAdded += OnComponentReferenceAdded;
-            _metaQuery = GetEntityQuery<MetaDataComponent>();
         }
 
         /// <summary>

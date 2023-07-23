@@ -23,7 +23,7 @@ namespace Robust.Client.Physics
             {
                 if (_enableDebug == value) return;
 
-                Sawmill.Info($"Set grid fixture debug to {value}");
+                Log.Info($"Set grid fixture debug to {value}");
                 _enableDebug = value;
 
                 if (_enableDebug)
@@ -59,7 +59,7 @@ namespace Robust.Client.Physics
 
         private void OnDebugMessage(ChunkSplitDebugMessage ev)
         {
-            Sawmill.Info($"Received grid fixture debug data");
+            Log.Info($"Received grid fixture debug data");
             if (!_enableDebug) return;
 
             _nodes[ev.Grid] = ev.Nodes;

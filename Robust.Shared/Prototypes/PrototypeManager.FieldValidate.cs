@@ -138,7 +138,7 @@ public partial class PrototypeManager
         canBeEmpty = false;
 
         // Check for a [PrototypeId] attribute.
-        var attrib = field.GetCustomAttribute(typeof(PrototypeIdAttribute<>), false);
+        var attrib = field.GetCustomAttribute(typeof(ValidatePrototypeIdAttribute<>), false);
         if (attrib != null)
         {
             proto = attrib.GetType().GetGenericArguments().First();

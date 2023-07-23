@@ -225,7 +225,7 @@ public interface IPrototypeManager
     /// This method uses reflection to validate that prototype id fields correspond to valid prototypes.
     /// </summary>
     /// <remarks>
-    /// This will validate any field that has either a <see cref="PrototypeIdAttribute{T}"/> attribute, or a
+    /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
     /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
     /// </remarks>
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection

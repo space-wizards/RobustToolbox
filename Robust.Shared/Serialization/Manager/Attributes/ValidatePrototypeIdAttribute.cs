@@ -8,6 +8,6 @@ namespace Robust.Shared.Serialization.Manager.Attributes;
 /// If the field needs to be have a default value.
 /// </summary>
 [AttributeUsage(AttributeTargets.Field)]
-public sealed class PrototypeIdAttribute<T> : Attribute where T : IPrototype
+public sealed class ValidatePrototypeIdAttribute<T> : Attribute where T : IPrototype
 {
 }

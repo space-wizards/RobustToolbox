@@ -35,11 +35,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `IReplayRecordingManager.RecordingFinished` now takes a `ReplayRecordingFinished` object as argument.
+* `IReplayRecordingManager.GetReplayStats` now returns a `ReplayRecordingStats` struct instead of a tuple. The units have also been normalized
 
 ### New features
 
-*None yet*
+* `IReplayRecordingManager` can now track a "state" object for an active recording.
+* If the path given to `IReplayRecordingManager.TryStartRecording` is rooted, the base replay directory is ignored.
 
 ### Bugfixes
 
@@ -47,7 +49,8 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* `IReplayRecordingManager` no longer considers itself recording inside `RecordingFinished`.
+* `IReplayRecordingManager.Initialize()` was moved to an engine-internal interface.
 
 ### Internal
 

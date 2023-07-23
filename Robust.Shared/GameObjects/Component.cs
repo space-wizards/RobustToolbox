@@ -95,14 +95,7 @@ namespace Robust.Shared.GameObjects
 
             LifeStage = ComponentLifeStage.Starting;
             entManager.EventBus.RaiseComponentEvent(this, CompStartupInstance);
-            Startup();
-
-#if DEBUG
-            if (LifeStage != ComponentLifeStage.Running)
-            {
-                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Startup)} in derived method.");
-            }
-#endif
+            LifeStage = ComponentLifeStage.Running;
         }
 
         /// <summary>
@@ -177,17 +170,6 @@ namespace Robust.Shared.GameObjects
         protected virtual void Initialize()
         {
             LifeStage = ComponentLifeStage.Initialized;
-        }
-
-        /// <summary>
-        ///     Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
-        /// </summary>
-        /// <remarks>
-        /// Components are allowed to remove themselves in their own Startup function.
-        /// </remarks>
-        protected virtual void Startup()
-        {
-            LifeStage = ComponentLifeStage.Running;
         }
 
         /// <summary>

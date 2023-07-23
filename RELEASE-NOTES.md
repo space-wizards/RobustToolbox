@@ -54,6 +54,58 @@ END TEMPLATE-->
 *None yet*
 
 
+## 139.0.0
+
+### Breaking changes
+
+* Remove Component.Startup(), fully replacing it with the Eventbus.
+
+
+## 138.1.0
+
+### New features
+
+* Add rotation methods to TransformSystem for no lerp.
+
+### Bugfixes
+
+* Fix AnimationCompleted ordering.
+
+
+## 138.0.0
+
+### Breaking changes
+
+* Obsoleted unused `IMidiRenderer.VolumeBoost` property. Use `IMidiRenderer.VelocityOverride` instead.
+* `IMidiRenderer.TrackedCoordinates` is now a `MapCoordinates`.
+
+### New features
+
+* Added `Master` property to `IMidiRenderer`, which allows it to copy all MIDI events from another renderer.
+* Added `FilteredChannels` property to `IMidiRenderer`, which allows it to filter out notes from certain channels.
+* Added `SystemReset` helper property to `IMidiRenderer`, which allows you to easily send it a SystemReset MIDI message.
+
+### Bugfixes
+
+* Fixed some cases were `MidiRenderer` would not respect the `MidiBank` and `MidiProgram.
+* Fixed user soundfonts not loading.
+* Fixed `ItemList` item selection unselecting everything when in `Multiple` mode.
+
+
+## 137.1.0
+
+### New features
+
+* Added BQL `paused` selector.
+* `ModUpdateLevel.PostInput` allows running content code after network and async task processing.
+
+### Other
+
+* BQL `with` now includes paused entities.
+* The game loop now times more accurately and avoids sleeping more than necessary.
+* Sandboxing (and thus, client startup) should be much faster when ran from the launcher.
+
+
 ## 137.0.0
 
 ### Breaking changes

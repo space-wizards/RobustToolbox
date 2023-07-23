@@ -209,12 +209,28 @@ public interface IPrototypeManager
     /// Validate all prototypes defined in yaml files contained in the given directory.
     /// </summary>
     /// <param name="path">The directory containing the yaml files that need validating.</param>
-    /// <param name="validateAssemblyIds">If true, this will use reflection to validate that all hard coded prototype
-    /// ids exist somewhere in the given folder. This will validate any field that has either a
-    /// <see cref="PrototypeIdAttribute{T}"/> attribute, or a <see cref="DataFieldAttribute"/> with a
-    /// <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.</param>
-    (Dictionary<string, HashSet<ErrorNode>> YamlErrors, List<string> staticIdErrors)
-        ValidateDirectory(ResPath path, bool validateAssemblyIds = true);
+    /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>
+    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path);
+
+    /// <summary>
+    /// Validate all prototypes defined in yaml files contained in the given directory.
+    /// </summary>
+    /// <param name="path">The directory containing the yaml files that need validating.</param>
+    /// <param name="prototypes">The prototypes ids that were present in the directory.</param>
+    /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>
+    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
+        out Dictionary<Type, HashSet<string>> prototypes);
+
+    /// <summary>
+    /// This method uses reflection to validate that prototype id fields correspond to valid prototypes.
+    /// </summary>
+    /// <remarks>
+    /// This will validate any field that has either a <see cref="PrototypeIdAttribute{T}"/> attribute, or a
+    /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
+    /// </remarks>
+    /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
+    /// will be considered invalid.</param>
+    List<string> ValidateFields(Dictionary<Type, HashSet<string>> prototypes);
 
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 

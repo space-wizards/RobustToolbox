@@ -1,25 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Threading;
-using Robust.Shared.Reflection;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
-using BindingFlags = System.Reflection.BindingFlags;
 
 namespace Robust.Shared.Prototypes;
 
 public partial class PrototypeManager
 {
-    public (Dictionary<string, HashSet<ErrorNode>> YamlErrors, List<string> staticIdErrors)
-        ValidateDirectory(ResPath path, bool validateAssemblyIds = true)
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path) => ValidateDirectory(path, out _);
+
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
+        out Dictionary<Type, HashSet<string>> protos)
     {
         var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
@@ -85,99 +81,13 @@ public partial class PrototypeManager
             }
         }
 
-        var staticIdErrors = new List<string>();
-        if (!validateAssemblyIds)
-            return (dict, staticIdErrors);
-
-        const BindingFlags flags =
-            BindingFlags.Static
-            | BindingFlags.Instance
-            | BindingFlags.NonPublic
-            | BindingFlags.Public;
-
-        foreach (var t in _reflectionManager.FindAllTypes())
+        protos = new(prototypes.Count);
+        foreach (var (type, typeDict) in prototypes)
         {
-            object? obj = null;
-
-            foreach (var field in t.GetFields(flags))
-            {
-                Type prototypeKind;
-                DataFieldAttribute? dataDef = null;
-
-                var attrib = field.GetCustomAttribute(typeof(PrototypeIdAttribute<>), false);
-                if (attrib != null)
-                {
-                    prototypeKind = attrib.GetType().GetGenericArguments().First();
-                }
-                else
-                {
-                    // Check if this is a data-field with a prototype id serializer
-                    if (!field.TryGetCustomAttribute(out dataDef)
-                        || dataDef.CustomTypeSerializer == null
-                        || !dataDef.CustomTypeSerializer.IsGenericType
-                        || dataDef.CustomTypeSerializer.GetGenericTypeDefinition() != typeof(PrototypeIdSerializer<>))
-                    {
-                        continue;
-                    }
-
-                    prototypeKind = dataDef.CustomTypeSerializer.GetGenericArguments().First();
-                }
-
-                if (!field.IsStatic && obj == null)
-                {
-                    // This is an instanced field. So we will attempt to get an instance and get the default values.
-
-                    if (t.IsAbstract)
-                        continue; // TODO somehow validate private instanced fields on abstract classes.
-
-                    try
-                    {
-                        obj = Activator.CreateInstance(t);
-                    }
-                    catch
-                    {
-                        staticIdErrors.Add($"Prototype id field failed validation. could not create instance to validate default value. Field: {field} in {t.FullName}");
-                        continue;
-                    }
-                }
-
-                if (field.FieldType != typeof(string))
-                {
-                    staticIdErrors.Add($"Prototype id field failed validation. Field is not a string. Field: {field} in {t.FullName}");
-                    continue;
-                }
-
-                var value = field.GetValue(obj);
-                if (value is not string id || string.IsNullOrWhiteSpace(id))
-                {
-                    if (field.IsStatic)
-                    {
-                        // Const fields should always have a valid value.
-                        staticIdErrors.Add($"Prototype id field failed validation. Static fields must have a value. Field: {field} in {t.FullName}");
-                    }
-                    else if (value != null && !dataDef!.Required)
-                    {
-                        // This is an optional data-field, it should either be nullable or have a sane default value.
-                        staticIdErrors.Add($"Prototype id field failed validation. Optional data-fields must be nullable or have a default value. Field: {field} in {t.FullName}");
-                    }
-
-                    continue;
-                }
-
-                if (!prototypes.TryGetValue(prototypeKind, out var instances))
-                {
-                    staticIdErrors.Add($"Prototype id field failed validation. Unknown prototype kind. Field: {field} in {t.FullName}");
-                    continue;
-                }
-
-                if (!instances.ContainsKey(id))
-                {
-                    staticIdErrors.Add($"Prototype id field failed validation. Unknown prototype: {id}. Field: {field} in {t.FullName}");
-                }
-            }
+            protos[type] = typeDict.Keys.ToHashSet();
         }
 
-        return (dict, staticIdErrors);
+        return dict;
     }
 
     private sealed class PrototypeValidationData

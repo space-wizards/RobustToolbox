@@ -15,6 +15,9 @@ public sealed class DefaultStylesheet
     {
         var notoSansFont = res.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf");
         var notoSansFont12 = new VectorFont(notoSansFont, 12);
+        var notoSansMonoFont = res.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSansMono-Regular.ttf");
+        var notoSansMono12 = new VectorFont(notoSansMonoFont, 12);
+
 
         var theme = userInterfaceManager.CurrentTheme;
 
@@ -38,6 +41,13 @@ public sealed class DefaultStylesheet
 
         Stylesheet = new Stylesheet(new StyleRule[]
         {
+            /*
+             * Debug console and other monospace things.
+             */
+
+            Element().Class("monospace")
+                .Prop("font", notoSansMono12),
+
             /*
              * OS Window defaults
              */

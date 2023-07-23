@@ -45,19 +45,31 @@ namespace Robust.Server.Console
         /// <inheritdoc />
         public override void WriteLine(ICommonSession? session, string text)
         {
+            var msg = new FormattedMessage();
+            msg.AddText(text);
             if (session is IPlayerSession playerSession)
-                OutputText(playerSession, text, false);
+                OutputText(playerSession, msg, false);
             else
-                OutputText(null, text, false);
+                OutputText(null, msg, false);
+        }
+
+        public override void WriteLine(ICommonSession? session, FormattedMessage msg)
+        {
+            if (session is IPlayerSession playerSession)
+                OutputText(playerSession, msg, false);
+            else
+                OutputText(null, msg, false);
         }
 
         /// <inheritdoc />
         public override void WriteError(ICommonSession? session, string text)
         {
+            var msg = new FormattedMessage();
+            msg.AddText(text);
             if (session is IPlayerSession playerSession)
-                OutputText(playerSession, text, true);
+                OutputText(playerSession, msg, true);
             else
-                OutputText(null, text, true);
+                OutputText(null, msg, true);
         }
 
         public bool IsCmdServer(IConsoleCommand cmd) => true;
@@ -162,7 +174,7 @@ namespace Robust.Server.Console
             ExecuteCommand(session, text);
         }
 
-        private void OutputText(IPlayerSession? session, string text, bool error)
+        private void OutputText(IPlayerSession? session, FormattedMessage text, bool error)
         {
             if (session != null)
             {
@@ -252,6 +264,12 @@ namespace Robust.Server.Console
             {
                 _owner.WriteLine(text);
                 _sudoer.WriteLine(text);
+            }
+
+            public void WriteLine(FormattedMessage message)
+            {
+                _owner.WriteLine(message);
+                _sudoer.WriteLine(message);
             }
 
             public void WriteError(string text)

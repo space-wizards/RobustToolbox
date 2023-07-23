@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Robust.Shared.Players;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console
 {
@@ -248,6 +249,8 @@ namespace Robust.Shared.Console
         /// </param>
         /// <param name="text">Text message to send.</param>
         void WriteLine(ICommonSession? session, string text);
+
+        void WriteLine(ICommonSession? session, FormattedMessage msg);
 
         /// <summary>
         /// Sends a foreground colored text string to the remote session.

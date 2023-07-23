@@ -21,13 +21,13 @@ namespace Robust.Client.Console
 {
     public sealed class AddStringArgs : EventArgs
     {
-        public string Text { get; }
+        public FormattedMessage Text { get; }
 
         public bool Local { get; }
 
         public bool Error { get; }
 
-        public AddStringArgs(string text, bool local, bool error)
+        public AddStringArgs(FormattedMessage text, bool local, bool error)
         {
             Text = text;
             Local = local;
@@ -132,10 +132,17 @@ namespace Robust.Client.Console
             AddFormatted?.Invoke(this, new AddFormattedMessageArgs(message));
         }
 
+        public override void WriteLine(ICommonSession? session, FormattedMessage msg)
+        {
+            AddFormattedLine(msg);
+        }
+
         /// <inheritdoc />
         public override void WriteError(ICommonSession? session, string text)
         {
-            OutputText(text, true, true);
+            var msg = new FormattedMessage();
+            msg.AddText(text);
+            OutputText(msg, true, true);
         }
 
         public bool IsCmdServer(IConsoleCommand cmd)
@@ -205,7 +212,9 @@ namespace Robust.Client.Console
         /// <inheritdoc />
         public override void WriteLine(ICommonSession? session, string text)
         {
-            OutputText(text, true, false);
+            var msg = new FormattedMessage();
+            msg.AddText(text);
+            OutputText(msg, true, false);
         }
 
         /// <inheritdoc />
@@ -214,12 +223,12 @@ namespace Robust.Client.Console
             // We don't have anything to dispose.
         }
 
-        private void OutputText(string text, bool local, bool error)
+        private void OutputText(FormattedMessage text, bool local, bool error)
         {
             AddString?.Invoke(this, new AddStringArgs(text, local, error));
 
             var level = error ? LogLevel.Warning : LogLevel.Info;
-            _conLogger.Log(level, text);
+            _conLogger.Log(level, text.ToString());
         }
 
         private void OnNetworkConnected(object? sender, NetChannelArgs netChannelArgs)
@@ -229,7 +238,7 @@ namespace Robust.Client.Console
 
         private void HandleConCmdAck(MsgConCmdAck msg)
         {
-            OutputText("< " + msg.Text, false, msg.Error);
+            OutputText(msg.Text, false, msg.Error);
         }
 
         private void HandleConCmdReg(MsgConCmdReg msg)

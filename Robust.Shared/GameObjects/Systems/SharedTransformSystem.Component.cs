@@ -1320,40 +1320,46 @@ public abstract partial class SharedTransformSystem
 
     public void DetachParentToNull(EntityUid uid, TransformComponent xform, TransformComponent? oldXform)
     {
-        if (xform._parent.IsValid())
+        DebugTools.Assert(uid == xform.Owner);
+
+        var parent = xform._parent;
+        if (!parent.IsValid())
         {
-            DebugTools.Assert(uid == xform.Owner);
-            var oldParent = xform._parent;
-            if (!oldParent.IsValid())
-            {
-                DebugTools.Assert(!xform.Anchored);
-                DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0);
-                return;
-            }
+            DebugTools.Assert(!xform.Anchored,
+                $"Entity is anchored but has no parent? Entity: {ToPrettyString(uid)}");
 
-            // Before making any changes to physics or transforms, remove from the current broadphase
-            _lookup.RemoveFromEntityTree(uid, xform);
+            DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0,
+                $"Entity is in a container but has no parent? Entity: {ToPrettyString(uid)}");
 
-            // Stop any active lerps
-            xform.NextPosition = null;
-            xform.NextRotation = null;
-            xform.LerpParent = EntityUid.Invalid;
-
-            if (xform.Anchored && _metaQuery.TryGetComponent(xform.GridUid, out var meta) && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
-            {
-                var grid = Comp<MapGridComponent>(xform.GridUid.Value);
-                var tileIndices = grid.TileIndicesFor(xform.Coordinates);
-                grid.RemoveFromSnapGridCell(tileIndices, uid);
-                xform._anchored = false;
-                var anchorStateChangedEvent = new AnchorStateChangedEvent(xform, true);
-                RaiseLocalEvent(uid, ref anchorStateChangedEvent, true);
-            }
-
-            SetCoordinates(uid, xform, default, Angle.Zero, oldParent: oldXform);
-            DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0);
+            DebugTools.Assert(xform.Broadphase == BroadphaseData.Invalid || HasComp<BroadphaseComponent>(uid),
+                $"Entity has no parent but is on some broadphase? Entity: {ToPrettyString(uid)}");
+            return;
         }
-        else
-            DebugTools.Assert(!xform.Anchored);
+
+        // Before making any changes to physics or transforms, remove from the current broadphase
+        _lookup.RemoveFromEntityTree(uid, xform);
+
+        // Stop any active lerps
+        xform.NextPosition = null;
+        xform.NextRotation = null;
+        xform.LerpParent = EntityUid.Invalid;
+
+        if (xform.Anchored
+            && _metaQuery.TryGetComponent(xform.GridUid, out var meta)
+            && meta.EntityLifeStage <= EntityLifeStage.MapInitialized)
+        {
+            var grid = Comp<MapGridComponent>(xform.GridUid.Value);
+            var tileIndices = grid.TileIndicesFor(xform.Coordinates);
+            grid.RemoveFromSnapGridCell(tileIndices, uid);
+            xform._anchored = false;
+            var anchorStateChangedEvent = new AnchorStateChangedEvent(xform, true);
+            RaiseLocalEvent(uid, ref anchorStateChangedEvent, true);
+        }
+
+        SetCoordinates(uid, xform, default, Angle.Zero, oldParent: oldXform);
+
+        DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0,
+            $"Entity is in a container after having been detached to null-space? Entity: {ToPrettyString(uid)}");
     }
 
     #endregion

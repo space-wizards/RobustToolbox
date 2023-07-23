@@ -66,7 +66,7 @@ public partial class PrototypeManager
             return;
         }
 
-        if (!TryGetValue(field, type, ref instance, errors, out var value))
+        if (!TryGetFieldValue(field, type, ref instance, errors, out var value))
             return;
 
         if (value == null)
@@ -101,7 +101,7 @@ public partial class PrototypeManager
     /// Get the value of some field. If this is not a static field, this will create instance of the object in order to
     /// validate default field values.
     /// </summary>
-    private bool TryGetValue(FieldInfo field, Type type, ref object? instance, List<string> errors, out object? value)
+    private bool TryGetFieldValue(FieldInfo field, Type type, ref object? instance, List<string> errors, out object? value)
     {
         value = null;
 
@@ -114,6 +114,10 @@ public partial class PrototypeManager
         var constructor = type.GetConstructor(
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
             Type.EmptyTypes);
+
+        // TODO handle parameterless record constructors.
+        // Figure out how ISerializationManager does it, or just re-use that code somehow.
+        // In the meantime, record data fields need an explicit parameterless ctor.
 
         if (constructor == null)
         {

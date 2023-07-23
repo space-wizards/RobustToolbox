@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 139.0.0
+
+### Breaking changes
+
+* Remove Component.Startup(), fully replacing it with the Eventbus.
+
+
 ## 138.1.0
 
 ### New features

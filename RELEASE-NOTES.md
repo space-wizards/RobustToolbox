@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed potential crashes if buffered audio sources (e.g. MIDI) fail to create due to running out of audio streams.
 
 ### Other
 

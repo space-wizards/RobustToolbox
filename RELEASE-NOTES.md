@@ -48,6 +48,7 @@ END TEMPLATE-->
 ### Other
 
 * Pressing `^C` twice on the server will now cause it to hard-exit immediately.
+* `Tools` now has `EXCEPTION_TOLERANCE` enabled.
 
 ### Internal
 

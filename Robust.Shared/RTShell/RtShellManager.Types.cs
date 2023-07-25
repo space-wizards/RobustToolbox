@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace Robust.Shared.RTShell;
 
-public sealed partial class NewConManager
+public sealed partial class RtShellManager
 {
     public bool IsTransformableTo(Type left, Type right)
     {

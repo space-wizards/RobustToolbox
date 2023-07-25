@@ -12,7 +12,7 @@ namespace Robust.Shared.RTShell;
 
 public sealed class ForwardParser
 {
-    [Robust.Shared.IoC.Dependency] public readonly NewConManager NewCon = default!;
+    [Robust.Shared.IoC.Dependency] public readonly RtShellManager RtShell = default!;
 
     public readonly string Input;
     public int MaxIndex { get; private set; }

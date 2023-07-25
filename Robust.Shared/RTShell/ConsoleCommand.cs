@@ -3,35 +3,30 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 using Robust.Shared.RTShell.Errors;
-using Robust.Shared.Utility;
 using Invocable = System.Func<Robust.Shared.RTShell.CommandInvocationArguments, object?>;
 
 namespace Robust.Shared.RTShell;
 
-// TODO:
-// SANDBOX SAFETY
-// JESUS FUCK SANDBOX SAFETY
-
+[Reflect(false)]
 public abstract partial class ConsoleCommand
 {
-    [Dependency] protected readonly NewConManager ConManager = default!;
+    [Dependency] protected readonly RtShellManager RtShell = default!;
 
     public string Name { get; }
 
     public bool HasSubCommands { get; }
 
-    public readonly Dictionary<string, SortedDictionary<string, Type>>? Parameters;
-
     public virtual Type[] TypeParameterParsers => Array.Empty<Type>();
 
     public bool HasTypeParameters => TypeParameterParsers.Length != 0;
 
-    private readonly Dictionary<string, ConsoleCommandImplementor> Implementors = new();
-
-    public IEnumerable<string> Subcommands => Implementors.Keys.Where(x => x != "");
+    public IEnumerable<string> Subcommands => _implementors.Keys.Where(x => x != "");
 
     public ConsoleCommand()
     {
@@ -52,7 +47,7 @@ public abstract partial class ConsoleCommand
 
         Name = name;
         HasSubCommands = false;
-        Implementors[""] =
+        _implementors[""] =
             new ConsoleCommandImplementor
             {
                 Owner = this,
@@ -60,7 +55,7 @@ public abstract partial class ConsoleCommand
             };
 
         var impls = GetGenericImplementations();
-        Parameters = new();
+        Dictionary<string, SortedDictionary<string, Type>> parameters = new();
 
         foreach (var impl in impls)
         {
@@ -70,7 +65,7 @@ public abstract partial class ConsoleCommand
             {
                 subCmd = x;
                 HasSubCommands = true;
-                Implementors[x] =
+                _implementors[x] =
                     new ConsoleCommandImplementor
                     {
                         Owner = this,
@@ -78,7 +73,6 @@ public abstract partial class ConsoleCommand
                     };
             }
 
-            // TODO: Error checking, all impls must have the same required attributes when not subcommands.
             foreach (var param in impl.GetParameters())
             {
                 if (param.GetCustomAttribute<CommandArgumentAttribute>() is { } arg)
@@ -86,14 +80,14 @@ public abstract partial class ConsoleCommand
                     if (arg.Optional)
                         continue;
 
-                    if (Parameters.ContainsKey(param.Name!))
+                    if (parameters.ContainsKey(param.Name!))
                         continue;
 
                     myParams.Add(param.Name!, param.ParameterType);
                 }
             }
 
-            if (Parameters.TryGetValue(subCmd ?? "", out var existing))
+            if (parameters.TryGetValue(subCmd ?? "", out var existing))
             {
                 if (!existing.SequenceEqual(existing))
                 {
@@ -101,121 +95,28 @@ public abstract partial class ConsoleCommand
                 }
             }
             else
-                Parameters.Add(subCmd ?? "", myParams);
+                parameters.Add(subCmd ?? "", myParams);
 
         }
     }
 
-
-    public virtual bool TryGetReturnType(string? subCommand, Type? pipedType, Type[] typeArguments, [NotNullWhen(true)] out Type? type)
-    {
-        var impls = GetConcreteImplementations(pipedType, typeArguments, subCommand).ToList();
-
-        if (impls.Count == 1)
-        {
-            type = impls.First().ReturnType;
-            return true;
-        }
-
-        type = null;
-        return false;
-
-        throw new NotImplementedException($"write your own TryGetReturnType your command is too clamplicated. Got {impls.Count} implementations for {Name} {subCommand ?? "[no subcommand]"}.");
-    }
 
     public IEnumerable<Type> AcceptedTypes(string? subCommand)
     {
         return GetGenericImplementations()
-            .Where(x => x.ConsoleGetPipedArgument() is not null)
-            .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
+            .Where(x =>
+                x.ConsoleGetPipedArgument() is not null
+            &&  x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
             .Select(x => x.ConsoleGetPipedArgument()!.ParameterType);
     }
 
-    private Dictionary<(CommandDiscriminator, string?), List<MethodInfo>> _concreteImplementations = new();
-
-    public List<MethodInfo> GetConcreteImplementations(Type? pipedType, Type[] typeArguments,
-        string? subCommand)
+    internal bool TryParseArguments(bool doAutocomplete, ForwardParser parser, Type? pipedType, string? subCommand, [NotNullWhen(true)] out Dictionary<string, object?>? args, out Type[] resolvedTypeArguments, out IConError? error, out ValueTask<(CompletionResult?, IConError?)>? autocomplete)
     {
-        var idx = (new CommandDiscriminator(pipedType, typeArguments), subCommand);
-        if (_concreteImplementations.TryGetValue(idx,
-                out var impl))
-        {
-            return impl;
-        }
-
-        impl = GetConcreteImplementationsInternal(pipedType, typeArguments, subCommand);
-        _concreteImplementations[idx] = impl;
-        return impl;
-
-    }
-
-    private List<MethodInfo> GetConcreteImplementationsInternal(Type? pipedType, Type[] typeArguments, string? subCommand)
-    {
-        var impls = GetGenericImplementations()
-            .Where(x =>
-            {
-                if (x.ConsoleGetPipedArgument() is { } param)
-                {
-                    return pipedType?.IsAssignableToGeneric(param.ParameterType) ?? false;
-                }
-
-                return pipedType is null;
-            })
-            .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
-            .Where(x =>
-            {
-                if (x.IsGenericMethodDefinition)
-                {
-                    var expectedLen = x.GetGenericArguments().Length;
-                    if (x.HasCustomAttribute<TakesPipedTypeAsGeneric>())
-                        expectedLen -= 1;
-
-                    return typeArguments.Length == expectedLen;
-                }
-
-                return typeArguments.Length == 0;
-            })
-            .Select(x =>
-        {
-            if (x.IsGenericMethodDefinition)
-            {
-                if (x.HasCustomAttribute<TakesPipedTypeAsGeneric>())
-                {
-                    var paramT = x.ConsoleGetPipedArgument()!.ParameterType;
-                    var t = pipedType!.Intersect(paramT);
-                    return x.MakeGenericMethod(typeArguments.Append(t).ToArray());
-                }
-                else
-                    return x.MakeGenericMethod(typeArguments);
-            }
-
-            return x;
-        }).ToList();
-
-        return impls;
-    }
-
-    public List<MethodInfo> GetGenericImplementations()
-    {
-        var t = GetType();
-
-        var methods = t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | BindingFlags.Instance);
-
-        return methods.Where(x => x.HasCustomAttribute<CommandImplementationAttribute>()).ToList();
-    }
-
-    public bool TryGetImplementation(Type? pipedType, string? subCommand, Type[] typeArguments, [NotNullWhen(true)] out Invocable? impl)
-    {
-        return Implementors[subCommand ?? ""].TryGetImplementation(pipedType, typeArguments, out impl);
-    }
-
-    public bool TryParseArguments(ForwardParser parser, Type? pipedType, string? subCommand, [NotNullWhen(true)] out Dictionary<string, object?>? args, out Type[] resolvedTypeArguments, out IConError? error)
-    {
-        return Implementors[subCommand ?? ""].TryParseArguments(parser, subCommand, pipedType, out args, out resolvedTypeArguments, out error);
+        return _implementors[subCommand ?? ""].TryParseArguments(doAutocomplete, parser, subCommand, pipedType, out args, out resolvedTypeArguments, out error, out autocomplete);
     }
 }
 
-public sealed class CommandInvocationArguments
+internal sealed class CommandInvocationArguments
 {
     public required object? PipedArgument;
     public required IInvocationContext Context { get; set; }
@@ -225,7 +126,7 @@ public sealed class CommandInvocationArguments
     public Type? PipedArgumentType => Bundle.PipedArgumentType;
 }
 
-public sealed class CommandArgumentBundle
+internal sealed class CommandArgumentBundle
 {
     public required Dictionary<string, object?> Arguments;
     public required bool Inverted = false;
@@ -233,7 +134,7 @@ public sealed class CommandArgumentBundle
     public required Type[] TypeArguments;
 }
 
-public record struct CommandDiscriminator(Type? PipedType, Type[] TypeArguments) : IEquatable<CommandDiscriminator?>
+public readonly record struct CommandDiscriminator(Type? PipedType, Type[] TypeArguments) : IEquatable<CommandDiscriminator?>
 {
     public bool Equals(CommandDiscriminator? other)
     {

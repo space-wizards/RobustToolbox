@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -11,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.TypeParsers;
 
-public sealed class ComponentTypeParser : TypeParser<ComponentType>
+internal sealed class ComponentTypeParser : TypeParser<ComponentType>
 {
     [Dependency] private readonly IComponentFactory _factory = default!;
 
@@ -40,9 +42,11 @@ public sealed class ComponentTypeParser : TypeParser<ComponentType>
         return true;
     }
 
-    public override bool TryAutocomplete(ForwardParser parser, string? argName, [NotNullWhen(true)] out CompletionResult? options, out IConError? error)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
     {
-        throw new NotImplementedException();
+        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>(
+            (CompletionResult.FromOptions(_factory.AllRegisteredTypes.Select(_factory.GetComponentName)), null)
+            );
     }
 }
 

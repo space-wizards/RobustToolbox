@@ -4,7 +4,7 @@ using Robust.Shared.RTShell.Errors;
 namespace Robust.Shared.RTShell.Commands.Players;
 
 [ConsoleCommand]
-public sealed class SelfCommand : ConsoleCommand
+internal sealed class SelfCommand : ConsoleCommand
 {
     [CommandImplementation]
     public EntityUid Self([CommandInvocationContext] IInvocationContext ctx)

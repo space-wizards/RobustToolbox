@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.RTShell.Errors;
@@ -7,7 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.TypeParsers;
 
-public sealed class QuantityParser : TypeParser<Quantity>
+internal sealed class QuantityParser : TypeParser<Quantity>
 {
     public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
@@ -35,11 +36,9 @@ public sealed class QuantityParser : TypeParser<Quantity>
         return true;
     }
 
-    public override bool TryAutocomplete(ForwardParser parser, string? argName, [NotNullWhen(true)] out CompletionResult? result, out IConError? error)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
     {
-        result = CompletionResult.FromHint($"{argName ?? "quantity"}");
-        error = null;
-        return true;
+        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHint($"{argName ?? "quantity"}"), null));
     }
 }
 

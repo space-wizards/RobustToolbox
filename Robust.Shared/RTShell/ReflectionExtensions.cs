@@ -8,7 +8,8 @@ using Robust.Shared.Log;
 
 namespace Robust.Shared.RTShell;
 
-public static class ReflectionExtensions
+// TODO: Audit this for sandboxability and expose some of these to content.
+internal static class ReflectionExtensions
 {
     public static bool CanBeNull(this Type t)
     {
@@ -25,7 +26,7 @@ public static class ReflectionExtensions
         return t.IsGenericType && t.GetGenericTypeDefinition() == genericType;
     }
 
-    public static IEnumerable<Type> GetVariants(this Type t, NewConManager newCon)
+    public static IEnumerable<Type> GetVariants(this Type t, RtShellManager rtShell)
     {
         var args = t.GetGenericArguments();
         var generic = t.GetGenericTypeDefinition();
@@ -56,7 +57,7 @@ public static class ReflectionExtensions
 
         var newArgs = (Type[]) args.Clone();
 
-        foreach (var type in newCon.AllSteppedTypes(args[variant], false))
+        foreach (var type in rtShell.AllSteppedTypes(args[variant], false))
         {
             newArgs[variant] = type;
             yield return generic.MakeGenericType(newArgs);

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading.Tasks;
+using Robust.Shared.Console;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.RTShell.Errors;
 using Robust.Shared.RTShell.TypeParsers;
@@ -10,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell;
 
-public sealed partial class NewConManager
+public sealed partial class RtShellManager
 {
     private readonly Dictionary<Type, ITypeParser> _consoleTypeParsers = new();
     private readonly Dictionary<Type, Type> _genericTypeParsers = new();
@@ -29,7 +32,8 @@ public sealed partial class NewConManager
             }
             else
             {
-                var parser = (ITypeParser) _typeFactory.CreateInstance(parserType);
+                var parser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(parserType)!;
+                parser.PostInject();
                 _log.Debug($"Setting up {parserType.PrettyName()}, {parser.Parses.PrettyName()}");
                 _consoleTypeParsers.Add(parser.Parses, parser);
             }
@@ -49,7 +53,7 @@ public sealed partial class NewConManager
 
             var concreteParser = genParser.MakeGenericType(t.GenericTypeArguments);
 
-            var builtParser = (ITypeParser) _typeFactory.CreateInstance(concreteParser, true, true);
+            var builtParser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(concreteParser, true, true)!;
             builtParser.PostInject();
             _consoleTypeParsers.Add(builtParser.Parses, builtParser);
             return builtParser;
@@ -66,6 +70,18 @@ public sealed partial class NewConManager
     public bool TryParse<T>(ForwardParser parser, [NotNullWhen(true)] out object? parsed, out IConError? error)
     {
         return TryParse(parser, typeof(T), out parsed, out error);
+    }
+
+    public ValueTask<(CompletionResult?, IConError?)> TryAutocomplete(ForwardParser parser, Type t, string? argName)
+    {
+        var impl = GetParserForType(t);
+
+        if (impl is null)
+        {
+            return ValueTask.FromResult<(CompletionResult?, IConError?)>((null, new UnparseableValueError(t)));
+        }
+
+        return impl.TryAutocomplete(parser, argName);
     }
 
     public bool TryParse(ForwardParser parser, Type t, [NotNullWhen(true)] out object? parsed, out IConError? error)

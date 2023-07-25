@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
@@ -10,9 +11,8 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.TypeParsers;
 
-public sealed class TypeTypeParser : TypeParser<Type>
+internal sealed class TypeTypeParser : TypeParser<Type>
 {
-    [Dependency] private readonly IModLoader _modLoader = default!;
     public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
         var res = parser.GetWord();
@@ -30,9 +30,9 @@ public sealed class TypeTypeParser : TypeParser<Type>
         return result is not null;
     }
 
-    public override bool TryAutocomplete(ForwardParser parser, string? argName, [NotNullWhen(true)] out CompletionResult? options, out IConError? error)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
     {
-        throw new NotImplementedException();
+        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHint("C# level type"), null));
     }
 }
 

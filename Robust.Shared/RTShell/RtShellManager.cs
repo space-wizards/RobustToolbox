@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -14,10 +15,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell;
 
-public sealed partial class NewConManager
+public sealed partial class RtShellManager
 {
     [Dependency] private readonly IConsoleHost _conHost = default!;
-    [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+    [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
     [Dependency] private readonly IEntityManager _entity = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
@@ -41,7 +42,8 @@ public sealed partial class NewConManager
                 continue;
             }
 
-            var command = (ConsoleCommand)_typeFactory.CreateInstance(ty, false, true);
+            var command = (ConsoleCommand)Activator.CreateInstance(ty)!;
+            IoCManager.InjectDependencies(command);
 
             _commands.Add(command.Name, command);
         }
@@ -53,9 +55,20 @@ public sealed partial class NewConManager
         _log.Info($"Initialized console in {watch.Elapsed}");
     }
 
-    private CompletionResult CompletionCallback(IConsoleShell shell, string[] args)
+    private async ValueTask<CompletionResult> CompletionCallback(IConsoleShell shell, string[] args, string argstr)
     {
-        throw new NotImplementedException();
+        var parser = new ForwardParser(argstr[2..]);
+        var ctx = new OldShellInvocationContext(shell);
+        Logger.Debug("awawa");
+        CommandRun.TryParse(true, parser, null, null, false, out _, out var completions, out _);
+        if (completions is null)
+            return CompletionResult.Empty;
+
+        var (result, err) = await completions.Value;
+        if (result is null)
+            return CompletionResult.Empty;
+
+        return result;
     }
 
     public IEnumerable<CommandSpec> AllCommands()
@@ -87,7 +100,7 @@ public sealed partial class NewConManager
     {
         var parser = new ForwardParser(argstr[2..]);
         var ctx = new OldShellInvocationContext(shell);
-        if (!CommandRun.TryParse(parser, null, null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
+        if (!CommandRun.TryParse(false, parser, null, null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
         {
             if (err is not null)
             {
@@ -118,7 +131,7 @@ public readonly record struct CommandSpec(ConsoleCommand Cmd, string? SubCommand
     public CompletionOption AsCompletion()
     {
         return new CompletionOption(
-                $"{Cmd}{(SubCommand is not null ? ":" + SubCommand : "")}",
+                $"{Cmd.Name}{(SubCommand is not null ? ":" + SubCommand : "")}",
                 Cmd.Description(SubCommand)
             );
     }

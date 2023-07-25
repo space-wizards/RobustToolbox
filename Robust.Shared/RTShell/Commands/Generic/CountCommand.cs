@@ -5,7 +5,7 @@ using System.Linq;
 namespace Robust.Shared.RTShell.Commands.Generic;
 
 [ConsoleCommand]
-public sealed class CountCommand : ConsoleCommand
+internal sealed class CountCommand : ConsoleCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public int Count<T>([PipedArgument] IEnumerable<T> enumerable)

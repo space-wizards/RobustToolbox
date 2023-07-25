@@ -6,7 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.Invocation;
 
-public sealed class OldShellInvocationContext : IInvocationContext
+internal sealed class OldShellInvocationContext : IInvocationContext
 {
     public bool CheckInvokable(ConsoleCommand command, string? subCommand, out IConError? error)
     {

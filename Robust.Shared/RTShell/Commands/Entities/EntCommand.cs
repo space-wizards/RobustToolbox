@@ -3,7 +3,7 @@
 namespace Robust.Shared.RTShell.Commands.Entities;
 
 [ConsoleCommand]
-public sealed class EntCommand : ConsoleCommand
+internal sealed class EntCommand : ConsoleCommand
 {
     [CommandImplementation]
     public EntityUid Ent([CommandArgument] EntityUid ent) => ent;

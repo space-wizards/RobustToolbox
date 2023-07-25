@@ -5,11 +5,11 @@ using Robust.Shared.RTShell.Syntax;
 namespace Robust.Shared.RTShell.Commands.Info;
 
 [ConsoleCommand]
-public sealed class CmdCommand : ConsoleCommand
+internal sealed class CmdCommand : ConsoleCommand
 {
     [CommandImplementation("list")]
     public IEnumerable<CommandSpec> List()
-        => ConManager.AllCommands();
+        => RtShell.AllCommands();
 
     [CommandImplementation("explain")]
     public void Explain(

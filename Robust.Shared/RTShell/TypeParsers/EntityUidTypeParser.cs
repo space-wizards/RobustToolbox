@@ -1,16 +1,20 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.RTShell.Errors;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.TypeParsers;
 
-public sealed class EntityUidTypeParser : TypeParser<EntityUid>
+internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
 {
+    [Dependency] private readonly IEntityManager _entity = default!;
+
     public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
         var start = parser.Index;
@@ -34,9 +38,9 @@ public sealed class EntityUidTypeParser : TypeParser<EntityUid>
         return true;
     }
 
-    public override bool TryAutocomplete(ForwardParser parser, string? argName, [NotNullWhen(true)] out CompletionResult? options, out IConError? error)
+    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
     {
-        throw new NotImplementedException();
+        return (CompletionResult.FromHint("<entity id>"), null);
     }
 }
 

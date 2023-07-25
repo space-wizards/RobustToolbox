@@ -5,7 +5,7 @@ using Robust.Shared.Timing;
 namespace Robust.Shared.RTShell.Commands.Info;
 
 [ConsoleCommand]
-public sealed class StopwatchCommand : ConsoleCommand
+internal sealed class StopwatchCommand : ConsoleCommand
 {
     [CommandImplementation]
     public object? Stopwatch([CommandInvocationContext] IInvocationContext ctx, [CommandArgument] CommandRun expr)

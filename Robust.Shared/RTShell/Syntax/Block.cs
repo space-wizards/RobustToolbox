@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
+using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.RTShell.Errors;
 using Robust.Shared.Utility;
@@ -12,16 +14,16 @@ namespace Robust.Shared.RTShell.Syntax;
 /// </summary>
 public sealed class Block<T>
 {
-    public CommandRun<T> CommandRun { get; set; }
+    private CommandRun<T> CommandRun { get; set; }
 
-    public static bool TryParse(ForwardParser parser, Type? pipedType,
-        [NotNullWhen(true)] out Block<T>? block, out IConError? error)
+    public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType,
+        [NotNullWhen(true)] out Block<T>? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
     {
         parser.Consume(char.IsWhiteSpace);
 
         var enclosed = parser.EatMatch('{');
 
-        CommandRun<T>.TryParse(parser, pipedType, !enclosed, out var expr, out _, out error);
+        CommandRun<T>.TryParse(doAutoComplete, parser, pipedType, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {
@@ -53,16 +55,16 @@ public sealed class Block<T>
 
 public sealed class Block<TIn, TOut>
 {
-    public CommandRun<TIn, TOut> CommandRun { get; set; }
+    private CommandRun<TIn, TOut> CommandRun { get; set; }
 
-    public static bool TryParse(ForwardParser parser, Type? pipedType,
-        [NotNullWhen(true)] out Block<TIn, TOut>? block, out IConError? error)
+    public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType,
+        [NotNullWhen(true)] out Block<TIn, TOut>? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
     {
         parser.Consume(char.IsWhiteSpace);
 
         var enclosed = parser.EatMatch('{');
 
-        CommandRun<TIn, TOut>.TryParse(parser, !enclosed, out var expr, out _, out error);
+        CommandRun<TIn, TOut>.TryParse(doAutoComplete, parser, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {

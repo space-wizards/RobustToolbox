@@ -5,7 +5,7 @@ using Robust.Shared.Physics.Components;
 namespace Robust.Shared.RTShell.Commands.Physics;
 
 [ConsoleCommand]
-public sealed class PhysicsCommand : ConsoleCommand
+internal sealed class PhysicsCommand : ConsoleCommand
 {
     [CommandImplementation("velocity")]
     public IEnumerable<float> Velocity([PipedArgument] IEnumerable<EntityUid> input)

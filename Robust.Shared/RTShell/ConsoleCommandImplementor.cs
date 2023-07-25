@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
+using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.RTShell.Errors;
 using Robust.Shared.RTShell.TypeParsers;
@@ -12,7 +14,7 @@ namespace Robust.Shared.RTShell;
 
 internal sealed class ConsoleCommandImplementor
 {
-    [Dependency] private readonly NewConManager _newConManager = default!;
+    [Dependency] private readonly RtShellManager _rtShellManager = default!;
     public required ConsoleCommand Owner;
 
     public required string? SubCommand;
@@ -24,18 +26,26 @@ internal sealed class ConsoleCommandImplementor
         IoCManager.InjectDependencies(this);
     }
 
-    public bool TryParseArguments(ForwardParser parser, string? subCommand, Type? pipedType, [NotNullWhen(true)] out Dictionary<string, object?>? args, out Type[] resolvedTypeArguments, out IConError? error)
+    public bool TryParseArguments(bool doAutocomplete, ForwardParser parser, string? subCommand, Type? pipedType, [NotNullWhen(true)] out Dictionary<string, object?>? args, out Type[] resolvedTypeArguments, out IConError? error, out ValueTask<(CompletionResult?, IConError?)>? autocomplete)
     {
         resolvedTypeArguments = new Type[Owner.TypeParameterParsers.Length];
 
         for (var i = 0; i < Owner.TypeParameterParsers.Length; i++)
         {
             var start = parser.Index;
-            if (!_newConManager.TryParse(parser, Owner.TypeParameterParsers[i], out var parsed, out error) || parsed is not { } ty)
+            var chkpoint = parser.Save();
+            if (!_rtShellManager.TryParse(parser, Owner.TypeParameterParsers[i], out var parsed, out error) || parsed is not { } ty)
             {
                 error?.Contextualize(parser.Input, (start, parser.Index));
                 resolvedTypeArguments = Array.Empty<Type>();
                 args = null;
+                autocomplete = null;
+                if (doAutocomplete)
+                {
+                    parser.Restore(chkpoint);
+                    autocomplete = _rtShellManager.TryAutocomplete(parser, Owner.TypeParameterParsers[i], null);
+                }
+
                 return false;
             }
 
@@ -61,6 +71,7 @@ internal sealed class ConsoleCommandImplementor
         {
             args = null;
             error = null;
+            autocomplete = null;
             return false;
         }
 
@@ -69,16 +80,24 @@ internal sealed class ConsoleCommandImplementor
         foreach (var argument in impl.ConsoleGetArguments())
         {
             var start = parser.Index;
-            if (!_newConManager.TryParse(parser, argument.ParameterType, out var parsed, out error))
+            var chkpoint = parser.Save();
+            if (!_rtShellManager.TryParse(parser, argument.ParameterType, out var parsed, out error))
             {
                 error?.Contextualize(parser.Input, (start, parser.Index));
                 args = null;
+                autocomplete = null;
+                if (doAutocomplete)
+                {
+                    parser.Restore(chkpoint);
+                    autocomplete = _rtShellManager.TryAutocomplete(parser, argument.ParameterType, null);
+                }
                 return false;
             }
             args[argument.Name!] = parsed;
         }
 
         error = null;
+        autocomplete = null;
         return true;
     }
 

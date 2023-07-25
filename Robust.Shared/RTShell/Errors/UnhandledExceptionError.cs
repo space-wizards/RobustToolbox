@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -7,7 +8,9 @@ namespace Robust.Shared.RTShell.Errors;
 
 public sealed class UnhandledExceptionError : IConError
 {
+    [PublicAPI]
     public Exception Exception;
+
     public FormattedMessage DescribeInner()
     {
         var msg = new FormattedMessage();

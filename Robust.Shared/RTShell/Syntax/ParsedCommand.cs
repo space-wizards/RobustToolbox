@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -18,20 +19,20 @@ public sealed class ParsedCommand
     public Type? ReturnType { get; }
 
     public Type? PipedType => Bundle.PipedArgumentType;
-    public Invocable Invocable { get; }
-    public CommandArgumentBundle Bundle { get; }
+    private Invocable Invocable { get; }
+    private CommandArgumentBundle Bundle { get; }
     public string? SubCommand { get; }
 
-    public static bool TryParse(ForwardParser parser, Type? pipedArgumentType, [NotNullWhen(true)] out ParsedCommand? result, out IConError? error, out bool noCommand, out CompletionResult? autocomplete, Type? targetType = null)
+    public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedArgumentType, [NotNullWhen(true)] out ParsedCommand? result, out IConError? error, out bool noCommand, out ValueTask<(CompletionResult?, IConError?)>? autocomplete, Type? targetType = null)
     {
-        autocomplete = null;
         noCommand = false;
         var checkpoint = parser.Save();
         var bundle = new CommandArgumentBundle()
             {Arguments = new(), Inverted = false, PipedArgumentType = pipedArgumentType, TypeArguments = Array.Empty<Type>()};
 
+        autocomplete = null;
         if (!TryDigestModifiers(parser, bundle, out error)
-            || !TryParseCommand(parser, bundle, pipedArgumentType, targetType, out var subCommand, out var invocable, out var command, out error, out noCommand, out autocomplete)
+            || !TryParseCommand(doAutoComplete, parser, bundle, pipedArgumentType, targetType, out var subCommand, out var invocable, out var command, out error, out noCommand, out autocomplete)
             || !command.TryGetReturnType(subCommand, pipedArgumentType, bundle.TypeArguments, out var retType)
             )
         {
@@ -41,16 +42,17 @@ public sealed class ParsedCommand
         }
 
 
-        result = new(bundle, invocable, command, retType);
+        result = new(bundle, invocable, command, retType, subCommand);
         return true;
     }
 
-    private ParsedCommand(CommandArgumentBundle bundle, Invocable invocable, ConsoleCommand command, Type? returnType)
+    private ParsedCommand(CommandArgumentBundle bundle, Invocable invocable, ConsoleCommand command, Type? returnType, string? subCommand)
     {
         Invocable = invocable;
         Bundle = bundle;
         Command = command;
         ReturnType = returnType;
+        SubCommand = subCommand;
     }
 
     private static bool TryDigestModifiers(ForwardParser parser, CommandArgumentBundle bundle, out IConError? error)
@@ -65,7 +67,7 @@ public sealed class ParsedCommand
         return true;
     }
 
-    private static bool TryParseCommand(ForwardParser parser, CommandArgumentBundle bundle, Type? pipedType, Type? targetType, out string? subCommand, [NotNullWhen(true)] out Invocable? invocable, [NotNullWhen(true)] out ConsoleCommand? command, out IConError? error, out bool noCommand, out CompletionResult? autocomplete)
+    private static bool TryParseCommand(bool makeCompletions, ForwardParser parser, CommandArgumentBundle bundle, Type? pipedType, Type? targetType, out string? subCommand, [NotNullWhen(true)] out Invocable? invocable, [NotNullWhen(true)] out ConsoleCommand? command, out IConError? error, out bool noCommand, out ValueTask<(CompletionResult?, IConError?)>? autocomplete)
     {
         noCommand = false;
         var start = parser.Index;
@@ -73,7 +75,7 @@ public sealed class ParsedCommand
         subCommand = null;
         invocable = null;
         command = null;
-        var conManager = IoCManager.Resolve<NewConManager>();
+        var conManager = IoCManager.Resolve<RtShellManager>();
         if (cmd is null)
         {
             if (parser.PeekChar() is null)
@@ -81,16 +83,19 @@ public sealed class ParsedCommand
                 noCommand = true;
                 error = new OutOfInputError();
                 error.Contextualize(parser.Input, (parser.Index, parser.Index));
-                if (pipedType is not null)
+                autocomplete = null;
+                if (pipedType is not null && makeCompletions)
                 {
                     var cmds = conManager.CommandsTakingType(pipedType);
-                    autocomplete = CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>");
+                    autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
                 }
-
-                autocomplete = CompletionResult.FromHintOptions(
+                else if (makeCompletions)
+                {
+                    autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(
                         conManager.AllCommands().Select(x => x.AsCompletion()),
                         "<command>"
-                    );
+                    ), error));
+                }
 
                 return false;
             }
@@ -105,20 +110,17 @@ public sealed class ParsedCommand
             }
         }
 
-        if (!parser.NewCon.TryGetCommand(cmd, out var cmdImpl))
+        if (!parser.RtShell.TryGetCommand(cmd, out var cmdImpl))
         {
             error = new UnknownCommandError(cmd);
             error.Contextualize(parser.Input, (start, parser.Index));
-            if (pipedType is not null)
+            autocomplete = null;
+            if (makeCompletions)
             {
-                var cmds = conManager.CommandsTakingType(pipedType);
-                autocomplete = CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>");
+                var cmds = conManager.CommandsTakingType(pipedType ?? typeof(void));
+                autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
             }
 
-            autocomplete = CompletionResult.FromHintOptions(
-                conManager.AllCommands().Select(x => x.AsCompletion()),
-                "<command>"
-            );
             return false;
         }
 
@@ -161,11 +163,10 @@ public sealed class ParsedCommand
 
         var argsStart = parser.Index;
 
-        if (!cmdImpl.TryParseArguments(parser, pipedType, subCommand, out var args, out var types, out error))
+        if (!cmdImpl.TryParseArguments(makeCompletions, parser, pipedType, subCommand, out var args, out var types, out error, out autocomplete))
         {
             noCommand = true;
             error?.Contextualize(parser.Input, (argsStart, parser.Index));
-            autocomplete = null;
             return false;
         }
 
@@ -225,7 +226,7 @@ public record struct NoImplementationError(string Cmd, Type[] Types, string? Sub
 {
     public FormattedMessage DescribeInner()
     {
-        var newCon = IoCManager.Resolve<NewConManager>();
+        var newCon = IoCManager.Resolve<RtShellManager>();
 
         var msg = FormattedMessage.FromMarkup($"Could not find an implementation for {Cmd} given the input type {PipedType?.PrettyName() ?? "void"}.");
         msg.PushNewline();

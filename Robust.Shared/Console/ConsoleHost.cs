@@ -327,10 +327,11 @@ namespace Robust.Shared.Console
             public ValueTask<CompletionResult> GetCompletionAsync(
                 IConsoleShell shell,
                 string[] args,
+                string argStr,
                 CancellationToken cancel)
             {
                 if (CompletionCallbackAsync != null)
-                    return CompletionCallbackAsync(shell, args);
+                    return CompletionCallbackAsync(shell, args, argStr);
 
                 if (CompletionCallback != null)
                     return ValueTask.FromResult(CompletionCallback(shell, args));

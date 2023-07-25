@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.RTShell.Errors;
@@ -15,10 +16,10 @@ namespace Robust.Shared.RTShell.Syntax;
 /// </summary>
 public sealed class CommandRun
 {
-    public List<(ParsedCommand, Vector2i)> Commands;
-    private string _originalExpr;
+    public readonly List<(ParsedCommand, Vector2i)> Commands;
+    private readonly string _originalExpr;
 
-    public static bool TryParse(ForwardParser parser, Type? pipedType, Type? targetOutput, bool once, [NotNullWhen(true)] out CommandRun? expr, out CompletionResult? autocomplete, out IConError? error)
+    public static bool TryParse(bool doAutocomplete, ForwardParser parser, Type? pipedType, Type? targetOutput, bool once, [NotNullWhen(true)] out CommandRun? expr, out ValueTask<(CompletionResult?, IConError?)>? autocomplete, out IConError? error)
     {
         autocomplete = null;
         error = null;
@@ -26,7 +27,7 @@ public sealed class CommandRun
         var start = parser.Index;
         var noCommand = false;
 
-        while ((!once || cmds.Count < 1) && ParsedCommand.TryParse(parser, pipedType, out var cmd, out error, out noCommand, out autocomplete, targetOutput))
+        while ((!once || cmds.Count < 1) && ParsedCommand.TryParse(doAutocomplete, parser, pipedType, out var cmd, out error, out noCommand, out autocomplete, targetOutput))
         {
             var end = parser.Index;
             pipedType = cmd.ReturnType;
@@ -86,12 +87,12 @@ public sealed class CommandRun
 
 public sealed class CommandRun<TIn, TOut>
 {
-    public CommandRun InnerCommandRun;
+    private readonly CommandRun _innerCommandRun;
 
-    public static bool TryParse(ForwardParser parser, bool once,
-        [NotNullWhen(true)] out CommandRun<TIn, TOut>? expr, out CompletionResult? autocomplete, out IConError? error)
+    public static bool TryParse(bool doAutoComplete, ForwardParser parser, bool once,
+        [NotNullWhen(true)] out CommandRun<TIn, TOut>? expr, out ValueTask<(CompletionResult?, IConError?)>? autocomplete, out IConError? error)
     {
-        if (!CommandRun.TryParse(parser, typeof(TIn), typeof(TOut), once, out var innerExpr, out autocomplete, out error))
+        if (!CommandRun.TryParse(doAutoComplete, parser, typeof(TIn), typeof(TOut), once, out var innerExpr, out autocomplete, out error))
         {
             expr = null;
             return false;
@@ -103,7 +104,7 @@ public sealed class CommandRun<TIn, TOut>
 
     public TOut? Invoke(object? input, IInvocationContext ctx)
     {
-        var res = InnerCommandRun.Invoke(input, ctx);
+        var res = _innerCommandRun.Invoke(input, ctx);
         if (res is null)
             return default;
         return (TOut?) res;
@@ -111,18 +112,18 @@ public sealed class CommandRun<TIn, TOut>
 
     private CommandRun(CommandRun commandRun)
     {
-        InnerCommandRun = commandRun;
+        _innerCommandRun = commandRun;
     }
 }
 
 public sealed class CommandRun<TRes>
 {
-    public CommandRun InnerCommandRun;
+    private readonly CommandRun _innerCommandRun;
 
-    public static bool TryParse(ForwardParser parser, Type? pipedType, bool once,
-        [NotNullWhen(true)] out CommandRun<TRes>? expr, out CompletionResult? completion, out IConError? error)
+    public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType, bool once,
+        [NotNullWhen(true)] out CommandRun<TRes>? expr, out ValueTask<(CompletionResult?, IConError?)>? completion, out IConError? error)
     {
-        if (!CommandRun.TryParse(parser, pipedType, typeof(TRes), once, out var innerExpr, out completion, out error))
+        if (!CommandRun.TryParse(doAutoComplete, parser, pipedType, typeof(TRes), once, out var innerExpr, out completion, out error))
         {
             expr = null;
             return false;
@@ -134,7 +135,7 @@ public sealed class CommandRun<TRes>
 
     public TRes? Invoke(object? input, IInvocationContext ctx)
     {
-        var res = InnerCommandRun.Invoke(input, ctx);
+        var res = _innerCommandRun.Invoke(input, ctx);
         if (res is null)
             return default;
         return (TRes?) res;
@@ -142,7 +143,7 @@ public sealed class CommandRun<TRes>
 
     private CommandRun(CommandRun commandRun)
     {
-        InnerCommandRun = commandRun;
+        _innerCommandRun = commandRun;
     }
 }
 

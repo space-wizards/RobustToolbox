@@ -3,7 +3,7 @@
 namespace Robust.Shared.RTShell.Commands.Generic;
 
 [ConsoleCommand]
-public sealed class AsCommand : ConsoleCommand
+internal sealed class AsCommand : ConsoleCommand
 {
     public override Type[] TypeParameterParsers => new[] {typeof(Type)};
 

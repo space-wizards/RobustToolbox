@@ -7,7 +7,7 @@ namespace Robust.Shared.RTShell;
 
 // This is for information about commands that can be queried, i.e. return type possibilities.
 
-public sealed partial class NewConManager
+public sealed partial class RtShellManager
 {
     private readonly Dictionary<Type, List<CommandSpec>> _commandPipeValueMap = new();
     private readonly Dictionary<CommandSpec, HashSet<Type>> _commandReturnValueMap = new();

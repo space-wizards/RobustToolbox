@@ -31,6 +31,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Replays;
+using Robust.Shared.RTShell;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
@@ -368,6 +369,7 @@ namespace Robust.Server
             _prototype.LoadDefaultPrototypes();
             _prototype.ResolveResults();
 
+            IoCManager.Resolve<RtShellManager>().Initialize();
             _consoleHost.Initialize();
             _entityManager.Startup();
             _mapManager.Startup();

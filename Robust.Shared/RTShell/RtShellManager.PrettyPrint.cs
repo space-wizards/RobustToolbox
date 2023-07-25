@@ -7,7 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell;
 
-public sealed partial class NewConManager
+public sealed partial class RtShellManager
 {
     public string PrettyPrintType(object? value)
     {

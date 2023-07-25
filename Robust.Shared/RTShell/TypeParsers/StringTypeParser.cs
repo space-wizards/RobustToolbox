@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.RTShell.Errors;
@@ -8,7 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.TypeParsers;
 
-public sealed class StringTypeParser : TypeParser<string>
+internal sealed class StringTypeParser : TypeParser<string>
 {
     public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
@@ -35,7 +36,10 @@ public sealed class StringTypeParser : TypeParser<string>
 
         while (true)
         {
-            while (parser.PeekChar() is not '"' and not '\\') { output.Append(parser.GetChar()); }
+            while (parser.PeekChar() is not '"' and not '\\' and not null)
+            {
+                output.Append(parser.GetChar());
+            }
 
             if (parser.PeekChar() is '"' or null)
             {
@@ -69,11 +73,9 @@ public sealed class StringTypeParser : TypeParser<string>
         return true;
     }
 
-    public override bool TryAutocomplete(ForwardParser parser, string? argName,  [NotNullWhen(true)] out CompletionResult? result, out IConError? error)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
     {
-        result = CompletionResult.FromHint($"\"<{argName ?? "string"}>\"");
-        error = null;
-        return true;
+        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHint($"\"<{argName ?? "string"}>\""), null));
     }
 }
 

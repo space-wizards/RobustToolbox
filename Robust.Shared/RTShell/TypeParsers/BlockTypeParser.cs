@@ -1,37 +1,54 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.RTShell.Errors;
 using Robust.Shared.RTShell.Syntax;
 
 namespace Robust.Shared.RTShell.TypeParsers;
 
-public sealed class BlockTypeParser<T> : TypeParser<Block<T>>
+internal sealed class BlockTypeParser<T> : TypeParser<Block<T>>
 {
+    public BlockTypeParser()
+    {
+    }
+
     public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var r = Block<T>.TryParse(parser, null, out var block, out error);
+        var r = Block<T>.TryParse(false, parser, null, out var block, out _, out error);
         result = block;
         return r;
     }
 
-    public override bool TryAutocomplete(ForwardParser parser, string? argName, [NotNullWhen(true)] out CompletionResult? options, out IConError? error)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
     {
-        throw new NotImplementedException();
+        Block<T>.TryParse(true, parser, null, out _, out var autocomplete, out _);
+        if (autocomplete is null)
+            return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((null, null));
+
+        return autocomplete.Value;
     }
 }
 
-public sealed class BlockTypeParser<TIn, TOut> : TypeParser<Block<TIn, TOut>>
+internal sealed class BlockTypeParser<TIn, TOut> : TypeParser<Block<TIn, TOut>>
 {
+    public BlockTypeParser()
+    {
+    }
+
     public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var r = Block<TIn, TOut>.TryParse(parser, null, out var block, out error);
+        var r = Block<TIn, TOut>.TryParse(false, parser, null, out var block, out _, out error);
         result = block;
         return r;
     }
 
-    public override bool TryAutocomplete(ForwardParser parser, string? argName, [NotNullWhen(true)] out CompletionResult? options, out IConError? error)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
     {
-        throw new NotImplementedException();
+        Block<TIn, TOut>.TryParse(true, parser, null, out _, out var autocomplete, out _);
+        if (autocomplete is null)
+            return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((null, null));
+
+        return autocomplete.Value;
     }
 }

@@ -3,7 +3,7 @@
 namespace Robust.Shared.RTShell.Commands.Debug;
 
 [ConsoleCommand]
-public sealed class FuckCommand : ConsoleCommand
+internal sealed class FuckCommand : ConsoleCommand
 {
     [CommandImplementation]
     public object? Fuck([PipedArgument] object? value)

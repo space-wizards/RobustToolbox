@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Robust.Shared.RTShell.Commands.Info;
 
 [ConsoleCommand]
-public sealed class TypesCommand : ConsoleCommand
+internal sealed class TypesCommand : ConsoleCommand
 {
     [CommandImplementation("consumers")]
     public void Consumers([CommandInvocationContext] IInvocationContext ctx, [PipedArgument] object? input)
@@ -13,7 +13,7 @@ public sealed class TypesCommand : ConsoleCommand
 
         ctx.WriteLine($"Valid intakers for {t.PrettyName()}:");
 
-        foreach (var (command, subCommand) in ConManager.CommandsTakingType(t))
+        foreach (var (command, subCommand) in RtShell.CommandsTakingType(t))
         {
             if (subCommand is null)
                 ctx.WriteLine($"{command.Name}");
@@ -26,7 +26,7 @@ public sealed class TypesCommand : ConsoleCommand
     public IEnumerable<Type> Tree([CommandInvocationContext] IInvocationContext ctx, [PipedArgument] object? input)
     {
         var t = input is Type ? (Type)input : input!.GetType();
-        return ConManager.AllSteppedTypes(t);
+        return RtShell.AllSteppedTypes(t);
     }
 
     [CommandImplementation("gettype")]

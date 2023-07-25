@@ -7,7 +7,7 @@ using Robust.Shared.RTShell.Syntax;
 namespace Robust.Shared.RTShell.Commands.Generic;
 
 [ConsoleCommand]
-public sealed class MapCommand : ConsoleCommand
+internal sealed class MapCommand : ConsoleCommand
 {
     public override Type[] TypeParameterParsers => new[] {typeof(Type)};
 

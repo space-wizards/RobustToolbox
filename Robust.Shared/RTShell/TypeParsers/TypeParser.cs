@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
@@ -15,7 +16,7 @@ public interface ITypeParser : IPostInjectInit
 
     public bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error);
 
-    public bool TryAutocomplete(ForwardParser parser, string? argName, [NotNullWhen(true)] out CompletionResult? options, out IConError? error);
+    public ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName);
 }
 
 [PublicAPI]
@@ -29,11 +30,10 @@ public abstract class TypeParser<T> : ITypeParser
     public Type Parses => typeof(T);
 
     public abstract bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error);
-    public abstract bool TryAutocomplete(ForwardParser parser, string? argName, [NotNullWhen(true)] out CompletionResult? options, out IConError? error);
+    public abstract ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName);
 
     public void PostInject()
     {
-        Logger.Debug("awawasadfs");
         _sawmill = _log.GetSawmill(GetType().PrettyName());
     }
 }

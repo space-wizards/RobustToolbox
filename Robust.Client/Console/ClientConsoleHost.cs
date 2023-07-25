@@ -312,13 +312,14 @@ namespace Robust.Client.Console
             public async ValueTask<CompletionResult> GetCompletionAsync(
                 IConsoleShell shell,
                 string[] args,
+                string argStr,
                 CancellationToken cancel)
             {
                 var host = (ClientConsoleHost)shell.ConsoleHost;
                 var argsList = args.ToList();
                 argsList.Insert(0, Command);
 
-                return await host.DoServerCompletions(argsList, cancel);
+                return await host.DoServerCompletions(argsList, argStr, cancel);
             }
         }
 
@@ -336,10 +337,11 @@ namespace Robust.Client.Console
             public override async ValueTask<CompletionResult> GetCompletionAsync(
                 IConsoleShell shell,
                 string[] args,
+                string argStr,
                 CancellationToken cancel)
             {
                 var host = (ClientConsoleHost)shell.ConsoleHost;
-                return await host.DoServerCompletions(args.ToList(), cancel);
+                return await host.DoServerCompletions(args.ToList(), argStr, cancel);
             }
         }
     }

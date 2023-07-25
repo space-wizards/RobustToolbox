@@ -82,13 +82,13 @@ namespace Robust.Server.Console
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
                 ExecuteInShell(sudoShell, argStr["sudo ".Length..]);
-            }, (shell, args) =>
+            }, (shell, args, argStr) =>
             {
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
 
 #pragma warning disable CA2012
-                return CalcCompletions(sudoShell, args);
+                return CalcCompletions(sudoShell, args, argStr);
 #pragma warning restore CA2012
             });
 
@@ -195,9 +195,10 @@ namespace Robust.Server.Console
         private async void HandleConCompletions(MsgConCompletion message)
         {
             var session = _players.GetSessionByChannel(message.MsgChannel);
+
             var shell = new ConsoleShell(this, session, false);
 
-            var result = await CalcCompletions(shell, message.Args);
+            var result = await CalcCompletions(shell, message.Args, message.ArgString);
 
             var msg = new MsgConCompletionResp
             {
@@ -211,7 +212,7 @@ namespace Robust.Server.Console
             NetManager.ServerSendMessage(msg, message.MsgChannel);
         }
 
-        private ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args)
+        private ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
         {
             // Logger.Debug(string.Join(", ", args));
 
@@ -229,7 +230,7 @@ namespace Robust.Server.Console
             if (!ShellCanExecute(shell, cmdName))
                 return ValueTask.FromResult(CompletionResult.Empty);
 
-            return cmd.GetCompletionAsync(shell, args[1..], default);
+            return cmd.GetCompletionAsync(shell, args[1..], argStr, default);
         }
 
         private sealed class SudoShell : IConsoleShell

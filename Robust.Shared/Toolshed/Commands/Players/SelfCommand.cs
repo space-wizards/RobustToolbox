@@ -3,7 +3,7 @@ using Robust.Shared.Toolshed.Errors;
 
 namespace Robust.Shared.Toolshed.Commands.Players;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class SelfCommand : ToolshedCommand
 {
     [CommandImplementation]

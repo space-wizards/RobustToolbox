@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class EntitiesCommand : ToolshedCommand
 {
     [CommandImplementation]

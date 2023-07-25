@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class FloatTypeParser : TypeParser<int>
+internal sealed class FloatTypeParser : TypeParser<float>
 {
     public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {

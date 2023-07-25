@@ -7,7 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Commands.Info;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class SearchCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]

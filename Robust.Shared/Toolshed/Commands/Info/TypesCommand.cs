@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Robust.Shared.Toolshed.Commands.Info;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class TypesCommand : ToolshedCommand
 {
     [CommandImplementation("consumers")]

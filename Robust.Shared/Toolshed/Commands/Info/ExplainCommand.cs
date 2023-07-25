@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Toolshed.Commands.Info;
 
-[RtShellCommand]
+[ToolshedCommand]
 public sealed class ExplainCommand : ToolshedCommand
 {
     [CommandImplementation]

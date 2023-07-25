@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class EntCommand : ToolshedCommand
 {
     [CommandImplementation]

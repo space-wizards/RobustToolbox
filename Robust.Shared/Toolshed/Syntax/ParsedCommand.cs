@@ -195,7 +195,7 @@ public sealed class ParsedCommand
 
     public object? Invoke(object? pipedIn, IInvocationContext ctx)
     {
-        if (!ctx.CheckInvokable(Command, SubCommand, out var error))
+        if (!ctx.CheckInvokable(new CommandSpec(Command, SubCommand), out var error))
         {
             // Could not invoke the command for whatever reason, i.e. permission errors.
             if (error is not null)

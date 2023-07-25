@@ -4,8 +4,8 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
-[RtShellCommand]
-public sealed class NearbyCommand : ToolshedCommand
+[ToolshedCommand]
+internal sealed class NearbyCommand : ToolshedCommand
 {
     private EntityLookupSystem? _lookup;
 

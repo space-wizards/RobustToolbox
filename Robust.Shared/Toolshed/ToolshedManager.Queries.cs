@@ -92,6 +92,8 @@ public sealed partial class ToolshedManager
         do
         {
             yield return t;
+            if (t == typeof(void))
+                yield break;
             yield return typeof(IEnumerable<>).MakeGenericType(t);
 
             if (t.IsGenericType && allowVariants)

@@ -7,7 +7,7 @@ namespace Robust.Shared.Toolshed;
 
 public interface IInvocationContext
 {
-    public bool CheckInvokable(ToolshedCommand command, string? subCommand, out IConError? error);
+    public bool CheckInvokable(CommandSpec command, out IConError? error);
 
     ICommonSession? Session { get; }
 

@@ -33,12 +33,12 @@ public sealed partial class ToolshedManager
         var watch = new Stopwatch();
         watch.Start();
 
-        var tys = _reflection.FindTypesWithAttribute<RtShellCommandAttribute>();
+        var tys = _reflection.FindTypesWithAttribute<ToolshedCommandAttribute>();
         foreach (var ty in tys)
         {
             if (!ty.IsAssignableTo(typeof(ToolshedCommand)))
             {
-                _log.Error($"The type {ty.AssemblyQualifiedName} has {nameof(RtShellCommandAttribute)} without being a child of {nameof(ToolshedCommand)}");
+                _log.Error($"The type {ty.AssemblyQualifiedName} has {nameof(ToolshedCommandAttribute)} without being a child of {nameof(ToolshedCommand)}");
                 continue;
             }
 
@@ -58,13 +58,12 @@ public sealed partial class ToolshedManager
     private async ValueTask<CompletionResult> CompletionCallback(IConsoleShell shell, string[] args, string argstr)
     {
         var parser = new ForwardParser(argstr[2..]);
-        var ctx = new OldShellInvocationContext(shell);
-        Logger.Debug("awawa");
+
         CommandRun.TryParse(true, parser, null, null, false, out _, out var completions, out _);
         if (completions is null)
             return CompletionResult.Empty;
 
-        var (result, err) = await completions.Value;
+        var (result, _) = await completions.Value;
         if (result is null)
             return CompletionResult.Empty;
 
@@ -135,6 +134,8 @@ public readonly record struct CommandSpec(ToolshedCommand Cmd, string? SubComman
                 Cmd.Description(SubCommand)
             );
     }
+
+    public string FullName() => $"{Cmd.Name}{(SubCommand is not null ? ":" + SubCommand : "")}";
 
     public override string ToString()
     {

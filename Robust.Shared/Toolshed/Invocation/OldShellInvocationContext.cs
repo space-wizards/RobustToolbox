@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.Console;
+using Robust.Shared.IoC;
 using Robust.Shared.Players;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
@@ -8,8 +9,15 @@ namespace Robust.Shared.Toolshed.Invocation;
 
 internal sealed class OldShellInvocationContext : IInvocationContext
 {
-    public bool CheckInvokable(ToolshedCommand command, string? subCommand, out IConError? error)
+    [Dependency] private readonly ToolshedManager _toolshed = default!;
+
+    public bool CheckInvokable(CommandSpec command, out IConError? error)
     {
+        if (_toolshed.ActivePermissionController is { } controller)
+        {
+            return controller.CheckInvokable(command, Session, out error);
+        }
+
         error = null;
         return true;
     }
@@ -43,6 +51,7 @@ internal sealed class OldShellInvocationContext : IInvocationContext
 
     public OldShellInvocationContext(IConsoleShell shell)
     {
+        IoCManager.InjectDependencies(this);
         _shell = shell;
     }
 }

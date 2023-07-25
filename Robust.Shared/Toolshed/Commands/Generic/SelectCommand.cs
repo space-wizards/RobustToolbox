@@ -7,7 +7,7 @@ using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class SelectCommand : ToolshedCommand
 {
     [Dependency] private readonly IRobustRandom _random = default!;

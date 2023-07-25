@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class CountCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]

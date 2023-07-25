@@ -4,8 +4,8 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
-[RtShellCommand]
-public sealed class PrototypedCommand : ToolshedCommand
+[ToolshedCommand]
+internal sealed class PrototypedCommand : ToolshedCommand
 {
     [CommandImplementation()]
     public IEnumerable<EntityUid> Prototyped([PipedArgument] IEnumerable<EntityUid> input,

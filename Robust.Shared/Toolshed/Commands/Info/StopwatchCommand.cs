@@ -4,7 +4,7 @@ using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.Commands.Info;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class StopwatchCommand : ToolshedCommand
 {
     [CommandImplementation]

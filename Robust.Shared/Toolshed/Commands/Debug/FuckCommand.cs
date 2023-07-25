@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Toolshed.Commands.Debug;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class FuckCommand : ToolshedCommand
 {
     [CommandImplementation]

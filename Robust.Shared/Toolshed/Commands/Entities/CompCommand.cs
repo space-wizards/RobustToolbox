@@ -6,7 +6,7 @@ using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class CompCommand : ToolshedCommand
 {
     public override Type[] TypeParameterParsers => new[] {typeof(ComponentType)};

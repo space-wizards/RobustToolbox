@@ -29,7 +29,7 @@ public abstract partial class ToolshedCommand
 
     public ToolshedCommand()
     {
-        var name = GetType().GetCustomAttribute<RtShellCommandAttribute>()!.Name;
+        var name = GetType().GetCustomAttribute<ToolshedCommandAttribute>()!.Name;
 
         if (name is null)
         {

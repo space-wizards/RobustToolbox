@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Toolshed.Commands.Info;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class CmdCommand : ToolshedCommand
 {
     [CommandImplementation("list")]

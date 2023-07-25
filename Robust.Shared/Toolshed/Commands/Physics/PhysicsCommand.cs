@@ -5,7 +5,7 @@ using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.Toolshed.Commands.Physics;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class PhysicsCommand : ToolshedCommand
 {
     [CommandImplementation("velocity")]

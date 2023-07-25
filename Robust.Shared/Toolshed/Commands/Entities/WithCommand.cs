@@ -5,7 +5,7 @@ using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class WithCommand : ToolshedCommand
 {
     [CommandImplementation]

@@ -5,7 +5,7 @@ namespace Robust.Shared.Toolshed;
 
 [AttributeUsage(AttributeTargets.Class)]
 [MeansImplicitUse]
-public sealed class RtShellCommandAttribute : Attribute
+public sealed class ToolshedCommandAttribute : Attribute
 {
     public string? Name = null;
 }

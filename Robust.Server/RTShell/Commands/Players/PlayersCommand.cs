@@ -14,7 +14,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.Commands.Players;
 
-[RtShellCommand]
+[ToolshedCommand]
 public sealed class PlayerCommand : ToolshedCommand
 {
     [Dependency] private readonly IPlayerManager _playerManager = default!;

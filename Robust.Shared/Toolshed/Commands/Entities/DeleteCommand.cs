@@ -4,7 +4,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class DeleteCommand : ToolshedCommand
 {
     [Dependency] private readonly IEntityManager _entity = default!;

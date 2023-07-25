@@ -5,7 +5,7 @@ using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
-[RtShellCommand]
+[ToolshedCommand]
 internal sealed class MapCommand : ToolshedCommand
 {
     public override Type[] TypeParameterParsers => new[] {typeof(Type)};

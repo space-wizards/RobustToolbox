@@ -1,0 +1,12 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace Robust.Shared.Toolshed.Commands.Generic;
+
+[RtShellCommand]
+public sealed class UniqueCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Unique<T>([PipedArgument] IEnumerable<T> input)
+        => input.Distinct();
+}

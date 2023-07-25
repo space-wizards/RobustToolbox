@@ -8,13 +8,14 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
-using Robust.Shared.RTShell.Errors;
+using Robust.Shared.Toolshed;
+using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.Commands.Players;
 
 [RtShellCommand]
-public sealed class PlayerCommand : RtShellCommand
+public sealed class PlayerCommand : ToolshedCommand
 {
     [Dependency] private readonly IPlayerManager _playerManager = default!;
 

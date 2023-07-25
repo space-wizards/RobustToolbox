@@ -36,6 +36,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
@@ -369,7 +370,7 @@ namespace Robust.Server
             _prototype.LoadDefaultPrototypes();
             _prototype.ResolveResults();
 
-            IoCManager.Resolve<RtShellManager>().Initialize();
+            IoCManager.Resolve<ToolshedManager>().Initialize();
             _consoleHost.Initialize();
             _entityManager.Startup();
             _mapManager.Startup();

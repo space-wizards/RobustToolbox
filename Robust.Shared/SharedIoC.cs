@@ -12,12 +12,12 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Profiling;
 using Robust.Shared.Random;
-using Robust.Shared.RTShell;
 using Robust.Shared.Sandboxing;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 
 namespace Robust.Shared
 {
@@ -47,7 +47,7 @@ namespace Robust.Shared
             deps.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
             deps.Register<IParallelManager, ParallelManager>();
             deps.Register<IParallelManagerInternal, ParallelManager>();
-            deps.Register<RtShellManager>();
+            deps.Register<ToolshedManager>();
         }
     }
 }

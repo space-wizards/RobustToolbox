@@ -4,8 +4,8 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.RTShell.Commands.Entities;
 
-[ConsoleCommand]
-internal sealed class DeleteCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class DeleteCommand : RtShellCommand
 {
     [Dependency] private readonly IEntityManager _entity = default!;
 

@@ -15,7 +15,7 @@ namespace Robust.Shared.RTShell;
 internal sealed class ConsoleCommandImplementor
 {
     [Dependency] private readonly RtShellManager _rtShellManager = default!;
-    public required ConsoleCommand Owner;
+    public required RtShellCommand Owner;
 
     public required string? SubCommand;
 

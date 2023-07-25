@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.RTShell;
 
-public abstract partial class ConsoleCommand
+public abstract partial class RtShellCommand
 {
     public string Description(string? subCommand)
         => Loc.GetString($"command-description-{Name}" + (subCommand is not null ? $"-{subCommand}" : ""));

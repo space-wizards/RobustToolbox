@@ -5,7 +5,7 @@ namespace Robust.Shared.RTShell;
 
 [AttributeUsage(AttributeTargets.Class)]
 [MeansImplicitUse]
-public sealed class ConsoleCommandAttribute : Attribute
+public sealed class RtShellCommandAttribute : Attribute
 {
     public string? Name = null;
 }
@@ -32,7 +32,6 @@ public sealed class PipedArgumentAttribute : Attribute
 [MeansImplicitUse]
 public sealed class CommandArgumentAttribute : Attribute
 {
-    public readonly bool Optional = false;
 }
 
 [AttributeUsage(AttributeTargets.Parameter)]

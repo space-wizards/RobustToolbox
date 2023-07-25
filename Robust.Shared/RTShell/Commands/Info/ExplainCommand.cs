@@ -2,8 +2,8 @@
 
 namespace Robust.Shared.RTShell.Commands.Info;
 
-[ConsoleCommand]
-public sealed class ExplainCommand : ConsoleCommand
+[RtShellCommand]
+public sealed class ExplainCommand : RtShellCommand
 {
     [CommandImplementation]
     public void Explain(

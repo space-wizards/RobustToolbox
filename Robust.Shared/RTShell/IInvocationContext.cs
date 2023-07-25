@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.Players;
+using Robust.Shared.Reflection;
 using Robust.Shared.RTShell.Errors;
 using Robust.Shared.Utility;
 
@@ -7,7 +8,7 @@ namespace Robust.Shared.RTShell;
 
 public interface IInvocationContext
 {
-    public bool CheckInvokable(ConsoleCommand command, string? subCommand, out IConError? error);
+    public bool CheckInvokable(RtShellCommand command, string? subCommand, out IConError? error);
 
     ICommonSession? Session { get; }
 

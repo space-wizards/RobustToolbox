@@ -40,7 +40,7 @@ public sealed partial class RtShellManager
         }
     }
 
-    public ITypeParser? GetParserForType(Type t)
+    private ITypeParser? GetParserForType(Type t)
     {
         if (_consoleTypeParsers.TryGetValue(t, out var parser))
             return parser;

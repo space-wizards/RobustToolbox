@@ -5,8 +5,8 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.Commands.Info;
 
-[ConsoleCommand]
-internal sealed class BuildInfoCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class BuildInfoCommand : RtShellCommand
 {
     [Dependency] private readonly IConfigurationManager _cfg = default!;
 

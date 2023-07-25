@@ -13,8 +13,8 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.Commands.Players;
 
-[ConsoleCommand]
-public sealed class PlayerCommand : ConsoleCommand
+[RtShellCommand]
+public sealed class PlayerCommand : RtShellCommand
 {
     [Dependency] private readonly IPlayerManager _playerManager = default!;
 

@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace Robust.Shared.RTShell.Commands.Generic;
 
-[ConsoleCommand]
-internal sealed class CountCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class CountCommand : RtShellCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public int Count<T>([PipedArgument] IEnumerable<T> enumerable)

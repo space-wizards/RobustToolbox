@@ -15,7 +15,7 @@ using Invocable = Func<CommandInvocationArguments, object?>;
 
 public sealed class ParsedCommand
 {
-    public ConsoleCommand Command { get; }
+    public RtShellCommand Command { get; }
     public Type? ReturnType { get; }
 
     public Type? PipedType => Bundle.PipedArgumentType;
@@ -46,7 +46,7 @@ public sealed class ParsedCommand
         return true;
     }
 
-    private ParsedCommand(CommandArgumentBundle bundle, Invocable invocable, ConsoleCommand command, Type? returnType, string? subCommand)
+    private ParsedCommand(CommandArgumentBundle bundle, Invocable invocable, RtShellCommand command, Type? returnType, string? subCommand)
     {
         Invocable = invocable;
         Bundle = bundle;
@@ -67,7 +67,7 @@ public sealed class ParsedCommand
         return true;
     }
 
-    private static bool TryParseCommand(bool makeCompletions, ForwardParser parser, CommandArgumentBundle bundle, Type? pipedType, Type? targetType, out string? subCommand, [NotNullWhen(true)] out Invocable? invocable, [NotNullWhen(true)] out ConsoleCommand? command, out IConError? error, out bool noCommand, out ValueTask<(CompletionResult?, IConError?)>? autocomplete)
+    private static bool TryParseCommand(bool makeCompletions, ForwardParser parser, CommandArgumentBundle bundle, Type? pipedType, Type? targetType, out string? subCommand, [NotNullWhen(true)] out Invocable? invocable, [NotNullWhen(true)] out RtShellCommand? command, out IConError? error, out bool noCommand, out ValueTask<(CompletionResult?, IConError?)>? autocomplete)
     {
         noCommand = false;
         var start = parser.Index;
@@ -271,7 +271,7 @@ public record struct NoImplementationError(string Cmd, Type[] Types, string? Sub
     public StackTrace? Trace { get; set; }
 }
 
-public record struct UnknownSubcommandError(string Cmd, string SubCmd, ConsoleCommand Command) : IConError
+public record struct UnknownSubcommandError(string Cmd, string SubCmd, RtShellCommand Command) : IConError
 {
     public FormattedMessage DescribeInner()
     {

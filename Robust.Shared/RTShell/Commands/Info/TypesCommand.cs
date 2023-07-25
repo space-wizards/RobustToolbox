@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace Robust.Shared.RTShell.Commands.Info;
 
-[ConsoleCommand]
-internal sealed class TypesCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class TypesCommand : RtShellCommand
 {
     [CommandImplementation("consumers")]
     public void Consumers([CommandInvocationContext] IInvocationContext ctx, [PipedArgument] object? input)

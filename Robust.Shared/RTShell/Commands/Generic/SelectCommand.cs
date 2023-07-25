@@ -8,8 +8,8 @@ using Robust.Shared.RTShell.TypeParsers;
 
 namespace Robust.Shared.RTShell.Commands.Generic;
 
-[ConsoleCommand]
-internal sealed class SelectCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class SelectCommand : RtShellCommand
 {
     [Dependency] private readonly IRobustRandom _random = default!;
 

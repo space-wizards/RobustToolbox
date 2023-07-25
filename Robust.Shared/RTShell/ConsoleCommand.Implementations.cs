@@ -7,7 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell;
 
-public abstract partial class ConsoleCommand
+public abstract partial class RtShellCommand
 {
     private readonly Dictionary<string, ConsoleCommandImplementor> _implementors = new();
     private readonly Dictionary<(CommandDiscriminator, string?), List<MethodInfo>> _concreteImplementations = new();

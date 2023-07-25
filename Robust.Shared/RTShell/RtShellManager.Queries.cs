@@ -37,7 +37,7 @@ public sealed partial class RtShellManager
         }
     }
 
-    public IEnumerable<(ConsoleCommand, string?)> CommandsFittingConstraint(Type input, Type output)
+    public IEnumerable<(RtShellCommand, string?)> CommandsFittingConstraint(Type input, Type output)
     {
         foreach (var (command, subcommand) in CommandsTakingType(input))
         {

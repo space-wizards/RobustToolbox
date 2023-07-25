@@ -4,8 +4,8 @@ using Robust.Shared.RTShell.Syntax;
 
 namespace Robust.Shared.RTShell.Commands.Info;
 
-[ConsoleCommand]
-internal sealed class CmdCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class CmdCommand : RtShellCommand
 {
     [CommandImplementation("list")]
     public IEnumerable<CommandSpec> List()

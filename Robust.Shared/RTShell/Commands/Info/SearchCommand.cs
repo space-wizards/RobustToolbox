@@ -7,8 +7,8 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.RTShell.Commands.Info;
 
-[ConsoleCommand]
-internal sealed class SearchCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class SearchCommand : RtShellCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<FormattedMessage> Search<T>([PipedArgument] IEnumerable<T> input, [CommandArgument] string term)

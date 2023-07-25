@@ -6,8 +6,8 @@ using Robust.Shared.RTShell.TypeParsers;
 
 namespace Robust.Shared.RTShell.Commands.Entities;
 
-[ConsoleCommand]
-internal sealed class CompCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class CompCommand : RtShellCommand
 {
     public override Type[] TypeParameterParsers => new[] {typeof(ComponentType)};
 

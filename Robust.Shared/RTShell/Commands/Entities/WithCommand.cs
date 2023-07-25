@@ -5,8 +5,8 @@ using Robust.Shared.RTShell.TypeParsers;
 
 namespace Robust.Shared.RTShell.Commands.Entities;
 
-[ConsoleCommand]
-internal sealed class WithCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class WithCommand : RtShellCommand
 {
     [CommandImplementation]
     public IEnumerable<EntityUid> With([PipedArgument] IEnumerable<EntityUid> input, [CommandArgument] ComponentType ty, [CommandInverted] bool inverted)

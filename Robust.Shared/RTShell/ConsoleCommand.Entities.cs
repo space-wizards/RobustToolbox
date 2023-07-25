@@ -5,13 +5,22 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.RTShell;
 
-public abstract partial class ConsoleCommand
+public abstract partial class RtShellCommand
 {
     [PublicAPI, IoC.Dependency]
     protected readonly IEntityManager EntityManager = default!;
 
     [PublicAPI, IoC.Dependency]
     protected readonly IEntitySystemManager EntitySystemManager = default!;
+
+    protected MetaDataComponent MetaData(EntityUid entity)
+        => EntityManager.GetComponent<MetaDataComponent>(entity);
+
+    protected TransformComponent Transform(EntityUid entity)
+        => EntityManager.GetComponent<TransformComponent>(entity);
+
+    protected string EntName(EntityUid entity)
+        => EntityManager.GetComponent<MetaDataComponent>(entity).EntityName;
 
     [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Del(EntityUid entityUid)

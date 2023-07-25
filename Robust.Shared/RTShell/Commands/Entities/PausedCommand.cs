@@ -4,8 +4,8 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.RTShell.Commands.Entities;
 
-[ConsoleCommand]
-internal sealed class PausedCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class PausedCommand : RtShellCommand
 {
     [CommandImplementation]
     public IEnumerable<EntityUid> Paused([PipedArgument] IEnumerable<EntityUid> entities, [CommandInverted] bool inverted)

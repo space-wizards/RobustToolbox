@@ -25,7 +25,7 @@ public sealed partial class RtShellManager
 
     private ISawmill _log = default!;
 
-    private readonly Dictionary<string, ConsoleCommand> _commands = new();
+    private readonly Dictionary<string, RtShellCommand> _commands = new();
 
     public void Initialize()
     {
@@ -33,16 +33,16 @@ public sealed partial class RtShellManager
         var watch = new Stopwatch();
         watch.Start();
 
-        var tys = _reflection.FindTypesWithAttribute<ConsoleCommandAttribute>();
+        var tys = _reflection.FindTypesWithAttribute<RtShellCommandAttribute>();
         foreach (var ty in tys)
         {
-            if (!ty.IsAssignableTo(typeof(ConsoleCommand)))
+            if (!ty.IsAssignableTo(typeof(RtShellCommand)))
             {
-                _log.Error($"The type {ty.AssemblyQualifiedName} has {nameof(ConsoleCommandAttribute)} without being a child of {nameof(ConsoleCommand)}");
+                _log.Error($"The type {ty.AssemblyQualifiedName} has {nameof(RtShellCommandAttribute)} without being a child of {nameof(RtShellCommand)}");
                 continue;
             }
 
-            var command = (ConsoleCommand)Activator.CreateInstance(ty)!;
+            var command = (RtShellCommand)Activator.CreateInstance(ty)!;
             IoCManager.InjectDependencies(command);
 
             _commands.Add(command.Name, command);
@@ -89,9 +89,9 @@ public sealed partial class RtShellManager
         }
     }
 
-    public ConsoleCommand GetCommand(string commandName) => _commands[commandName];
+    public RtShellCommand GetCommand(string commandName) => _commands[commandName];
 
-    public bool TryGetCommand(string commandName, [NotNullWhen(true)] out ConsoleCommand? command)
+    public bool TryGetCommand(string commandName, [NotNullWhen(true)] out RtShellCommand? command)
     {
         return _commands.TryGetValue(commandName, out command);
     }
@@ -121,9 +121,9 @@ public sealed partial class RtShellManager
     }
 }
 
-public readonly record struct CommandSpec(ConsoleCommand Cmd, string? SubCommand) : IAsType<ConsoleCommand>
+public readonly record struct CommandSpec(RtShellCommand Cmd, string? SubCommand) : IAsType<RtShellCommand>
 {
-    public ConsoleCommand AsType()
+    public RtShellCommand AsType()
     {
         return Cmd;
     }

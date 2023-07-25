@@ -4,8 +4,8 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.RTShell.Commands.Entities;
 
-[ConsoleCommand]
-internal sealed class EntitiesCommand : ConsoleCommand
+[RtShellCommand]
+internal sealed class EntitiesCommand : RtShellCommand
 {
     [CommandImplementation]
     public IEnumerable<EntityUid> Entities()

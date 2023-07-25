@@ -8,7 +8,7 @@ namespace Robust.Shared.RTShell.Invocation;
 
 internal sealed class OldShellInvocationContext : IInvocationContext
 {
-    public bool CheckInvokable(ConsoleCommand command, string? subCommand, out IConError? error)
+    public bool CheckInvokable(RtShellCommand command, string? subCommand, out IConError? error)
     {
         error = null;
         return true;

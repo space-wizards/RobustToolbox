@@ -14,7 +14,7 @@ using Invocable = System.Func<Robust.Shared.RTShell.CommandInvocationArguments, 
 namespace Robust.Shared.RTShell;
 
 [Reflect(false)]
-public abstract partial class ConsoleCommand
+public abstract partial class RtShellCommand
 {
     [Dependency] protected readonly RtShellManager RtShell = default!;
 
@@ -28,9 +28,9 @@ public abstract partial class ConsoleCommand
 
     public IEnumerable<string> Subcommands => _implementors.Keys.Where(x => x != "");
 
-    public ConsoleCommand()
+    public RtShellCommand()
     {
-        var name = GetType().GetCustomAttribute<ConsoleCommandAttribute>()!.Name;
+        var name = GetType().GetCustomAttribute<RtShellCommandAttribute>()!.Name;
 
         if (name is null)
         {
@@ -77,9 +77,6 @@ public abstract partial class ConsoleCommand
             {
                 if (param.GetCustomAttribute<CommandArgumentAttribute>() is { } arg)
                 {
-                    if (arg.Optional)
-                        continue;
-
                     if (parameters.ContainsKey(param.Name!))
                         continue;
 

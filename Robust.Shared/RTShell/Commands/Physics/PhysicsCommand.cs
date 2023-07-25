@@ -17,7 +17,7 @@ internal sealed class PhysicsCommand : ConsoleCommand
             if (!physQuery.TryGetComponent(ent, out var comp))
                 continue;
 
-            yield return comp.LinearVelocity.Length;
+            yield return comp.LinearVelocity.Length();
         }
     }
 

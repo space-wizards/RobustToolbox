@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.RTShell.Commands.Entities;
@@ -9,6 +10,7 @@ internal sealed class EntitiesCommand : ConsoleCommand
     [CommandImplementation]
     public IEnumerable<EntityUid> Entities()
     {
-        return EntityManager.GetEntities();
+        // NOTE: Makes a copy due to the fact chained on commands might modify this list.
+        return EntityManager.GetEntities().ToHashSet();
     }
 }

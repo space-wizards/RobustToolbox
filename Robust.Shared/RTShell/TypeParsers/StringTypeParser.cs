@@ -43,6 +43,13 @@ internal sealed class StringTypeParser : TypeParser<string>
 
             if (parser.PeekChar() is '"' or null)
             {
+                if (parser.PeekChar() is null)
+                {
+                    error = new OutOfInputError();
+                    result = null;
+                    return false;
+                }
+
                 parser.GetChar();
                 break;
             }

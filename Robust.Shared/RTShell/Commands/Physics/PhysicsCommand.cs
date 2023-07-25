@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Physics.Components;
 
@@ -19,6 +20,16 @@ internal sealed class PhysicsCommand : ConsoleCommand
 
             yield return comp.LinearVelocity.Length();
         }
+    }
+
+    public IEnumerable<EntityUid> Parents([PipedArgument] IEnumerable<EntityUid> input)
+    {
+        foreach (var VARIABLE in input)
+        {
+
+        }
+
+        throw new NotImplementedException();
     }
 
     [CommandImplementation("angular_velocity")]

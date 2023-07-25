@@ -35,7 +35,7 @@ internal static class ReflectionExtensions
 
         if (variantCount > 1)
         {
-            throw new NotImplementedException("I swear to god I am NOT supporting more than one variant type parameter.");
+            throw new NotImplementedException("I swear to god I am NOT supporting more than one variant type parameter. Absolutely no combinatorial explosions in this house, factorials can go home.");
         }
 
         yield return t;

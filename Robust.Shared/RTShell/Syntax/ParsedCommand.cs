@@ -84,17 +84,10 @@ public sealed class ParsedCommand
                 error = new OutOfInputError();
                 error.Contextualize(parser.Input, (parser.Index, parser.Index));
                 autocomplete = null;
-                if (pipedType is not null && makeCompletions)
+                if (makeCompletions)
                 {
-                    var cmds = conManager.CommandsTakingType(pipedType);
+                    var cmds = conManager.CommandsTakingType(pipedType ?? typeof(void));
                     autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
-                }
-                else if (makeCompletions)
-                {
-                    autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(
-                        conManager.AllCommands().Select(x => x.AsCompletion()),
-                        "<command>"
-                    ), error));
                 }
 
                 return false;
@@ -126,15 +119,22 @@ public sealed class ParsedCommand
 
         if (cmdImpl.HasSubCommands)
         {
+            error = null;
+            autocomplete = null;
+            if (makeCompletions)
+            {
+                var cmds = conManager.CommandsTakingType(pipedType ?? typeof(void)).Where(x => x.Cmd.Name == cmd);
+                autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((
+                    CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
+            }
+
             if (parser.GetChar() is not ':')
             {
                 noCommand = true;
                 error = new OutOfInputError();
                 error.Contextualize(parser.Input, (parser.Index, parser.Index));
-                autocomplete = null;
                 return false;
             }
-
 
             var subCmdStart = parser.Index;
 
@@ -143,7 +143,6 @@ public sealed class ParsedCommand
                 noCommand = true;
                 error = new OutOfInputError();
                 error.Contextualize(parser.Input, (parser.Index, parser.Index));
-                autocomplete = null;
                 return false;
             }
 
@@ -152,14 +151,20 @@ public sealed class ParsedCommand
                 noCommand = true;
                 error = new UnknownSubcommandError(cmd, subcmd, cmdImpl);
                 error.Contextualize(parser.Input, (subCmdStart, parser.Index));
-                autocomplete = null;
                 return false;
             }
 
             subCommand = subcmd;
         }
 
-        parser.Consume(char.IsWhiteSpace);
+        if (parser.Consume(char.IsWhiteSpace) == 0 && makeCompletions)
+        {
+            noCommand = true;
+            error = null;
+            var cmds = conManager.CommandsTakingType(pipedType ?? typeof(void));
+            autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), null));
+            return false;
+        }
 
         var argsStart = parser.Index;
 

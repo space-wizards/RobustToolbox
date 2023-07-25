@@ -130,7 +130,7 @@ internal sealed class ConsoleCommandImplementor
         else
         {
             impls = possibleImpls.Where(x =>
-                x.ConsoleGetPipedArgument() is {} param && pipedType!.IsAssignableTo(param.ParameterType)
+                x.ConsoleGetPipedArgument() is {} param && _rtShellManager.IsTransformableTo(pipedType, param.ParameterType)
                 || x.IsGenericMethodDefinition);
         }
 
@@ -157,7 +157,7 @@ internal sealed class ConsoleCommandImplementor
                 else
                 {
                     // (ParameterType)(args.PipedArgument)
-                    paramList.Add(Expression.Convert(Expression.Field(args, nameof(CommandInvocationArguments.PipedArgument)), pipedType));
+                    paramList.Add(_rtShellManager.GetTransformer(param.ParameterType, pipedType, Expression.Field(args, nameof(CommandInvocationArguments.PipedArgument))));
                 }
 
                 continue;

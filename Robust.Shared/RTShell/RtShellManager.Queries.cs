@@ -76,7 +76,7 @@ public sealed partial class RtShellManager
 
     private Dictionary<Type, HashSet<Type>> _typeCache = new();
 
-    public IEnumerable<Type> AllSteppedTypes(Type t, bool allowVariants = true)
+    internal IEnumerable<Type> AllSteppedTypes(Type t, bool allowVariants = true)
     {
         if (_typeCache.TryGetValue(t, out var cache))
             return cache;
@@ -92,6 +92,7 @@ public sealed partial class RtShellManager
         do
         {
             yield return t;
+            yield return typeof(IEnumerable<>).MakeGenericType(t);
 
             if (t.IsGenericType && allowVariants)
             {

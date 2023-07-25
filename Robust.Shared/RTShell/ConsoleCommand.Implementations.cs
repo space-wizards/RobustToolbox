@@ -38,6 +38,8 @@ public abstract partial class ConsoleCommand
         }
 
         impl = GetConcreteImplementationsInternal(pipedType, typeArguments, subCommand);
+        if (impl.Count == 0 && pipedType is not null && pipedType != typeof(void))
+            impl = GetConcreteImplementationsInternal(typeof(IEnumerable<>).MakeGenericType(pipedType), typeArguments, subCommand);
         _concreteImplementations[idx] = impl;
         return impl;
     }

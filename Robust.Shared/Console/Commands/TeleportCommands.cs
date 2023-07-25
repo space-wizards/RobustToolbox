@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -53,7 +54,7 @@ internal sealed class TeleportCommand : LocalizedCommands
 
         if (_map.TryFindGridAt(mapId, position, out var gridUid, out var grid))
         {
-            var gridPos = grid.WorldToLocal(position);
+            var gridPos = xformSystem.GetInvWorldMatrix(gridUid).Transform(position);
 
             xformSystem.SetCoordinates(entity, transform, new EntityCoordinates(gridUid, gridPos));
         }

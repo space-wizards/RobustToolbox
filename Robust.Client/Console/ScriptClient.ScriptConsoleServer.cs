@@ -109,7 +109,7 @@ namespace Robust.Client.Console
             public void ReceiveCompletionResponse(MsgScriptCompletionResponse response)
             {
                 Suggestions.SetSuggestions(response);
-                Suggestions.OpenAt((Position.X + Size.X, Position.Y), (Size.X / 2, Size.Y));
+                Suggestions.OpenAt(new(Position.X + Size.X, Position.Y), new(Size.X / 2, Size.Y));
             }
         }
     }

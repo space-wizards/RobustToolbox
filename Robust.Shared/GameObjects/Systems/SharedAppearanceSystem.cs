@@ -46,7 +46,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
         DebugTools.Assert(value.GetType().IsValueType || value is ICloneable, "Appearance data values must be cloneable.");
 
         component.AppearanceData[key] = value;
-        Dirty(component);
+        Dirty(uid, component);
         QueueUpdate(uid, component);
     }
 

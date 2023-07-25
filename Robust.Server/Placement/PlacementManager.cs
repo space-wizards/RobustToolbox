@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Collections;
@@ -188,7 +189,7 @@ namespace Robust.Server.Placement
             {
                 var newGrid = _mapManager.CreateGrid(coordinates.GetMapId(_entityManager));
                 var newGridXform = _entityManager.GetComponent<TransformComponent>(newGrid.Owner);
-                newGridXform.WorldPosition = coordinates.Position - (newGrid.TileSize / 2f); // assume bottom left tile origin
+                newGridXform.WorldPosition = coordinates.Position - newGrid.TileSizeHalfVector; // assume bottom left tile origin
                 var tilePos = newGrid.WorldToTile(coordinates.Position);
                 newGrid.SetTile(tilePos, new Tile(tileType));
             }

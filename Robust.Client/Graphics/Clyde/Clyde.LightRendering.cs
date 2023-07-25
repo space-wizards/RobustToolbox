@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Buffers;
+using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
@@ -17,6 +18,7 @@ using Robust.Shared.Physics;
 using Robust.Client.ComponentTrees;
 using static Robust.Shared.GameObjects.OccluderComponent;
 using Robust.Shared.Utility;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -558,7 +560,7 @@ namespace Robust.Client.Graphics.Clyde
             if (light.CastShadows)
                 shadowCount++;
 
-            float distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared;
+            var distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared();
             state.clyde._lightsToRenderList[count++] = (light, lightPos, distanceSquared, rot);
 
             return true;

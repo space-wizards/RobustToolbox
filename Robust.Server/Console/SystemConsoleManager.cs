@@ -47,6 +47,7 @@ namespace Robust.Server.Console
         private long _lastReceivedBytes;
         private long _lastSentBytes;
 
+        private bool _hasCancelled;
 
         public void Dispose()
         {
@@ -319,8 +320,15 @@ namespace Robust.Server.Console
 
         private void CancelKeyHandler(object? sender, ConsoleCancelEventArgs args)
         {
+            if (_hasCancelled)
+            {
+                Con.WriteLine("Double CancelKey, terminating process.");
+                return;
+            }
+
             // Handle process exiting ourselves.
             args.Cancel = true;
+            _hasCancelled = true;
 
             _taskManager.RunOnMainThread(() => { _baseServer.Shutdown("CancelKey"); });
         }

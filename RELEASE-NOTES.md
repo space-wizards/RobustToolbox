@@ -43,15 +43,143 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed potential crashes if buffered audio sources (e.g. MIDI) fail to create due to running out of audio streams.
 
 ### Other
 
-*None yet*
+* Pressing `^C` twice on the server will now cause it to hard-exit immediately.
+* `Tools` now has `EXCEPTION_TOLERANCE` enabled.
 
 ### Internal
 
 *None yet*
+
+
+## 140.0.0
+
+### Breaking changes
+
+* `IReplayRecordingManager.RecordingFinished` now takes a `ReplayRecordingFinished` object as argument.
+* `IReplayRecordingManager.GetReplayStats` now returns a `ReplayRecordingStats` struct instead of a tuple. The units have also been normalized
+
+### New features
+
+* `IReplayRecordingManager` can now track a "state" object for an active recording.
+* If the path given to `IReplayRecordingManager.TryStartRecording` is rooted, the base replay directory is ignored.
+
+### Other
+
+* `IReplayRecordingManager` no longer considers itself recording inside `RecordingFinished`.
+* `IReplayRecordingManager.Initialize()` was moved to an engine-internal interface.
+
+
+## 139.0.0
+
+### Breaking changes
+
+* Remove Component.Startup(), fully replacing it with the Eventbus.
+
+
+## 138.1.0
+
+### New features
+
+* Add rotation methods to TransformSystem for no lerp.
+
+### Bugfixes
+
+* Fix AnimationCompleted ordering.
+
+
+## 138.0.0
+
+### Breaking changes
+
+* Obsoleted unused `IMidiRenderer.VolumeBoost` property. Use `IMidiRenderer.VelocityOverride` instead.
+* `IMidiRenderer.TrackedCoordinates` is now a `MapCoordinates`.
+
+### New features
+
+* Added `Master` property to `IMidiRenderer`, which allows it to copy all MIDI events from another renderer.
+* Added `FilteredChannels` property to `IMidiRenderer`, which allows it to filter out notes from certain channels.
+* Added `SystemReset` helper property to `IMidiRenderer`, which allows you to easily send it a SystemReset MIDI message.
+
+### Bugfixes
+
+* Fixed some cases were `MidiRenderer` would not respect the `MidiBank` and `MidiProgram.
+* Fixed user soundfonts not loading.
+* Fixed `ItemList` item selection unselecting everything when in `Multiple` mode.
+
+
+## 137.1.0
+
+### New features
+
+* Added BQL `paused` selector.
+* `ModUpdateLevel.PostInput` allows running content code after network and async task processing.
+
+### Other
+
+* BQL `with` now includes paused entities.
+* The game loop now times more accurately and avoids sleeping more than necessary.
+* Sandboxing (and thus, client startup) should be much faster when ran from the launcher.
+
+
+## 137.0.0
+
+### Breaking changes
+
+* Component network state handler methods have been fully deprecated and replaced with the eventbus event equivalents (ComponentGetState and ComponentHandleState).
+
+
+## 136.0.1
+
+### Bugfixes
+
+* Fixed debugging on Linux when CEF is enabled.
+
+
+## 136.0.0
+
+### New features
+
+* Several more style box properties now scale with UI scale. Signature of some stylebox methods have been changed.
+
+### Bugfixes
+
+* Fixed OutputPanel scroll-bar not functioning properly.
+
+
+## 135.0.0
+
+### Breaking changes
+
+* Style boxes now scale with the current UI scale. This affects how the the margins, padding, and style box textures are drawn and how controls are arranged. Various style box methods now need to be provided with the current UI scale.
+
+
+## 134.0.0
+
+### Breaking changes
+
+* Several methods were moved out of the `UserInterface` components and into the UI system.
+* The BUI constructor arguments have changed and now require an EntityUid to be given instead of a component.
+
+
+## 133.0.0
+
+### Breaking changes
+
+* Replace Robust's Vector2 with System.Numerics.Vector2.
+
+### New features
+
+* `AssetPassPipe` has a new `CheckDuplicates` property that makes it explicitly check for and drop duplicate asset files passed through.
+
+### Bugfixes
+
+* Static entities that are parented to other entities will no longer collide with their parent.
+* Fix some miscellaneous doc comments and typos (e.g. PvsSystem and EntityManager).
+* Fix ContentGetDirectoryEntries.
 
 
 ## 132.2.0

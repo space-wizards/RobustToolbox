@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -141,29 +142,6 @@ namespace Robust.Client.GameObjects
                     _eyeManager.CurrentEye = _eye;
                 }
             }
-        }
-
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            base.HandleComponentState(curState, nextState);
-
-            if (curState is not EyeComponentState state)
-            {
-                return;
-            }
-
-            DrawFov = state.DrawFov;
-            // TODO: Should be a way for content to override lerping and lerp the zoom
-            Zoom = state.Zoom;
-            Offset = state.Offset;
-            VisibilityMask = state.VisibilityMask;
-        }
-
-        protected override void OnRemove()
-        {
-            base.OnRemove();
-
-            Current = false;
         }
 
         /// <summary>

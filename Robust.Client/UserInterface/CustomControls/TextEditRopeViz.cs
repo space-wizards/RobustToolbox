@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
@@ -86,8 +87,6 @@ internal sealed class TextEditRopeViz : OSWindow
 
         DrawNode(root, _panOffset, 0, out _);
 
-        const int nodeWidthHalf = 2;
-
         float DrawNode(Rope.Node node, Vector2 offset, int depth, out Vector2 nodePos)
         {
             switch (node)
@@ -95,16 +94,16 @@ internal sealed class TextEditRopeViz : OSWindow
                 case Rope.Branch branch:
                 {
                     var depthOffset = 20 + (totalDepth - depth) * 4;
-                    var leftWidth = DrawNode(branch.Left, offset + (0, depthOffset), depth + 1, out var leftPos);
+                    var leftWidth = DrawNode(branch.Left, offset + new Vector2(0, depthOffset), depth + 1, out var leftPos);
                     var rightWidth = 0f;
                     Vector2? rightPos = null;
                     if (branch.Right is { } right)
                     {
-                        rightWidth = DrawNode(right, offset + (leftWidth, depthOffset), depth + 1, out var rightPosOut);
+                        rightWidth = DrawNode(right, offset + new Vector2(leftWidth, depthOffset), depth + 1, out var rightPosOut);
                         rightPos = rightPosOut;
                     }
 
-                    nodePos = offset + (leftWidth, 0);
+                    nodePos = offset + new Vector2(leftWidth, 0);
                     handle.DrawLine(nodePos, leftPos, Color.DarkGray);
 
                     if (rightPos is { } rp)
@@ -113,10 +112,10 @@ internal sealed class TextEditRopeViz : OSWindow
                     }
                     else
                     {
-                        handle.DrawLine(nodePos, nodePos + (10, 10), Color.Red);
+                        handle.DrawLine(nodePos, nodePos + new Vector2(10, 10), Color.Red);
                     }
 
-                    handle.DrawRect(new UIBox2(nodePos - (1, 1), nodePos + (2, 2)), Color.White);
+                    handle.DrawRect(new UIBox2(nodePos - new Vector2(1, 1), nodePos + new Vector2(2, 2)), Color.White);
 
                     return leftWidth + rightWidth;
                 }
@@ -124,7 +123,7 @@ internal sealed class TextEditRopeViz : OSWindow
                 {
                     var colorIdx = leaf.Text.Length;
                     var color = colorIdx < LeafColors.Length ? LeafColors[colorIdx] : LeafColors[^1];
-                    handle.DrawRect(new UIBox2(offset - (2, 2), offset + (3, 3)), color);
+                    handle.DrawRect(new UIBox2(offset - new Vector2(2, 2), offset + new Vector2(3, 3)), color);
                     nodePos = offset;
                     return 6;
                 }
@@ -135,7 +134,7 @@ internal sealed class TextEditRopeViz : OSWindow
 
         static UIBox2 Around(Vector2 vec, float size)
         {
-            return new UIBox2(vec - (size, size), vec + (size, size));
+            return new UIBox2(vec - new Vector2(size, size), vec + new Vector2(size, size));
         }
     }
 

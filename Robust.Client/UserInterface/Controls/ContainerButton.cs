@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
@@ -34,13 +35,13 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            var boxSize = ActualStyleBox.MinimumSize / UIScale;
-            var childBox = Vector2.ComponentMax(availableSize - boxSize, Vector2.Zero);
+            var boxSize = ActualStyleBox.MinimumSize;
+            var childBox = Vector2.Max(availableSize - boxSize, Vector2.Zero);
             var min = Vector2.Zero;
             foreach (var child in Children)
             {
                 child.Measure(childBox);
-                min = Vector2.ComponentMax(min, child.DesiredSize);
+                min = Vector2.Max(min, child.DesiredSize);
             }
 
             return min + boxSize;
@@ -48,11 +49,12 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
-            var contentBox = ActualStyleBox.GetContentBox(UIBox2.FromDimensions(Vector2.Zero, finalSize * UIScale));
+            var box = UIBox2.FromDimensions(Vector2.Zero, finalSize);
+            var contentBox = ActualStyleBox.GetContentBox(box, 1);
 
             foreach (var child in Children)
             {
-                child.ArrangePixel((UIBox2i) contentBox);
+                child.Arrange(contentBox);
             }
 
             return finalSize;
@@ -64,7 +66,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var style = ActualStyleBox;
             var drawBox = PixelSizeBox;
-            style.Draw(handle, drawBox);
+            style.Draw(handle, drawBox, UIScale);
         }
 
         protected override void DrawModeChanged()

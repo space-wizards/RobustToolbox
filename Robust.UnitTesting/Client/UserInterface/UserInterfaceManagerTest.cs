@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -55,11 +56,11 @@ namespace Robust.UnitTesting.Client.UserInterface
             _userInterfaceManager.RootControl.AddChild(control1);
             control1.AddChild(control2);
             // Offsets to test relative positioning on the events.
-            LayoutContainer.SetPosition(control2, (5, 5));
+            LayoutContainer.SetPosition(control2, new Vector2(5, 5));
             control2.AddChild(control3);
-            LayoutContainer.SetPosition(control3, (5, 5));
+            LayoutContainer.SetPosition(control3, new Vector2(5, 5));
             control3.AddChild(control4);
-            LayoutContainer.SetPosition(control4, (5, 5));
+            LayoutContainer.SetPosition(control4, new Vector2(5, 5));
 
             control1.Arrange(new UIBox2(0, 0, 50, 50));
 

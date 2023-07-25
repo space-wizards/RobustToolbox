@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -278,7 +279,7 @@ internal struct Simplex
             case 2:
             {
                 Vector2 e12 = V._01.W - V._00.W;
-                float sgn = Vector2.Cross(e12, -V._00.W);
+                float sgn = Vector2Helpers.Cross(e12, -V._00.W);
                 if (sgn > 0.0f)
                 {
                     // Origin is left of e12.
@@ -361,10 +362,10 @@ internal struct Simplex
                 return 0.0f;
 
             case 2:
-                return (V._00.W - V._01.W).Length;
+                return (V._00.W - V._01.W).Length();
 
             case 3:
-                return Vector2.Cross(V._01.W - V._00.W, V._02.W - V._00.W);
+                return Vector2Helpers.Cross(V._01.W - V._00.W, V._02.W - V._00.W);
 
             default:
                 Debug.Assert(false);
@@ -480,11 +481,11 @@ internal struct Simplex
         float d23_2 = -w2e23;
 
         // Triangle123
-        float n123 = Vector2.Cross(e12, e13);
+        float n123 = Vector2Helpers.Cross(e12, e13);
 
-        float d123_1 = n123 * Vector2.Cross(w2, w3);
-        float d123_2 = n123 * Vector2.Cross(w3, w1);
-        float d123_3 = n123 * Vector2.Cross(w1, w2);
+        float d123_1 = n123 * Vector2Helpers.Cross(w2, w3);
+        float d123_2 = n123 * Vector2Helpers.Cross(w3, w1);
+        float d123_3 = n123 * Vector2Helpers.Cross(w1, w2);
 
         // w1 region
         if (d12_2 <= 0.0f && d13_2 <= 0.0f)

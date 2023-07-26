@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed;
 
@@ -11,6 +13,13 @@ public sealed partial class ToolshedManager
     {
         if (left.IsAssignableTo(right))
             return true;
+
+        var asType = typeof(IAsType<>).MakeGenericType(right);
+
+        if (left.GetInterfaces().Contains(asType))
+        {
+            return true;
+        }
 
         if (right == typeof(object))
             return true; // May need boxed.
@@ -26,10 +35,21 @@ public sealed partial class ToolshedManager
         return false;
     }
 
-    internal Expression GetTransformer(Type to, Type from, Expression input)
+    internal Expression GetTransformer(Type from, Type to, Expression input)
     {
         if (!IsTransformableTo(from, to))
             throw new InvalidCastException();
+
+        var asType = typeof(IAsType<>).MakeGenericType(to);
+
+        if (from.GetInterfaces().Contains(asType))
+        {
+            // Just call astype 4head
+            return Expression.Convert(
+                    Expression.Call(input, asType.GetMethod(nameof(IAsType<int>.AsType))!),
+                    to
+                );
+        }
 
         if (to.IsGenericType && to.GetGenericTypeDefinition() == typeof(IEnumerable<>))
         {

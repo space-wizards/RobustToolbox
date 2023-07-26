@@ -193,15 +193,22 @@ public sealed class ParsedCommand
         return true;
     }
 
+    private bool _passedInvokeTest = false;
+
     public object? Invoke(object? pipedIn, IInvocationContext ctx)
     {
-        if (!ctx.CheckInvokable(new CommandSpec(Command, SubCommand), out var error))
+        if (!_passedInvokeTest && !ctx.CheckInvokable(new CommandSpec(Command, SubCommand), out var error))
         {
             // Could not invoke the command for whatever reason, i.e. permission errors.
             if (error is not null)
                 ctx.ReportError(error);
             return null;
         }
+
+        // TODO: This optimization might be dangerous if blocks can be passed to other people through vars.
+        // Or not if it can only be done deliberately, but social engineering is a thing.
+        _passedInvokeTest = true;
+
         try
         {
             return Invocable.Invoke(new CommandInvocationArguments()

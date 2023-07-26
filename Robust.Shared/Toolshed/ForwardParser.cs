@@ -19,9 +19,9 @@ public sealed class ForwardParser
 
     public int Index { get; private set; } = 0;
 
-    public ForwardParser(string input)
+    public ForwardParser(string input, ToolshedManager toolshed)
     {
-        IoCManager.InjectDependencies(this);
+        Toolshed = toolshed;
         Input = input;
         MaxIndex = input.Length - 1;
     }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed;
@@ -29,6 +30,8 @@ internal sealed class ToolshedCommandImplementor
     public bool TryParseArguments(bool doAutocomplete, ForwardParser parser, string? subCommand, Type? pipedType, [NotNullWhen(true)] out Dictionary<string, object?>? args, out Type[] resolvedTypeArguments, out IConError? error, out ValueTask<(CompletionResult?, IConError?)>? autocomplete)
     {
         resolvedTypeArguments = new Type[Owner.TypeParameterParsers.Length];
+
+        var firstStart = parser.Index;
 
         for (var i = 0; i < Owner.TypeParameterParsers.Length; i++)
         {
@@ -70,7 +73,8 @@ internal sealed class ToolshedCommandImplementor
         if (impls.FirstOrDefault() is not { } impl)
         {
             args = null;
-            error = null;
+            error = new NoImplementationError(Owner.Name, resolvedTypeArguments, subCommand, pipedType);
+            error.Contextualize(parser.Input, (firstStart, parser.Index));
             autocomplete = null;
             return false;
         }
@@ -157,7 +161,7 @@ internal sealed class ToolshedCommandImplementor
                 else
                 {
                     // (ParameterType)(args.PipedArgument)
-                    paramList.Add(_toolshedManager.GetTransformer(param.ParameterType, pipedType, Expression.Field(args, nameof(CommandInvocationArguments.PipedArgument))));
+                    paramList.Add(_toolshedManager.GetTransformer(pipedType, param.ParameterType, Expression.Field(args, nameof(CommandInvocationArguments.PipedArgument))));
                 }
 
                 continue;

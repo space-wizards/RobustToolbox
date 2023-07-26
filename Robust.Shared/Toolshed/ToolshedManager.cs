@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
@@ -57,7 +58,7 @@ public sealed partial class ToolshedManager
 
     private async ValueTask<CompletionResult> CompletionCallback(IConsoleShell shell, string[] args, string argstr)
     {
-        var parser = new ForwardParser(argstr[2..]);
+        var parser = new ForwardParser(argstr[2..], this);
 
         CommandRun.TryParse(true, parser, null, null, false, out _, out var completions, out _);
         if (completions is null)
@@ -97,26 +98,43 @@ public sealed partial class ToolshedManager
 
     private void Callback(IConsoleShell shell, string argstr, string[] args)
     {
-        var parser = new ForwardParser(argstr[2..]);
+
         var ctx = new OldShellInvocationContext(shell);
-        if (!CommandRun.TryParse(false, parser, null, null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
+
+        if (!InvokeCommand(ctx, argstr[2..], null, out var result))
         {
-            if (err is not null)
+            var errs = ctx.GetErrors().ToList();
+            if (errs.Count == 0)
             {
-                ctx.ReportError(err);
-                ctx.WriteLine(err.Describe());
+                ctx.WriteLine("Got some unknown error when trying to invoke the command. This is probably a bug!");
             }
             else
             {
-                ctx.WriteLine("Got some unknown error while parsing.");
+                foreach (var err in errs)
+                {
+                    ctx.WriteLine(err.Describe());
+                }
             }
-
-            return;
         }
 
-        var value = expr.Invoke(null, ctx);
+        shell.WriteLine(FormattedMessage.FromMarkup(PrettyPrintType(result)));
+    }
 
-        shell.WriteLine(FormattedMessage.FromMarkup(PrettyPrintType(value)));
+    public bool InvokeCommand(IInvocationContext ctx, string command, object? input, out object? result)
+    {
+        var parser = new ForwardParser(command, this);
+        if (!CommandRun.TryParse(false, parser, input?.GetType(), null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
+        {
+
+            if (err is not null)
+                ctx.ReportError(err);
+
+            result = null;
+            return false;
+        }
+
+        result = expr.Invoke(input, ctx);
+        return true;
     }
 }
 

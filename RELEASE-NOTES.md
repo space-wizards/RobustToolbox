@@ -43,16 +43,31 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 141.0.0
+
+### Breaking changes
+
+* Component.Initialize has been fully replaced with the Eventbus.
+
+### Bugfixes
+
 * Fixed potential crashes if buffered audio sources (e.g. MIDI) fail to create due to running out of audio streams.
 
 ### Other
 
 * Pressing `^C` twice on the server will now cause it to hard-exit immediately.
 * `Tools` now has `EXCEPTION_TOLERANCE` enabled.
-
-### Internal
-
-*None yet*
 
 
 ## 140.0.0

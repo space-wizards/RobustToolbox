@@ -12,9 +12,9 @@ void main()
 
     lowp vec4 COLOR;
 
-    // [SHADER_CODE]
-
     lowp vec3 lightSample = texture2D(lightMap, Pos).rgb;
+
+    // [SHADER_CODE]
 
     gl_FragColor = zAdjustResult(COLOR * VtxModulate * vec4(lightSample, 1.0));
 }

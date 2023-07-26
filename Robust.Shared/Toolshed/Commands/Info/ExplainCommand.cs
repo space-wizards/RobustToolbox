@@ -15,6 +15,7 @@ public sealed class ExplainCommand : ToolshedCommand
         {
             ctx.WriteLine(cmd.Command.GetHelp(cmd.SubCommand));
             ctx.WriteLine($"{cmd.PipedType?.PrettyName() ?? "[none]"} -> {cmd.ReturnType?.PrettyName() ?? "[none]"}");
+            ctx.WriteLine("");
         }
     }
 }

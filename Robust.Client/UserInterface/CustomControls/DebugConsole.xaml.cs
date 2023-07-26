@@ -108,7 +108,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private Color DetermineColor(bool local, bool error)
         {
-            return Color.White;
+            return error ? Color.Red : Color.White;
         }
 
         protected override void FrameUpdate(FrameEventArgs args)

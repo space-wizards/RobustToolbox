@@ -10,6 +10,7 @@ using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -158,8 +159,13 @@ namespace Robust.Client.Console
             if (string.IsNullOrWhiteSpace(command))
                 return;
 
+            WriteLine(null, "");
+            var msg = new FormattedMessage();
+            msg.PushColor(Color.Gold);
+            msg.AddText("> " + command);
+            msg.Pop();
             // echo the command locally
-            WriteLine(null, "> " + command);
+            OutputText(msg, true, false);
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();

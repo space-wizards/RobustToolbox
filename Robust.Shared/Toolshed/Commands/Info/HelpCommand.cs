@@ -21,6 +21,7 @@ public sealed class HelpCommand : ToolshedCommand
         ctx.WriteMarkup($@"
 For a list of commands, run [color={Gold}]cmd:list[/color].
 To search for commands, run [color={Gold}]cmd:list search ""[color={Aqua}]query[/color]""[/color].
+For a breakdown of how a string of commands flows, run [color={Gold}]explain [color={Aqua}]commands here[/color][/color].
 ");
     }
 }

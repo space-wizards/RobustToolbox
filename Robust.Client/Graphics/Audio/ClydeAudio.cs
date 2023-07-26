@@ -261,6 +261,9 @@ namespace Robust.Client.Graphics.Audio
         {
             var source = AL.GenSource();
 
+            if (!AL.IsSource(source))
+                throw new Exception("Failed to generate source. Too many simultaneous audio streams?");
+
             // ReSharper disable once PossibleInvalidOperationException
 
             var audioSource = new BufferedAudioSource(this, source, AL.GenBuffers(buffers), floatAudio);

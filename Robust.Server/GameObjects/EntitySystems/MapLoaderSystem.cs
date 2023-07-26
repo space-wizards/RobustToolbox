@@ -44,6 +44,7 @@ public sealed class MapLoaderSystem : EntitySystem
                  private          IServerEntityManagerInternal _serverEntityManager = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private ISawmill _logLoader = default!;
@@ -764,11 +765,12 @@ public sealed class MapLoaderSystem : EntitySystem
             SequenceDataNode yamlGridChunks = (SequenceDataNode)yamlGrid["chunks"];
 
             var grid = AllocateMapGrid(gridComp, yamlGridInfo);
+            var gridUid = grid.Owner;
 
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY), notNullableOverride: true);
+                _serManager.Read(chunkNode, _context, instanceProvider: () => _mapSystem.GetOrAddChunk(gridUid, grid, chunkOffsetX, chunkOffsetY), notNullableOverride: true);
             }
         }
     }

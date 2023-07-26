@@ -97,6 +97,8 @@ internal sealed partial class ReplayPlaybackManager
 
             if (message is EntityEventArgs args)
                 _entMan.DispatchReceivedNetworkMsg(args);
+            else
+                _sawmill.Warning($"Unhandled replay message: {message.GetType()}");
         }
     }
 }

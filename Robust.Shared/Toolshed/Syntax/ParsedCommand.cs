@@ -19,7 +19,7 @@ public sealed class ParsedCommand
     public Type? ReturnType { get; }
 
     public Type? PipedType => Bundle.PipedArgumentType;
-    private Invocable Invocable { get; }
+    internal Invocable Invocable { get; }
     private CommandArgumentBundle Bundle { get; }
     public string? SubCommand { get; }
 
@@ -130,7 +130,6 @@ public sealed class ParsedCommand
 
             if (parser.GetChar() is not ':')
             {
-                noCommand = true;
                 error = new OutOfInputError();
                 error.Contextualize(parser.Input, (parser.Index, parser.Index));
                 return false;
@@ -140,7 +139,6 @@ public sealed class ParsedCommand
 
             if (parser.GetWord() is not { } subcmd)
             {
-                noCommand = true;
                 error = new OutOfInputError();
                 error.Contextualize(parser.Input, (parser.Index, parser.Index));
                 return false;
@@ -148,7 +146,6 @@ public sealed class ParsedCommand
 
             if (!cmdImpl.Subcommands.Contains(subcmd))
             {
-                noCommand = true;
                 error = new UnknownSubcommandError(cmd, subcmd, cmdImpl);
                 error.Contextualize(parser.Input, (subCmdStart, parser.Index));
                 return false;
@@ -159,7 +156,6 @@ public sealed class ParsedCommand
 
         if (parser.Consume(char.IsWhiteSpace) == 0 && makeCompletions)
         {
-            noCommand = true;
             error = null;
             var cmds = conManager.CommandsTakingType(pipedType ?? typeof(void));
             autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), null));
@@ -170,7 +166,6 @@ public sealed class ParsedCommand
 
         if (!cmdImpl.TryParseArguments(makeCompletions, parser, pipedType, subCommand, out var args, out var types, out error, out autocomplete))
         {
-            noCommand = true;
             error?.Contextualize(parser.Input, (argsStart, parser.Index));
             return false;
         }
@@ -179,7 +174,6 @@ public sealed class ParsedCommand
 
         if (!cmdImpl.TryGetImplementation(bundle.PipedArgumentType, subCommand, types, out var impl))
         {
-            noCommand = true;
             error = new NoImplementationError(cmd, types, subCommand, bundle.PipedArgumentType);
             error.Contextualize(parser.Input, (start, parser.Index));
             autocomplete = null;

@@ -26,8 +26,22 @@ internal sealed class QuantityParser : TypeParser<Quantity>
             return false;
         }
 
+        if (v < 0.0)
+        {
+            error = new InvalidQuantity(word);
+            result = null;
+            return false;
+        }
+
         if (word.EndsWith('%'))
         {
+            if (v > 100.0)
+            {
+                error = new InvalidQuantity(word);
+                result = null;
+                return false;
+            }
+
             result = new Quantity(null, (v / 100.0f));
             return true;
         }

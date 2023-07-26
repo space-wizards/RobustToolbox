@@ -9,12 +9,53 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Syntax;
 
+public sealed class Block
+{
+    internal CommandRun CommandRun { get; set; }
+
+    public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType,
+        [NotNullWhen(true)] out Block? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
+    {
+        parser.Consume(char.IsWhiteSpace);
+
+        var enclosed = parser.EatMatch('{');
+
+        CommandRun.TryParse(doAutoComplete, parser, pipedType, null, !enclosed, out var expr, out autoComplete, out error);
+
+        if (expr is null)
+        {
+            block = null;
+            return false;
+        }
+
+        if (enclosed && !parser.EatMatch('}'))
+        {
+            error = new MissingClosingBrace();
+            block = null;
+            return false;
+        }
+
+        block = new Block(expr);
+        return true;
+    }
+
+    public Block(CommandRun expr)
+    {
+        CommandRun = expr;
+    }
+
+    public object? Invoke(object? input, IInvocationContext ctx)
+    {
+        return CommandRun.Invoke(input, ctx);
+    }
+}
+
 /// <summary>
 /// Something more akin to actual expressions.
 /// </summary>
 public sealed class Block<T>
 {
-    private CommandRun<T> CommandRun { get; set; }
+    internal CommandRun<T> CommandRun { get; set; }
 
     public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType,
         [NotNullWhen(true)] out Block<T>? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
@@ -55,7 +96,7 @@ public sealed class Block<T>
 
 public sealed class Block<TIn, TOut>
 {
-    private CommandRun<TIn, TOut> CommandRun { get; set; }
+    internal CommandRun<TIn, TOut> CommandRun { get; set; }
 
     public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType,
         [NotNullWhen(true)] out Block<TIn, TOut>? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)

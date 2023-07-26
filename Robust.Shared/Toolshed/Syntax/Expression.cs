@@ -37,7 +37,10 @@ public sealed class CommandRun
             start = parser.Index;
         }
 
-        if (error is not null and not OutOfInputError || error is not null && noCommand && cmds.Count == 0 || cmds.Count == 0)
+        if (error is OutOfInputError && noCommand)
+            error = null;
+
+        if (error is not null and not OutOfInputError || error is OutOfInputError && !noCommand || cmds.Count == 0)
         {
             expr = null;
             return false;
@@ -87,7 +90,7 @@ public sealed class CommandRun
 
 public sealed class CommandRun<TIn, TOut>
 {
-    private readonly CommandRun _innerCommandRun;
+    internal readonly CommandRun InnerCommandRun;
 
     public static bool TryParse(bool doAutoComplete, ForwardParser parser, bool once,
         [NotNullWhen(true)] out CommandRun<TIn, TOut>? expr, out ValueTask<(CompletionResult?, IConError?)>? autocomplete, out IConError? error)
@@ -104,7 +107,7 @@ public sealed class CommandRun<TIn, TOut>
 
     public TOut? Invoke(object? input, IInvocationContext ctx)
     {
-        var res = _innerCommandRun.Invoke(input, ctx);
+        var res = InnerCommandRun.Invoke(input, ctx);
         if (res is null)
             return default;
         return (TOut?) res;
@@ -112,13 +115,13 @@ public sealed class CommandRun<TIn, TOut>
 
     private CommandRun(CommandRun commandRun)
     {
-        _innerCommandRun = commandRun;
+        InnerCommandRun = commandRun;
     }
 }
 
 public sealed class CommandRun<TRes>
 {
-    private readonly CommandRun _innerCommandRun;
+    internal readonly CommandRun _innerCommandRun;
 
     public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType, bool once,
         [NotNullWhen(true)] out CommandRun<TRes>? expr, out ValueTask<(CompletionResult?, IConError?)>? completion, out IConError? error)

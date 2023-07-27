@@ -20,7 +20,6 @@ public sealed class FontTag : IMarkupTag
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     public string Name => "font";
-    public bool IsUnsafe => false;
 
     /// <inheritdoc/>
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)

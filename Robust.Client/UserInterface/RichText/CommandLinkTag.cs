@@ -13,7 +13,6 @@ public sealed class CommandLinkTag : IMarkupTag
     [Dependency] private readonly IClientConsoleHost _clientConsoleHost = default!;
 
     public string Name => "cmdlink";
-    public bool IsUnsafe => true;
 
     /// <inheritdoc/>
     public bool TryGetControl(MarkupNode node, [NotNullWhen(true)] out Control? control)

@@ -13,7 +13,6 @@ public sealed class BoldTag : IMarkupTag
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     public string Name => "bold";
-    public bool IsUnsafe => false;
 
     /// <inheritdoc/>
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)

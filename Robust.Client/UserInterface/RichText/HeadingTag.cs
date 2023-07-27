@@ -12,7 +12,6 @@ public sealed class HeadingTag : IMarkupTag
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
     public string Name => "head";
-    public bool IsUnsafe => false;
 
     /// <inheritdoc/>
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)

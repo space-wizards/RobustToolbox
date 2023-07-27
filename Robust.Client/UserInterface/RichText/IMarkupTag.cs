@@ -11,11 +11,6 @@ public interface IMarkupTag
     public string Name { get; }
 
     /// <summary>
-    /// Whether or not this tag is unsafe to use in user input
-    /// </summary>
-    public bool IsUnsafe { get; }
-
-    /// <summary>
     /// Called when an opening node for this tag is encountered.<br/>
     /// Used for pushing new values used for rendering text contained within this tag.<br/>
     /// Important: Push some kind of default value into the context or throw when missing a required parameter

@@ -177,7 +177,7 @@ internal abstract partial class ViewVariablesManager
         var type = path.Type;
         var cache = GetCache(type);
 
-        foreach (var handler in GetAllTypeHandlers(type))
+        foreach (var handler in cache.GetAllHandlers())
         {
             foreach (var subpath in handler.ListPath(path))
             {

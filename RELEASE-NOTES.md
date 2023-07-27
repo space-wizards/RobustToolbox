@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 141.1.0
+
+### New features
+
+* MapInitEvent is run clientside for placementmanager entities to predict entity appearances.
+* Add CollisionLayerChangeEvent for physics fixtures.
+
+
 ## 141.0.0
 
 ### Breaking changes

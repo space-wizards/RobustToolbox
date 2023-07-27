@@ -845,7 +845,13 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            var channel = _channels[msg.SenderConnection];
+            if (!_channels.TryGetValue(msg.SenderConnection, out var channel))
+            {
+                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Got unexpected data packet before handshake completion.");
+
+                msg.SenderConnection.Disconnect("Unexpected packet before handshake completion");
+                return true;
+            }
 
             var encryption = IsServer ? channel.Encryption : _clientEncryption;
 

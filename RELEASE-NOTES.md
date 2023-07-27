@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Fix bug in `NetManager` that allowed exception spam through protocol abuse.
 
 ### Internal
 

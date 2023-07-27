@@ -72,6 +72,6 @@ public sealed class FontTag : IMarkupTag
             prototype = prototypeManager.Index<FontPrototype>(DefaultFont);
 
         var fontResource = cache.GetResource<FontResource>(prototype.Path);
-        return new VectorFont(fontId, fontResource, size);
+        return new VectorFont(fontResource, size);
     }
 }

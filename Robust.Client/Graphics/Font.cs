@@ -94,15 +94,9 @@ namespace Robust.Client.Graphics
     /// </summary>
     public sealed class VectorFont : Font
     {
-        public string? Name { get; }
         public int Size { get; }
 
         internal IFontInstanceHandle Handle { get; }
-
-        public VectorFont(string name, FontResource res, int sizehandle) : this(res, sizehandle)
-        {
-            Name = name;
-        }
 
         public VectorFont(FontResource res, int size)
         {

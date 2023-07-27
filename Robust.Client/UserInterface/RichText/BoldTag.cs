@@ -1,3 +1,4 @@
+using System.Linq;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -18,8 +19,7 @@ public sealed class BoldTag : IMarkupTag
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
         string fontId;
-        if (context.Font.TryPeek(out var previousFont)
-            && previousFont is Graphics.VectorFont { Name: ItalicTag.ItalicFont })
+        if (context.Tags.Any(x => x is ItalicTag))
             fontId = BoldItalicTag.BoldItalicFont;
         else
             fontId = BoldFont;

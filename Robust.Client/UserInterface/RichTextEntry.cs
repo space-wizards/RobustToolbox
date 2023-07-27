@@ -231,10 +231,12 @@ namespace Robust.Client.UserInterface
 
             if (!node.Closing)
             {
+                context.Tags.Add(tag);
                 tag.PushDrawContext(node, context);
                 return tag.TextBefore(node);
             }
 
+            context.Tags.Remove(tag);
             tag.PopDrawContext(node, context);
             return tag.TextAfter(node);
         }

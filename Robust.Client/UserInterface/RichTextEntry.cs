@@ -20,6 +20,8 @@ namespace Robust.Client.UserInterface
 
         private readonly MarkupTagManager _tagManager;
 
+        private readonly Type[]? _tagsAllowed;
+
         public readonly FormattedMessage Message;
 
         /// <summary>
@@ -46,6 +48,7 @@ namespace Robust.Client.UserInterface
             Width = 0;
             LineBreaks = default;
             _tagManager = tagManager;
+            _tagsAllowed = tagsAllowed;
 
             var nodeIndex = -1;
             foreach (var node in Message.Nodes)
@@ -55,7 +58,7 @@ namespace Robust.Client.UserInterface
                 if (node.Name == null)
                     continue;
 
-                if (!_tagManager.TryGetMarkupTag(node.Name, tagsAllowed, out var tag) || !tag.TryGetControl(node, out var control))
+                if (!_tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag) || !tag.TryGetControl(node, out var control))
                     continue;
 
                 parent.Children.Add(control);
@@ -226,7 +229,7 @@ namespace Robust.Client.UserInterface
                 return node.Value.StringValue ?? "";
 
             //Skip the node if there is no markup tag for it.
-            if (!_tagManager.TryGetMarkupTag(node.Name, null, out var tag))
+            if (!_tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag))
                 return "";
 
             if (!node.Closing)

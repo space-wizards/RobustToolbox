@@ -258,11 +258,17 @@ internal abstract partial class ViewVariablesManager
     [DataDefinition] // For VV path reading purposes.
     [SuppressMessage("ReSharper", "UnusedMember.Local")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    private sealed class VvTest : IEnumerable<object>
+    private sealed class VvTest : VvTestBase, IEnumerable<object>
     {
         [DataField("x")]
         [ViewVariables(VVAccess.ReadWrite)]
         private int X = 10;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public new string HiddenBase = "Hello, world!";
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public override string VirtualProperty { get; set; } = "I'm the overriden value!";
 
         // Note: DataField implies VV read-only already.
         [ViewVariables] public Dictionary<object, object> Dict = new() {{"a", "b"}, {"c", "d"}};
@@ -309,6 +315,21 @@ internal abstract partial class ViewVariablesManager
                 Y = 15;
             }
         }
+    }
+
+    [Virtual]
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    public class VvTestBase
+    {
+        [ViewVariables(VVAccess.ReadWrite)]
+        public string HiddenBase = "Goodbye, world...";
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float InheritedField = 5.0f;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public virtual string VirtualProperty { get; set; } = "I'm the base value!";
     }
 
     internal sealed class DomainData

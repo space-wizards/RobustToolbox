@@ -277,5 +277,7 @@ namespace Robust.Shared.Scripting
         public void ClearErrors()
         {
         }
+
+        public Dictionary<string, object?> Variables { get; }  = new();
     }
 }

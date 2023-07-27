@@ -49,6 +49,8 @@ internal sealed class OldShellInvocationContext : IInvocationContext
         _errors.Clear();
     }
 
+    public Dictionary<string, object?> Variables { get; } = new();
+
     public OldShellInvocationContext(IConsoleShell shell)
     {
         IoCManager.InjectDependencies(this);

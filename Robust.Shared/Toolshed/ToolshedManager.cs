@@ -7,6 +7,7 @@ using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Toolshed.Invocation;
@@ -96,10 +97,16 @@ public sealed partial class ToolshedManager
         return _commands.TryGetValue(commandName, out command);
     }
 
+    private Dictionary<NetUserId, IInvocationContext> _contexts = new();
+
     private void Callback(IConsoleShell shell, string argstr, string[] args)
     {
-
-        var ctx = new OldShellInvocationContext(shell);
+        var uid = shell.Player?.UserId ?? new NetUserId();
+        if (!_contexts.TryGetValue(uid, out var ctx))
+        {
+            ctx = new OldShellInvocationContext(shell);
+            _contexts[uid] = ctx;
+        }
 
         if (!InvokeCommand(ctx, argstr[2..], null, out var result))
         {
@@ -115,6 +122,8 @@ public sealed partial class ToolshedManager
                     ctx.WriteLine(err.Describe());
                 }
             }
+
+            ctx.ClearErrors();
         }
 
         shell.WriteLine(FormattedMessage.FromMarkup(PrettyPrintType(result)));

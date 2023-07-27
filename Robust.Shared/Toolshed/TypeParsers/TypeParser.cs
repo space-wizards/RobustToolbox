@@ -27,7 +27,7 @@ public abstract class TypeParser<T> : ITypeParser
 
     protected ISawmill _sawmill = default!;
 
-    public Type Parses => typeof(T);
+    public virtual Type Parses => typeof(T);
 
     public abstract bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error);
     public abstract ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName);

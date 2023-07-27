@@ -40,4 +40,17 @@ public interface IInvocationContext
     public IEnumerable<IConError> GetErrors();
 
     public void ClearErrors();
+
+    protected Dictionary<string, object?> Variables { get; }
+
+    public object? ReadVar(string name)
+    {
+        Variables.TryGetValue(name, out var res);
+        return res;
+    }
+
+    public void WriteVar(string name, object? value)
+    {
+        Variables[name] = value;
+    }
 }

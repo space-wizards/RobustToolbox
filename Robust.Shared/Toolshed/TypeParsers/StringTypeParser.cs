@@ -9,7 +9,8 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class StringTypeParser : TypeParser<string>
+[Virtual]
+internal class StringTypeParser : TypeParser<string>
 {
     public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {

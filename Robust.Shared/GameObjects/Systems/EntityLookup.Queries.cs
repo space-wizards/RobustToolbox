@@ -699,7 +699,7 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
-    public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Vector2i gridIndices, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid gridId, Vector2i gridIndices, float enlargement = PhysicsConstants.PolygonRadius * 1.5f, LookupFlags flags = DefaultFlags)
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid))
@@ -708,6 +708,7 @@ public sealed partial class EntityLookupSystem
         var lookup = _broadQuery.GetComponent(gridId);
         var tileSize = grid.TileSize;
         var aabb = GetLocalBounds(gridIndices, tileSize);
+        aabb = aabb.Enlarged(enlargement);
         return GetEntitiesIntersecting(lookup, aabb, flags);
     }
 
@@ -786,9 +787,9 @@ public sealed partial class EntityLookupSystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef, LookupFlags flags = DefaultFlags)
+    public IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef, float enlargement = PhysicsConstants.PolygonRadius * 1.5f, LookupFlags flags = DefaultFlags)
     {
-        return GetEntitiesIntersecting(tileRef.GridUid, tileRef.GridIndices, flags);
+        return GetEntitiesIntersecting(tileRef.GridUid, tileRef.GridIndices, enlargement, flags);
     }
 
     #endregion

@@ -47,11 +47,18 @@ END TEMPLATE-->
 
 ### Other
 
-* Fix bug in `NetManager` that allowed exception spam through protocol abuse.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 141.2.0
+
+### Other
+
+* Fix bug in `NetManager` that allowed exception spam through protocol abuse.
 
 
 ## 141.1.0

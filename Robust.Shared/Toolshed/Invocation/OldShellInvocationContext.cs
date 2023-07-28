@@ -22,19 +22,19 @@ internal sealed class OldShellInvocationContext : IInvocationContext
         return true;
     }
 
-    public ICommonSession? Session => _shell.Player;
+    public ICommonSession? Session => Shell.Player;
 
-    private IConsoleShell _shell;
+    public IConsoleShell Shell;
     private List<IConError> _errors = new();
 
     public void WriteLine(string line)
     {
-        _shell.WriteLine(line);
+        Shell.WriteLine(line);
     }
 
     public void WriteLine(FormattedMessage line)
     {
-        _shell.WriteLine(line);
+        Shell.WriteLine(line);
     }
 
     public void ReportError(IConError err)
@@ -54,6 +54,6 @@ internal sealed class OldShellInvocationContext : IInvocationContext
     public OldShellInvocationContext(IConsoleShell shell)
     {
         IoCManager.InjectDependencies(this);
-        _shell = shell;
+        Shell = shell;
     }
 }

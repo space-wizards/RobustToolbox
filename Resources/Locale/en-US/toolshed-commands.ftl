@@ -1,7 +1,5 @@
 ﻿command-description-tpto =
     Teleport the given entities to some target entity.
-command-description-runverbas =
-    Runs the given verb on some given entities, using the target entity as the runner.
 command-description-player-list =
     Returns a list of all player sessions.
 command-description-player-self =
@@ -61,3 +59,57 @@ command-description-with =
     This command can be inverted with not.
 command-description-fuck =
     Throws an exception.
+command-description-ecscomp-listty =
+    Lists every type of component registered.
+command-description-cd =
+    Changes the session's current directory to the given relative or absolute path.
+command-description-ls-here =
+    Lists the contents of the current directory.
+command-description-ls-in =
+    Lists the contents of the given relative or absolute path.
+command-description-methods-get =
+    Returns all methods associated with the input type.
+command-description-methods-overrides =
+    Returns all methods overriden on the input type.
+command-description-methods-overridesfrom =
+    Returns all methods overriden from the given type on the input type.
+command-description-cmd-moo =
+    Asks the important questions.
+command-description-cmd-descloc =
+    Returns the localization string for a command's description.
+command-description-cmd-getshim =
+    Returns a command's execution shim.
+command-description-help =
+    Provides a quick rundown of how to use toolshed.
+command-description-ioc-registered =
+    Returns all the types registered with IoCManager on the current thread (usually the game thread)
+command-description-ioc-get =
+    Gets an instance of an IoC registration.
+command-description-loc-tryloc =
+    Tries to get a localization string, returning null if unable.
+command-description-loc-loc =
+    Gets a localization string, returning the unlocalized string if unable.
+command-description-physics-angular_velocity =
+    Returns the angular velocity of the given entities.
+command-description-vars =
+    Provides a list of all variables set in this session.
+command-description-any =
+    Returns true if there's any values in the input, otherwise false.
+command-description-ArrowCommand =
+    Assigns the input to a variable.
+command-description-isempty =
+    Returns true if the input is empty, otherwise false.
+command-description-isnull =
+    Returns true if the input is null, otherwise false.
+command-description-unique =
+    Filters the input sequence for uniqueness, removing duplicate values.
+command-description-where =
+    Given some input sequence IEnumerable<T>, takes a block of signature T -> bool that decides if each input value should be included in the output sequence.
+command-description-do =
+    Backwards compatibility with BQL, applies the given old commands over the input sequence.
+command-description-named =
+    Filters the input entities by their name, with the regex $selector^.
+command-description-prototyped =
+    Filters the input entities by their prototype.
+command-description-nearby =
+    Creates a new list of all entities nearby the inputs within the given range.

@@ -4,6 +4,7 @@ using System.Reflection;
 
 namespace Robust.Shared.Toolshed.Commands.Types;
 
+#if CLIENT_SCRIPTING
 [ToolshedCommand]
 internal sealed class MethodsCommand : ToolshedCommand
 {
@@ -45,3 +46,4 @@ internal sealed class MethodsCommand : ToolshedCommand
         }
     }
 }
+#endif

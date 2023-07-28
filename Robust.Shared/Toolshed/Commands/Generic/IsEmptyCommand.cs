@@ -7,16 +7,16 @@ namespace Robust.Shared.Toolshed.Commands.Generic;
 internal sealed class IsEmptyCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public bool IsEmpty<T>([PipedArgument] T? input)
+    public bool IsEmpty<T>([PipedArgument] T? input, [CommandInverted] bool inverted)
     {
         if (input is null)
-            return true; // Null is empty for all we care.
+            return true ^ inverted; // Null is empty for all we care.
 
         if (input is IEnumerable @enum)
         {
-            return !@enum.Cast<object?>().Any();
+            return !@enum.Cast<object?>().Any() ^ inverted;
         }
 
-        return false; // Not a collection, cannot be empty.
+        return false ^ inverted; // Not a collection, cannot be empty.
     }
 }

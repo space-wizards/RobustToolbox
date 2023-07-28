@@ -3,7 +3,7 @@
 namespace Robust.Shared.Toolshed.Commands.Vfs;
 
 [ToolshedCommand]
-public sealed class CdCommand : VfsCommand
+internal sealed class CdCommand : VfsCommand
 {
     [CommandImplementation]
     public void Cd(

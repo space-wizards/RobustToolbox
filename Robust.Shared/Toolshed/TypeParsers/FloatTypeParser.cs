@@ -33,7 +33,8 @@ internal sealed class FloatTypeParser : TypeParser<float>
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+        string? argName)
     {
         return new ValueTask<(CompletionResult? result, IConError? error)>(
                 (CompletionResult.FromHint($"any float (decimal number)"), null)

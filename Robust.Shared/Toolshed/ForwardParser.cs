@@ -12,7 +12,7 @@ namespace Robust.Shared.Toolshed;
 
 public sealed class ForwardParser
 {
-    [Robust.Shared.IoC.Dependency] public readonly ToolshedManager Toolshed = default!;
+    [IoC.Dependency] public readonly ToolshedManager Toolshed = default!;
 
     public readonly string Input;
     public int MaxIndex { get; private set; }

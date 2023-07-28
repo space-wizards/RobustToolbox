@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Robust.Shared.Toolshed.Commands.Info;
+namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
 internal sealed class TypesCommand : ToolshedCommand

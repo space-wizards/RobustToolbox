@@ -19,7 +19,8 @@ internal sealed class BlockTypeParser : TypeParser<Block>
         return r;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+        string? argName)
     {
         Block.TryParse(true, parser, null, out _, out var autocomplete, out _);
         if (autocomplete is null)
@@ -43,7 +44,8 @@ internal sealed class BlockTypeParser<T> : TypeParser<Block<T>>
         return r;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+        string? argName)
     {
         Block<T>.TryParse(true, parser, null, out _, out var autocomplete, out _);
         if (autocomplete is null)
@@ -66,7 +68,8 @@ internal sealed class BlockTypeParser<TIn, TOut> : TypeParser<Block<TIn, TOut>>
         return r;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+        string? argName)
     {
         Block<TIn, TOut>.TryParse(true, parser, null, out _, out var autocomplete, out _);
         if (autocomplete is null)

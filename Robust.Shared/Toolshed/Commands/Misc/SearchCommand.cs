@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Toolshed.Commands.Info;
+namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
 internal sealed class SearchCommand : ToolshedCommand

@@ -33,7 +33,8 @@ internal sealed class IntTypeParser : TypeParser<int>
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+        string? argName)
     {
         return new ValueTask<(CompletionResult? result, IConError? error)>(
                 (CompletionResult.FromHint($"integer between {int.MinValue} and {int.MaxValue}"), null)

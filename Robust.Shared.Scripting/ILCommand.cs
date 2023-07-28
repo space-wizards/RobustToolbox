@@ -26,7 +26,7 @@ public sealed class ILCommand : ToolshedCommand
         }
     }
 
-    IILReader GetReader(MethodBase method)
+    private IILReader GetReader(MethodBase method)
     {
         IILReaderConfiguration cfg = ILReader.Configuration.Resolve(method);
         return cfg.GetReader(method);

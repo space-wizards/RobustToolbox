@@ -37,7 +37,8 @@ internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
         return true;
     }
 
-    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+        string? argName)
     {
         return (CompletionResult.FromHint("<entity id>"), null);
     }

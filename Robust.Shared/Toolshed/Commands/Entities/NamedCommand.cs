@@ -6,7 +6,7 @@ using Robust.Shared.GameObjects;
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
 [ToolshedCommand]
-public sealed class NamedCommand : ToolshedCommand
+internal sealed class NamedCommand : ToolshedCommand
 {
     [CommandImplementation]
     public IEnumerable<EntityUid> Named([PipedArgument] IEnumerable<EntityUid> input, [CommandArgument] string regex, [CommandInverted] bool inverted)

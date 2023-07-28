@@ -3,7 +3,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Toolshed.Commands.Info;
+namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
 internal sealed class BuildInfoCommand : ToolshedCommand

@@ -53,4 +53,9 @@ public interface IInvocationContext
     {
         Variables[name] = value;
     }
+
+    public IEnumerable<string> GetVars()
+    {
+        return Variables.Keys;
+    }
 }

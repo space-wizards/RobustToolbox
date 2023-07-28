@@ -71,7 +71,7 @@ public sealed class ParsedCommand
     {
         noCommand = false;
         var start = parser.Index;
-        var cmd = parser.GetWord(char.IsAsciiLetterOrDigit);
+        var cmd = parser.GetWord(c => c is not ':' and not '{' and not '}' && !char.IsWhiteSpace(c));
         subCommand = null;
         invocable = null;
         command = null;

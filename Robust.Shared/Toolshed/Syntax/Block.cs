@@ -20,7 +20,7 @@ public sealed class Block
 
         var enclosed = parser.EatMatch('{');
 
-        CommandRun.TryParse(doAutoComplete, parser, pipedType, null, !enclosed, out var expr, out autoComplete, out error);
+        CommandRun.TryParse(enclosed, doAutoComplete, parser, pipedType, null, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {
@@ -64,7 +64,7 @@ public sealed class Block<T>
 
         var enclosed = parser.EatMatch('{');
 
-        CommandRun<T>.TryParse(doAutoComplete, parser, pipedType, !enclosed, out var expr, out autoComplete, out error);
+        CommandRun<T>.TryParse(enclosed, doAutoComplete, parser, pipedType, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {
@@ -105,7 +105,7 @@ public sealed class Block<TIn, TOut>
 
         var enclosed = parser.EatMatch('{');
 
-        CommandRun<TIn, TOut>.TryParse(doAutoComplete, parser, !enclosed, out var expr, out autoComplete, out error);
+        CommandRun<TIn, TOut>.TryParse(enclosed, doAutoComplete, parser, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {

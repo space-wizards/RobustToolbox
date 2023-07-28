@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Metadata;
 using Robust.Shared.Toolshed.Syntax;
-using Invocable = System.Func<Robust.Shared.Toolshed.CommandInvocationArguments, object?>;
 
-namespace Robust.Shared.Toolshed.Commands.Info;
+namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
 internal sealed class CmdCommand : ToolshedCommand
@@ -17,6 +15,9 @@ internal sealed class CmdCommand : ToolshedCommand
     [CommandImplementation("moo")]
     public string Moo()
         => "Have you mooed today?";
+
+    [CommandImplementation("descloc")]
+    public string GetLogStr([PipedArgument] CommandSpec cmd) => cmd.DescLocStr();
 
 #if CLIENT_SCRIPTING
     [CommandImplementation("getshim")]

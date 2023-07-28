@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Physics.Components;
 
-namespace Robust.Shared.Toolshed.Commands.Physics;
+namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
 internal sealed class PhysicsCommand : ToolshedCommand

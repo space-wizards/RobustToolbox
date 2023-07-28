@@ -4,7 +4,7 @@ using System.Linq;
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
 [ToolshedCommand]
-public sealed class IsEmptyCommand : ToolshedCommand
+internal sealed class IsEmptyCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public bool IsEmpty<T>([PipedArgument] T? input)

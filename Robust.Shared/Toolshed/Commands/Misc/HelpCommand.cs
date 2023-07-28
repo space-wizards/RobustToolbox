@@ -1,6 +1,6 @@
 ﻿using Robust.Shared.Maths;
 
-namespace Robust.Shared.Toolshed.Commands.Info;
+namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
 public sealed class HelpCommand : ToolshedCommand

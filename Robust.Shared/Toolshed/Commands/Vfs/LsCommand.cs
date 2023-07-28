@@ -5,7 +5,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.Commands.Vfs;
 
 [ToolshedCommand]
-public sealed class LsCommand : VfsCommand
+internal sealed class LsCommand : VfsCommand
 {
     [CommandImplementation("here")]
     public IEnumerable<ResPath> LsHere([CommandInvocationContext] IInvocationContext ctx)

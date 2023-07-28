@@ -6,7 +6,7 @@ using Robust.Shared.IoC;
 namespace Robust.Shared.Toolshed.Commands;
 
 [ToolshedCommand]
-public sealed class EcsCompCommand : ToolshedCommand
+internal sealed class EcsCompCommand : ToolshedCommand
 {
     [Dependency] private readonly IComponentFactory _factory = default!;
 
@@ -15,6 +15,4 @@ public sealed class EcsCompCommand : ToolshedCommand
     {
         return _factory.AllRegisteredTypes;
     }
-
-
 }

@@ -19,7 +19,9 @@ public sealed class CommandRun
     public readonly List<(ParsedCommand, Vector2i)> Commands;
     private readonly string _originalExpr;
 
-    public static bool TryParse(bool doAutocomplete, ForwardParser parser, Type? pipedType, Type? targetOutput, bool once, [NotNullWhen(true)] out CommandRun? expr, out ValueTask<(CompletionResult?, IConError?)>? autocomplete, out IConError? error)
+    public static bool TryParse(bool blockMode, bool doAutocomplete, ForwardParser parser, Type? pipedType,
+        Type? targetOutput, bool once, [NotNullWhen(true)] out CommandRun? expr,
+        out ValueTask<(CompletionResult?, IConError?)>? autocomplete, out IConError? error)
     {
         autocomplete = null;
         error = null;
@@ -32,9 +34,12 @@ public sealed class CommandRun
             var end = parser.Index;
             pipedType = cmd.ReturnType;
             cmds.Add((cmd, (start, end)));
-            if (cmd.ReturnType == targetOutput)
-                goto done;
+            parser.Consume(char.IsWhiteSpace);
             start = parser.Index;
+
+            if (blockMode && parser.PeekChar() == '}')
+                break;
+            parser.DebugPrint();
         }
 
         if (error is OutOfInputError && noCommand)
@@ -46,14 +51,13 @@ public sealed class CommandRun
             return false;
         }
 
-        if (cmds.Last().Item1.ReturnType != targetOutput && targetOutput is not null)
+        if (!(cmds.Last().Item1.ReturnType?.IsAssignableTo(targetOutput) ?? false) && targetOutput is not null)
         {
             error = new ExpressionOfWrongType(targetOutput, cmds.Last().Item1.ReturnType!, once);
             expr = null;
             return false;
         }
 
-        done:
         expr = new CommandRun(cmds, parser.Input);
         return true;
     }
@@ -92,10 +96,11 @@ public sealed class CommandRun<TIn, TOut>
 {
     internal readonly CommandRun InnerCommandRun;
 
-    public static bool TryParse(bool doAutoComplete, ForwardParser parser, bool once,
-        [NotNullWhen(true)] out CommandRun<TIn, TOut>? expr, out ValueTask<(CompletionResult?, IConError?)>? autocomplete, out IConError? error)
+    public static bool TryParse(bool blockMode, bool doAutoComplete, ForwardParser parser, bool once,
+        [NotNullWhen(true)] out CommandRun<TIn, TOut>? expr,
+        out ValueTask<(CompletionResult?, IConError?)>? autocomplete, out IConError? error)
     {
-        if (!CommandRun.TryParse(doAutoComplete, parser, typeof(TIn), typeof(TOut), once, out var innerExpr, out autocomplete, out error))
+        if (!CommandRun.TryParse(blockMode, doAutoComplete, parser, typeof(TIn), typeof(TOut), once, out var innerExpr, out autocomplete, out error))
         {
             expr = null;
             return false;
@@ -123,10 +128,11 @@ public sealed class CommandRun<TRes>
 {
     internal readonly CommandRun _innerCommandRun;
 
-    public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType, bool once,
-        [NotNullWhen(true)] out CommandRun<TRes>? expr, out ValueTask<(CompletionResult?, IConError?)>? completion, out IConError? error)
+    public static bool TryParse(bool blockMode, bool doAutoComplete, ForwardParser parser, Type? pipedType, bool once,
+        [NotNullWhen(true)] out CommandRun<TRes>? expr, out ValueTask<(CompletionResult?, IConError?)>? completion,
+        out IConError? error)
     {
-        if (!CommandRun.TryParse(doAutoComplete, parser, pipedType, typeof(TRes), once, out var innerExpr, out completion, out error))
+        if (!CommandRun.TryParse(blockMode, doAutoComplete, parser, pipedType, typeof(TRes), once, out var innerExpr, out completion, out error))
         {
             expr = null;
             return false;

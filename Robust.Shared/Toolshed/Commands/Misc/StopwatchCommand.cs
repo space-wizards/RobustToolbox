@@ -2,7 +2,7 @@
 using Robust.Shared.Timing;
 using Robust.Shared.Toolshed.Syntax;
 
-namespace Robust.Shared.Toolshed.Commands.Info;
+namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
 internal sealed class StopwatchCommand : ToolshedCommand

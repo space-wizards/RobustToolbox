@@ -22,7 +22,8 @@ internal sealed class ResPathTypeParser : StringTypeParser
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+        string? argName)
     {
         return base.TryAutocomplete(parser, argName);
     }

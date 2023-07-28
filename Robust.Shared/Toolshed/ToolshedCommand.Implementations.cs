@@ -12,7 +12,7 @@ public abstract partial class ToolshedCommand
     private readonly Dictionary<string, ToolshedCommandImplementor> _implementors = new();
     private readonly Dictionary<(CommandDiscriminator, string?), List<MethodInfo>> _concreteImplementations = new();
 
-    public virtual bool TryGetReturnType(string? subCommand, Type? pipedType, Type[] typeArguments,
+    public bool TryGetReturnType(string? subCommand, Type? pipedType, Type[] typeArguments,
         [NotNullWhen(true)] out Type? type)
     {
         var impls = GetConcreteImplementations(pipedType, typeArguments, subCommand).ToList();

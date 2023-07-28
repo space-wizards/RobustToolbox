@@ -5,7 +5,7 @@ using System.Reflection;
 namespace Robust.Shared.Toolshed.Commands.Types;
 
 [ToolshedCommand]
-public sealed class MethodsCommand : ToolshedCommand
+internal sealed class MethodsCommand : ToolshedCommand
 {
     [CommandImplementation("get")]
     public IEnumerable<MethodInfo> Get([PipedArgument] IEnumerable<Type> types)

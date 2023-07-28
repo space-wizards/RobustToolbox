@@ -16,7 +16,8 @@ public interface ITypeParser : IPostInjectInit
 
     public bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error);
 
-    public ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName);
+    public ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+        string? argName);
 }
 
 [PublicAPI]
@@ -30,7 +31,8 @@ public abstract class TypeParser<T> : ITypeParser
     public virtual Type Parses => typeof(T);
 
     public abstract bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error);
-    public abstract ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName);
+    public abstract ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+        string? argName);
 
     public void PostInject()
     {

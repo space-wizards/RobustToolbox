@@ -24,6 +24,7 @@ public sealed partial class ToolshedManager
     [Dependency] private readonly IEntityManager _entity = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
+    [Dependency] private readonly INetManager _net = default!;
 
     private ISawmill _log = default!;
 
@@ -31,6 +32,11 @@ public sealed partial class ToolshedManager
 
     public void Initialize()
     {
+#if !CLIENT_SCRIPTING
+        if (_net.IsClient)
+            throw new NotImplementedException("Toolshed is not yet ready for client-side use.");
+#endif
+
         _log = _logManager.GetSawmill("toolshed");
         var watch = new Stopwatch();
         watch.Start();
@@ -61,7 +67,7 @@ public sealed partial class ToolshedManager
     {
         var parser = new ForwardParser(argstr[2..], this);
 
-        CommandRun.TryParse(true, parser, null, null, false, out _, out var completions, out _);
+        CommandRun.TryParse(false, true, parser, null, null, false, out _, out var completions, out _);
         if (completions is null)
             return CompletionResult.Empty;
 
@@ -132,7 +138,7 @@ public sealed partial class ToolshedManager
     public bool InvokeCommand(IInvocationContext ctx, string command, object? input, out object? result)
     {
         var parser = new ForwardParser(command, this);
-        if (!CommandRun.TryParse(false, parser, input?.GetType(), null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
+        if (!CommandRun.TryParse(false, false, parser, input?.GetType(), null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
         {
 
             if (err is not null)
@@ -163,6 +169,8 @@ public readonly record struct CommandSpec(ToolshedCommand Cmd, string? SubComman
     }
 
     public string FullName() => $"{Cmd.Name}{(SubCommand is not null ? ":" + SubCommand : "")}";
+
+    public string DescLocStr() => Cmd.UnlocalizedDescription(SubCommand);
 
     public override string ToString()
     {

@@ -1,13 +1,26 @@
-﻿using Robust.Shared.Localization;
+﻿using System.Linq;
+using Robust.Shared.Localization;
 
 namespace Robust.Shared.Toolshed;
 
 public abstract partial class ToolshedCommand
 {
     public string Description(string? subCommand)
-        => Loc.GetString($"command-description-{Name}" + (subCommand is not null ? $"-{subCommand}" : ""));
+        => Loc.GetString(UnlocalizedDescription(subCommand));
 
-    public string GetHelp(string? subCommand, bool includeName = true)
+    public string UnlocalizedDescription(string? subCommand)
+    {
+        if (Name.All(char.IsAsciiLetterOrDigit))
+        {
+            return $"command-description-{Name}" + (subCommand is not null ? $"-{subCommand}" : "");
+        }
+        else
+        {
+            return $"command-description-{GetType().PrettyName()}" + (subCommand is not null ? $"-{subCommand}" : "");
+        }
+    }
+
+    public string GetHelp(string? subCommand)
     {
         if (subCommand is null)
             return $"{Name}: {Description(null)}";

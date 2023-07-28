@@ -30,7 +30,8 @@ internal sealed class TypeTypeParser : TypeParser<Type>
         return result is not null;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+        string? argName)
     {
         return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHint("C# level type"), null));
     }

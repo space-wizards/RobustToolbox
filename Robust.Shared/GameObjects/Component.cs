@@ -75,14 +75,7 @@ namespace Robust.Shared.GameObjects
 
             LifeStage = ComponentLifeStage.Initializing;
             entManager.EventBus.RaiseComponentEvent(this, type, CompInitInstance);
-            Initialize();
-
-#if DEBUG
-            if (LifeStage != ComponentLifeStage.Initialized)
-            {
-                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Initialize)} in derived method.");
-            }
-#endif
+            LifeStage = ComponentLifeStage.Initialized;
         }
 
         /// <summary>
@@ -162,15 +155,6 @@ namespace Robust.Shared.GameObjects
         private static readonly ComponentStartup CompStartupInstance = new();
         private static readonly ComponentShutdown CompShutdownInstance = new();
         private static readonly ComponentRemove CompRemoveInstance = new();
-
-        /// <summary>
-        /// Called when all of the entity's other components have been added and are available,
-        /// But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
-        /// </summary>
-        protected virtual void Initialize()
-        {
-            LifeStage = ComponentLifeStage.Initialized;
-        }
 
         /// <summary>
         /// Called when the component is removed from an entity.

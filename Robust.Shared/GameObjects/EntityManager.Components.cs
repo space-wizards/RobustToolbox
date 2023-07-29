@@ -77,7 +77,10 @@ namespace Robust.Shared.GameObjects
             _netComponents.Clear();
             _entCompIndex.Clear();
             _deleteSet.Clear();
-            FillComponentDict();
+            foreach (var dict in _entTraitDict.Values)
+            {
+                dict.Clear();
+            }
         }
 
         private void AddComponentRefType(CompIdx type)

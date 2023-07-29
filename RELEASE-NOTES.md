@@ -47,11 +47,49 @@ END TEMPLATE-->
 
 ### Other
 
-* Pressing `^C` twice on the server will now cause it to hard-exit immediately.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 141.2.1
+
+### Bugfixes
+
+* Fix component trait dictionaries not clearing on reconnect leading to bad GetComponent in areas (e.g. entire game looks black due to no entities).
+
+
+## 141.2.0
+
+### Other
+
+* Fix bug in `NetManager` that allowed exception spam through protocol abuse.
+
+
+## 141.1.0
+
+### New features
+
+* MapInitEvent is run clientside for placementmanager entities to predict entity appearances.
+* Add CollisionLayerChangeEvent for physics fixtures.
+
+
+## 141.0.0
+
+### Breaking changes
+
+* Component.Initialize has been fully replaced with the Eventbus.
+
+### Bugfixes
+
+* Fixed potential crashes if buffered audio sources (e.g. MIDI) fail to create due to running out of audio streams.
+
+### Other
+
+* Pressing `^C` twice on the server will now cause it to hard-exit immediately.
+* `Tools` now has `EXCEPTION_TOLERANCE` enabled.
 
 
 ## 140.0.0

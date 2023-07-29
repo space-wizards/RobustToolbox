@@ -54,6 +54,23 @@ END TEMPLATE-->
 *None yet*
 
 
+## 142.0.0
+
+### Breaking changes
+
+* `EntityManager.GetAllComponents()` now returns a (EntityUid, Component) tuple
+
+### New features
+
+* Added `IPrototypeManager.ValidateFields()`, which uses reflection to validate that the default values of c# string fields correspond to valid entity prototypes. Validates any fields with a `ValidatePrototypeIdAttribute`  and any data-field that uses the PrototypeIdSerializer custom type serializer.
+
+### Other
+
+* Replay playback will now log errors when encountering unhandled messages.
+* Made `GetAssemblyByName()` throw descriptive error messages.
+* Improved performance of various EntityLookupSystem functions
+
+
 ## 141.2.1
 
 ### Bugfixes

@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-*None yet*
+* Fix certain debug commands and tools crashing on non-SS14 RobustToolbox games due to a missing font.
 
 ### Other
 

@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 141.2.1
+
+### Bugfixes
+
+* Fix component trait dictionaries not clearing on reconnect leading to bad GetComponent in areas (e.g. entire game looks black due to no entities).
+
+
 ## 141.2.0
 
 ### Other

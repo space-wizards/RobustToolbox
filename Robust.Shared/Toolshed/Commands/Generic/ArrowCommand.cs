@@ -1,4 +1,6 @@
-﻿using Robust.Shared.Toolshed.Syntax;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.Commands.Generic ;
 
@@ -9,10 +11,22 @@ internal sealed class ArrowCommand : ToolshedCommand
     public T Arrow<T>(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] T input,
-        [CommandArgument] VarRef<T> @ref
+        [CommandArgument] ValueRef<T> @ref
         )
     {
         @ref.Set(ctx, input);
         return input;
+    }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public List<T> Arrow<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> input,
+        [CommandArgument] ValueRef<List<T>> @ref
+    )
+    {
+        var list = input.ToList();
+        @ref.Set(ctx, list);
+        return list;
     }
 }

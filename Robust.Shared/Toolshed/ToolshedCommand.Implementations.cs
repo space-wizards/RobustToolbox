@@ -17,7 +17,7 @@ public abstract partial class ToolshedCommand
     {
         var impls = GetConcreteImplementations(pipedType, typeArguments, subCommand).ToList();
 
-        if (impls.Count == 1)
+        if (impls.Count > 0)
         {
             type = impls.First().ReturnType;
             return true;
@@ -56,6 +56,15 @@ public abstract partial class ToolshedCommand
                 }
 
                 return pipedType is null;
+            })
+            .OrderByDescending(x =>
+            {
+                if (x.ConsoleGetPipedArgument() is { } param)
+                {
+                    return param.ParameterType.IsGenericType;
+                }
+
+                return false;
             })
             .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
             .Where(x =>

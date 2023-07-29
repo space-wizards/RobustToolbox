@@ -39,7 +39,6 @@ public sealed class CommandRun
 
             if (blockMode && parser.PeekChar() == '}')
                 break;
-            parser.DebugPrint();
         }
 
         if (error is OutOfInputError && noCommand)

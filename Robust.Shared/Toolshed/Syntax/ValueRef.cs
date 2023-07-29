@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
@@ -6,26 +8,41 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Syntax;
 
-public sealed class VarRef<T>
+public sealed class ValueRef<T>
 {
     private Block<T>? _innerBlock;
     private string? _varName;
+    private bool _hasValue = false;
+    private T? _value;
     private string? _expression;
     private Vector2i? _refSpan;
 
-    public VarRef(string varName)
+    public ValueRef(string varName)
     {
         _varName = varName;
     }
 
-    public VarRef(Block<T> innerBlock)
+    public ValueRef(Block<T> innerBlock)
     {
         _innerBlock = innerBlock;
     }
 
+    public ValueRef(T value)
+    {
+        _value = value;
+        _hasValue = true;
+    }
+
+    public bool LikelyConst => _varName is not null || _hasValue;
+
+
     public T? Evaluate(IInvocationContext ctx)
     {
-        if (_varName is not null)
+        if (_value is not null && _hasValue)
+        {
+            return _value;
+        }
+        else if (_varName is not null)
         {
             return (T?)ctx.ReadVar(_varName);
         }
@@ -41,7 +58,7 @@ public sealed class VarRef<T>
 
     public void Set(IInvocationContext ctx, T? value)
     {
-        if (_innerBlock is not null)
+        if (_varName is null)
             throw new NotImplementedException();
 
         ctx.WriteVar(_varName!, value);

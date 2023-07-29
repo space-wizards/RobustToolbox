@@ -488,7 +488,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="includePaused"></param>
         /// <returns>All components that are the specified type.</returns>
-        IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false);
+        IEnumerable<(EntityUid Uid, Component Component)> GetAllComponents(Type type, bool includePaused = false);
 
         /// <summary>
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.

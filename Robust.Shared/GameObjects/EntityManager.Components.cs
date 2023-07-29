@@ -1270,28 +1270,26 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         /// <inheritdoc />
-        public IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false)
+        public IEnumerable<(EntityUid Uid, Component Component)> GetAllComponents(Type type, bool includePaused = false)
         {
             var comps = _entTraitDict[type];
 
             if (includePaused)
             {
-                foreach (var comp in comps.Values)
+                foreach (var (uid, comp) in comps)
                 {
                     if (comp.Deleted) continue;
 
-                    yield return comp;
+                    yield return (uid, comp);
                 }
             }
             else
             {
-                var metaQuery = GetEntityQuery<MetaDataComponent>();
-
-                foreach (var comp in comps.Values)
+                foreach (var (uid, comp) in comps)
                 {
-                    if (comp.Deleted || !metaQuery.TryGetComponent(comp.Owner, out var meta) || meta.EntityPaused) continue;
+                    if (comp.Deleted || !_metaQuery.TryGetComponent(uid, out var meta) || meta.EntityPaused) continue;
 
-                    yield return comp;
+                    yield return (uid, comp);
                 }
             }
         }

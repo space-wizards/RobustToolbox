@@ -12,7 +12,7 @@ using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.RTShell.Commands.Players;
+namespace Robust.Server.Toolshed.Commands.Players;
 
 [ToolshedCommand]
 public sealed class PlayerCommand : ToolshedCommand

@@ -95,7 +95,7 @@ public sealed partial class SerializationManager
                 // When writing generic enums, we want to use the enum serializer.
                 // Otherwise, we fall back to the default IConvertible behaviour.
 
-                if (baseType == actualType ||
+                if (baseType != typeof(Enum) ||
                     !serializationManager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeWriter<>),
                         typeof(Enum), out serializer))
                 {

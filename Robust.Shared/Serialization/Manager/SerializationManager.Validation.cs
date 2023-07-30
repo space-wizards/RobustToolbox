@@ -66,6 +66,10 @@ public sealed partial class SerializationManager
             }
             else if (key.type.IsEnum)
             {
+                // Does not include cases where the target type is System.Enum.
+                // Those get handled by the generic enum serializer which uses reflection to resolve strings into enums.
+                DebugTools.Assert(key.type != typeof(Enum));
+
                 call = Expression.Call(
                     managerConst,
                     nameof(ValidateEnum),

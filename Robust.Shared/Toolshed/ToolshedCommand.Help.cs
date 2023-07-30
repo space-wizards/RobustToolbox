@@ -5,9 +5,15 @@ namespace Robust.Shared.Toolshed;
 
 public abstract partial class ToolshedCommand
 {
+    /// <summary>
+    ///     Returns a command's localized description.
+    /// </summary>
     public string Description(string? subCommand)
         => Loc.GetString(UnlocalizedDescription(subCommand));
 
+    /// <summary>
+    ///     Returns the locale string for a command's description.
+    /// </summary>
     public string UnlocalizedDescription(string? subCommand)
     {
         if (Name.All(char.IsAsciiLetterOrDigit))
@@ -20,6 +26,9 @@ public abstract partial class ToolshedCommand
         }
     }
 
+    /// <summary>
+    ///     Returns a command's help string.
+    /// </summary>
     public string GetHelp(string? subCommand)
     {
         if (subCommand is null)
@@ -28,6 +37,7 @@ public abstract partial class ToolshedCommand
             return $"{Name}:{subCommand}: {Description(subCommand)}";
     }
 
+    /// <inheritdoc/>
     public override string ToString()
     {
         return GetHelp(null);

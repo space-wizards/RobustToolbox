@@ -7,53 +7,67 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Invocation;
 
+/// <inheritdoc />
 internal sealed class OldShellInvocationContext : IInvocationContext
 {
     [Dependency] private readonly ToolshedManager _toolshed = default!;
+    private readonly List<IConError> _errors = new();
 
-    public bool CheckInvokable(CommandSpec command, out IConError? error)
-    {
-        if (_toolshed.ActivePermissionController is { } controller)
-        {
-            return controller.CheckInvokable(command, Session, out error);
-        }
-
-        error = null;
-        return true;
-    }
-
-    public ICommonSession? Session => Shell.Player;
-
+    /// <summary>
+    ///     Old system's shell associated with this context
+    /// </summary>
     public IConsoleShell Shell;
-    private List<IConError> _errors = new();
-
-    public void WriteLine(string line)
-    {
-        Shell.WriteLine(line);
-    }
-
-    public void WriteLine(FormattedMessage line)
-    {
-        Shell.WriteLine(line);
-    }
-
-    public void ReportError(IConError err)
-    {
-        _errors.Add(err);
-    }
-
-    public IEnumerable<IConError> GetErrors() => _errors;
-
-    public void ClearErrors()
-    {
-        _errors.Clear();
-    }
-
-    public Dictionary<string, object?> Variables { get; } = new();
 
     public OldShellInvocationContext(IConsoleShell shell)
     {
         IoCManager.InjectDependencies(this);
         Shell = shell;
     }
+
+    /// <inheritdoc />
+    public bool CheckInvokable(CommandSpec command, out IConError? error)
+    {
+        if (_toolshed.ActivePermissionController is { } controller)
+            return controller.CheckInvokable(command, Session, out error);
+
+        error = null;
+        return true;
+    }
+
+    /// <inheritdoc />
+    public ICommonSession? Session => Shell.Player;
+
+    /// <inheritdoc />
+    public void WriteLine(string line)
+    {
+        Shell.WriteLine(line);
+    }
+
+    /// <inheritdoc />
+    public void WriteLine(FormattedMessage line)
+    {
+        Shell.WriteLine(line);
+    }
+
+    /// <inheritdoc />
+    public void ReportError(IConError err)
+    {
+        _errors.Add(err);
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<IConError> GetErrors()
+    {
+        return _errors;
+    }
+
+    /// <inheritdoc />
+    public void ClearErrors()
+    {
+        _errors.Clear();
+    }
+
+    /// <inheritdoc />
+    public Dictionary<string, object?> Variables { get; } = new();
 }
+

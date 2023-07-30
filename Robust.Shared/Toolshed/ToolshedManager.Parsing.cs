@@ -31,7 +31,7 @@ public sealed partial class ToolshedManager
             }
             else
             {
-                var parser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(parserType)!;
+                var parser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(parserType);
                 parser.PostInject();
                 _log.Debug($"Setting up {parserType.PrettyName()}, {parser.Parses.PrettyName()}");
                 _consoleTypeParsers.Add(parser.Parses, parser);
@@ -52,7 +52,7 @@ public sealed partial class ToolshedManager
 
             var concreteParser = genParser.MakeGenericType(t.GenericTypeArguments);
 
-            var builtParser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(concreteParser, true, true)!;
+            var builtParser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(concreteParser, true);
             builtParser.PostInject();
             _consoleTypeParsers.Add(builtParser.Parses, builtParser);
             return builtParser;
@@ -66,11 +66,22 @@ public sealed partial class ToolshedManager
         return null;
     }
 
+    /// <summary>
+    ///     Attempts to parse the given type.
+    /// </summary>
+    /// <param name="parser">The input to parse from.</param>
+    /// <param name="parsed">The parsed value, if any.</param>
+    /// <param name="error">A console error, if any, that can be reported to explain the parsing failure.</param>
+    /// <typeparam name="T">The type to parse from the input.</typeparam>
+    /// <returns>Success.</returns>
     public bool TryParse<T>(ForwardParser parser, [NotNullWhen(true)] out object? parsed, out IConError? error)
     {
         return TryParse(parser, typeof(T), out parsed, out error);
     }
 
+    /// <summary>
+    ///     iunno man it does autocomplete what more do u want
+    /// </summary>
     public ValueTask<(CompletionResult?, IConError?)> TryAutocomplete(ForwardParser parser, Type t, string? argName)
     {
         var impl = GetParserForType(t);
@@ -83,6 +94,14 @@ public sealed partial class ToolshedManager
         return impl.TryAutocomplete(parser, argName);
     }
 
+    /// <summary>
+    ///     Attempts to parse the given type.
+    /// </summary>
+    /// <param name="parser">The input to parse from.</param>
+    /// <param name="t">The type to parse from the input.</param>
+    /// <param name="parsed">The parsed value, if any.</param>
+    /// <param name="error">A console error, if any, that can be reported to explain the parsing failure.</param>
+    /// <returns>Success.</returns>
     public bool TryParse(ForwardParser parser, Type t, [NotNullWhen(true)] out object? parsed, out IConError? error)
     {
         var impl = GetParserForType(t);
@@ -98,6 +117,10 @@ public sealed partial class ToolshedManager
     }
 }
 
+/// <summary>
+///     Error that's given if a type cannot be parsed due to lack of parser.
+/// </summary>
+/// <param name="T">The type being parsed.</param>
 public record struct UnparseableValueError(Type T) : IConError
 {
     public FormattedMessage DescribeInner()

@@ -20,6 +20,8 @@ public sealed class SplatCommand : ToolshedCommand
         for (var i = 0; i < amount; i++)
         {
             yield return value.Evaluate(ctx)!;
+            if (ctx.GetErrors().Any())
+                yield break;
         }
     }
 }

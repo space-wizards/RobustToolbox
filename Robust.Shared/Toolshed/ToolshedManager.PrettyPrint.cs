@@ -9,6 +9,14 @@ namespace Robust.Shared.Toolshed;
 
 public sealed partial class ToolshedManager
 {
+    /// <summary>
+    ///     Pretty prints a value for use in the console.
+    /// </summary>
+    /// <param name="value">Value to pretty print.</param>
+    /// <returns>The stringified value.</returns>
+    /// <remarks>
+    ///     This returns markup.
+    /// </remarks>
     public string PrettyPrintType(object? value)
     {
         if (value is null)

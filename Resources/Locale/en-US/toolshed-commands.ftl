@@ -113,3 +113,13 @@ command-description-prototyped =
     Filters the input entities by their prototype.
 command-description-nearby =
     Creates a new list of all entities nearby the inputs within the given range.
+command-description-first =
+    Returns the first entry of the given enumerable.
+command-description-splat =
+    "Splats" a block, value, or variable, creating N copies of it in a list.
+command-description-val =
+    Casts the given value, block, or variable to the given type. This is mostly a workaround for current limitations of variables.
+command-description-actor-controlled =
+    Filters entities by whether or not they're actively controlled.
+command-description-actor-session =
+    Returns the sessions associated with the input entities.

@@ -37,7 +37,11 @@ public sealed partial class ToolshedManager
         }
     }
 
-    public IEnumerable<(ToolshedCommand, string?)> CommandsFittingConstraint(Type input, Type output)
+    /// <summary>
+    ///     Returns all commands that fit the given type constraints.
+    /// </summary>
+    /// <returns>Enumerable of matching command specs.</returns>
+    public IEnumerable<CommandSpec> CommandsFittingConstraint(Type input, Type output)
     {
         foreach (var (command, subcommand) in CommandsTakingType(input))
         {
@@ -48,13 +52,17 @@ public sealed partial class ToolshedManager
 
             foreach (var impl in impls)
             {
-                Logger.Debug($"{impl.ReturnType.PrettyName()}");
                 if (impl.ReturnType.IsAssignableTo(output))
-                    yield return (command, subcommand);
+                    yield return new CommandSpec(command, subcommand);
             }
         }
     }
 
+    /// <summary>
+    ///     Returns all commands that accept the given type.
+    /// </summary>
+    /// <param name="t">Type to use in the query.</param>
+    /// <returns>Enumerable of matching command specs.</returns>
     public IEnumerable<CommandSpec> CommandsTakingType(Type t)
     {
         var output = new Dictionary<(string, string?), CommandSpec>();
@@ -125,6 +133,12 @@ public sealed partial class ToolshedManager
         } while (t != oldT);
     }
 
+    /// <summary>
+    ///     Attempts to return the return values of the given command, if they can be decided.
+    /// </summary>
+    /// <remarks>
+    ///     Generics are flat out uncomputable so this doesn't bother.
+    /// </remarks>
     public IReadOnlySet<Type> GetCommandRetValues(CommandSpec command)
         => GetCommandRetValuesInternal(command);
 

@@ -27,7 +27,22 @@ internal sealed class ToolshedCommandImplementor
         IoCManager.InjectDependencies(this);
     }
 
-    public bool TryParseArguments(bool doAutocomplete, ForwardParser parser, string? subCommand, Type? pipedType, [NotNullWhen(true)] out Dictionary<string, object?>? args, out Type[] resolvedTypeArguments, out IConError? error, out ValueTask<(CompletionResult?, IConError?)>? autocomplete)
+    /// <summary>
+    ///     You who tread upon this dreaded land, what is it that brings you here?
+    ///     For this place is not for you, this land of terror and death.
+    ///     It brings fear to all who tread within, terror to the homes ahead.
+    ///     Begone, foul maintainer, for this place is not for thee.
+    /// </summary>
+    public bool TryParseArguments(
+            bool doAutocomplete,
+            ForwardParser parser,
+            string? subCommand,
+            Type? pipedType,
+            [NotNullWhen(true)] out Dictionary<string, object?>? args,
+            out Type[] resolvedTypeArguments,
+            out IConError? error,
+            out ValueTask<(CompletionResult?, IConError?)>? autocomplete
+        )
     {
         resolvedTypeArguments = new Type[Owner.TypeParameterParsers.Length];
 
@@ -105,6 +120,9 @@ internal sealed class ToolshedCommandImplementor
         return true;
     }
 
+    /// <summary>
+    ///     Attempts to generate a callable shim for a command, aka it's implementation, using the given types.
+    /// </summary>
     public bool TryGetImplementation(Type? pipedType, Type[] typeArguments, [NotNullWhen(true)] out Func<CommandInvocationArguments, object?>? impl)
     {
         var discrim = new CommandDiscriminator(pipedType, typeArguments);

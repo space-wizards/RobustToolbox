@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.Commands.Generic;
@@ -16,6 +17,9 @@ internal sealed class WhereCommand : ToolshedCommand
         foreach (var i in input)
         {
             var res = check.Invoke(i, ctx);
+
+            if (ctx.GetErrors().Any())
+                yield break;
 
             if (res)
                 yield return i;

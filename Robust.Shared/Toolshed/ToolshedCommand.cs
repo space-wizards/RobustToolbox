@@ -23,11 +23,11 @@ public abstract partial class ToolshedCommand
 
     public virtual Type[] TypeParameterParsers => Array.Empty<Type>();
 
-    public bool HasTypeParameters => TypeParameterParsers.Length != 0;
+    internal bool HasTypeParameters => TypeParameterParsers.Length != 0;
 
     public IEnumerable<string> Subcommands => _implementors.Keys.Where(x => x != "");
 
-    public ToolshedCommand()
+    protected ToolshedCommand()
     {
         var name = GetType().GetCustomAttribute<ToolshedCommandAttribute>()!.Name;
 
@@ -74,7 +74,7 @@ public abstract partial class ToolshedCommand
 
             foreach (var param in impl.GetParameters())
             {
-                if (param.GetCustomAttribute<CommandArgumentAttribute>() is { } arg)
+                if (param.GetCustomAttribute<CommandArgumentAttribute>() is not null)
                 {
                     if (parameters.ContainsKey(param.Name!))
                         continue;
@@ -96,8 +96,7 @@ public abstract partial class ToolshedCommand
         }
     }
 
-
-    public IEnumerable<Type> AcceptedTypes(string? subCommand)
+    internal IEnumerable<Type> AcceptedTypes(string? subCommand)
     {
         return GetGenericImplementations()
             .Where(x =>
@@ -130,7 +129,7 @@ internal sealed class CommandArgumentBundle
     public required Type[] TypeArguments;
 }
 
-public readonly record struct CommandDiscriminator(Type? PipedType, Type[] TypeArguments) : IEquatable<CommandDiscriminator?>
+internal readonly record struct CommandDiscriminator(Type? PipedType, Type[] TypeArguments) : IEquatable<CommandDiscriminator?>
 {
     public bool Equals(CommandDiscriminator? other)
     {

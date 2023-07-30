@@ -39,7 +39,10 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+
+- Toolshed, a tacit shell language, has been introduced.
+  - Use Robust.Shared.ToolshedManager to invoke commands, with optional input and output.
+  - Implement IInvocationContext for custom invocation contexts i.e. scripting systems.
 
 ### Bugfixes
 

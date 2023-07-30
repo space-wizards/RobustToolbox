@@ -30,8 +30,6 @@ public sealed partial class SerializationManager
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
             Expression call;
-            bool couldRead = true;
-
             if (manager._regularSerializerProvider.TryGetTypeNodeSerializer(typeof(ITypeValidator<,>), key.type, key.node, out var serializer))
             {
                 var serializerConst = Expression.Constant(serializer);
@@ -101,25 +99,25 @@ public sealed partial class SerializationManager
             }
             else
             {
-                call = manager.ErrorNodeExpression(nodeParam, "Failed to read node.", false);
-                couldRead = false;
+                call = Expression.Call(
+                    managerConst,
+                    nameof(ValidateGenericValue),
+                    new[] { key.type, key.node },
+                    nodeParam,
+                    contextParam);
             }
 
-            if (couldRead)
-            {
-                //insert a nullcheck at the beginning, but ONLY if we are actually found a way of validating this node
-                call = Expression.Condition(
-                    Expression.Call(
-                        typeof(SerializationManager),
-                        nameof(IsNull),
-                        Type.EmptyTypes,
-                        nodeParam),
-                    Expression.Convert(key.type.IsNullable()
-                        ? manager.ValidateNodeExpression(nodeParam)
-                        : manager.ErrorNodeExpression(nodeParam, "Non-nullable field contained a null value", true), typeof(ValidationNode)),
-                    Expression.Convert(call, typeof(ValidationNode)));
-            }
-
+            //insert a nullcheck at the beginning, but ONLY if we are actually found a way of validating this node
+            call = Expression.Condition(
+                Expression.Call(
+                    typeof(SerializationManager),
+                    nameof(IsNull),
+                    Type.EmptyTypes,
+                    nodeParam),
+                Expression.Convert(key.type.IsNullable()
+                    ? manager.ValidateNodeExpression(nodeParam)
+                    : manager.ErrorNodeExpression(nodeParam, "Non-nullable field contained a null value", true), typeof(ValidationNode)),
+                Expression.Convert(call, typeof(ValidationNode)));
 
             return Expression.Lambda<ValidationDelegate>(
                 call,
@@ -182,6 +180,20 @@ public sealed partial class SerializationManager
             MappingDataNode mappingDataNode => dataDefinition.Validate(this, mappingDataNode, context),
             _ => new ErrorNode(node, "Invalid NodeType for DataDefinition")
         };
+    }
+
+    private ValidationNode ValidateGenericValue<T, TNode>(DataNode node, ISerializationContext? context)
+        where T : notnull
+        where TNode : DataNode
+    {
+        if (context != null
+            && context.SerializerProvider.TryGetTypeNodeSerializer<ITypeValidator<T, TNode>, T, TNode>(out var seri))
+        {
+            return seri.Validate(this, (TNode)node, DependencyCollection, context);
+        }
+
+        return new ErrorNode(node,
+            $"Failed to get node validator. Type: {typeof(T).Name}. Node type: {node.GetType().Name}. Node: {node}");
     }
 
     #endregion

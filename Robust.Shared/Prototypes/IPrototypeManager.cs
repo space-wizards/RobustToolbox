@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -231,6 +232,14 @@ public interface IPrototypeManager
     /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
     /// will be considered invalid.</param>
     List<string> ValidateFields(Dictionary<Type, HashSet<string>> prototypes);
+
+    /// <summary>
+    /// This method will serialize all loaded prototypes into yaml and then validate them. This can be used to ensure
+    /// that hard coded default values for data-fields all pass the normal yaml validation steps.
+    /// </summary>
+    /// <returns>Returns a collection of yaml validation errors, sorted by prototype kind id. The outer dictionary is
+    /// empty, everything was successfully validated.</returns>
+    Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx);
 
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 

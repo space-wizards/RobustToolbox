@@ -8,10 +8,5 @@ public sealed partial class ToolshedManager
     /// <remarks>
     ///     Invocation contexts can entirely ignore this, though it's bad form to do so if they have a session on hand.
     /// </remarks>
-    public IPermissionController? ActivePermissionController { get; private set; }
-
-    public void SetPermissionController(IPermissionController controller)
-    {
-        ActivePermissionController = controller;
-    }
+    public IPermissionController? ActivePermissionController { get; set; }
 }

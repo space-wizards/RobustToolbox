@@ -2,7 +2,6 @@ using System;
 using System.Text;
 using DiscordRPC;
 using DiscordRPC.Logging;
-using Microsoft.VisualBasic;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;

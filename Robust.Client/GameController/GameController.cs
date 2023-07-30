@@ -33,6 +33,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -85,6 +86,7 @@ namespace Robust.Client
         [Dependency] private readonly IReplayLoadManager _replayLoader = default!;
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -162,6 +164,7 @@ namespace Robust.Client
             // before prototype load.
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
+            _reflectionManager.Initialize();
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
             _prototypeManager.ResolveResults();

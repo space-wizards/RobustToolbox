@@ -102,7 +102,6 @@ public sealed partial class ToolshedManager
             yield return t;
             if (t == typeof(void))
                 yield break;
-            yield return typeof(IEnumerable<>).MakeGenericType(t);
 
             if (t.IsGenericType && allowVariants)
             {
@@ -127,6 +126,8 @@ public sealed partial class ToolshedManager
                     yield return innerT;
                 }
             }
+
+            yield return typeof(IEnumerable<>).MakeGenericType(t);
 
             oldT = t;
             t = t.StepDownConstraints();

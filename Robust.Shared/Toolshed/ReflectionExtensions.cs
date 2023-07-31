@@ -84,7 +84,7 @@ internal static class ReflectionExtensions
 
     public static Type StepDownConstraints(this Type t)
     {
-        if (!t.IsGenericType)
+        if (!t.IsGenericType || t.IsGenericTypeDefinition)
             return t;
 
         var oldArgs = t.GenericTypeArguments;
@@ -188,7 +188,7 @@ internal static class ReflectionExtensions
 
 
 
-    public static bool IsAssignableToGeneric(this Type left, Type right)
+    public static bool IsAssignableToGeneric(this Type left, Type right, ToolshedManager toolshed, bool recursiveDescent = true)
     {
         if (left.IsAssignableTo(right))
             return true;
@@ -205,15 +205,27 @@ internal static class ReflectionExtensions
             var equal = left.GetGenericTypeDefinition() == right.GetGenericTypeDefinition();
 
             if (!equal)
-                return false;
+                goto next;
 
             var res = true;
             foreach (var (leftTy, rightTy) in left.GenericTypeArguments.Zip(right.GenericTypeArguments))
             {
-                res &= leftTy.IsAssignableToGeneric(rightTy);
+                res &= leftTy.IsAssignableToGeneric(rightTy, toolshed, false);
             }
 
             return res;
+        }
+
+        next:
+        if (recursiveDescent)
+        {
+            foreach (var leftSubTy in toolshed.AllSteppedTypes(left))
+            {
+                if (leftSubTy.IsAssignableToGeneric(right, toolshed, false))
+                {
+                    return true;
+                }
+            }
         }
 
         return false;

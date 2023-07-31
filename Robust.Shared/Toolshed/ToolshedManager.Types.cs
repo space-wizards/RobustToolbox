@@ -40,6 +40,10 @@ public sealed partial class ToolshedManager
         if (!IsTransformableTo(from, to))
             throw new InvalidCastException();
 
+        if (from.IsAssignableTo(to))
+            return Expression.Convert(input, to);
+        _log.Debug($"Didn't just do a normal convert. {from} {to}");
+
         var asType = typeof(IAsType<>).MakeGenericType(to);
 
         if (from.GetInterfaces().Contains(asType))

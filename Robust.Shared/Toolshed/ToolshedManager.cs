@@ -22,17 +22,16 @@ namespace Robust.Shared.Toolshed;
 
 /// <summary>
 ///     The overarching controller for Toolshed, providing invocation, reflection, commands, parsing, and other tools used by the language.
+///     <see href="https://docs.spacestation14.io/">External documentation</see> has a more in-depth look.
 /// </summary>
 /// <seealso cref="ToolshedCommand"/>
 /// <seealso cref="IInvocationContext"/>
 public sealed partial class ToolshedManager
 {
-    [Dependency] private readonly IConsoleHost _conHost = default!;
     [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
     [Dependency] private readonly IEntityManager _entity = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly INetManager _net = default!;
 
     private ISawmill _log = default!;
 
@@ -124,6 +123,12 @@ public sealed partial class ToolshedManager
     /// <param name="input">An input value to use, if any.</param>
     /// <param name="result">The resulting value, if any.</param>
     /// <returns>Invocation success.</returns>
+    /// <example><code>
+    ///     ToolshedManager toolshed = ...;
+    ///     ICommonSession ctx = ...;
+    ///     // Now run some user provided command and get a result!
+    ///     toolshed.InvokeCommand(ctx, userCommand, "my input value", out var result);
+    /// </code></example>
     /// <remarks>
     ///     This will use the same IInvocationContext as the one used by the user for debug console commands.
     /// </remarks>
@@ -149,6 +154,12 @@ public sealed partial class ToolshedManager
     /// <param name="input">An input value to use, if any.</param>
     /// <param name="result">The resulting value, if any.</param>
     /// <returns>Invocation success.</returns>
+   /// <example><code>
+   ///     ToolshedManager toolshed = ...;
+   ///     IConsoleShell ctx = ...;
+   ///     // Now run some user provided command and get a result!
+   ///     toolshed.InvokeCommand(ctx, userCommand, "my input value", out var result);
+   /// </code></example>
     /// <remarks>
     ///     This will use the same IInvocationContext as the one used by the user for debug console commands.
     /// </remarks>
@@ -176,6 +187,12 @@ public sealed partial class ToolshedManager
     /// <param name="input">An input value to use, if any.</param>
     /// <param name="result">The resulting value, if any.</param>
     /// <returns>Invocation success.</returns>
+    /// <example><code>
+    ///     ToolshedManager toolshed = ...;
+    ///     IInvocationContext ctx = ...;
+    ///     // Now run some user provided command and get a result!
+    ///     toolshed.InvokeCommand(ctx, userCommand, "my input value", out var result);
+    /// </code></example>
     public bool InvokeCommand(IInvocationContext ctx, string command, object? input, out object? result)
     {
         ctx.ClearErrors();

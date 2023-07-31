@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed;
@@ -52,7 +53,7 @@ public abstract partial class ToolshedCommand
             {
                 if (x.ConsoleGetPipedArgument() is { } param)
                 {
-                    return pipedType?.IsAssignableToGeneric(param.ParameterType) ?? false;
+                    return pipedType?.IsAssignableToGeneric(param.ParameterType, Toolshed) ?? false;
                 }
 
                 return pipedType is null;

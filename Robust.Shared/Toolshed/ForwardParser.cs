@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Text;
+using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -12,7 +12,7 @@ namespace Robust.Shared.Toolshed;
 
 public sealed class ForwardParser
 {
-    [IoC.Dependency] public readonly ToolshedManager Toolshed = default!;
+    [Dependency] public readonly ToolshedManager Toolshed = default!;
 
     public readonly string Input;
     public int MaxIndex { get; private set; }
@@ -70,11 +70,7 @@ public sealed class ForwardParser
         return null;
     }
 
-    private void DebugFun([CallerMemberName] string method = "")
-    {
-        Logger.DebugS("parser", $"{method}()");
-    }
-
+    [PublicAPI]
     public void DebugPrint()
     {
         Logger.DebugS("parser", Input);
@@ -100,7 +96,10 @@ public sealed class ForwardParser
         Consume(char.IsWhiteSpace);
 
         // Walk forward until we run into whitespace
-        while (PeekChar() is { } c && test(c)) { builder.Append(GetChar()); }
+        while (PeekChar() is { } c && test(c))
+        {
+            builder.Append(GetChar());
+        }
 
         if (startingIndex == Index)
             return null;

@@ -23,6 +23,8 @@ namespace Robust.Shared.Toolshed;
 /// <summary>
 ///     The overarching controller for Toolshed, providing invocation, reflection, commands, parsing, and other tools used by the language.
 /// </summary>
+/// <seealso cref="ToolshedCommand"/>
+/// <seealso cref="IInvocationContext"/>
 public sealed partial class ToolshedManager
 {
     [Dependency] private readonly IConsoleHost _conHost = default!;

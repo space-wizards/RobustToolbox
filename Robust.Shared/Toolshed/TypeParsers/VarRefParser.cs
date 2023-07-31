@@ -35,7 +35,7 @@ internal sealed class VarRefParser<T> : TypeParser<ValueRef<T>>
         if (parser.EatMatch('$'))
         {
             // We're parsing a variable.
-            if (parser.GetWord(char.IsLetterOrDigit) is not { } word)
+            if (parser.GetWord(x => char.IsLetterOrDigit(x) || x == '_') is not { } word)
             {
                 error = new OutOfInputError();
                 result = null;

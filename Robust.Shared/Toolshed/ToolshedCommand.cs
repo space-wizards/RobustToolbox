@@ -9,22 +9,66 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed;
 
+/// <summary>
+///     This class is used for implementing new commands in Toolshed.
+/// </summary>
+/// <remarks>
+///     Toolshed's code generation will automatically handle creating command executor stubs, you don't need to override anything.
+/// </remarks>
+/// <example><code>
+///     [ToolshedCommand]
+///     public sealed class ExampleCommand : ToolshedCommand
+///     {
+///         // Toolshed will automatically infer autocompletion information, type information, and parsing.
+///         [CommandImplementation]
+///         public IEnumerable&lt;EntityUid&gt; Example(
+///                 [PipedArgument] IEnumerable&lt;EntityUid&gt; input,
+///                 [CommandArgument] int amount
+///             )
+///         {
+///             return input.Take(amount);
+///         }
+///     }
+/// </code></example>
+/// <seealso cref="ToolshedManager"/>
+/// <seealso cref="ToolshedCommandAttribute"/>
+/// <seealso cref="CommandImplementationAttribute"/>
+/// <seealso cref="PipedArgumentAttribute"/>
+/// <seealso cref="CommandArgumentAttribute"/>
+/// <seealso cref="CommandInvertedAttribute"/>
+/// <seealso cref="CommandInvocationContextAttribute"/>
+/// <seealso cref="TakesPipedTypeAsGeneric"/>
 [Reflect(false)]
 public abstract partial class ToolshedCommand
 {
     [Dependency] protected readonly ToolshedManager Toolshed = default!;
 
+    /// <summary>
+    ///     The user-facing name of the command.
+    /// </summary>
+    /// <remarks>This is automatically generated based on the type name unless overridden with <see cref="ToolshedCommandAttribute"/>.</remarks>
     public string Name { get; }
 
+    /// <summary>
+    ///     Whether or not this command has subcommands.
+    /// </summary>
     public bool HasSubCommands { get; }
 
+    /// <summary>
+    ///     The additional type parameters of this command, specifically which parsers to use.
+    /// </summary>
+    /// <remarks>Every type specified must either be <see cref="Type"/> itself or something implementing <see cref="IAsType{Type}"/> where T is Type.</remarks>
     public virtual Type[] TypeParameterParsers => Array.Empty<Type>();
 
     internal bool HasTypeParameters => TypeParameterParsers.Length != 0;
 
+    /// <summary>
+    ///     The list of all subcommands on this command.
+    /// </summary>
     public IEnumerable<string> Subcommands => _implementors.Keys.Where(x => x != "");
 
     protected ToolshedCommand()

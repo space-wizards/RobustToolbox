@@ -75,7 +75,6 @@ public sealed class ParsedCommand
         subCommand = null;
         invocable = null;
         command = null;
-        var conManager = IoCManager.Resolve<ToolshedManager>();
         if (cmd is null)
         {
             if (parser.PeekChar() is null)
@@ -86,7 +85,7 @@ public sealed class ParsedCommand
                 autocomplete = null;
                 if (makeCompletions)
                 {
-                    var cmds = conManager.CommandsTakingType(pipedType ?? typeof(void));
+                    var cmds = parser.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
                     autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
                 }
 
@@ -110,7 +109,7 @@ public sealed class ParsedCommand
             autocomplete = null;
             if (makeCompletions)
             {
-                var cmds = conManager.CommandsTakingType(pipedType ?? typeof(void));
+                var cmds = parser.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
                 autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
             }
 
@@ -123,7 +122,7 @@ public sealed class ParsedCommand
             autocomplete = null;
             if (makeCompletions)
             {
-                var cmds = conManager.CommandsTakingType(pipedType ?? typeof(void)).Where(x => x.Cmd.Name == cmd);
+                var cmds = parser.Toolshed.CommandsTakingType(pipedType ?? typeof(void)).Where(x => x.Cmd.Name == cmd);
                 autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((
                     CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
             }
@@ -157,7 +156,7 @@ public sealed class ParsedCommand
         if (parser.Consume(char.IsWhiteSpace) == 0 && makeCompletions)
         {
             error = null;
-            var cmds = conManager.CommandsTakingType(pipedType ?? typeof(void));
+            var cmds = parser.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
             autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), null));
             return false;
         }
@@ -187,7 +186,7 @@ public sealed class ParsedCommand
         return true;
     }
 
-    private bool _passedInvokeTest = false;
+    private bool _passedInvokeTest;
 
     public object? Invoke(object? pipedIn, IInvocationContext ctx)
     {

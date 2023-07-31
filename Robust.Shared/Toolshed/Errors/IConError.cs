@@ -5,8 +5,19 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Errors;
 
+/// <summary>
+///     A Toolshed-oriented representation of an error.
+///     Contains metadata about where in an executed command it occurred, and supports formatting.
+/// </summary>
 public interface IConError
 {
+    /// <summary>
+    ///     Returns a user friendly description of the error.
+    /// </summary>
+    /// <remarks>
+    ///     This calls <see cref="M:Robust.Shared.Toolshed.Errors.IConError.DescribeInner"/> for the actual description by default.
+    ///     If you fully override this, you should provide your own context provider, as the default implementation includes where in the expression the error occurred.
+    /// </remarks>
     public FormattedMessage Describe()
     {
         var msg = new FormattedMessage();
@@ -28,15 +39,35 @@ public interface IConError
         return msg;
     }
 
+    /// <summary>
+    ///     Describes the error, called by <see cref="M:Robust.Shared.Toolshed.Errors.IConError.Describe"/>'s default implementation.
+    /// </summary>
     protected FormattedMessage DescribeInner();
+    /// <summary>
+    ///     The expression this error was raised in or on.
+    /// </summary>
     public string? Expression { get; protected set; }
+    /// <summary>
+    ///     Where in the expression this error was raised.
+    /// </summary>
     public Vector2i? IssueSpan { get; protected set; }
+    /// <summary>
+    ///     The stack trace for this error if any.
+    /// </summary>
+    /// <remarks>
+    ///     This is not present in release builds.
+    /// </remarks>
     public StackTrace? Trace { get; protected set; }
 
-    public IConError Contextualize(string expression, Vector2i issueSpan)
+    /// <summary>
+    ///     Attaches additional context to an error, namely where it occurred.
+    /// </summary>
+    /// <param name="expression">Expression the error occured in or on.</param>
+    /// <param name="issueSpan">Where in the expression it occurred.</param>
+    public void Contextualize(string expression, Vector2i issueSpan)
     {
         if (Expression is not null && IssueSpan is not null)
-            return this;
+            return;
 
 #if  TOOLS
         Trace = new StackTrace(skipFrames: 1);
@@ -44,12 +75,21 @@ public interface IConError
 
         Expression = expression;
         IssueSpan = issueSpan;
-        return this;
     }
 }
 
+/// <summary>
+///     Pile of helpers for console formatting.
+/// </summary>
 public static class ConHelpers
 {
+    /// <summary>
+    ///     Highlights a section of the input a given color.
+    /// </summary>
+    /// <param name="input">Input text.</param>
+    /// <param name="span">Span to highlight.</param>
+    /// <param name="color">Color to use.</param>
+    /// <returns>A formatted message with highlighting applied.</returns>
     public static FormattedMessage HighlightSpan(string input, Vector2i span, Color color)
     {
         if (span.X == span.Y)
@@ -62,6 +102,11 @@ public static class ConHelpers
         return msg;
     }
 
+    /// <summary>
+    ///     Creates a string with up arrows (<c>^</c>) under the given span.
+    /// </summary>
+    /// <param name="span">Span to underline.</param>
+    /// <returns>A string of whitespace with (<c>^</c>) under the given span.</returns>
     public static FormattedMessage ArrowSpan(Vector2i span)
     {
         var builder = new StringBuilder();

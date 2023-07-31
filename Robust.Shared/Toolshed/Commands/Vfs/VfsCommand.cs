@@ -1,19 +1,29 @@
-﻿using Robust.Shared.ContentPack;
+﻿using System;
+using JetBrains.Annotations;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Commands.Vfs;
 
+/// <summary>
+///     A simple base class for commands that work with the VFS and would like to manipulate the user's current location within the VFS.
+/// </summary>
+/// <seealso cref="UserVfsLocVariableName"/>
+[PublicAPI]
 public abstract class VfsCommand : ToolshedCommand
 {
     [Dependency] protected readonly IResourceManager Resources = default!;
 
-    public const string UserVfsLocVariable = "user_vfs_loc";
+    /// <summary>
+    ///     The name of the variable storing a <see cref="ResPath">ResPath?</see> representing the user's current VFS location.
+    /// </summary>
+    public const string UserVfsLocVariableName = "user_vfs_loc";
 
-    public ResPath CurrentPath(IInvocationContext ctx) => ((ResPath?) ctx.ReadVar(UserVfsLocVariable)) ?? ResPath.Root;
+    protected ResPath CurrentPath(IInvocationContext ctx) => ((ResPath?) ctx.ReadVar(UserVfsLocVariableName)) ?? ResPath.Root;
 
-    public void SetPath(IInvocationContext ctx, ResPath path)
+    protected void SetPath(IInvocationContext ctx, ResPath path)
     {
-        ctx.WriteVar(UserVfsLocVariable, (ResPath?) path.Clean());
+        ctx.WriteVar(UserVfsLocVariableName, (ResPath?) path.Clean());
     }
 }

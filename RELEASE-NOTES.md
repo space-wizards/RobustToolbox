@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 142.0.1
+
+### Bugfixes
+
+* Fix Enum serialization.
+
+
 ## 142.0.0
 
 ### Breaking changes

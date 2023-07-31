@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `IHttpClientHolder` holds a shared `HttpClient` for use by content. It has Happy Eyeballs fixed and an appropriate `User-Agent`.
 
 ### Bugfixes
 
@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Outgoing HTTP requests now all use Happy Eyeballs to try to prioritize IPv6. This is necessary because .NET still does not support this critical feature itself.
 
 ### Internal
 

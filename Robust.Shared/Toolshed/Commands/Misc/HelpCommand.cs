@@ -12,8 +12,8 @@ internal sealed class HelpCommand : ToolshedCommand
     public void Help([CommandInvocationContext] IInvocationContext ctx)
     {
         ctx.WriteLine($@"
-TOOLSHED
-/.\\\\\\\\
+  TOOLSHED
+ /.\\\\\\\\
 /___\\\\\\\\
 |''''|'''''|
 | 8  | === |

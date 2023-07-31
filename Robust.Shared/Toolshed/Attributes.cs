@@ -73,6 +73,18 @@ public sealed class CommandInvocationContextAttribute : Attribute
 ///     If the argument marked with <see cref="PipedArgumentAttribute"/> is not <c>T</c> but instead a pattern like <c>IEnumerable&lt;T&gt;</c>, Toolshed will account for this.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class TakesPipedTypeAsGeneric : Attribute
+public sealed class TakesPipedTypeAsGenericAttribute : Attribute
 {
+}
+
+// Internal because this is just a hack at the moment and should be replaced with proper inference later!
+// Overrides type argument parsing to parse a block and then use it's return type as the sole type argument.
+internal sealed class MapLikeCommandAttribute : Attribute
+{
+    public bool TakesPipedType;
+
+    public MapLikeCommandAttribute(bool takesPipedType = true)
+    {
+        TakesPipedType = takesPipedType;
+    }
 }

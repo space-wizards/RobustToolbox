@@ -70,23 +70,7 @@ public sealed partial class ToolshedManager
         InitializeParser();
         InitializeQueries();
 
-        _conHost.RegisterCommand("|", Callback, CompletionCallback);
         _log.Info($"Initialized console in {watch.Elapsed}");
-    }
-
-    private async ValueTask<CompletionResult> CompletionCallback(IConsoleShell shell, string[] args, string argstr)
-    {
-        var parser = new ForwardParser(argstr[2..], this);
-
-        CommandRun.TryParse(false, true, parser, null, null, false, out _, out var completions, out _);
-        if (completions is null)
-            return CompletionResult.Empty;
-
-        var (result, _) = await completions.Value;
-        if (result is null)
-            return CompletionResult.Empty;
-
-        return result;
     }
 
     /// <summary>
@@ -132,35 +116,6 @@ public sealed partial class ToolshedManager
 
     private Dictionary<NetUserId, IInvocationContext> _contexts = new();
 
-    private void Callback(IConsoleShell shell, string argstr, string[] args)
-    {
-        var uid = shell.Player?.UserId ?? new NetUserId();
-        if (!_contexts.TryGetValue(uid, out var ctx))
-        {
-            ctx = new OldShellInvocationContext(shell);
-            _contexts[uid] = ctx;
-        }
-
-        if (!InvokeCommand(ctx, argstr[2..], null, out var result))
-        {
-            var errs = ctx.GetErrors().ToList();
-            if (errs.Count == 0)
-            {
-                ctx.WriteLine("Got some unknown error when trying to invoke the command. This is probably a bug!");
-            }
-            else
-            {
-                foreach (var err in errs)
-                {
-                    ctx.WriteLine(err.Describe());
-                }
-            }
-
-        }
-
-        shell.WriteLine(FormattedMessage.FromMarkup(PrettyPrintType(result)));
-    }
-
     /// <summary>
     ///     Invokes a command as the given user.
     /// </summary>
@@ -185,6 +140,33 @@ public sealed partial class ToolshedManager
 
         return InvokeCommand(ctx, command, input, out result);
     }
+
+    /// <summary>
+    ///     Invokes a command as the given user.
+    /// </summary>
+    /// <param name="session">User to run as.</param>
+    /// <param name="command">Command to invoke.</param>
+    /// <param name="input">An input value to use, if any.</param>
+    /// <param name="result">The resulting value, if any.</param>
+    /// <returns>Invocation success.</returns>
+    /// <remarks>
+    ///     This will use the same IInvocationContext as the one used by the user for debug console commands.
+    /// </remarks>
+    public bool InvokeCommand(IConsoleShell session, string command, object? input, out object? result, out IInvocationContext ctx)
+    {
+        var idx = session.Player?.UserId ?? new NetUserId();
+        if (!_contexts.TryGetValue(idx, out var ourCtx))
+        {
+            ourCtx = new OldShellInvocationContext(session);
+            _contexts[idx] = ourCtx;
+        }
+
+        ourCtx.ClearErrors();
+        ctx = ourCtx;
+
+        return InvokeCommand(ctx, command, input, out result);
+    }
+
 
     /// <summary>
     ///     Invokes a command with the given context.

@@ -9,6 +9,8 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
+using Robust.Shared.Toolshed;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.Console
@@ -19,6 +21,7 @@ namespace Robust.Server.Console
         [Dependency] private readonly IConGroupController _groupController = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private readonly ToolshedManager _toolshed = default!;
 
         public ServerConsoleHost() : base(isServer: true) {}
 
@@ -129,6 +132,18 @@ namespace Robust.Server.Console
                     AnyCommandExecuted?.Invoke(shell, cmdName, command, cmdArgs);
                     conCmd.Execute(shell, command, cmdArgs);
                 }
+                else
+                {
+                    // toolshed time
+                    _toolshed.InvokeCommand(shell, command, null, out var res, out var ctx);
+
+                    foreach (var err in ctx.GetErrors())
+                    {
+                        ctx.WriteLine(err.Describe());
+                    }
+
+                    shell.WriteLine(_toolshed.PrettyPrintType(res));
+                }
             }
             catch (Exception e)
             {
@@ -200,6 +215,20 @@ namespace Robust.Server.Console
 
             var result = await CalcCompletions(shell, message.Args, message.ArgString);
 
+            if ((result.Options.Length == 0 && result.Hint is null) || message.Args.Length <= 1)
+            {
+                var parser = new ForwardParser(message.ArgString, _toolshed);
+                CommandRun.TryParse(false, true, parser, null, null, false, out _, out var completions, out _);
+                if (completions == null)
+                {
+                    goto done;
+                }
+                var (shedRes, _) = await completions.Value;
+                shedRes ??= CompletionResult.Empty;
+                result = new CompletionResult(shedRes.Options.Concat(result.Options).ToArray(), shedRes.Hint ?? result.Hint);
+            }
+
+            done:
             var msg = new MsgConCompletionResp
             {
                 Result = result,

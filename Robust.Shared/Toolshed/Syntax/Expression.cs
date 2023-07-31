@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Robust.Shared.Console;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
@@ -28,6 +29,7 @@ public sealed class CommandRun
         var cmds = new List<(ParsedCommand, Vector2i)>();
         var start = parser.Index;
         var noCommand = false;
+        parser.Consume(char.IsWhiteSpace);
 
         while ((!once || cmds.Count < 1) && ParsedCommand.TryParse(doAutocomplete, parser, pipedType, out var cmd, out error, out noCommand, out autocomplete, targetOutput))
         {

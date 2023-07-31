@@ -186,7 +186,7 @@ public sealed class ParsedCommand
         return true;
     }
 
-    private bool _passedInvokeTest;
+    private bool _passedInvokeTest = false;
 
     public object? Invoke(object? pipedIn, IInvocationContext ctx)
     {

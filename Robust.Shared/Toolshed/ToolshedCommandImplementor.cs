@@ -10,6 +10,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed;
 
@@ -48,6 +49,28 @@ internal sealed class ToolshedCommandImplementor
 
         var firstStart = parser.Index;
 
+        // HACK: This is for commands like Map until I have a better solution.
+        if (Owner.GetType().GetCustomAttribute<MapLikeCommandAttribute>() is {} mapLike)
+        {
+            var start = parser.Index;
+            // We do our own parsing, assuming this is some kind of map-like operation.
+            var chkpoint = parser.Save();
+            DebugTools.AssertNotNull(pipedType);
+            DebugTools.Assert(pipedType?.IsGenericType ?? false);
+            DebugTools.Assert(pipedType?.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+            if (!Block.TryParse(doAutocomplete, parser, mapLike.TakesPipedType ? pipedType.GetGenericArguments()[0] : null, out var block, out autocomplete, out error))
+            {
+                error?.Contextualize(parser.Input, (start, parser.Index));
+                resolvedTypeArguments = Array.Empty<Type>();
+                args = null;
+                return false;
+            }
+
+            resolvedTypeArguments[0] = block.CommandRun.Commands.Last().Item1.ReturnType!;
+            parser.Restore(chkpoint);
+            goto mapLikeDone;
+        }
+
         for (var i = 0; i < Owner.TypeParameterParsers.Length; i++)
         {
             var start = parser.Index;
@@ -84,6 +107,7 @@ internal sealed class ToolshedCommandImplementor
             resolvedTypeArguments[i] = real;
         }
 
+        mapLikeDone:
         var impls = Owner.GetConcreteImplementations(pipedType, resolvedTypeArguments, subCommand);
         if (impls.FirstOrDefault() is not { } impl)
         {
@@ -95,7 +119,6 @@ internal sealed class ToolshedCommandImplementor
         }
 
         args = new();
-
         foreach (var argument in impl.ConsoleGetArguments())
         {
             var start = parser.Index;

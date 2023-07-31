@@ -122,7 +122,7 @@ public interface IInvocationContext
     /// <remarks>
     ///     This may behave arbitrarily, but it's advised it behave somewhat sanely.
     /// </remarks>
-    public object? ReadVar(string name)
+    public virtual object? ReadVar(string name)
     {
         Variables.TryGetValue(name, out var res);
         return res;
@@ -136,7 +136,7 @@ public interface IInvocationContext
     /// <remarks>
     ///     Writes may be ignored or manipulated.
     /// </remarks>
-    public void WriteVar(string name, object? value)
+    public virtual void WriteVar(string name, object? value)
     {
         Variables[name] = value;
     }
@@ -145,7 +145,7 @@ public interface IInvocationContext
     ///     Provides a list of all variables that have been written to at some point.
     /// </summary>
     /// <returns>List of all variables.</returns>
-    public IEnumerable<string> GetVars()
+    public virtual IEnumerable<string> GetVars()
     {
         return Variables.Keys;
     }

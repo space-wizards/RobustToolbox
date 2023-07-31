@@ -41,7 +41,7 @@ namespace Robust.Shared.Toolshed;
 /// <seealso cref="CommandArgumentAttribute"/>
 /// <seealso cref="CommandInvertedAttribute"/>
 /// <seealso cref="CommandInvocationContextAttribute"/>
-/// <seealso cref="TakesPipedTypeAsGeneric"/>
+/// <seealso cref="TakesPipedTypeAsGenericAttribute"/>
 [Reflect(false)]
 public abstract partial class ToolshedCommand
 {

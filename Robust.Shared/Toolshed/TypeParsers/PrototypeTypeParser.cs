@@ -12,7 +12,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-public sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
+internal sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
     where T : class, IPrototype
 {
     [Dependency] private readonly IPrototypeManager _prototype = default!;

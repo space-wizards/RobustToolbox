@@ -72,7 +72,7 @@ public abstract partial class ToolshedCommand
                 if (x.IsGenericMethodDefinition)
                 {
                     var expectedLen = x.GetGenericArguments().Length;
-                    if (x.HasCustomAttribute<TakesPipedTypeAsGeneric>())
+                    if (x.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>())
                         expectedLen -= 1;
 
                     return typeArguments.Length == expectedLen;
@@ -84,7 +84,7 @@ public abstract partial class ToolshedCommand
             {
                 if (x.IsGenericMethodDefinition)
                 {
-                    if (x.HasCustomAttribute<TakesPipedTypeAsGeneric>())
+                    if (x.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>())
                     {
                         var paramT = x.ConsoleGetPipedArgument()!.ParameterType;
                         var t = pipedType!.Intersect(paramT);

@@ -8,7 +8,26 @@ using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class VarRefParser<T> : TypeParser<ValueRef<T>>
+internal sealed class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
+{
+    [Dependency] private readonly ToolshedManager _toolshed = default!;
+
+    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    {
+        var res = _toolshed.TryParse<ValueRef<T, T>>(parser, out var inner, out error);
+        result = null;
+        if (res)
+            result = new ValueRef<T>((ValueRef<T, T>)inner!);
+        return res;
+    }
+
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    {
+        return _toolshed.TryAutocomplete(parser, typeof(ValueRef<T, T>), argName);
+    }
+}
+
+internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
 {
     [Dependency] private readonly ToolshedManager _toolshed = default!;
 
@@ -25,7 +44,7 @@ internal sealed class VarRefParser<T> : TypeParser<ValueRef<T>>
 
         if (value is not null && success)
         {
-            result = new ValueRef<T>((T)value);
+            result = new ValueRef<T, TAuto>((T)value);
             error = null;
             return true;
         }
@@ -42,7 +61,7 @@ internal sealed class VarRefParser<T> : TypeParser<ValueRef<T>>
                 return false;
             }
 
-            result = new ValueRef<T>(word);
+            result = new ValueRef<T, TAuto>(word);
             error = null;
             return true;
         }
@@ -50,7 +69,7 @@ internal sealed class VarRefParser<T> : TypeParser<ValueRef<T>>
         {
             if (Block<T>.TryParse(false, parser, null, out var block, out _, out error))
             {
-                result = new ValueRef<T>(block);
+                result = new ValueRef<T, TAuto>(block);
                 return true;
             }
 
@@ -70,6 +89,13 @@ internal sealed class VarRefParser<T> : TypeParser<ValueRef<T>>
         }
         else
         {
+            var (res, err) = await _toolshed.TryAutocomplete(parser, typeof(TAuto), null);
+
+            if (err is not UnparseableValueError || res is not null)
+            {
+                return (CompletionResult.FromHintOptions(res?.Options ?? Array.Empty<CompletionOption>(),$"<variable, block, or value of type {typeof(T).PrettyName()}>"), err);
+            }
+
             var chkpoint = parser.Save();
             if (Block<T>.TryParse(false, parser, null, out _, out var result, out _))
             {
@@ -78,12 +104,6 @@ internal sealed class VarRefParser<T> : TypeParser<ValueRef<T>>
             }
             parser.Restore(chkpoint);
 
-            var (res, err) = await _toolshed.TryAutocomplete(parser, typeof(T), null);
-
-            if (err is not UnparseableValueError || res is not null)
-            {
-                return (CompletionResult.FromHintOptions(res?.Options ?? Array.Empty<CompletionOption>(),$"<variable, block, or value of type {typeof(T)}>"), err);
-            }
 
             return (CompletionResult.FromHint("$<variable name>"), null);
         }

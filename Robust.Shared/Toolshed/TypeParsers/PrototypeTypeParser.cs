@@ -53,8 +53,14 @@ internal sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
     }
 }
 
-public readonly record struct Prototype<T>(T Value)
-    where T: class, IPrototype;
+public readonly record struct Prototype<T>(T Value) : IAsType<string>
+    where T : class, IPrototype
+{
+    public string AsType()
+    {
+        return Value.ID;
+    }
+}
 
 public record struct NotAValidPrototype(string Proto, string Kind) : IConError
 {

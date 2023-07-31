@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
@@ -8,47 +6,77 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Syntax;
 
-public sealed class ValueRef<T>
+
+public sealed class ValueRef<T> : ValueRef<T, T>
 {
-    private Block<T>? _innerBlock;
-    private string? _varName;
-    private bool _hasValue = false;
-    private T? _value;
-    private string? _expression;
-    private Vector2i? _refSpan;
+    public ValueRef(ValueRef<T, T> inner)
+    {
+        InnerBlock = inner.InnerBlock;
+        VarName = inner.VarName;
+        HasValue = inner.HasValue;
+        Value = inner.Value;
+        Expression = inner.Expression;
+        RefSpan = inner.RefSpan;
+    }
+    public ValueRef(string varName) : base(varName)
+    {
+    }
+
+    public ValueRef(Block<T> innerBlock) : base(innerBlock)
+    {
+    }
+
+    public ValueRef(T value) : base(value)
+    {
+    }
+}
+
+[Virtual]
+public class ValueRef<T, TAuto>
+{
+    internal Block<T>? InnerBlock;
+    internal string? VarName;
+    internal bool HasValue = false;
+    internal T? Value;
+    internal string? Expression;
+    internal Vector2i? RefSpan;
+
+    protected ValueRef()
+    {
+    }
 
     public ValueRef(string varName)
     {
-        _varName = varName;
+        VarName = varName;
     }
 
     public ValueRef(Block<T> innerBlock)
     {
-        _innerBlock = innerBlock;
+        InnerBlock = innerBlock;
     }
 
     public ValueRef(T value)
     {
-        _value = value;
-        _hasValue = true;
+        Value = value;
+        HasValue = true;
     }
 
-    public bool LikelyConst => _varName is not null || _hasValue;
+    public bool LikelyConst => VarName is not null || HasValue;
 
 
     public T? Evaluate(IInvocationContext ctx)
     {
-        if (_value is not null && _hasValue)
+        if (Value is not null && HasValue)
         {
-            return _value;
+            return Value;
         }
-        else if (_varName is not null)
+        else if (VarName is not null)
         {
-            return (T?)ctx.ReadVar(_varName);
+            return (T?)ctx.ReadVar(VarName);
         }
-        else if (_innerBlock is not null)
+        else if (InnerBlock is not null)
         {
-            return _innerBlock.Invoke(null, ctx);
+            return InnerBlock.Invoke(null, ctx);
         }
         else
         {
@@ -58,10 +86,10 @@ public sealed class ValueRef<T>
 
     public void Set(IInvocationContext ctx, T? value)
     {
-        if (_varName is null)
+        if (VarName is null)
             throw new NotImplementedException();
 
-        ctx.WriteVar(_varName!, value);
+        ctx.WriteVar(VarName!, value);
     }
 }
 

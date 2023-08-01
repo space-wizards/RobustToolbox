@@ -46,11 +46,13 @@ internal sealed class TypeTypeParser : TypeParser<Type>
         {"IEnumerable", typeof(IEnumerable<>)},
         {"List", typeof(List<>)},
         {"HashSet", typeof(HashSet<>)},
+        {nameof(Task), typeof(Task<>)},
+        {nameof(ValueTask), typeof(ValueTask<>)},
         // C# doesn't let you do `typeof(Dictionary<>)`. Why is a mystery to me.
         {"Dictionary", typeof(Dictionary<int, int>).GetGenericTypeDefinition()},
     };
 
-    private HashSet<string> _ambiguousTypes = new();
+    private readonly HashSet<string> _ambiguousTypes = new();
 
     public override void PostInject()
     {
@@ -67,7 +69,6 @@ internal sealed class TypeTypeParser : TypeParser<Type>
                 {
                     Types.Remove(name);
                     _ambiguousTypes.Add(name);
-                    Logger.Debug($"Discarding ambiguous type {exported}");
                 }
             }
         }

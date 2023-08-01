@@ -150,14 +150,14 @@ internal sealed class ToolshedCommandImplementor
     {
         var discrim = new CommandDiscriminator(pipedType, typeArguments);
 
+        if (Implementations.TryGetValue(discrim, out impl))
+            return true;
+
         if (!Owner.TryGetReturnType(SubCommand, pipedType, typeArguments, out var ty))
         {
             impl = null;
             return false;
         }
-
-        if (Implementations.TryGetValue(discrim, out impl))
-            return true;
 
         // Okay we need to build a new shim.
 

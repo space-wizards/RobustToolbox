@@ -55,21 +55,32 @@ public abstract partial class SharedJointSystem
             if (Deleted(relay) || !_jointsQuery.TryGetComponent(relay, out var joint))
                 continue;
 
-            RefreshRelay(relay, joint);
+            RefreshRelay(relay, component: joint);
         }
     }
 
+    /// <summary>
+    /// Refreshes the joint relay for this entity, prefering its containing container or nothing.
+    /// </summary>
     public void RefreshRelay(EntityUid uid, JointComponent? component = null)
     {
-        if (!Resolve(uid, ref component))
-            return;
-
         EntityUid? relay = null;
 
         if (_container.TryGetOuterContainer(uid, Transform(uid), out var container))
         {
             relay = container.Owner;
         }
+
+        RefreshRelay(uid, relay, component);
+    }
+
+    /// <summary>
+    /// Refreshes the joint relay for this entity.
+    /// </summary>
+    public void RefreshRelay(EntityUid uid, EntityUid? relay, JointComponent? component = null)
+    {
+        if (!Resolve(uid, ref component))
+            return;
 
         if (component.Relay == relay)
             return;

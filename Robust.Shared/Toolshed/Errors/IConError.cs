@@ -8,6 +8,12 @@ namespace Robust.Shared.Toolshed.Errors;
 /// <summary>
 ///     A Toolshed-oriented representation of an error.
 ///     Contains metadata about where in an executed command it occurred, and supports formatting.
+///     <code>
+///     > entities runverbas self "yeet"
+///     entities runverbas self "yeet"
+///                        ^^^^^
+///     You must be logged in with a client to use this, the server console isn't workable.
+///     </code>
 /// </summary>
 public interface IConError
 {

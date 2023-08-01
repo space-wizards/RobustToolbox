@@ -23,7 +23,16 @@ public sealed class ParsedCommand
     private CommandArgumentBundle Bundle { get; }
     public string? SubCommand { get; }
 
-    public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedArgumentType, [NotNullWhen(true)] out ParsedCommand? result, out IConError? error, out bool noCommand, out ValueTask<(CompletionResult?, IConError?)>? autocomplete, Type? targetType = null)
+    public static bool TryParse(
+            bool doAutoComplete,
+            ForwardParser parser,
+            Type? pipedArgumentType,
+            [NotNullWhen(true)] out ParsedCommand? result,
+            out IConError? error,
+            out bool noCommand,
+            out ValueTask<(CompletionResult?, IConError?)>? autocomplete,
+            Type? targetType = null
+        )
     {
         noCommand = false;
         var checkpoint = parser.Save();
@@ -67,7 +76,19 @@ public sealed class ParsedCommand
         return true;
     }
 
-    private static bool TryParseCommand(bool makeCompletions, ForwardParser parser, CommandArgumentBundle bundle, Type? pipedType, Type? targetType, out string? subCommand, [NotNullWhen(true)] out Invocable? invocable, [NotNullWhen(true)] out ToolshedCommand? command, out IConError? error, out bool noCommand, out ValueTask<(CompletionResult?, IConError?)>? autocomplete)
+    private static bool TryParseCommand(
+                bool makeCompletions,
+                ForwardParser parser,
+                CommandArgumentBundle bundle,
+                Type? pipedType,
+                Type? targetType,
+                out string? subCommand,
+                [NotNullWhen(true)] out Invocable? invocable,
+                [NotNullWhen(true)] out ToolshedCommand? command,
+                out IConError? error,
+                out bool noCommand,
+                out ValueTask<(CompletionResult?, IConError?)>? autocomplete
+            )
     {
         noCommand = false;
         var start = parser.Index;

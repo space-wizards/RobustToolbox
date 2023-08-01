@@ -34,7 +34,7 @@ public abstract class TypeParser<T> : ITypeParser
     public abstract ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
         string? argName);
 
-    public void PostInject()
+    public virtual void PostInject()
     {
         _sawmill = _log.GetSawmill(GetType().PrettyName());
     }

@@ -149,7 +149,16 @@ public abstract partial class ToolshedCommand
             .Select(x => x.ConsoleGetPipedArgument()!.ParameterType);
     }
 
-    internal bool TryParseArguments(bool doAutocomplete, ForwardParser parser, Type? pipedType, string? subCommand, [NotNullWhen(true)] out Dictionary<string, object?>? args, out Type[] resolvedTypeArguments, out IConError? error, out ValueTask<(CompletionResult?, IConError?)>? autocomplete)
+    internal bool TryParseArguments(
+            bool doAutocomplete,
+            ForwardParser parser,
+            Type? pipedType,
+            string? subCommand,
+            [NotNullWhen(true)] out Dictionary<string, object?>? args,
+            out Type[] resolvedTypeArguments,
+            out IConError? error,
+            out ValueTask<(CompletionResult?, IConError?)>? autocomplete
+        )
     {
         return _implementors[subCommand ?? ""].TryParseArguments(doAutocomplete, parser, subCommand, pipedType, out args, out resolvedTypeArguments, out error, out autocomplete);
     }

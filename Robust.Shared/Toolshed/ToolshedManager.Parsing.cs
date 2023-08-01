@@ -60,7 +60,7 @@ public sealed partial class ToolshedManager
 
         var baseTy = t.BaseType;
 
-        if (baseTy is not null)
+        if (baseTy is not null && baseTy != typeof(object) && baseTy != t.BaseType)
             return GetParserForType(t);
 
         return null;

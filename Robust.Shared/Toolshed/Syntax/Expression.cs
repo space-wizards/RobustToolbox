@@ -20,9 +20,17 @@ public sealed class CommandRun
     public readonly List<(ParsedCommand, Vector2i)> Commands;
     private readonly string _originalExpr;
 
-    public static bool TryParse(bool blockMode, bool doAutocomplete, ForwardParser parser, Type? pipedType,
-        Type? targetOutput, bool once, [NotNullWhen(true)] out CommandRun? expr,
-        out ValueTask<(CompletionResult?, IConError?)>? autocomplete, out IConError? error)
+    public static bool TryParse(
+            bool blockMode,
+            bool doAutocomplete,
+            ForwardParser parser,
+            Type? pipedType,
+            Type? targetOutput,
+            bool once,
+            [NotNullWhen(true)] out CommandRun? expr,
+            out ValueTask<(CompletionResult?, IConError?)>? autocomplete,
+            out IConError? error
+        )
     {
         autocomplete = null;
         error = null;

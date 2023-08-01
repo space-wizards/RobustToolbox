@@ -13,8 +13,14 @@ public sealed class Block
 {
     internal CommandRun CommandRun { get; set; }
 
-    public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType,
-        [NotNullWhen(true)] out Block? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
+    public static bool TryParse(
+            bool doAutoComplete,
+            ForwardParser parser,
+            Type? pipedType,
+            [NotNullWhen(true)] out Block? block,
+            out ValueTask<(CompletionResult?, IConError?)>? autoComplete,
+            out IConError? error
+        )
     {
         parser.Consume(char.IsWhiteSpace);
 

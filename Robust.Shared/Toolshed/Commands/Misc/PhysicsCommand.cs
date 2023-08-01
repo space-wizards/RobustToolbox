@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Physics.Components;
 
@@ -8,6 +9,8 @@ namespace Robust.Shared.Toolshed.Commands.Misc;
 [ToolshedCommand]
 internal sealed class PhysicsCommand : ToolshedCommand
 {
+    private SharedTransformSystem? _xform = default!;
+
     [CommandImplementation("velocity")]
     public IEnumerable<float> Velocity([PipedArgument] IEnumerable<EntityUid> input)
     {
@@ -22,14 +25,11 @@ internal sealed class PhysicsCommand : ToolshedCommand
         }
     }
 
-    public IEnumerable<EntityUid> Parents([PipedArgument] IEnumerable<EntityUid> input)
+    [CommandImplementation("parent")]
+    public IEnumerable<EntityUid> Parent([PipedArgument] IEnumerable<EntityUid> input)
     {
-        foreach (var VARIABLE in input)
-        {
-
-        }
-
-        throw new NotImplementedException();
+        _xform ??= GetSys<SharedTransformSystem>();
+        return input.Select(x => Comp<TransformComponent>(x).ParentUid);
     }
 
     [CommandImplementation("angular_velocity")]

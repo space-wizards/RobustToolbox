@@ -29,8 +29,8 @@ namespace Robust.Server.Bql
                 return base.DoInitialSelection(arguments, isInverted, entityManager);
             }
 
-            return entityManager.GetAllComponents((Type) arguments[0])
-                .Select(x => x.Owner);
+            return entityManager.GetAllComponents((Type) arguments[0], includePaused: true)
+                .Select(x => x.Uid);
         }
     }
 
@@ -350,6 +350,19 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             return input.Where(e => (entityManager.TryGetComponent<TransformComponent>(e, out var transform) && transform.Anchored) ^ isInverted);
+        }
+    }
+
+    [RegisterBqlQuerySelector]
+    public sealed class PausedQuerySelector : BqlQuerySelector
+    {
+        public override string Token => "paused";
+
+        public override QuerySelectorArgument[] Arguments => Array.Empty<QuerySelectorArgument>();
+
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
+        {
+            return input.Where(e => entityManager.GetComponent<MetaDataComponent>(e).EntityPaused ^ isInverted);
         }
     }
 }

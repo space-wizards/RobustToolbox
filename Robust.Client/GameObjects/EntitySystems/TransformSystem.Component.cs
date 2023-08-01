@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
@@ -19,6 +20,13 @@ public sealed partial class TransformSystem
         xform.NextPosition = null;
         xform.LerpParent = EntityUid.Invalid;
         base.SetLocalPositionNoLerp(xform, value);
+    }
+
+    public override void SetLocalRotationNoLerp(TransformComponent xform, Angle angle)
+    {
+        xform.NextRotation = null;
+        xform.LerpParent = EntityUid.Invalid;
+        base.SetLocalRotationNoLerp(xform, angle);
     }
 
     public override void SetLocalRotation(TransformComponent xform, Angle angle)

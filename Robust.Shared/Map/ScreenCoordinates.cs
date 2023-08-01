@@ -1,6 +1,7 @@
 ﻿using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using System;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 

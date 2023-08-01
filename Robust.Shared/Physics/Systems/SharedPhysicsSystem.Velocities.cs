@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -24,7 +25,7 @@ public abstract partial class SharedPhysicsSystem
             return Vector2.Zero;
 
         var velocity = component.LinearVelocity;
-        var angVelocity = xform.LocalRotation.RotateVec(Vector2.Cross(component.AngularVelocity, point - component.LocalCenter));
+        var angVelocity = xform.LocalRotation.RotateVec(Vector2Helpers.Cross(component.AngularVelocity, point - component.LocalCenter));
         return velocity + angVelocity;
     }
 
@@ -65,7 +66,7 @@ public abstract partial class SharedPhysicsSystem
                 velocity += body.LinearVelocity;
 
                 // add angular velocity that results from the parent's rotation (NOT in map coordinates, but in the parentXform.Parent's frame)
-                angularComponent += Vector2.Cross(body.AngularVelocity, localPos - body.LocalCenter);
+                angularComponent += Vector2Helpers.Cross(body.AngularVelocity, localPos - body.LocalCenter);
                 angularComponent = xform.LocalRotation.RotateVec(angularComponent);
             }
 
@@ -147,7 +148,7 @@ public abstract partial class SharedPhysicsSystem
 
                 // add the component of the linear velocity that results from the parent's rotation. This is NOT in map
                 // coordinates, this is the velocity in the parentXform.Parent's frame.
-                linearVelocityAngularContribution += Vector2.Cross(body.AngularVelocity, localPos - body.LocalCenter);
+                linearVelocityAngularContribution += Vector2Helpers.Cross(body.AngularVelocity, localPos - body.LocalCenter);
                 linearVelocityAngularContribution = xform.LocalRotation.RotateVec(linearVelocityAngularContribution);
             }
 
@@ -195,7 +196,7 @@ public abstract partial class SharedPhysicsSystem
         }
 
         TransformComponent? parentXform = xformQuery.GetComponent(parent);
-        var localPos = parentXform.InvWorldMatrix.Transform(xform.WorldPosition);
+        var localPos = _transform.GetInvWorldMatrix(parentXform).Transform(_transform.GetWorldPosition(xform));
 
         var oldLinear = physics.LinearVelocity;
         var oldAngular = physics.AngularVelocity;
@@ -212,7 +213,7 @@ public abstract partial class SharedPhysicsSystem
 
                 // add the component of the linear velocity that results from the parent's rotation. This is NOT in map
                 // coordinates, this is the velocity in the parentXform.Parent's frame.
-                linearAngularContribution += Vector2.Cross(body.AngularVelocity, localPos - body.LocalCenter);
+                linearAngularContribution += Vector2Helpers.Cross(body.AngularVelocity, localPos - body.LocalCenter);
                 linearAngularContribution = parentXform.LocalRotation.RotateVec(linearAngularContribution);
             }
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -170,7 +171,7 @@ internal abstract partial class ViewVariablesManager
         var kind = segments[0];
         var id = segments[1];
 
-        if (!_protoMan.TryGetVariantType(kind, out var kindType)
+        if (!_protoMan.TryGetKindType(kind, out var kindType)
             || !_protoMan.TryIndex(kindType, id, out var prototype))
             return EmptyResolve;
 
@@ -186,10 +187,10 @@ internal abstract partial class ViewVariablesManager
                 var kind = segments[0];
                 var prototype = segments.Length == 1 ? string.Empty : segments[1];
 
-                if(!_protoMan.HasVariant(kind))
+                if(!_protoMan.HasKind(kind))
                     goto case 0;
 
-                if (_protoMan.TryIndex(_protoMan.GetVariantType(kind), prototype, out _))
+                if (_protoMan.TryIndex(_protoMan.GetKindType(kind), prototype, out _))
                     goto case default;
 
                 return _protoMan.EnumeratePrototypes(kind)
@@ -274,7 +275,7 @@ internal abstract partial class ViewVariablesManager
 
         [DataField("vector")]
         [ViewVariables(VVAccess.ReadWrite)]
-        private Vector2 Vector = (50, 50);
+        private Vector2 Vector = new(50, 50);
 
         [DataField("data")]
         [ViewVariables(VVAccess.ReadWrite)]

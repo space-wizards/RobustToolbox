@@ -15,10 +15,16 @@ public sealed class GamePrototypeLoadManager : SharedPrototypeLoadManager
     [Dependency] private readonly IServerNetManager _netManager = default!;
     [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IConGroupController _controller = default!;
+    [Dependency] private readonly ILogManager _logManager = default!;
+
+    private ISawmill _sawmill = default!;
 
     public override void Initialize()
     {
         base.Initialize();
+
+        _sawmill = _logManager.GetSawmill("adminbus");
+
         _netManager.Connected += NetManagerOnConnected;
     }
 
@@ -36,7 +42,7 @@ public sealed class GamePrototypeLoadManager : SharedPrototypeLoadManager
         {
             base.LoadPrototypeData(message);
             _netManager.ServerSendToAll(message); // everyone load it up!
-            Logger.InfoS("adminbus", $"Loaded adminbus prototype data from {player.Name}.");
+            _sawmill.Info($"Loaded adminbus prototype data from {player.Name}.");
         }
         else
         {

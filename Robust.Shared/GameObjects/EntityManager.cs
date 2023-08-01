@@ -18,6 +18,8 @@ namespace Robust.Shared.GameObjects
 {
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
+    public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : Component;
+
     /// <inheritdoc />
     [Virtual]
     public partial class EntityManager : IEntityManager
@@ -35,6 +37,9 @@ namespace Robust.Shared.GameObjects
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
         private SharedTransformSystem _xforms = default!;
+
+        private EntityQuery<MetaDataComponent> _metaQuery;
+        private EntityQuery<TransformComponent> _xformQuery;
 
         #endregion Dependencies
 
@@ -75,7 +80,8 @@ namespace Robust.Shared.GameObjects
         public event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
         private string _xformName = string.Empty;
-        private string _metaName = string.Empty;
+
+        private SharedMapSystem _mapSystem = default!;
 
         private ISawmill _sawmill = default!;
         private ISawmill _resolveSawmill = default!;
@@ -102,7 +108,6 @@ namespace Robust.Shared.GameObjects
 
             InitializeComponents();
             _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
-            _metaName = _componentFactory.GetComponentName(typeof(MetaDataComponent));
             _sawmill = LogManager.GetSawmill("entity");
             _resolveSawmill = LogManager.GetSawmill("resolve");
 
@@ -114,7 +119,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public bool IsDefault(EntityUid uid)
         {
-            if (!TryGetComponent<MetaDataComponent>(uid, out var metadata) || metadata.EntityPrototype == null)
+            if (!_metaQuery.TryGetComponent(uid, out var metadata) || metadata.EntityPrototype == null)
                 return false;
 
             var prototype = metadata.EntityPrototype;
@@ -221,7 +226,10 @@ namespace Robust.Shared.GameObjects
             _entitySystemManager.Initialize();
             Started = true;
             _eventBus.CalcOrdering();
-            _xforms = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
+            _mapSystem = System<SharedMapSystem>();
+            _xforms = System<SharedTransformSystem>();
+            _metaQuery = GetEntityQuery<MetaDataComponent>();
+            _xformQuery = GetEntityQuery<TransformComponent>();
         }
 
         public virtual void Shutdown()
@@ -308,7 +316,7 @@ namespace Robust.Shared.GameObjects
 
             if (coordinates.IsValid(this))
             {
-                _xforms.SetCoordinates(newEntity, GetComponent<TransformComponent>(newEntity), coordinates, unanchor: false);
+                _xforms.SetCoordinates(newEntity, _xformQuery.GetComponent(newEntity), coordinates, unanchor: false);
             }
 
             return newEntity;
@@ -318,7 +326,7 @@ namespace Robust.Shared.GameObjects
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
             var newEntity = CreateEntity(prototypeName, default, overrides);
-            var transform = GetComponent<TransformComponent>(newEntity);
+            var transform = _xformQuery.GetComponent(newEntity);
 
             if (coordinates.MapId == MapId.Nullspace)
             {
@@ -335,7 +343,7 @@ namespace Robust.Shared.GameObjects
             EntityCoordinates coords;
             if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var gridUid, out var grid))
             {
-                coords = new EntityCoordinates(gridUid, grid.WorldToLocal(coordinates.Position));
+                coords = new EntityCoordinates(gridUid, _mapSystem.WorldToLocal(gridUid, grid, coordinates.Position));
                 _xforms.SetCoordinates(newEntity, transform, coords, unanchor: false);
             }
             else
@@ -557,7 +565,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    xformSys.DetachParentToNull(uid, transform, xformQuery, metaQuery);
+                    xformSys.DetachParentToNull(uid, transform);
                 }
                 catch (Exception e)
                 {
@@ -675,29 +683,20 @@ namespace Robust.Shared.GameObjects
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
         private protected EntityUid AllocEntity(
-            string? prototypeName,
+            EntityPrototype? prototype,
             out MetaDataComponent metadata,
             EntityUid uid = default)
         {
-            EntityPrototype? prototype = null;
-            if (!string.IsNullOrWhiteSpace(prototypeName))
-            {
-                // If the prototype doesn't exist then we throw BEFORE we allocate the entity.
-                prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            }
-
             var entity = AllocEntity(out metadata, uid);
-
             metadata._entityPrototype = prototype;
-            Dirty(metadata, metadata);
-
+            Dirty(entity, metadata, metadata);
             return entity;
         }
 
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(out MetaDataComponent metadata, EntityUid uid = default)
+        private EntityUid AllocEntity(out MetaDataComponent metadata, EntityUid uid = default)
         {
             if (uid == default)
             {
@@ -735,7 +734,9 @@ namespace Robust.Shared.GameObjects
             if (prototypeName == null)
                 return AllocEntity(out _, uid);
 
-            var entity = AllocEntity(prototypeName, out var metadata, uid);
+            PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype);
+
+            var entity = AllocEntity(prototype, out var metadata, uid);
             try
             {
                 EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, context);
@@ -752,7 +753,7 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+            EntityPrototype.LoadEntity(_metaQuery.GetComponent(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
         }
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
@@ -764,12 +765,12 @@ namespace Robust.Shared.GameObjects
         {
             try
             {
-                var meta = GetComponent<MetaDataComponent>(entity);
+                var meta = _metaQuery.GetComponent(entity);
                 InitializeEntity(entity, meta);
                 StartEntity(entity);
 
                 // If the map we're initializing the entity on is initialized, run map init on it.
-                if (_mapManager.IsMapInitialized(mapId ?? GetComponent<TransformComponent>(entity).MapID))
+                if (_mapManager.IsMapInitialized(mapId ?? _xformQuery.GetComponent(entity).MapID))
                     RunMapInit(entity, meta);
             }
             catch (Exception e)

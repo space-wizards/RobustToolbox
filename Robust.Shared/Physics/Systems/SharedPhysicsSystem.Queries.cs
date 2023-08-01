@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.Debugging;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -31,9 +32,9 @@ namespace Robust.Shared.Physics.Systems
         {
             var state = (collider, mapId, found: false);
 
-            foreach (var broadphase in _broadphase.GetBroadphases(mapId, collider))
+            foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, collider))
             {
-                var gridCollider = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(collider);
+                var gridCollider = _transform.GetInvWorldMatrix(uid).TransformBox(collider);
 
                 broadphase.StaticTree.QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
                 {
@@ -128,9 +129,9 @@ namespace Robust.Shared.Physics.Systems
 
             var bodies = new HashSet<PhysicsComponent>();
 
-            foreach (var broadphase in _broadphase.GetBroadphases(mapId, worldAABB))
+            foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, worldAABB))
             {
-                var gridAABB = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(worldAABB);
+                var gridAABB = _transform.GetInvWorldMatrix(uid).TransformBox(worldAABB);
 
                 foreach (var proxy in broadphase.StaticTree.QueryAabb(gridAABB, false))
                 {
@@ -155,9 +156,9 @@ namespace Robust.Shared.Physics.Systems
 
             var bodies = new HashSet<PhysicsComponent>();
 
-            foreach (var broadphase in _broadphase.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
+            foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
             {
-                var gridAABB = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(worldBounds);
+                var gridAABB = _transform.GetInvWorldMatrix(uid).TransformBox(worldBounds);
 
                 foreach (var proxy in broadphase.StaticTree.QueryAabb(gridAABB, false))
                 {
@@ -261,13 +262,13 @@ namespace Robust.Shared.Physics.Systems
             Func<EntityUid, TState, bool> predicate, float maxLength = 50F, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new();
-            var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
-            var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
-                Vector2.ComponentMax(ray.Position, endPoint));
+            var endPoint = ray.Position + ray.Direction.Normalized() * maxLength;
+            var rayBox = new Box2(Vector2.Min(ray.Position, endPoint),
+                Vector2.Max(ray.Position, endPoint));
 
-            foreach (var broadphase in _broadphase.GetBroadphases(mapId, rayBox))
+            foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, rayBox))
             {
-                var (_, rot, matrix, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
+                var (_, rot, matrix, invMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(uid);
 
                 var position = invMatrix.Transform(ray.Position);
                 var gridRot = new Angle(-rot.Theta);
@@ -366,13 +367,13 @@ namespace Robust.Shared.Physics.Systems
         public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, EntityUid? ignoredEnt = null)
         {
             var penetration = 0f;
-            var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
-            var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
-                Vector2.ComponentMax(ray.Position, endPoint));
+            var endPoint = ray.Position + ray.Direction.Normalized() * maxLength;
+            var rayBox = new Box2(Vector2.Min(ray.Position, endPoint),
+                Vector2.Max(ray.Position, endPoint));
 
-            foreach (var broadphase in _broadphase.GetBroadphases(mapId, rayBox))
+            foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, rayBox))
             {
-                var (_, rot, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationInvMatrix();
+                var (_, rot, invMatrix) = _transform.GetWorldPositionRotationInvMatrix(uid);
 
                 var position = invMatrix.Transform(ray.Position);
                 var gridRot = new Angle(-rot.Theta);
@@ -391,10 +392,10 @@ namespace Robust.Shared.Physics.Systems
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length * 2, -gridRay.Direction).Intersects(
+                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction).Intersects(
                             proxy.AABB, out _, out var exitPoint))
                     {
-                        penetration += (point - exitPoint).Length;
+                        penetration += (point - exitPoint).Length();
                     }
                     return true;
                 }, gridRay);
@@ -410,10 +411,10 @@ namespace Robust.Shared.Physics.Systems
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length * 2, -gridRay.Direction).Intersects(
+                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction).Intersects(
                             proxy.AABB, out _, out var exitPoint))
                     {
-                        penetration += (point - exitPoint).Length;
+                        penetration += (point - exitPoint).Length();
                     }
                     return true;
                 }, gridRay);

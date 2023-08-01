@@ -40,19 +40,23 @@ namespace Robust.Server.GameObjects
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
 
+        private ISawmill _netEntSawmill = default!;
+
         protected override int NextEntityUid { get; set; } = (int) EntityUid.FirstUid;
 
         public override void Initialize()
         {
+            _netEntSawmill = LogManager.GetSawmill("net.ent");
+
             SetupNetworking();
             ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             base.Initialize();
         }
 
-        EntityUid IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid uid)
+        EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype, EntityUid uid)
         {
-            return AllocEntity(prototypeName, out _, uid);
+            return AllocEntity(prototype, out _, uid);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
@@ -199,7 +203,7 @@ namespace Robust.Server.GameObjects
             {
                 if (msgT < cT && _logLateMsgs)
                 {
-                    Logger.WarningS("net.ent", "Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}",
+                    _netEntSawmill.Warning("Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}",
                         (int) msgT.Value - (int) cT.Value, message.MsgChannel.UserName, msgT, cT);
                 }
 

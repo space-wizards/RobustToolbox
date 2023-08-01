@@ -70,6 +70,7 @@ namespace Robust.Server
             deps.Register<IServerEntityManagerInternal, ServerEntityManager>();
             deps.Register<IServerGameStateManager, ServerGameStateManager>();
             deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
+            deps.Register<IReplayRecordingManagerInternal, ReplayRecordingManager>();
             deps.Register<IServerReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IServerNetManager, NetManager>();
             deps.Register<IStatusHost, StatusHost>();
@@ -92,6 +93,7 @@ namespace Robust.Server
             deps.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
+            deps.Register<IHttpClientHolder, HttpClientHolder>();
         }
     }
 }

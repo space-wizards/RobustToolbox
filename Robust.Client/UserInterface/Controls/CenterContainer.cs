@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -18,7 +19,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 child.Arrange(UIBox2.FromDimensions(childPos, childSize));
 
-                max = Vector2.ComponentMax(max, childSize);
+                max = Vector2.Max(max, childSize);
             }
             return max;
         }

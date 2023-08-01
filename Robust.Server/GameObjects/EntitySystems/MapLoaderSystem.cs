@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using Robust.Server.Maps;
 using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
@@ -43,6 +44,7 @@ public sealed class MapLoaderSystem : EntitySystem
                  private          IServerEntityManagerInternal _serverEntityManager = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private ISawmill _logLoader = default!;
@@ -423,12 +425,16 @@ public sealed class MapLoaderSystem : EntitySystem
                 }
 
                 var entities = (SequenceDataNode) metaDef["entities"];
+                EntityPrototype? proto = null;
+
+                if (type != null)
+                    _prototypeManager.TryIndex(type, out proto);
 
                 foreach (var entityDef in entities.Cast<MappingDataNode>())
                 {
                     var uid = entityDef.Get<ValueDataNode>("uid").AsInt();
 
-                    var entity = _serverEntityManager.AllocEntity(type);
+                    var entity = _serverEntityManager.AllocEntity(proto);
                     data.Entities.Add(entity);
                     data.UidEntityMap.Add(uid, entity);
                     data.EntitiesToDeserialize.Add(entity, entityDef);
@@ -461,11 +467,13 @@ public sealed class MapLoaderSystem : EntitySystem
                     }
                     else if (ev.RenamedPrototypes.TryGetValue(typeNode.Value, out var newType))
                     {
-                        entity = _serverEntityManager.AllocEntity(newType);
+                        _prototypeManager.TryIndex<EntityPrototype>(newType, out var prototype);
+                        entity = _serverEntityManager.AllocEntity(prototype);
                     }
                     else
                     {
-                        entity = _serverEntityManager.AllocEntity(typeNode.Value);
+                        _prototypeManager.TryIndex<EntityPrototype>(typeNode.Value, out var prototype);
+                        entity = _serverEntityManager.AllocEntity(prototype);
                     }
                 }
                 else
@@ -757,11 +765,12 @@ public sealed class MapLoaderSystem : EntitySystem
             SequenceDataNode yamlGridChunks = (SequenceDataNode)yamlGrid["chunks"];
 
             var grid = AllocateMapGrid(gridComp, yamlGridInfo);
+            var gridUid = grid.Owner;
 
             foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) = _serManager.Read<Vector2i>(chunkNode["ind"]);
-                _serManager.Read(chunkNode, _context, instanceProvider: () => grid.GetOrAddChunk(chunkOffsetX, chunkOffsetY), notNullableOverride: true);
+                _serManager.Read(chunkNode, _context, instanceProvider: () => _mapSystem.GetOrAddChunk(gridUid, grid, chunkOffsetX, chunkOffsetY), notNullableOverride: true);
             }
         }
     }
@@ -807,7 +816,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
             if (xformQuery.TryGetComponent(rootEntity, out var xform) && IsRoot(xform, mapQuery) && !HasComp<MapComponent>(rootEntity))
             {
-                xform.LocalPosition = data.Options.TransformMatrix.Transform(xform.LocalPosition);
+                _transform.SetLocalPosition(xform, data.Options.TransformMatrix.Transform(xform.LocalPosition));
                 xform.LocalRotation += data.Options.Rotation;
             }
         }
@@ -1143,7 +1152,7 @@ public sealed class MapLoaderSystem : EntitySystem
                 var xform = Transform(entityUid);
                 if (xform.NoLocalRotation && xform.LocalRotation != 0)
                 {
-                    Logger.Error($"Encountered a no-rotation entity with non-zero local rotation: {ToPrettyString(entityUid)}");
+                    Log.Error($"Encountered a no-rotation entity with non-zero local rotation: {ToPrettyString(entityUid)}");
                     xform._localRotation = 0;
                 }
 

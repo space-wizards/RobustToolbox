@@ -78,15 +78,16 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
         IWritableDirProvider directory,
         string? name = null,
         bool overwrite = false,
-        TimeSpan? duration = null)
+        TimeSpan? duration = null,
+        object? state = null)
     {
-        if (!base.TryStartRecording(directory, name, overwrite, duration))
+        if (!base.TryStartRecording(directory, name, overwrite, duration, state))
             return false;
 
-        var (state, detachMsg) = CreateFullState();
+        var (gameState, detachMsg) = CreateFullState();
         if (detachMsg != null)
             RecordReplayMessage(detachMsg);
-        Update(state);
+        Update(gameState);
         return true;
     }
 

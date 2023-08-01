@@ -79,7 +79,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 SubscribeLocalEvent<DummyComponent, TestStructEvent>(MyRefHandler);
 #pragma warning disable RA0013
                 SubscribeLocalEvent<DummyTwoComponent, TestStructEvent>(MyValueHandler);
-#pragma warning enable RA0013
+#pragma warning restore RA0013
             }
 
             private void MyValueHandler(EntityUid uid, DummyTwoComponent component, TestStructEvent args) { }

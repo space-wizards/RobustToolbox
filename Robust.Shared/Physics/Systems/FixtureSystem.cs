@@ -9,6 +9,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -174,7 +175,7 @@ namespace Robust.Shared.Physics.Systems
 
             if (!manager.Fixtures.Remove(fixture.ID))
             {
-                Logger.ErrorS("fixtures", $"Tried to remove fixture from {ToPrettyString(uid)} that was already removed.");
+                Log.Error($"Tried to remove fixture from {ToPrettyString(uid)} that was already removed.");
                 return;
             }
 
@@ -214,7 +215,9 @@ namespace Robust.Shared.Physics.Systems
                         throw new InvalidOperationException($"Tried to setup fixture on init for {ToPrettyString(uid)} with no ID!");
                     }
 
+#pragma warning disable CS0618
                     fixture.Body = body;
+#pragma warning restore CS0618
                 }
 
                 // Make sure all the right stuff is set on the body
@@ -236,7 +239,7 @@ namespace Robust.Shared.Physics.Systems
 
             if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? physics))
             {
-                Logger.ErrorS("physics", $"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
+                Log.Error($"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;
             }
 
@@ -245,7 +248,9 @@ namespace Robust.Shared.Physics.Systems
             foreach (var (id, fixture) in component.Fixtures)
             {
                 DebugTools.Assert(id == fixture.ID);
+#pragma warning disable CS0618
                 fixture.Body = physics;
+#pragma warning restore CS0618
             }
 
             var toAddFixtures = new ValueList<Fixture>();
@@ -260,7 +265,9 @@ namespace Robust.Shared.Physics.Systems
                 var fixture = state.Fixtures[i];
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
+#pragma warning disable CS0618
                 newFixture.Body = physics;
+#pragma warning restore CS0618
                 newFixtures.Add(newFixture.ID, newFixture);
             }
 
@@ -349,6 +356,9 @@ namespace Robust.Shared.Physics.Systems
             if (resetMass)
                 _physics.ResetMassData(uid, manager, body);
 
+            // Save the old layer to see if an event should be raised later.
+            var oldLayer = body.CollisionLayer;
+
             // Normally this method is called when fixtures need to be dirtied anyway so no point in returning early I think
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
@@ -356,6 +366,12 @@ namespace Robust.Shared.Physics.Systems
 
             if (manager.FixtureCount == 0)
                 _physics.SetCanCollide(uid, false, manager: manager, body: body);
+
+            if (oldLayer != layer)
+            {
+                var ev = new CollisionLayerChangeEvent(body);
+                RaiseLocalEvent(ref ev);
+            }
 
             if (dirty)
                 Dirty(manager);

@@ -102,7 +102,7 @@ public partial class PrototypeManager
                         throw;
                     }
 
-                    _sawmill.Error($"Error reloading prototypes in file {file}:\n{e}");
+                    Sawmill.Error($"Error reloading prototypes in file {file}:\n{e}");
                     return null;
                 }
 
@@ -140,7 +140,7 @@ public partial class PrototypeManager
                 }
                 catch (Exception e)
                 {
-                    _sawmill.Error($"Exception whilst loading prototypes from {file}#{i}:\n{e}");
+                    Sawmill.Error($"Exception whilst loading prototypes from {file}#{i}:\n{e}");
                 }
 
                 i += 1;
@@ -148,7 +148,7 @@ public partial class PrototypeManager
         }
         catch (Exception e)
         {
-            _sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", file, e.Message);
+            Sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", file, e.Message);
         }
     }
 

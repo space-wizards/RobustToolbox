@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Server.Player;
@@ -70,19 +71,19 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
             var gridComp = mapMan.CreateGrid(mapId);
             gridComp.SetTile(Vector2i.Zero, new Tile(1));
             grid1 = gridComp.Owner;
-            xformSys.SetLocalPosition(grid1, (-2,0));
+            xformSys.SetLocalPosition(grid1, new Vector2(-2,0));
 
             gridComp = mapMan.CreateGrid(mapId);
             gridComp.SetTile(Vector2i.Zero, new Tile(1));
             grid2 = gridComp.Owner;
-            xformSys.SetLocalPosition(grid2, (2,0));
+            xformSys.SetLocalPosition(grid2, new Vector2(2,0));
         });
 
         // Spawn player entity on grid 1
         EntityUid player = default;
         await server.WaitPost(() =>
         {
-            var coords = new EntityCoordinates(grid1, (0.5f, 0.5f));
+            var coords = new EntityCoordinates(grid1, new Vector2(0.5f, 0.5f));
             player = sEntMan.SpawnEntity("", coords);
             var session = (IPlayerSession) sPlayerMan.Sessions.First();
             session.AttachToEntity(player);
@@ -103,7 +104,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         EntityUid entB = default;
         EntityUid childA = default;
         EntityUid childB = default;
-        var coords = new EntityCoordinates(grid2, (0.5f, 0.5f));
+        var coords = new EntityCoordinates(grid2, new Vector2(0.5f, 0.5f));
         await server.WaitPost(() =>
         {
             entA = sEntMan.SpawnEntity("", coords);

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Avalonia.Metadata;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -88,7 +89,7 @@ namespace Robust.Client.UserInterface
                 ThemeUpdateRecursive(Parent?.Theme ?? UserInterfaceManager.CurrentTheme);
             }
         }
-        
+
         protected virtual void OnThemeUpdated()
         {
         }

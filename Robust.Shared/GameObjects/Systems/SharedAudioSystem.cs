@@ -10,11 +10,12 @@ using Robust.Shared.Random;
 namespace Robust.Shared.GameObjects;
 public abstract class SharedAudioSystem : EntitySystem
 {
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IPrototypeManager _protoMan = default!;
     [Dependency] protected readonly IConfigurationManager CfgManager = default!;
+    [Dependency] private   readonly IMapManager _mapManager = default!;
+    [Dependency] private   readonly IPrototypeManager _protoMan = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
     [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
+    [Dependency] private   readonly SharedMapSystem _map = default!;
 
     /// <summary>
     /// Default max range at which the sound can be heard.
@@ -31,7 +32,7 @@ public abstract class SharedAudioSystem : EntitySystem
         switch (specifier)
         {
             case SoundPathSpecifier path:
-                return path.Path == null ? string.Empty : path.Path.ToString();
+                return path.Path == default ? string.Empty : path.Path.ToString();
 
             case SoundCollectionSpecifier collection:
             {
@@ -292,7 +293,7 @@ public abstract class SharedAudioSystem : EntitySystem
     protected EntityCoordinates GetFallbackCoordinates(MapCoordinates mapCoordinates)
     {
         if (_mapManager.TryFindGridAt(mapCoordinates, out var gridUid, out var mapGrid))
-            return new EntityCoordinates(gridUid, mapGrid.WorldToLocal(mapCoordinates.Position));
+            return new EntityCoordinates(gridUid, _map.WorldToLocal(gridUid, mapGrid, mapCoordinates.Position));
 
         if (_mapManager.HasMapEntity(mapCoordinates.MapId))
             return new EntityCoordinates(_mapManager.GetMapEntityId(mapCoordinates.MapId), mapCoordinates.Position);

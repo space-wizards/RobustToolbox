@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -23,6 +24,28 @@ namespace Robust.Shared.Containers
 
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
+            SubscribeLocalEvent<ContainerManagerComponent, ComponentGetState>(OnContainerGetState);
+        }
+
+        private void OnContainerGetState(EntityUid uid, ContainerManagerComponent component, ref ComponentGetState args)
+        {
+            // naive implementation that just sends the full state of the component
+            Dictionary<string, ContainerManagerComponent.ContainerManagerComponentState.ContainerData> containerSet = new(component.Containers.Count);
+
+            foreach (var container in component.Containers.Values)
+            {
+                var uidArr = new EntityUid[container.ContainedEntities.Count];
+
+                for (var index = 0; index < container.ContainedEntities.Count; index++)
+                {
+                    uidArr[index] = container.ContainedEntities[index];
+                }
+
+                var sContainer = new ContainerManagerComponent.ContainerManagerComponentState.ContainerData(container.ContainerType, container.ID, container.ShowContents, container.OccludesLight, uidArr);
+                containerSet.Add(container.ID, sContainer);
+            }
+
+            args.State = new ContainerManagerComponent.ContainerManagerComponentState(containerSet);
         }
 
         // TODO: Make ContainerManagerComponent ECS and make these proxy methods the real deal.

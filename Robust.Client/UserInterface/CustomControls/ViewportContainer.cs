@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
@@ -17,7 +18,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public IClydeViewport? Viewport { get; set; }
 
-        private Vector2 _viewportResolution = (1f, 1f);
+        private Vector2 _viewportResolution = new Vector2(1f, 1f);
 
         /// <summary>
         ///     This controls the render target size, *as a fraction of the control size.*
@@ -69,7 +70,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (Viewport == null)
             {
-                handle.DrawRect(UIBox2.FromDimensions((0, 0), Size * UIScale), Color.Red);
+                handle.DrawRect(UIBox2.FromDimensions(new Vector2(0, 0), Size * UIScale), Color.Red);
             }
             else
             {
@@ -81,7 +82,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 Viewport.Render();
                 handle.DrawTextureRect(Viewport.RenderTarget.Texture,
-                    UIBox2.FromDimensions((0, 0), (Vector2i) (Viewport.Size / _viewportResolution)));
+                    UIBox2.FromDimensions(new Vector2(0, 0), (Vector2i) (Viewport.Size / _viewportResolution)));
 
                 Viewport.RenderScreenOverlaysAbove(handle, this, viewportBounds);
             }

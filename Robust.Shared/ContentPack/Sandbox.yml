@@ -305,6 +305,7 @@ Types:
     ConcurrentQueue`1: { All: True }
     ConcurrentStack`1: { All: True }
   System.Collections:
+    BitArray: { All: True }
     IEnumerable: { All: True }
     IEnumerator: { All: True }
     IReadOnlyList`1: { All: True }
@@ -427,6 +428,7 @@ Types:
     AddressFamily: { }
   System.Numerics:
     BitOperations: { All: True }
+    Vector2: { All: True }
   System.Reflection:
     Assembly:
       Methods:

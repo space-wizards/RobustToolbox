@@ -58,7 +58,7 @@ namespace Robust.Shared
         /// </summary>
         /// <seealso cref="NetMtuExpand"/>
         public static readonly CVarDef<int> NetMtu =
-            CVarDef.Create("net.mtu", NetPeerConfiguration.kDefaultMTU, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu", 1000, CVar.ARCHIVE);
 
         /// <summary>
         /// If set, automatically try to detect MTU above <see cref="NetMtu"/>.
@@ -318,6 +318,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> SysGCCollectStart =
             CVarDef.Create("sys.gc_collect_start", true);
+
+        /// <summary>
+        /// Use precise sleeping methods in the game loop.
+        /// </summary>
+        public static readonly CVarDef<bool> SysPreciseSleep =
+            CVarDef.Create("sys.precise_sleep", true);
 
         /*
          * METRICS
@@ -1263,6 +1269,15 @@ namespace Robust.Shared
 
         public static readonly CVarDef<float> MidiVolume =
             CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<int> MidiMinRendererParallel =
+            CVarDef.Create("midi.min_renderers_parallel_update", 3, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<float> MidiPositionUpdateDelay =
+            CVarDef.Create("midi.position_update_delay", 0.125f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<float> MidiOcclusionUpdateDelay =
+            CVarDef.Create("midi.occlusion_update_delay", 0.25f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * HUB

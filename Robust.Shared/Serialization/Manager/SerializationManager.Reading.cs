@@ -278,6 +278,10 @@ namespace Robust.Shared.Serialization.Manager
             }
             else if (actualType.IsEnum)
             {
+                // Does not include cases where the target type is System.Enum.
+                // Those get handled by the generic enum serializer which uses reflection to resolve strings into enums.
+                DebugTools.Assert(actualType != typeof(Enum));
+
                 if (nodeType == typeof(ValueDataNode))
                 {
                     call = Expression.Call(managerConst, nameof(ReadEnumValue), new[] { actualType },

@@ -3,20 +3,27 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using NFluidsynth;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio.Midi;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Threading;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -26,6 +33,13 @@ internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
 
+    private int _minRendererParallel;
+    private float _occlusionUpdateDelay;
+    private float _positionUpdateDelay;
+
+    [ViewVariables] private TimeSpan _nextOcclusionUpdate = TimeSpan.Zero;
+    [ViewVariables] private TimeSpan _nextPositionUpdate = TimeSpan.Zero;
+
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCacheInternal _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -33,6 +47,9 @@ internal sealed partial class MidiManager : IMidiManager
     [Dependency] private readonly IClydeAudio _clydeAudio = default!;
     [Dependency] private readonly ITaskManager _taskManager = default!;
     [Dependency] private readonly ILogManager _logger = default!;
+    [Dependency] private readonly IParallelManager _parallel = default!;
+    [Dependency] private readonly IRuntimeLog _runtime = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
 
     private SharedPhysicsSystem _broadPhaseSystem = default!;
 
@@ -59,11 +76,10 @@ internal sealed partial class MidiManager : IMidiManager
         }
     }
 
-    [ViewVariables]
-    private readonly List<IMidiRenderer> _renderers = new();
+    [ViewVariables] private readonly List<IMidiRenderer> _renderers = new();
 
     private bool _alive = true;
-    private Settings? _settings;
+    [ViewVariables] private Settings? _settings;
     private Thread? _midiThread;
     private ISawmill _midiSawmill = default!;
     private float _volume = 0f;
@@ -115,7 +131,7 @@ internal sealed partial class MidiManager : IMidiManager
     private bool _failedInitialize;
 
     private NFluidsynth.Logger.LoggerDelegate _loggerDelegate = default!;
-    private ISawmill _sawmill = default!;
+    private ISawmill _fluidsynthSawmill = default!;
     private float _maxCastLength;
 
     [ViewVariables(VVAccess.ReadWrite)]
@@ -130,12 +146,20 @@ internal sealed partial class MidiManager : IMidiManager
     {
         if (FluidsynthInitialized || _failedInitialize) return;
 
-        _volume = _cfgMan.GetCVar(CVars.MidiVolume);
         _cfgMan.OnValueChanged(CVars.MidiVolume, value =>
         {
             _volume = value;
             _volumeDirty = true;
         }, true);
+
+        _cfgMan.OnValueChanged(CVars.MidiMinRendererParallel,
+            value => _minRendererParallel = value, true);
+
+        _cfgMan.OnValueChanged(CVars.MidiOcclusionUpdateDelay,
+            value => _occlusionUpdateDelay = value, true);
+
+        _cfgMan.OnValueChanged(CVars.MidiPositionUpdateDelay,
+            value => _positionUpdateDelay = value, true);
 
         _midiSawmill = _logger.GetSawmill("midi");
 #if DEBUG
@@ -143,7 +167,7 @@ internal sealed partial class MidiManager : IMidiManager
 #else
         _midiSawmill.Level = LogLevel.Error;
 #endif
-        _sawmill = _logger.GetSawmill("midi.fluidsynth");
+        _fluidsynthSawmill = _logger.GetSawmill("midi.fluidsynth");
         _loggerDelegate = LoggerDelegate;
 
         if (!_resourceManager.UserData.Exists(CustomSoundfontDirectory))
@@ -167,8 +191,6 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["synth.lock-memory"].IntValue = 0;
             _settings["synth.threadsafe-api"].IntValue = 1;
             _settings["synth.gain"].DoubleValue = 1.0d;
-            _settings["synth.polyphony"].IntValue = 1024;
-            _settings["synth.cpu-cores"].IntValue = 2;
             _settings["synth.midi-channels"].IntValue = 16;
             _settings["synth.overflow.age"].DoubleValue = 3000;
             _settings["audio.driver"].StringValue = "file";
@@ -176,8 +198,11 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["audio.period-size"].IntValue = 4096;
             _settings["midi.autoconnect"].IntValue = 1;
             _settings["player.reset-synth"].IntValue = 0;
+            _settings["synth.midi-channels"].IntValue = Math.Clamp(RobustMidiEvent.MaxChannels, 16, 256);
             _settings["synth.midi-bank-select"].StringValue = "gm";
             //_settings["synth.verbose"].IntValue = 1; // Useful for debugging.
+
+            _parallel.AddAndInvokeParallelCountChanged(UpdateParallelCount);
         }
         catch (Exception e)
         {
@@ -193,6 +218,18 @@ internal sealed partial class MidiManager : IMidiManager
         _cfgMan.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
 
         FluidsynthInitialized = true;
+    }
+
+    private void UpdateParallelCount()
+    {
+        if (_settings == null)
+            return;
+
+        _settings["synth.polyphony"].IntValue = Math.Clamp(1024 + (int)(Math.Log2(_parallel.ParallelProcessCount) * 2048), 1, 65535);
+        _settings["synth.cpu-cores"].IntValue = Math.Clamp(_parallel.ParallelProcessCount, 1, 256);
+
+        _midiSawmill.Debug($"Synth Cores: {_settings["synth.cpu-cores"].IntValue}");
+        _midiSawmill.Debug($"Synth Polyphony: {_settings["synth.polyphony"].IntValue}");
     }
 
     private void OnRaycastLengthChanged(float value)
@@ -211,7 +248,7 @@ internal sealed partial class MidiManager : IMidiManager
             NFluidsynth.Logger.LogLevel.Debug => LogLevel.Debug,
             _ => LogLevel.Debug
         };
-        _sawmill.Log(rLevel, message);
+        _fluidsynthSawmill.Log(rLevel, message);
     }
 
     public IMidiRenderer? GetNewRenderer(bool mono = true)
@@ -238,7 +275,7 @@ internal sealed partial class MidiManager : IMidiManager
 
             var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _clydeAudio, _taskManager, _midiSawmill);
 
-            _midiSawmill.Debug($"Loading soundfont {FallbackSoundfont}");
+            _midiSawmill.Debug($"Loading fallback soundfont {FallbackSoundfont}");
             // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
             renderer.LoadSoundfont(FallbackSoundfont);
 
@@ -252,8 +289,8 @@ internal sealed partial class MidiManager : IMidiManager
 
                     try
                     {
+                        _midiSawmill.Debug($"Loading OS soundfont {filepath}");
                         renderer.LoadSoundfont(filepath);
-                        _midiSawmill.Debug($"Loaded Linux soundfont {filepath}");
                     }
                     catch (Exception)
                     {
@@ -267,7 +304,7 @@ internal sealed partial class MidiManager : IMidiManager
             {
                 if (File.Exists(OsxSoundfont) && SoundFont.IsSoundFont(OsxSoundfont))
                 {
-                    _midiSawmill.Debug($"Loading soundfont {OsxSoundfont}");
+                    _midiSawmill.Debug($"Loading OS soundfont {OsxSoundfont}");
                     renderer.LoadSoundfont(OsxSoundfont);
                 }
             }
@@ -275,7 +312,7 @@ internal sealed partial class MidiManager : IMidiManager
             {
                 if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
                 {
-                    _midiSawmill.Debug($"Loading soundfont {WindowsSoundfont}");
+                    _midiSawmill.Debug($"Loading OS soundfont {WindowsSoundfont}");
                     renderer.LoadSoundfont(WindowsSoundfont);
                 }
             }
@@ -286,27 +323,31 @@ internal sealed partial class MidiManager : IMidiManager
             {
                 if (File.Exists(soundfontOverride) && SoundFont.IsSoundFont(soundfontOverride))
                 {
-                    _midiSawmill.Debug($"Loading soundfont {soundfontOverride} from environment variable.");
+                    _midiSawmill.Debug($"Loading environment variable soundfont {soundfontOverride}");
                     renderer.LoadSoundfont(soundfontOverride);
                 }
             }
 
             // Load content-specific custom soundfonts, which should override the system/fallback soundfont.
-            _midiSawmill.Debug($"Loading soundfonts from {ContentCustomSoundfontDirectory}");
+            _midiSawmill.Debug($"Loading soundfonts from content directory {ContentCustomSoundfontDirectory}");
             foreach (var file in _resourceManager.ContentFindFiles(ContentCustomSoundfontDirectory))
             {
                 if (file.Extension != "sf2" && file.Extension != "dls" && file.Extension != "sf3") continue;
-                _midiSawmill.Debug($"Loading soundfont {file}");
+                _midiSawmill.Debug($"Loading content soundfont {file}");
                 renderer.LoadSoundfont(file.ToString());
             }
 
+            var userDataPath = _resourceManager.UserData.RootDir == null
+                ? CustomSoundfontDirectory
+                : new ResPath(_resourceManager.UserData.RootDir) / CustomSoundfontDirectory.ToRelativePath();
+
             // Load every soundfont from the user data directory last, since those may override any other soundfont.
-            _midiSawmill.Debug($"Loading soundfonts from {{USERDATA}} {CustomSoundfontDirectory}");
-            var enumerator = _resourceManager.UserData.Find($"{CustomSoundfontDirectory.ToRelativePath()}/*").Item1;
+            _midiSawmill.Debug($"Loading soundfonts from user data directory {userDataPath}");
+            var enumerator = _resourceManager.UserData.Find($"{CustomSoundfontDirectory.ToRelativePath()}*").Item1;
             foreach (var file in enumerator)
             {
                 if (file.Extension != "sf2" && file.Extension != "dls" && file.Extension != "sf3") continue;
-                _midiSawmill.Debug($"Loading soundfont {{USERDATA}} {file}");
+                _midiSawmill.Debug($"Loading user soundfont {file}");
                 renderer.LoadSoundfont(file.ToString());
             }
 
@@ -336,71 +377,107 @@ internal sealed partial class MidiManager : IMidiManager
 
         lock (_renderers)
         {
-            foreach (var renderer in _renderers)
+            if (_renderers.Count == 0)
+                return;
+
+            var transQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
+            var opts = new ParallelOptions { MaxDegreeOfParallelism = _parallel.ParallelProcessCount };
+
+            if (_renderers.Count > _minRendererParallel)
             {
-                if (renderer.Disposed)
-                    continue;
-
-                if(_volumeDirty)
-                    renderer.Source.SetVolume(Volume);
-
-                if (!renderer.Mono)
+                Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, transQuery, physicsQuery));
+            }
+            else
+            {
+                foreach (var renderer in _renderers)
                 {
-                    renderer.Source.SetGlobal();
-                    continue;
-                }
-
-                MapCoordinates? mapPos = null;
-                var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
-                if (trackingEntity)
-                {
-                    renderer.TrackingCoordinates = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity!.Value).Coordinates;
-                }
-
-                if (renderer.TrackingCoordinates != null)
-                {
-                    mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
-                }
-
-                if (mapPos != null && mapPos.Value.MapId == _eyeManager.CurrentMap)
-                {
-                    var pos = mapPos.Value;
-
-                    var sourceRelative = pos.Position - _eyeManager.CurrentEye.Position.Position;
-                    var occlusion = 0f;
-                    if (sourceRelative.Length > 0)
-                    {
-                        occlusion = _broadPhaseSystem.IntersectRayPenetration(
-                            pos.MapId,
-                            new CollisionRay(
-                                _eyeManager.CurrentEye.Position.Position,
-                                sourceRelative.Normalized,
-                                OcclusionCollisionMask),
-                            MathF.Min(sourceRelative.Length, _maxCastLength),
-                            renderer.TrackingEntity);
-                    }
-
-                    renderer.Source.SetOcclusion(occlusion);
-
-                    if (!renderer.Source.SetPosition(pos.Position))
-                    {
-                        return;
-                    }
-
-                    if (trackingEntity)
-                    {
-                        var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value);
-                        renderer.Source.SetVelocity(vel);
-                    }
-                }
-                else
-                {
-                    renderer.Source.SetOcclusion(float.MaxValue);
+                    UpdateRenderer(renderer, transQuery, physicsQuery);
                 }
             }
+
         }
 
+        if (_nextOcclusionUpdate < _timing.RealTime)
+            _nextOcclusionUpdate = _timing.RealTime.Add(TimeSpan.FromSeconds(_occlusionUpdateDelay));
+
+        if (_nextPositionUpdate < _timing.RealTime)
+            _nextPositionUpdate = _timing.RealTime.Add(TimeSpan.FromSeconds(_positionUpdateDelay));
+
         _volumeDirty = false;
+    }
+    private void UpdateRenderer(IMidiRenderer renderer, EntityQuery<TransformComponent> transQuery,
+        EntityQuery<PhysicsComponent> physicsQuery)
+    {
+        try
+        {
+            if (renderer.Disposed)
+                return;
+
+            if (_volumeDirty)
+                renderer.Source.SetVolume(Volume);
+
+            if (!renderer.Mono)
+            {
+                renderer.Source.SetGlobal();
+                return;
+            }
+
+            if (_nextPositionUpdate < _timing.RealTime)
+            {
+                if (renderer.TrackingEntity is {} trackedEntity && !_entityManager.Deleted(trackedEntity))
+                {
+                    renderer.TrackingCoordinates = transQuery.GetComponent(renderer.TrackingEntity!.Value).MapPosition;
+                }
+                else if (renderer.TrackingCoordinates == null)
+                {
+                    return;
+                }
+
+                if (!renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.Position))
+                {
+                    return;
+                }
+
+                var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value,
+                    xformQuery: transQuery, physicsQuery: physicsQuery);
+                renderer.Source.SetVelocity(vel);
+            }
+
+            if (renderer.TrackingCoordinates != null && renderer.TrackingCoordinates.Value.MapId == _eyeManager.CurrentMap)
+            {
+                if (_nextOcclusionUpdate >= _timing.RealTime)
+                    return;
+
+                var pos = renderer.TrackingCoordinates.Value;
+
+                var sourceRelative = pos.Position - _eyeManager.CurrentEye.Position.Position;
+                var occlusion = 0f;
+                if (sourceRelative.Length() > 0)
+                {
+                    occlusion = _broadPhaseSystem.IntersectRayPenetration(
+                        pos.MapId,
+                        new CollisionRay(
+                            _eyeManager.CurrentEye.Position.Position,
+                            sourceRelative.Normalized(),
+                            OcclusionCollisionMask),
+                        MathF.Min(sourceRelative.Length(), _maxCastLength),
+                        renderer.TrackingEntity);
+                }
+
+                renderer.Source.SetOcclusion(occlusion);
+            }
+            else
+            {
+                renderer.Source.SetOcclusion(float.MaxValue);
+            }
+
+        }
+        catch (Exception ex)
+        {
+            _runtime.LogException(ex, _midiSawmill.Name);
+        }
+
     }
 
     /// <summary>
@@ -416,7 +493,12 @@ internal sealed partial class MidiManager : IMidiManager
                 {
                     var renderer = _renderers[i];
                     if (!renderer.Disposed)
+                    {
+                        if (renderer.Master is { Disposed: true })
+                            renderer.Master = null;
+
                         renderer.Render();
+                    }
                     else
                     {
                         renderer.InternalDispose();

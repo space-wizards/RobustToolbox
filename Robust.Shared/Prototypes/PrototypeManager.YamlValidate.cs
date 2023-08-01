@@ -12,7 +12,10 @@ namespace Robust.Shared.Prototypes;
 
 public partial class PrototypeManager
 {
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path)
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path) => ValidateDirectory(path, out _);
+
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
+        out Dictionary<Type, HashSet<string>> protos)
     {
         var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
@@ -76,6 +79,12 @@ public partial class PrototypeManager
                 if (result.Count > 0)
                     dict.GetOrNew(data.File).UnionWith(result);
             }
+        }
+
+        protos = new(prototypes.Count);
+        foreach (var (type, typeDict) in prototypes)
+        {
+            protos[type] = typeDict.Keys.ToHashSet();
         }
 
         return dict;

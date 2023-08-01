@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Localization;
@@ -142,7 +143,7 @@ namespace Robust.Client.UserInterface.Controls
             var panel = _getPanel();
             var panelBox = new UIBox2(0, headerSize, PixelWidth, PixelHeight);
 
-            panel?.Draw(handle, panelBox);
+            panel?.Draw(handle, panelBox, UIScale);
 
             var font = _getFont();
             var boxActive = _getTabBoxActive();
@@ -184,10 +185,10 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (box != null)
                 {
-                    var drawBox = box.GetEnvelopBox(topLeft, size);
+                    var drawBox = box.GetEnvelopBox(topLeft, size, UIScale);
                     boxAdvance = drawBox.Width;
-                    box.Draw(handle, drawBox);
-                    contentBox = box.GetContentBox(drawBox);
+                    box.Draw(handle, drawBox, UIScale);
+                    contentBox = box.GetContentBox(drawBox, UIScale);
                 }
                 else
                 {
@@ -218,11 +219,11 @@ namespace Robust.Client.UserInterface.Controls
 
             if (TabsVisible)
             {
-                headerSize = (0, _getHeaderSize() / UIScale);
+                headerSize = new Vector2(0, _getHeaderSize() / UIScale);
             }
 
             var panel = _getPanel();
-            var panelSize = (panel?.MinimumSize ?? Vector2.Zero) / UIScale;
+            var panelSize = (panel?.MinimumSize ?? Vector2.Zero);
 
             var contentsSize = availableSize - headerSize - panelSize;
 
@@ -232,7 +233,7 @@ namespace Robust.Client.UserInterface.Controls
                 if (child.Visible)
                 {
                     child.Measure(contentsSize);
-                    total = Vector2.ComponentMax(child.DesiredSize, total);
+                    total = Vector2.Max(child.DesiredSize, total);
                 }
             }
 
@@ -251,7 +252,7 @@ namespace Robust.Client.UserInterface.Controls
             var contentBox = new UIBox2i(0, headerSize, (int) (finalSize.X * UIScale), (int) (finalSize.Y * UIScale));
             if (panel != null)
             {
-                contentBox = (UIBox2i) panel.GetContentBox(contentBox);
+                contentBox = (UIBox2i) panel.GetContentBox(contentBox, UIScale);
             }
 
             var control = GetChild(_currentTab);
@@ -321,6 +322,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        // Returns the size of the header, in real pixels
         [System.Diagnostics.Contracts.Pure]
         private int _getHeaderSize()
         {
@@ -332,8 +334,8 @@ namespace Robust.Client.UserInterface.Controls
                 var inactive = _getTabBoxInactive();
                 var font = _getFont();
 
-                var activeSize = active?.MinimumSize ?? Vector2.Zero;
-                var inactiveSize = inactive?.MinimumSize ?? Vector2.Zero;
+                var activeSize = (active?.MinimumSize ?? Vector2.Zero) * UIScale;
+                var inactiveSize = (inactive?.MinimumSize ?? Vector2.Zero) * UIScale;
 
                 headerSize = (int) MathF.Max(activeSize.Y, inactiveSize.Y);
                 headerSize += font.GetHeight(UIScale);

@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -9,6 +10,8 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.UnitTesting.Shared.Prototypes
 {

@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
@@ -13,6 +14,7 @@ namespace Robust.Client.UserInterface.Controls
     public class ItemList : Control, IList<ItemList.Item>
     {
         private bool _isAtBottom = true;
+        /// The size of all the child widgets, in pixels
         private int _totalContentHeight;
 
         private VScrollBar _scrollBar;
@@ -62,7 +64,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 itemHeight = Math.Max(itemHeight, ActualFont.GetHeight(UIScale));
-                itemHeight += ActualItemBackground.MinimumSize.Y;
+                itemHeight += ActualItemBackground.MinimumSize.Y * UIScale;
 
                 _totalContentHeight += (int)Math.Ceiling(itemHeight);
             }
@@ -86,9 +88,9 @@ namespace Robust.Client.UserInterface.Controls
                 _scrollBar.MoveToEnd();
         }
 
-        public Item AddItem(string text, Texture? icon = null, bool selectable = true)
+        public Item AddItem(string text, Texture? icon = null, bool selectable = true, object? metadata = null)
         {
-            var item = new Item(this) {Text = text, Icon = icon, Selectable = selectable};
+            var item = new Item(this) {Text = text, Icon = icon, Selectable = selectable, Metadata = metadata};
             Add(item);
             return item;
         }
@@ -332,7 +334,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var offset = -_scrollBar.Value;
 
-            listBg.Draw(handle, PixelSizeBox);
+            listBg.Draw(handle, PixelSizeBox, UIScale);
 
             foreach (var item in _itemList)
             {
@@ -353,16 +355,16 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 itemHeight = Math.Max(itemHeight, font.GetHeight(UIScale));
-                itemHeight += ActualItemBackground.MinimumSize.Y;
+                itemHeight += ActualItemBackground.MinimumSize.Y * UIScale;
 
                 var region = UIBox2.FromDimensions(0, offset, PixelWidth, itemHeight);
                 item.Region = region;
 
                 if (region.Intersects(sizeBox))
                 {
-                    bg.Draw(handle, item.Region.Value);
+                    bg.Draw(handle, item.Region.Value, UIScale);
 
-                    var contentBox = bg.GetContentBox(item.Region.Value);
+                    var contentBox = bg.GetContentBox(item.Region.Value, UIScale);
                     var drawOffset = contentBox.TopLeft;
                     if (item.Icon != null)
                     {
@@ -410,7 +412,7 @@ namespace Robust.Client.UserInterface.Controls
                     font.DrawChar(handle, rune, baseLine, UIScale, color);
                 }
 
-                baseLine += (metrics.Advance, 0);
+                baseLine += new Vector2(metrics.Advance, 0);
             }
         }
 
@@ -419,7 +421,7 @@ namespace Robust.Client.UserInterface.Controls
             var size = Vector2.Zero;
             if (ActualBackground != null)
             {
-                size += ActualBackground.MinimumSize / UIScale;
+                size += ActualBackground.MinimumSize;
             }
 
             return size;
@@ -446,7 +448,8 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (item.Selected && SelectMode != ItemListSelectMode.Button)
                     {
-                        ClearSelected();
+                        if(SelectMode != ItemListSelectMode.Multiple)
+                            ClearSelected();
                         item.Selected = false;
                         return;
                     }
@@ -495,19 +498,11 @@ namespace Robust.Client.UserInterface.Controls
             return font.GetHeight(UIScale) * 2;
         }
 
-        [Pure]
-        private UIBox2 _getContentBox()
-        {
-            var style = ActualBackground;
-            return style?.GetContentBox(SizeBox) ?? SizeBox;
-        }
-
         protected override void Resized()
         {
             base.Resized();
 
-            var styleBoxSize = ActualBackground?.MinimumSize.Y ?? 0;
-
+            var styleBoxSize = (ActualBackground?.MinimumSize.Y ?? 0) * UIScale;
             _scrollBar.Page = PixelSize.Y - styleBoxSize;
             RecalculateContentHeight();
         }
@@ -521,7 +516,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private void _updateScrollbarVisibility()
         {
-            _scrollBar.Visible = _totalContentHeight + ActualBackground.MinimumSize.Y > PixelHeight;
+            _scrollBar.Visible = _totalContentHeight + ActualBackground.MinimumSize.Y > Height;
         }
 
         public abstract class ItemListEventArgs : EventArgs

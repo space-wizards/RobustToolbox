@@ -64,12 +64,16 @@ namespace Robust.Shared.Physics.Systems
 
         private ISawmill _sawmill = default!;
 
+        private EntityQuery<TransformComponent> _xformQuery;
+
         public override void Initialize()
         {
             base.Initialize();
 
             _sawmill = Logger.GetSawmill("physics");
             _sawmill.Level = LogLevel.Info;
+
+            _xformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
@@ -101,7 +105,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnCollisionChange(ref CollisionChangeEvent ev)
         {
-            var uid = ev.Body.Owner;
+            var uid = ev.BodyUid;
             var mapId = Transform(uid).MapID;
 
             if (mapId == MapId.Nullspace)
@@ -205,8 +209,8 @@ namespace Robust.Shared.Physics.Systems
             {
                 if (body.Awake)
                 {
-                    oldMap?.RemoveSleepBody(body);
-                    newMap?.AddAwakeBody(body);
+                    RemoveSleepBody(uid, body, oldMap);
+                    AddAwakeBody(uid, body, newMap);
                     DebugTools.Assert(body.Awake);
                 }
                 else
@@ -252,24 +256,24 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnWake(ref PhysicsWakeEvent @event)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Entity).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            EntityUid tempQualifier = _mapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).AddAwakeBody(@event.Body);
+            var tempQualifier = _mapManager.GetMapEntityId(mapId);
+            AddAwakeBody(@event.Entity, @event.Body, tempQualifier);
         }
 
         private void OnSleep(ref PhysicsSleepEvent @event)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Entity).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            EntityUid tempQualifier = _mapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
+            var tempQualifier = _mapManager.GetMapEntityId(mapId);
+            RemoveSleepBody(@event.Entity, @event.Body, tempQualifier);
         }
 
         private void HandleContainerRemoved(EntityUid uid, PhysicsComponent physics, EntGotRemovedFromContainerMessage message)
@@ -314,9 +318,9 @@ namespace Robust.Shared.Physics.Systems
                 CollideContacts();
                 var enumerator = AllEntityQuery<PhysicsMapComponent>();
 
-                while (enumerator.MoveNext(out var comp))
+                while (enumerator.MoveNext(out var uid, out var comp))
                 {
-                    Step(comp, frameTime, prediction);
+                    Step(uid, comp, frameTime, prediction);
                 }
 
                 var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);

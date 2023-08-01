@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Animations;
+using Robust.Shared.Collections;
 using Robust.Shared.Timing;
 using static Robust.Client.Animations.AnimationPlaybackShared;
 
@@ -45,15 +46,21 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            // TODO: Get rid of this ToArray() allocation.
-            foreach (var (key, playback) in _playingAnimations.ToArray())
+            var toRemove = new ValueList<string>();
+
+            foreach (var (key, playback) in _playingAnimations)
             {
                 var keep = UpdatePlayback(this, playback, args.DeltaSeconds);
-                if (!keep)
-                {
-                    _playingAnimations.Remove(key);
-                    AnimationCompleted?.Invoke(key);
-                }
+                if (keep)
+                    continue;
+
+                toRemove.Add(key);
+            }
+
+            foreach (var key in toRemove)
+            {
+                _playingAnimations.Remove(key);
+                AnimationCompleted?.Invoke(key);
             }
         }
     }

@@ -625,7 +625,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetCurrentBroadphase(xform, out var broadphase))
                 return;
 
-            AddOrUpdateEntityTree(broadphase.Owner, broadphase, uid, xform);
+            AddOrUpdateEntityTree(broadphase.Owner, broadphase, uid, xform, true);
         }
 
         private void AddOrUpdateEntityTree(EntityUid broadUid,

@@ -30,7 +30,7 @@ namespace Robust.Server.Bql
             }
 
             return entityManager.GetAllComponents((Type) arguments[0], includePaused: true)
-                .Select(x => x.Owner);
+                .Select(x => x.Uid);
         }
     }
 

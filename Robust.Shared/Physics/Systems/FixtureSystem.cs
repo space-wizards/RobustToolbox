@@ -9,6 +9,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Events;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -355,6 +356,9 @@ namespace Robust.Shared.Physics.Systems
             if (resetMass)
                 _physics.ResetMassData(uid, manager, body);
 
+            // Save the old layer to see if an event should be raised later.
+            var oldLayer = body.CollisionLayer;
+
             // Normally this method is called when fixtures need to be dirtied anyway so no point in returning early I think
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
@@ -362,6 +366,12 @@ namespace Robust.Shared.Physics.Systems
 
             if (manager.FixtureCount == 0)
                 _physics.SetCanCollide(uid, false, manager: manager, body: body);
+
+            if (oldLayer != layer)
+            {
+                var ev = new CollisionLayerChangeEvent(body);
+                RaiseLocalEvent(ref ev);
+            }
 
             if (dirty)
                 Dirty(manager);

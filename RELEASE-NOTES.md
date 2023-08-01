@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `IHttpClientHolder` holds a shared `HttpClient` for use by content. It has Happy Eyeballs fixed and an appropriate `User-Agent`.
 
 ### Bugfixes
 
@@ -47,11 +47,73 @@ END TEMPLATE-->
 
 ### Other
 
-* Pressing `^C` twice on the server will now cause it to hard-exit immediately.
+* Outgoing HTTP requests now all use Happy Eyeballs to try to prioritize IPv6. This is necessary because .NET still does not support this critical feature itself.
 
 ### Internal
 
 *None yet*
+
+
+## 142.0.1
+
+### Bugfixes
+
+* Fix Enum serialization.
+
+
+## 142.0.0
+
+### Breaking changes
+
+* `EntityManager.GetAllComponents()` now returns a (EntityUid, Component) tuple
+
+### New features
+
+* Added `IPrototypeManager.ValidateFields()`, which uses reflection to validate that the default values of c# string fields correspond to valid entity prototypes. Validates any fields with a `ValidatePrototypeIdAttribute`  and any data-field that uses the PrototypeIdSerializer custom type serializer.
+
+### Other
+
+* Replay playback will now log errors when encountering unhandled messages.
+* Made `GetAssemblyByName()` throw descriptive error messages.
+* Improved performance of various EntityLookupSystem functions
+
+
+## 141.2.1
+
+### Bugfixes
+
+* Fix component trait dictionaries not clearing on reconnect leading to bad GetComponent in areas (e.g. entire game looks black due to no entities).
+
+
+## 141.2.0
+
+### Other
+
+* Fix bug in `NetManager` that allowed exception spam through protocol abuse.
+
+
+## 141.1.0
+
+### New features
+
+* MapInitEvent is run clientside for placementmanager entities to predict entity appearances.
+* Add CollisionLayerChangeEvent for physics fixtures.
+
+
+## 141.0.0
+
+### Breaking changes
+
+* Component.Initialize has been fully replaced with the Eventbus.
+
+### Bugfixes
+
+* Fixed potential crashes if buffered audio sources (e.g. MIDI) fail to create due to running out of audio streams.
+
+### Other
+
+* Pressing `^C` twice on the server will now cause it to hard-exit immediately.
+* `Tools` now has `EXCEPTION_TOLERANCE` enabled.
 
 
 ## 140.0.0

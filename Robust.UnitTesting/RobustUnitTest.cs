@@ -70,6 +70,7 @@ namespace Robust.UnitTesting
             var configurationManager = deps.Resolve<IConfigurationManagerInternal>();
 
             configurationManager.Initialize(Project == UnitTestProject.Server);
+            deps.Resolve<IReflectionManager>().Initialize();
 
             foreach (var assembly in assemblies)
             {

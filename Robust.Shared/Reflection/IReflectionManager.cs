@@ -119,5 +119,7 @@ namespace Robust.Shared.Reflection
 
         Type? YamlTypeTagLookup(Type baseType, string typeName);
         IEnumerable<Type> FindAllTypes();
+
+        void Initialize();
     }
 }

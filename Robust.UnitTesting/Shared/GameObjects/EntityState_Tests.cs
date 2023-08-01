@@ -42,6 +42,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IAuthManager, AuthManager>();
             container.Register<IGameTiming, GameTiming>();
             container.Register<ProfManager, ProfManager>();
+            container.Register<HttpClientHolder>();
             container.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
             container.BuildGraph();
 

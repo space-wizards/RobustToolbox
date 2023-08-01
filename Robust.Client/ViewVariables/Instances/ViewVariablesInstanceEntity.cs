@@ -88,7 +88,7 @@ namespace Robust.Client.ViewVariables.Instances
                 var stringified = PrettyPrint.PrintUserFacingWithType(obj, out var typeStringified);
                 if (typeStringified != "")
                 {
-                    //var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
+                    //var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
                     // Custom ToString() implementation.
                     var headBox = new BoxContainer
                     {

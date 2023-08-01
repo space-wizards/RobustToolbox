@@ -24,7 +24,7 @@ public sealed class LiveProfileViewControl : Control
     {
         IoCManager.InjectDependencies(this);
 
-        if (!_resourceCache.TryGetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf", out var font))
+        if (!_resourceCache.TryGetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf", out var font))
             return;
 
         _font = font.MakeDefault();

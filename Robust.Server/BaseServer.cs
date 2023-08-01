@@ -30,6 +30,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -101,6 +102,7 @@ namespace Robust.Server
         [Dependency] private readonly IReplayRecordingManagerInternal _replay = default!;
         [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
         [Dependency] private readonly NetworkResourceManager _netResMan = default!;
+        [Dependency] private readonly IReflectionManager _refMan = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -367,6 +369,7 @@ namespace Robust.Server
             _prototype.Initialize();
             _prototype.LoadDefaultPrototypes();
             _prototype.ResolveResults();
+            _refMan.Initialize();
 
             _consoleHost.Initialize();
             _entityManager.Startup();

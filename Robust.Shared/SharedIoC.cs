@@ -46,6 +46,7 @@ namespace Robust.Shared
             deps.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
             deps.Register<IParallelManager, ParallelManager>();
             deps.Register<IParallelManagerInternal, ParallelManager>();
+            deps.Register<HttpClientHolder>();
         }
     }
 }

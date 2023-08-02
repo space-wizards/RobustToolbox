@@ -1325,8 +1325,15 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert((MetaData(uid).Flags & MetaDataFlags.InContainer) == 0x0,
                 $"Entity is in a container but has no parent? Entity: {ToPrettyString(uid)}");
 
-            DebugTools.Assert(xform.Broadphase == BroadphaseData.Invalid || HasComp<BroadphaseComponent>(uid),
-                $"Entity has no parent but is on some broadphase? Entity: {ToPrettyString(uid)}");
+            if (xform.Broadphase != null)
+            {
+                DebugTools.Assert(
+                    xform.Broadphase == BroadphaseData.Invalid
+                    || xform.Broadphase.Value.Uid == uid
+                    || Deleted(xform.Broadphase.Value.Uid)
+                    || Terminating(xform.Broadphase.Value.Uid),
+                $"Entity has no parent but is on some broadphase? Entity: {ToPrettyString(uid)}. Broadphase: {ToPrettyString(xform.Broadphase.Value.Uid)}");
+            }
             return;
         }
 

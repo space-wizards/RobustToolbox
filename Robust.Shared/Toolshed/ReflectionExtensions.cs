@@ -193,10 +193,24 @@ internal static class ReflectionExtensions
         if (left.IsAssignableTo(right))
             return true;
 
-        if (left.Constructable() &&
-            (right.IsGenericParameter || right.IsGenericTypeParameter || right.IsGenericMethodParameter))
+        if (right.IsInterface)
         {
-            // TODO: constraint evaluation.
+            foreach (var i in left.GetInterfaces())
+            {
+                if (left.IsAssignableToGeneric(i, toolshed, recursiveDescent))
+                    return true;
+            }
+        }
+
+        if (left.Constructable() && right.IsGenericParameter)
+        {
+            var constraints = right.GetGenericParameterConstraints();
+            foreach (var t in constraints)
+            {
+                if (!left.IsAssignableToGeneric(t, toolshed, recursiveDescent))
+                    return false;
+            }
+
             return true;
         }
 

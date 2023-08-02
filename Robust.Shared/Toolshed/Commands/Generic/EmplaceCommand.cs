@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Players;
@@ -68,6 +69,12 @@ internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEnt
         if (name == "value")
             return Value;
 
+        if (Value is IEmplaceBreakout breakout)
+        {
+            if (breakout.TryReadVar(name, out var value))
+                return value;
+        }
+
         // TODO: Emplace behavior should be generalized and not hardcoded.
         if (Value is EntityUid id)
         {
@@ -132,5 +139,19 @@ internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEnt
     {
         if (name == "value")
             return;
+
+        if (Value is IEmplaceBreakout v)
+        {
+            if (v.VarsOverriden.Contains(name))
+                return;
+        }
+
+        Inner.WriteVar(name, value);
     }
+}
+
+public interface IEmplaceBreakout
+{
+    public ImmutableHashSet<string> VarsOverriden { get; }
+    public bool TryReadVar(string name, out object? value);
 }

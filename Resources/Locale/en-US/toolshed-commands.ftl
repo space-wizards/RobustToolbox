@@ -123,3 +123,9 @@ command-description-actor-controlled =
     Filters entities by whether or not they're actively controlled.
 command-description-actor-session =
     Returns the sessions associated with the input entities.
+command-description-physics-parent =
+    Returns the parent(s) of the input entities.
+command-description-emplace =
+    Runs the given block over it's inputs, with the input value placed into the variable $value within the block.
+    Additionally breaks out $wx, $wy, $proto, $desc, $name, and $paused for entities.
+    Can also have breakout values for other types, consult the documentation for that type for further info.

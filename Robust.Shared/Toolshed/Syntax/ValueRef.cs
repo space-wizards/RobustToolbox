@@ -6,7 +6,6 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Syntax;
 
-
 public sealed class ValueRef<T> : ValueRef<T, T>
 {
     public ValueRef(ValueRef<T, T> inner)

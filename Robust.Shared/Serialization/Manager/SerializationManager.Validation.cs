@@ -193,7 +193,7 @@ public sealed partial class SerializationManager
         }
 
         return new ErrorNode(node,
-            $"Failed to get node validator. Type: {typeof(T).Name}. Node type: {node.GetType().Name}. Node: {node}");
+            $"Failed to get node validator. Type: {typeof(T).Name}. Node type: {node.GetType().Name}. Yaml:\n{node}");
     }
 
     #endregion

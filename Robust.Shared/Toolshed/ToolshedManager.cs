@@ -32,6 +32,7 @@ public sealed partial class ToolshedManager
     [Dependency] private readonly IEntityManager _entity = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
+    [Dependency] private readonly INetManager _net = default!;
 
     private ISawmill _log = default!;
 

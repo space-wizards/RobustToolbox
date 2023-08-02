@@ -27,13 +27,17 @@ namespace Robust.Client.Utility
 
         public void Initialize()
         {
+            var state = _loc.GetString("discord-rpc-in-main-menu");
+            var largeImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceSecondIconId);
+            var largeImageText = _loc.GetString("discord-rpc-in-main-menu-logo-text");
+
             _defaultPresence = new()
             {
-                State = _loc.GetString("discord-rpc-in-main-menu"),
+                State = Truncate(state, 128),
                 Assets = new Assets
                 {
-                    LargeImageKey = "logo",
-                    LargeImageText = "I think coolsville SUCKS"
+                    LargeImageKey = Truncate(largeImageKey, 32),
+                    LargeImageText = Truncate(largeImageText, 128),
                 }
             };
             _configurationManager.OnValueChanged(CVars.DiscordEnabled, newValue =>
@@ -104,7 +108,9 @@ namespace Robust.Client.Utility
             {
                 var details = _loc.GetString("discord-rpc-on-server", ("servername", serverName));
                 var state = _loc.GetString("discord-rpc-players", ("players", users), ("maxplayers", maxUsers));
-                var imageText = _loc.GetString("discord-rpc-character", ("username", username));
+                var largeImageText = _loc.GetString("discord-rpc-character", ("username", username));
+                var largeImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceMainIconId);
+                var smallImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceSecondIconId);
 
                 // Strings are limited by byte count. See the setters in RichPresence. Hence the truncate calls.
                 _activePresence = new RichPresence
@@ -113,9 +119,9 @@ namespace Robust.Client.Utility
                     State = Truncate(state, 128),
                     Assets = new Assets
                     {
-                        LargeImageKey = Truncate("devstation", 32),
-                        LargeImageText = Truncate(imageText, 128),
-                        SmallImageKey = Truncate("logo", 32)
+                        LargeImageKey = Truncate(largeImageKey, 32),
+                        LargeImageText = Truncate(largeImageText, 128),
+                        SmallImageKey = Truncate(smallImageKey, 32)
                     }
                 };
                 _client.SetPresence(_activePresence);

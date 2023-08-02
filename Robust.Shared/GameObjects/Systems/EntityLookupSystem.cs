@@ -436,7 +436,7 @@ namespace Robust.Shared.GameObjects
 
             // TODO can this just be done implicitly via transform startup?
             // or do things need to be in trees for other component startup logic?
-            FindAndAddToEntityTree(uid);
+            FindAndAddToEntityTree(uid, false);
         }
 
         private void OnMove(ref MoveEvent args)
@@ -605,7 +605,7 @@ namespace Robust.Shared.GameObjects
                 xform);
         }
 
-        public void FindAndAddToEntityTree(EntityUid uid, bool recursive = false, TransformComponent? xform = null)
+        public void FindAndAddToEntityTree(EntityUid uid, bool recursive = true, TransformComponent? xform = null)
         {
             if (!_xformQuery.Resolve(uid, ref xform))
                 return;
@@ -632,7 +632,7 @@ namespace Robust.Shared.GameObjects
             BroadphaseComponent broadphase,
             EntityUid uid,
             TransformComponent xform,
-            bool recursive = false)
+            bool recursive = true)
         {
             var broadphaseXform = _xformQuery.GetComponent(broadphase.Owner);
             if (!TryComp(broadphaseXform.MapUid, out PhysicsMapComponent? physMap))
@@ -694,7 +694,7 @@ namespace Robust.Shared.GameObjects
                 while (childEnumerator.MoveNext(out var child))
                 {
                     var childXform = _xformQuery.GetComponent(child.Value);
-                    AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform);
+                    AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, recursive);
                 }
                 return;
             }
@@ -705,7 +705,7 @@ namespace Robust.Shared.GameObjects
                     continue;
 
                 var childXform = _xformQuery.GetComponent(child.Value);
-                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform);
+                AddOrUpdateEntityTree(broadUid, broadphase, broadphaseXform, physicsMap, child.Value, childXform, recursive);
             }
         }
 

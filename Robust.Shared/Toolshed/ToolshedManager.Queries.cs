@@ -63,6 +63,7 @@ public sealed partial class ToolshedManager
     /// </summary>
     /// <param name="t">Type to use in the query.</param>
     /// <returns>Enumerable of matching command specs.</returns>
+    /// <remarks>Not currently type constraint aware.</remarks>
     public IEnumerable<CommandSpec> CommandsTakingType(Type t)
     {
         var output = new Dictionary<(string, string?), CommandSpec>();

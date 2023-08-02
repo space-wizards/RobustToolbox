@@ -129,3 +129,35 @@ command-description-emplace =
     Runs the given block over it's inputs, with the input value placed into the variable $value within the block.
     Additionally breaks out $wx, $wy, $proto, $desc, $name, and $paused for entities.
     Can also have breakout values for other types, consult the documentation for that type for further info.
+command-description-AddCommand =
+    Performs numeric addition.
+command-description-SubtractCommand =
+    Performs numeric subtraction.
+command-description-MultiplyCommand =
+    Performs numeric multiplication.
+command-description-DivideCommand =
+    Performs numeric division.
+command-description-min =
+    Returns the minimum of two values.
+command-description-max =
+    Returns the maximum of two values.
+command-description-BitAndCommand =
+    Performs bitwise AND.
+command-description-BitOrCommand =
+    Performs bitwise OR.
+command-description-BitXorCommand =
+    Performs bitwise XOR.
+command-description-neg =
+    Negates the input.
+command-description-GreaterThanCommand =
+    Performs a greater-than comparison, x > y.
+command-description-LessThanCommand =
+    Performs a less-than comparison, x < y.
+command-description-GreaterThanOrEqualCommand =
+    Performs a greater-than-or-equal comparison, x >= y.
+command-description-LessThanOrEqualCommand =
+    Performs a less-than-or-equal comparison, x <= y.
+command-description-EqualCommand =
+    Performs an equality comparison, returning true if the inputs are equal.
+command-description-NotEqualCommand =
+    Performs an equality comparison, returning true if the inputs are not equal.

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
 
@@ -89,21 +91,24 @@ internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
         }
         else
         {
+            var chkpoint = parser.Save();
             var (res, err) = await _toolshed.TryAutocomplete(parser, typeof(TAuto), null);
-
+            parser.Restore(chkpoint);
+            CompletionOption[] parseOptions = Array.Empty<CompletionOption>();
             if (err is not UnparseableValueError || res is not null)
             {
-                return (CompletionResult.FromHintOptions(res?.Options ?? Array.Empty<CompletionOption>(),$"<variable, block, or value of type {typeof(T).PrettyName()}>"), err);
+                parseOptions = res?.Options ?? parseOptions;
             }
 
-            var chkpoint = parser.Save();
-            if (Block<T>.TryParse(false, parser, null, out _, out var result, out _))
+            chkpoint = parser.Save();
+            Block<T>.TryParse(true, parser, null, out _, out var result, out _);
+            if (result is not null)
             {
-                if (result is not null)
-                    return await result.Value;
+                var (blockRes, _) = await result.Value;
+                var options = blockRes?.Options ?? Array.Empty<CompletionOption>();
+                return (CompletionResult.FromHintOptions(parseOptions.Concat(options).ToArray(), $"<variable, block, or value of type {typeof(T).PrettyName()}>"), err);
             }
             parser.Restore(chkpoint);
-
 
             return (CompletionResult.FromHint("$<variable name>"), null);
         }

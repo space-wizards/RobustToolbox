@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 142.1.1
+
+### Bugfixes
+
+* Fixed a bad debug assert in `DetachParentToNull()`
+
+
 ## 142.1.0
 
 ### New features

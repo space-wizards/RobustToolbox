@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 142.1.2
+
+### Other
+
+* Don't log an error on failing to resolve for joint relay refreshing.
+
+
 ## 142.1.1
 
 ### Bugfixes

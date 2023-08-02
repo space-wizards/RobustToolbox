@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-* Fix certain debug commands and tools crashing on non-SS14 RobustToolbox games due to a missing font.
+*None yet*
 
 ### Other
 
@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `IHttpClientHolder` holds a shared `HttpClient` for use by content. It has Happy Eyeballs fixed and an appropriate `User-Agent`.
+*None yet*
 
 ### Bugfixes
 
@@ -47,11 +47,40 @@ END TEMPLATE-->
 
 ### Other
 
-* Outgoing HTTP requests now all use Happy Eyeballs to try to prioritize IPv6. This is necessary because .NET still does not support this critical feature itself.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 142.1.0
+
+### New features
+
+* `IHttpClientHolder` holds a shared `HttpClient` for use by content. It has Happy Eyeballs fixed and an appropriate `User-Agent`.
+* Added `DataNode.ToString()`. Makes it easier to save yaml files and debug code.
+* Added some cvars to modify discord rich presence icons.
+* .ogg files now read the `Artist` and `Title` tags and make them available via new fields in `AudioStream`. 
+* The default fragment shaders now have access to the local light level (`lowp vec3 lightSample`).
+* Added `IPrototypeManager.ValidateAllPrototypesSerializable()`, which can be used to check that all currently loaded prototypes can be serialised & deserialised.
+
+### Bugfixes
+
+* Fix certain debug commands and tools crashing on non-SS14 RobustToolbox games due to a missing font.
+* Discord rich presence strings are now truncated if they are too long.
+* Fixed a couple of broadphase/entity-lookup update bugs that were affecting containers and entities attached to other (non-grid/map) entities.
+* Fixed `INetChannel.Disconnect()` not properly disconnecting clients in integration tests. 
+
+### Other
+
+* Outgoing HTTP requests now all use Happy Eyeballs to try to prioritize IPv6. This is necessary because .NET still does not support this critical feature itself.
+* Made various physics related component properties VV-editable.
+* The default EntitySystem sawmill log level now defaults to `Info` instead of `Verbose`. The level remains verbose when in debug mode.
+
+### Internal
+
+* The debug asserts in `DetachParentToNull()` are now more informative.
 
 
 ## 142.0.1

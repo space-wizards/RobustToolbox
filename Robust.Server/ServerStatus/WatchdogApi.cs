@@ -11,6 +11,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -28,7 +29,7 @@ namespace Robust.Server.ServerStatus
 
         // Ping watchdog every 15 seconds.
         private static readonly TimeSpan PingGap = TimeSpan.FromSeconds(15);
-        private readonly HttpClient _httpClient = new();
+        private readonly HttpClient _httpClient = new(HappyEyeballsHttp.CreateHttpHandler());
 
         private TimeSpan? _lastPing;
         private string? _watchdogToken;

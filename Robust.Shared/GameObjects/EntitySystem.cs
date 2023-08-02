@@ -206,6 +206,10 @@ namespace Robust.Shared.GameObjects
         void IPostInjectInit.PostInject()
         {
             Log = LogManager.GetSawmill(SawmillName);
+
+#if !DEBUG
+            Log.Level = LogLevel.Info;
+#endif
         }
     }
 }

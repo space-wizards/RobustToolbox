@@ -1188,6 +1188,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DiscordEnabled =
             CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
 
+        public static readonly CVarDef<string> DiscordRichPresenceMainIconId =
+            CVarDef.Create("discord.rich_main_icon_id", "devstation", CVar.CLIENTONLY);
+
+        public static readonly CVarDef<string> DiscordRichPresenceSecondIconId =
+            CVarDef.Create("discord.rich_second_icon_id", "logo", CVar.CLIENTONLY);
+
         /*
          * RES
          */

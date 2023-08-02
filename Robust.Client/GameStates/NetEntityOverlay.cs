@@ -41,7 +41,7 @@ namespace Robust.Client.GameStates
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
-            _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
+            _font = new VectorFont(cache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
             _lineHeight = _font.GetLineHeight(1);
 
             _gameStateManager.GameStateApplied += HandleGameStateApplied;

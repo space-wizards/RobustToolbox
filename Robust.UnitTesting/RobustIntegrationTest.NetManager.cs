@@ -97,8 +97,6 @@ namespace Robust.UnitTesting
                 {
                     channel.Disconnect(reason);
                 }
-
-                _channels.Clear();
             }
 
             public void ProcessPackets()
@@ -185,19 +183,11 @@ namespace Robust.UnitTesting
 
                         case DisconnectMessage disconnect:
                         {
-                            if (IsServer)
+                            if (_channels.TryGetValue(disconnect.Connection, out var channel))
                             {
-                                if (_channels.TryGetValue(disconnect.Connection, out var channel))
-                                {
-                                    Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, string.Empty));
-
-                                    _channels.Remove(disconnect.Connection);
-                                    channel.IsConnected = false;
-                                }
-                            }
-                            else
-                            {
-                                _channels.Clear();
+                                Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, disconnect.Reason));
+                                _channels.Remove(disconnect.Connection);
+                                channel.IsConnected = false;
                             }
 
                             break;
@@ -328,8 +318,6 @@ namespace Robust.UnitTesting
             public void DisconnectChannel(INetChannel channel, string reason)
             {
                 channel.Disconnect(reason);
-                _channels.Remove(((IntegrationNetChannel) channel).RemoteUid);
-                Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, string.Empty));
             }
 
             INetChannel? IClientNetManager.ServerChannel => ServerChannel;
@@ -356,6 +344,7 @@ namespace Robust.UnitTesting
             public void ClientConnect(string host, int port, string userNameRequest)
             {
                 DebugTools.Assert(IsClient);
+                DebugTools.Assert(ServerChannel == null, "Already connected.");
 
                 if (NextConnectChannel == null)
                 {
@@ -369,13 +358,6 @@ namespace Robust.UnitTesting
 
             public void ClientDisconnect(string reason)
             {
-                DebugTools.Assert(IsClient);
-                if (ServerChannel == null)
-                {
-                    return;
-                }
-
-                Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
                 Shutdown(reason);
             }
 
@@ -431,22 +413,14 @@ namespace Robust.UnitTesting
                     IntegrationNetManager owner,
                     ChannelWriter<object> otherChannel,
                     int uid,
-                    NetUserData userData)
+                    NetUserData userData,
+                    int remoteUid)
                 {
                     _owner = owner;
                     ConnectionUid = uid;
                     UserData = userData;
                     OtherChannel = otherChannel;
                     IsConnected = true;
-                }
-
-                public IntegrationNetChannel(
-                    IntegrationNetManager owner,
-                    ChannelWriter<object> otherChannel,
-                    int uid,
-                    NetUserData userData,
-                    int remoteUid) : this(owner, otherChannel, uid, userData)
-                {
                     RemoteUid = remoteUid;
                 }
 
@@ -462,9 +436,8 @@ namespace Robust.UnitTesting
 
                 public void Disconnect(string reason)
                 {
-                    OtherChannel.TryWrite(new DisconnectMessage(RemoteUid));
-
-                    IsConnected = false;
+                    OtherChannel.TryWrite(new DisconnectMessage(RemoteUid, reason));
+                    _owner.MessageChannelWriter.TryWrite(new DisconnectMessage(ConnectionUid, reason));
                 }
 
                 public void Disconnect(string reason, bool sendBye)
@@ -518,11 +491,13 @@ namespace Robust.UnitTesting
 
             private sealed class DisconnectMessage
             {
-                public DisconnectMessage(int connection)
+                public DisconnectMessage(int connection, string reason)
                 {
+                    Reason = reason;
                     Connection = connection;
                 }
 
+                public readonly string Reason;
                 public int Connection { get; }
             }
         }

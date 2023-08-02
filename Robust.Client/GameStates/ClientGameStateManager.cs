@@ -745,10 +745,6 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            var contQuery = _entities.GetEntityQuery<ContainerManagerComponent>();
-            var physicsQuery = _entities.GetEntityQuery<PhysicsComponent>();
-            var fixturesQuery = _entities.GetEntityQuery<FixturesComponent>();
-            var broadQuery = _entities.GetEntityQuery<BroadphaseComponent>();
             var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);
 
             // Apply entity states.

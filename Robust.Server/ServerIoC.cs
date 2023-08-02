@@ -91,6 +91,7 @@ namespace Robust.Server
             deps.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
+            deps.Register<IHttpClientHolder, HttpClientHolder>();
         }
     }
 }

@@ -78,6 +78,25 @@ public sealed class RecursiveUpdateTest
         Assert.That(childAXform.ParentUid, Is.EqualTo(contained));
         Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
 
+        // Check that moving the container does not re-add the contained entities to the broadphase.
+        var newCoords = new EntityCoordinates(guid, new Vector2(0.25f, 0.25f));
+        xforms.SetCoordinates(container, newCoords);
+
+        Assert.That(broadphase.SundriesTree, Does.Contain(container));
+        Assert.That(broadphase.SundriesTree, Does.Not.Contain(contained));
+        Assert.That(broadphase.SundriesTree, Does.Not.Contain(childA));
+        Assert.That(broadphase.SundriesTree, Does.Not.Contain(childB));
+
+        Assert.That(containerXform.Broadphase, Is.EqualTo(broadData));
+        Assert.That(containedXform.Broadphase, Is.EqualTo(null));
+        Assert.That(childAXform.Broadphase, Is.EqualTo(null));
+        Assert.That(childBXform.Broadphase, Is.EqualTo(null));
+
+        Assert.That(containerXform.ParentUid, Is.EqualTo(guid));
+        Assert.That(containedXform.ParentUid, Is.EqualTo(container));
+        Assert.That(childAXform.ParentUid, Is.EqualTo(contained));
+        Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
+
         // Remove from container.
         slot.Remove(contained);
 

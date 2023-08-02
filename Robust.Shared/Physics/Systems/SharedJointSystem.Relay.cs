@@ -64,6 +64,9 @@ public abstract partial class SharedJointSystem
     /// </summary>
     public void RefreshRelay(EntityUid uid, JointComponent? component = null)
     {
+        if (!Resolve(uid, ref component, false))
+            return;
+
         EntityUid? relay = null;
 
         if (_container.TryGetOuterContainer(uid, Transform(uid), out var container))
@@ -79,7 +82,7 @@ public abstract partial class SharedJointSystem
     /// </summary>
     public void RefreshRelay(EntityUid uid, EntityUid? relay, JointComponent? component = null)
     {
-        if (!Resolve(uid, ref component))
+        if (!Resolve(uid, ref component, false))
             return;
 
         if (component.Relay == relay)

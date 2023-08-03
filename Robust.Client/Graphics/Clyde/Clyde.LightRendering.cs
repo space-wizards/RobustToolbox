@@ -596,7 +596,7 @@ namespace Robust.Client.Graphics.Clyde
                 return true;
             }
 
-            light.DistFromCentreSq = (state.worldAABB.Center - light.ScreenPosition).LengthSquared;
+            light.DistFromCentreSq = (state.worldAABB.Center - light.ScreenPosition).LengthSquared();
 
             // If the light is a shadow casting light, keep a separate track of that
             if (light.CastShadows)
@@ -887,39 +887,10 @@ namespace Robust.Client.Graphics.Clyde
                 var midpoint = dims / 2;
                 var fraction = dims / 32;
 
-
-                SampleLighting(viewport, viewport.LightRenderTarget.Handle,
+                // This sets up an async copy of the lighting data to CPU, updating viewpoint.Eye.LastBrightness
+                SampleLighting(viewport, viewport.LightRenderTarget,
                     new UIBox2i(midpoint.X - fraction.X,
                         midpoint.Y - fraction.Y, fraction.X * 2, fraction.Y * 2));
-
-                // if (_hasGLFloatFramebuffers)
-                // {
-                //     viewport.LightRenderTarget.CopyPixelsToMemory<R11fG11fB10f>(image => { }
-                //
-                // }
-                //     ? RenderTargetColorFormat.R11FG11FB10F
-                //     : RenderTargetColorFormat.Rgba8;
-                //
-                // CopyRenderTargetPixels(viewport.LightRenderTarget)
-
-                // Midpoint of the screen and a box around the player.
-                // It's expensive to get textures back from the GPU but the results are worth it.
-                var centreSqColor = viewport.LightRenderTarget.Texture.MeasureBrightness(midpoint.X - fraction.X,
-                    midpoint.Y - fraction.Y, fraction.X * 2, fraction.Y * 2);
-
-                // When calculating intensity, count the red less because red doesn't bother human night vision, so why
-                //   not extend that into the game.
-                var intensity = centreSqColor.R * 0.2f + centreSqColor.G * 0.4f + centreSqColor.B * 0.4f;
-                if (!_hasGLFloatFramebuffers)
-                {
-                    // Measured intensity is going to cap out at 1.0 because without floats we have no overbrighten.
-                    //   So aim for a slightly darker fullbright.
-                    intensity *= 1.5f;
-                }
-
-                // User code can now use this to adjust exposure. See EyeExposureSystem.UpdateViewportExposure in
-                //   SS14 client code.
-                viewport.Eye.LastBrightness = intensity;
             }
         }
 

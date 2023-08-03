@@ -33,6 +33,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Render()
         {
+            CheckTransferringLights();
             CheckTransferringScreenshots();
 
             var allMinimized = true;

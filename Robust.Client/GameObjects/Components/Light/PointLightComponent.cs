@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Animations;
 using Robust.Shared.ComponentTrees;

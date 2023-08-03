@@ -601,12 +601,13 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesIntersecting(BroadphaseComponent lookup, Box2 localAABB, LookupFlags flags = DefaultFlags)
     {
         var intersecting = new HashSet<EntityUid>();
+        // Dummy tree
         var state = (lookup.StaticSundriesTree._b2Tree, intersecting, flags);
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
         {
             lookup.DynamicTree.QueryAabb(ref state,
-                static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting, LookupFlags flags) tuple,
+                static (ref (B2DynamicTree<EntityUid> _, HashSet<EntityUid> intersecting, LookupFlags flags) tuple,
                     in FixtureProxy value) =>
                 {
                     if ((tuple.flags & LookupFlags.Sensors) != 0x0 || value.Fixture.Hard)
@@ -621,7 +622,7 @@ public sealed partial class EntityLookupSystem
         if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state,
-                static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting, LookupFlags flags) tuple,
+                static (ref (B2DynamicTree<EntityUid> _, HashSet<EntityUid> intersecting, LookupFlags flags) tuple,
                     in FixtureProxy value) =>
                 {
                     if ((tuple.flags & LookupFlags.Sensors) != 0x0 || value.Fixture.Hard)
@@ -635,6 +636,8 @@ public sealed partial class EntityLookupSystem
 
         if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
+            state = (lookup.StaticSundriesTree._b2Tree, intersecting, flags);
+
             lookup.StaticSundriesTree._b2Tree.Query(ref state,
                 static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting, LookupFlags flags) tuple,
                     DynamicTree.Proxy proxy) =>
@@ -646,6 +649,8 @@ public sealed partial class EntityLookupSystem
 
         if ((flags & LookupFlags.Sundries) != 0x0)
         {
+            state = (lookup.SundriesTree._b2Tree, intersecting, flags);
+
             lookup.SundriesTree._b2Tree.Query(ref state,
                 static (ref (B2DynamicTree<EntityUid> _b2Tree, HashSet<EntityUid> intersecting, LookupFlags flags) tuple,
                     DynamicTree.Proxy proxy) =>

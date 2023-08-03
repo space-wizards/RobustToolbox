@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Lidgren.Network;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;

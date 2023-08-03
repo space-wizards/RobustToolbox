@@ -23,6 +23,7 @@
 */
 
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
@@ -73,12 +74,12 @@ public sealed class PhysicsComponent : Component
     /// body will be woken.
     /// </summary>
     /// <value><c>true</c> if sleeping is allowed; otherwise, <c>false</c>.</value>
-    [DataField("sleepingAllowed"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("sleepingAllowed"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public bool SleepingAllowed = true;
 
-    [DataField("sleepTime"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("sleepTime"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public float SleepTime = 0f;
@@ -89,7 +90,7 @@ public sealed class PhysicsComponent : Component
     /// <remarks>
     ///     Also known as Enabled in Box2D
     /// </remarks>
-    [DataField("canCollide"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("canCollide"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public bool CanCollide = true;
@@ -145,10 +146,10 @@ public sealed class PhysicsComponent : Component
     /// <remarks>
     /// https://en.wikipedia.org/wiki/Moment_of_inertia
     /// </remarks>
-    [ViewVariables(VVAccess.ReadWrite)]
+    [ViewVariables]
     public float Inertia => _inertia + _mass * Vector2.Dot(_localCenter, _localCenter);
 
-    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    [ViewVariables(VVAccess.ReadWrite), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     // ReSharper disable once InconsistentNaming
     internal float _inertia;
 

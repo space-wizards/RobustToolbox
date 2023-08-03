@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
@@ -107,25 +104,5 @@ namespace Robust.Shared.ContentPack
         /// that opens up the screenshot directory using the operating system's file explorer.
         /// </summary>
         void OpenOsWindow(ResPath path);
-
-        /// <summary>
-        /// Asynchronously opens and writes the sequence of bytes to a file. If the file exists, its existing contents will
-        /// be replaced.
-        /// </summary>
-        Task WriteAllBytesAsync(ResPath path, byte[] bytes, CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Asynchronously opens and writes the sequence of bytes to a file. If the file exists, its existing contents will
-        /// be replaced.
-        /// </summary>
-        Task WriteBytesAsync(ResPath path, byte[] bytes, int offset, int length,
-            CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Asynchronously opens and writes the sequence of bytes to a file. If the file exists, its existing contents will
-        /// be replaced.
-        /// </summary>
-        Task WriteBytesAsync(ResPath patch, ReadOnlyMemory<byte> bytes,
-            CancellationToken cancellationToken = default);
     }
 }

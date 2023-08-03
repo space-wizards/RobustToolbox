@@ -27,7 +27,7 @@ namespace Robust.Client.Graphics.Audio
                     readSamples += read;
                 }
 
-                return new OggVorbisData(totalSamples, sampleRate, channels, buffer);
+                return new OggVorbisData(totalSamples, sampleRate, channels, buffer, vorbis.Tags.Title, vorbis.Tags.Artist);
             }
         }
 
@@ -37,13 +37,17 @@ namespace Robust.Client.Graphics.Audio
             public readonly long SampleRate;
             public readonly long Channels;
             public readonly ReadOnlyMemory<float> Data;
+            public readonly string Title;
+            public readonly string Artist;
 
-            public OggVorbisData(long totalSamples, long sampleRate, long channels, ReadOnlyMemory<float> data)
+            public OggVorbisData(long totalSamples, long sampleRate, long channels, ReadOnlyMemory<float> data, string title, string artist)
             {
                 TotalSamples = totalSamples;
                 SampleRate = sampleRate;
                 Channels = channels;
                 Data = data;
+                Title = title;
+                Artist = artist;
             }
         }
     }

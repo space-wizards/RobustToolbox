@@ -12,9 +12,9 @@ void main()
 
     lowp vec4 COLOR;
 
-    // [SHADER_CODE]
-
     lowp vec3 lightSample = texture2D(lightMap, Pos).rgb;
+
+    // [SHADER_CODE]
 
     // Whiten everything (even black source pixels) as lighting becomes too intense.
     vec3 overBrightC = max(vec3(0.0), lightSample - vec3(1.3));

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -52,7 +53,7 @@ namespace Robust.Client.GameStates
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
-            _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
+            _font = new VectorFont(cache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
 
             _gameStateManager.GameStateApplied += HandleGameStateApplied;
         }
@@ -227,7 +228,7 @@ namespace Robust.Client.GameStates
 
             // average payload line
             var avg = height - BytesToPixels(_totalHistoryPayload/HistorySize);
-            var avgEnd = new Vector2(LeftMargin + width, avg)+ (70,0);
+            var avgEnd = new Vector2(LeftMargin + width, avg) + new Vector2(70, 0);
             handle.DrawLine(new Vector2(LeftMargin, avg), avgEnd, Color.DarkGray.WithAlpha(0.8f));
 
             // top payload warning line
@@ -252,7 +253,8 @@ namespace Robust.Client.GameStates
             handle.DrawString(_font, new Vector2(LeftMargin + width, minYoff), "8.19Kbit/s");
 
             // avg text
-            handle.DrawString(_font, avgEnd - _font.GetLineHeight(1)/2f, "average");
+            var lineHeight = _font.GetLineHeight(1) / 2f;
+            handle.DrawString(_font, avgEnd - new Vector2(lineHeight, lineHeight), "average");
 
             // lag text info
             if(lastLagY != -1)

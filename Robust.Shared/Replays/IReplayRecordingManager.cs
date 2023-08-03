@@ -12,11 +12,6 @@ namespace Robust.Shared.Replays;
 public interface IReplayRecordingManager
 {
     /// <summary>
-    /// Initializes the replay manager.
-    /// </summary>
-    void Initialize();
-
-    /// <summary>
     /// Whether or not a replay recording can currently be started.
     /// </summary>
     bool CanStartRecording();
@@ -52,6 +47,14 @@ public interface IReplayRecordingManager
     bool IsRecording { get; }
 
     /// <summary>
+    /// Gets the <c>state</c> object passed into <see cref="TryStartRecording"/> for the current recording.
+    /// </summary>
+    /// <remarks>
+    /// Returns <see langword="null"/> if there is no active replay recording.
+    /// </remarks>
+    public object? ActiveRecordingState { get; }
+
+    /// <summary>
     /// Processes pending write tasks and saves the replay data for the current tick. This should be called even if a
     /// replay is not currently being recorded.
     /// </summary>
@@ -62,20 +65,20 @@ public interface IReplayRecordingManager
     /// to the recording's metadata file, as well as to provide serializable messages that get replayed when the replay
     /// is initially loaded. E.g., this should contain networked events that would get sent to a newly connected client.
     /// </summary>
-    event Action<MappingDataNode, List<object>>? RecordingStarted;
+    event Action<MappingDataNode, List<object>> RecordingStarted;
 
     /// <summary>
     /// This gets invoked whenever a replay recording is stopping. Subscribers can use this to add extra yaml data to the
     /// recording's metadata file.
     /// </summary>
-    event Action<MappingDataNode>? RecordingStopped;
+    event Action<MappingDataNode> RecordingStopped;
 
     /// <summary>
     /// This gets invoked after a replay recording has finished and provides information about where the replay data
     /// was saved. Note that this only means that all write tasks have started, however some of the file tasks may not
     /// have finished yet. See <see cref="WaitWriteTasks"/>.
     /// </summary>
-    event Action<IWritableDirProvider, ResPath>? RecordingFinished;
+    event Action<ReplayRecordingFinished> RecordingFinished;
 
     /// <summary>
     /// Tries to starts a replay recording.
@@ -93,12 +96,16 @@ public interface IReplayRecordingManager
     /// <param name="duration">
     /// Optional time limit for the recording.
     /// </param>
+    /// <param name="state">
+    /// An arbitrary object that is available in <see cref="ActiveRecordingState"/> and <see cref="RecordingFinished"/>.
+    /// </param>
     /// <returns>Returns true if the recording was successfully started.</returns>
     bool TryStartRecording(
         IWritableDirProvider directory,
         string? name = null,
         bool overwrite = false,
-        TimeSpan? duration = null);
+        TimeSpan? duration = null,
+        object? state = null);
 
     /// <summary>
     /// Stops an ongoing replay recording.
@@ -106,59 +113,48 @@ public interface IReplayRecordingManager
     void StopRecording();
 
     /// <summary>
-    /// Returns information about the currently ongoing replay recording, including the currently elapsed time and the
-    /// compressed replay size.
+    /// Returns information about the currently ongoing replay recording.
     /// </summary>
-    (float Minutes, int Ticks, float Size, float UncompressedSize) GetReplayStats();
-
-    /// <summary>
-    /// Check the status of all async write tasks and return true if one of the tasks is still writing something.
-    /// </summary>
-    bool IsWriting();
+    ReplayRecordingStats GetReplayStats();
 
     /// <summary>
     /// Returns a task that will wait for all the current writing tasks to finish.
     /// </summary>
-    /// <exception cref="Exception">
-    /// Throws an exception if <see cref="IsRecording"/> is true (i.e., new write tasks as still being created).
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if we are currently recording (<see cref="IsRecording"/> true).
     /// </exception>
     Task WaitWriteTasks();
+}
 
-    // Define misc constants for writing and reading replays files.
-    # region Constants
+/// <summary>
+/// Event data for <see cref="IReplayRecordingManager.RecordingFinished"/>.
+/// </summary>
+/// <param name="Directory">The writable dir provider in which the replay is being recorded.</param>
+/// <param name="Path">The path to the replay in <paramref name="Directory"/>.</param>
+/// <param name="State">The state object passed to <see cref="IReplayRecordingManager.TryStartRecording"/>.</param>
+public record ReplayRecordingFinished(IWritableDirProvider Directory, ResPath Path, object? State);
+
+/// <summary>
+/// Statistics for an active replay recording.
+/// </summary>
+/// <param name="Time">The simulation time the replay has been recording for.</param>
+/// <param name="Ticks">The amount of simulation ticks the replay has recorded.</param>
+/// <param name="Size">The total compressed size of the replay data blobs.</param>
+/// <param name="UncompressedSize">The total uncompressed size of the replay data blobs.</param>
+public record struct ReplayRecordingStats(TimeSpan Time, uint Ticks, long Size, long UncompressedSize);
+
+/// <summary>
+/// Engine-internal functions for <see cref="IReplayRecordingManager"/>.
+/// </summary>
+internal interface IReplayRecordingManagerInternal : IReplayRecordingManager
+{
+    /// <summary>
+    /// Initializes the replay manager.
+    /// </summary>
+    void Initialize();
 
     /// <summary>
-    /// File extension for data files that have to be deserialized and decompressed.
+    /// Shut down any active replay recording, at engine shutdown.
     /// </summary>
-    public const string Ext = "dat";
-
-    // filenames
-    public static readonly ResPath MetaFile = new($"replay.yml");
-    public static readonly ResPath CvarFile = new($"cvars.toml");
-    public static readonly ResPath StringsFile = new($"strings.{Ext}");
-    public static readonly ResPath InitFile = new($"init.{Ext}");
-
-    // Yaml keys
-    public const string Hash = "typeHash";
-    public const string CompHash = "componentHash";
-    public const string Strings = "stringHash";
-    public const string Time = "time";
-    public const string Name = "name";
-    public const string Tick = "serverStartTime";
-    public const string ServerTime = "startTick";
-    public const string BaseTick = "timeBaseTick";
-    public const string BaseTime = "timeBaseTimespan";
-    public const string Duration = "duration";
-    public const string Engine = "engineVersion";
-    public const string Fork = "buildForkId";
-    public const string ForkVersion = "buildVersion";
-    public const string FileCount = "fileCount";
-    public const string Compressed = "size";
-    public const string Uncompressed = "uncompressedSize";
-    public const string EndTick = "endTick";
-    public const string EndTime = "serverEndTime";
-    public const string IsClient = "clientRecording";
-    public const string Recorder = "recordedBy";
-
-    #endregion
+    void Shutdown();
 }

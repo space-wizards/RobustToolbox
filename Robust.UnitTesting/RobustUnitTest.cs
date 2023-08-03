@@ -26,6 +26,8 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using EyeComponent = Robust.Server.GameObjects.EyeComponent;
+using MapSystem = Robust.Server.GameObjects.MapSystem;
 
 namespace Robust.UnitTesting
 {
@@ -68,6 +70,7 @@ namespace Robust.UnitTesting
             var configurationManager = deps.Resolve<IConfigurationManagerInternal>();
 
             configurationManager.Initialize(Project == UnitTestProject.Server);
+            deps.Resolve<IReflectionManager>().Initialize();
 
             foreach (var assembly in assemblies)
             {
@@ -85,6 +88,7 @@ namespace Robust.UnitTesting
 
             var systems = deps.Resolve<IEntitySystemManager>();
             // Required systems
+            systems.LoadExtraSystemType<MapSystem>();
             systems.LoadExtraSystemType<EntityLookupSystem>();
 
             // uhhh so maybe these are the wrong system for the client, but I CBF adding sprite system and all the rest,
@@ -126,6 +130,11 @@ namespace Robust.UnitTesting
             // Required components for the engine to work
             // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?
             var compFactory = deps.Resolve<IComponentFactory>();
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(EyeComponent)))
+            {
+                compFactory.RegisterClass<EyeComponent>();
+            }
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MapComponent)))
             {

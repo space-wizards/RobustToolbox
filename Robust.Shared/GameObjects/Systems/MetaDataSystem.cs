@@ -141,7 +141,7 @@ public abstract class MetaDataSystem : EntitySystem
             return;
 
         var ev = new MetaFlagRemoveAttemptEvent(toRemove);
-        EntityManager.EventBus.RaiseLocalEvent(component.Owner, ref ev, true);
+        EntityManager.EventBus.RaiseLocalEvent(uid, ref ev, true);
 
         component.Flags &= ~ev.ToRemove;
     }

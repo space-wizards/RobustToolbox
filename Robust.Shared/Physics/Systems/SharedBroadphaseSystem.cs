@@ -20,15 +20,19 @@ namespace Robust.Shared.Physics.Systems
 {
     public abstract class SharedBroadphaseSystem : EntitySystem
     {
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IParallelManager _parallel = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
-        private ISawmill _logger = default!;
+        private EntityQuery<BroadphaseComponent> _broadphaseQuery;
+        private EntityQuery<MapGridComponent> _gridQuery;
+        private EntityQuery<PhysicsComponent> _physicsQuery;
+        private EntityQuery<TransformComponent> _xformQuery;
 
         /*
          * Okay so Box2D has its own "MoveProxy" stuff so you can easily find new contacts when required.
@@ -53,9 +57,12 @@ namespace Robust.Shared.Physics.Systems
         {
             base.Initialize();
 
-            _logger = Logger.GetSawmill("physics");
-            UpdatesOutsidePrediction = true;
+            _broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
+            _gridQuery = GetEntityQuery<MapGridComponent>();
+            _physicsQuery = GetEntityQuery<PhysicsComponent>();
+            _xformQuery = GetEntityQuery<TransformComponent>();
 
+            UpdatesOutsidePrediction = true;
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
             _cfg.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
@@ -79,27 +86,24 @@ namespace Robust.Shared.Physics.Systems
             PhysicsMapComponent component,
             MapId mapId,
             HashSet<EntityUid> movedGrids,
-            Dictionary<FixtureProxy, Box2> gridMoveBuffer,
-            EntityQuery<BroadphaseComponent> broadQuery,
-            EntityQuery<TransformComponent> xformQuery)
+            Dictionary<FixtureProxy, Box2> gridMoveBuffer)
         {
             // None moved this tick
             if (movedGrids.Count == 0) return;
 
-            var mapBroadphase = broadQuery.GetComponent(_mapManager.GetMapEntityId(mapId));
+            var mapBroadphase = _broadphaseQuery.GetComponent(_mapManager.GetMapEntityId(mapId));
 
             // This is so that if we're on a broadphase that's moving (e.g. a grid) we need to make sure anything
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
             var moveBuffer = component.MoveBuffer;
-            var gridQuery = GetEntityQuery<MapGridComponent>();
 
             foreach (var gridUid in movedGrids)
             {
-                var grid = gridQuery.GetComponent(gridUid);
-                var xform = xformQuery.GetComponent(gridUid);
+                var grid = _gridQuery.GetComponent(gridUid);
+                var xform = _xformQuery.GetComponent(gridUid);
 
                 DebugTools.Assert(xform.MapID == mapId);
-                var worldAABB = _transform.GetWorldMatrix(xform, xformQuery).TransformBox(grid.LocalAABB);
+                var worldAABB = _transform.GetWorldMatrix(xform).TransformBox(grid.LocalAABB);
                 var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
                 var state = (moveBuffer, gridMoveBuffer);
 
@@ -111,7 +115,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 moveBuffer[proxy] = worldAABB;
                 // If something is in our AABB then try grid traversal for it
-                _traversal.CheckTraverse(proxy.Entity, xformQuery.GetComponent(proxy.Entity));
+                _traversal.CheckTraverse(proxy.Entity, _xformQuery.GetComponent(proxy.Entity));
             }
         }
 
@@ -157,12 +161,8 @@ namespace Robust.Shared.Physics.Systems
             var movedGrids = Comp<MovedGridsComponent>(mapUid).MovedGrids;
             var gridMoveBuffer = new Dictionary<FixtureProxy, Box2>();
 
-            var broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
-            var physicsQuery = GetEntityQuery<PhysicsComponent>();
-            var xformQuery = GetEntityQuery<TransformComponent>();
-
             // Find any entities being driven over that might need to be considered
-            FindGridContacts(component, mapId, movedGrids, gridMoveBuffer, broadphaseQuery, xformQuery);
+            FindGridContacts(component, mapId, movedGrids, gridMoveBuffer);
 
             // There is some mariana trench levels of bullshit going on.
             // We essentially need to re-create Box2D's FindNewContacts but in a way that allows us to check every
@@ -174,7 +174,7 @@ namespace Robust.Shared.Physics.Systems
             // to cache a bunch of stuff to make up for it.
 
             // Handle grids first as they're not stored on map broadphase at all.
-            HandleGridCollisions(mapId, movedGrids, physicsQuery, xformQuery);
+            HandleGridCollisions(mapId, movedGrids);
 
             // EZ
             if (moveBuffer.Count == 0)
@@ -212,7 +212,7 @@ namespace Robust.Shared.Physics.Systems
                     var proxyBody = proxy.Body;
                     DebugTools.Assert(!proxyBody.Deleted);
 
-                    var state = (this, proxy, worldAABB, buffer, xformQuery, broadphaseQuery);
+                    var state = (this, proxy, worldAABB, buffer);
 
                     // Get every broadphase we may be intersecting.
                     _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_broadphaseExpand), ref state,
@@ -220,18 +220,16 @@ namespace Robust.Shared.Physics.Systems
                             SharedBroadphaseSystem system,
                             FixtureProxy proxy,
                             Box2 worldAABB,
-                            List<FixtureProxy> pairBuffer,
-                            EntityQuery<TransformComponent> xformQuery,
-                            EntityQuery<BroadphaseComponent> broadphaseQuery) tuple) =>
+                            List<FixtureProxy> pairBuffer) tuple) =>
                         {
                             ref var buffer = ref tuple.pairBuffer;
-                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, uid, buffer, tuple.xformQuery, tuple.broadphaseQuery);
+                            tuple.system.FindPairs(tuple.proxy, tuple.worldAABB, uid, buffer);
                             return true;
                         });
 
                     // Struct ref moment, I have no idea what's fastest.
                     buffer = state.buffer;
-                    FindPairs(proxy, worldAABB, _mapManager.GetMapEntityId(mapId), buffer, xformQuery, broadphaseQuery);
+                    FindPairs(proxy, worldAABB, _mapManager.GetMapEntityId(mapId), buffer);
                 }
             });
 
@@ -272,27 +270,23 @@ namespace Robust.Shared.Physics.Systems
 
         private void HandleGridCollisions(
             MapId mapId,
-            HashSet<EntityUid> movedGrids,
-            EntityQuery<PhysicsComponent> physicsQuery,
-            EntityQuery<TransformComponent> xformQuery)
+            HashSet<EntityUid> movedGrids)
         {
-            var gridQuery = GetEntityQuery<MapGridComponent>();
-
             foreach (var gridUid in movedGrids)
             {
-                var grid = gridQuery.GetComponent(gridUid);
-                var xform = xformQuery.GetComponent(gridUid);
+                var grid = _gridQuery.GetComponent(gridUid);
+                var xform = _xformQuery.GetComponent(gridUid);
                 DebugTools.Assert(xform.MapID == mapId);
 
-                var (worldPos, worldRot, worldMatrix, invWorldMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(xform, xformQuery);
+                var (worldPos, worldRot, worldMatrix, invWorldMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(xform);
 
                 var aabb = new Box2Rotated(grid.LocalAABB, worldRot).CalcBoundingBox().Translated(worldPos);
 
                 // TODO: Need to handle grids colliding with non-grid entities with the same layer
                 // (nothing in SS14 does this yet).
 
-                var transform = _physicsSystem.GetPhysicsTransform(gridUid, xformQuery: xformQuery);
-                var state = (gridUid, grid, transform, worldMatrix, invWorldMatrix, _physicsSystem, _transform, physicsQuery, xformQuery);
+                var transform = _physicsSystem.GetPhysicsTransform(gridUid, xformQuery: _xformQuery);
+                var state = (gridUid, grid, transform, worldMatrix, invWorldMatrix, _map, _physicsSystem, _transform, _physicsQuery, _xformQuery);
 
                 _mapManager.FindGridsIntersecting(mapId, aabb, ref state,
                     static (EntityUid uid, MapGridComponent component,
@@ -301,6 +295,7 @@ namespace Robust.Shared.Physics.Systems
                             Transform transform,
                             Matrix3 worldMatrix,
                             Matrix3 invWorldMatrix,
+                            SharedMapSystem _map,
                             SharedPhysicsSystem _physicsSystem,
                             SharedTransformSystem xformSystem,
                             EntityQuery<PhysicsComponent> physicsQuery,
@@ -320,7 +315,7 @@ namespace Robust.Shared.Physics.Systems
                         var aabb1 = tuple.grid.LocalAABB.Intersect(tuple.invWorldMatrix.TransformBox(otherGridBounds));
 
                         // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
-                        var ourChunks = tuple.grid.GetLocalMapChunks(aabb1);
+                        var ourChunks = tuple._map.GetLocalMapChunks(tuple.gridUid, tuple.grid, aabb1);
                         var physicsA = tuple.physicsQuery.GetComponent(tuple.gridUid);
                         var physicsB = tuple.physicsQuery.GetComponent(uid);
 
@@ -331,7 +326,7 @@ namespace Robust.Shared.Physics.Systems
                                 tuple.worldMatrix.TransformBox(
                                     ourChunk.CachedBounds.Translated(ourChunk.Indices * tuple.grid.ChunkSize));
                             var ourChunkOtherRef = otherGridInvMatrix.TransformBox(ourChunkWorld);
-                            var collidingChunks = component.GetLocalMapChunks(ourChunkOtherRef);
+                            var collidingChunks = tuple._map.GetLocalMapChunks(uid, component, ourChunkOtherRef);
 
                             while (collidingChunks.MoveNext(out var collidingChunk))
                             {
@@ -372,14 +367,12 @@ namespace Robust.Shared.Physics.Systems
             FixtureProxy proxy,
             Box2 worldAABB,
             EntityUid broadphase,
-            List<FixtureProxy> pairBuffer,
-            EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<BroadphaseComponent> broadphaseQuery)
+            List<FixtureProxy> pairBuffer)
         {
             DebugTools.Assert(proxy.Body.CanCollide);
 
             // Broadphase can't intersect with entities on itself so skip.
-            if (proxy.Entity == broadphase || !xformQuery.TryGetComponent(proxy.Entity, out var xform))
+            if (proxy.Entity == broadphase || !_xformQuery.TryGetComponent(proxy.Entity, out var xform))
             {
                 return;
             }
@@ -389,7 +382,7 @@ namespace Robust.Shared.Physics.Systems
             DebugTools.AssertNotNull(xform.Broadphase);
             if (!_lookup.TryGetCurrentBroadphase(xform, out var proxyBroad))
             {
-                _logger.Error($"Found null broadphase for {ToPrettyString(proxy.Entity)}");
+                Log.Error($"Found null broadphase for {ToPrettyString(proxy.Entity)}");
                 DebugTools.Assert(false);
                 return;
             }
@@ -401,10 +394,10 @@ namespace Robust.Shared.Physics.Systems
             }
             else
             {
-                aabb = _transform.GetInvWorldMatrix(broadphase, xformQuery).TransformBox(worldAABB);
+                aabb = _transform.GetInvWorldMatrix(broadphase).TransformBox(worldAABB);
             }
 
-            var broadphaseComp = broadphaseQuery.GetComponent(broadphase);
+            var broadphaseComp = _broadphaseQuery.GetComponent(broadphase);
             var state = (pairBuffer, proxy);
 
             QueryBroadphase(broadphaseComp.DynamicTree, state, aabb);
@@ -492,7 +485,7 @@ namespace Robust.Shared.Physics.Systems
         // TODO: The below is slow and should just query the map's broadphase directly. The problem is that
         // there's some ordering stuff going on where the broadphase has queued all of its updates but hasn't applied
         // them yet so this query will fail on initialization which chains into a whole lot of issues.
-        internal IEnumerable<BroadphaseComponent> GetBroadphases(MapId mapId, Box2 aabb)
+        internal IEnumerable<(EntityUid uid, BroadphaseComponent comp)> GetBroadphases(MapId mapId, Box2 aabb)
         {
             // TODO Okay so problem: If we just do Encloses that's a lot faster BUT it also means we don't return the
             // map's broadphase which avoids us iterating over it for 99% of bodies.
@@ -507,16 +500,16 @@ namespace Robust.Shared.Physics.Systems
 
                 if (!EntityManager.TryGetComponent(bUid, out MapGridComponent? mapGrid))
                 {
-                    yield return broadphase;
+                    yield return (bUid, broadphase);
                     continue;
                 }
 
                 // Won't worry about accurate bounds checks as it's probably slower in most use cases.
-                var chunkEnumerator = mapGrid.GetMapChunks(aabb);
+                var chunkEnumerator = _map.GetMapChunks(bUid, mapGrid, aabb);
 
                 if (chunkEnumerator.MoveNext(out _))
                 {
-                    yield return broadphase;
+                    yield return (bUid, broadphase);
                 }
             }
         }

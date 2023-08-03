@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -110,6 +109,7 @@ namespace Robust.Shared.Network
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly ILogManager _logMan = default!;
         [Dependency] private readonly ProfManager _prof = default!;
+        [Dependency] private readonly HttpClientHolder _http = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -133,8 +133,6 @@ namespace Robust.Shared.Network
             = new();
 
         private readonly HashSet<NetUserId> _awaitingDisconnectToConnect = new HashSet<NetUserId>();
-
-        private readonly HttpClient _httpClient = new();
 
         private ISawmill _logger = default!;
         private ISawmill _authLogger = default!;
@@ -245,7 +243,7 @@ namespace Robust.Shared.Network
                 throw new InvalidOperationException("NetManager has already been initialized.");
             }
 
-            HttpClientUserAgent.AddUserAgent(_httpClient);
+            _strings.Sawmill = _logger;
 
             SynchronizeNetTime();
 
@@ -737,6 +735,8 @@ namespace Robust.Shared.Network
             NetEncryption? encryption,
             LoginType loginType)
         {
+            _logger.Verbose($"{sender.RemoteEndPoint}: Initial handshake complete!");
+
             var channel = new NetChannel(this, sender, userData, loginType);
             _assignedUserIds.Add(userData.UserId, sender);
             _assignedUsernames.Add(userData.UserName, sender);
@@ -841,7 +841,13 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            var channel = _channels[msg.SenderConnection];
+            if (!_channels.TryGetValue(msg.SenderConnection, out var channel))
+            {
+                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Got unexpected data packet before handshake completion.");
+
+                msg.SenderConnection.Disconnect("Unexpected packet before handshake completion");
+                return true;
+            }
 
             var encryption = IsServer ? channel.Encryption : _clientEncryption;
 
@@ -891,12 +897,12 @@ namespace Robust.Shared.Network
             }
             catch (InvalidCastException ice)
             {
-                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet: {ice.Message}");
+                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet:\n{ice}");
                 return true;
             }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
-                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet: {e.Message}");
+                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet:\n{e}");
                 return true;
             }
 

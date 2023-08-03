@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -26,6 +29,11 @@ public interface IPrototypeManager
     /// Returns an <see cref="IEnumerable{T}"/> of all registered prototype kinds by their ID.
     /// </summary>
     IEnumerable<string> GetPrototypeKinds();
+
+    /// <summary>
+    /// Returns the count of the specified prototype.
+    /// </summary>
+    int Count<T>() where T : class, IPrototype;
 
     /// <summary>
     /// Return an <see cref="IEnumerable{T}"/> of all prototypes of a certain kind.
@@ -198,7 +206,40 @@ public interface IPrototypeManager
     /// </summary>
     void LoadDirectory(ResPath path, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 
+    /// <summary>
+    /// Validate all prototypes defined in yaml files contained in the given directory.
+    /// </summary>
+    /// <param name="path">The directory containing the yaml files that need validating.</param>
+    /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>
     Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path);
+
+    /// <summary>
+    /// Validate all prototypes defined in yaml files contained in the given directory.
+    /// </summary>
+    /// <param name="path">The directory containing the yaml files that need validating.</param>
+    /// <param name="prototypes">The prototypes ids that were present in the directory.</param>
+    /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>
+    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
+        out Dictionary<Type, HashSet<string>> prototypes);
+
+    /// <summary>
+    /// This method uses reflection to validate that prototype id fields correspond to valid prototypes.
+    /// </summary>
+    /// <remarks>
+    /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
+    /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
+    /// </remarks>
+    /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
+    /// will be considered invalid.</param>
+    List<string> ValidateFields(Dictionary<Type, HashSet<string>> prototypes);
+
+    /// <summary>
+    /// This method will serialize all loaded prototypes into yaml and then validate them. This can be used to ensure
+    /// that hard coded default values for data-fields all pass the normal yaml validation steps.
+    /// </summary>
+    /// <returns>Returns a collection of yaml validation errors, sorted by prototype kind id. The outer dictionary is
+    /// empty, everything was successfully validated.</returns>
+    Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx);
 
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 

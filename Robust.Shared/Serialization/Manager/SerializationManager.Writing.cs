@@ -92,13 +92,33 @@ public sealed partial class SerializationManager
             }
             else if (actualType.IsEnum)
             {
-                // Enums implement IConvertible.
-                // Need it for the culture overload.
-                call = Expression.Call(
-                    instanceParam,
-                    nameof(WriteConvertible),
-                    Type.EmptyTypes,
-                    Expression.Convert(objParam, typeof(IConvertible)));
+                // When writing generic enums, we want to use the enum serializer.
+                // Otherwise, we fall back to the default IConvertible behaviour.
+
+                if (baseType != typeof(Enum) ||
+                    !serializationManager._regularSerializerProvider.TryGetTypeSerializer(typeof(ITypeWriter<>),
+                        typeof(Enum), out serializer))
+                {
+                    call = Expression.Call(
+                        instanceParam,
+                        nameof(WriteConvertible),
+                        Type.EmptyTypes,
+                        Expression.Convert(objParam, typeof(IConvertible)));
+                }
+                else
+                {
+                    var serializerConst = Expression.Constant(serializer);
+                    call = Expression.Call(
+                        instanceParam,
+                        nameof(WriteValue),
+                        new []{typeof(Enum)},
+                        serializerConst,
+                        Expression.Convert(objParam, typeof(Enum)),
+                        alwaysWriteParam,
+                        contextParam,
+                        Expression.Constant(notNullableOverride)
+                    );
+                }
             }
             else if (actualType.IsArray)
             {

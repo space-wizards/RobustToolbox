@@ -121,7 +121,7 @@ namespace Robust.Client.ViewVariables
             }
 
             //var smallFont =
-            //    new VectorFont(IoCManager.Resolve<IResourceCache>().GetResource<FontResource>("/Fonts/CALIBRI.TTF"),
+            //    new VectorFont(IoCManager.Resolve<IResourceCache>().GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"),
             //        10);
 
             // Custom ToString() implementation.

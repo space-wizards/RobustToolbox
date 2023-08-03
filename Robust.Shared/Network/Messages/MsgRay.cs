@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using System.Numerics;
+using Lidgren.Network;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 

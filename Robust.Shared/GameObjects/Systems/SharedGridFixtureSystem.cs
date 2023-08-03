@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -20,9 +22,9 @@ namespace Robust.Shared.GameObjects
     public abstract class SharedGridFixtureSystem : EntitySystem
     {
         [Dependency] private readonly FixtureSystem _fixtures = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
 
-        protected ISawmill Sawmill = default!;
         private bool _enabled;
         private float _fixtureEnlargement;
 
@@ -32,12 +34,17 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
-            Sawmill = Logger.GetSawmill("physics");
 
             _cfg.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
             _cfg.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
 
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
+            SubscribeLocalEvent<RegenerateGridBoundsEvent>(OnGridBoundsRegenerate);
+        }
+
+        private void OnGridBoundsRegenerate(ref RegenerateGridBoundsEvent ev)
+        {
+            RegenerateCollision(ev.Entity, ev.ChunkRectangles, ev.RemovedChunks);
         }
 
         protected virtual void OnGridInit(GridInitializeEvent ev)
@@ -47,7 +54,7 @@ namespace Robust.Shared.GameObjects
 
             // This will also check for grid splits if applicable.
             var grid = Comp<MapGridComponent>(ev.EntityUid);
-            grid.RegenerateCollision(grid.GetMapChunks().Values.ToHashSet());
+            _map.RegenerateCollision(ev.EntityUid, grid, _map.GetMapChunks(ev.EntityUid, grid).Values.ToHashSet());
         }
 
         public override void Shutdown()
@@ -67,23 +74,24 @@ namespace Robust.Shared.GameObjects
             Dictionary<MapChunk, List<Box2i>> mapChunks,
             List<MapChunk> removedChunks)
         {
-            if (!_enabled) return;
+            if (!_enabled)
+                return;
 
             if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
             {
-                Sawmill.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(body)}");
+                Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(body)}");
                 return;
             }
 
             if (!EntityManager.TryGetComponent(uid, out FixturesComponent? manager))
             {
-                Sawmill.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(manager)}");
+                Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(manager)}");
                 return;
             }
 
             if (!EntityManager.TryGetComponent(uid, out TransformComponent? xform))
             {
-                Sawmill.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(TransformComponent)}");
+                Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(TransformComponent)}");
                 return;
             }
 
@@ -134,12 +142,14 @@ namespace Robust.Shared.GameObjects
 
                 poly.Set(vertices, 4);
 
+#pragma warning disable CS0618
                 var newFixture = new Fixture(
                     $"grid_chunk-{bounds.Left}-{bounds.Bottom}",
                     poly,
                     MapGridHelpers.CollisionGroup,
                     MapGridHelpers.CollisionGroup,
                     true) { Body = body};
+#pragma warning restore CS0618
 
                 newFixtures.Add(newFixture);
             }

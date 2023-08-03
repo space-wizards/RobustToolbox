@@ -1,3 +1,4 @@
+using System;
 using Robust.Server.GameStates;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -22,6 +23,12 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
         base.Initialize();
         _pvs = _sysMan.GetEntitySystem<PvsSystem>();
         NetConf.OnValueChanged(CVars.ReplayServerRecordingEnabled, SetReplayEnabled, true);
+    }
+
+    protected override string DefaultReplayFileName()
+    {
+        // UTC
+        return DateTime.UtcNow.ToString(DefaultReplayNameFormat);
     }
 
     public override void RecordServerMessage(object obj)

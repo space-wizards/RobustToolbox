@@ -3,6 +3,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -19,9 +21,17 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
     private ISawmill _sawmill = default!;
 
+    private SharedMapSystem _mapSystem = default!;
+    private SharedTransformSystem _transformSystem = default!;
+    private EntityQuery<PhysicsComponent> _physicsQuery;
+    private EntityQuery<TransformComponent> _xformQuery;
+
     /// <inheritdoc />
     public void Initialize()
     {
+        _physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
+        _xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+
         _sawmill = Logger.GetSawmill("map");
 
 #if DEBUG
@@ -35,14 +45,15 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     /// <inheritdoc />
     public void Startup()
     {
+        _transformSystem = EntityManager.System<SharedTransformSystem>();
+        _mapSystem = EntityManager.System<SharedMapSystem>();
+
 #if DEBUG
         DebugTools.Assert(_dbgGuardInit);
         _dbgGuardRunning = true;
 #endif
 
-        Logger.DebugS("map", "Starting...");
-
-        DebugTools.Assert(!GridExists(EntityUid.Invalid));
+        _sawmill.Debug("Starting...");
     }
 
     /// <inheritdoc />
@@ -51,29 +62,29 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 #if DEBUG
         DebugTools.Assert(_dbgGuardInit);
 #endif
-        Logger.DebugS("map", "Stopping...");
+        _sawmill.Debug("Stopping...");
 
-        foreach (var mapComp in EntityManager.EntityQuery<MapComponent>())
+        // TODO: AllEntityQuery instead???
+        var query = EntityManager.EntityQueryEnumerator<MapComponent>();
+
+        while (query.MoveNext(out var uid, out _))
         {
-            EntityManager.DeleteEntity(mapComp.Owner);
+            EntityManager.DeleteEntity(uid);
         }
-
-#if DEBUG
-        DebugTools.Assert(!GridExists(EntityUid.Invalid));
-        _dbgGuardRunning = false;
-#endif
     }
 
     /// <inheritdoc />
     public void Restart()
     {
-        Logger.DebugS("map", "Restarting...");
+        _sawmill.Debug("Restarting...");
 
         // Don't just call Shutdown / Startup because we don't want to touch the subscriptions on gridtrees
         // Restart can be called any time during a game, whereas shutdown / startup are typically called upon connection.
-        foreach (var mapComp in EntityManager.EntityQuery<MapComponent>())
+        var query = EntityManager.EntityQueryEnumerator<MapComponent>();
+
+        while (query.MoveNext(out var uid, out _))
         {
-            EntityManager.DeleteEntity(mapComp.Owner);
+            EntityManager.DeleteEntity(uid);
         }
     }
 

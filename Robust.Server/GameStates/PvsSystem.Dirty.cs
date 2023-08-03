@@ -94,9 +94,7 @@ namespace Robust.Server.GameStates
         /// </summary>
         internal void MarkDirty(EntityUid uid)
         {
-            var query = GetEntityQuery<TransformComponent>();
-            var xform = query.GetComponent(uid);
-            var coordinates = _transform.GetMoverCoordinates(xform, query);
+            var coordinates = _transform.GetMoverCoordinates(uid);
             _entityPvsCollection.MarkDirty(_entityPvsCollection.GetChunkIndex(coordinates));
         }
     }

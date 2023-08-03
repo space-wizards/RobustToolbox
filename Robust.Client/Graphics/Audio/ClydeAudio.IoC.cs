@@ -15,7 +15,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Audio;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
-using Vector2 = Robust.Shared.Maths.Vector2;
+using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.Graphics.Audio
 {

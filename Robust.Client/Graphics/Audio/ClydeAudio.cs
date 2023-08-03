@@ -1,20 +1,14 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using OpenTK.Mathematics;
 using Robust.Client.Audio;
 using Robust.Shared;
-using Robust.Shared.Configuration;
-using Robust.Shared.IoC;
 using Robust.Shared.Audio;
 using Robust.Shared.Log;
-using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Client.Graphics.Audio
 {
@@ -183,15 +177,15 @@ namespace Robust.Client.Graphics.Audio
         private void _updateAudio()
         {
             var eye = _eyeManager.CurrentEye;
-            var (x, y) = eye.Position.Position;
-            AL.Listener(ALListener3f.Position, x, y, -5);
+            var vec = eye.Position.Position;
+            AL.Listener(ALListener3f.Position, vec.X, vec.Y, -5);
             var rot2d = eye.Rotation.ToVec();
             AL.Listener(ALListenerfv.Orientation, new []{0, 0, -1, rot2d.X, rot2d.Y, 0});
 
             // Default orientation: at: (0, 0, -1)  up: (0, 1, 0)
-            var (rotX, rotY) = eye.Rotation.ToVec();
+            var rot = eye.Rotation.ToVec();
             var at = new Vector3(0f, 0f, -1f);
-            var up = new Vector3(rotY, rotX, 0f);
+            var up = new Vector3(rot.Y, rot.X, 0f);
             AL.Listener(ALListenerfv.Orientation, ref at, ref up);
 
             _flushALDisposeQueues();
@@ -267,6 +261,9 @@ namespace Robust.Client.Graphics.Audio
         {
             var source = AL.GenSource();
 
+            if (!AL.IsSource(source))
+                throw new Exception("Failed to generate source. Too many simultaneous audio streams?");
+
             // ReSharper disable once PossibleInvalidOperationException
 
             var audioSource = new BufferedAudioSource(this, source, AL.GenBuffers(buffers), floatAudio);
@@ -332,7 +329,7 @@ namespace Robust.Client.Graphics.Audio
             var handle = new ClydeHandle(_audioSampleBuffers.Count);
             _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
             var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
-            return new AudioStream(handle, length, (int) vorbis.Channels, name);
+            return new AudioStream(handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
         }
 
         public AudioStream LoadAudioWav(Stream stream, string? name = null)

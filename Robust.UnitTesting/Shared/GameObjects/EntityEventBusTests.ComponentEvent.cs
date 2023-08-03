@@ -3,6 +3,7 @@ using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.UnitTesting.Shared.Reflection;
 
@@ -13,7 +14,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         [Test]
         public void SubscribeCompEvent()
         {
-            var compFactory = new ComponentFactory(new DynamicTypeFactory(), new ReflectionManagerTest());
+            var compFactory = new ComponentFactory(new DynamicTypeFactory(), new ReflectionManagerTest(), new LogManager());
 
             // Arrange
             var entUid = new EntityUid(7);

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
@@ -57,20 +58,11 @@ public interface IBroadPhase<T> : ICollection<T> where T : notnull {
 
     int Capacity { get; }
 
-    int Height {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get;
-    }
+    int Height { get; }
 
-    int MaxBalance {
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
-        get;
-    }
+    int MaxBalance { get; }
 
-    float AreaRatio {
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
-        get;
-    }
+    float AreaRatio { get; }
 
     bool Add(in T item, Box2? newAABB = null);
 

@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
@@ -528,7 +529,7 @@ namespace Robust.Client.Graphics.Clyde
                     // So there are distortions from incorrect projection.
                     _renderHandle.UseShader(_fovDebugShaderInstance);
                     _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
-                    var pos = UIBox2.FromDimensions(viewport.Size / 2 - (200, 200), (400, 400));
+                    var pos = UIBox2.FromDimensions(viewport.Size / 2 - new Vector2(200, 200), new Vector2(400, 400));
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
                 }
 

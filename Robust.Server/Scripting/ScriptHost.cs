@@ -36,12 +36,17 @@ namespace Robust.Server.Scripting
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         readonly Dictionary<IPlayerSession, Dictionary<int, ScriptInstance>> _instances =
             new();
 
+        private ISawmill _sawmill = default!;
+
         public void Initialize()
         {
+            _sawmill = _logManager.GetSawmill("script");
+
             _netManager.RegisterNetMessage<MsgScriptStop>(ReceiveScriptEnd);
             _netManager.RegisterNetMessage<MsgScriptEval>(ReceiveScriptEval);
             _netManager.RegisterNetMessage<MsgScriptStart>(ReceiveScriptStart);
@@ -87,7 +92,7 @@ namespace Robust.Server.Scripting
 
             if (!_conGroupController.CanScript(session))
             {
-                Logger.WarningS("script", "Client {0} tried to access Scripting without permissions.", session);
+                _sawmill.Warning("Client {0} tried to access Scripting without permissions.", session);
                 _netManager.ServerSendMessage(reply, message.MsgChannel);
                 return;
             }
@@ -119,7 +124,7 @@ namespace Robust.Server.Scripting
 
             if (!_conGroupController.CanScript(session))
             {
-                Logger.WarningS("script", "Client {0} tried to access Scripting without permissions.", session);
+                _sawmill.Warning("Client {0} tried to access Scripting without permissions.", session);
                 return;
             }
 
@@ -252,7 +257,7 @@ namespace Robust.Server.Scripting
 
             if (!_conGroupController.CanScript(session))
             {
-                Logger.WarningS("script", "Client {0} tried to access Scripting without permissions.", session);
+                _sawmill.Warning("Client {0} tried to access Scripting without permissions.", session);
                 return;
             }
 

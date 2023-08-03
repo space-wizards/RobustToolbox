@@ -195,7 +195,7 @@ namespace Robust.Shared.Network
                 var request = new HttpRequestMessage(HttpMethod.Post, authServer + "api/session/join");
                 request.Content = JsonContent.Create(joinReq);
                 request.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", authToken);
-                var joinResp = await _httpClient.SendAsync(request, cancel);
+                var joinResp = await _http.Client.SendAsync(request, cancel);
 
                 joinResp.EnsureSuccessStatusCode();
 

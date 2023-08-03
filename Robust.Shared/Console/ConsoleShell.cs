@@ -1,4 +1,5 @@
 using Robust.Shared.Players;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console
 {
@@ -46,6 +47,11 @@ namespace Robust.Shared.Console
         public void WriteLine(string text)
         {
             ConsoleHost.WriteLine(Player, text);
+        }
+
+        public void WriteLine(FormattedMessage message)
+        {
+            ConsoleHost.WriteLine(Player, message);
         }
 
         /// <inheritdoc />

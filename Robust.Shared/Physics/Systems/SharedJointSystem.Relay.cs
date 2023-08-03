@@ -50,20 +50,21 @@ public abstract partial class SharedJointSystem
 
     private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ComponentShutdown args)
     {
-        var jointQuery = GetEntityQuery<JointComponent>();
-
         foreach (var relay in component.Relayed)
         {
-            if (Deleted(relay) || !jointQuery.TryGetComponent(relay, out var joint))
+            if (Deleted(relay) || !_jointsQuery.TryGetComponent(relay, out var joint))
                 continue;
 
-            RefreshRelay(relay, joint);
+            RefreshRelay(relay, component: joint);
         }
     }
 
+    /// <summary>
+    /// Refreshes the joint relay for this entity, prefering its containing container or nothing.
+    /// </summary>
     public void RefreshRelay(EntityUid uid, JointComponent? component = null)
     {
-        if (!Resolve(uid, ref component))
+        if (!Resolve(uid, ref component, false))
             return;
 
         EntityUid? relay = null;
@@ -73,6 +74,17 @@ public abstract partial class SharedJointSystem
             relay = container.Owner;
         }
 
+        RefreshRelay(uid, relay, component);
+    }
+
+    /// <summary>
+    /// Refreshes the joint relay for this entity.
+    /// </summary>
+    public void RefreshRelay(EntityUid uid, EntityUid? relay, JointComponent? component = null)
+    {
+        if (!Resolve(uid, ref component, false))
+            return;
+
         if (component.Relay == relay)
             return;
 
@@ -81,7 +93,7 @@ public abstract partial class SharedJointSystem
             if (relayTarget.Relayed.Remove(uid))
             {
                 // TODO: Comp cleanup.
-                Dirty(relayTarget);
+                Dirty(component.Relay.Value, relayTarget);
             }
         }
 
@@ -93,11 +105,10 @@ public abstract partial class SharedJointSystem
             if (relayTarget.Relayed.Add(uid))
             {
                 _physics.WakeBody(relay.Value);
-                Dirty(relayTarget);
+                Dirty(relay.Value, relayTarget);
             }
-
         }
 
-        Dirty(component);
+        Dirty(uid, component);
     }
 }

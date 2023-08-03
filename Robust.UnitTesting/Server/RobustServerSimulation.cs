@@ -178,6 +178,8 @@ namespace Robust.UnitTesting.Server
             container.Register<IModLoaderInternal, TestingModLoader>();
             container.Register<ProfManager, ProfManager>();
             container.RegisterInstance<ITaskManager>(new Mock<ITaskManager>().Object);
+            container.Register<HttpClientHolder>();
+            container.Register<IHttpClientHolder, HttpClientHolder>();
 
             var realReflection = new ServerReflectionManager();
             realReflection.LoadAssemblies(new List<Assembly>(2)
@@ -244,7 +246,6 @@ namespace Robust.UnitTesting.Server
             container.RegisterInstance<IServerGameStateManager>(new Mock<IServerGameStateManager>().Object);
             container.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
             container.RegisterInstance<IServerReplayRecordingManager>(new Mock<IServerReplayRecordingManager>().Object);
-            container.RegisterInstance<IInternalReplayRecordingManager>(new Mock<IInternalReplayRecordingManager>().Object);
 
             _diFactory?.Invoke(container);
             container.BuildGraph();
@@ -270,6 +271,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapLightComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<JointComponent>();
+            compFactory.RegisterClass<EyeComponent>();
             compFactory.RegisterClass<GridTreeComponent>();
             compFactory.RegisterClass<MovedGridsComponent>();
             compFactory.RegisterClass<JointRelayTargetComponent>();

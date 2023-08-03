@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Upload;
@@ -14,6 +17,7 @@ namespace Robust.Shared.Upload;
 public abstract class SharedNetworkResourceManager : IDisposable
 {
     [Dependency] private readonly INetManager _netManager = default!;
+    [Dependency] private readonly IReplayRecordingManager _replay = default!;
     [Dependency] protected readonly IResourceManager ResourceManager = default!;
 
     public const double BytesToMegabytes = 0.000001d;
@@ -34,9 +38,23 @@ public abstract class SharedNetworkResourceManager : IDisposable
 
         // Add our content root to the resource manager.
         ResourceManager.AddRoot(Prefix, ContentRoot);
+        _replay.RecordingStarted += OnStartReplayRecording;
     }
 
-    protected abstract void ResourceUploadMsg(NetworkResourceUploadMessage msg);
+    private void OnStartReplayRecording(MappingDataNode metadata, List<object> events)
+    {
+        // replays will need information about currently loaded extra resources
+        foreach (var (path, data) in ContentRoot.GetAllFiles())
+        {
+            events.Add(new ReplayResourceUploadMsg { RelativePath = path, Data = data });
+        }
+    }
+
+    protected virtual void ResourceUploadMsg(NetworkResourceUploadMessage msg)
+    {
+        ContentRoot.AddOrUpdateFile(msg.RelativePath, msg.Data);
+        _replay.RecordReplayMessage(new ReplayResourceUploadMsg { RelativePath = msg.RelativePath, Data = msg.Data });
+    }
 
     public void Dispose()
     {

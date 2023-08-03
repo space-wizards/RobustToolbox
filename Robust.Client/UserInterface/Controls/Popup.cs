@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -73,9 +74,9 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            return Vector2.ComponentMax(
+            return Vector2.Max(
                 _desiredSize,
-                base.MeasureOverride(Vector2.ComponentMax(availableSize, _desiredSize)));
+                base.MeasureOverride(Vector2.Max(availableSize, _desiredSize)));
         }
     }
 }

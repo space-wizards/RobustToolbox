@@ -116,24 +116,14 @@ namespace Robust.Server.Player
         [Obsolete("Use ActorSystem.Attach() instead.")]
         public void AttachToEntity(EntityUid? entity)
         {
-            DetachFromEntity();
-
-            if (entity == null)
-                return;
-
-            AttachToEntity((EntityUid) entity);
+            EntitySystem.Get<ActorSystem>().Attach(entity, this);
         }
 
         /// <inheritdoc />
         [Obsolete("Use ActorSystem.Attach() instead.")]
         public void AttachToEntity(EntityUid uid)
         {
-            DetachFromEntity();
-
-            if (!EntitySystem.Get<ActorSystem>().Attach(uid, this))
-            {
-                Logger.Warning($"Couldn't attach player \"{this}\" to entity \"{uid}\"! Did it have a player already attached to it?");
-            }
+            EntitySystem.Get<ActorSystem>().Attach(uid, this);
         }
 
         /// <inheritdoc />
@@ -143,22 +133,17 @@ namespace Robust.Server.Player
             if (AttachedEntity == null)
                 return;
 
-#if EXCEPTION_TOLERANCE
             if (IoCManager.Resolve<IEntityManager>().Deleted(AttachedEntity!.Value))
             {
-                Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
+                Logger.Error($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
                 // We can't contact ActorSystem because trying to fire an entity event would crash.
                 // Work around it.
                 AttachedEntity = null;
                 UpdatePlayerState();
                 return;
             }
-#endif
 
-            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntity.Value))
-            {
-                Logger.Warning($"Couldn't detach player \"{this}\" from entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
-            }
+            EntitySystem.Get<ActorSystem>().Detach(AttachedEntity.Value);
         }
 
         /// <inheritdoc />

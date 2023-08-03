@@ -1,14 +1,8 @@
-using System;
-using System.Collections.Generic;
 using Robust.Server.Console;
 using Robust.Server.Player;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Replays;
-using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Upload;
 
 namespace Robust.Server.Upload;
@@ -16,46 +10,39 @@ namespace Robust.Server.Upload;
 /// <summary>
 ///     Manages sending runtime-loaded prototypes from game staff to clients.
 /// </summary>
-public sealed class GamePrototypeLoadManager : IGamePrototypeLoadManager
+public sealed class GamePrototypeLoadManager : SharedPrototypeLoadManager
 {
-    [Dependency] private readonly IReplayRecordingManager _replay = default!;
     [Dependency] private readonly IServerNetManager _netManager = default!;
     [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly ILocalizationManager _localizationManager = default!;
     [Dependency] private readonly IConGroupController _controller = default!;
+    [Dependency] private readonly ILogManager _logManager = default!;
 
-    private readonly List<string> _loadedPrototypes = new();
-    public IReadOnlyList<string> LoadedPrototypes => _loadedPrototypes;
+    private ISawmill _sawmill = default!;
 
-    public void Initialize()
+    public override void Initialize()
     {
-        _netManager.RegisterNetMessage<GamePrototypeLoadMessage>(ClientLoadsPrototype);
+        base.Initialize();
+
+        _sawmill = _logManager.GetSawmill("adminbus");
+
         _netManager.Connected += NetManagerOnConnected;
-        _replay.OnRecordingStarted += OnStartReplayRecording;
     }
 
-    private void OnStartReplayRecording((MappingDataNode, List<object>) initReplayData)
+    public override void SendGamePrototype(string prototype)
     {
-        // replays will need information about currently loaded prototypes
-        foreach (var prototype in _loadedPrototypes)
-        {
-            initReplayData.Item2.Add(new ReplayPrototypeUploadMsg { PrototypeData = prototype });
-        }
+        var msg = new GamePrototypeLoadMessage { PrototypeData = prototype };
+        base.LoadPrototypeData(msg);
+        _netManager.ServerSendToAll(msg);
     }
 
-    public void SendGamePrototype(string prototype)
-    {
-
-    }
-
-    private void ClientLoadsPrototype(GamePrototypeLoadMessage message)
+    protected override void LoadPrototypeData(GamePrototypeLoadMessage message)
     {
         var player = _playerManager.GetSessionByChannel(message.MsgChannel);
         if (_controller.CanCommand(player, "loadprototype"))
         {
-            LoadPrototypeData(message.PrototypeData);
-            Logger.InfoS("adminbus", $"Loaded adminbus prototype data from {player.Name}.");
+            base.LoadPrototypeData(message);
+            _netManager.ServerSendToAll(message); // everyone load it up!
+            _sawmill.Info($"Loaded adminbus prototype data from {player.Name}.");
         }
         else
         {
@@ -63,28 +50,10 @@ public sealed class GamePrototypeLoadManager : IGamePrototypeLoadManager
         }
     }
 
-    private void LoadPrototypeData(string prototypeData)
-    {
-        _loadedPrototypes.Add(prototypeData);
-
-        _replay.QueueReplayMessage(new ReplayPrototypeUploadMsg { PrototypeData = prototypeData });
-
-        var msg = new GamePrototypeLoadMessage
-        {
-            PrototypeData = prototypeData
-        };
-        _netManager.ServerSendToAll(msg); // everyone load it up!
-        var changed = new Dictionary<Type, HashSet<string>>();
-        _prototypeManager.LoadString(prototypeData, true, changed); // server needs it too.
-        _prototypeManager.ResolveResults();
-        _prototypeManager.ReloadPrototypes(changed);
-        _localizationManager.ReloadLocalizations();
-    }
-
     private void NetManagerOnConnected(object? sender, NetChannelArgs e)
     {
         // Just dump all the prototypes on connect, before them missing could be an issue.
-        foreach (var prototype in _loadedPrototypes)
+        foreach (var prototype in LoadedPrototypes)
         {
             var msg = new GamePrototypeLoadMessage
             {

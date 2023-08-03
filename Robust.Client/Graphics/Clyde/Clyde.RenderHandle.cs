@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
@@ -165,7 +166,7 @@ namespace Robust.Client.Graphics.Clyde
                 var oldModel = _clyde._currentMatrixModel;
 
                 var newModel = oldModel;
-                position += (oldModel.R0C2, oldModel.R1C2);
+                position += new Vector2(oldModel.R0C2, oldModel.R1C2);
                 newModel.R0C2 = 0;
                 newModel.R1C2 = 0;
                 SetModelTransform(newModel);

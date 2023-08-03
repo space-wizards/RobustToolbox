@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 
 namespace Robust.Shared.Maths
 {
@@ -249,13 +250,13 @@ namespace Robust.Shared.Maths
 
         private static readonly Vector2[] DirectionVectors = {
             new (0, -1),
-            new Vector2(1, -1).Normalized,
+            new Vector2(1, -1).Normalized(),
             new (1, 0),
-            new Vector2(1, 1).Normalized,
+            new Vector2(1, 1).Normalized(),
             new (0, 1),
-            new Vector2(-1, 1).Normalized,
+            new Vector2(-1, 1).Normalized(),
             new (-1, 0),
-            new Vector2(-1, -1).Normalized
+            new Vector2(-1, -1).Normalized()
         };
 
         private static readonly Vector2i[] IntDirectionVectors = {

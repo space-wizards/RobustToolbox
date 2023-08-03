@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Replays;
@@ -29,7 +30,7 @@ internal sealed partial class ReplayPlaybackManager
             Playing = false;
 
         // TODO REPLAYS do we actually need to do this?
-        // if not, we can probably remove all of the UpdateFullRep() calls, which speeds things up significantly.
+        // Either way, the UpdateFullRep() calls need to stay because it is needed for PVS-detached entities.
         _gameState.ResetPredictedEntities();
 
         if (Playing)
@@ -42,7 +43,8 @@ internal sealed partial class ReplayPlaybackManager
             var state = Replay.CurState;
             _gameState.UpdateFullRep(state, cloneDelta: true);
             _gameState.ApplyGameState(state, Replay.NextState);
-            DebugTools.Assert(Replay.LastApplied + 1 == state.ToSequence);
+            DebugTools.Assert(Replay.LastApplied >= state.FromSequence);
+            DebugTools.Assert(Replay.LastApplied + 1 <= state.ToSequence);
             Replay.LastApplied = state.ToSequence;
             ProcessMessages(Replay.CurMessages, false);
         }
@@ -74,14 +76,29 @@ internal sealed partial class ReplayPlaybackManager
                 continue;
             }
 
-            DebugTools.Assert(message is not ReplayPrototypeUploadMsg && message is not SharedNetworkResourceManager.ReplayResourceUploadMsg);
+            if (Replay.ClientSideRecording && message is LeavePvs leavePvs)
+            {
+                // TODO Replays detach immediate
+                // Maybe track our own detach queue and use _gameState.DetachImmediate()?
+                // That way we don't have to clone this. Downside would be that all entities will be immediately
+                // detached. I.e., the detach budget cvar will simply be ignored.
+                var clone = new List<EntityUid>(leavePvs.Entities);
 
+                _gameState.QueuePvsDetach(clone, leavePvs.Tick);
+                continue;
+            }
+
+            DebugTools.Assert(message is not LeavePvs);
+            DebugTools.Assert(message is not ReplayPrototypeUploadMsg);
+            DebugTools.Assert(message is not SharedNetworkResourceManager.ReplayResourceUploadMsg);
 
             if (HandleReplayMessage != null && HandleReplayMessage.Invoke(message, skipEffects))
                 continue;
 
             if (message is EntityEventArgs args)
                 _entMan.DispatchReceivedNetworkMsg(args);
+            else if (_warned.Add(message.GetType()))
+                _sawmill.Error($"Unhandled replay message: {message.GetType()}.");
         }
     }
 }

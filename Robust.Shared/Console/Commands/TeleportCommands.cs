@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -37,7 +38,7 @@ internal sealed class TeleportCommand : LocalizedCommands
         var transform = _entityManager.GetComponent<TransformComponent>(entity);
         var position = new Vector2(posX, posY);
 
-        transform.AttachToGridOrMap();
+        xformSystem.AttachToGridOrMap(entity, transform);
 
         MapId mapId;
         if (args.Length == 3 && int.TryParse(args[2], out var intMapId))
@@ -53,7 +54,7 @@ internal sealed class TeleportCommand : LocalizedCommands
 
         if (_map.TryFindGridAt(mapId, position, out var gridUid, out var grid))
         {
-            var gridPos = grid.WorldToLocal(position);
+            var gridPos = xformSystem.GetInvWorldMatrix(gridUid).Transform(position);
 
             xformSystem.SetCoordinates(entity, transform, new EntityCoordinates(gridUid, gridPos));
         }
@@ -83,7 +84,7 @@ public sealed class TeleportToCommand : LocalizedCommands
 
         var target = args[0];
 
-        if (!TryGetTransformFromUidOrUsername(target, shell, _entities, _players, out _, out var targetTransform))
+        if (!TryGetTransformFromUidOrUsername(target, shell, out _, out var targetTransform))
             return;
 
         var transformSystem = _entities.System<SharedTransformSystem>();
@@ -109,7 +110,7 @@ public sealed class TeleportToCommand : LocalizedCommands
                 if (victim == target)
                     continue;
 
-                if (!TryGetTransformFromUidOrUsername(victim, shell, _entities, _players, out var uid, out var victimTransform))
+                if (!TryGetTransformFromUidOrUsername(victim, shell, out var uid, out var victimTransform))
                     return;
 
                 transformSystem.SetCoordinates(uid.Value, targetCoords);
@@ -118,22 +119,20 @@ public sealed class TeleportToCommand : LocalizedCommands
         }
     }
 
-    private static bool TryGetTransformFromUidOrUsername(
+    private bool TryGetTransformFromUidOrUsername(
         string str,
         IConsoleShell shell,
-        IEntityManager entMan,
-        ISharedPlayerManager playerMan,
         [NotNullWhen(true)] out EntityUid? victimUid,
         [NotNullWhen(true)] out TransformComponent? transform)
     {
-        if (EntityUid.TryParse(str, out var uid) && entMan.TryGetComponent(uid, out transform))
+        if (EntityUid.TryParse(str, out var uid) && _entities.TryGetComponent(uid, out transform))
         {
             victimUid = uid;
             return true;
         }
 
-        if (playerMan.Sessions.TryFirstOrDefault(x => x.ConnectedClient.UserName == str, out var session)
-            && entMan.TryGetComponent(session.AttachedEntity, out transform))
+        if (_players.Sessions.TryFirstOrDefault(x => x.ConnectedClient.UserName == str, out var session)
+            && _entities.TryGetComponent(session.AttachedEntity, out transform))
         {
             victimUid = session.AttachedEntity;
             return true;
@@ -150,11 +149,11 @@ public sealed class TeleportToCommand : LocalizedCommands
     {
         if (args.Length == 0)
             return CompletionResult.Empty;
-        ;
+
         var last = args[^1];
 
         var users = _players.Sessions
-            .Select(x => x.ConnectedClient.UserName ?? string.Empty)
+            .Select(x => x.Name ?? string.Empty)
             .Where(x => !string.IsNullOrWhiteSpace(x) && x.StartsWith(last, StringComparison.CurrentCultureIgnoreCase));
 
         var hint = args.Length == 1 ? "cmd-tpto-destination-hint" : "cmd-tpto-victim-hint";

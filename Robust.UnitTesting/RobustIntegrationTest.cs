@@ -738,6 +738,8 @@ namespace Robust.UnitTesting
                 {
                     var modLoader = new ModLoader();
                     IoCManager.InjectDependencies(modLoader);
+                    var cast = (IPostInjectInit) modLoader;
+                    cast.PostInject();
                     modLoader.SetEnableSandboxing(true);
                     modLoader.LoadGameAssembly(assembly.Location);
                 });

@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.IoC;
@@ -5,6 +6,7 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console;
 
+[Obsolete("You should use ToolshedCommand instead.")]
 public abstract class LocalizedCommands : IConsoleCommand
 {
     [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
@@ -23,12 +25,12 @@ public abstract class LocalizedCommands : IConsoleCommand
 
     /// <inheritdoc />
     public abstract void Execute(IConsoleShell shell, string argStr, string[] args);
-    
+
     /// <inheritdoc />
     public virtual CompletionResult GetCompletion(IConsoleShell shell, string[] args) => CompletionResult.Empty;
 
     /// <inheritdoc />
-    public virtual ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args,
+    public virtual ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, string argStr,
         CancellationToken cancel)
     {
         return ValueTask.FromResult(GetCompletion(shell, args));

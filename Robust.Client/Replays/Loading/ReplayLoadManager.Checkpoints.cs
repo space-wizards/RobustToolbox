@@ -82,9 +82,13 @@ public sealed partial class ReplayLoadManager
         }
 
         HashSet<ResPath> uploadedFiles = new();
+        var detached = new HashSet<EntityUid>();
+        var detachQueue = new Dictionary<GameTick, List<EntityUid>>();
+
         if (initMessages != null)
-            UpdateMessages(initMessages, uploadedFiles, prototypes, cvars, ref timeBase, true);
-        UpdateMessages(messages[0], uploadedFiles, prototypes, cvars, ref timeBase, true);
+            UpdateMessages(initMessages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
+        UpdateMessages(messages[0], uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
+        ProcessQueue(GameTick.MaxValue, detachQueue, detached);
 
         var entSpan = state0.EntityStates.Value;
         Dictionary<EntityUid, EntityState> entStates = new(entSpan.Count);
@@ -108,7 +112,7 @@ public sealed partial class ReplayLoadManager
             entStates.Values.ToArray(),
             playerStates.Values.ToArray(),
             Array.Empty<EntityUid>());
-        checkPoints.Add(new CheckpointState(state0, timeBase, cvars, 0));
+        checkPoints.Add(new CheckpointState(state0, timeBase, cvars, 0, detached));
 
         DebugTools.Assert(state0.EntityDeletions.Value.Count == 0);
         var empty = Array.Empty<EntityUid>();
@@ -134,14 +138,19 @@ public sealed partial class ReplayLoadManager
 
             var curState = states[i];
             UpdatePlayerStates(curState.PlayerStates.Span, playerStates);
-            UpdateDeletions(curState.EntityDeletions, entStates);
-            UpdateEntityStates(curState.EntityStates.Span, entStates, ref spawnedTracker, ref stateTracker);
-            UpdateMessages(messages[i], uploadedFiles, prototypes, cvars, ref timeBase);
+            UpdateEntityStates(curState.EntityStates.Span, entStates, ref spawnedTracker, ref stateTracker, detached);
+            UpdateMessages(messages[i], uploadedFiles, prototypes, cvars, detachQueue, ref timeBase);
+            ProcessQueue(curState.ToSequence, detachQueue, detached);
+            UpdateDeletions(curState.EntityDeletions, entStates, detached);
             serverTime[i] = GetTime(curState.ToSequence) - initialTime;
             ticksSinceLastCheckpoint++;
 
-            if (ticksSinceLastCheckpoint < _checkpointInterval && spawnedTracker < _checkpointEntitySpawnThreshold && stateTracker < _checkpointEntityStateThreshold)
+            if (ticksSinceLastCheckpoint < _checkpointInterval
+                && spawnedTracker < _checkpointEntitySpawnThreshold
+                && stateTracker < _checkpointEntityStateThreshold)
+            {
                 continue;
+            }
 
             ticksSinceLastCheckpoint = 0;
             spawnedTracker = 0;
@@ -152,7 +161,7 @@ public sealed partial class ReplayLoadManager
                 entStates.Values.ToArray(),
                 playerStates.Values.ToArray(),
                 empty); // for full states, deletions are implicit by simply not being in the state
-            checkPoints.Add(new CheckpointState(newState, timeBase, cvars, i));
+            checkPoints.Add(new CheckpointState(newState, timeBase, cvars, i, detached));
         }
 
         _sawmill.Info($"Finished generating checkpoints. Elapsed time: {st.Elapsed}");
@@ -160,10 +169,25 @@ public sealed partial class ReplayLoadManager
         return (checkPoints.ToArray(), serverTime);
     }
 
+    private void ProcessQueue(
+        GameTick curTick,
+        Dictionary<GameTick, List<EntityUid>> detachQueue,
+        HashSet<EntityUid> detached)
+    {
+        foreach (var (tick, ents) in detachQueue)
+        {
+            if (tick > curTick)
+                continue;
+            detachQueue.Remove(tick);
+            detached.UnionWith(ents);
+        }
+    }
+
     private void UpdateMessages(ReplayMessage message,
         HashSet<ResPath> uploadedFiles,
         Dictionary<Type, HashSet<string>> prototypes,
         Dictionary<string, object> cvars,
+        Dictionary<GameTick, List<EntityUid>> detachQueue,
         ref (TimeSpan, GameTick) timeBase,
         bool ignoreDuplicates = false)
     {
@@ -202,6 +226,10 @@ public sealed partial class ReplayLoadManager
 
                     message.Messages.RemoveSwap(i);
                     break;
+
+                case LeavePvs leave:
+                    detachQueue.TryAdd(leave.Tick, leave.Entities);
+                    break;
             }
         }
 
@@ -237,18 +265,22 @@ public sealed partial class ReplayLoadManager
         }
     }
 
-    private void UpdateDeletions(NetListAsArray<EntityUid> entityDeletions, Dictionary<EntityUid, EntityState> entStates)
+    private void UpdateDeletions(NetListAsArray<EntityUid> entityDeletions,
+        Dictionary<EntityUid, EntityState> entStates, HashSet<EntityUid> detached)
     {
         foreach (var ent in entityDeletions.Span)
         {
             entStates.Remove(ent);
+            detached.Remove(ent);
         }
     }
 
-    private void UpdateEntityStates(ReadOnlySpan<EntityState> span, Dictionary<EntityUid, EntityState> entStates,  ref int spawnedTracker, ref int stateTracker)
+    private void UpdateEntityStates(ReadOnlySpan<EntityState> span, Dictionary<EntityUid, EntityState> entStates,
+        ref int spawnedTracker, ref int stateTracker, HashSet<EntityUid> detached)
     {
         foreach (var entState in span)
         {
+            detached.Remove(entState.Uid);
             if (!entStates.TryGetValue(entState.Uid, out var oldEntState))
             {
                 var modifiedState = AddImplicitData(entState);
@@ -299,7 +331,7 @@ public sealed partial class ReplayLoadManager
         {
             var existing = combined[index];
 
-            if (!newCompStates.TryGetValue(existing.NetID, out var newCompState))
+            if (!newCompStates.Remove(existing.NetID, out var newCompState))
                 continue;
 
             if (newCompState.State is not IComponentDeltaState delta || delta.FullState)
@@ -312,6 +344,14 @@ public sealed partial class ReplayLoadManager
             combined[index] = new ComponentChange(existing.NetID, delta.CreateNewFullState(existing.State), newCompState.LastModifiedTick);
         }
 
+        foreach (var compChange in newCompStates.Values)
+        {
+            // I'm not 100% sure about this, but I think delta states should always be full states here?
+            DebugTools.Assert(compChange.State is not IComponentDeltaState delta || delta.FullState);
+            combined.Add(compChange);
+        }
+
+        DebugTools.Assert(newState.NetComponents == null || newState.NetComponents.Count == combined.Count);
         return new EntityState(newState.Uid, combined, newState.EntityLastModified, newState.NetComponents ?? oldNetComps);
     }
 

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
@@ -26,6 +27,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly ILogManager LogManager = default!;
         [Dependency] private readonly ISharedPlayerManager _playerMan = default!;
         [Dependency] private readonly IReplayRecordingManager _replayMan = default!;
+        [Dependency] protected readonly ILocalizationManager Loc = default!;
 
         public ISawmill Log { get; private set; } = default!;
 
@@ -128,7 +130,7 @@ namespace Robust.Shared.GameObjects
         protected void RaiseNetworkEvent(EntityEventArgs message, Filter filter, bool recordReplay = true)
         {
             if (recordReplay)
-                _replayMan.QueueReplayMessage(message);
+                _replayMan.RecordServerMessage(message);
 
             foreach (var session in filter.Recipients)
             {
@@ -204,6 +206,10 @@ namespace Robust.Shared.GameObjects
         void IPostInjectInit.PostInject()
         {
             Log = LogManager.GetSawmill(SawmillName);
+
+#if !DEBUG
+            Log.Level = LogLevel.Info;
+#endif
         }
     }
 }

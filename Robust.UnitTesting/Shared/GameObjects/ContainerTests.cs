@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
@@ -58,7 +59,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var containerSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
 
                  mapId = mapMan.CreateMap();
-                 mapPos = new MapCoordinates((0, 0), mapId);
+                 mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
                  entityUid = entMan.SpawnEntity(null, mapPos);
                  entMan.GetComponent<MetaDataComponent>(entityUid).EntityName = "Container";
@@ -88,7 +89,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(container.Insert(itemUid));
 
                  // Move item out of PVS so that it doesn't get sent to the client
-                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = (100000, 0);
+                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(100000, 0);
              });
 
              // Needs minimum 4 to sync to client because buffer size is 3
@@ -118,7 +119,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var entMan = IoCManager.Resolve<IEntityManager>();
 
                  // Move item into PVS so it gets sent to the client
-                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = (0, 0);
+                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(0, 0);
              });
 
              await server.WaitRunTicks(1);
@@ -180,7 +181,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var containerSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
 
                  mapId = mapMan.CreateMap();
-                 mapPos = new MapCoordinates((0, 0), mapId);
+                 mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
                  entityUid = entMan.SpawnEntity(null, mapPos);
                  entMan.GetComponent<MetaDataComponent>(entityUid).EntityName = "Container";
@@ -210,7 +211,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  container.Insert(itemUid);
 
                  // Move item out of PVS so that it doesn't get sent to the client
-                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = (100000, 0);
+                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(100000, 0);
              });
 
             await server.WaitRunTicks(1);
@@ -293,10 +294,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 var containerSys = entMan.EntitySysManager.GetEntitySystem<Robust.Server.Containers.ContainerSystem>();
 
                 // build the map
-                var mapIdOne = new MapId(1);
                 var mapManager = IoCManager.Resolve<IMapManager>();
 
-                mapManager.CreateMap(mapIdOne);
+                var mapIdOne = mapManager.CreateMap();
                 Assert.That(mapManager.IsMapInitialized(mapIdOne), Is.True);
 
                 var containerEnt = entMan.SpawnEntity(null, new MapCoordinates(1, 1, mapIdOne));
@@ -322,9 +322,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             await server.WaitAssertion(() =>
             {
-                var mapIdTwo = new MapId(2);
                 var mapManager = IoCManager.Resolve<IMapManager>();
                 var mapLoader = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
+                var mapIdTwo = mapManager.CreateMap();
 
                 // load the map
                 mapLoader.Load(mapIdTwo, "container_test.yml");

@@ -9,9 +9,10 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.ContentPack
 {
-    public abstract class BaseModLoader
+    internal abstract class BaseModLoader : IPostInjectInit
     {
         [Dependency] protected readonly IReflectionManager ReflectionManager = default!;
+        [Dependency] protected readonly ILogManager LogManager = default!;
         [Dependency] private readonly IDependencyCollection _dependencies = default!;
 
         private readonly List<ModuleTestingCallbacks> _testingCallbacks = new();
@@ -20,6 +21,8 @@ namespace Robust.Shared.ContentPack
         ///     Loaded assemblies.
         /// </summary>
         protected readonly List<ModInfo> Mods = new();
+
+        protected ISawmill Sawmill { get; private set; } = default!;
 
         public IEnumerable<Assembly> LoadedModules => Mods.Select(p => p.GameAssembly);
 
@@ -82,7 +85,7 @@ namespace Robust.Shared.ContentPack
                             entry.PostInit();
                             break;
                         default:
-                            Logger.ErrorS("res.mod", $"Unknown RunLevel: {level}");
+                            Sawmill.Error($"Unknown RunLevel: {level}");
                             break;
                     }
                 }
@@ -119,6 +122,11 @@ namespace Robust.Shared.ContentPack
                     entryPoint.Dispose();
                 }
             }
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            Sawmill = LogManager.GetSawmill("res.mod");
         }
 
         /// <summary>

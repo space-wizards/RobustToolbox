@@ -1,3 +1,5 @@
+using System;
+using System.Text;
 using DiscordRPC;
 using DiscordRPC.Logging;
 using Robust.Shared;
@@ -25,13 +27,17 @@ namespace Robust.Client.Utility
 
         public void Initialize()
         {
+            var state = _loc.GetString("discord-rpc-in-main-menu");
+            var largeImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceSecondIconId);
+            var largeImageText = _loc.GetString("discord-rpc-in-main-menu-logo-text");
+
             _defaultPresence = new()
             {
-                State = _loc.GetString("discord-rpc-in-main-menu"),
+                State = Truncate(state, 128),
                 Assets = new Assets
                 {
-                    LargeImageKey = "logo",
-                    LargeImageText = "I think coolsville SUCKS"
+                    LargeImageKey = Truncate(largeImageKey, 32),
+                    LargeImageText = Truncate(largeImageText, 128),
                 }
             };
             _configurationManager.OnValueChanged(CVars.DiscordEnabled, newValue =>
@@ -95,18 +101,60 @@ namespace Robust.Client.Utility
 
         public void Update(string serverName, string username, string maxUsers, string users)
         {
-            _activePresence = new RichPresence
+            if (_client == null)
+                return;
+
+            try
             {
-                Details = _loc.GetString("discord-rpc-on-server", ("servername", serverName)),
-                State = _loc.GetString("discord-rpc-players", ("players", users), ("maxplayers", maxUsers)),
-                Assets = new Assets
+                var details = _loc.GetString("discord-rpc-on-server", ("servername", serverName));
+                var state = _loc.GetString("discord-rpc-players", ("players", users), ("maxplayers", maxUsers));
+                var largeImageText = _loc.GetString("discord-rpc-character", ("username", username));
+                var largeImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceMainIconId);
+                var smallImageKey = _configurationManager.GetCVar(CVars.DiscordRichPresenceSecondIconId);
+
+                // Strings are limited by byte count. See the setters in RichPresence. Hence the truncate calls.
+                _activePresence = new RichPresence
                 {
-                    LargeImageKey = "devstation",
-                    LargeImageText = _loc.GetString("discord-rpc-character", ("username", username)),
-                    SmallImageKey = "logo"
-                }
-            };
-            _client?.SetPresence(_activePresence);
+                    Details = Truncate(details, 128),
+                    State = Truncate(state, 128),
+                    Assets = new Assets
+                    {
+                        LargeImageKey = Truncate(largeImageKey, 32),
+                        LargeImageText = Truncate(largeImageText, 128),
+                        SmallImageKey = Truncate(smallImageKey, 32)
+                    }
+                };
+                _client.SetPresence(_activePresence);
+            }
+            catch (Exception ex)
+            {
+                _client.Logger.Error($"Caught exception while updating discord rich presence. Exception:\n{ex}");
+            }
+        }
+
+        private string Truncate(string value, int bytes, string postfix = "...")
+            => Truncate(value, bytes, postfix, Encoding.UTF8);
+
+        /// <summary>
+        /// Truncate strings down to some minimum byte count. If the string gets truncated, it will have the postfix appended.
+        /// </summary>
+        private string Truncate(string value, int bytes, string postfix, Encoding encoding)
+        {
+            value = value.Trim();
+            var output = value;
+
+            // Theres probably a better way of doing this, but I don't know how.
+            // If this wasn't a crude hack this function should
+            while (encoding.GetByteCount(output) > bytes)
+            {
+                if (value.Length == 0)
+                    return string.Empty;
+
+                value = value.Substring(0, value.Length - 1);
+                output = value + postfix;
+            }
+
+            return output;
         }
 
         public void ClearPresence()

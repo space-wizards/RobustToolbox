@@ -72,14 +72,14 @@ namespace Robust.Shared.GameObjects
             return system;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T>([NotNull] ref T? instance)
             where T : IEntitySystem
         {
             _systemDependencyCollection.Resolve(ref instance);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
             where T1 : IEntitySystem
             where T2 : IEntitySystem
@@ -87,7 +87,7 @@ namespace Robust.Shared.GameObjects
             _systemDependencyCollection.Resolve(ref instance1, ref instance2);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
             where T1 : IEntitySystem
             where T2 : IEntitySystem
@@ -96,7 +96,7 @@ namespace Robust.Shared.GameObjects
             _systemDependencyCollection.Resolve(ref instance1, ref instance2, ref instance3);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
             where T1 : IEntitySystem
             where T2 : IEntitySystem

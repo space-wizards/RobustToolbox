@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.Map;
 
@@ -28,24 +27,20 @@ internal partial class MapManager
             return;
         }
 
-        var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-        var xformSystem = EntityManager.System<SharedTransformSystem>();
-        var state = (worldAABB, gridTree.Tree, callback, approx, physicsQuery, xformQuery, xformSystem);
+        var state = (worldAABB, gridTree.Tree, callback, approx, this, _transformSystem);
 
         gridTree.Tree.Query(ref state,
             static (ref (Box2 worldAABB,
                     B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> gridTree,
                     GridCallback callback,
                     bool approx,
-                    EntityQuery<PhysicsComponent> physicsQuery, EntityQuery<TransformComponent> xformQuery,
+                    MapManager mapManager,
                     SharedTransformSystem xformSystem) tuple,
                 DynamicTree.Proxy proxy) =>
             {
                 var data = tuple.gridTree.GetUserData(proxy);
 
-                if (!tuple.approx && !IsIntersecting(tuple.worldAABB, data.Uid, data.Grid,
-                        tuple.physicsQuery, tuple.xformQuery, tuple.xformSystem))
+                if (!tuple.approx && !tuple.mapManager.IsIntersecting(tuple.worldAABB, data.Uid, data.Grid))
                 {
                     return true;
                 }
@@ -68,32 +63,6 @@ internal partial class MapManager
         {
             return;
         }
-        var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-        var xformSystem = EntityManager.System<SharedTransformSystem>();
-        var state2 = (state, worldAABB, gridTree.Tree, callback, approx, physicsQuery, xformQuery, xformSystem);
-
-        gridTree.Tree.Query(ref state2, static (ref (
-                TState state,
-                Box2 worldAABB,
-                B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> gridTree,
-                GridCallback<TState> callback,
-                bool approx,
-                EntityQuery<PhysicsComponent> physicsQuery,
-                EntityQuery<TransformComponent> xformQuery,
-                SharedTransformSystem xformSystem) tuple,
-            DynamicTree.Proxy proxy) =>
-        {
-            var data = tuple.gridTree.GetUserData(proxy);
-
-            if (!tuple.approx && !IsIntersecting(tuple.worldAABB, data.Uid, data.Grid,
-                    tuple.physicsQuery, tuple.xformQuery, tuple.xformSystem))
-            {
-                return true;
-            }
-
-            return tuple.callback(data.Uid, data.Grid, ref tuple.state);
-        }, worldAABB);
 
         var mapUid = GetMapEntityId(mapId);
 
@@ -102,25 +71,55 @@ internal partial class MapManager
             callback(mapUid, grid, ref state);
         }
 
+        var state2 = (state, worldAABB, gridTree.Tree, callback, approx, this, _transformSystem);
+
+        gridTree.Tree.Query(ref state2, static (ref (
+                TState state,
+                Box2 worldAABB,
+                B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> gridTree,
+                GridCallback<TState> callback,
+                bool approx,
+                MapManager mapManager,
+                SharedTransformSystem xformSystem) tuple,
+            DynamicTree.Proxy proxy) =>
+        {
+            var data = tuple.gridTree.GetUserData(proxy);
+
+            if (!tuple.approx && !tuple.mapManager.IsIntersecting(tuple.worldAABB, data.Uid, data.Grid))
+            {
+                return true;
+            }
+
+            return tuple.callback(data.Uid, data.Grid, ref tuple.state);
+        }, worldAABB);
+
         state = state2.state;
     }
 
-    private static bool IsIntersecting(
+    public void FindGridsIntersecting(MapId mapId, Box2Rotated worldBounds, GridCallback callback, bool approx = false,
+        bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), callback, approx, includeMap);
+    }
+
+    public void FindGridsIntersecting<TState>(MapId mapId, Box2Rotated worldBounds, ref TState state, GridCallback<TState> callback,
+        bool approx = false, bool includeMap = true)
+    {
+        FindGridsIntersecting(mapId, worldBounds.CalcBoundingBox(), ref state, callback, approx, includeMap);
+    }
+
+    private bool IsIntersecting(
         Box2 aabb,
         EntityUid gridUid,
-        MapGridComponent grid,
-        EntityQuery<PhysicsComponent> physicsQuery,
-        EntityQuery<TransformComponent> xformQuery,
-        SharedTransformSystem xformSystem)
+        MapGridComponent grid)
     {
-        var xformComp = xformQuery.GetComponent(gridUid);
-        var (worldPos, worldRot, matrix, invMatrix) = xformSystem.GetWorldPositionRotationMatrixWithInv(xformComp, xformQuery);
+        var (worldPos, worldRot, matrix, invMatrix) = _transformSystem.GetWorldPositionRotationMatrixWithInv(gridUid);
         var overlap = matrix.TransformBox(grid.LocalAABB).Intersect(aabb);
         var localAABB = invMatrix.TransformBox(overlap);
 
-        if (physicsQuery.HasComponent(gridUid))
+        if (_physicsQuery.HasComponent(gridUid))
         {
-            var enumerator = grid.GetLocalMapChunks(localAABB);
+            var enumerator = _mapSystem.GetLocalMapChunks(gridUid, grid, localAABB);
 
             var transform = new Transform(worldPos, worldRot);
 
@@ -165,19 +164,20 @@ internal partial class MapManager
         out EntityUid uid,
         [NotNullWhen(true)] out MapGridComponent? grid)
     {
+        var rangeVec = new Vector2(0.2f, 0.2f);
+
         // Need to enlarge the AABB by at least the grid shrinkage size.
-        var aabb = new Box2(worldPos - 0.2f, worldPos + 0.2f);
+        var aabb = new Box2(worldPos - rangeVec, worldPos + rangeVec);
 
         uid = EntityUid.Invalid;
         grid = null;
-        var xformSystem = EntityManager.System<SharedTransformSystem>();
-        var state = (uid, grid, worldPos, xformQuery, xformSystem);
+        var state = (uid, grid, worldPos, _mapSystem, _transformSystem);
 
         FindGridsIntersecting(mapId, aabb, ref state, static (EntityUid iUid, MapGridComponent iGrid, ref (
             EntityUid uid,
             MapGridComponent? grid,
             Vector2 worldPos,
-            EntityQuery<TransformComponent> xformQuery,
+            SharedMapSystem mapSystem,
             SharedTransformSystem xformSystem) tuple) =>
         {
             // Turn the worldPos into a localPos and work out the relevant chunk we need to check
@@ -185,7 +185,7 @@ internal partial class MapManager
             // (though now we need some extra calcs up front).
 
             // Doesn't use WorldBounds because it's just an AABB.
-            var matrix = tuple.xformSystem.GetInvWorldMatrix(iUid, tuple.xformQuery);
+            var matrix = tuple.xformSystem.GetInvWorldMatrix(iUid);
             var localPos = matrix.Transform(tuple.worldPos);
 
             // NOTE:
@@ -193,9 +193,10 @@ internal partial class MapManager
             // you account for the fact that fixtures are shrunk slightly!
             var chunkIndices = SharedMapSystem.GetChunkIndices(localPos, iGrid.ChunkSize);
 
-            if (!iGrid.HasChunk(chunkIndices)) return true;
+            if (!tuple.mapSystem.HasChunk(iUid, iGrid, chunkIndices))
+                return true;
 
-            var chunk = iGrid.GetOrAddChunk(chunkIndices);
+            var chunk = tuple.mapSystem.GetOrAddChunk(iUid, iGrid, chunkIndices);
             var chunkRelative = SharedMapSystem.GetChunkRelative(localPos, iGrid.ChunkSize);
             var chunkTile = chunk.GetTile(chunkRelative);
 
@@ -225,8 +226,7 @@ internal partial class MapManager
     /// </summary>
     public bool TryFindGridAt(MapId mapId, Vector2 worldPos, out EntityUid uid, [NotNullWhen(true)] out MapGridComponent? grid)
     {
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-        return TryFindGridAt(mapId, worldPos, xformQuery, out uid, out grid);
+        return TryFindGridAt(mapId, worldPos, _xformQuery, out uid, out grid);
     }
 
     /// <summary>

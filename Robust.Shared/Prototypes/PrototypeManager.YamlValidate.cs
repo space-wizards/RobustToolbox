@@ -1,18 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
 
 public partial class PrototypeManager
 {
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path)
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path) => ValidateDirectory(path, out _);
+
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
+        out Dictionary<Type, HashSet<string>> protos)
     {
         var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
@@ -78,7 +86,72 @@ public partial class PrototypeManager
             }
         }
 
+        protos = new(prototypes.Count);
+        foreach (var (type, typeDict) in prototypes)
+        {
+            protos[type] = typeDict.Keys.ToHashSet();
+        }
+
         return dict;
+    }
+
+    public Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx)
+    {
+        var result = new Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>>();
+        var dict = new Dictionary<string, HashSet<ErrorNode>>();
+
+        foreach (var (type, kinds) in _kinds)
+        {
+            foreach (var instance in kinds.Instances.Values)
+            {
+                DebugTools.Assert(type == instance.GetType());
+                var errorNodes = ValidateProto(type, instance, ctx, out var caughtException);
+                if (errorNodes.Count > 0)
+                    dict.GetOrNew(instance.ID).UnionWith(errorNodes);
+
+                // Avoid tests taking forever as they thrown one exception per prototype.
+                if (caughtException)
+                    break;
+            }
+
+            if (dict.Count > 0)
+            {
+                result[type] = dict;
+                dict = new();
+            }
+        }
+
+        return result;
+    }
+
+    private HashSet<ErrorNode> ValidateProto(Type type, IPrototype instance, ISerializationContext? ctx,
+        out bool caughtException)
+    {
+        caughtException = false;
+        DataNode node;
+        try
+        {
+            node = _serializationManager.WriteValue(type, instance, alwaysWrite: true, context:ctx);
+        }
+        catch (Exception e)
+        {
+            caughtException = true;
+            var msg = $"Caught exception while writing. Exception: {e}";
+            return new() { new ErrorNode(new ValueDataNode(""), msg) };
+        }
+
+        try
+        {
+            return _serializationManager.ValidateNode(type, node, context:ctx)
+                .GetErrors()
+                .ToHashSet();
+        }
+        catch (Exception e)
+        {
+            caughtException = true;
+            var msg = $"Caught exception while validating. Exception: {e}";
+            return new() { new ErrorNode(new ValueDataNode(""), msg) };
+        }
     }
 
     private sealed class PrototypeValidationData

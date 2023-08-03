@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
@@ -153,6 +154,7 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component exists with the given type <see cref="componentType"/>.
         /// </exception>
+        [Pure]
         string GetComponentName(Type componentType);
 
         /// <summary>

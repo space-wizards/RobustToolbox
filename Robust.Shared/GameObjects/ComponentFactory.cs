@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -17,12 +18,13 @@ namespace Robust.Shared.GameObjects
     {
         private readonly IDynamicTypeFactoryInternal _typeFactory;
         private readonly IReflectionManager _reflectionManager;
+        private readonly ISawmill _sawmill;
 
         // Bunch of dictionaries to allow lookups in all directions.
         /// <summary>
         /// Mapping of component name to type.
         /// </summary>
-        private readonly Dictionary<string, ComponentRegistration> names = new();
+        private readonly Dictionary<string, ComponentRegistration> _names = new();
 
         /// <summary>
         /// Mapping of lowercase component names to their registration.
@@ -71,10 +73,11 @@ namespace Robust.Shared.GameObjects
 
         private IEnumerable<ComponentRegistration> AllRegistrations => types.Values;
 
-        public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager)
+        public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, ILogManager logManager)
         {
             _typeFactory = typeFactory;
             _reflectionManager = reflectionManager;
+            _sawmill = logManager.GetSawmill("ent.componentFactory");
         }
 
         private void Register(Type type, bool overwrite = false)
@@ -105,11 +108,11 @@ namespace Robust.Shared.GameObjects
                 IgnoredComponentNames.Remove(name);
             }
 
-            if (names.ContainsKey(name))
+            if (_names.ContainsKey(name))
             {
                 if (!overwrite)
                 {
-                    throw new InvalidOperationException($"{name} is already registered, previous: {names[name]}");
+                    throw new InvalidOperationException($"{name} is already registered, previous: {_names[name]}");
                 }
 
                 RemoveComponent(name);
@@ -128,7 +131,7 @@ namespace Robust.Shared.GameObjects
 
             var registration = new ComponentRegistration(name, type, idx);
 
-            names[name] = registration;
+            _names[name] = registration;
             _lowerCaseNames[lowerCaseName] = name;
             types[type] = registration;
             CompIdx.AssignArray(ref _array, idx, registration);
@@ -211,7 +214,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Cannot add {name} to ignored components: It is already registered as ignored");
             }
 
-            if (names.ContainsKey(name))
+            if (_names.ContainsKey(name))
             {
                 if (!overwrite)
                 {
@@ -230,9 +233,9 @@ namespace Robust.Shared.GameObjects
             if (_networkedComponents is not null)
                 throw new ComponentRegistrationLockException();
 
-            var registration = names[name];
+            var registration = _names[name];
 
-            names.Remove(registration.Name);
+            _names.Remove(registration.Name);
             _lowerCaseNames.Remove(registration.Name.ToLowerInvariant());
             types.Remove(registration.Type);
         }
@@ -244,7 +247,7 @@ namespace Robust.Shared.GameObjects
                 componentName = lowerCaseName;
             }
 
-            if (names.ContainsKey(componentName))
+            if (_names.ContainsKey(componentName))
             {
                 return ComponentAvailability.Available;
             }
@@ -311,7 +314,7 @@ namespace Robust.Shared.GameObjects
 
             try
             {
-                return names[componentName];
+                return _names[componentName];
             }
             catch (KeyNotFoundException)
             {
@@ -319,6 +322,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        [Pure]
         public string GetComponentName(Type componentType)
         {
             return GetRegistration(componentType).Name;
@@ -372,7 +376,7 @@ namespace Robust.Shared.GameObjects
                 componentName = lowerCaseName;
             }
 
-            if (names.TryGetValue(componentName, out var tempRegistration))
+            if (_names.TryGetValue(componentName, out var tempRegistration))
             {
                 registration = tempRegistration;
                 return true;
@@ -435,21 +439,23 @@ namespace Robust.Shared.GameObjects
         {
             if (!typeof(IComponent).IsAssignableFrom(type))
             {
-                Logger.Error("Type {0} has RegisterComponentAttribute but does not implement IComponent.", type);
+                _sawmill.Error("Type {0} has RegisterComponentAttribute but does not implement IComponent.", type);
                 return;
             }
 
             Register(type);
 
+#pragma warning disable CS0618
             foreach (var attribute in Attribute.GetCustomAttributes(type, typeof(ComponentReferenceAttribute)))
             {
                 var cast = (ComponentReferenceAttribute) attribute;
+#pragma warning restore CS0618
 
                 var refType = cast.ReferenceType;
 
                 if (!refType.IsAssignableFrom(type))
                 {
-                    Logger.Error("Type {0} has reference for type it does not implement: {1}.", type, refType);
+                    _sawmill.Error("Type {0} has reference for type it does not implement: {1}.", type, refType);
                     continue;
                 }
 
@@ -470,9 +476,9 @@ namespace Robust.Shared.GameObjects
             // component names are 1:1 with component concrete types
 
             // a subset of component names are networked
-            var networkedRegs = new List<ComponentRegistration>(names.Count);
+            var networkedRegs = new List<ComponentRegistration>(_names.Count);
 
-            foreach (var kvRegistration in names)
+            foreach (var kvRegistration in _names)
             {
                 var registration = kvRegistration.Value;
                 if (Attribute.GetCustomAttribute(registration.Type, typeof(NetworkedComponentAttribute)) is NetworkedComponentAttribute)

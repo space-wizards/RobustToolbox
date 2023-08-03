@@ -905,7 +905,7 @@ public class ArchetypeComponentAccessBenchmark
             var curLength = array.Length;
             if (curLength <= idx.Value)
             {
-                var newLength = MathHelper.NextPowerOfTwo(Math.Max(8, idx.Value));
+                var newLength = MathHelper.NextPowerOfTwo(System.Math.Max(8, idx.Value));
                 Array.Resize(ref array, newLength);
             }
 

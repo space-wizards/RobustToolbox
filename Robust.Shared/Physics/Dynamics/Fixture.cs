@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -78,14 +79,14 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         /// Contact friction between 2 bodies. Not tile-friction for top-down.
         /// </summary>
-        [DataField("friction"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        [ViewVariables(VVAccess.ReadWrite), DataField("friction"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public float Friction = PhysicsConstants.DefaultContactFriction;
 
         /// <summary>
         /// AKA how much bounce there is on a collision.
         /// 0.0 for inelastic collision and 1.0 for elastic.
         /// </summary>
-        [DataField("restitution"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        [ViewVariables(VVAccess.ReadWrite), DataField("restitution"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public float Restitution = PhysicsConstants.DefaultRestitution;
 
         /// <summary>
@@ -95,13 +96,13 @@ namespace Robust.Shared.Physics.Dynamics
         /// <remarks>
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
-        [DataField("hard"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        [ViewVariables(VVAccess.ReadWrite), DataField("hard"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public bool Hard = true;
 
         /// <summary>
         /// In kg / m ^ 2
         /// </summary>
-        [DataField("density"),
+        [ViewVariables(VVAccess.ReadWrite), DataField("density"),
          Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
              Other = AccessPermissions.Read)]
         public float Density = PhysicsConstants.DefaultDensity;
@@ -109,7 +110,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.
         /// </summary>
-        [DataField("layer", customTypeSerializer: typeof(FlagSerializer<CollisionLayer>)),
+        [ViewVariables(VVAccess.ReadWrite), DataField("layer", customTypeSerializer: typeof(FlagSerializer<CollisionLayer>)),
          Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
              Other = AccessPermissions.Read)]
         public int CollisionLayer;
@@ -117,7 +118,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///  Bitmask of the layers this component collides with.
         /// </summary>
-        [DataField("mask", customTypeSerializer: typeof(FlagSerializer<CollisionMask>)),
+        [ViewVariables(VVAccess.ReadWrite), DataField("mask", customTypeSerializer: typeof(FlagSerializer<CollisionMask>)),
          Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
              Other = AccessPermissions.Read)]
         public int CollisionMask;

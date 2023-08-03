@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
@@ -81,7 +82,7 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             var styleBox = _getGrabberStyleBox();
-            styleBox?.Draw(handle, _getGrabberBox());
+            styleBox?.Draw(handle, _getGrabberBox(), UIScale);
         }
 
         protected internal override void MouseExited()

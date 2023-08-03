@@ -305,6 +305,7 @@ Types:
     ConcurrentQueue`1: { All: True }
     ConcurrentStack`1: { All: True }
   System.Collections:
+    BitArray: { All: True }
     IEnumerable: { All: True }
     IEnumerator: { All: True }
     IReadOnlyList`1: { All: True }
@@ -359,7 +360,12 @@ Types:
       - "string ToUpper(string)"
   System.IO.Compression:
     CompressionMode: { } # Enum
+    CompressionLevel: { } # Enum
     DeflateStream: { All: True }
+    ZipArchive: { All : True }
+    ZipArchiveEntry: { All : True }
+    ZipArchiveMode: { } # Enum
+
   System.IO:
     BinaryReader: { All: True }
     FileAccess: { } # Enum
@@ -422,6 +428,7 @@ Types:
     AddressFamily: { }
   System.Numerics:
     BitOperations: { All: True }
+    Vector2: { All: True }
   System.Reflection:
     Assembly:
       Methods:

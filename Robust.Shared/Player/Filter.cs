@@ -172,7 +172,7 @@ namespace Robust.Shared.Player
                 session.AttachedEntity != null &&
                 xformQuery.TryGetComponent(session.AttachedEntity.Value, out var xform) &&
                 xform.MapID == position.MapId &&
-                (xform.WorldPosition - position.Position).Length < range, playerMan);
+                (xform.WorldPosition - position.Position).Length() < range, playerMan);
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace Robust.Shared.Player
                 session.AttachedEntity != null &&
                 xformQuery.TryGetComponent(session.AttachedEntity.Value, out var xform) &&
                 xform.MapID == position.MapId &&
-                (xform.WorldPosition - position.Position).Length < range);
+                (xform.WorldPosition - position.Position).Length() < range);
         }
 
         /// <summary>

@@ -201,6 +201,15 @@ public partial class EntitySystem
     }
 
     /// <summary>
+    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+    {
+        EntityManager.Dirty(uid, component, meta);
+    }
+
+    /// <summary>
     ///     Retrieves the name of an entity.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
@@ -389,7 +398,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.GetComponent&lt;T&gt;"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T Comp<T>(EntityUid uid) where T : class, IComponent
+    protected T Comp<T>(EntityUid uid) where T : Component
     {
         return EntityManager.GetComponent<T>(uid);
     }
@@ -626,14 +635,14 @@ public partial class EntitySystem
 
     #region Entity Spawning
 
-    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, EntityCoordinates)" />
+    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, EntityCoordinates, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
     {
         return EntityManager.SpawnEntity(prototype, coordinates);
     }
 
-    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, MapCoordinates)" />
+    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, MapCoordinates, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? prototype, MapCoordinates coordinates)
     {

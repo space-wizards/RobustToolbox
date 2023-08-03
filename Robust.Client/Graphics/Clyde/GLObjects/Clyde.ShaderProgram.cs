@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {

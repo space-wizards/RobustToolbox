@@ -1,4 +1,5 @@
 #if DEBUG
+using System.Numerics;
 using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.Input;

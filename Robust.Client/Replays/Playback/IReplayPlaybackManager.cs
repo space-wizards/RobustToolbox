@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Network;
 using Robust.Shared.Replays;
+using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Client.Replays.Playback;
 
@@ -65,9 +69,10 @@ public interface IReplayPlaybackManager
     void SetTime(TimeSpan time) => SetIndex(GetIndex(time));
 
     /// <summary>
-    /// Invoked after replay playback has started and the first game state has been applied.
+    /// Invoked after replay playback has started and the first game state has been applied. Provides the replay
+    /// metadata and the messages that were received just before the replay recording was started.
     /// </summary>
-    event Action? ReplayPlaybackStarted;
+    event Action<MappingDataNode, List<object>>? ReplayPlaybackStarted;
 
     /// <summary>
     /// If not null, this will cause the playback to auto-pause after some number of ticks. E.g., if you want to advance
@@ -122,4 +127,15 @@ public interface IReplayPlaybackManager
     /// Invoked when the replay is unpaused.
     /// </summary>
     event Action? ReplayUnpaused;
+
+    /// <summary>
+    /// If currently replaying a client-side recording, this is the user that recorded the replay.
+    /// Useful for setting default observer spawn positions.
+    /// </summary>
+    NetUserId? Recorder { get; }
+
+    /// <summary>
+    /// Fetches the entity that the <see cref="Recorder"/> is currently attached to.
+    /// </summary>
+    public bool TryGetRecorderEntity([NotNullWhen(true)] out EntityUid? uid);
 }

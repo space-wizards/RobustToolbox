@@ -25,9 +25,9 @@ public abstract class SharedAppearanceSystem : EntitySystem
     /// <summary>
     ///     Mark an appearance component as dirty, so that the appearance will get updated in the next frame update.
     /// </summary>
-    /// <param name="component"></param>
-    /// <param name="updateDetached">If true, the appearance will update even if the entity is currently outside of PVS range.</param>
-    public virtual void MarkDirty(AppearanceComponent component, bool updateDetached = false) {}
+    public virtual void QueueUpdate(EntityUid uid, AppearanceComponent component)
+    {
+    }
 
     public void SetData(EntityUid uid, Enum key, object value, AppearanceComponent? component = null)
     {
@@ -46,8 +46,8 @@ public abstract class SharedAppearanceSystem : EntitySystem
         DebugTools.Assert(value.GetType().IsValueType || value is ICloneable, "Appearance data values must be cloneable.");
 
         component.AppearanceData[key] = value;
-        Dirty(component);
-        MarkDirty(component);
+        Dirty(uid, component);
+        QueueUpdate(uid, component);
     }
 
     public bool TryGetData<T>(EntityUid uid, Enum key, [NotNullWhen(true)] out T value, AppearanceComponent? component = null)

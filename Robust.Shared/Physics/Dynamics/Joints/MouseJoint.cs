@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -223,7 +224,7 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         {
             _impulse *= data.DtRatio;
             vB += _impulse * _invMassB;
-            wB += _invIB * Vector2.Cross(_rB, _impulse);
+            wB += _invIB * Vector2Helpers.Cross(_rB, _impulse);
         }
         else
         {
@@ -245,21 +246,21 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         var wB = angularVelocities[offset + _indexB];
 
         // Cdot = v + cross(w, r)
-        var Cdot = vB + Vector2.Cross(wB, _rB);
+        var Cdot = vB + Vector2Helpers.Cross(wB, _rB);
         var impulse = Transform.Mul(_mass, -(Cdot + _C + _impulse * _gamma));
 
         var oldImpulse = _impulse;
         _impulse += impulse;
         float maxImpulse = data.FrameTime * _maxForce;
 
-        if (_impulse.LengthSquared > maxImpulse * maxImpulse)
+        if (_impulse.LengthSquared() > maxImpulse * maxImpulse)
         {
-            _impulse *= maxImpulse / _impulse.Length;
+            _impulse *= maxImpulse / _impulse.Length();
         }
         impulse = _impulse - oldImpulse;
 
         vB += impulse * _invMassB;
-        wB += _invIB * Vector2.Cross(_rB, impulse);
+        wB += _invIB * Vector2Helpers.Cross(_rB, impulse);
 
         linearVelocities[offset + _indexB] = vB;
         angularVelocities[offset + _indexB] = wB;

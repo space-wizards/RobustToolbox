@@ -1,18 +1,23 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Configuration;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
+using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Client.Upload;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Replays;
+using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Client.Replays.Playback;
 
@@ -21,9 +26,11 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
     [Dependency] private readonly ILogManager _logMan = default!;
     [Dependency] private readonly IBaseClient _client = default!;
     [Dependency] private readonly IMidiManager _midi = default!;
+    [Dependency] private readonly IPlayerManager _player = default!;
     [Dependency] private readonly IClydeAudio _clydeAudio = default!;
     [Dependency] private readonly IClientGameTiming _timing = default!;
     [Dependency] private readonly IClientNetManager _netMan = default!;
+    [Dependency] private readonly IComponentFactory _factory = default!;
     [Dependency] private readonly IPrototypeManager _protoMan = default!;
     [Dependency] private readonly IGameController _controller = default!;
     [Dependency] private readonly IClientEntityManager _entMan = default!;
@@ -32,20 +39,23 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
     [Dependency] private readonly IClientGameStateManager _gameState = default!;
     [Dependency] private readonly IClientNetConfigurationManager _netConf = default!;
 
-    public event Action? ReplayPlaybackStarted;
+    public event Action<MappingDataNode, List<object>>? ReplayPlaybackStarted;
     public event Action? ReplayPlaybackStopped;
     public event Action? ReplayPaused;
     public event Action? ReplayUnpaused;
 
     public ReplayData? Replay { get; private set; }
+    public NetUserId? Recorder => Replay?.Recorder;
     private int _checkpointInterval;
     private int _visualEventThreshold;
     public uint? AutoPauseCountdown { get; set; }
     public int? ScrubbingTarget { get; set; }
     private bool _playing;
+    private ushort _metaId;
 
     private bool _initialized;
     private ISawmill _sawmill = default!;
+    private HashSet<Type> _warned = new();
 
     public bool Playing
     {
@@ -77,6 +87,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
 
         _initialized = true;
         _sawmill = _logMan.GetSawmill("replay");
+        _metaId = _factory.GetRegistration(typeof(MetaDataComponent)).NetID!.Value;
         _confMan.OnValueChanged(CVars.CheckpointInterval, (value) => _checkpointInterval = value, true);
         _confMan.OnValueChanged(CVars.ReplaySkipThreshold, (value) => _visualEventThreshold = value, true);
         _client.RunLevelChanged += OnRunLevelChanged;
@@ -101,10 +112,11 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
 
         Replay = replay;
         _controller.TickUpdateOverride += TickUpdateOverride;
+
         if (Replay.CurrentIndex < 0)
             ResetToNearestCheckpoint(0, true);
 
-        ReplayPlaybackStarted?.Invoke();
+        ReplayPlaybackStarted?.Invoke(Replay.YamlData, Replay.InitialMessages?.Messages ?? new ());
     }
 
     public void StopReplay()
@@ -134,5 +146,20 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
             renderer.ClearAllEvents();
             renderer.StopAllNotes();
         }
+    }
+
+    public bool TryGetRecorderEntity([NotNullWhen(true)] out EntityUid? uid)
+    {
+        if (Recorder != null
+            && _player.SessionsDict.TryGetValue(Recorder.Value, out var session)
+            && session.AttachedEntity is { } recorderEnt
+            && _entMan.EntityExists(recorderEnt))
+        {
+            uid = recorderEnt;
+            return true;
+        }
+
+        uid = null;
+        return false;
     }
 }

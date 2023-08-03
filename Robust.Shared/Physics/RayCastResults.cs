@@ -1,4 +1,5 @@
-﻿using Robust.Shared.GameObjects;
+﻿using System.Numerics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics

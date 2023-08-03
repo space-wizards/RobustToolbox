@@ -105,11 +105,11 @@ internal sealed partial class StatusHost
     private Task<bool> SourceAczDictionaryViaFile(AssetPass pass, IPackageLogger logger)
     {
         var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
-        if (!File.Exists(path))
+        if (!FileHelper.TryOpenFileRead(path, out var fileStream))
             return Task.FromResult(false);
 
         _aczSawmill.Info($"StatusHost found client zip: {path}");
-        using var zip = new ZipArchive(File.OpenRead(path), ZipArchiveMode.Read, leaveOpen: false);
+        using var zip = new ZipArchive(fileStream, ZipArchiveMode.Read, leaveOpen: false);
         SourceAczDictionaryViaZipStream(zip, pass, logger);
         return Task.FromResult(true);
     }

@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
@@ -120,8 +121,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
             var v1 = Transform.Mul(transform, Vertex1);
             var v2 = Transform.Mul(transform, Vertex2);
 
-            var lower = Vector2.ComponentMin(v1, v2);
-            var upper = Vector2.ComponentMax(v1, v2);
+            var lower = Vector2.Min(v1, v2);
+            var upper = Vector2.Max(v1, v2);
 
             var radius = new Vector2(Radius, Radius);
             return new Box2(lower - radius, upper + radius);

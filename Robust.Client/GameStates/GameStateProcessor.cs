@@ -263,12 +263,14 @@ namespace Robust.Client.GameStates
             return false;
         }
 
-        internal void AddLeavePvsMessage(MsgStateLeavePvs message)
+        internal void AddLeavePvsMessage(List<EntityUid> entities, GameTick tick)
         {
             // Late message may still need to be processed,
-            DebugTools.Assert(message.Entities.Count > 0);
-            _pvsDetachMessages.TryAdd(message.Tick, message.Entities);
+            DebugTools.Assert(entities.Count > 0);
+            _pvsDetachMessages.TryAdd(tick, entities);
         }
+
+        public void ClearDetachQueue() => _pvsDetachMessages.Clear();
 
         public List<(GameTick Tick, List<EntityUid> Entities)> GetEntitiesToDetach(GameTick toTick, int budget)
         {
@@ -386,6 +388,11 @@ namespace Robust.Client.GameStates
         public Dictionary<ushort, ComponentState> GetLastServerStates(EntityUid entity)
         {
             return _lastStateFullRep[entity];
+        }
+
+        public Dictionary<EntityUid, Dictionary<ushort, ComponentState>> GetFullRep()
+        {
+            return _lastStateFullRep;
         }
 
         public bool TryGetLastServerStates(EntityUid entity,

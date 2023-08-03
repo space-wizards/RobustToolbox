@@ -236,7 +236,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
         /// <param name="uid">Entity UID to look on.</param>
         /// <returns>The component of Type from the Entity.</returns>
-        T GetComponent<T>(EntityUid uid);
+        T GetComponent<T>(EntityUid uid) where T : IComponent;
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -391,6 +391,18 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if the player should get the component state.</returns>
         bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
 
+        /// <summary>
+        /// Returns all instances of a component in an array.
+        /// Use sparingly.
+        /// </summary>
+        (EntityUid Uid, T Component)[] AllComponents<T>() where T : Component;
+
+        /// <summary>
+        /// Returns all instances of a component in a List.
+        /// Use sparingly.
+        /// </summary>
+        List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : Component;
+
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
             where TComp1 : Component;
 
@@ -476,7 +488,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="includePaused"></param>
         /// <returns>All components that are the specified type.</returns>
-        IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false);
+        IEnumerable<(EntityUid Uid, Component Component)> GetAllComponents(Type type, bool includePaused = false);
 
         /// <summary>
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.

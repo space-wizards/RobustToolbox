@@ -144,6 +144,9 @@ public sealed partial class EntityLookupSystem
                 tuple.found = true;
                 return false;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+
+            if (state.found)
+                return true;
         }
 
         if ((flags & LookupFlags.Static) != 0x0)
@@ -156,6 +159,9 @@ public sealed partial class EntityLookupSystem
                 tuple.found = true;
                 return false;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+
+            if (state.found)
+                return true;
         }
 
         if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
@@ -168,6 +174,9 @@ public sealed partial class EntityLookupSystem
                 tuple.found = true;
                 return false;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
+
+            if (state.found)
+                return true;
         }
 
         if ((flags & LookupFlags.Sundries) != 0x0)
@@ -182,10 +191,7 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
-        if (state.found)
-            return true;
-
-        return false;
+        return state.found;
     }
 
     private bool AnyEntitiesIntersecting(EntityUid lookupUid,
@@ -209,6 +215,9 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
+        if (state.found)
+            return true;
+
         if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, (ref (EntityUid? ignored, bool found) tuple, in FixtureProxy value) =>
@@ -220,6 +229,9 @@ public sealed partial class EntityLookupSystem
                 return false;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
+
+        if (state.found)
+            return true;
 
         if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
@@ -233,6 +245,9 @@ public sealed partial class EntityLookupSystem
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
 
+        if (state.found)
+            return true;
+
         if ((flags & LookupFlags.Sundries) != 0x0)
         {
             lookup.SundriesTree.QueryAabb(ref state, static (ref (EntityUid? ignored, bool found) tuple, in EntityUid value) =>
@@ -244,9 +259,6 @@ public sealed partial class EntityLookupSystem
                 return false;
             }, localAABB, (flags & LookupFlags.Approximate) != 0x0);
         }
-
-        if (state.found)
-            return true;
 
         return state.found;
     }

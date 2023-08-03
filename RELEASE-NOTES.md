@@ -54,6 +54,90 @@ END TEMPLATE-->
 *None yet*
 
 
+## 143.0.0
+
+### New features
+
+
+- Toolshed, a tacit shell language, has been introduced.
+  - Use Robust.Shared.ToolshedManager to invoke commands, with optional input and output.
+  - Implement IInvocationContext for custom invocation contexts i.e. scripting systems.
+
+
+## 142.1.2
+
+### Other
+
+* Don't log an error on failing to resolve for joint relay refreshing.
+
+
+## 142.1.1
+
+### Bugfixes
+
+* Fixed a bad debug assert in `DetachParentToNull()`
+
+
+## 142.1.0
+
+### New features
+
+* `IHttpClientHolder` holds a shared `HttpClient` for use by content. It has Happy Eyeballs fixed and an appropriate `User-Agent`.
+* Added `DataNode.ToString()`. Makes it easier to save yaml files and debug code.
+* Added some cvars to modify discord rich presence icons.
+* .ogg files now read the `Artist` and `Title` tags and make them available via new fields in `AudioStream`. 
+* The default fragment shaders now have access to the local light level (`lowp vec3 lightSample`).
+* Added `IPrototypeManager.ValidateAllPrototypesSerializable()`, which can be used to check that all currently loaded prototypes can be serialised & deserialised.
+
+### Bugfixes
+
+* Fix certain debug commands and tools crashing on non-SS14 RobustToolbox games due to a missing font.
+* Discord rich presence strings are now truncated if they are too long.
+* Fixed a couple of broadphase/entity-lookup update bugs that were affecting containers and entities attached to other (non-grid/map) entities.
+* Fixed `INetChannel.Disconnect()` not properly disconnecting clients in integration tests. 
+
+### Other
+
+* Outgoing HTTP requests now all use Happy Eyeballs to try to prioritize IPv6. This is necessary because .NET still does not support this critical feature itself.
+* Made various physics related component properties VV-editable.
+* The default EntitySystem sawmill log level now defaults to `Info` instead of `Verbose`. The level remains verbose when in debug mode.
+
+### Internal
+
+* The debug asserts in `DetachParentToNull()` are now more informative.
+
+
+## 142.0.1
+
+### Bugfixes
+
+* Fix Enum serialization.
+
+
+## 142.0.0
+
+### Breaking changes
+
+* `EntityManager.GetAllComponents()` now returns a (EntityUid, Component) tuple
+
+### New features
+
+* Added `IPrototypeManager.ValidateFields()`, which uses reflection to validate that the default values of c# string fields correspond to valid entity prototypes. Validates any fields with a `ValidatePrototypeIdAttribute`  and any data-field that uses the PrototypeIdSerializer custom type serializer.
+
+### Other
+
+* Replay playback will now log errors when encountering unhandled messages.
+* Made `GetAssemblyByName()` throw descriptive error messages.
+* Improved performance of various EntityLookupSystem functions
+
+
+## 141.2.1
+
+### Bugfixes
+
+* Fix component trait dictionaries not clearing on reconnect leading to bad GetComponent in areas (e.g. entire game looks black due to no entities).
+
+
 ## 141.2.0
 
 ### Other

@@ -329,7 +329,7 @@ namespace Robust.Client.Graphics.Audio
             var handle = new ClydeHandle(_audioSampleBuffers.Count);
             _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
             var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
-            return new AudioStream(handle, length, (int) vorbis.Channels, name);
+            return new AudioStream(handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
         }
 
         public AudioStream LoadAudioWav(Stream stream, string? name = null)

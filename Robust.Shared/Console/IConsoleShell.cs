@@ -1,4 +1,5 @@
 using Robust.Shared.Players;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console
 {
@@ -53,6 +54,8 @@ namespace Robust.Shared.Console
         /// </summary>
         /// <param name="text">Line of text to write.</param>
         void WriteLine(string text);
+
+        void WriteLine(FormattedMessage message);
 
         /// <summary>
         /// Write an error line to the console window.

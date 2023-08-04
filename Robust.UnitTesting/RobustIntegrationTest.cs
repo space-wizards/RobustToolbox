@@ -647,10 +647,18 @@ namespace Robust.UnitTesting
                     Options.BeforeStart?.Invoke();
                     cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
 
+                    var resMan = deps.Resolve<IResourceManagerInternal>();
                     if (Options.ExtraPrototypes != null)
                     {
-                        deps.Resolve<IResourceManagerInternal>()
-                            .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
+                        resMan.MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
+                    }
+
+                    if (Options.ExtraPrototypeList is {} list)
+                    {
+                        for (var i = 0; i < list.Length; i++)
+                        {
+                            resMan.MountString($"/Prototypes/__integration_extra_{i}.yml", list[i]);
+                        }
                     }
                 }
 
@@ -1002,7 +1010,19 @@ namespace Robust.UnitTesting
             public Action? BeforeRegisterComponents { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
+
+            /// <summary>
+            /// String containing extra prototypes to load. Contents of the string are treated like a yaml file in the
+            /// resources folder.
+            /// </summary>
             public string? ExtraPrototypes { get; set; }
+
+            /// <summary>
+            /// List of strings containing extra prototypes to load. Contents of the strings are treated like yaml files
+            /// in the resources folder.
+            /// </summary>
+            public string[]? ExtraPrototypeList;
+
             public LogLevel? FailureLogLevel { get; set; } = RTCVars.FailureLogLevel.DefaultValue;
             public bool ContentStart { get; set; } = false;
 

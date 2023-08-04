@@ -108,7 +108,7 @@ command-description-where =
 command-description-do =
     Backwards compatibility with BQL, applies the given old commands over the input sequence.
 command-description-named =
-    Filters the input entities by their name, with the regex $selector^.
+    Filters the input entities by their name, with the regex ^selector$.
 command-description-prototyped =
     Filters the input entities by their prototype.
 command-description-nearby =

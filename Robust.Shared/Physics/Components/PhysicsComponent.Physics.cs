@@ -260,7 +260,7 @@ public sealed class PhysicsComponent : Component
     /// <summary>
     ///     The current status of the object
     /// </summary>
-    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    [ViewVariables(VVAccess.ReadWrite), DataField("bodyStatus"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public BodyStatus BodyStatus { get; set; }
 
     [ViewVariables, Access(typeof(SharedPhysicsSystem))]

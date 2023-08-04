@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
-using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json.Serialization;
 // ReSharper disable UseUtf8StringLiteral
 using Microsoft.Win32;
 using Robust.Shared.Console;
+using Robust.Shared.Log;
 
 namespace Robust.Shared.Network
 {
@@ -179,12 +178,12 @@ namespace Robust.Shared.Network
                         }
                         catch (FormatException e)
                         {
-                            System.Console.WriteLine(e);
+                            Logger.Error(e.Message);
                             throw;
                         }
                         catch (OverflowException e)
                         {
-                            System.Console.WriteLine(e);
+                            Logger.Error(e.Message);
                             throw;
                         }
                     }
@@ -204,12 +203,12 @@ namespace Robust.Shared.Network
                                 }
                                 catch (FormatException e)
                                 {
-                                    System.Console.WriteLine(e);
+                                    Logger.Error(e.Message);
                                     throw;
                                 }
                                 catch (OverflowException e)
                                 {
-                                    System.Console.WriteLine(e);
+                                    Logger.Error(e.Message);
                                     throw;
                                 }
                                 if (m.Contains(t))

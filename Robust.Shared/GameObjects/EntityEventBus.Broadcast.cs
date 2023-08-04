@@ -223,8 +223,14 @@ namespace Robust.Shared.GameObjects
                 subscriptions.BroadcastRegistrations.Add(subscriptionTuple);
 
             var inverseSubscription = _inverseEventSubscriptions.GetOrNew(subscriber);
-            if (!inverseSubscription.ContainsKey(eventType))
-                inverseSubscription.Add(eventType, subscriptionTuple);
+            if (!inverseSubscription.TryAdd(eventType, subscriptionTuple))
+            {
+                // Maybe this might need to be supported in future if we want to support separate local & network subs.
+                // For now, local+network broadcast subs break and don't unsubscribe properly.
+                var name = subscriber.GetType().Name;
+                throw new InvalidOperationException(
+                    $"{name} attempted to subscribe twice to the same event: {eventType.Name}");
+            }
         }
 
         /// <inheritdoc />

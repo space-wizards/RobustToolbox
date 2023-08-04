@@ -16,4 +16,9 @@ internal sealed class GridRenderingSystem : EntitySystem
     {
         _clyde.RegisterGridEcsEvents();
     }
+
+    public override void Shutdown()
+    {
+        _clyde.ShutdownGridEcsEvents();
+    }
 }

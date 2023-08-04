@@ -655,7 +655,7 @@ namespace Robust.UnitTesting
 
                     if (Options.ExtraPrototypeList is {} list)
                     {
-                        for (var i = 0; i < list.Length; i++)
+                        for (var i = 0; i < list.Count; i++)
                         {
                             resMan.MountString($"/Prototypes/__integration_extra_{i}.yml", list[i]);
                         }
@@ -1021,7 +1021,7 @@ namespace Robust.UnitTesting
             /// List of strings containing extra prototypes to load. Contents of the strings are treated like yaml files
             /// in the resources folder.
             /// </summary>
-            public string[]? ExtraPrototypeList;
+            public List<string>? ExtraPrototypeList;
 
             public LogLevel? FailureLogLevel { get; set; } = RTCVars.FailureLogLevel.DefaultValue;
             public bool ContentStart { get; set; } = false;

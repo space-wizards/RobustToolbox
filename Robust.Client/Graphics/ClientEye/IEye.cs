@@ -18,7 +18,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         /// Should the black FoV effect be drawn for this eye?
         /// </summary>
-        public bool DrawFov { get; set; }
+        bool DrawFov { get; set; }
 
         /// <summary>
         /// Current position of the center of the eye in the game world.
@@ -67,7 +67,7 @@ namespace Robust.Client.Graphics
         /// How much we should brighten lights around the player. 1.0 is default brightness
         ///   This is a multiplier to light power and it also increases range by sqrt(Exposure) as per light laws..
         /// </summary>
-        public float Exposure { get; set; }
+        float Exposure { get; set; }
 
         /// <summary>
         /// Renderer measurement of light intensity last frame. 0.1 is dark, 1.0 is extremely bright.
@@ -75,13 +75,13 @@ namespace Robust.Client.Graphics
         ///   Note that this is after exposure is applied, so adjusting exposure each frame to keep this around
         ///   50-70% makes sense.
         /// </summary>
-        public float LastBrightness { get; set; }
+        float LastBrightness { get; set; }
 
         /// <summary>
         /// Set true if you want to use LastBrightness.
         ///   The renderer will read the lighting texture and calculate it for you each frame.
         /// </summary>
-        public bool MeasureBrightness { get; set; }
+        bool MeasureBrightness { get; set; }
 
         /// <summary>
         /// Lighting over 100% is compressed by taking sqrt and then multiplying by this value.
@@ -89,7 +89,7 @@ namespace Robust.Client.Graphics
         ///   0.0 crushes it to exactly fullbright, which is bland.
         /// Important when there are LOT of lightsources, or they are powerful, or Exposure is high.
         /// </summary>
-        public float LightIntolerance { get; set; }
+        float LightIntolerance { get; set; }
 
     }
 }

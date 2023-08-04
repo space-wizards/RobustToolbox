@@ -19,7 +19,6 @@ using Robust.Server;
 using Robust.Server.Console;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
-using Robust.Shared.Analyzers;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -30,7 +29,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -544,6 +542,23 @@ namespace Robust.UnitTesting
             {
                 Stop();
             }
+
+            protected void LoadExtraPrototypes(IDependencyCollection deps, IntegrationOptions options)
+            {
+                var resMan = deps.Resolve<IResourceManagerInternal>();
+                if (options.ExtraPrototypes != null)
+                {
+                    resMan.MountString("/Prototypes/__integration_extra.yml", options.ExtraPrototypes);
+                }
+
+                if (options.ExtraPrototypeList is {} list)
+                {
+                    for (var i = 0; i < list.Count; i++)
+                    {
+                        resMan.MountString($"/Prototypes/__integration_extra_{i}.yml", list[i]);
+                    }
+                }
+            }
         }
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
@@ -646,20 +661,7 @@ namespace Robust.UnitTesting
                 {
                     Options.BeforeStart?.Invoke();
                     cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
-
-                    var resMan = deps.Resolve<IResourceManagerInternal>();
-                    if (Options.ExtraPrototypes != null)
-                    {
-                        resMan.MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
-                    }
-
-                    if (Options.ExtraPrototypeList is {} list)
-                    {
-                        for (var i = 0; i < list.Count; i++)
-                        {
-                            resMan.MountString($"/Prototypes/__integration_extra_{i}.yml", list[i]);
-                        }
-                    }
+                    LoadExtraPrototypes(deps, Options);
                 }
 
                 cfg.OverrideConVars(new[]
@@ -822,12 +824,7 @@ namespace Robust.UnitTesting
                 {
                     Options.BeforeStart?.Invoke();
                     cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
-
-                    if (Options.ExtraPrototypes != null)
-                    {
-                        deps.Resolve<IResourceManagerInternal>()
-                            .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
-                    }
+                    LoadExtraPrototypes(deps, Options);
                 }
 
                 cfg.OverrideConVars(new[]

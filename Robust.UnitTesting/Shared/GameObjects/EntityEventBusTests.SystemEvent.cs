@@ -51,6 +51,27 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         /// <summary>
+        /// Duplicate Event subscriptions are not allowed.
+        /// </summary>
+        [Test]
+        public void SubscribeEvent_DuplicateSubscription_Invalid()
+        {
+            // Arrange
+            var bus = BusFactory();
+            var subscriber = new TestEventSubscriber();
+
+            int delegateCallCount = 0;
+            void Handler(TestEventArgs ev) => delegateCallCount++;
+
+            // 2 subscriptions 1 handler
+            bus.SubscribeEvent<TestEventArgs>(EventSource.Local, subscriber, Handler);
+
+            Assert.Throws<InvalidOperationException>(() => bus.SubscribeEvent<TestEventArgs>(EventSource.Local, subscriber, Handler));
+        }
+
+        // TODO if ever duplicate events are allowed, re-enable these tests.
+        /*
+        /// <summary>
         /// Unlike C# events, the set of event handler delegates is unique.
         /// Subscribing the same delegate multiple times will only call the handler once.
         /// </summary>
@@ -99,6 +120,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(delFooCount, Is.EqualTo(1));
             Assert.That(delBarCount, Is.EqualTo(1));
         }
+        */
 
         /// <summary>
         /// A subscriber's handlers are properly called only when the specified event type is raised.

@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 143.1.0
+
+### New features
+
+* Add locale support for grammatical measure words.
+
+### Bugfixes
+
+* Don't raise contact events for entities that were QueueDeleted during the tick.
+* Exception on duplicate broadcast subscriptions as this was unsupported behaviour.
+
+### Other
+
+* Add VV ReadWrite to PhysicsComponent BodyStatus.
+
+
 ## 143.0.0
 
 ### New features

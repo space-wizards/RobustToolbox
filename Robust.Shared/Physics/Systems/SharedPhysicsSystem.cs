@@ -250,6 +250,7 @@ namespace Robust.Shared.Physics.Systems
         {
             base.Shutdown();
 
+            ShutdownContacts();
             ShutdownIsland();
             _configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }

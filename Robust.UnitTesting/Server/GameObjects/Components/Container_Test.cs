@@ -21,7 +21,6 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterPrototypes(protoMan => protoMan.LoadString(Prototypes))
                 .InitializeInstance();
 
             // Adds the map with id 1, and spawns entity 1 as the map entity.

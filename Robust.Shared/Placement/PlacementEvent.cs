@@ -2,7 +2,7 @@
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 
-namespace Robust.Server.Placement;
+namespace Robust.Shared.Placement;
 
 public readonly struct PlacementEntityEvent
 {

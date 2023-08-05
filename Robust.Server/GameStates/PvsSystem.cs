@@ -34,6 +34,7 @@ internal sealed partial class PvsSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
     [Shared.IoC.Dependency] private readonly IParallelManager _parallelManager = default!;
+    [Shared.IoC.Dependency] private readonly IComponentFactory _factory = default!;
 
     public const float ChunkSize = 8;
 
@@ -1034,8 +1035,17 @@ internal sealed partial class PvsSystem : EntitySystem
             {
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
                 DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
-                if (md.EntityLastModifiedTick > fromTick)
-                    stateEntities.Add(GetEntityState(player, uid, fromTick, md));
+                if (md.EntityLastModifiedTick <= fromTick)
+                    continue;
+
+                var state = GetEntityState(player, uid, fromTick, md);
+
+                // Temporary debugging code. See also code in GetEntityState()
+                // TODO REMOVE TEMPORARY CODE
+                if (state.Empty)
+                    Log.Error($"{nameof(GetEntityState)} returned an empty state while enumerating all. Entity {ToPrettyString(uid)}.");
+
+                stateEntities.Add(state);
             }
         }
         else
@@ -1058,7 +1068,15 @@ internal sealed partial class PvsSystem : EntitySystem
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
                     DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick || md.EntityLastModifiedTick == GameTick.Zero);
                     DebugTools.Assert(md.EntityLastModifiedTick > fromTick || md.EntityLastModifiedTick == GameTick.Zero);
-                    stateEntities.Add(GetEntityState(player, uid, fromTick, md));
+
+                    var state = GetEntityState(player, uid, fromTick, md);
+
+                    // Temporary debugging code. See also code in GetEntityState()
+                    // TODO REMOVE TEMPORARY CODE
+                    if (state.Empty)
+                        Log.Error($"{nameof(GetEntityState)} returned an empty state for new entity {ToPrettyString(uid)}.");
+
+                    stateEntities.Add(state);
                 }
 
                 foreach (var uid in dirty)
@@ -1070,7 +1088,15 @@ internal sealed partial class PvsSystem : EntitySystem
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
                     DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick || md.EntityLastModifiedTick == GameTick.Zero);
                     DebugTools.Assert(md.EntityLastModifiedTick > fromTick || md.EntityLastModifiedTick == GameTick.Zero);
-                    stateEntities.Add(GetEntityState(player, uid, fromTick, md));
+
+                    var state = GetEntityState(player, uid, fromTick, md);
+
+                    // Temporary debugging code. See also code in GetEntityState()
+                    // TODO REMOVE TEMPORARY CODE
+                    if (state.Empty)
+                        Log.Error($"{nameof(GetEntityState)} returned an empty state for dirty entity {ToPrettyString(uid)}.");
+
+                    stateEntities.Add(state);
                 }
             }
         }
@@ -1130,6 +1156,23 @@ internal sealed partial class PvsSystem : EntitySystem
 
             if (sendCompList)
                 netComps!.Add(netId);
+        }
+
+        // Temporary debugging code. See also code in GetAllEntityStates()
+        // TODO REMOVE TEMPORARY CODE
+        if (changed.Count == 0)
+        {
+            var msg = $"{nameof(GetEntityState)} got an empty change set for entity {ToPrettyString(entityUid)}. Net component Data:";
+            foreach (var (_, cmp) in EntityManager.GetNetComponents(entityUid))
+            {
+                msg += $"\nName: {_factory.GetComponentName(cmp.GetType())}" +
+                       $"Enabled: {cmp.NetSyncEnabled}, " +
+                       $"Lifestage: {cmp.LifeStage}, " +
+                       $"OwnerOnly: {cmp.SendOnlyToOwner}, " +
+                       $"SessionSpecific: {cmp.SessionSpecific}, " +
+                       $"LastModified: {cmp.LastModifiedTick}";
+            }
+            Log.Error(msg);
         }
 
         DebugTools.Assert(meta.EntityLastModifiedTick >= meta.LastComponentRemoved);

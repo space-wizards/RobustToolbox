@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 143.2.0
+
+### New features
+
+* Add support for tests to load extra prototypes.
+
+### Bugfixes
+
+* Fix named toolshed command.
+* Unsubscribe from grid rendering events on shutdown.
+
+### Other
+
+* Remove unnecessary test prototypes.
+
+
 ## 143.1.0
 
 ### New features

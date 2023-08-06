@@ -167,7 +167,8 @@ namespace Robust.Client.GameObjects
 
         public bool TreeUpdateQueued { get; set; }
 
-        [DataField("layerDatums")]
+        [DataField("layerDatums",
+            priority:-1)] // Ensures that ISerializationHooks are run before this gets populated. Yes, this is very cursed.
         private List<PrototypeLayerData> LayerDatums
         {
             get

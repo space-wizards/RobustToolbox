@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
@@ -121,17 +122,17 @@ namespace Robust.Server.GameObjects
             RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession), true);
         }
 
-        public (IPlayerSession? actor, EntityUid? actorEntity) GetActorFromUserId(NetUserId? userId)
+        public bool TryGetActorFromUserId(NetUserId? userId, [NotNullWhen(true)] out IPlayerSession? actor, [MaybeNullWhen(true)] out EntityUid? actorEntity)
         {
-            IPlayerSession? actor = null;
-            EntityUid? actorEntity = null;
+            actor = null;
+            actorEntity = null;
             if (userId != null)
             {
                 actor = _playerManager.GetSessionByUserId(userId.Value);
                 actorEntity = actor.AttachedEntity;
             }
 
-            return (actor, actorEntity);
+            return actor != null;
         }
     }
 

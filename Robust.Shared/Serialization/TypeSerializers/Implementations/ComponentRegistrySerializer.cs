@@ -59,7 +59,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
-                var read = (IComponent)serializationManager.Read(type, copy, hookCtx)!;
+                var read = (IComponent)serializationManager.Read(type, copy, hookCtx, context)!;
 
                 components[compType] = new ComponentRegistryEntry(read, copy);
             }

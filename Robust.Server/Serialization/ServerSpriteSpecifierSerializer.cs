@@ -1,4 +1,3 @@
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -34,7 +33,7 @@ public sealed class ServerSpriteSpecifierSerializer : SpriteSpecifierSerializer
         }
 
         var path = serializationManager.ValidateNode<ResPath>(
-            new ValueDataNode($"{SpriteSpecifierSerializer.TextureRoot / valuePathNode.Value}"), context);
+            new ValueDataNode($"{TextureRoot / valuePathNode.Value}"), context);
 
         if (path is ErrorNode) return path;
 
@@ -44,11 +43,15 @@ public sealed class ServerSpriteSpecifierSerializer : SpriteSpecifierSerializer
         // meta.json
 
         var statePath = serializationManager.ValidateNode<ResPath>(
-            new ValueDataNode($"{SpriteSpecifierSerializer.TextureRoot / valuePathNode.Value / valueStateNode.Value}.png"),
+            new ValueDataNode($"{TextureRoot / valuePathNode.Value / valueStateNode.Value}.png"),
             context);
 
         if (statePath is ErrorNode) return statePath;
 
-        return new ValidatedMappingNode(new());
+        return new ValidatedMappingNode(new()
+        {
+            { new ValidatedValueNode(new ValueDataNode("sprite")), new ValidatedValueNode(pathNode)},
+            { new ValidatedValueNode(new ValueDataNode("state")), new ValidatedValueNode(valueStateNode)},
+        });
     }
 }

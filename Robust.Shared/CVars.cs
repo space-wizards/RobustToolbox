@@ -1570,5 +1570,11 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> LaunchContentBundle =
             CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
+
+        /*
+         * TOOLSHED
+         * CVars controlling how Toolshed behaves, like max output.
+         */
+
     }
 }

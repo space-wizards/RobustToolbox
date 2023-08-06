@@ -162,6 +162,12 @@ internal static class ReflectionExtensions
     // IEnumerable<EntityUid> ^ IEnumerable<T> -> EntityUid
     public static Type Intersect(this Type left, Type right)
     {
+        if (right.IsGenericType && right.GetGenericTypeDefinition() == typeof(Nullable<>) &&
+            (!left.IsGenericType || left.GetGenericTypeDefinition() != typeof(Nullable<>)))
+        {
+            return left;
+        }
+
         if (!left.IsGenericType)
             return left;
 
@@ -193,24 +199,20 @@ internal static class ReflectionExtensions
         if (left.IsAssignableTo(right))
             return true;
 
-        if (right.IsInterface)
+        if (right.IsInterface && !left.IsInterface)
         {
             foreach (var i in left.GetInterfaces())
             {
-                if (left.IsAssignableToGeneric(i, toolshed, recursiveDescent))
+                if (right.GetMostGenericPossible() != i.GetMostGenericPossible())
+                    continue;
+                if (right.IsAssignableToGeneric(i, toolshed, recursiveDescent))
                     return true;
             }
         }
 
         if (left.Constructable() && right.IsGenericParameter)
         {
-            var constraints = right.GetGenericParameterConstraints();
-            foreach (var t in constraints)
-            {
-                if (!left.IsAssignableToGeneric(t, toolshed, recursiveDescent))
-                    return false;
-            }
-
+            // TODO: We need a constraint solver and a general overhaul of how toolshed constructs implementations.
             return true;
         }
 
@@ -255,7 +257,7 @@ internal static class ReflectionExtensions
         if (!IsGenericRelated(t))
             return true;
 
-        if (!t.IsGenericType)
+        if (!t.IsGenericType || !t.IsConstructedGenericType)
             return false;
 
         var r = true;
@@ -290,5 +292,13 @@ internal static class ReflectionExtensions
         var indexParams = propertyInfo.GetIndexParameters();
         return indexParams.Length == 1
                && indexParams[0].ParameterType == typeof(string);
+    }
+
+    public static Type GetMostGenericPossible(this Type t)
+    {
+        if (!t.IsGenericType)
+            return t;
+
+        return t.GetGenericTypeDefinition();
     }
 }

@@ -142,7 +142,8 @@ namespace Robust.Server.Console
                         ctx.WriteLine(err.Describe());
                     }
 
-                    shell.WriteLine(_toolshed.PrettyPrintType(res));
+                    shell.WriteLine(FormattedMessage.FromMarkupPermissive(_toolshed.PrettyPrintType(res, out var more, moreUsed: true)));
+                    ctx.WriteVar("more", more);
                 }
             }
             catch (Exception e)

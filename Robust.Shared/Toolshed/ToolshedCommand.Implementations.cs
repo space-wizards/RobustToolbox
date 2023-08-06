@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Security;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -83,22 +84,31 @@ public abstract partial class ToolshedCommand
             })
             .Select(x =>
             {
-                if (x.IsGenericMethodDefinition)
+                try
                 {
-                    if (x.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>())
+                    if (x.IsGenericMethodDefinition)
                     {
-                        var paramT = x.ConsoleGetPipedArgument()!.ParameterType;
-                        var t = pipedType!.Intersect(paramT);
-                        return x.MakeGenericMethod(typeArguments.Append(t).ToArray());
+                        if (x.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>())
+                        {
+                            var paramT = x.ConsoleGetPipedArgument()!.ParameterType;
+                            var t = pipedType!.Intersect(paramT);
+                            return x.MakeGenericMethod(typeArguments.Append(t).ToArray());
+                        }
+                        else
+                            return x.MakeGenericMethod(typeArguments);
                     }
-                    else
-                        return x.MakeGenericMethod(typeArguments);
+
+                    return x;
+                }
+                catch (ArgumentException _)
+                {
+                    // oopsy, toolshed guessed wrong somewhere. Likely due to lack of constraint solver.
+                    return null;
                 }
 
-                return x;
-            }).ToList();
+            });
 
-        return impls;
+        return impls.Where(x => x is not null).Cast<MethodInfo>().ToList();
     }
 
     internal List<MethodInfo> GetGenericImplementations()

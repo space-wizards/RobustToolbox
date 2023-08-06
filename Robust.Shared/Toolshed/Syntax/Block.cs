@@ -135,7 +135,7 @@ public sealed class Block<TIn, TOut>
         CommandRun = expr;
     }
 
-    public TOut? Invoke(object? input, IInvocationContext ctx)
+    public TOut? Invoke(TIn? input, IInvocationContext ctx)
     {
         return CommandRun.Invoke(input, ctx);
     }

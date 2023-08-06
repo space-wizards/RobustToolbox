@@ -17,7 +17,7 @@ internal sealed class CmdCommand : ToolshedCommand
         => "Have you mooed today?";
 
     [CommandImplementation("descloc")]
-    public string GetLogStr([PipedArgument] CommandSpec cmd) => cmd.DescLocStr();
+    public string GetLocStr([PipedArgument] CommandSpec cmd) => cmd.DescLocStr();
 
 #if CLIENT_SCRIPTING
     [CommandImplementation("getshim")]

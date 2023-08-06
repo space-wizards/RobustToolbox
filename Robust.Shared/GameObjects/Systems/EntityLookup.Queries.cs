@@ -25,12 +25,10 @@ public sealed partial class EntityLookupSystem
     private void AddEntitiesIntersecting(
         EntityUid lookupUid,
         HashSet<EntityUid> intersecting,
-        Box2 worldAABB,
+        Box2 localAABB,
         LookupFlags flags)
     {
         var lookup = _broadQuery.GetComponent(lookupUid);
-        var invMatrix = _transform.GetInvWorldMatrix(lookupUid);
-        var localAABB = invMatrix.TransformBox(worldAABB);
         var state = (intersecting, flags);
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
@@ -280,14 +278,15 @@ public sealed partial class EntityLookupSystem
         var intersecting = new HashSet<EntityUid>();
 
         // Get grid entities
-        var state = (this, _map, intersecting, worldAABB, flags);
+        var state = (this, _map, intersecting, worldAABB, _transform, flags);
 
         _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
             static (EntityUid gridUid, MapGridComponent grid, ref (
                 EntityLookupSystem lookup, SharedMapSystem _map, HashSet<EntityUid> intersecting,
-                Box2 worldAABB, LookupFlags flags) tuple) =>
+                Box2 worldAABB, SharedTransformSystem xformSystem, LookupFlags flags) tuple) =>
             {
-                tuple.lookup.AddEntitiesIntersecting(gridUid, tuple.intersecting, tuple.worldAABB, tuple.flags);
+                var localAABB = tuple.xformSystem.GetInvWorldMatrix(gridUid).TransformBox(tuple.worldAABB);
+                tuple.lookup.AddEntitiesIntersecting(gridUid, tuple.intersecting, localAABB, tuple.flags);
 
                 if ((tuple.flags & LookupFlags.Static) != 0x0)
                 {
@@ -306,7 +305,9 @@ public sealed partial class EntityLookupSystem
 
         // Get map entities
         var mapUid = _mapManager.GetMapEntityId(mapId);
-        AddEntitiesIntersecting(mapUid, intersecting, worldAABB, flags);
+        // Transform just in case future proofing?
+        var localAABB = _transform.GetInvWorldMatrix(mapUid).TransformBox(worldAABB);
+        AddEntitiesIntersecting(mapUid, intersecting, localAABB, flags);
         AddContained(intersecting, flags);
 
         return intersecting;
@@ -672,7 +673,8 @@ public sealed partial class EntityLookupSystem
         if (!_mapManager.GridExists(gridId))
             return intersecting;
 
-        AddEntitiesIntersecting(gridId, intersecting, worldAABB, flags);
+        var localAABB = _transform.GetInvWorldMatrix(gridId).TransformBox(worldAABB);
+        AddEntitiesIntersecting(gridId, intersecting, localAABB, flags);
         AddContained(intersecting, flags);
 
         return intersecting;

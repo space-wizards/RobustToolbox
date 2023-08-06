@@ -131,12 +131,16 @@ public sealed partial class ReplayLoadManager
         var ticksSinceLastCheckpoint = 0;
         var spawnedTracker = 0;
         var stateTracker = 0;
+        var curState = state0;
         for (var i = 1; i < states.Count; i++)
         {
             if (i % 10 == 0)
                 await callback(i, states.Count, LoadingState.ProcessingFiles, false);
 
-            var curState = states[i];
+            var lastState = curState;
+            curState = states[i];
+            DebugTools.Assert(curState.FromSequence <= lastState.ToSequence);
+
             UpdatePlayerStates(curState.PlayerStates.Span, playerStates);
             UpdateEntityStates(curState.EntityStates.Span, entStates, ref spawnedTracker, ref stateTracker, detached);
             UpdateMessages(messages[i], uploadedFiles, prototypes, cvars, detachQueue, ref timeBase);
@@ -222,7 +226,13 @@ public sealed partial class ReplayLoadManager
                     // forwards. Also, note that files HAVE to be uploaded while generating checkpoints, in case
                     // someone spawns an entity that relies on uploaded data.
                     if (!ignoreDuplicates)
-                        throw new NotSupportedException("Overwriting an existing file is not yet supported by replays.");
+                    {
+                        var msg = $"Overwriting an existing file upload! Path: {path}";
+                        if (_confMan.GetCVar(CVars.ReplayIgnoreErrors))
+                            _sawmill.Error(msg);
+                        else
+                            throw new NotSupportedException(msg);
+                    }
 
                     message.Messages.RemoveSwap(i);
                     break;
@@ -255,7 +265,12 @@ public sealed partial class ReplayLoadManager
                     // prototype changes when jumping around in time. This also requires reworking how the initial
                     // implicit state data is generated, because we can't simply cache it anymore.
                     // Also, does reloading prototypes in release mode modify existing entities?
-                    throw new NotSupportedException($"Overwriting an existing prototype is not yet supported by replays.");
+
+                    var msg = $"Overwriting an existing prototype! Kind: {kind.Name}. Ids: {string.Join(", ", ids)}";
+                    if (_confMan.GetCVar(CVars.ReplayIgnoreErrors))
+                        _sawmill.Error(msg);
+                    else
+                        throw new NotSupportedException(msg);
                 }
             }
 

@@ -192,7 +192,7 @@ public sealed partial class SerializationManager
         }
 
         var type = typeof(T);
-        if (!type.IsSealed || type.IsInterface)
+        if (!type.IsSealed) // abstract classes, virtual classes, and interfaces.
         {
             return (WriteGenericDelegate<T>)_writeGenericBaseDelegates.GetOrAdd((type, value!.GetType(), notNullableOverride),
                 static (tuple, manager) => ValueFactory(tuple.baseType, tuple.actualType, tuple.Item3, manager), this);

@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Threading;
 using Robust.Client.Graphics;
+using Robust.Client.Graphics.Clyde;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
@@ -27,8 +28,7 @@ namespace Robust.Client.ResourceManagement
                 ParsedShader = ShaderParser.Parse(reader, cache);
             }
 
-            var clyde = IoCManager.Resolve<IClydeInternal>();
-            ClydeHandle = clyde.LoadShader(ParsedShader, path.ToString());
+            ClydeHandle = ((IClydeInternal)cache.Clyde).LoadShader(ParsedShader, path.ToString());
         }
 
         public override void Reload(IResourceCache cache, ResPath path, CancellationToken ct = default)
@@ -57,8 +57,7 @@ namespace Robust.Client.ResourceManagement
                 }
             }
 
-            var clyde = IoCManager.Resolve<IClydeInternal>();
-            clyde.ReloadShader(ClydeHandle, ParsedShader);
+            ((IClydeInternal)cache.Clyde).ReloadShader(ClydeHandle, ParsedShader);
         }
     }
 }

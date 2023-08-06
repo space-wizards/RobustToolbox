@@ -200,7 +200,6 @@ namespace Robust.Client.GameObjects
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataField("rsi", priority: 2)]
         public RSI? BaseRSI
         {
             get => _baseRsi;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Client.Graphics;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 
@@ -40,5 +41,9 @@ namespace Robust.Client.ResourceManagement
         // Resource load callbacks so content can hook stuff like click maps.
         event Action<TextureLoadedEventArgs> OnRawTextureLoaded;
         event Action<RsiLoadedEventArgs> OnRsiLoaded;
+        
+        IClyde Clyde { get; }
+        IClydeAudio ClydeAudio { get; }
+        IFontManager FontManager { get; }
     }
 }

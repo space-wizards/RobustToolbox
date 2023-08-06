@@ -54,6 +54,52 @@ END TEMPLATE-->
 *None yet*
 
 
+## 144.0.0
+
+### Breaking changes
+
+* Add new args to entitylookup methods to allow for shrinkage of tile-bounds checks. Default changed to shrink the grid-local AABB by the polygon skin to avoid clipping neighboring tile entities.
+* Non-hard fixtures will no longer count by default for EntityLookup.
+
+### New features
+
+* Added new EntityLookup flag to return non-hard fixtures or not.
+
+
+## 143.3.0
+
+### New features
+
+* Entity placement and spawn commands now raise informative events that content can handle.
+* Replay clients can now optionally ignore some errors instead of refusing to load the replay.
+
+### Bugfixes
+
+* `AudioParams.PlayOffsetSecond` will no longer apply an offset that is larger then the length of the audio stream.
+* Fixed yaml serialization of arrays of virtual/abstract objects.
+
+
+### Other
+
+* Removed an incorrect gamestate debug assert.
+
+
+## 143.2.0
+
+### New features
+
+* Add support for tests to load extra prototypes from multiple sources.
+
+### Bugfixes
+
+* Fix named toolshed command.
+* Unsubscribe from grid rendering events on shutdown.
+
+### Other
+
+* Remove unnecessary test prototypes.
+
+
 ## 143.1.0
 
 ### New features

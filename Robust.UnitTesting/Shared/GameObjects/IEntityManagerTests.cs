@@ -11,19 +11,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
     {
         private static readonly MapId TestMapId = new(1);
 
-        const string PROTOTYPE = @"
-- type: entity
-  name: dummy
-  id: dummy
-  components:
-  - type: Transform
-";
-
         private static ISimulation SimulationFactory()
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterPrototypes(protoMan => protoMan.LoadString(PROTOTYPE))
                 .InitializeInstance();
 
             var mapManager = sim.Resolve<IMapManager>();
@@ -43,7 +34,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var sim = SimulationFactory();
 
             var entMan = sim.Resolve<IEntityManager>();
-            var newEnt = entMan.SpawnEntity("dummy", new MapCoordinates(0, 0, TestMapId));
+            var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, TestMapId));
             Assert.That(newEnt, Is.Not.EqualTo(EntityUid.Invalid));
         }
 

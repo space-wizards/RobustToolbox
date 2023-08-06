@@ -32,6 +32,7 @@ using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
@@ -371,6 +372,7 @@ namespace Robust.Server
             _prototype.ResolveResults();
             _refMan.Initialize();
 
+            IoCManager.Resolve<ToolshedManager>().Initialize();
             _consoleHost.Initialize();
             _entityManager.Startup();
             _mapManager.Startup();

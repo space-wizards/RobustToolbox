@@ -1,4 +1,3 @@
-using Robust.Server.Bql;
 using Robust.Server.Configuration;
 using Robust.Server.Console;
 using Robust.Server.DataMetrics;
@@ -82,7 +81,6 @@ namespace Robust.Server
             deps.Register<IScriptHost, ScriptHost>();
             deps.Register<IMetricsManager, MetricsManager>();
             deps.Register<IAuthManager, AuthManager>();
-            deps.Register<IBqlQueryManager, BqlQueryManager>();
             deps.Register<HubManager, HubManager>();
             deps.Register<IRobustSerializer, ServerRobustSerializer>();
             deps.Register<IRobustSerializerInternal, ServerRobustSerializer>();

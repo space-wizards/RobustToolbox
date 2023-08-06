@@ -1509,8 +1509,8 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ReplayDynamicalScrubbing = CVarDef.Create("replay.dynamical_scrubbing", true);
 
         /// <summary>
-        /// When recording replays,
-        /// should we attempt to make a valid content bundle that can be directly executed by the launcher?
+        /// When recording replays, should we attempt to make a valid content bundle that can be directly executed by
+        /// the launcher?
         /// </summary>
         /// <remarks>
         /// This requires the server's build information to be sufficiently filled out.
@@ -1518,6 +1518,16 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ReplayMakeContentBundle =
             CVarDef.Create("replay.make_content_bundle", true);
 
+        /// <summary>
+        /// If true, this will cause the replay client to ignore some errors while loading a replay file.
+        /// </summary>
+        /// <remarks>
+        /// This might make otherwise broken replays playable, but ignoring these errors is also very likely to
+        /// cause unexpected and confusing errors elsewhere. By default this is disabled so that users report the
+        /// original exception rather than sending people on a wild-goose chase to find a non-existent bug.
+        /// </remarks>
+        public static readonly CVarDef<bool> ReplayIgnoreErrors =
+            CVarDef.Create("replay.ignore_errors", false, CVar.CLIENTONLY | CVar.ARCHIVE);
         /*
          * CFG
          */

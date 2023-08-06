@@ -164,6 +164,21 @@ public abstract partial class SharedPhysicsSystem
             4096);
 
         InitializePool();
+        EntityManager.EntityQueueDeleted += OnContactEntityQueueDel;
+    }
+
+    private void ShutdownContacts()
+    {
+        EntityManager.EntityQueueDeleted -= OnContactEntityQueueDel;
+    }
+
+    private void OnContactEntityQueueDel(EntityUid obj)
+    {
+        // If an entity is queuedeleted then we want to purge its contacts before SimulateWorld runs in the same tick.
+        if (!TryComp<PhysicsComponent>(obj, out var physicsComp))
+            return;
+
+        DestroyContacts(physicsComp);
     }
 
     private void InitializePool()

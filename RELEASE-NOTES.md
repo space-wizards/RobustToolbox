@@ -54,6 +54,48 @@ END TEMPLATE-->
 *None yet*
 
 
+## 143.2.0
+
+### New features
+
+* Add support for tests to load extra prototypes.
+
+### Bugfixes
+
+* Fix named toolshed command.
+* Unsubscribe from grid rendering events on shutdown.
+
+### Other
+
+* Remove unnecessary test prototypes.
+
+
+## 143.1.0
+
+### New features
+
+* Add locale support for grammatical measure words.
+
+### Bugfixes
+
+* Don't raise contact events for entities that were QueueDeleted during the tick.
+* Exception on duplicate broadcast subscriptions as this was unsupported behaviour.
+
+### Other
+
+* Add VV ReadWrite to PhysicsComponent BodyStatus.
+
+
+## 143.0.0
+
+### New features
+
+
+- Toolshed, a tacit shell language, has been introduced.
+  - Use Robust.Shared.ToolshedManager to invoke commands, with optional input and output.
+  - Implement IInvocationContext for custom invocation contexts i.e. scripting systems.
+
+
 ## 142.1.2
 
 ### Other

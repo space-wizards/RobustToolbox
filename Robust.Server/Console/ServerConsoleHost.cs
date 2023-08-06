@@ -9,6 +9,8 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
+using Robust.Shared.Toolshed;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.Console
@@ -19,6 +21,7 @@ namespace Robust.Server.Console
         [Dependency] private readonly IConGroupController _groupController = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private readonly ToolshedManager _toolshed = default!;
 
         public ServerConsoleHost() : base(isServer: true) {}
 
@@ -45,19 +48,31 @@ namespace Robust.Server.Console
         /// <inheritdoc />
         public override void WriteLine(ICommonSession? session, string text)
         {
+            var msg = new FormattedMessage();
+            msg.AddText(text);
             if (session is IPlayerSession playerSession)
-                OutputText(playerSession, text, false);
+                OutputText(playerSession, msg, false);
             else
-                OutputText(null, text, false);
+                OutputText(null, msg, false);
+        }
+
+        public override void WriteLine(ICommonSession? session, FormattedMessage msg)
+        {
+            if (session is IPlayerSession playerSession)
+                OutputText(playerSession, msg, false);
+            else
+                OutputText(null, msg, false);
         }
 
         /// <inheritdoc />
         public override void WriteError(ICommonSession? session, string text)
         {
+            var msg = new FormattedMessage();
+            msg.AddText(text);
             if (session is IPlayerSession playerSession)
-                OutputText(playerSession, text, true);
+                OutputText(playerSession, msg, true);
             else
-                OutputText(null, text, true);
+                OutputText(null, msg, true);
         }
 
         public bool IsCmdServer(IConsoleCommand cmd) => true;
@@ -70,13 +85,13 @@ namespace Robust.Server.Console
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
                 ExecuteInShell(sudoShell, argStr["sudo ".Length..]);
-            }, (shell, args) =>
+            }, (shell, args, argStr) =>
             {
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
 
 #pragma warning disable CA2012
-                return CalcCompletions(sudoShell, args);
+                return CalcCompletions(sudoShell, args, argStr);
 #pragma warning restore CA2012
             });
 
@@ -116,6 +131,18 @@ namespace Robust.Server.Console
 
                     AnyCommandExecuted?.Invoke(shell, cmdName, command, cmdArgs);
                     conCmd.Execute(shell, command, cmdArgs);
+                }
+                else
+                {
+                    // toolshed time
+                    _toolshed.InvokeCommand(shell, command, null, out var res, out var ctx);
+
+                    foreach (var err in ctx.GetErrors())
+                    {
+                        ctx.WriteLine(err.Describe());
+                    }
+
+                    shell.WriteLine(_toolshed.PrettyPrintType(res));
                 }
             }
             catch (Exception e)
@@ -162,7 +189,7 @@ namespace Robust.Server.Console
             ExecuteCommand(session, text);
         }
 
-        private void OutputText(IPlayerSession? session, string text, bool error)
+        private void OutputText(IPlayerSession? session, FormattedMessage text, bool error)
         {
             if (session != null)
             {
@@ -183,10 +210,25 @@ namespace Robust.Server.Console
         private async void HandleConCompletions(MsgConCompletion message)
         {
             var session = _players.GetSessionByChannel(message.MsgChannel);
+
             var shell = new ConsoleShell(this, session, false);
 
-            var result = await CalcCompletions(shell, message.Args);
+            var result = await CalcCompletions(shell, message.Args, message.ArgString);
 
+            if ((result.Options.Length == 0 && result.Hint is null) || message.Args.Length <= 1)
+            {
+                var parser = new ForwardParser(message.ArgString, _toolshed);
+                CommandRun.TryParse(false, true, parser, null, null, false, out _, out var completions, out _);
+                if (completions == null)
+                {
+                    goto done;
+                }
+                var (shedRes, _) = await completions.Value;
+                shedRes ??= CompletionResult.Empty;
+                result = new CompletionResult(shedRes.Options.Concat(result.Options).ToArray(), shedRes.Hint ?? result.Hint);
+            }
+
+            done:
             var msg = new MsgConCompletionResp
             {
                 Result = result,
@@ -199,7 +241,7 @@ namespace Robust.Server.Console
             NetManager.ServerSendMessage(msg, message.MsgChannel);
         }
 
-        private ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args)
+        private ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
         {
             // Logger.Debug(string.Join(", ", args));
 
@@ -217,7 +259,7 @@ namespace Robust.Server.Console
             if (!ShellCanExecute(shell, cmdName))
                 return ValueTask.FromResult(CompletionResult.Empty);
 
-            return cmd.GetCompletionAsync(shell, args[1..], default);
+            return cmd.GetCompletionAsync(shell, args[1..], argStr, default);
         }
 
         private sealed class SudoShell : IConsoleShell
@@ -252,6 +294,12 @@ namespace Robust.Server.Console
             {
                 _owner.WriteLine(text);
                 _sudoer.WriteLine(text);
+            }
+
+            public void WriteLine(FormattedMessage message)
+            {
+                _owner.WriteLine(message);
+                _sudoer.WriteLine(message);
             }
 
             public void WriteError(string text)

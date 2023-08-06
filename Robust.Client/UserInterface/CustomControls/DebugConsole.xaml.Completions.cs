@@ -90,7 +90,7 @@ public sealed partial class DebugConsole
 
     private async void TypeUpdateCompletions(bool fullUpdate)
     {
-        var (args, _, _) = CalcTypingArgs();
+        var (args, _, _, str) = CalcTypingArgs();
 
         if (args.Count != _compParamCount)
         {
@@ -101,7 +101,7 @@ public sealed partial class DebugConsole
         if (fullUpdate)
         {
             var seq = ++_compSeqSend;
-            var task = _consoleHost.GetCompletions(args, _compCancel.Token);
+            var task = _consoleHost.GetCompletions(args, str, _compCancel.Token);
 
             if (!task.IsCompleted)
             {
@@ -140,7 +140,7 @@ public sealed partial class DebugConsole
         if (_compCurResult == null)
             return;
 
-        var (_, curTyping, _) = CalcTypingArgs();
+        var (_, curTyping, _, _) = CalcTypingArgs();
 
         var curSelected = _compFiltered?.Length > 0 ? _compFiltered[_compSelected] : default;
         _compFiltered = FilterCompletions(_compCurResult.Options, curTyping);
@@ -168,7 +168,7 @@ public sealed partial class DebugConsole
 
         DebugTools.AssertNotNull(_compCurResult);
 
-        var (_, _, endRange) = CalcTypingArgs();
+        var (_, _, endRange, _) = CalcTypingArgs();
 
         var offset = CommandBar.GetOffsetAtIndex(endRange.start);
         // Logger.Debug($"Offset: {offset}");
@@ -231,7 +231,7 @@ public sealed partial class DebugConsole
         }
     }
 
-    private (List<string> args, string curTyping, (int start, int end) lastRange) CalcTypingArgs()
+    private (List<string> args, string curTyping, (int start, int end) lastRange, string argStr) CalcTypingArgs()
     {
         var cursor = CommandBar.CursorPosition;
         // Don't consider text after the cursor.
@@ -252,7 +252,7 @@ public sealed partial class DebugConsole
         else
             lastRange = (cursor, cursor);
 
-        return (args, args[^1], lastRange);
+        return (args, args[^1], lastRange, text.ToString());
     }
 
     private CompletionOption[] FilterCompletions(IEnumerable<CompletionOption> completions, string curTyping)
@@ -270,7 +270,7 @@ public sealed partial class DebugConsole
             {
                 // Figure out typing word so we know how much to replace.
                 var (completion, _, completionFlags) = _compFiltered[_compSelected];
-                var (_, _, lastRange) = CalcTypingArgs();
+                var (_, _, lastRange, _) = CalcTypingArgs();
 
                 // Replace the full word from the start.
                 // This means that letter casing will match the completion suggestion.

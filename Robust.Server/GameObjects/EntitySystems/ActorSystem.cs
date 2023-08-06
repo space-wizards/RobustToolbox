@@ -1,6 +1,8 @@
 using JetBrains.Annotations;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects
@@ -11,6 +13,8 @@ namespace Robust.Server.GameObjects
     [UsedImplicitly]
     public sealed class ActorSystem : EntitySystem
     {
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -115,6 +119,19 @@ namespace Robust.Server.GameObjects
 
             // The player is fully detached now that the component has shut down.
             RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession), true);
+        }
+
+        public (IPlayerSession? actor, EntityUid? actorEntity) GetActorFromUserId(NetUserId? userId)
+        {
+            IPlayerSession? actor = null;
+            EntityUid? actorEntity = null;
+            if (userId != null)
+            {
+                actor = _playerManager.GetSessionByUserId(userId.Value);
+                actorEntity = actor.AttachedEntity;
+            }
+
+            return (actor, actorEntity);
         }
     }
 

@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 144.0.1
+
+### Bugfixes
+
+* Fix some EntityLookup queries incorrectly being double transformed internally.
+* Shrink TileEnlargement even further for EntityLookup default queries.
+
+
 ## 144.0.0
 
 ### Breaking changes

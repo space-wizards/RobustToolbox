@@ -1,5 +1,4 @@
 using Robust.Client.ResourceManagement;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -29,7 +28,7 @@ public sealed class ClientSpriteSpecifierSerializer : SpriteSpecifierSerializer
         }
 
         var res = dependencies.Resolve<IResourceCache>();
-        var rsiPath = SpriteSpecifierSerializer.TextureRoot / valuePathNode.Value;
+        var rsiPath = TextureRoot / valuePathNode.Value;
         if (!res.TryGetResource(rsiPath, out RSIResource? resource))
         {
             return new ErrorNode(node, "Failed to load RSI");
@@ -40,6 +39,10 @@ public sealed class ClientSpriteSpecifierSerializer : SpriteSpecifierSerializer
             return new ErrorNode(node, "Invalid RSI state");
         }
 
-        return new ValidatedMappingNode(new());
+        return new ValidatedMappingNode(new()
+        {
+            { new ValidatedValueNode(new ValueDataNode("sprite")), new ValidatedValueNode(pathNode)},
+            { new ValidatedValueNode(new ValueDataNode("state")), new ValidatedValueNode(valueStateNode)},
+        });
     }
 }

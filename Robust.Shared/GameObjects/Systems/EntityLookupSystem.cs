@@ -85,6 +85,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private EntityQuery<PhysicsMapComponent> _mapQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
+    public const float TileEnlargementRadius = -PhysicsConstants.PolygonRadius * 4f;
+
     /// <summary>
     /// Returns all non-grid entities. Consider using your own flags if you wish for a faster query.
     /// </summary>

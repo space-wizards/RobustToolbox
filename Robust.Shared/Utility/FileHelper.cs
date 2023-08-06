@@ -82,8 +82,13 @@ internal static class FileHelper
             // Who the fuck though this was the right way of handling that? This should clearly just be a
             // ERROR_FILE_NOT_FOUND or other result like that,
             // https://github.com/dotnet/runtime/issues/70275
-            stream = null;
-            return false;
+            if (Directory.Exists(path))
+            {
+                stream = null;
+                return false;
+            }
+
+            throw;
         }
     }
 }

@@ -10,7 +10,7 @@ public sealed class ContentFileReadTest : RobustIntegrationTest
 {
     [Test]
     [TestOf(typeof(ResourceManager))]
-    public async Task TestConnectDisconnect()
+    public async Task TestFileReading()
     {
         var client = StartClient();
         await client.WaitIdleAsync();

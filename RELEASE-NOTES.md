@@ -54,11 +54,29 @@ END TEMPLATE-->
 *None yet*
 
 
+## 143.3.0
+
+### New features
+
+* Entity placement and spawn commands now raise informative events that content can handle.
+* Replay clients can now optionally ignore some errors instead of refusing to load the replay.
+
+### Bugfixes
+
+* `AudioParams.PlayOffsetSecond` will no longer apply an offset that is larger then the length of the audio stream.
+* Fixed yaml serialization of arrays of virtual/abstract objects.
+
+
+### Other
+
+* Removed an incorrect gamestate debug assert.
+
+
 ## 143.2.0
 
 ### New features
 
-* Add support for tests to load extra prototypes.
+* Add support for tests to load extra prototypes from multiple sources.
 
 ### Bugfixes
 

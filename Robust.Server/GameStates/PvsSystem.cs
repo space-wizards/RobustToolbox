@@ -1033,7 +1033,6 @@ internal sealed partial class PvsSystem : EntitySystem
             while (query.MoveNext(out var uid, out var md))
             {
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
                 if (md.EntityLastModifiedTick > fromTick)
                     stateEntities.Add(GetEntityState(player, uid, fromTick, md));
             }

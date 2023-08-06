@@ -33,6 +33,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             var sequenceNode = new SequenceDataNode();
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
 
+            // Special case for -1 to avoid InvalidOperationException errors.
+            if (value == -1)
+            {
+                var name = Enum.GetName(flagType, -1);
+                if (name != null)
+                {
+                    sequenceNode.Add(new ValueDataNode(name));
+                    return sequenceNode;
+                }
+            }
+
             // Assumption: a bitflag enum has a constructor for every bit value such that
             // that bit is set in some other constructor i.e. if a 1 appears somewhere in
             // the bits of one of the enum constructors, there is an enum constructor which

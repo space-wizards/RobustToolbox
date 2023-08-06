@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 144.0.0
+
+### Breaking changes
+
+* Add new args to entitylookup methods to allow for shrinkage of tile-bounds checks. Default changed to shrink the grid-local AABB by the polygon skin to avoid clipping neighboring tile entities.
+* Non-hard fixtures will no longer count by default for EntityLookup.
+
+### New features
+
+* Added new EntityLookup flag to return non-hard fixtures or not.
+
+
 ## 143.3.0
 
 ### New features

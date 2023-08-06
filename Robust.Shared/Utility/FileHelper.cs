@@ -80,7 +80,7 @@ internal static class FileHelper
         {
             // UnauthorizedAccessException aka this is a folder not a file because of course that is what that means.
             // Who the fuck though this was the right way of handling that? This should clearly just be a
-            // ERROR_FILE_NOT_FOUND or other result like that,
+            // ERROR_FILE_NOT_FOUND or some other result like that,
             // https://github.com/dotnet/runtime/issues/70275
             if (Directory.Exists(path))
             {

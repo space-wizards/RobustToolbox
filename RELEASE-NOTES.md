@@ -54,6 +54,25 @@ END TEMPLATE-->
 *None yet*
 
 
+## 145.0.0
+
+### Breaking changes
+
+* Removed some old SpriteComponent data-fields ("rsi", and "layerDatums").
+
+### New features
+
+* Added `ActorSystem.TryGetActorFromUserId()`.
+* Added IPrototypeManager.EnumerateKinds().
+
+### Bugfixes
+
+* Fixed SpriteSpecifierSerializer yaml validation not working properly.
+* Fixed IoC/Threading exceptions in `Resource.Load()`.
+* Fixed `TransformSystem.SetCoordinates()` throwing uninformative client-side errors.
+* Fixed `IResourceManager.ContentFileExists()` and `TryContentFileRead()` throwing exceptions on windows when trying to open a directory.
+
+
 ## 144.0.1
 
 ### Bugfixes

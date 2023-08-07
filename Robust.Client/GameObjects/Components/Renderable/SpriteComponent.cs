@@ -167,36 +167,6 @@ namespace Robust.Client.GameObjects
 
         public bool TreeUpdateQueued { get; set; }
 
-        [DataField("layerDatums")]
-        private List<PrototypeLayerData> LayerDatums
-        {
-            get
-            {
-                var layerDatums = new List<PrototypeLayerData>();
-                foreach (var layer in Layers)
-                {
-                    layerDatums.Add(layer.ToPrototypeData());
-                }
-
-                return layerDatums;
-            }
-            set
-            {
-                if (value == null) return;
-
-                Layers.Clear();
-                foreach (var layerDatum in value)
-                {
-                    AddLayer(layerDatum);
-                }
-
-                _layerMapShared = true;
-
-                QueueUpdateRenderTree();
-                QueueUpdateIsInert();
-            }
-        }
-
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -356,7 +326,16 @@ namespace Robust.Client.GameObjects
             if (layerDatums.Count != 0)
             {
                 LayerMap.Clear();
-                LayerDatums = layerDatums;
+                Layers.Clear();
+                foreach (var datum in layerDatums)
+                {
+                    AddLayer(datum);
+                }
+
+                _layerMapShared = true;
+
+                QueueUpdateRenderTree();
+                QueueUpdateIsInert();
             }
 
             UpdateLocalMatrix();

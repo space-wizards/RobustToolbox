@@ -486,7 +486,9 @@ public abstract partial class SharedTransformSystem
         {
             if (value.EntityId == uid)
             {
-                QueueDel(uid);
+                DetachParentToNull(uid, xform);
+                if (_netMan.IsServer || uid.IsClientSide())
+                    QueueDel(uid);
                 throw new InvalidOperationException($"Attempted to parent an entity to itself: {ToPrettyString(uid)}");
             }
 
@@ -494,13 +496,17 @@ public abstract partial class SharedTransformSystem
             {
                 if (!_xformQuery.Resolve(value.EntityId, ref newParent, false))
                 {
-                    QueueDel(uid);
+                    DetachParentToNull(uid, xform);
+                    if (_netMan.IsServer || uid.IsClientSide())
+                        QueueDel(uid);
                     throw new InvalidOperationException($"Attempted to parent entity {ToPrettyString(uid)} to non-existent entity {value.EntityId}");
                 }
 
                 if (newParent.LifeStage > ComponentLifeStage.Running || LifeStage(value.EntityId) > EntityLifeStage.MapInitialized)
                 {
-                    QueueDel(uid);
+                    DetachParentToNull(uid, xform);
+                    if (_netMan.IsServer || uid.IsClientSide())
+                        QueueDel(uid);
                     throw new InvalidOperationException($"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(uid)}, new parent: {ToPrettyString(value.EntityId)}");
                 }
 
@@ -514,7 +520,7 @@ public abstract partial class SharedTransformSystem
                         if (recursiveXform.ParentUid == uid)
                         {
                             if (!_gameTiming.ApplyingState)
-                                throw new InvalidOperationException($"Attempted to parent an entity to one of its descendants! {ToPrettyString(uid)}");
+                                throw new InvalidOperationException($"Attempted to parent an entity to one of its descendants! {ToPrettyString(uid)}. new parent: {ToPrettyString(value.EntityId)}");
 
                             // Client is halfway through applying server state, which can sometimes lead to a temporarily circular transform hierarchy.
                             // E.g., client is holding a foldable bed and predicts dropping & sitting in it -> reset to holding it -> bed is parent of player and vice versa.

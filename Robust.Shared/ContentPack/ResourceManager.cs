@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -190,6 +191,14 @@ namespace Robust.Shared.ContentPack
                 throw new FileNotFoundException($"Path '{path}' contains invalid characters/filenames.");
             }
 #endif
+
+            if (path.Value.CanonPath.EndsWith(ResPath.Separator))
+            {
+                // This is a folder, not a file.
+                fileStream = null;
+                return false;
+            }
+
             foreach (var (prefix, root) in _contentRoots)
             {
                 if (!path.Value.TryRelativeTo(prefix, out var relative))

@@ -59,7 +59,7 @@ public abstract partial class SharedTransformSystem
         DebugTools.Assert(xformQuery.GetComponent(oldGridUid).MapID == xformQuery.GetComponent(newGridUid).MapID);
         DebugTools.Assert(xform._anchored);
 
-        Dirty(xform);
+        Dirty(uid, xform);
         var ev = new ReAnchorEvent(uid, oldGridUid, newGridUid, tilePos, xform);
         RaiseLocalEvent(uid, ref ev);
     }
@@ -81,11 +81,11 @@ public abstract partial class SharedTransformSystem
             return false;
 
         var wasAnchored = xform._anchored;
-        Dirty(xform);
+        Dirty(uid, xform);
         xform._anchored = true;
 
         // Mark as static before doing position changes, to avoid the velocity change on parent change.
-        _physics.TrySetBodyType(uid, BodyType.Static);
+        _physics.TrySetBodyType(uid, BodyType.Static, xform: xform);
 
         if (!wasAnchored && xform.Running)
         {
@@ -117,27 +117,19 @@ public abstract partial class SharedTransformSystem
         if (!xform._anchored)
             return;
 
-        Dirty(xform);
+        Dirty(uid, xform);
         xform._anchored = false;
 
         if (setPhysics)
-            _physics.TrySetBodyType(uid, BodyType.Dynamic);
+            _physics.TrySetBodyType(uid, BodyType.Dynamic, xform: xform);
 
         if (xform.LifeStage < ComponentLifeStage.Initialized)
             return;
 
-        if (TryComp(xform.GridUid, out MapGridComponent? grid))
+        if (_gridQuery.TryGetComponent(xform.GridUid, out var grid))
         {
             var tileIndices = _map.TileIndicesFor(xform.GridUid.Value, grid, xform.Coordinates);
             _map.RemoveFromSnapGridCell(xform.GridUid.Value, grid, tileIndices, uid);
-        }
-        else if (xform.Initialized)
-        {
-            //HACK: Client grid pivot causes this.
-            //TODO: make grid components the actual grid
-
-            // I have NFI what the comment above is on about, but this doesn't seem good, so lets log an error if it happens.
-            Log.Error($"Missing grid while unanchoring {ToPrettyString(uid)}");
         }
 
         if (!xform.Running)
@@ -1103,7 +1095,7 @@ public abstract partial class SharedTransformSystem
 
         DebugTools.Assert(!xform.NoLocalRotation || xform.LocalRotation == 0);
 
-        Dirty(xform);
+        Dirty(xform.Owner, xform);
         xform.MatricesDirty = true;
 
         if (!xform.Initialized)

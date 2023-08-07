@@ -15,6 +15,7 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
+using TerraFX.Interop.Windows;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.Physics.Systems
@@ -50,29 +51,29 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly IParallelManager _parallel = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IDependencyCollection _deps = default!;
-        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedJointSystem _joints = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
         [Dependency] private readonly Gravity2DController _gravity = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+        [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
+        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private readonly SharedJointSystem _joints = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         private int _substeps;
 
         public bool MetricsEnabled { get; protected set; }
 
-        private ISawmill _sawmill = default!;
-
+        private EntityQuery<FixturesComponent> _fixturesQuery;
+        private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
 
         public override void Initialize()
         {
             base.Initialize();
 
-            _sawmill = Logger.GetSawmill("physics");
-            _sawmill.Level = LogLevel.Info;
-
+            _fixturesQuery = GetEntityQuery<FixturesComponent>();
+            _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);

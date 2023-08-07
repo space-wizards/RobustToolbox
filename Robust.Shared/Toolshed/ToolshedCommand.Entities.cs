@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 
 namespace Robust.Shared.Toolshed;
 
@@ -33,6 +34,20 @@ public abstract partial class ToolshedCommand
     [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected string EntName(EntityUid entity)
         => EntityManager.GetComponent<MetaDataComponent>(entity).EntityName;
+
+    /// <summary>
+    ///     A shorthand for spawning an entity.
+    /// </summary>
+    [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid Spawn(string? proto, EntityCoordinates coords)
+        => EntityManager.SpawnEntity(proto, coords);
+
+    /// <summary>
+    ///     A shorthand for spawning an entity.
+    /// </summary>
+    [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid Spawn(string? proto, MapCoordinates coords)
+        => EntityManager.SpawnEntity(proto, coords);
 
     /// <summary>
     ///     A shorthand for deleting an entity.

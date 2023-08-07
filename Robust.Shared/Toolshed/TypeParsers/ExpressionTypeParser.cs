@@ -8,17 +8,17 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 
 internal sealed class ExpressionTypeParser : TypeParser<CommandRun>
 {
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var res = CommandRun.TryParse(false, false, parser, null, null, false, out var r, out _, out error);
+        var res = CommandRun.TryParse(false, false, parserContext, null, null, false, out var r, out _, out error);
         result = r;
         return res;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        CommandRun.TryParse(false, true, parser, null, null, false, out _, out var autocomplete, out _);
+        CommandRun.TryParse(false, true, parserContext, null, null, false, out _, out var autocomplete, out _);
         if (autocomplete is null)
             return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((null, null));
 
@@ -29,17 +29,17 @@ internal sealed class ExpressionTypeParser : TypeParser<CommandRun>
 
 internal sealed class ExpressionTypeParser<T> : TypeParser<CommandRun<T>>
 {
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var res = CommandRun<T>.TryParse(false, false, parser, null, false, out var r, out _, out error);
+        var res = CommandRun<T>.TryParse(false, false, parserContext, null, false, out var r, out _, out error);
         result = r;
         return res;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        CommandRun<T>.TryParse(false, true, parser, null, false, out _, out var autocomplete, out _);
+        CommandRun<T>.TryParse(false, true, parserContext, null, false, out _, out var autocomplete, out _);
         if (autocomplete is null)
             return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((null, null));
 

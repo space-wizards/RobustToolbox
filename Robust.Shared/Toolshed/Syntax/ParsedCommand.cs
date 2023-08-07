@@ -25,7 +25,7 @@ public sealed class ParsedCommand
 
     public static bool TryParse(
             bool doAutoComplete,
-            ForwardParser parser,
+            ParserContext parserContext,
             Type? pipedArgumentType,
             [NotNullWhen(true)] out ParsedCommand? result,
             out IConError? error,
@@ -35,18 +35,18 @@ public sealed class ParsedCommand
         )
     {
         noCommand = false;
-        var checkpoint = parser.Save();
+        var checkpoint = parserContext.Save();
         var bundle = new CommandArgumentBundle()
             {Arguments = new(), Inverted = false, PipedArgumentType = pipedArgumentType, TypeArguments = Array.Empty<Type>()};
 
         autocomplete = null;
-        if (!TryDigestModifiers(parser, bundle, out error)
-            || !TryParseCommand(doAutoComplete, parser, bundle, pipedArgumentType, targetType, out var subCommand, out var invocable, out var command, out error, out noCommand, out autocomplete)
+        if (!TryDigestModifiers(parserContext, bundle, out error)
+            || !TryParseCommand(doAutoComplete, parserContext, bundle, pipedArgumentType, targetType, out var subCommand, out var invocable, out var command, out error, out noCommand, out autocomplete)
             || !command.TryGetReturnType(subCommand, pipedArgumentType, bundle.TypeArguments, out var retType)
             )
         {
             result = null;
-            parser.Restore(checkpoint);
+            parserContext.Restore(checkpoint);
             return false;
         }
 
@@ -64,12 +64,12 @@ public sealed class ParsedCommand
         SubCommand = subCommand;
     }
 
-    private static bool TryDigestModifiers(ForwardParser parser, CommandArgumentBundle bundle, out IConError? error)
+    private static bool TryDigestModifiers(ParserContext parserContext, CommandArgumentBundle bundle, out IConError? error)
     {
         error = null;
-        if (parser.PeekWord() == "not")
+        if (parserContext.PeekWord() == "not")
         {
-            parser.GetWord(); //yum
+            parserContext.GetWord(); //yum
             bundle.Inverted = true;
         }
 
@@ -78,7 +78,7 @@ public sealed class ParsedCommand
 
     private static bool TryParseCommand(
                 bool makeCompletions,
-                ForwardParser parser,
+                ParserContext parserContext,
                 CommandArgumentBundle bundle,
                 Type? pipedType,
                 Type? targetType,
@@ -91,22 +91,22 @@ public sealed class ParsedCommand
             )
     {
         noCommand = false;
-        var start = parser.Index;
-        var cmd = parser.GetWord(c => c is not ':' and not '{' and not '}' && !char.IsWhiteSpace(c));
+        var start = parserContext.Index;
+        var cmd = parserContext.GetWord(c => c is not ':' and not '{' and not '}' && !char.IsWhiteSpace(c));
         subCommand = null;
         invocable = null;
         command = null;
         if (cmd is null)
         {
-            if (parser.PeekChar() is null)
+            if (parserContext.PeekChar() is null)
             {
                 noCommand = true;
                 error = new OutOfInputError();
-                error.Contextualize(parser.Input, (parser.Index, parser.Index));
+                error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index));
                 autocomplete = null;
                 if (makeCompletions)
                 {
-                    var cmds = parser.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
+                    var cmds = parserContext.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
                     autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
                 }
 
@@ -117,20 +117,20 @@ public sealed class ParsedCommand
 
                 noCommand = true;
                 error = new NotValidCommandError(targetType);
-                error.Contextualize(parser.Input, (start, parser.Index));
+                error.Contextualize(parserContext.Input, (start, parserContext.Index));
                 autocomplete = null;
                 return false;
             }
         }
 
-        if (!parser.Toolshed.TryGetCommand(cmd, out var cmdImpl))
+        if (!parserContext.Toolshed.TryGetCommand(cmd, out var cmdImpl))
         {
             error = new UnknownCommandError(cmd);
-            error.Contextualize(parser.Input, (start, parser.Index));
+            error.Contextualize(parserContext.Input, (start, parserContext.Index));
             autocomplete = null;
             if (makeCompletions)
             {
-                var cmds = parser.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
+                var cmds = parserContext.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
                 autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
             }
 
@@ -143,50 +143,50 @@ public sealed class ParsedCommand
             autocomplete = null;
             if (makeCompletions)
             {
-                var cmds = parser.Toolshed.CommandsTakingType(pipedType ?? typeof(void)).Where(x => x.Cmd.Name == cmd);
+                var cmds = parserContext.Toolshed.CommandsTakingType(pipedType ?? typeof(void)).Where(x => x.Cmd.Name == cmd);
                 autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((
                     CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
             }
 
-            if (parser.GetChar() is not ':')
+            if (parserContext.GetChar() is not ':')
             {
                 error = new OutOfInputError();
-                error.Contextualize(parser.Input, (parser.Index, parser.Index));
+                error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index));
                 return false;
             }
 
-            var subCmdStart = parser.Index;
+            var subCmdStart = parserContext.Index;
 
-            if (parser.GetWord() is not { } subcmd)
+            if (parserContext.GetWord() is not { } subcmd)
             {
                 error = new OutOfInputError();
-                error.Contextualize(parser.Input, (parser.Index, parser.Index));
+                error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index));
                 return false;
             }
 
             if (!cmdImpl.Subcommands.Contains(subcmd))
             {
                 error = new UnknownSubcommandError(cmd, subcmd, cmdImpl);
-                error.Contextualize(parser.Input, (subCmdStart, parser.Index));
+                error.Contextualize(parserContext.Input, (subCmdStart, parserContext.Index));
                 return false;
             }
 
             subCommand = subcmd;
         }
 
-        if (parser.Consume(char.IsWhiteSpace) == 0 && makeCompletions)
+        if (parserContext.Consume(char.IsWhiteSpace) == 0 && makeCompletions)
         {
             error = null;
-            var cmds = parser.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
+            var cmds = parserContext.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
             autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), null));
             return false;
         }
 
-        var argsStart = parser.Index;
+        var argsStart = parserContext.Index;
 
-        if (!cmdImpl.TryParseArguments(makeCompletions, parser, pipedType, subCommand, out var args, out var types, out error, out autocomplete))
+        if (!cmdImpl.TryParseArguments(makeCompletions, parserContext, pipedType, subCommand, out var args, out var types, out error, out autocomplete))
         {
-            error?.Contextualize(parser.Input, (argsStart, parser.Index));
+            error?.Contextualize(parserContext.Input, (argsStart, parserContext.Index));
             return false;
         }
 
@@ -195,7 +195,7 @@ public sealed class ParsedCommand
         if (!cmdImpl.TryGetImplementation(bundle.PipedArgumentType, subCommand, types, out var impl))
         {
             error = new NoImplementationError(cmd, types, subCommand, bundle.PipedArgumentType);
-            error.Contextualize(parser.Input, (start, parser.Index));
+            error.Contextualize(parserContext.Input, (start, parserContext.Index));
             autocomplete = null;
             return false;
         }

@@ -8,9 +8,9 @@ using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Toolshed;
+namespace Robust.Shared.Toolshed.Syntax;
 
-public sealed class ForwardParser
+public sealed class ParserContext
 {
     [Dependency] public readonly ToolshedManager Toolshed = default!;
 
@@ -19,20 +19,20 @@ public sealed class ForwardParser
 
     public int Index { get; private set; } = 0;
 
-    public ForwardParser(string input, ToolshedManager toolshed)
+    public ParserContext(string input, ToolshedManager toolshed)
     {
         Toolshed = toolshed;
         Input = input;
         MaxIndex = input.Length - 1;
     }
 
-    private ForwardParser(ForwardParser parser, int sliceSize, int? index)
+    private ParserContext(ParserContext parserContext, int sliceSize, int? index)
     {
         IoCManager.InjectDependencies(this);
         DebugTools.Assert(sliceSize > 0);
-        Input = parser.Input;
-        Index = index ?? parser.Index;
-        MaxIndex = Math.Min(parser.MaxIndex, Index + sliceSize - 1);
+        Input = parserContext.Input;
+        Index = index ?? parserContext.Index;
+        MaxIndex = Math.Min(parserContext.MaxIndex, Index + sliceSize - 1);
     }
 
     public bool SpanInRange(int length)
@@ -137,7 +137,7 @@ public sealed class ForwardParser
         return amount;
     }
 
-    public ForwardParser? SliceBlock(char startDelim, char endDelim)
+    public ParserContext? SliceBlock(char startDelim, char endDelim)
     {
         var checkpoint = Save();
 
@@ -172,7 +172,7 @@ public sealed class ForwardParser
             }
         }
 
-        return new ForwardParser(this, Index - blockStart, blockStart);
+        return new ParserContext(this, Index - blockStart, blockStart);
     }
 }
 

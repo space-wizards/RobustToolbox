@@ -4,15 +4,16 @@ using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
 internal sealed class IntTypeParser : TypeParser<int>
 {
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var maybeInt = parser.GetWord();
+        var maybeInt = parserContext.GetWord();
         if (!int.TryParse(maybeInt, out var @int))
         {
             if (maybeInt is null)
@@ -33,7 +34,7 @@ internal sealed class IntTypeParser : TypeParser<int>
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
         return new ValueTask<(CompletionResult? result, IConError? error)>(

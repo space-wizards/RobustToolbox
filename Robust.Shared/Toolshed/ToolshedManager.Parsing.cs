@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
 
@@ -69,20 +70,20 @@ public sealed partial class ToolshedManager
     /// <summary>
     ///     Attempts to parse the given type.
     /// </summary>
-    /// <param name="parser">The input to parse from.</param>
+    /// <param name="parserContext">The input to parse from.</param>
     /// <param name="parsed">The parsed value, if any.</param>
     /// <param name="error">A console error, if any, that can be reported to explain the parsing failure.</param>
     /// <typeparam name="T">The type to parse from the input.</typeparam>
     /// <returns>Success.</returns>
-    public bool TryParse<T>(ForwardParser parser, [NotNullWhen(true)] out object? parsed, out IConError? error)
+    public bool TryParse<T>(ParserContext parserContext, [NotNullWhen(true)] out object? parsed, out IConError? error)
     {
-        return TryParse(parser, typeof(T), out parsed, out error);
+        return TryParse(parserContext, typeof(T), out parsed, out error);
     }
 
     /// <summary>
     ///     iunno man it does autocomplete what more do u want
     /// </summary>
-    public ValueTask<(CompletionResult?, IConError?)> TryAutocomplete(ForwardParser parser, Type t, string? argName)
+    public ValueTask<(CompletionResult?, IConError?)> TryAutocomplete(ParserContext parserContext, Type t, string? argName)
     {
         var impl = GetParserForType(t);
 
@@ -91,18 +92,18 @@ public sealed partial class ToolshedManager
             return ValueTask.FromResult<(CompletionResult?, IConError?)>((null, new UnparseableValueError(t)));
         }
 
-        return impl.TryAutocomplete(parser, argName);
+        return impl.TryAutocomplete(parserContext, argName);
     }
 
     /// <summary>
     ///     Attempts to parse the given type.
     /// </summary>
-    /// <param name="parser">The input to parse from.</param>
+    /// <param name="parserContext">The input to parse from.</param>
     /// <param name="t">The type to parse from the input.</param>
     /// <param name="parsed">The parsed value, if any.</param>
     /// <param name="error">A console error, if any, that can be reported to explain the parsing failure.</param>
     /// <returns>Success.</returns>
-    public bool TryParse(ForwardParser parser, Type t, [NotNullWhen(true)] out object? parsed, out IConError? error)
+    public bool TryParse(ParserContext parserContext, Type t, [NotNullWhen(true)] out object? parsed, out IConError? error)
     {
         var impl = GetParserForType(t);
 
@@ -113,7 +114,7 @@ public sealed partial class ToolshedManager
             return false;
         }
 
-        return impl.TryParse(parser, out parsed, out error);
+        return impl.TryParse(parserContext, out parsed, out error);
     }
 }
 

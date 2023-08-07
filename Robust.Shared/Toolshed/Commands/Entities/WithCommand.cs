@@ -9,7 +9,11 @@ namespace Robust.Shared.Toolshed.Commands.Entities;
 internal sealed class WithCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public IEnumerable<EntityUid> With([PipedArgument] IEnumerable<EntityUid> input, [CommandArgument] ComponentType ty, [CommandInverted] bool inverted)
+    public IEnumerable<EntityUid> With(
+            [PipedArgument] IEnumerable<EntityUid> input,
+            [CommandArgument] ComponentType ty,
+            [CommandInverted] bool inverted
+        )
     {
         return input.Where(x => EntityManager.HasComponent(x, ty.Ty) ^ inverted);
     }

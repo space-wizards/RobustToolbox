@@ -23,7 +23,7 @@ public sealed class CommandRun
     public static bool TryParse(
             bool blockMode,
             bool doAutocomplete,
-            ForwardParser parser,
+            ParserContext parserContext,
             Type? pipedType,
             Type? targetOutput,
             bool once,
@@ -35,19 +35,19 @@ public sealed class CommandRun
         autocomplete = null;
         error = null;
         var cmds = new List<(ParsedCommand, Vector2i)>();
-        var start = parser.Index;
+        var start = parserContext.Index;
         var noCommand = false;
-        parser.Consume(char.IsWhiteSpace);
+        parserContext.Consume(char.IsWhiteSpace);
 
-        while ((!once || cmds.Count < 1) && ParsedCommand.TryParse(doAutocomplete, parser, pipedType, out var cmd, out error, out noCommand, out autocomplete, targetOutput))
+        while ((!once || cmds.Count < 1) && ParsedCommand.TryParse(doAutocomplete, parserContext, pipedType, out var cmd, out error, out noCommand, out autocomplete, targetOutput))
         {
-            var end = parser.Index;
+            var end = parserContext.Index;
             pipedType = cmd.ReturnType;
             cmds.Add((cmd, (start, end)));
-            parser.Consume(char.IsWhiteSpace);
-            start = parser.Index;
+            parserContext.Consume(char.IsWhiteSpace);
+            start = parserContext.Index;
 
-            if (blockMode && parser.PeekChar() == '}')
+            if (blockMode && parserContext.PeekChar() == '}')
                 break;
         }
 
@@ -67,7 +67,7 @@ public sealed class CommandRun
             return false;
         }
 
-        expr = new CommandRun(cmds, parser.Input);
+        expr = new CommandRun(cmds, parserContext.Input);
         return true;
     }
 
@@ -105,11 +105,11 @@ public sealed class CommandRun<TIn, TOut>
 {
     internal readonly CommandRun InnerCommandRun;
 
-    public static bool TryParse(bool blockMode, bool doAutoComplete, ForwardParser parser, bool once,
+    public static bool TryParse(bool blockMode, bool doAutoComplete, ParserContext parserContext, bool once,
         [NotNullWhen(true)] out CommandRun<TIn, TOut>? expr,
         out ValueTask<(CompletionResult?, IConError?)>? autocomplete, out IConError? error)
     {
-        if (!CommandRun.TryParse(blockMode, doAutoComplete, parser, typeof(TIn), typeof(TOut), once, out var innerExpr, out autocomplete, out error))
+        if (!CommandRun.TryParse(blockMode, doAutoComplete, parserContext, typeof(TIn), typeof(TOut), once, out var innerExpr, out autocomplete, out error))
         {
             expr = null;
             return false;
@@ -137,11 +137,11 @@ public sealed class CommandRun<TRes>
 {
     internal readonly CommandRun _innerCommandRun;
 
-    public static bool TryParse(bool blockMode, bool doAutoComplete, ForwardParser parser, Type? pipedType, bool once,
+    public static bool TryParse(bool blockMode, bool doAutoComplete, ParserContext parserContext, Type? pipedType, bool once,
         [NotNullWhen(true)] out CommandRun<TRes>? expr, out ValueTask<(CompletionResult?, IConError?)>? completion,
         out IConError? error)
     {
-        if (!CommandRun.TryParse(blockMode, doAutoComplete, parser, pipedType, typeof(TRes), once, out var innerExpr, out completion, out error))
+        if (!CommandRun.TryParse(blockMode, doAutoComplete, parserContext, pipedType, typeof(TRes), once, out var innerExpr, out completion, out error))
         {
             expr = null;
             return false;

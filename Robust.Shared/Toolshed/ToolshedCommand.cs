@@ -9,6 +9,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed;
@@ -151,7 +152,7 @@ public abstract partial class ToolshedCommand
 
     internal bool TryParseArguments(
             bool doAutocomplete,
-            ForwardParser parser,
+            ParserContext parserContext,
             Type? pipedType,
             string? subCommand,
             [NotNullWhen(true)] out Dictionary<string, object?>? args,
@@ -160,7 +161,7 @@ public abstract partial class ToolshedCommand
             out ValueTask<(CompletionResult?, IConError?)>? autocomplete
         )
     {
-        return _implementors[subCommand ?? ""].TryParseArguments(doAutocomplete, parser, subCommand, pipedType, out args, out resolvedTypeArguments, out error, out autocomplete);
+        return _implementors[subCommand ?? ""].TryParseArguments(doAutocomplete, parserContext, subCommand, pipedType, out args, out resolvedTypeArguments, out error, out autocomplete);
     }
 }
 

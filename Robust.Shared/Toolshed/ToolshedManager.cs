@@ -198,7 +198,7 @@ public sealed partial class ToolshedManager
     {
         ctx.ClearErrors();
 
-        var parser = new ForwardParser(command, this);
+        var parser = new ParserContext(command, this);
         if (!CommandRun.TryParse(false, false, parser, input?.GetType(), null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
         {
 

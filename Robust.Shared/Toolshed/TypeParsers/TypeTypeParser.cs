@@ -12,6 +12,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
@@ -74,9 +75,9 @@ internal sealed class TypeTypeParser : TypeParser<Type>
         }
     }
 
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var firstWord = parser.GetWord(char.IsLetterOrDigit);
+        var firstWord = parserContext.GetWord(char.IsLetterOrDigit);
         if (firstWord is null)
         {
             error = new OutOfInputError();
@@ -95,7 +96,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
 
         if (ty.IsGenericTypeDefinition)
         {
-            if (!parser.EatMatch('<'))
+            if (!parserContext.EatMatch('<'))
             {
                 error = new ExpectedGeneric();
                 result = null;
@@ -107,7 +108,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
 
             for (var i = 0; i < len; i++)
             {
-                if (!TryParse(parser, out var t, out error))
+                if (!TryParse(parserContext, out var t, out error))
                 {
                     result = null;
                     return false;
@@ -115,7 +116,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
 
                 args[i] = (Type) t;
 
-                if (i != (len - 1) && !parser.EatMatch(','))
+                if (i != (len - 1) && !parserContext.EatMatch(','))
                 {
                     error = new ExpectedNextType();
                     result = null;
@@ -123,7 +124,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
                 }
             }
 
-            if (!parser.EatMatch('>'))
+            if (!parserContext.EatMatch('>'))
             {
                 error = new ExpectedGeneric();
                 result = null;
@@ -133,9 +134,9 @@ internal sealed class TypeTypeParser : TypeParser<Type>
             ty = ty.MakeGenericType(args);
         }
 
-        if (parser.EatMatch('['))
+        if (parserContext.EatMatch('['))
         {
-            if (!parser.EatMatch(']'))
+            if (!parserContext.EatMatch(']'))
             {
                 error = new UnknownType(firstWord);
                 result = null;
@@ -145,7 +146,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
             ty = ty.MakeArrayType();
         }
 
-        if (parser.EatMatch('?') && (ty.IsValueType || ty.IsPrimitive))
+        if (parserContext.EatMatch('?') && (ty.IsValueType || ty.IsPrimitive))
         {
             ty = typeof(Nullable<>).MakeGenericType(ty);
         }
@@ -161,7 +162,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
         return ty;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
         // TODO: Suggest generics.

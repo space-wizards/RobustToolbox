@@ -4,21 +4,21 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Toolshed.TypeParsers;
 
-namespace Robust.Shared.Toolshed.Commands.Entities;
+namespace Robust.Shared.Toolshed.Commands.Entities.Components;
 
 [ToolshedCommand]
 internal sealed class CompCommand : ToolshedCommand
 {
     public override Type[] TypeParameterParsers => new[] {typeof(ComponentType)};
 
-    [CommandImplementation]
+    [CommandImplementation("get")]
     public IEnumerable<T> CompEnumerable<T>([PipedArgument] IEnumerable<EntityUid> input)
         where T: IComponent
     {
         return input.Where(HasComp<T>).Select(Comp<T>);
     }
 
-    [CommandImplementation]
+    [CommandImplementation("get")]
     public T? CompDirect<T>([PipedArgument] EntityUid input)
         where T : IComponent
     {

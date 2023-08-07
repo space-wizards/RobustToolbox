@@ -8,8 +8,11 @@ namespace Robust.Shared.Toolshed.Commands.Entities;
 internal sealed class PrototypedCommand : ToolshedCommand
 {
     [CommandImplementation()]
-    public IEnumerable<EntityUid> Prototyped([PipedArgument] IEnumerable<EntityUid> input,
-        [CommandArgument] string prototype)
-        => input.Where(x => MetaData(x).EntityPrototype?.ID == prototype);
+    public IEnumerable<EntityUid> Prototyped(
+            [PipedArgument] IEnumerable<EntityUid> input,
+            [CommandArgument] string prototype,
+            [CommandInverted] bool inverted
+        )
+        => input.Where(x => MetaData(x).EntityPrototype?.ID == prototype ^ inverted);
 
 }

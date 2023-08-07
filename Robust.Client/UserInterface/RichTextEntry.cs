@@ -39,7 +39,7 @@ namespace Robust.Client.UserInterface
 
         private readonly Dictionary<int, Control> _tagControls = new();
 
-        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed, Color? defaultColor = null)
+        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
             Message = message;
             Height = 0;

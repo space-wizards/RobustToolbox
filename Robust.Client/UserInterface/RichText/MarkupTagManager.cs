@@ -65,14 +65,11 @@ public sealed class MarkupTagManager
         return _markupTagTypes.GetValueOrDefault(name);
     }
 
-    private Type[]? _tagsAllowed;
     public bool TryGetMarkupTag(string name, Type[]? tagsAllowed, [NotNullWhen(true)] out IMarkupTag? tag)
     {
-        if (null == tagsAllowed)
-            tagsAllowed = _tagsAllowed ??= _markupTagTypes.Values.Select(x => x.GetType()).ToArray();
         if (_markupTagTypes.TryGetValue(name, out var markupTag)
             // Using a whitelist prevents new tags from sneaking in.
-            && tagsAllowed.Any(x => x == markupTag.GetType()))
+            && (tagsAllowed == null || Array.IndexOf(tagsAllowed, markupTag.GetType()) != -1))
         {
             tag = markupTag;
             return true;

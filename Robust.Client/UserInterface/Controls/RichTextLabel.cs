@@ -22,24 +22,14 @@ namespace Robust.Client.UserInterface.Controls
             IoCManager.InjectDependencies(this);
         }
 
-        public void SetMessage(FormattedMessage message)
-        {
-            SetMessage(message, null);
-        }
-
-        public void SetMessage(FormattedMessage message, Type[]? tagsAllowed, Color? defaultColor = null)
+        public void SetMessage(FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
             _message = message;
             _entry = new RichTextEntry(_message, this, _tagManager, tagsAllowed, defaultColor);
             InvalidateMeasure();
         }
 
-        public void SetMessage(string message)
-        {
-            SetMessage(message, null, null);
-        }
-
-        public void SetMessage(string message, Type[]? tagsAllowed, Color? defaultColor = null)
+        public void SetMessage(string message, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
             var msg = new FormattedMessage();
             msg.AddText(message);

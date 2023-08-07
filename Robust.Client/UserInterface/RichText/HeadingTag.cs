@@ -16,11 +16,14 @@ public sealed class HeadingTag : IMarkupTag
     /// <inheritdoc/>
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
-        if (!node.Value.TryGetLong(out var levelParam)) return;
+        if (!node.Value.TryGetLong(out var levelParam))
+            return;
+
         var level = Math.Min(Math.Max((int)levelParam, 1), 3);
         node.Attributes["size"] = new MarkupParameter(
             (int)Math.Ceiling(FontTag.DefaultSize * 2 / Math.Sqrt(level))
         );
+
         var font = FontTag.CreateFont(context.Font, node, _resourceCache, _prototypeManager, BoldTag.BoldFont);
         context.Font.Push(font);
     }

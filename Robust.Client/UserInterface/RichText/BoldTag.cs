@@ -18,12 +18,11 @@ public sealed class BoldTag : IMarkupTag
     /// <inheritdoc/>
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
-        string fontId;
-        if (context.Tags.Any(x => x is ItalicTag))
-            fontId = BoldItalicTag.BoldItalicFont;
-        else
-            fontId = BoldFont;
-        var font = FontTag.CreateFont(context.Font, node, _resourceCache, _prototypeManager, fontId);
+        var font = FontTag.CreateFont(context.Font, node, _resourceCache, _prototypeManager,
+            context.Tags.Any(static x => x is ItalicTag)
+                ? BoldItalicTag.BoldItalicFont
+                : BoldFont
+        );
         context.Font.Push(font);
     }
 

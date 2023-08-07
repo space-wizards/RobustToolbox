@@ -128,7 +128,8 @@ namespace Robust.Server.GameObjects
             actorEntity = null;
             if (userId != null)
             {
-                actor = _playerManager.GetSessionByUserId(userId.Value);
+                if (!_playerManager.TryGetSessionById(userId.Value, out actor))
+                    return false;
                 actorEntity = actor.AttachedEntity;
             }
 

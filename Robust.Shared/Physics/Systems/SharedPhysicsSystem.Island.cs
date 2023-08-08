@@ -344,7 +344,7 @@ public abstract partial class SharedPhysicsSystem
 
             if (!metaQuery.TryGetComponent(seedUid, out var metadata))
             {
-                _sawmill.Error($"Found deleted entity {ToPrettyString(seedUid)} on map!");
+                Log.Error($"Found deleted entity {ToPrettyString(seedUid)} on map!");
                 RemoveSleepBody(seedUid, seed, component);
                 continue;
             }

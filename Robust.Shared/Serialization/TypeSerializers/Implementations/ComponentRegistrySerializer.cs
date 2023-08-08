@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -58,7 +59,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
-                var read = (IComponent)serializationManager.Read(type, copy, hookCtx)!;
+                var read = (IComponent)serializationManager.Read(type, copy, hookCtx, context)!;
 
                 components[compType] = new ComponentRegistryEntry(read, copy);
             }
@@ -171,7 +172,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public void CopyTo(ISerializationManager serializationManager, ComponentRegistry source, ref ComponentRegistry target,
-            SerializationHookContext hookCtx, ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);

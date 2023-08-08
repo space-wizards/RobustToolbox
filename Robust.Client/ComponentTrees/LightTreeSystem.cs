@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
@@ -18,8 +19,9 @@ public sealed class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, Po
     {
         // Really we should be rotating the light offset by the relative rotation. But I assume the light offset will
         // always be relatively small, so fuck it, this is probably faster than having to compute the angle every time.
-        var radius = entry.Component.Radius + entry.Component.Offset.Length;
-        return new Box2(pos - radius, pos + radius);
+        var radius = entry.Component.Radius + entry.Component.Offset.Length();
+        var radiusVec = new Vector2(radius, radius);
+        return new Box2(pos - radiusVec, pos + radiusVec);
     }
 
     protected override Box2 ExtractAabb(in ComponentTreeEntry<PointLightComponent> entry)

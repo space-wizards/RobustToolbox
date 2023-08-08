@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Avalonia.Metadata;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -73,19 +74,37 @@ namespace Robust.Client.UserInterface
         //    _nameScope = nameScope;
         //}
 
-        public UITheme Theme { get; set; }
+        public UITheme Theme { get; internal set; }
 
-        protected virtual void OnThemeUpdated(){}
-        internal void ThemeUpdateRecursive()
+        private UITheme? _themeOverride;
+
+        public UITheme? ThemeOverride
         {
-            var curTheme = UserInterfaceManager.CurrentTheme;
-            if (Theme == curTheme) return; //don't update themes if the themes are up to date
-            Theme = curTheme;
+            get => _themeOverride;
+            set
+            {
+                if (_themeOverride == value)
+                    return;
+                _themeOverride = value;
+                ThemeUpdateRecursive(Parent?.Theme ?? UserInterfaceManager.CurrentTheme);
+            }
+        }
+
+        protected virtual void OnThemeUpdated()
+        {
+        }
+
+        public void ThemeUpdateRecursive(UITheme theme)
+        {
+            theme = _themeOverride ?? theme;
+            if (Theme == theme)
+                return;
+
+            Theme = theme;
             OnThemeUpdated();
             foreach (var child in Children)
             {
-                // Don't descent into children that have a style sheet since those aren't affected.
-                child.ThemeUpdateRecursive();
+                child.ThemeUpdateRecursive(Theme);
             }
         }
 
@@ -668,6 +687,7 @@ namespace Robust.Client.UserInterface
         protected virtual void ChildAdded(Control newChild)
         {
             OnChildAdded?.Invoke(newChild);
+            newChild.ThemeUpdateRecursive(Theme);
             InvalidateMeasure();
         }
 

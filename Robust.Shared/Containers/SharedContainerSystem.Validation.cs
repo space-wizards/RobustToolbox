@@ -45,8 +45,8 @@ public abstract partial class SharedContainerSystem : EntitySystem
                 // CBF updating all maps. meta-data flags now get saved, eventually we should be able to just initialize
                 // entities in containers without having to "re-insert" them.
                 meta.Flags |= MetaDataFlags.InContainer;
-                _lookup.RemoveFromEntityTree(ent, xform, xformQuery);
-                ((BaseContainer)cont).RecursivelyUpdatePhysics(ent, xform, physics, _physics, _joint, physicsQuery, xformQuery, jointQuery);
+                _lookup.RemoveFromEntityTree(ent, xform);
+                ((BaseContainer)cont).RecursivelyUpdatePhysics(ent, xform, physics, _physics, physicsQuery, xformQuery);
 
                 // assert children have correct properties
                 ValidateChildren(xform, xformQuery, physicsQuery);

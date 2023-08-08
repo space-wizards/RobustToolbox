@@ -1,3 +1,5 @@
+# If this gets updated, make sure to also update https://github.com/space-wizards/RobustToolboxSpecifications
+
 list(include('attribution'), min=1)
 ---
 attribution:

@@ -11,6 +11,7 @@ using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Containers
@@ -68,7 +69,8 @@ namespace Robust.Shared.Containers
             TransformComponent? transform = null,
             TransformComponent? ownerTransform = null,
             MetaDataComponent? meta = null,
-            PhysicsComponent? physics = null)
+            PhysicsComponent? physics = null,
+            bool force = false)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
@@ -79,7 +81,7 @@ namespace Robust.Shared.Containers
             IoCManager.Resolve(ref entMan);
 
             //Verify we can insert into this container
-            if (!CanInsert(toinsert, entMan))
+            if (!force && !CanInsert(toinsert, entMan))
                 return false;
 
             var physicsQuery = entMan.GetEntityQuery<PhysicsComponent>();
@@ -114,7 +116,7 @@ namespace Robust.Shared.Containers
             // Remove the entity and any children from broadphases.
             // This is done before changing can collide to avoid unecceary updates.
             // TODO maybe combine with RecursivelyUpdatePhysics to avoid fetching components and iterating parents twice?
-            lookupSys.RemoveFromEntityTree(toinsert, transform, transformQuery);
+            lookupSys.RemoveFromEntityTree(toinsert, transform);
             DebugTools.Assert(transform.Broadphase == null || !transform.Broadphase.Value.IsValid());
 
             // Avoid unnecessary broadphase updates while unanchoring, changing physics collision, and re-parenting.
@@ -129,7 +131,7 @@ namespace Robust.Shared.Containers
             // got-inserted event, but really that event should run after the entity was actually inserted (so that
             // parent/map have updated). But we are better of disabling collision before doing map/parent changes.
             physicsQuery.Resolve(toinsert, ref physics, false);
-            RecursivelyUpdatePhysics(toinsert, transform, physics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
+            RecursivelyUpdatePhysics(toinsert, transform, physics, physicsSys, physicsQuery, transformQuery);
 
             // Attach to new parent
             var oldParent = transform.ParentUid;
@@ -141,6 +143,10 @@ namespace Robust.Shared.Containers
 
             // Implementation specific insert logic
             InternalInsert(toinsert, entMan);
+
+            // Update any relevant joint relays
+            // Can't be done above as the container flag isn't set yet.
+            RecursivelyUpdateJoints(toinsert, transform, jointSys, jointQuery, transformQuery);
 
             // Raise container events (after re-parenting and internal remove).
             entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, oldParent, this), true);
@@ -162,10 +168,8 @@ namespace Robust.Shared.Containers
             TransformComponent xform,
             PhysicsComponent? physics,
             SharedPhysicsSystem physicsSys,
-            SharedJointSystem jointSys,
             EntityQuery<PhysicsComponent> physicsQuery,
-            EntityQuery<TransformComponent> transformQuery,
-            EntityQuery<JointComponent> jointQuery)
+            EntityQuery<TransformComponent> transformQuery)
         {
             if (physics != null)
             {
@@ -175,9 +179,6 @@ namespace Robust.Shared.Containers
                 physicsSys.SetLinearVelocity(uid, Vector2.Zero, false, body: physics);
                 physicsSys.SetAngularVelocity(uid,0, false, body: physics);
                 physicsSys.SetCanCollide(uid, false, false, body: physics);
-
-                if (jointQuery.TryGetComponent(uid, out var joint))
-                    jointSys.ClearJoints(uid, joint);
             }
 
             var enumerator = xform.ChildEnumerator;
@@ -186,7 +187,30 @@ namespace Robust.Shared.Containers
             {
                 var childXform = transformQuery.GetComponent(child.Value);
                 physicsQuery.TryGetComponent(child.Value, out var childPhysics);
-                RecursivelyUpdatePhysics(child.Value, childXform, childPhysics, physicsSys, jointSys, physicsQuery, transformQuery, jointQuery);
+                RecursivelyUpdatePhysics(child.Value, childXform, childPhysics, physicsSys, physicsQuery, transformQuery);
+            }
+        }
+
+        internal void RecursivelyUpdateJoints(
+            EntityUid uid,
+            TransformComponent xform,
+            SharedJointSystem jointSys,
+            EntityQuery<JointComponent> jointQuery,
+            EntityQuery<TransformComponent> transformQuery)
+        {
+            if (jointQuery.TryGetComponent(uid, out var jointComp))
+            {
+                // TODO: This is going to be going up while joints going down, although these aren't too common
+                // in SS14 atm.
+                jointSys.RefreshRelay(uid, jointComp);
+            }
+
+            var enumerator = xform.ChildEnumerator;
+
+            while (enumerator.MoveNext(out var child))
+            {
+                var childXform = transformQuery.GetComponent(child.Value);
+                RecursivelyUpdateJoints(child.Value, childXform, jointSys, jointQuery, transformQuery);
             }
         }
 
@@ -290,7 +314,12 @@ namespace Robust.Shared.Containers
             if (xform.ParentUid == oldParent // move event should already have handled it
                 && xform.Broadphase == null) // broadphase explicitly invalid?
             {
-                entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>().FindAndAddToEntityTree(toRemove, xform);
+                entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>().FindAndAddToEntityTree(toRemove, xform: xform);
+            }
+
+            if (entMan.TryGetComponent<JointComponent>(toRemove, out var jointComp))
+            {
+                entMan.System<SharedJointSystem>().RefreshRelay(toRemove, jointComp);
             }
 
             // Raise container events (after re-parenting and internal remove).

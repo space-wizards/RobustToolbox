@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics;
@@ -11,12 +12,16 @@ using Robust.Shared.Timing;
 namespace Robust.Client.Physics
 {
     [UsedImplicitly]
-    public sealed class PhysicsSystem : SharedPhysicsSystem
+    public sealed partial class PhysicsSystem : SharedPhysicsSystem
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly IPlayerManager _player = default!;
+        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
 
         public override void Update(float frameTime)
         {
+            UpdateIsPredicted();
             SimulateWorld(frameTime, _gameTiming.InPrediction);
         }
 
@@ -30,7 +35,7 @@ namespace Robust.Client.Physics
             // Also need to suss out having the client build the island anyway and just... not solving it?
             foreach (var body in component.AwakeBodies)
             {
-                if (!body.SleepingAllowed || body.LinearVelocity.Length > LinearToleranceSqr / 2f || body.AngularVelocity * body.AngularVelocity > AngularToleranceSqr / 2f) continue;
+                if (!body.SleepingAllowed || body.LinearVelocity.Length() > LinearToleranceSqr / 2f || body.AngularVelocity * body.AngularVelocity > AngularToleranceSqr / 2f) continue;
                 body.SleepTime += frameTime;
                 if (body.SleepTime > TimeToSleep)
                 {

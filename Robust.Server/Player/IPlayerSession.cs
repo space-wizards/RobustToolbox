@@ -23,6 +23,7 @@ namespace Robust.Server.Player
         ///     Do not call this directly for most content code.
         /// </summary>
         /// <param name="entity">The entity to attach to.</param>
+        [Obsolete("Use ActorSystem.Attach() instead.")]
         void AttachToEntity(EntityUid? entity);
 
         /// <summary>
@@ -31,6 +32,7 @@ namespace Robust.Server.Player
         ///     Do not call this directly for most content code.
         /// </summary>
         /// <param name="uid">The entity to attach to.</param>
+        [Obsolete("Use ActorSystem.Attach() instead.")]
         void AttachToEntity(EntityUid uid);
 
         /// <summary>
@@ -38,6 +40,7 @@ namespace Robust.Server.Player
         ///     NOTE: The content pack almost certainly has an alternative for this.
         ///     Do not call this directly for most content code.
         /// </summary>
+        [Obsolete("Use ActorSystem.Detach() instead.")]
         void DetachFromEntity();
         void OnConnect();
         void OnDisconnect();

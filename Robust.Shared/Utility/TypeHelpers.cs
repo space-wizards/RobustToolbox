@@ -197,10 +197,10 @@ namespace Robust.Shared.Utility
             return (attribute = memberInfo.GetCustomAttribute(type)) != null;
         }
 
-        internal static bool HasParameterlessConstructor(this Type type)
+        internal static bool HasParameterlessConstructor(this Type type, BindingFlags flags = BindingFlags.Instance | BindingFlags.Public)
         {
             return type
-                .GetConstructors(BindingFlags.Instance | BindingFlags.Public)
+                .GetConstructors(flags)
                 .Any(m => m.GetParameters().Length == 0);
         }
 

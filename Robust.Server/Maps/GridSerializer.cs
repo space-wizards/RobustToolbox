@@ -77,7 +77,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
                 id = tileDefinitionManager[defName].TileId;
 
                 var tile = new Tile(id, flags, variant);
-                chunk.SetTile(x, y, tile);
+                chunk.TrySetTile(x, y, tile, out _, out _);
             }
         }
 
@@ -129,10 +129,10 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         return Convert.ToBase64String(barr);
     }
 
-    public MapChunk CreateCopy(ISerializationManager serializationManager, MapChunk source, SerializationHookContext hookCtx,
-        ISerializationContext? context = null)
+    public MapChunk CreateCopy(ISerializationManager serializationManager, MapChunk source,
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
-        var mapManager = ((SerializationManager)serializationManager).DependencyCollection.Resolve<IMapManager>();
+        var mapManager = dependencies.Resolve<IMapManager>();
         mapManager.SuppressOnTileChanged = true;
         var chunk = new MapChunk(source.X, source.Y, source.ChunkSize)
         {
@@ -143,7 +143,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         {
             for (ushort x = 0; x < chunk.ChunkSize; x++)
             {
-                chunk.SetTile(x, y, source.GetTile(x, y));
+                chunk.TrySetTile(x, y, source.GetTile(x, y), out _, out _);
             }
         }
 

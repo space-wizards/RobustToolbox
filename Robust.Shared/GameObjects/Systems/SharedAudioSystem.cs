@@ -10,11 +10,12 @@ using Robust.Shared.Random;
 namespace Robust.Shared.GameObjects;
 public abstract class SharedAudioSystem : EntitySystem
 {
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IPrototypeManager _protoMan = default!;
     [Dependency] protected readonly IConfigurationManager CfgManager = default!;
+    [Dependency] private   readonly IMapManager _mapManager = default!;
+    [Dependency] private   readonly IPrototypeManager _protoMan = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
     [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
+    [Dependency] private   readonly SharedMapSystem _map = default!;
 
     /// <summary>
     /// Default max range at which the sound can be heard.
@@ -31,7 +32,7 @@ public abstract class SharedAudioSystem : EntitySystem
         switch (specifier)
         {
             case SoundPathSpecifier path:
-                return path.Path == null ? string.Empty : path.Path.ToString();
+                return path.Path == default ? string.Empty : path.Path.ToString();
 
             case SoundCollectionSpecifier collection:
             {
@@ -181,6 +182,17 @@ public abstract class SharedAudioSystem : EntitySystem
     }
 
     /// <summary>
+    /// Play an audio file at the specified EntityCoordinates for every entity in PVS range.
+    /// </summary>
+    /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
+    /// <param name="uid">The EntityCoordinates to attach the audio source to.</param>
+    /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
+    public IPlayingAudioStream? PlayPvs(SoundSpecifier? sound, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    {
+        return sound == null ? null : Play(GetSound(sound), Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager), coordinates, true, audioParams ?? sound.Params);
+    }
+
+    /// <summary>
     /// Play an audio file following an entity for every entity in PVS range.
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
@@ -201,6 +213,17 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="user">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
     /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
     public abstract IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null);
+
+    /// <summary>
+    /// Plays a predicted sound following an EntityCoordinates. The server will send the sound to every player in PVS range,
+    /// unless that player is attached to the "user" entity that initiated the sound. The client-side system plays
+    /// this sound as normal
+    /// </summary>
+    /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
+    /// <param name="coordinates">The entitycoordinates "emitting" the audio</param>
+    /// <param name="user">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
+    /// <param name="audioParams">Audio parameters to apply when playing the sound. Defaults to using the sound specifier's parameters</param>
+    public abstract IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user, AudioParams? audioParams = null);
 
     // TODO rename to play static
     /// <summary>
@@ -269,8 +292,8 @@ public abstract class SharedAudioSystem : EntitySystem
 
     protected EntityCoordinates GetFallbackCoordinates(MapCoordinates mapCoordinates)
     {
-        if (_mapManager.TryFindGridAt(mapCoordinates, out var mapGrid))
-            return new EntityCoordinates(mapGrid.Owner, mapGrid.WorldToLocal(mapCoordinates.Position));
+        if (_mapManager.TryFindGridAt(mapCoordinates, out var gridUid, out var mapGrid))
+            return new EntityCoordinates(gridUid, _map.WorldToLocal(gridUid, mapGrid, mapCoordinates.Position));
 
         if (_mapManager.HasMapEntity(mapCoordinates.MapId))
             return new EntityCoordinates(_mapManager.GetMapEntityId(mapCoordinates.MapId), mapCoordinates.Position);

@@ -17,27 +17,29 @@ internal static class TextEditShared
     // Functions for calculating next positions when doing word-bound cursor movement (ctrl+left/right).
     //
 
-    internal static int NextWordPosition(string str, int cursor)
+    internal static int EndWordPosition(string str, int cursor)
     {
-        return cursor + NextWordPosition(new StringEnumerateHelpers.SubstringRuneEnumerator(str, cursor));
+        return cursor + EndWordPosition(new StringEnumerateHelpers.SubstringRuneEnumerator(str, cursor));
     }
 
-    internal static int NextWordPosition<T>(T runes) where T : IEnumerator<Rune>
+    internal static int EndWordPosition<T>(T runes) where T : IEnumerator<Rune>
     {
         if (!runes.MoveNext())
             return 0;
 
-        var charClass = GetCharClass(runes.Current);
-
         var i = 0;
+        if (!IterForward(CharClass.Whitespace))
+            return i;
 
+        var charClass = GetCharClass(runes.Current);
         IterForward(charClass);
-        IterForward(CharClass.Whitespace);
 
         return i;
 
-        void IterForward(CharClass cClass)
+        bool IterForward(CharClass cClass)
         {
+            var hasNext = true;
+
             do
             {
                 var rune = runes.Current;
@@ -46,7 +48,11 @@ internal static class TextEditShared
                     break;
 
                 i += rune.Utf16SequenceLength;
-            } while (runes.MoveNext());
+
+                hasNext = runes.MoveNext();
+            } while (hasNext);
+
+            return hasNext;
         }
     }
 

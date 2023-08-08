@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
@@ -30,10 +31,12 @@ public static class CompletionHelper
         if (!curPath.StartsWith("/"))
             curPath = "/";
 
-        var resPath = new ResourcePath(curPath);
+        var resPath = new ResPath(curPath);
 
-        if (!curPath.EndsWith("/"))
-            resPath = (resPath / "..").Clean();
+        if (!curPath.EndsWith("/")){
+            resPath /= "..";
+            resPath = resPath.Clean();
+        }
 
         var options = res.ContentGetDirectoryEntries(resPath)
             .OrderBy(c => c)
@@ -42,9 +45,36 @@ public static class CompletionHelper
                 var opt = (resPath / c).ToString();
 
                 if (c.EndsWith("/"))
-                    return new CompletionOption(opt + "/", Flags: CompletionOptionFlags.PartialCompletion);
+                    return new CompletionOption(opt, Flags: CompletionOptionFlags.PartialCompletion);
 
                 return new CompletionOption(opt);
+            });
+
+        return options;
+    }
+
+    public static IEnumerable<CompletionOption> ContentDirPath(string arg, IResourceManager res)
+    {
+        var curPath = arg;
+        if (!curPath.StartsWith("/"))
+            return new[] { new CompletionOption("/") };
+
+        var resPath = new ResPath(curPath);
+
+        if (!curPath.EndsWith("/"))
+        {
+            resPath /= "..";
+            resPath = resPath.Clean();
+        }
+
+        var options = res.ContentGetDirectoryEntries(resPath)
+            .Where(c => c.EndsWith("/"))
+            .OrderBy(c => c)
+            .Select(c =>
+            {
+                var opt = (resPath / c).ToString();
+
+                return new CompletionOption(opt, Flags: CompletionOptionFlags.PartialCompletion);
             });
 
         return options;
@@ -56,13 +86,16 @@ public static class CompletionHelper
         if (curPath == "")
             curPath = "/";
 
-        var resPath = new ResourcePath(curPath);
+        var resPath = new ResPath(curPath);
 
         if (!resPath.IsRooted)
             return Enumerable.Empty<CompletionOption>();
 
         if (!curPath.EndsWith("/"))
-            resPath = (resPath / "..").Clean();
+        {
+            resPath /= "..";
+            resPath = resPath.Clean();
+        }
 
         var entries = provider.DirectoryEntries(resPath);
 
@@ -71,7 +104,7 @@ public static class CompletionHelper
             {
                 var full = resPath / c;
                 if (provider.IsDir(full))
-                    return new CompletionOption($"{full}/", Flags: CompletionOptionFlags.PartialCompletion);
+                    return new CompletionOption($"{full}", Flags: CompletionOptionFlags.PartialCompletion);
 
                 return new CompletionOption(full.ToString());
             })
@@ -108,6 +141,47 @@ public static class CompletionHelper
     {
         IoCManager.Resolve(ref entManager);
 
-        return entManager.EntityQuery<MapComponent>(true).Select(o => new CompletionOption(o.WorldMap.ToString()));
+        return entManager.EntityQuery<MapComponent>(true).Select(o => new CompletionOption(o.MapId.ToString()));
+    }
+
+    public static IEnumerable<CompletionOption> MapUids(IEntityManager? entManager = null)
+    {
+        IoCManager.Resolve(ref entManager);
+
+        var query = entManager.AllEntityQueryEnumerator<MapComponent>();
+        while (query.MoveNext(out var uid, out _))
+        {
+            yield return new CompletionOption(uid.ToString());
+        }
+    }
+
+    public static IEnumerable<CompletionOption> EntityUids(string text, IEntityManager? entManager = null)
+    {
+        IoCManager.Resolve(ref entManager);
+
+        foreach (var ent in entManager.GetEntities())
+        {
+            var entString = ent.ToString();
+
+            if (!entString.StartsWith(text))
+                continue;
+
+            yield return new CompletionOption(entString);
+        }
+    }
+
+    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : Component
+    {
+        IoCManager.Resolve(ref entManager);
+
+        var query = entManager.AllEntityQueryEnumerator<T>();
+
+        while (query.MoveNext(out var uid, out _))
+        {
+            if (!uid.ToString().StartsWith(text))
+                continue;
+
+            yield return new CompletionOption(uid.ToString());
+        }
     }
 }

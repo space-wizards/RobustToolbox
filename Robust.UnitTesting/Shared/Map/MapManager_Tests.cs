@@ -4,6 +4,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
 using System.Management;
+using System.Numerics;
 using Robust.Shared.Map.Components;
 
 namespace Robust.UnitTesting.Shared.Map
@@ -96,7 +97,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(entMan.HasComponent<MapComponent>(newMapEntity));
 
             var mapComp = entMan.GetComponent<MapComponent>(newMapEntity);
-            Assert.That(mapComp.WorldMap == mapID);
+            Assert.That(mapComp.MapId == mapID);
         }
 
         /// <summary>

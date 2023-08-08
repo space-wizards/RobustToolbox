@@ -5,16 +5,15 @@ using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
 using Robust.Server.DataMetrics;
-using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Log;
 using Robust.Server.Placement;
 using Robust.Server.Player;
-using Robust.Server.Replays;
 using Robust.Server.Scripting;
 using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
+using Robust.Server.Upload;
 using Robust.Server.Utility;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
@@ -31,10 +30,14 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
+using Robust.Shared.Replays;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
@@ -44,7 +47,7 @@ namespace Robust.Server
     /// <summary>
     /// The master class that runs the rest of the engine.
     /// </summary>
-    internal sealed class BaseServer : IBaseServerInternal
+    internal sealed class BaseServer : IBaseServerInternal, IPostInjectInit
     {
         private static readonly Gauge ServerUpTime = Metrics.CreateGauge(
             "robust_server_uptime",
@@ -97,7 +100,10 @@ namespace Robust.Server
         [Dependency] private readonly ISerializationManager _serialization = default!;
         [Dependency] private readonly IStatusHost _statusHost = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [Dependency] private readonly IInternalReplayRecordingManager _replay = default!;
+        [Dependency] private readonly IReplayRecordingManagerInternal _replay = default!;
+        [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
+        [Dependency] private readonly NetworkResourceManager _netResMan = default!;
+        [Dependency] private readonly IReflectionManager _refMan = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -105,6 +111,7 @@ namespace Robust.Server
         private Func<ILogHandler>? _logHandlerFactory;
         private ILogHandler? _logHandler;
         private IGameLoop _mainLoop = default!;
+        private ISawmill _logger = default!;
         private bool _autoPause;
 
         private string? _shutdownReason;
@@ -133,9 +140,9 @@ namespace Robust.Server
         public void Shutdown(string? reason)
         {
             if (string.IsNullOrWhiteSpace(reason))
-                Logger.InfoS("srv", "Shutting down...");
+                _logger.Info("Shutting down...");
             else
-                Logger.InfoS("srv", $"{reason}, shutting down...");
+                _logger.Info($"{reason}, shutting down...");
 
             _shutdownReason = reason ?? "Shutting down";
 
@@ -274,7 +281,7 @@ namespace Robust.Server
             catch (Exception e)
             {
                 var port = _network.Port;
-                Logger.Fatal(
+                _logger.Fatal(
                     "Unable to setup networking manager. Check port {0} is not already in use and that all binding addresses are correct!\n{1}",
                     port, e);
                 return true;
@@ -301,7 +308,7 @@ namespace Robust.Server
 
             if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, Options.ContentModulePrefix))
             {
-                Logger.Fatal("Errors while loading content assemblies.");
+                _logger.Fatal("Errors while loading content assemblies.");
                 return true;
             }
 
@@ -361,9 +368,11 @@ namespace Robust.Server
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             _prototype.Initialize();
-            _prototype.LoadDirectory(Options.PrototypeDirectory);
+            _prototype.LoadDefaultPrototypes();
             _prototype.ResolveResults();
+            _refMan.Initialize();
 
+            IoCManager.Resolve<ToolshedManager>().Initialize();
             _consoleHost.Initialize();
             _entityManager.Startup();
             _mapManager.Startup();
@@ -377,6 +386,8 @@ namespace Robust.Server
             _stateManager.TransformNetId = reg.NetID.Value;
 
             _scriptHost.Initialize();
+            _protoLoadMan.Initialize();
+            _netResMan.Initialize();
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
@@ -437,6 +448,7 @@ namespace Robust.Server
                 return true;
             }
 
+            var logger = _log.GetSawmill("loki");
             var serverName = _config.GetCVar(CVars.LokiName);
             var address = _config.GetCVar(CVars.LokiAddress);
             var username = _config.GetCVar(CVars.LokiUsername);
@@ -444,13 +456,13 @@ namespace Robust.Server
 
             if (string.IsNullOrWhiteSpace(serverName))
             {
-                Logger.FatalS("loki", "Misconfiguration: Server name is not specified/empty.");
+                logger.Fatal("Misconfiguration: Server name is not specified/empty.");
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(address))
             {
-                Logger.FatalS("loki", "Misconfiguration: Loki address is not specified/empty.");
+                logger.Fatal("Misconfiguration: Loki address is not specified/empty.");
                 return false;
             }
 
@@ -463,7 +475,7 @@ namespace Robust.Server
             {
                 if (string.IsNullOrWhiteSpace(password))
                 {
-                    Logger.FatalS("loki", "Misconfiguration: Loki password is not specified/empty but username is.");
+                    logger.Fatal("Misconfiguration: Loki password is not specified/empty but username is.");
                     return false;
                 }
 
@@ -473,7 +485,7 @@ namespace Robust.Server
 
             cfg.LogLabelProvider = new LogLabelProvider(serverName);
 
-            Logger.DebugS("loki", "Loki enabled for server {ServerName} loki address {LokiAddress}.", serverName,
+            logger.Debug("Loki enabled for server {ServerName} loki address {LokiAddress}.", serverName,
                 address);
 
             var handler = new LokiLogHandler(cfg);
@@ -503,7 +515,12 @@ namespace Robust.Server
         {
             if (_mainLoop == null)
             {
-                _mainLoop = new GameLoop(_time, _runtimeLog, _prof)
+                _mainLoop = new GameLoop(
+                    _time,
+                    _runtimeLog,
+                    _prof,
+                    _log.GetSawmill("eng"),
+                    GameLoopOptions.FromCVars(_config))
                 {
                     SleepMode = SleepMode.Delay,
                     DetectSoftLock = true,
@@ -540,7 +557,7 @@ namespace Robust.Server
             // Don't start the main loop. This only works if a reason is passed to Shutdown(...)
             if (_shutdownReason != null)
             {
-                Logger.Fatal("Shutdown has been requested before the main loop has been started, complying.");
+                _logger.Fatal("Shutdown has been requested before the main loop has been started, complying.");
             }
             else _mainLoop.Run();
 
@@ -563,16 +580,16 @@ namespace Robust.Server
                 var b = (byte) i;
                 _time.TickRate = b;
 
-                Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
+                _logger.Info($"Tickrate changed to: {b} on tick {_time.CurTick}");
             });
 
             var startOffset = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetTimeStartOffset));
             _time.TimeBase = (startOffset, GameTick.First);
             _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
 
-            Logger.InfoS("srv", $"Name: {ServerName}");
-            Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
-            Logger.InfoS("srv", $"Max players: {MaxPlayers}");
+            _logger.Info($"Name: {ServerName}");
+            _logger.Info($"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
+            _logger.Info($"Max players: {MaxPlayers}");
 
             _config.OnValueChanged(CVars.GameAutoPauseEmpty, UpdateAutoPause, true);
         }
@@ -584,13 +601,13 @@ namespace Robust.Server
             {
                 if (!_time.Paused && CheckIfShouldAutoPause())
                 {
-                    Logger.DebugS("srv", "game.auto_pause_empty changed, pausing");
+                    _logger.Debug("game.auto_pause_empty changed, pausing");
                     _time.Paused = true;
                 }
             }
             else if (_time.Paused)
             {
-                Logger.DebugS("srv", "game.auto_pause_empty changed, unpausing");
+                _logger.Debug("game.auto_pause_empty changed, unpausing");
                 _time.Paused = false;
             }
         }
@@ -602,13 +619,13 @@ namespace Robust.Server
 
             if (e.NewStatus == SessionStatus.Connected && _time.Paused)
             {
-                Logger.DebugS("srv", "Client connecting, unpausing automatically.");
+                _logger.Debug("Client connecting, unpausing automatically.");
                 _time.Paused = false;
             }
 
             if (e.NewStatus == SessionStatus.Disconnected && CheckIfShouldAutoPause())
             {
-                Logger.DebugS("srv", "Last client disconnected, pausing automatically.");
+                _logger.Debug("Last client disconnected, pausing automatically.");
                 _time.Paused = true;
             }
         }
@@ -621,6 +638,8 @@ namespace Robust.Server
         // called right before main loop returns, do all saving/cleanup in here
         public void Cleanup()
         {
+            _replay.Shutdown();
+
             _modLoader.Shutdown();
 
             _playerManager.Shutdown();
@@ -658,10 +677,13 @@ namespace Robust.Server
 
         private void Input(FrameEventArgs args)
         {
+            using var _ = TickUsage.WithLabels("Inputs").NewTimer();
             _systemConsole.UpdateInput();
 
             _network.ProcessPackets();
             _taskManager.ProcessPendingTasks();
+
+            _modLoader.BroadcastUpdate(ModUpdateLevel.InputPostEngine, args);
         }
 
         private void Update(FrameEventArgs frameEventArgs)
@@ -716,6 +738,11 @@ namespace Robust.Server
             _hubManager.Heartbeat();
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _logger = _log.GetSawmill("srv");
         }
     }
 }

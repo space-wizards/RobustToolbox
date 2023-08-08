@@ -97,7 +97,8 @@ namespace Robust.Shared.Containers
             TransformComponent? transform = null,
             TransformComponent? ownerTransform = null,
             MetaDataComponent? meta = null,
-            PhysicsComponent? physics = null);
+            PhysicsComponent? physics = null,
+            bool force = false);
 
         /// <summary>
         /// Checks if the entity can be removed from this container.

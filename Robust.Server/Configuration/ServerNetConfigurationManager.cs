@@ -1,15 +1,19 @@
 using Robust.Shared.Configuration;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System.Collections.Generic;
+using Robust.Shared.IoC;
+using Robust.Shared.Replays;
 
 namespace Robust.Server.Configuration;
 
 internal sealed class ServerNetConfigurationManager : NetConfigurationManager, IServerNetConfigurationManager
 {
+    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
+
     private readonly Dictionary<INetChannel, Dictionary<string, object>> _replicatedCVars = new();
 
     public override void SetupNetworking()
@@ -79,8 +83,13 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
         msg.Tick = Timing.CurTick;
         msg.NetworkedVars = new List<(string name, object value)>{ (name, value) };
 
-        // TODO REPLAYS: send cvar changes after the initial cvars were set
         NetManager.ServerSendToAll(msg);
+
+        _replayRecording.RecordServerMessage(new ReplayMessage.CvarChangeMsg()
+        {
+            ReplicatedCvars = msg.NetworkedVars,
+            TimeBase = _timing.TimeBase
+        });
     }
 
     protected override void ApplyNetVarChange(

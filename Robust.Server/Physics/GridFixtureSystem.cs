@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using Robust.Server.Console;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -23,7 +24,7 @@ namespace Robust.Server.Physics
     /// <summary>
     /// Handles generating fixtures for MapGrids.
     /// </summary>
-    internal sealed class GridFixtureSystem : SharedGridFixtureSystem
+    public sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
@@ -165,14 +166,16 @@ namespace Robust.Server.Physics
         #endregion
 
         /// <summary>
-        /// Check for any potential splits after maploading is done.
+        /// Check for any potential splits.
         /// </summary>
-        internal void CheckSplits(EntityUid uid)
+        public void CheckSplits(EntityUid uid)
         {
-            var nodes = _nodes[uid];
+            if (!_nodes.TryGetValue(uid, out var nodes))
+                return;
+
             var dirtyNodes = new HashSet<ChunkSplitNode>(nodes.Count);
 
-            foreach (var (_, group) in nodes)
+            foreach (var group in nodes.Values)
             {
                 foreach (var node in group.Nodes)
                 {
@@ -188,7 +191,13 @@ namespace Robust.Server.Physics
         /// </summary>
         private void CheckSplits(EntityUid uid, HashSet<ChunkSplitNode> dirtyNodes)
         {
-            if (_isSplitting || !SplitAllowed) return;
+            // TODO: We already have mapgrid elsewhere
+            if (_isSplitting || !SplitAllowed ||
+               !TryComp<MapGridComponent>(uid, out var grid) ||
+               !grid.CanSplit)
+            {
+                return;
+            }
 
             _isSplitting = true;
             _logger.Debug($"Started split check for {ToPrettyString(uid)}");
@@ -311,7 +320,7 @@ namespace Robust.Server.Physics
                             var tilePos = offset + tile;
                             var bounds = _lookup.GetLocalBounds(tilePos, oldGrid.TileSize);
 
-                            foreach (var ent in _lookup.GetEntitiesIntersecting(oldGridUid, tilePos, LookupFlags.Dynamic | LookupFlags.Sundries))
+                            foreach (var ent in _lookup.GetEntitiesIntersecting(oldGridUid, tilePos, 0f, LookupFlags.Dynamic | LookupFlags.Sundries))
                             {
                                 // Consider centre of entity position maybe?
                                 var entXform = xformQuery.GetComponent(ent);

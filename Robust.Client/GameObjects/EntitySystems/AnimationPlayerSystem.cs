@@ -4,22 +4,48 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class AnimationPlayerSystem : EntitySystem
+    public sealed class AnimationPlayerSystem : EntitySystem, IPostInjectInit
     {
         private readonly List<AnimationPlayerComponent> _activeAnimations = new();
 
+        private EntityQuery<MetaDataComponent> _metaQuery;
+
         [Dependency] private readonly IComponentFactory _compFact = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+
+        private ISawmill _sawmill = default!;
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            _metaQuery = GetEntityQuery<MetaDataComponent>();
+        }
 
         public override void FrameUpdate(float frameTime)
         {
-            for (var i = _activeAnimations.Count - 1; i >= 0; i--)
+            // TODO: Active or something idk.
+            for (var i = 0; i < _activeAnimations.Count; i++)
             {
                 var anim = _activeAnimations[i];
-                if (!Update(anim, frameTime)) continue;
+                var uid = anim.Owner;
+
+                if (!_metaQuery.TryGetComponent(uid, out var metadata) ||
+                    metadata.EntityPaused)
+                {
+                    continue;
+                }
+
+                if (!Update(uid, anim, frameTime))
+                {
+                    continue;
+                }
+
                 _activeAnimations.RemoveSwap(i);
+                i--;
                 anim.HasPlayingAnimation = false;
             }
         }
@@ -31,16 +57,18 @@ namespace Robust.Client.GameObjects
             component.HasPlayingAnimation = true;
         }
 
-        private bool Update(AnimationPlayerComponent component, float frameTime)
+        private bool Update(EntityUid uid, AnimationPlayerComponent component, float frameTime)
         {
             if (component.PlayingAnimationCount == 0 ||
                 component.Deleted)
+            {
                 return true;
+            }
 
             var remie = new RemQueue<string>();
             foreach (var (key, playback) in component.PlayingAnimations)
             {
-                var keep = AnimationPlaybackShared.UpdatePlayback(component.Owner, playback, frameTime);
+                var keep = AnimationPlaybackShared.UpdatePlayback(uid, playback, frameTime);
                 if (!keep)
                 {
                     remie.Add(key);
@@ -50,7 +78,7 @@ namespace Robust.Client.GameObjects
             foreach (var key in remie)
             {
                 component.PlayingAnimations.Remove(key);
-                EntityManager.EventBus.RaiseLocalEvent(component.Owner, new AnimationCompletedEvent {Uid = component.Owner, Key = key}, true);
+                EntityManager.EventBus.RaiseLocalEvent(uid, new AnimationCompletedEvent {Uid = uid, Key = key}, true);
                 component.AnimationComplete(key);
             }
 
@@ -89,13 +117,13 @@ namespace Robust.Client.GameObjects
 
                 if (compTrack.ComponentType == null)
                 {
-                    Logger.Error($"Attempted to play a component animation without any component specified.");
+                    _sawmill.Error($"Attempted to play a component animation without any component specified.");
                     return;
                 }
 
                 if (!EntityManager.TryGetComponent(component.Owner, compTrack.ComponentType, out var animatedComp))
                 {
-                    Logger.Error(
+                    _sawmill.Error(
                         $"Attempted to play a component animation, but the entity {ToPrettyString(component.Owner)} does not have the component to be animated: {compTrack.ComponentType}.");
                     return;
                 }
@@ -109,7 +137,7 @@ namespace Robust.Client.GameObjects
                 // animated is not part of the networked state and setting it does not dirty the component. Hence only a
                 // warning in debug mode.
                 if (reg.NetID != null)
-                    Logger.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(component.Owner)}");
+                    _sawmill.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(component.Owner)}");
             }
 #endif
 
@@ -150,6 +178,11 @@ namespace Robust.Client.GameObjects
         {
             if (!Resolve(uid, ref component, false)) return;
             component.PlayingAnimations.Remove(key);
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _sawmill = _logManager.GetSawmill("anim");
         }
     }
 

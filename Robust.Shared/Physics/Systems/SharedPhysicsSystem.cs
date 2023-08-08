@@ -5,7 +5,6 @@ using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Collision;
@@ -50,26 +49,30 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly IParallelManager _parallel = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IDependencyCollection _deps = default!;
-        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedJointSystem _joints = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
         [Dependency] private readonly Gravity2DController _gravity = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
+        [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
+        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private readonly SharedJointSystem _joints = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         private int _substeps;
 
         public bool MetricsEnabled { get; protected set; }
 
-        private ISawmill _sawmill = default!;
+        private EntityQuery<FixturesComponent> _fixturesQuery;
+        private EntityQuery<PhysicsComponent> _physicsQuery;
+        private EntityQuery<TransformComponent> _xformQuery;
 
         public override void Initialize()
         {
             base.Initialize();
 
-            _sawmill = Logger.GetSawmill("physics");
-            _sawmill.Level = LogLevel.Info;
+            _fixturesQuery = GetEntityQuery<FixturesComponent>();
+            _physicsQuery = GetEntityQuery<PhysicsComponent>();
+            _xformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
@@ -79,7 +82,7 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<PhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
-            SubscribeLocalEvent<PhysicsComponent, ComponentRemove>(OnPhysicsRemove);
+            SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
             SubscribeLocalEvent<PhysicsComponent, ComponentGetState>(OnPhysicsGetState);
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
             InitializeIsland();
@@ -90,15 +93,18 @@ namespace Robust.Shared.Physics.Systems
             _configManager.OnValueChanged(CVars.TargetMinimumTickrate, UpdateSubsteps, true);
         }
 
-        private void OnPhysicsRemove(EntityUid uid, PhysicsComponent component, ComponentRemove args)
+        private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
         {
             SetCanCollide(uid, false, false, body: component);
             DebugTools.Assert(!component.Awake);
+
+            if (LifeStage(uid) <= EntityLifeStage.MapInitialized)
+                RemComp<FixturesComponent>(uid);
         }
 
         private void OnCollisionChange(ref CollisionChangeEvent ev)
         {
-            var uid = ev.Body.Owner;
+            var uid = ev.BodyUid;
             var mapId = Transform(uid).MapID;
 
             if (mapId == MapId.Nullspace)
@@ -202,8 +208,8 @@ namespace Robust.Shared.Physics.Systems
             {
                 if (body.Awake)
                 {
-                    oldMap?.RemoveSleepBody(body);
-                    newMap?.AddAwakeBody(body);
+                    RemoveSleepBody(uid, body, oldMap);
+                    AddAwakeBody(uid, body, newMap);
                     DebugTools.Assert(body.Awake);
                 }
                 else
@@ -243,30 +249,31 @@ namespace Robust.Shared.Physics.Systems
         {
             base.Shutdown();
 
+            ShutdownContacts();
             ShutdownIsland();
             _configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void OnWake(ref PhysicsWakeEvent @event)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Entity).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            EntityUid tempQualifier = _mapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).AddAwakeBody(@event.Body);
+            var tempQualifier = _mapManager.GetMapEntityId(mapId);
+            AddAwakeBody(@event.Entity, @event.Body, tempQualifier);
         }
 
         private void OnSleep(ref PhysicsSleepEvent @event)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Entity).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            EntityUid tempQualifier = _mapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<PhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
+            var tempQualifier = _mapManager.GetMapEntityId(mapId);
+            RemoveSleepBody(@event.Entity, @event.Body, tempQualifier);
         }
 
         private void HandleContainerRemoved(EntityUid uid, PhysicsComponent physics, EntGotRemovedFromContainerMessage message)
@@ -311,9 +318,9 @@ namespace Robust.Shared.Physics.Systems
                 CollideContacts();
                 var enumerator = AllEntityQuery<PhysicsMapComponent>();
 
-                while (enumerator.MoveNext(out var comp))
+                while (enumerator.MoveNext(out var uid, out var comp))
                 {
-                    Step(comp, frameTime, prediction);
+                    Step(uid, comp, frameTime, prediction);
                 }
 
                 var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, frameTime);

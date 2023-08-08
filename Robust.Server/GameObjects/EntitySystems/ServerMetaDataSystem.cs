@@ -6,7 +6,7 @@ namespace Robust.Server.GameObjects;
 
 public sealed class ServerMetaDataSystem : MetaDataSystem
 {
-    [Dependency] private readonly PVSSystem _pvsSystem = default!;
+    [Dependency] private readonly PvsSystem _pvsSystem = default!;
 
     public override void Initialize()
     {
@@ -60,7 +60,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
 
     /// <summary>
     ///     If a new player gets attached to an entity, this will ensure that the player receives session-restricted
-    ///     component states by dirtying any restricted components. 
+    ///     component states by dirtying any restricted components.
     /// </summary>
     private void OnActorPlayerAttach(EntityUid uid, MetaDataComponent meta, PlayerAttachedEvent args)
     {
@@ -70,7 +70,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         foreach (var (_, comp) in EntityManager.GetNetComponents(uid))
         {
             if (comp.SessionSpecific || comp.SendOnlyToOwner)
-                Dirty(comp);
+                Dirty(uid, comp);
         }
     }
 

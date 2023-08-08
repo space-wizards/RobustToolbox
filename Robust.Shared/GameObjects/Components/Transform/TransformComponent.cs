@@ -11,6 +11,7 @@ using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects
@@ -94,6 +95,7 @@ namespace Robust.Shared.GameObjects
         public MapId MapID { get; internal set; }
 
         internal bool _mapIdInitialized;
+        internal bool _gridInitialized;
 
         // TODO: Cache this.
         /// <summary>
@@ -354,7 +356,7 @@ namespace Robust.Shared.GameObjects
                 {
                     _anchored = value;
                 }
-                else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
+                else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out _, out var grid))
                 {
                     _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
                 }
@@ -393,75 +395,13 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal EntityUid LerpParent { get; set; }
 
-        internal EntityUid? FindGridEntityId(EntityQuery<TransformComponent> xformQuery)
-        {
-            if (_entMan.HasComponent<MapComponent>(Owner))
-            {
-                return null;
-            }
-
-            if (_entMan.HasComponent<MapGridComponent>(Owner))
-            {
-                return Owner;
-            }
-
-            if (_parent.IsValid())
-            {
-                var parentXform = xformQuery.GetComponent(_parent);
-                if (parentXform.GridUid != null || parentXform.LifeStage >= ComponentLifeStage.Initialized)
-                    return parentXform.GridUid;
-                else
-                    return parentXform.FindGridEntityId(xformQuery);
-            }
-
-            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Owner : null;
-        }
-
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
+        [Obsolete("Use the system's method instead.")]
         public void AttachToGridOrMap()
         {
-            bool TerminatingOrDeleted(EntityUid uid)
-            {
-                return !_entMan.TryGetComponent(uid, out MetaDataComponent? meta)
-                       || meta.EntityLifeStage >= EntityLifeStage.Terminating;
-            }
-
-            // nothing to do
-            if (!_parent.IsValid())
-                return;
-
-            var mapPos = MapPosition;
-
-            EntityUid newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.Owner))
-            {
-                newMapEntity = mapGrid.Owner;
-            }
-            else if (_mapManager.GetMapEntityId(mapPos.MapId) is { Valid: true } mapEnt
-                     && !TerminatingOrDeleted(mapEnt))
-            {
-                newMapEntity = mapEnt;
-            }
-            else
-            {
-                if (!_mapManager.IsMap(Owner))
-                    Logger.Warning($"Detached a non-map entity ({_entMan.ToPrettyString(Owner)}) to null-space. Unless this entity is being deleted, this should not happen.");
-
-                _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().DetachParentToNull(Owner, this);
-                return;
-            }
-
-            // this would be a no-op
-            if (newMapEntity == _parent)
-            {
-                return;
-            }
-
-            var newMapEntityXform = _entMan.GetComponent<TransformComponent>(newMapEntity);
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetCoordinates(Owner, this, new(newMapEntity, newMapEntityXform.InvWorldMatrix.Transform(mapPos.Position)));
-            _entMan.Dirty(this);
+            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AttachToGridOrMap(Owner, this);
         }
 
         /// <summary>
@@ -782,13 +722,13 @@ namespace Robust.Shared.GameObjects
     /// <remarks>
     ///     A null value means that this entity is simply not on a broadphase (e.g., in null-space or in a container).
     ///     An invalid entity UID indicates that this entity has intentionally been removed from broadphases and should
-    ///     not automatically be re-added by movement events..
+    ///     not automatically be re-added by movement events.
     /// </remarks>
-    internal record struct BroadphaseData(EntityUid Uid, EntityUid MapUid, bool CanCollide, bool Static)
+    internal record struct BroadphaseData(EntityUid Uid, EntityUid PhysicsMap, bool CanCollide, bool Static)
     {
         public bool IsValid() => Uid.IsValid();
         public bool Valid => IsValid();
-        public readonly static BroadphaseData Invalid = default;
+        public static readonly BroadphaseData Invalid = default;
 
         // TODO include MapId if ever grids are allowed to enter null-space (leave PVS).
     }

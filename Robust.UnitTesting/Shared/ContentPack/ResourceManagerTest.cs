@@ -67,7 +67,7 @@ namespace Robust.UnitTesting.Shared.ContentPack
 
             var stream = new MemoryStream(Data);
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
-            resourceManager.MountStreamAt(stream, new ResourcePath("/a/b/c.dat"));
+            resourceManager.MountStreamAt(stream, new ("/a/b/c.dat"));
         }
 
         [Test]
@@ -83,13 +83,13 @@ namespace Robust.UnitTesting.Shared.ContentPack
         [Test]
         public void TestInvalidPaths([ValueSource(nameof(InvalidPaths))] string path)
         {
-            Assert.That(ResourceManager.IsPathValid(new ResourcePath(path)), Is.False);
+            Assert.That(ResourceManager.IsPathValid(new (path)), Is.False);
         }
 
         [Test]
         public void TestInvalidPathsLowerCase([ValueSource(nameof(InvalidPaths))] string path)
         {
-            Assert.That(ResourceManager.IsPathValid(new ResourcePath(path.ToLowerInvariant())), Is.False);
+            Assert.That(ResourceManager.IsPathValid(new (path.ToLowerInvariant())), Is.False);
         }
 
         [Test]
@@ -112,8 +112,8 @@ namespace Robust.UnitTesting.Shared.ContentPack
 
             Assert.That(found, Is.EquivalentTo(new[]
             {
-                new ResourcePath("/bar/a.txt"),
-                new ResourcePath("/bar/b.txt"),
+                new ResPath("/bar/a.txt"),
+                new ResPath("/bar/b.txt"),
             }));
         }
 

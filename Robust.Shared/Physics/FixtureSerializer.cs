@@ -7,8 +7,10 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Physics;
@@ -16,39 +18,65 @@ namespace Robust.Shared.Physics;
 /// <summary>
 /// Special-case to avoid writing grid fixtures.
 /// </summary>
-public sealed class FixtureSerializer : ITypeSerializer<List<Fixture>, SequenceDataNode>
+public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixture>, MappingDataNode>, ITypeCopier<Dictionary<string, Fixture>>
 {
-    public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
+    public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)
     {
         var seq = new List<ValidationNode>(node.Count);
+        var keys = new HashSet<string>();
 
         foreach (var subNode in node)
         {
-            seq.Add(serializationManager.ValidateNode<Fixture>(subNode, context));
+            var key = (ValueDataNode)subNode.Key;
+
+            if (!keys.Add(key.Value))
+            {
+                seq.Add(new ErrorNode(subNode.Key, $"Found duplicate fixture ID {key.Value}"));
+                continue;
+            }
+
+            seq.Add(serializationManager.ValidateNode<Fixture>(subNode.Value, context));
         }
 
         return new ValidatedSequenceNode(seq);
     }
 
-    public List<Fixture> Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies,
-        SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<List<Fixture>>? instantiation = default)
+    public Dictionary<string, Fixture> Read(ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies,
+        SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<Dictionary<string, Fixture>>? instantiation = default)
     {
-        var value = instantiation != null ? instantiation() : new List<Fixture>(node.Count);
+        var value = instantiation != null ? instantiation() : new Dictionary<string, Fixture>(node.Count);
 
         foreach (var subNode in node)
         {
-            var fixture = serializationManager.Read<Fixture>(subNode, hookCtx, context, notNullableOverride: true);
-            value.Add(fixture);
+            var key = (ValueDataNode)subNode.Key;
+
+            var fixture = serializationManager.Read<Fixture>(subNode.Value, hookCtx, context, notNullableOverride: true);
+            fixture.ID = key.Value;
+            value.Add(key.Value, fixture);
         }
 
         return value;
     }
 
-    public DataNode Write(ISerializationManager serializationManager, List<Fixture> value, IDependencyCollection dependencies,
+    public void CopyTo(ISerializationManager serializationManager, Dictionary<string, Fixture> source, ref Dictionary<string, Fixture> target,
+        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
+    {
+        target.Clear();
+
+        foreach (var (id, fixture) in source)
+        {
+            var newFixture = serializationManager.CreateCopy(fixture, hookCtx, context);
+            newFixture.ID = id;
+
+            target.Add(id, newFixture);
+        }
+    }
+
+    public DataNode Write(ISerializationManager serializationManager, Dictionary<string, Fixture> value, IDependencyCollection dependencies,
         bool alwaysWrite = false, ISerializationContext? context = null)
     {
-        var seq = new SequenceDataNode();
+        var seq = new MappingDataNode();
 
         if (value.Count == 0)
             return seq;
@@ -62,9 +90,9 @@ public sealed class FixtureSerializer : ITypeSerializer<List<Fixture>, SequenceD
             }
         }
 
-        foreach (var fixture in value)
+        foreach (var (id, fixture) in value)
         {
-            seq.Add(serializationManager.WriteValue(fixture, alwaysWrite, context, notNullableOverride: true));
+            seq.Add(id, serializationManager.WriteValue(fixture, alwaysWrite, context, notNullableOverride: true));
         }
 
         return seq;

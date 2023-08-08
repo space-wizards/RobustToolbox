@@ -9,7 +9,7 @@ namespace Robust.Client.ResourceManagement
     {
         internal IFontFaceHandle FontFaceHandle { get; private set; } = default!;
 
-        public override void Load(IResourceCache cache, ResourcePath path)
+        public override void Load(IResourceCache cache, ResPath path)
         {
             if (!cache.TryContentFileRead(path, out var stream))
             {
@@ -18,7 +18,7 @@ namespace Robust.Client.ResourceManagement
 
             using (stream)
             {
-                FontFaceHandle = IoCManager.Resolve<IFontManagerInternal>().Load(stream);
+                FontFaceHandle = ((IFontManagerInternal)cache.FontManager).Load(stream);
             }
         }
 

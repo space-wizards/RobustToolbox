@@ -10,6 +10,11 @@ namespace Robust.Client.Placement
         void Initialize();
         bool IsActive { get; }
         bool Eraser { get; }
+
+        /// <summary>
+        /// Do we replace any existing entities with matching keys.
+        /// </summary>
+        bool Replacement { get; set; }
         PlacementMode? CurrentMode { get; set; }
         PlacementInformation? CurrentPermission { get; set; }
 

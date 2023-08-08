@@ -19,7 +19,7 @@ public partial class PrototypeManager
     public event Action<DataNodeDocument>? LoadedData;
 
     /// <inheritdoc />
-    public void LoadDirectory(ResourcePath path, bool overwrite = false,
+    public void LoadDirectory(ResPath path, bool overwrite = false,
         Dictionary<Type, HashSet<string>>? changed = null)
     {
         _hasEverBeenReloaded = true;
@@ -33,7 +33,7 @@ public partial class PrototypeManager
         var sawmill = _logManager.GetSawmill("eng");
 
         var results = streams.AsParallel()
-            .Select<ResourcePath, (ResourcePath, IEnumerable<ExtractedMappingData>)>(file =>
+            .Select<ResPath, (ResPath, IEnumerable<ExtractedMappingData>)>(file =>
             {
                 try
                 {
@@ -81,56 +81,7 @@ public partial class PrototypeManager
         }
     }
 
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
-    {
-        var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
-            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
-
-        var dict = new Dictionary<string, HashSet<ErrorNode>>();
-        foreach (var resourcePath in streams)
-        {
-            using var reader = ReadFile(resourcePath);
-
-            if (reader == null)
-            {
-                continue;
-            }
-
-            var yamlStream = new YamlStream();
-            yamlStream.Load(reader);
-
-            for (var i = 0; i < yamlStream.Documents.Count; i++)
-            {
-                var rootNode = (YamlSequenceNode)yamlStream.Documents[i].RootNode;
-                foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
-                {
-                    var type = node.GetNode("type").AsString();
-                    if (!_kindNames.ContainsKey(type))
-                    {
-                        if (_ignoredPrototypeTypes.Contains(type))
-                        {
-                            continue;
-                        }
-
-                        throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
-                    }
-
-                    var mapping = node.ToDataNodeCast<MappingDataNode>();
-                    mapping.Remove("type");
-                    var errorNodes = _serializationManager.ValidateNode(_kindNames[type], mapping).GetErrors()
-                        .ToHashSet();
-                    if (errorNodes.Count == 0) continue;
-                    if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
-                        dict[resourcePath.ToString()] = new HashSet<ErrorNode>();
-                    dict[resourcePath.ToString()].UnionWith(errorNodes);
-                }
-            }
-        }
-
-        return dict;
-    }
-
-    private StreamReader? ReadFile(ResourcePath file, bool @throw = true)
+    private StreamReader? ReadFile(ResPath file, bool @throw = true)
     {
         var retries = 0;
 
@@ -151,7 +102,7 @@ public partial class PrototypeManager
                         throw;
                     }
 
-                    _sawmill.Error($"Error reloading prototypes in file {file}:\n{e}");
+                    Sawmill.Error($"Error reloading prototypes in file {file}:\n{e}");
                     return null;
                 }
 
@@ -161,7 +112,7 @@ public partial class PrototypeManager
         }
     }
 
-    public void LoadFile(ResourcePath file, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
+    public void LoadFile(ResPath file, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null)
     {
         try
         {
@@ -189,7 +140,7 @@ public partial class PrototypeManager
                 }
                 catch (Exception e)
                 {
-                    _sawmill.Error($"Exception whilst loading prototypes from {file}#{i}:\n{e}");
+                    Sawmill.Error($"Exception whilst loading prototypes from {file}#{i}:\n{e}");
                 }
 
                 i += 1;
@@ -197,7 +148,7 @@ public partial class PrototypeManager
         }
         catch (Exception e)
         {
-            _sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", file, e.Message);
+            Sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", file, e.Message);
         }
     }
 

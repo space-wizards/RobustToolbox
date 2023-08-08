@@ -23,6 +23,7 @@
 */
 
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
@@ -73,12 +74,12 @@ public sealed class PhysicsComponent : Component
     /// body will be woken.
     /// </summary>
     /// <value><c>true</c> if sleeping is allowed; otherwise, <c>false</c>.</value>
-    [DataField("sleepingAllowed"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("sleepingAllowed"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public bool SleepingAllowed = true;
 
-    [DataField("sleepTime"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("sleepTime"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public float SleepTime = 0f;
@@ -89,7 +90,7 @@ public sealed class PhysicsComponent : Component
     /// <remarks>
     ///     Also known as Enabled in Box2D
     /// </remarks>
-    [DataField("canCollide"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("canCollide"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public bool CanCollide = true;
@@ -145,10 +146,10 @@ public sealed class PhysicsComponent : Component
     /// <remarks>
     /// https://en.wikipedia.org/wiki/Moment_of_inertia
     /// </remarks>
-    [ViewVariables(VVAccess.ReadWrite)]
+    [ViewVariables]
     public float Inertia => _inertia + _mass * Vector2.Dot(_localCenter, _localCenter);
 
-    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    [ViewVariables(VVAccess.ReadWrite), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     // ReSharper disable once InconsistentNaming
     internal float _inertia;
 
@@ -160,14 +161,14 @@ public sealed class PhysicsComponent : Component
     /// <summary>
     /// Inverse moment of inertia (1 / I).
     /// </summary>
-    [ViewVariables,
+    [ViewVariables(VVAccess.ReadWrite),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public float InvI;
 
     /// <summary>
     ///     Is the body allowed to have angular velocity.
     /// </summary>
-    [DataField("fixedRotation"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("fixedRotation"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public bool FixedRotation = true;
 
@@ -188,7 +189,7 @@ public sealed class PhysicsComponent : Component
     /// The force is applied to the center of mass.
     /// https://en.wikipedia.org/wiki/Force
     /// </remarks>
-    [DataField("force"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("force"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public Vector2 Force;
 
@@ -199,7 +200,7 @@ public sealed class PhysicsComponent : Component
     /// The torque rotates around the Z axis on the object.
     /// https://en.wikipedia.org/wiki/Torque
     /// </remarks>
-    [DataField("torque"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("torque"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public float Torque;
 
@@ -215,7 +216,7 @@ public sealed class PhysicsComponent : Component
     ///     This is a set amount that the body's linear velocity is reduced by every tick.
     ///     Combined with the tile friction.
     /// </summary>
-    [DataField("linearDamping"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("linearDamping"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public float LinearDamping = 0.2f;
@@ -225,7 +226,7 @@ public sealed class PhysicsComponent : Component
     ///     Combined with the tile friction.
     /// </summary>
     /// <returns></returns>
-    [DataField("angularDamping"),
+    [ViewVariables(VVAccess.ReadWrite), DataField("angularDamping"),
      Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
          Other = AccessPermissions.Read)]
     public float AngularDamping = 0.2f;
@@ -239,15 +240,15 @@ public sealed class PhysicsComponent : Component
     ///     entity's parents are all stationary, this is the rate of change of this entity's world position (not
     ///     local position).
     /// </remarks>
-    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+    [ViewVariables(VVAccess.ReadWrite), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
         Other = AccessPermissions.ReadExecute)]
     public Vector2 LinearVelocity;
 
     /// <summary>
     ///     Current angular velocity of the entity in radians per sec.
     /// </summary>
-    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
-        Other = AccessPermissions.ReadExecute)]
+    [ViewVariables(VVAccess.ReadWrite), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+         Other = AccessPermissions.ReadExecute)]
     public float AngularVelocity;
 
     /// <summary>
@@ -259,15 +260,9 @@ public sealed class PhysicsComponent : Component
     /// <summary>
     ///     The current status of the object
     /// </summary>
-    [Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+    [ViewVariables(VVAccess.ReadWrite), DataField("bodyStatus"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public BodyStatus BodyStatus { get; set; }
 
-    [ViewVariables(VVAccess.ReadWrite)]
-    public bool Predict
-    {
-        get => _predict;
-        set => _predict = value;
-    }
-
-    private bool _predict;
+    [ViewVariables, Access(typeof(SharedPhysicsSystem))]
+    public bool Predict;
 }

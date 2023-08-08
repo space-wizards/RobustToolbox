@@ -12,7 +12,7 @@ public abstract class ViewVariablesBaseCommand : LocalizedCommands
     [Dependency] protected readonly INetManager _netMan = default!;
     [Dependency] protected readonly IViewVariablesManager _vvm = default!;
 
-    public override async ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, CancellationToken cancel)
+    public override async ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, string argStr, CancellationToken cancel)
     {
         if (args.Length is 0 or > 1)
             return CompletionResult.Empty;

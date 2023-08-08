@@ -73,11 +73,14 @@ namespace Robust.Client.Timing
 
         public void StartStateApplication()
         {
+            DebugTools.Assert(IsFirstTimePredicted, "Starting state application in the middle of a past prediction.");
+            IsFirstTimePredicted = false;
             ApplyingState = true;
         }
 
         public void EndStateApplication()
         {
+            IsFirstTimePredicted = true;
             ApplyingState = false;
         }
     }

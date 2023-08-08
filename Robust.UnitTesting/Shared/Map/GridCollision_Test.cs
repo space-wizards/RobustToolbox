@@ -59,8 +59,8 @@ namespace Robust.UnitTesting.Shared.Map
                     var contact = node.Value;
                     node = node.Next;
 
-                    var bodyA = contact.FixtureA!.Body;
-                    var bodyB = contact.FixtureB!.Body;
+                    var bodyA = contact.BodyA;
+                    var bodyB = contact.BodyB;
 
                     var other = physics1 == bodyA ? bodyB : bodyA;
 
@@ -89,8 +89,8 @@ namespace Robust.UnitTesting.Shared.Map
                     if (!contact.IsTouching)
                         continue;
 
-                    var bodyA = contact.FixtureA!.Body;
-                    var bodyB = contact.FixtureB!.Body;
+                    var bodyA = contact.BodyA;
+                    var bodyB = contact.BodyB;
 
                     var other = physics1 == bodyA ? bodyB : bodyA;
 

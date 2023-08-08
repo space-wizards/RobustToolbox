@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -63,6 +64,18 @@ public partial class EntitySystem
             return true;
 
         return metaData.EntityDeleted;
+    }
+
+    /// <summary>
+    ///     Checks whether the entity is being or has been deleted (or never existed in the first place).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TerminatingOrDeleted(EntityUid uid, MetaDataComponent? metaData = null)
+    {
+        if (!Resolve(uid, ref metaData, false))
+            return true;
+
+        return metaData.EntityLifeStage >= EntityLifeStage.Terminating;
     }
 
     /// <summary>
@@ -185,6 +198,15 @@ public partial class EntitySystem
     protected void Dirty(Component component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(component, meta);
+    }
+
+    /// <summary>
+    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+    {
+        EntityManager.Dirty(uid, component, meta);
     }
 
     /// <summary>
@@ -376,7 +398,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.GetComponent&lt;T&gt;"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T Comp<T>(EntityUid uid) where T : class, IComponent
+    protected T Comp<T>(EntityUid uid) where T : Component
     {
         return EntityManager.GetComponent<T>(uid);
     }
@@ -613,14 +635,14 @@ public partial class EntitySystem
 
     #region Entity Spawning
 
-    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, EntityCoordinates)" />
+    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, EntityCoordinates, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
     {
         return EntityManager.SpawnEntity(prototype, coordinates);
     }
 
-    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, MapCoordinates)" />
+    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, MapCoordinates, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? prototype, MapCoordinates coordinates)
     {
@@ -715,18 +737,28 @@ public partial class EntitySystem
 
     #region Entity Query
 
+    /// <remarks>
+    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1}"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure]
     protected EntityQuery<T> GetEntityQuery<T>() where T : Component
     {
         return EntityManager.GetEntityQuery<T>();
     }
 
+    /// <remarks>
+    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1}"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<TComp1> EntityQuery<TComp1>(bool includePaused = false) where TComp1 : Component
     {
         return EntityManager.EntityQuery<TComp1>(includePaused);
     }
 
+    /// <remarks>
+    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2}"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
         where TComp1 : Component
@@ -735,6 +767,9 @@ public partial class EntitySystem
         return EntityManager.EntityQuery<TComp1, TComp2>(includePaused);
     }
 
+    /// <remarks>
+    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2, TComp3}"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
         where TComp1 : Component
@@ -744,6 +779,9 @@ public partial class EntitySystem
         return EntityManager.EntityQuery<TComp1, TComp2, TComp3>(includePaused);
     }
 
+    /// <remarks>
+    /// If you need the EntityUid, use <see cref="EntityQueryEnumerator{TComp1, TComp2, TComp3, TComp4}"/>
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
         where TComp1 : Component

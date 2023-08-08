@@ -1,16 +1,12 @@
 using Robust.Shared.Replays;
-using System;
 
 namespace Robust.Server.Replays;
 
 public interface IServerReplayRecordingManager : IReplayRecordingManager
 {
-    void ToggleRecording();
-    bool TryStartRecording(string? directory = null, bool overwrite = false, TimeSpan? duration = null);
-    void StopRecording();
-
     /// <summary>
-    ///     Returns information about the currently ongoing replay recording, including the currently elapsed time and the compressed replay size.
+    /// Processes pending write tasks and saves the replay data for the current tick. This should be called even if a
+    /// replay is not currently being recorded.
     /// </summary>
-    (float Minutes, int Ticks, float Size, float UncompressedSize) GetReplayStats();
+    void Update();
 }

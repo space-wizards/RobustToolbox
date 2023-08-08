@@ -11,6 +11,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Console
@@ -45,7 +46,7 @@ namespace Robust.Shared.Console
         protected ConsoleHost(bool isServer)
         {
             IsServer = isServer;
-            LocalShell = new ConsoleShell(this, null);
+            LocalShell = new ConsoleShell(this, null, true);
         }
 
         /// <inheritdoc />
@@ -173,6 +174,8 @@ namespace Robust.Shared.Console
 
         //TODO: IConsoleOutput for [e#1225]
         public abstract void WriteLine(ICommonSession? session, string text);
+        public abstract void WriteLine(ICommonSession? session, FormattedMessage msg);
+
         public abstract void WriteError(ICommonSession? session, string text);
 
         /// <inheritdoc />
@@ -190,7 +193,7 @@ namespace Robust.Shared.Console
             if (session.Status >= SessionStatus.Disconnected)
                 throw new InvalidOperationException("Tried to get the session shell of a disconnected peer.");
 
-            return new ConsoleShell(this, session);
+            return new ConsoleShell(this, session, false);
         }
 
         /// <inheritdoc />
@@ -324,10 +327,11 @@ namespace Robust.Shared.Console
             public ValueTask<CompletionResult> GetCompletionAsync(
                 IConsoleShell shell,
                 string[] args,
+                string argStr,
                 CancellationToken cancel)
             {
                 if (CompletionCallbackAsync != null)
-                    return CompletionCallbackAsync(shell, args);
+                    return CompletionCallbackAsync(shell, args, argStr);
 
                 if (CompletionCallback != null)
                     return ValueTask.FromResult(CompletionCallback(shell, args));

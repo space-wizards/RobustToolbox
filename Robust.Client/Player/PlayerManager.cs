@@ -23,6 +23,7 @@ namespace Robust.Client.Player
     {
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
+        [Dependency] private readonly IEntityManager _entManager = default!;
 
         /// <summary>
         ///     Active sessions of connected clients to the server.
@@ -153,7 +154,7 @@ namespace Robust.Client.Player
                 return;
             }
 
-            LocalPlayer.AttachEntity(entity.Value);
+            LocalPlayer.AttachEntity(entity.Value, _entManager, _client);
         }
 
         /// <summary>
@@ -177,16 +178,23 @@ namespace Robust.Client.Player
             {
                 hitSet.Add(state.UserId);
 
-                if (_sessions.TryGetValue(state.UserId, out var local))
+                if (_sessions.TryGetValue(state.UserId, out var session))
                 {
+                    var local = (PlayerSession) session;
                     // Exists, update data.
-                    if (local.Name == state.Name && local.Status == state.Status && local.Ping == state.Ping)
+                    if (local.Name == state.Name
+                        && local.Status == state.Status
+                        && local.Ping == state.Ping
+                        && local.AttachedEntity == state.ControlledEntity)
+                    {
                         continue;
+                    }
 
                     dirty = true;
                     local.Name = state.Name;
                     local.Status = state.Status;
                     local.Ping = state.Ping;
+                    local.AttachedEntity = state.ControlledEntity;
                 }
                 else
                 {
@@ -197,7 +205,8 @@ namespace Robust.Client.Player
                     {
                         Name = state.Name,
                         Status = state.Status,
-                        Ping = state.Ping
+                        Ping = state.Ping,
+                        AttachedEntity = state.ControlledEntity,
                     };
                     _sessions.Add(state.UserId, newSession);
                     if (state.UserId == LocalPlayer!.UserId)

@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -84,9 +85,9 @@ namespace Robust.Client.GameObjects
                     {
                         var poly = (PolygonShape) fixture.Shape;
 
-                        var verts = new Vector2[poly.Vertices.Length];
+                        var verts = new Vector2[poly.VertexCount];
 
-                        for (var i = 0; i < poly.Vertices.Length; i++)
+                        for (var i = 0; i < poly.VertexCount; i++)
                         {
                             verts[i] = Transform.Mul(transform, poly.Vertices[i]);
                         }

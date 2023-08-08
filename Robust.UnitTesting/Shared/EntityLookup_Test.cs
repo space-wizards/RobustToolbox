@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -36,7 +37,6 @@ namespace Robust.UnitTesting.Shared
         public void TestAnchoring()
         {
             var sim = RobustServerSimulation.NewSimulation();
-            // sim.RegisterEntitySystems(m => m.LoadExtraSystemType<EntityLookupSystem>());
             var server = sim.InitializeInstance();
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
@@ -60,7 +60,7 @@ namespace Robust.UnitTesting.Shared
             // When anchoring it should still get returned.
             xform.Anchored = true;
             Assert.That(xform.Anchored);
-            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
+            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Has.Count.EqualTo(1));
 
             xform.Anchored = false;
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));

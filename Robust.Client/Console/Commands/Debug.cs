@@ -191,6 +191,19 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal sealed class ShowRotationsCommand : LocalizedCommands
+    {
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+
+        public override string Command => "showrot";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
+            mgr.DebugRotations = !mgr.DebugRotations;
+        }
+    }
+
     internal sealed class ShowRayCommand : LocalizedCommands
     {
         [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
@@ -455,7 +468,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            using var writer = _res.UserData.OpenWriteText(new ResourcePath("/guidump.txt"));
+            using var writer = _res.UserData.OpenWriteText(new ResPath("/guidump.txt"));
 
             foreach (var root in _ui.AllRoots)
             {
@@ -608,6 +621,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ChunkInfoCommand : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IMapManager _map = default!;
         [Dependency] private readonly IEyeManager _eye = default!;
         [Dependency] private readonly IInputManager _input = default!;
@@ -618,16 +632,17 @@ namespace Robust.Client.Console.Commands
         {
             var mousePos = _eye.ScreenToMap(_input.MouseScreenPosition);
 
-            if (!_map.TryFindGridAt(mousePos, out var grid))
+            if (!_map.TryFindGridAt(mousePos, out var gridUid, out var grid))
             {
                 shell.WriteLine("No grid under your mouse cursor.");
                 return;
             }
 
-            var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
-            var chunk = grid.GetOrAddChunk(chunkIndex);
+            var mapSystem = _entManager.System<SharedMapSystem>();
+            var chunkIndex = mapSystem.LocalToChunkIndices(gridUid, grid, grid.MapToGrid(mousePos));
+            var chunk = mapSystem.GetOrAddChunk(gridUid, grid, chunkIndex);
 
-            shell.WriteLine($"worldBounds: {grid.CalcWorldAABB(chunk)} localBounds: {chunk.CachedBounds}");
+            shell.WriteLine($"worldBounds: {mapSystem.CalcWorldAABB(gridUid, grid, chunk)} localBounds: {chunk.CachedBounds}");
         }
     }
 
@@ -661,7 +676,7 @@ namespace Robust.Client.Console.Commands
                         ? StringComparer.Ordinal
                         : StringComparer.OrdinalIgnoreCase;
 
-                    var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResourcePath>>(stringComparer);
+                    var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResPath>>(stringComparer);
 
                     var taskManager = _taskManager;
 
@@ -675,7 +690,7 @@ namespace Robust.Client.Console.Commands
                             throw new NotImplementedException();
                         }
 
-                        reversePathResolution.GetOrAdd(fullPath, _ => new HashSet<ResourcePath>()).Add(path);
+                        reversePathResolution.GetOrAdd(fullPath, _ => new HashSet<ResPath>()).Add(path);
 
                         var dir = Path.GetDirectoryName(fullPath)!;
                         var fileName = Path.GetFileName(fullPath);
@@ -689,7 +704,7 @@ namespace Robust.Client.Console.Commands
                                 throw new NotImplementedException();
                             }
 
-                            reversePathResolution.GetOrAdd(incFullPath, _ => new HashSet<ResourcePath>()).Add(path);
+                            reversePathResolution.GetOrAdd(incFullPath, _ => new HashSet<ResPath>()).Add(path);
 
                             var incDir = Path.GetDirectoryName(incFullPath)!;
                             var incFileName = Path.GetFileName(incFullPath);

@@ -11,23 +11,17 @@ namespace Robust.Shared.Map.Components
     [NetworkedComponent]
     public sealed class MapComponent : Component
     {
-        [ViewVariables(VVAccess.ReadOnly)]
-        [DataField("index")]
-        private MapId _mapIndex = MapId.Nullspace;
-
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataField(("lightingEnabled"))]
+        [DataField("lightingEnabled")]
         public bool LightingEnabled { get; set; } = true;
 
-        public MapId WorldMap
-        {
-            get => _mapIndex;
-            internal set => _mapIndex = value;
-        }
+        [ViewVariables(VVAccess.ReadOnly)]
+        public MapId MapId { get; internal set; } = MapId.Nullspace;
 
         [ViewVariables(VVAccess.ReadOnly)]
         public bool MapPaused { get; set; } = false;
 
+        //TODO replace MapPreInit with the map's entity life stage
         [ViewVariables(VVAccess.ReadOnly)]
         public bool MapPreInit { get; set; } = false;
     }

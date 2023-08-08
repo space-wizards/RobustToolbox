@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -140,7 +141,7 @@ internal sealed partial class UserInterfaceManager
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception while trying to draw a UI element: {root}");
+                _sawmillUI.Error($"Caught exception while trying to draw a UI element: {root}");
                 _runtime.LogException(e, nameof(UserInterfaceManager));
             }
         }
@@ -151,12 +152,17 @@ internal sealed partial class UserInterfaceManager
             _styleUpdateQueue.Enqueue(control);
         }
 
+        /// <summary>
+        /// Queues a control so that it gets remeasured in the next frame update. Does not queue an arrange update.
+        /// </summary>
         public void QueueMeasureUpdate(Control control)
         {
             _measureUpdateQueue.Enqueue(control);
-            _arrangeUpdateQueue.Enqueue(control);
         }
 
+        /// <summary>
+        /// Queues a control so that it gets rearranged in the next frame update. Does not queue a measure update.
+        /// </summary>
         public void QueueArrangeUpdate(Control control)
         {
             _arrangeUpdateQueue.Enqueue(control);

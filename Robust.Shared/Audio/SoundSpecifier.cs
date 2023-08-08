@@ -27,19 +27,19 @@ public sealed class SoundPathSpecifier : SoundSpecifier
 {
     public const string Node = "path";
 
-    [DataField(Node, customTypeSerializer: typeof(ResourcePathSerializer), required: true)]
-    public ResourcePath? Path { get; }
+    [DataField(Node, customTypeSerializer: typeof(ResPathSerializer), required: true)]
+    public ResPath Path { get; }
 
     [UsedImplicitly]
-    public SoundPathSpecifier()
+    private SoundPathSpecifier()
     {
     }
 
-    public SoundPathSpecifier(string path, AudioParams? @params = null) : this(new ResourcePath(path), @params)
+    public SoundPathSpecifier(string path, AudioParams? @params = null) : this(new ResPath(path), @params)
     {
     }
 
-    public SoundPathSpecifier(ResourcePath path, AudioParams? @params = null)
+    public SoundPathSpecifier(ResPath path, AudioParams? @params = null)
     {
         Path = path;
         if (@params.HasValue)
@@ -49,7 +49,7 @@ public sealed class SoundPathSpecifier : SoundSpecifier
     [Obsolete("Use SharedAudioSystem.GetSound(), or just pass sound specifier directly into SharedAudioSystem.")]
     public override string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null)
     {
-        return Path == null ? string.Empty : Path.ToString();
+        return Path.ToString();
     }
 }
 

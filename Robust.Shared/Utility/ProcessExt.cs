@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using TerraFX.Interop.Windows;
+
 // ReSharper disable InconsistentNaming
 // ReSharper disable IdentifierTypo
 // ReSharper disable CommentTypo
@@ -49,34 +50,15 @@ namespace Robust.Shared.Utility
 
             PROCESS_MEMORY_COUNTERS_EX counters;
 
-            if (GetProcessMemoryInfo(process.Handle, &counters, sizeof(PROCESS_MEMORY_COUNTERS_EX)) == 0)
+            if (Windows.GetProcessMemoryInfo(
+                    (HANDLE)process.Handle,
+                    (PROCESS_MEMORY_COUNTERS*)(&counters),
+                    (uint)sizeof(PROCESS_MEMORY_COUNTERS_EX)) == 0)
                 return 0;
 
             var count = counters.PrivateUsage;
 
-            return count;
+            return (long)count;
         }
-
-        private struct PROCESS_MEMORY_COUNTERS_EX
-        {
-            public int cb;
-            public int PageFaultCount;
-            public nint PeakWorkingSetSize;
-            public nint WorkingSetSize;
-            public nint QuotaPeakPagedPoolUsage;
-            public nint QuotaPagedPoolUsage;
-            public nint QuotaPeakNonPagedPoolUsage;
-            public nint QuotaNonPagedPoolUsage;
-            public nint PagefileUsage;
-            public nint PeakPagefileUsage;
-            public nint PrivateUsage;
-        }
-
-        // ReSharper disable once StringLiteralTypo
-        [DllImport("psapi.dll", SetLastError = true)]
-        private static extern int GetProcessMemoryInfo(
-            IntPtr Process,
-            PROCESS_MEMORY_COUNTERS_EX* ppsmemCounters,
-            int cb);
     }
 }

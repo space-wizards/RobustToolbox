@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -144,20 +145,20 @@ namespace Robust.Shared.Physics
         public static float DistanceBetweenPointAndLineSegment(in Vector2 point, in Vector2 start, in Vector2 end)
         {
             if (start == end)
-                return (point - start).Length;
+                return (point - start).Length();
 
             var v = end - start;
             var w = point - start;
 
             var c1 = Vector2.Dot(w, v);
-            if (c1 <= 0) return (point - start).Length;
+            if (c1 <= 0) return (point - start).Length();
 
             var c2 = Vector2.Dot(v, v);
-            if (c2 <= c1) return (point - end).Length;
+            if (c2 <= c1) return (point - end).Length();
 
             var b = c1 / c2;
             var pointOnLine = start + v * b;
-            return (point - pointOnLine).Length;
+            return (point - pointOnLine).Length();
         }
     }
 }

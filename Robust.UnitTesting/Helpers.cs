@@ -18,7 +18,7 @@ namespace Robust.UnitTesting
             var stream = new MemoryStream();
             stream.Write(Encoding.UTF8.GetBytes(content));
             stream.Position = 0;
-            resourceManager.MountStreamAt(stream, new ResourcePath(path));
+            resourceManager.MountStreamAt(stream, new (path));
         }
     }
 }

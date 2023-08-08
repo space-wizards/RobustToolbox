@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net;
 using Robust.Client.Configuration;
 using Robust.Client.Debugging;
@@ -22,7 +23,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client
 {
     /// <inheritdoc />
-    public sealed class BaseClient : IBaseClient
+    public sealed class BaseClient : IBaseClient, IPostInjectInit
     {
         [Dependency] private readonly IClientNetManager _net = default!;
         [Dependency] private readonly IPlayerManager _playMan = default!;
@@ -32,6 +33,7 @@ namespace Robust.Client
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IClientGameStateManager _gameStates = default!;
+        [Dependency] private readonly ILogManager _logMan = default!;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -48,6 +50,7 @@ namespace Robust.Client
         public string? LastDisconnectReason { get; private set; }
 
         private (TimeSpan, GameTick) _timeBase;
+        private ISawmill _logger = default!;
 
         /// <inheritdoc />
         public void Initialize()
@@ -63,12 +66,20 @@ namespace Robust.Client
             _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged, invokeImmediately: true);
 
             _playMan.Initialize();
+            _playMan.PlayerListUpdated += OnPlayerListUpdated;
             Reset();
+        }
+
+        private void OnPlayerListUpdated(object? sender, EventArgs e)
+        {
+            var serverPlayers = _playMan.PlayerCount;
+            if (_net.ServerChannel != null && GameInfo != null && _net.IsConnected)
+                _discord.Update(GameInfo.ServerName, _net.ServerChannel.UserName, GameInfo.ServerMaxPlayers.ToString(), serverPlayers.ToString());
         }
 
         private void SyncTimeBase(MsgSyncTimeBase message)
         {
-            Logger.DebugS("client", $"Synchronized time base: {message.Tick}: {message.Time}");
+            _logger.Debug($"Synchronized time base: {message.Tick}: {message.Time}");
 
             if (RunLevel >= ClientRunLevel.Connected)
                 _timing.TimeBase = (message.Time, message.Tick);
@@ -84,7 +95,7 @@ namespace Robust.Client
             }
 
             _timing.SetTickRateAt((byte) tickrate, info.TickChanged);
-            Logger.InfoS("client", $"Tickrate changed to: {tickrate} on tick {_timing.CurTick}");
+            _logger.Info($"Tickrate changed to: {tickrate} on tick {_timing.CurTick}");
         }
 
         /// <inheritdoc />
@@ -167,7 +178,7 @@ namespace Robust.Client
 
             var userName = _net.ServerChannel!.UserName;
             var userId = _net.ServerChannel.UserId;
-            _discord.Update(info.ServerName, userName, info.ServerMaxPlayers.ToString());
+
             // start up player management
             _playMan.Startup();
 
@@ -175,6 +186,10 @@ namespace Robust.Client
             _playMan.LocalPlayer.Name = userName;
 
             _playMan.LocalPlayer.StatusChanged += OnLocalStatusChanged;
+
+            var serverPlayers = _playMan.PlayerCount;
+            _discord.Update(info.ServerName, userName, info.ServerMaxPlayers.ToString(), serverPlayers.ToString());
+
         }
 
         /// <summary>
@@ -265,10 +280,15 @@ namespace Robust.Client
 
         private void OnRunLevelChanged(ClientRunLevel newRunLevel)
         {
-            Logger.DebugS("client", $"Runlevel changed to: {newRunLevel}");
+            _logger.Debug($"Runlevel changed to: {newRunLevel}");
             var args = new RunLevelChangedEventArgs(RunLevel, newRunLevel);
             RunLevel = newRunLevel;
             RunLevelChanged?.Invoke(this, args);
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _logger = _logMan.GetSawmill("client");
         }
     }
 

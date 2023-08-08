@@ -21,12 +21,16 @@ namespace Robust.Client.GameStates
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
         private readonly ShaderInstance _shader;
+        private readonly SharedContainerSystem _container;
+        private readonly SharedTransformSystem _xform;
 
         public NetInterpOverlay(EntityLookupSystem lookup)
         {
             IoCManager.InjectDependencies(this);
             _lookup = lookup;
             _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+            _container = _entityManager.System<SharedContainerSystem>();
+            _xform = _entityManager.System<SharedTransformSystem>();
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
@@ -36,30 +40,45 @@ namespace Robust.Client.GameStates
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = args.WorldAABB;
 
-            foreach (var physics in _entityManager.EntityQuery<PhysicsComponent>(true))
+            var query = _entityManager.AllEntityQueryEnumerator<PhysicsComponent, TransformComponent>();
+            while (query.MoveNext(out var uid, out var physics, out var transform))
             {
-                // all entities have a TransformComponent
-                var transform = _entityManager.GetComponent<TransformComponent>(physics.Owner);
-
                 // if not on the same map, continue
-                if (transform.MapID != _eyeManager.CurrentMap || physics.Owner.IsInContainer(_entityManager))
+                if (transform.MapID != _eyeManager.CurrentMap || _container.IsEntityInContainer(uid))
+                    continue;
+
+                if (transform.GridUid == uid)
                     continue;
 
                 // This entity isn't lerping, no need to draw debug info for it
                 if(transform.NextPosition == null)
                     continue;
 
-                var aabb = _lookup.GetWorldAABB(physics.Owner);
+                var aabb = _lookup.GetWorldAABB(uid);
 
                 // if not on screen, or too small, continue
                 if (!aabb.Intersects(viewport) || aabb.IsEmpty())
                     continue;
 
+                var (pos, rot) = _xform.GetWorldPositionRotation(transform, _entityManager.GetEntityQuery<TransformComponent>());
                 var boxOffset = transform.NextPosition.Value - transform.LocalPosition;
-                var boxPosWorld = transform.WorldPosition + boxOffset;
+                var worldOffset = (rot - transform.LocalRotation).RotateVec(boxOffset);
 
-                worldHandle.DrawLine(transform.WorldPosition, boxPosWorld, Color.Yellow);
-                worldHandle.DrawRect(aabb.Translated(boxOffset), Color.Yellow.WithAlpha(0.5f), false);
+                var nextPos = pos + worldOffset;
+                worldHandle.DrawLine(pos, nextPos, Color.Yellow);
+
+                var nextAabb = aabb.Translated(worldOffset);
+
+                Angle nextRot = rot;
+                if (transform.NextRotation.HasValue)
+                    nextRot += transform.NextRotation.Value - transform.LocalRotation;
+                var nextBox = new Box2Rotated(nextAabb, nextRot, nextAabb.Center);
+                worldHandle.DrawRect(nextBox, Color.Green.WithAlpha(0.1f), true);
+                worldHandle.DrawRect(nextBox, Color.Green, false);
+
+                var box = new Box2Rotated(aabb, rot, aabb.Center);
+                worldHandle.DrawRect(box, Color.Yellow.WithAlpha(0.1f), true);
+                worldHandle.DrawRect(box, Color.Yellow, false);
             }
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
@@ -13,6 +14,7 @@ namespace Robust.Shared.Utility
         /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
         [ContractAnnotation("=> halt")]
+        [DoesNotReturn]
         public static void Assert(string message)
         {
             throw new DebugAssertException(message);
@@ -25,7 +27,9 @@ namespace Robust.Shared.Utility
         /// <param name="condition">Condition that must be true.</param>
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void Assert([AssertionCondition(AssertionConditionType.IS_TRUE)]
+        public static void Assert(
+            [AssertionCondition(AssertionConditionType.IS_TRUE)]
+            [DoesNotReturnIf(false)]
             bool condition)
         {
             if (!condition)
@@ -40,8 +44,11 @@ namespace Robust.Shared.Utility
         /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void Assert([AssertionCondition(AssertionConditionType.IS_TRUE)]
-            bool condition, string message)
+        public static void Assert(
+            [AssertionCondition(AssertionConditionType.IS_TRUE)]
+            [DoesNotReturnIf(false)]
+            bool condition,
+            string message)
         {
             if (!condition)
                 throw new DebugAssertException(message);
@@ -55,8 +62,12 @@ namespace Robust.Shared.Utility
         /// <param name="message">Exception message.</param>
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void Assert([AssertionCondition(AssertionConditionType.IS_TRUE)]
-            bool condition, [InterpolatedStringHandlerArgument("condition")] ref AssertInterpolatedStringHandler message)
+        public static void Assert(
+            [AssertionCondition(AssertionConditionType.IS_TRUE)]
+            [DoesNotReturnIf(false)]
+            bool condition,
+            [InterpolatedStringHandlerArgument("condition")]
+            ref AssertInterpolatedStringHandler message)
         {
             if (!condition)
                 throw new DebugAssertException(message.ToStringAndClear());

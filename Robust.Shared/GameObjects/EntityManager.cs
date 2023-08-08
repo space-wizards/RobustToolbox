@@ -1,5 +1,4 @@
 using Prometheus;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Profiling;
@@ -11,10 +10,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using Robust.Shared.Physics;
+using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Shared.GameObjects
 {
     public delegate void EntityUidQueryCallback(EntityUid uid);
+
+    public delegate void ComponentQueryCallback<T>(EntityUid uid, T component) where T : Component;
 
     /// <inheritdoc />
     [Virtual]
@@ -22,16 +26,20 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
-        [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly ISerializationManager _serManager = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
+        [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
+        [IoC.Dependency] protected readonly ILogManager LogManager = default!;
+        [IoC.Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
+        [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+        [IoC.Dependency] private readonly ISerializationManager _serManager = default!;
+        [IoC.Dependency] private readonly ProfManager _prof = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
         private SharedTransformSystem _xforms = default!;
+
+        private EntityQuery<MetaDataComponent> _metaQuery;
+        private EntityQuery<TransformComponent> _xformQuery;
 
         #endregion Dependencies
 
@@ -51,6 +59,8 @@ namespace Robust.Shared.GameObjects
         protected readonly Queue<EntityUid> QueuedDeletions = new();
         protected readonly HashSet<EntityUid> QueuedDeletionsSet = new();
 
+        private EntityDiffContext _context = new();
+
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
@@ -67,9 +77,24 @@ namespace Robust.Shared.GameObjects
         public event Action<EntityUid>? EntityInitialized;
         public event Action<EntityUid>? EntityStarted;
         public event Action<EntityUid>? EntityDeleted;
+
+        /// <summary>
+        /// Raised when an entity is queued for deletion. Not raised if an entity is deleted.
+        /// </summary>
+        public event Action<EntityUid>? EntityQueueDeleted;
         public event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
+        private string _xformName = string.Empty;
+
+        private SharedMapSystem _mapSystem = default!;
+
+        private ISawmill _sawmill = default!;
+        private ISawmill _resolveSawmill = default!;
+
         public bool Started { get; protected set; }
+
+        public bool ShuttingDown { get; protected set; }
+
         public bool Initialized { get; protected set; }
 
         /// <summary>
@@ -87,8 +112,112 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeComponents();
+            _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
+            _sawmill = LogManager.GetSawmill("entity");
+            _resolveSawmill = LogManager.GetSawmill("resolve");
 
             Initialized = true;
+        }
+
+        /// <summary>
+        /// Returns true if the entity's data (apart from transform) is default.
+        /// </summary>
+        public bool IsDefault(EntityUid uid)
+        {
+            if (!_metaQuery.TryGetComponent(uid, out var metadata) || metadata.EntityPrototype == null)
+                return false;
+
+            var prototype = metadata.EntityPrototype;
+
+            // Prototype may or may not have metadata / transforms
+            var protoComps = prototype.Components.Keys.ToList();
+
+            protoComps.Remove(_xformName);
+
+            // Fast check if the component counts match.
+            if (protoComps.Count != ComponentCount(uid) - 2)
+                return false;
+
+            // Check if entity name / description match
+            if (metadata.EntityName != prototype.Name ||
+                metadata.EntityDescription != prototype.Description)
+            {
+                return false;
+            }
+
+            // Get default prototype data
+            Dictionary<string, MappingDataNode> protoData = new();
+            try
+            {
+                _context.WritingReadingPrototypes = true;
+
+                foreach (var compType in protoComps)
+                {
+                    if (compType == _xformName)
+                        continue;
+
+                    var comp = prototype.Components[compType];
+                    protoData.Add(compType, _serManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component, alwaysWrite: true, context: _context));
+                }
+
+                _context.WritingReadingPrototypes = false;
+            }
+            catch (Exception e)
+            {
+                _sawmill.Error($"Failed to convert prototype {prototype.ID} into yaml. Exception: {e.Message}");
+                return false;
+            }
+
+            var comps = new HashSet<IComponent>(GetComponents(uid));
+            var compNames = new HashSet<string>(protoComps.Count);
+            foreach (var component in comps)
+            {
+                var compType = component.GetType();
+                var compName = _componentFactory.GetComponentName(compType);
+
+                if (compType == typeof(MetaDataComponent) || compType == typeof(TransformComponent))
+                    continue;
+
+                compNames.Add(compName);
+
+                // If the component isn't on the prototype then it's custom.
+                if (!protoComps.Contains(compName))
+                    return false;
+
+                MappingDataNode compMapping;
+                try
+                {
+                    compMapping = _serManager.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true, context: _context);
+                }
+                catch (Exception e)
+                {
+                    _sawmill.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
+                    return false;
+                }
+
+                if (protoData.TryGetValue(compName, out var protoMapping))
+                {
+                    var diff = compMapping.Except(protoMapping);
+
+                    if (diff != null && diff.Children.Count != 0)
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            // An entity may also remove components on init -> check no components are missing.
+            foreach (var compType in protoComps)
+            {
+                if (!compNames.Contains(compType))
+                    return false;
+            }
+
+            return true;
         }
 
         public virtual void Startup()
@@ -102,15 +231,20 @@ namespace Robust.Shared.GameObjects
             _entitySystemManager.Initialize();
             Started = true;
             _eventBus.CalcOrdering();
-            _xforms = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
+            _mapSystem = System<SharedMapSystem>();
+            _xforms = System<SharedTransformSystem>();
+            _metaQuery = GetEntityQuery<MetaDataComponent>();
+            _xformQuery = GetEntityQuery<TransformComponent>();
         }
 
         public virtual void Shutdown()
         {
+            ShuttingDown = true;
             FlushEntities();
             _eventBus.ClearEventTables();
             _entitySystemManager.Shutdown();
             ClearComponents();
+            ShuttingDown = false;
             Started = false;
         }
 
@@ -118,12 +252,14 @@ namespace Robust.Shared.GameObjects
         {
             _componentFactory.ComponentAdded -= OnComponentAdded;
             _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
+            ShuttingDown = true;
             FlushEntities();
             _entitySystemManager.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
             ClearComponents();
 
+            ShuttingDown = false;
             Initialized = false;
             Started = false;
         }
@@ -167,35 +303,35 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
-        public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid)
+        public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, euid);
+            return CreateEntity(prototypeName, euid, overrides);
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName);
+            return CreateEntity(prototypeName, default, overrides);
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName);
+            var newEntity = CreateEntity(prototypeName, default, overrides);
 
             if (coordinates.IsValid(this))
             {
-                _xforms.SetCoordinates(newEntity, GetComponent<TransformComponent>(newEntity), coordinates, unanchor: false);
+                _xforms.SetCoordinates(newEntity, _xformQuery.GetComponent(newEntity), coordinates, unanchor: false);
             }
 
             return newEntity;
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName);
-            var transform = GetComponent<TransformComponent>(newEntity);
+            var newEntity = CreateEntity(prototypeName, default, overrides);
+            var transform = _xformQuery.GetComponent(newEntity);
 
             if (coordinates.MapId == MapId.Nullspace)
             {
@@ -210,9 +346,9 @@ namespace Robust.Shared.GameObjects
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
             EntityCoordinates coords;
-            if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var grid))
+            if (transform.Anchored && _mapManager.TryFindGridAt(coordinates, out var gridUid, out var grid))
             {
-                coords = new(grid.Owner, grid.WorldToLocal(coordinates.Position));
+                coords = new EntityCoordinates(gridUid, _mapSystem.WorldToLocal(gridUid, grid, coordinates.Position));
                 _xforms.SetCoordinates(newEntity, transform, coords, unanchor: false);
             }
             else
@@ -224,21 +360,73 @@ namespace Robust.Shared.GameObjects
             return newEntity;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(EntityCoordinates coordinates, params string?[] protoNames)
+        {
+            var ents = new EntityUid[protoNames.Length];
+
+            for (var i = 0; i < protoNames.Length; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames)
+        {
+            var ents = new EntityUid[protoNames.Length];
+
+            for (var i = 0; i < protoNames.Length; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames)
+        {
+            var ents = new EntityUid[protoNames.Count];
+
+            for (var i = 0; i < protoNames.Count; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames)
+        {
+            var ents = new EntityUid[protoNames.Count];
+
+            for (var i = 0; i < protoNames.Count; i++)
+            {
+                ents[i] = SpawnEntity(protoNames[i], coordinates);
+            }
+
+            return ents;
+        }
+
         /// <inheritdoc />
-        public virtual EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates)
+        public virtual EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
             if (!coordinates.IsValid(this))
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
-            var entity = CreateEntityUninitialized(protoName, coordinates);
+            var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
             InitializeAndStartEntity(entity, coordinates.GetMapId(this));
             return entity;
         }
 
         /// <inheritdoc />
-        public virtual EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates)
+        public virtual EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var entity = CreateEntityUninitialized(protoName, coordinates);
+            var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
             InitializeAndStartEntity(entity, coordinates.MapId);
             return entity;
         }
@@ -281,21 +469,18 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public virtual void Dirty(Component component, MetaDataComponent? meta = null)
+        [Obsolete("use override with an EntityUid")]
+        public void Dirty(Component component, MetaDataComponent? meta = null)
         {
-#pragma warning disable CS0618
-            var owner = component.Owner;
-#pragma warning restore CS0618
+            Dirty(component.Owner, component, meta);
+        }
 
-            // Deserialization will cause this to be true.
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (!owner.IsValid() || component.LifeStage >= ComponentLifeStage.Removing)
+        public virtual void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+        {
+            if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
                 return;
 
-            if (!component.NetSyncEnabled)
-                return;
-
-            DirtyEntity(owner, meta);
+            DirtyEntity(uid, meta);
             component.LastModifiedTick = CurrentTick;
         }
 
@@ -325,7 +510,7 @@ namespace Robust.Shared.GameObjects
 #if !EXCEPTION_TOLERANCE
                 throw new InvalidOperationException(msg);
 #else
-                Logger.Error($"{msg}. Trace: {Environment.StackTrace}");
+                _sawmill.Error($"{msg}. Trace: {Environment.StackTrace}");
 #endif
             }
 
@@ -352,14 +537,14 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception while raising event {nameof(EntityTerminatingEvent)} on entity {ToPrettyString(uid, metadata)}\n{e}");
+                _sawmill.Error($"Caught exception while raising event {nameof(EntityTerminatingEvent)} on entity {ToPrettyString(uid, metadata)}\n{e}");
             }
 
             foreach (var child in transform._children)
             {
                 if (!metaQuery.TryGetComponent(child, out var childMeta) || childMeta.EntityDeleted)
                 {
-                    Logger.Error($"A deleted entity was still the transform child of another entity. Parent: {ToPrettyString(uid, metadata)}.");
+                    _sawmill.Error($"A deleted entity was still the transform child of another entity. Parent: {ToPrettyString(uid, metadata)}.");
                     transform._children.Remove(child);
                     continue;
                 }
@@ -385,11 +570,11 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    xformSys.DetachParentToNull(uid, transform, xformQuery, metaQuery);
+                    xformSys.DetachParentToNull(uid, transform);
                 }
                 catch (Exception e)
                 {
-                    Logger.Error($"Caught exception while trying to detach parent of entity '{ToPrettyString(uid, metadata)}' to null.\n{e}");
+                    _sawmill.Error($"Caught exception while trying to detach parent of entity '{ToPrettyString(uid, metadata)}' to null.\n{e}");
                 }
             }
 
@@ -401,12 +586,12 @@ namespace Robust.Shared.GameObjects
                 }
                 catch(Exception e)
                 {
-                    Logger.Error($"Caught exception while trying to recursively delete child entity '{ToPrettyString(child)}' of '{ToPrettyString(uid, metadata)}'\n{e}");
+                    _sawmill.Error($"Caught exception while trying to recursively delete child entity '{ToPrettyString(child)}' of '{ToPrettyString(uid, metadata)}'\n{e}");
                 }
             }
 
             if (transform._children.Count != 0)
-                Logger.Error($"Failed to delete all children of entity: {ToPrettyString(uid)}");
+                _sawmill.Error($"Failed to delete all children of entity: {ToPrettyString(uid)}");
 
             // Shut down all components.
             foreach (var component in InSafeOrder(_entCompIndex[uid]))
@@ -419,7 +604,7 @@ namespace Robust.Shared.GameObjects
                     }
                     catch (Exception e)
                     {
-                        Logger.Error($"Caught exception while trying to call shutdown on component of entity '{ToPrettyString(uid, metadata)}'\n{e}");
+                        _sawmill.Error($"Caught exception while trying to call shutdown on component of entity '{ToPrettyString(uid, metadata)}'\n{e}");
                     }
                 }
             }
@@ -434,7 +619,7 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception while invoking event {nameof(EntityDeleted)} on '{ToPrettyString(uid, metadata)}'\n{e}");
+                _sawmill.Error($"Caught exception while invoking event {nameof(EntityDeleted)} on '{ToPrettyString(uid, metadata)}'\n{e}");
             }
 
             _eventBus.OnEntityDeleted(uid);
@@ -449,16 +634,19 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                Logger.Error($"Caught exception while raising {nameof(EntityDeletedMessage)} on '{ToPrettyString(uid, metadata)}'\n{e}");
+                _sawmill.Error($"Caught exception while raising {nameof(EntityDeletedMessage)} on '{ToPrettyString(uid, metadata)}'\n{e}");
             }
 
             Entities.Remove(uid);
         }
 
-        public void QueueDeleteEntity(EntityUid uid)
+        public virtual void QueueDeleteEntity(EntityUid uid)
         {
-            if(QueuedDeletionsSet.Add(uid))
-                QueuedDeletions.Enqueue(uid);
+            if (!QueuedDeletionsSet.Add(uid))
+                return;
+
+            QueuedDeletions.Enqueue(uid);
+            EntityQueueDeleted?.Invoke(uid);
         }
 
         public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
@@ -496,36 +684,27 @@ namespace Robust.Shared.GameObjects
             }
 
             if (Entities.Count != 0)
-                Logger.Error("Entities were spawned while flushing entities.");
+                _sawmill.Error("Entities were spawned while flushing entities.");
         }
 
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
         private protected EntityUid AllocEntity(
-            string? prototypeName,
+            EntityPrototype? prototype,
             out MetaDataComponent metadata,
             EntityUid uid = default)
         {
-            EntityPrototype? prototype = null;
-            if (!string.IsNullOrWhiteSpace(prototypeName))
-            {
-                // If the prototype doesn't exist then we throw BEFORE we allocate the entity.
-                prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-            }
-
             var entity = AllocEntity(out metadata, uid);
-
             metadata._entityPrototype = prototype;
-            Dirty(metadata, metadata);
-
+            Dirty(entity, metadata, metadata);
             return entity;
         }
 
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(out MetaDataComponent metadata, EntityUid uid = default)
+        private EntityUid AllocEntity(out MetaDataComponent metadata, EntityUid uid = default)
         {
             if (uid == default)
             {
@@ -558,15 +737,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, EntityUid uid = default)
+        private protected virtual EntityUid CreateEntity(string? prototypeName, EntityUid uid = default, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
                 return AllocEntity(out _, uid);
 
-            var entity = AllocEntity(prototypeName, out var metadata, uid);
+            PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype);
+
+            var entity = AllocEntity(prototype, out var metadata, uid);
             try
             {
-                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, null);
+                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, context);
                 return entity;
             }
             catch (Exception e)
@@ -580,7 +761,7 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+            EntityPrototype.LoadEntity(_metaQuery.GetComponent(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
         }
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
@@ -592,12 +773,12 @@ namespace Robust.Shared.GameObjects
         {
             try
             {
-                var meta = GetComponent<MetaDataComponent>(entity);
+                var meta = _metaQuery.GetComponent(entity);
                 InitializeEntity(entity, meta);
                 StartEntity(entity);
 
                 // If the map we're initializing the entity on is initialized, run map init on it.
-                if (_mapManager.IsMapInitialized(mapId ?? GetComponent<TransformComponent>(entity).MapID))
+                if (_mapManager.IsMapInitialized(mapId ?? _xformQuery.GetComponent(entity).MapID))
                     RunMapInit(entity, meta);
             }
             catch (Exception e)
@@ -607,13 +788,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null)
+        public void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null)
         {
             InitializeComponents(entity, meta);
             EntityInitialized?.Invoke(entity);
         }
 
-        protected void StartEntity(EntityUid entity)
+        public void StartEntity(EntityUid entity)
         {
             StartComponents(entity);
             EntityStarted?.Invoke(entity);
@@ -663,6 +844,18 @@ namespace Robust.Shared.GameObjects
         protected virtual EntityUid GenerateEntityUid()
         {
             return new(NextEntityUid++);
+        }
+
+        private sealed class EntityDiffContext : ISerializationContext
+        {
+            public SerializationManager.SerializerProvider SerializerProvider { get; }
+            public bool WritingReadingPrototypes { get; set; }
+
+            public EntityDiffContext()
+            {
+                SerializerProvider = new();
+                SerializerProvider.RegisterSerializer(this);
+            }
         }
     }
 

@@ -305,6 +305,7 @@ Types:
     ConcurrentQueue`1: { All: True }
     ConcurrentStack`1: { All: True }
   System.Collections:
+    BitArray: { All: True }
     IEnumerable: { All: True }
     IEnumerator: { All: True }
     IReadOnlyList`1: { All: True }
@@ -345,6 +346,7 @@ Types:
     CompareOptions: { }
     CultureInfo: { All: True }
     DateTimeStyles: { All: True } # Enum
+    NumberFormatInfo: { All: True }
     NumberStyles: { } # Enum
     TextInfo:
       Methods:
@@ -358,7 +360,12 @@ Types:
       - "string ToUpper(string)"
   System.IO.Compression:
     CompressionMode: { } # Enum
+    CompressionLevel: { } # Enum
     DeflateStream: { All: True }
+    ZipArchive: { All : True }
+    ZipArchiveEntry: { All : True }
+    ZipArchiveMode: { } # Enum
+
   System.IO:
     BinaryReader: { All: True }
     FileAccess: { } # Enum
@@ -415,9 +422,13 @@ Types:
     IOrderedEnumerable`1: { All: True }
   System.Net:
     DnsEndPoint: { }
+    IPAddress: { All: True }
     HttpStatusCode: { } # Enum
+  System.Net.Sockets:
+    AddressFamily: { }
   System.Numerics:
     BitOperations: { All: True }
+    Vector2: { All: True }
   System.Reflection:
     Assembly:
       Methods:
@@ -960,6 +971,7 @@ Types:
     NullReferenceException: { All: True }
     Object: { All: True }
     ObsoleteAttribute: { All: True }
+    OperationCanceledException: { All: True }
     ParamArrayAttribute: { All: True }
     Predicate`1: { All: True } # Delegate
     Random: { All: True }

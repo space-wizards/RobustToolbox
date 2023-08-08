@@ -11,7 +11,7 @@ namespace Robust.Client.ResourceManagement
     {
         public AudioStream AudioStream { get; private set; } = default!;
 
-        public override void Load(IResourceCache cache, ResourcePath path)
+        public override void Load(IResourceCache cache, ResPath path)
         {
             if (!cache.ContentFileExists(path))
             {
@@ -20,14 +20,13 @@ namespace Robust.Client.ResourceManagement
 
             using (var fileStream = cache.ContentFileRead(path))
             {
-                var clyde = IoCManager.Resolve<IClydeAudio>();
                 if (path.Extension == "ogg")
                 {
-                    AudioStream = clyde.LoadAudioOggVorbis(fileStream, path.ToString());
+                    AudioStream = cache.ClydeAudio.LoadAudioOggVorbis(fileStream, path.ToString());
                 }
                 else if (path.Extension == "wav")
                 {
-                    AudioStream = clyde.LoadAudioWav(fileStream, path.ToString());
+                    AudioStream = cache.ClydeAudio.LoadAudioWav(fileStream, path.ToString());
                 }
                 else
                 {

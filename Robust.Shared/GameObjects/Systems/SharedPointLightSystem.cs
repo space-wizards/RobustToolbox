@@ -37,7 +37,7 @@ namespace Robust.Shared.GameObjects
 
             comp._enabled = enabled;
             RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
-            Dirty(comp);
+            Dirty(uid, comp);
         }
 
         public virtual void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null)
@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             comp._radius = radius;
-            Dirty(comp);
+            Dirty(uid, comp);
         }
     }
 }

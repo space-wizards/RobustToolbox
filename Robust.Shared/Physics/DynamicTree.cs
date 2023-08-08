@@ -22,6 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
@@ -175,7 +176,7 @@ namespace Robust.Shared.Physics
         bool ICollection<T>.Remove(T item)
             => Remove(item);
 
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public bool Update(in T item, Box2? newBox = null)
         {
             if (!TryGetProxy(item, out var proxy))

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -57,7 +58,10 @@ namespace Robust.Shared.Serialization
 
         public void Initialize()
         {
-            var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>().ToList();
+            var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>()
+                .OrderBy(x => x.FullName, StringComparer.InvariantCulture)
+                .ToList();
+
 #if DEBUG
             // confirm only shared types are marked for serialization, no client & server only types
             foreach (var type in types)
@@ -76,12 +80,17 @@ namespace Robust.Shared.Serialization
 
             LogSzr = _logManager.GetSawmill("szr");
             types.AddRange(AlwaysNetSerializable);
+            types.Add(typeof(Vector2));
 
             MappedStringSerializer.Initialize();
 
             var settings = new Settings
             {
-                CustomTypeSerializers = new[] {MappedStringSerializer.TypeSerializer}
+                CustomTypeSerializers = new[]
+                {
+                    MappedStringSerializer.TypeSerializer,
+                    new Vector2Serializer(),
+                }
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);

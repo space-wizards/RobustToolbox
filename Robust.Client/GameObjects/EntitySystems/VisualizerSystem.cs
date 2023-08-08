@@ -4,8 +4,7 @@ using Robust.Shared.IoC;
 namespace Robust.Client.GameObjects;
 
 /// <summary>
-///     An abstract entity system inheritor for systems that deal with
-///     appearance data, replacing <see cref="AppearanceVisualizer"/>.
+///     An abstract entity system inheritor for systems that deal with appearance data.
 /// </summary>
 public abstract class VisualizerSystem<T> : EntitySystem
     where T: Component

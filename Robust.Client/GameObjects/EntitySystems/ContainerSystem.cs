@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.Physics.Components;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
@@ -63,6 +64,10 @@ namespace Robust.Client.GameObjects
             if (args.Current is not ContainerManagerComponentState cast)
                 return;
 
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var xform = xformQuery.GetComponent(uid);
+
             // Delete now-gone containers.
             var toDelete = new ValueList<string>();
             foreach (var (id, container) in component.Containers)
@@ -70,7 +75,18 @@ namespace Robust.Client.GameObjects
                 if (cast.Containers.ContainsKey(id))
                     continue;
 
-                EmptyContainer(container, true, null, false, EntityManager);
+                foreach (var entity in container.ContainedEntities.ToArray())
+                {
+                    container.Remove(entity,
+                        EntityManager,
+                        xformQuery.GetComponent(entity),
+                        metaQuery.GetComponent(entity),
+                        force: true,
+                        reparent: false);
+
+                    DebugTools.Assert(!container.Contains(entity));
+                }
+
                 container.Shutdown(EntityManager, _netMan);
                 toDelete.Add(id);
             }
@@ -104,9 +120,17 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
-                foreach (var goner in toRemove)
+                foreach (var entity in toRemove)
                 {
-                    container.Remove(goner);
+                    container.Remove(
+                        entity,
+                        EntityManager,
+                        xformQuery.GetComponent(entity),
+                        metaQuery.GetComponent(entity),
+                        force: true,
+                        reparent: false);
+
+                    DebugTools.Assert(!container.Contains(entity));
                 }
 
                 // Remove entities that were expected, but have been removed from the container.
@@ -150,7 +174,13 @@ namespace Robust.Client.GameObjects
                         continue;
 
                     RemoveExpectedEntity(entity, out _);
-                    container.Insert(entity);
+                    container.Insert(entity, EntityManager,
+                        xformQuery.GetComponent(entity),
+                        xform,
+                        metaQuery.GetComponent(entity),
+                        force: true);
+
+                    DebugTools.Assert(container.Contains(entity));
                 }
             }
         }
@@ -181,7 +211,7 @@ namespace Robust.Client.GameObjects
             if (container.Deleted)
                 return;
 
-            container.Insert(message.Entity);
+            container.Insert(message.Entity, EntityManager);
         }
 
         private IContainer ContainerFactory(ContainerManagerComponent component, string containerType, string id)

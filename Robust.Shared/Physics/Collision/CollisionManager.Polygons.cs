@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Utility;
@@ -44,8 +45,8 @@ internal sealed partial class CollisionManager
         var n1s = poly1.Normals;
         var v1s = poly1.Vertices;
         var v2s = poly2.Vertices;
-        var count1 = v1s.Length;
-        var count2 = v2s.Length;
+        var count1 = poly1.VertexCount;
+        var count2 = poly2.VertexCount;
         var xf = Transform.MulT(xf2, xf1);
 
         var bestIndex = 0;
@@ -83,11 +84,11 @@ internal sealed partial class CollisionManager
     {
         var normals1 = poly1.Normals;
 
-        var count2 = poly2.Vertices.Length;
+        var count2 = poly2.VertexCount;
         var vertices2 = poly2.Vertices;
         var normals2 = poly2.Normals;
 
-        DebugTools.Assert(0 <= edge1 && edge1 < poly1.Vertices.Length);
+        DebugTools.Assert(0 <= edge1 && edge1 < poly1.VertexCount);
 
         // Get the normal of the reference edge in poly2's frame.
         var normal1 = Transform.MulT(xf2.Quaternion2D, Transform.Mul(xf1.Quaternion2D, normals1[edge1]));
@@ -185,7 +186,7 @@ internal sealed partial class CollisionManager
 
         FindIncidentEdge(incidentEdge, poly1, xf1, edge1, poly2, xf2);
 
-        int count1 = poly1.Vertices.Length;
+        int count1 = poly1.VertexCount;
 
         int iv1 = edge1;
         int iv2 = edge1 + 1 < count1 ? edge1 + 1 : 0;
@@ -194,7 +195,7 @@ internal sealed partial class CollisionManager
         Vector2 v12 = poly1.Vertices[iv2];
 
         Vector2 localTangent = v12 - v11;
-        localTangent = localTangent.Normalized;
+        localTangent = localTangent.Normalized();
 
         Vector2 localNormal = new Vector2(localTangent.Y, -localTangent.X);
         Vector2 planePoint = (v11 + v12) * 0.5f;

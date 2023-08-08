@@ -89,7 +89,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public bool InitializePreWindowing()
         {
-            _sawmillOgl = Logger.GetSawmill("clyde.ogl");
+            _sawmillOgl = _logManager.GetSawmill("clyde.ogl");
 
             _cfg.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
             _cfg.OnValueChanged(CVars.DisplayVSync, VSyncChanged, true);
@@ -174,6 +174,14 @@ namespace Robust.Client.Graphics.Clyde
             _entityManager.EventBus.SubscribeEvent<GridStartupEvent>(EventSource.Local, this, _updateOnGridCreated);
             _entityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, _updateOnGridRemoved);
             _entityManager.EventBus.SubscribeEvent<GridModifiedEvent>(EventSource.Local, this, _updateOnGridModified);
+        }
+
+        public void ShutdownGridEcsEvents()
+        {
+            _entityManager.EventBus.UnsubscribeEvent<TileChangedEvent>(EventSource.Local, this);
+            _entityManager.EventBus.UnsubscribeEvent<GridStartupEvent>(EventSource.Local, this);
+            _entityManager.EventBus.UnsubscribeEvent<GridRemovalEvent>(EventSource.Local, this);
+            _entityManager.EventBus.UnsubscribeEvent<GridModifiedEvent>(EventSource.Local, this);
         }
 
         private void GLInitBindings(bool gles)

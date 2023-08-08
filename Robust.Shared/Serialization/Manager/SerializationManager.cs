@@ -119,9 +119,10 @@ namespace Robust.Shared.Serialization.Manager
                 }
 
                 var isRecord = records.ContainsKey(type);
-                if (!type.IsValueType && !isRecord && !type.HasParameterlessConstructor())
+                if (!type.IsValueType && !isRecord && !type.HasParameterlessConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                 {
-                    sawmill.Debug(
+                    // If someone attempts to save or load an entity that uses this DataDefinition, this will lead to errors.
+                    sawmill.Warning(
                         $"Skipping registering data definition for type {type} since it has no parameterless ctor");
                     return;
                 }

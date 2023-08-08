@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 146.0.0
+
+### Breaking changes
+
+* Remove readOnly for DataFields and rename some ShaderPrototype C# fields internally to align with the normal schema.
+
+### Bugfixes
+
+* Add InvariantCulture to angle validation.
+
+### Internal
+
+* Add some additional EntityQuery<T> usages and remove a redundant CanCollide call on fixture shutdown.
+
+
 ## 145.0.0
 
 ### Breaking changes

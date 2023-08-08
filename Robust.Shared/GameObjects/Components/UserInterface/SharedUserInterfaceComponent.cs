@@ -16,11 +16,11 @@ namespace Robust.Shared.GameObjects
         [DataDefinition]
         public sealed class PrototypeData
         {
-            [DataField("key", readOnly: true, required: true)]
-            public Enum UiKey { get; set; } = default!;
+            [DataField("key", required: true)]
+            public Enum UiKey { get; } = default!;
 
-            [DataField("type", readOnly: true, required: true)]
-            public string ClientType { get; set; } = default!;
+            [DataField("type", required: true)]
+            public string ClientType { get; } = default!;
 
             /// <summary>
             ///     Maximum range before a BUI auto-closes. A non-positive number means there is no limit.

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -82,7 +83,12 @@ public class Generator : IIncrementalGenerator
                         continue;
                     }
 
-                    builder.AppendLine($"namespace {symbol.ContainingNamespace.ToDisplayString()};\n");
+                    builder.AppendLine($"""
+using Robust.Shared.Serialization;
+
+namespace {symbol.ContainingNamespace.ToDisplayString()};
+
+""");
 
                     var containingType = symbol.ContainingType;
                     while (containingType != null)
@@ -108,12 +114,14 @@ public class Generator : IIncrementalGenerator
                     if (nonPartial)
                         continue;
 
-                    var fields = GetDataFields(symbol);
+                    var definition = GetDataFields(symbol);
 
                     builder.Append($$"""
-{{GetPartialTypeDefinitionLine(symbol)}}
+{{GetPartialTypeDefinitionLine(symbol)}} : ISerializationGenerated<{{symbol.Name}}>
 {
+    {{GetCopyConstructor(definition)}}
 
+    {{GetCopyMethod(definition)}}
 }
 """
                     );
@@ -165,9 +173,9 @@ public class Generator : IIncrementalGenerator
         return $"{access} partial {typeKeyword} {symbol.Name}";
     }
 
-    private static List<DataField> GetDataFields(ITypeSymbol symbol)
+    private static DataDefinition GetDataFields(ITypeSymbol symbol)
     {
-        var data = new List<DataField>();
+        var fields = new List<DataField>();
 
         foreach (var member in symbol.GetMembers())
         {
@@ -177,7 +185,7 @@ public class Generator : IIncrementalGenerator
                 {
                     if (attribute.AttributeClass?.ToDisplayString() == DataFieldNamespace)
                     {
-                        data.Add(new DataField(field, attribute));
+                        fields.Add(new DataField(field, field.Type, attribute));
                         break;
                     }
                 }
@@ -188,13 +196,118 @@ public class Generator : IIncrementalGenerator
                 {
                     if (attribute.AttributeClass?.ToDisplayString() == DataFieldNamespace)
                     {
-                        data.Add(new DataField(property, attribute));
+                        fields.Add(new DataField(property, property.Type, attribute));
                         break;
                     }
                 }
             }
         }
 
-        return data;
+        return new DataDefinition(symbol, fields);
+    }
+
+    private static string GetCopyConstructor(DataDefinition definition)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($$"""
+public {{definition.Type.Name}}({{definition.Type.Name}} other)
+{
+""");
+
+        foreach (var field in definition.Fields)
+        {
+            var type = field.Type.WithNullableAnnotation(NullableAnnotation.None);
+            var name = field.Symbol.Name;
+
+            if (CanBeCopiedByValue(type))
+            {
+                builder.AppendLine($"{name} = other.{name};");
+            }
+            else if (type.GetAttributes().Any(attribute => attribute.AttributeClass?.ToDisplayString() == DataDefinitionNamespace))
+            {
+                builder.AppendLine($"{name} = other.{name}.Copy();");
+            }
+            else
+            {
+                builder.AppendLine($"// TODO {name}");
+            }
+        }
+
+        builder.AppendLine("}");
+
+        if (NeedsImplicitConstructor(definition.Type))
+        {
+            builder.AppendLine($$"""
+
+// Implicit constructor
+public {{definition.Type.Name}}()
+{
+}
+""");
+        }
+
+        return builder.ToString();
+    }
+
+    private static string GetCopyMethod(DataDefinition definition)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine($$"""
+public {{definition.Type.Name}} Copy()
+{
+    return new {{definition.Type.Name}}(this);
+}
+""");
+
+        return builder.ToString();
+    }
+
+    private static bool CanBeCopiedByValue(ITypeSymbol type)
+    {
+        if (type.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
+            return CanBeCopiedByValue(((INamedTypeSymbol) type).TypeArguments[0]);
+
+        if (type.TypeKind == TypeKind.Enum)
+            return true;
+
+        switch (type.SpecialType)
+        {
+            case SpecialType.System_Enum:
+            case SpecialType.System_Boolean:
+            case SpecialType.System_Char:
+            case SpecialType.System_SByte:
+            case SpecialType.System_Byte:
+            case SpecialType.System_Int16:
+            case SpecialType.System_UInt16:
+            case SpecialType.System_Int32:
+            case SpecialType.System_UInt32:
+            case SpecialType.System_Int64:
+            case SpecialType.System_UInt64:
+            case SpecialType.System_Decimal:
+            case SpecialType.System_Single:
+            case SpecialType.System_Double:
+            case SpecialType.System_String:
+            case SpecialType.System_DateTime:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static bool NeedsImplicitConstructor(ITypeSymbol type)
+    {
+        if (type is not INamedTypeSymbol named)
+            return false;
+
+        if (named.InstanceConstructors.Length == 0)
+            return true;
+
+        foreach (var constructor in named.InstanceConstructors)
+        {
+            if (!constructor.IsImplicitlyDeclared)
+                return false;
+        }
+
+        return true;
     }
 }

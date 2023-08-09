@@ -5,7 +5,6 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
-using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization;
 
@@ -48,6 +47,7 @@ public interface ISerializationGenerated<T> : ISerializationGenerated where T : 
 
     public static sealed ValueDataNode WriteEnum<TEnum>(ref TEnum @enum) where TEnum : struct, IConvertible
     {
+        IoCManager.Resolve<ISerializationManager>().EnsureCustomReader<global::Robust.Shared.Serialization.TypeSerializers.Implementations.ResourcePathSerializer, global::Robust.Shared.Utility.ResourcePath, ValueDataNode>();
         return new ValueDataNode(@enum.ToString());
     }
 

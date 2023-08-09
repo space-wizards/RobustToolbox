@@ -52,7 +52,8 @@ namespace Robust.Shared.Utility
         /// <summary>
         /// This exists for serv3.
         /// </summary>
-        private ResourcePath() : this("") {}
+        [Obsolete]
+        public ResourcePath() : this("") {}
 
         /// <summary>
         ///     Create a new path from a string, splitting it by the separator provided.

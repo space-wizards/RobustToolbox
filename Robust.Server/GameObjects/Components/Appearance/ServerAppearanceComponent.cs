@@ -7,4 +7,4 @@ namespace Robust.Server.GameObjects;
 /// </summary>
 [RegisterComponent]
 [ComponentReference(typeof(AppearanceComponent))]
-public sealed partial class ServerAppearanceComponent : AppearanceComponent { }
+public sealed class ServerAppearanceComponent : AppearanceComponent { }

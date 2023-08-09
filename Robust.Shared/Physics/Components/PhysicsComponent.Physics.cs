@@ -37,7 +37,7 @@ namespace Robust.Shared.Physics.Components
 {
     [ComponentReference(typeof(ILookupWorldBox2Component))]
     [RegisterComponent, NetworkedComponent]
-    public sealed partial class PhysicsComponent : Component, ILookupWorldBox2Component
+    public sealed class PhysicsComponent : Component, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 

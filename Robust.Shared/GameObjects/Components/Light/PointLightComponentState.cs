@@ -5,7 +5,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
-    public sealed partial class PointLightComponentState : ComponentState
+    public sealed class PointLightComponentState : ComponentState
     {
         public readonly Color Color;
 

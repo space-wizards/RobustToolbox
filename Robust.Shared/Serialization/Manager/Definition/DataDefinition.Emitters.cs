@@ -54,7 +54,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                                 Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(
                                     Expression.Call(
                                         managerConst,
-                                        nameof(SerializationManager.Read),
+                                        "Read",
                                         new []{fieldType, typeof(ValueDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                                         Expression.Convert(nodeVariable, typeof(ValueDataNode)),
                                         hookCtxParam,
@@ -69,7 +69,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(Expression.Call(
                                     managerConst,
-                                    nameof(SerializationManager.Read),
+                                    "Read",
                                     new []{fieldType, typeof(SequenceDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                                     Expression.Convert(nodeVariable, typeof(SequenceDataNode)),
                                     hookCtxParam,
@@ -84,7 +84,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         switchCases.Add(Expression.SwitchCase(Expression.Block(typeof(void),
                                 Expression.Assign(valueVariable, SerializationManager.WrapNullableIfNeededExpression(Expression.Call(
                                     managerConst,
-                                    nameof(SerializationManager.Read),
+                                    "Read",
                                     new []{fieldType, typeof(MappingDataNode), fieldDefinition.Attribute.CustomTypeSerializer},
                                     Expression.Convert(nodeVariable, typeof(MappingDataNode)),
                                     hookCtxParam,
@@ -111,7 +111,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     call = Expression.Assign(valueVariable, Expression.Call(
                         managerConst,
-                        nameof(SerializationManager.Read),
+                        "Read",
                         new[] { fieldDefinition.FieldType },
                         nodeVariable,
                         hookCtxParam,
@@ -135,7 +135,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         Expression.IfThenElse(
                         Expression.Call(
                             mappingDataParam,
-                            typeof(MappingDataNode).GetMethod(nameof(MappingDataNode.TryGet),
+                            typeof(MappingDataNode).GetMethod("TryGet",
                                 new [] { typeof(string), typeof(DataNode).MakeByRefType() })!,
                             tagConst,
                             nodeVariable),
@@ -207,7 +207,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     call = Expression.Call(
                         managerConst,
-                        nameof(SerializationManager.WriteValue),
+                        "WriteValue",
                         new[]{fieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         valueAccess,
                         alwaysWriteParam,
@@ -235,7 +235,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     call = Expression.Call(
                         managerConst,
-                        nameof(SerializationManager.WriteValue),
+                        "WriteValue",
                         new[] { fieldDefinition.FieldType },
                         valueVar,
                         alwaysWriteParam,
@@ -249,12 +249,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     writeExpression = Expression.IfThen(Expression.Not(Expression.Call(
                             mappingDataVar,
-                            typeof(MappingDataNode).GetMethod(nameof(MappingDataNode.Has), new[] { typeof(string) })!,
+                            typeof(MappingDataNode).GetMethod("Has", new[] { typeof(string) })!,
                             Expression.Constant(dfa
                                 .Tag))), //check if this node was already written by a type higher up the includetree
                         Expression.Call(
                             mappingDataVar,
-                            typeof(MappingDataNode).GetMethod(nameof(MappingDataNode.Add), new[] { typeof(string), typeof(DataNode) })!,
+                            typeof(MappingDataNode).GetMethod("Add", new[] { typeof(string), typeof(DataNode) })!,
                             Expression.Constant(dfa.Tag),
                             nodeVariable));
                 }
@@ -263,7 +263,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     writeExpression = Expression.IfThenElse(Expression.TypeIs(nodeVariable, typeof(MappingDataNode)),
                         Expression.Call(
                             mappingDataVar,
-                            nameof(MappingDataNode.Insert),
+                            "Insert",
                             Type.EmptyTypes,
                             Expression.Convert(nodeVariable, typeof(MappingDataNode)),
                             Expression.Constant(true)),
@@ -344,7 +344,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     call = Expression.Block(
                         Expression.Call(
                         managerConst,
-                        nameof(SerializationManager.CopyTo),
+                        "CopyTo",
                         new[]{fieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         sourceAccess,
                         targetValue,
@@ -378,7 +378,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     call = Expression.Call(
                         managerConst,
-                        nameof(SerializationManager.CreateCopy),
+                        "CreateCopy",
                         new []{fieldDefinition.FieldType, fieldDefinition.Attribute.CustomTypeSerializer},
                         AccessExpression(i, sourceParam),
                         hookCtxParam,
@@ -389,7 +389,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 {
                     call = Expression.Call(
                         managerConst,
-                        nameof(SerializationManager.CreateCopy),
+                        "CreateCopy",
                         new[] { fieldDefinition.FieldType },
                         AccessExpression(i, sourceParam),
                         hookCtxParam,
@@ -426,7 +426,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 switchCases.Add(Expression.SwitchCase(
                     Expression.Call(
                         managerConst,
-                        nameof(SerializationManager.ValidateNode),
+                        "ValidateNode",
                         new []{fieldType, typeof(ValueDataNode), field.Attribute.CustomTypeSerializer!},
                         Expression.Convert(nodeParam, typeof(ValueDataNode)),
                         contextParam),
@@ -438,7 +438,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 switchCases.Add(Expression.SwitchCase(
                     Expression.Call(
                         managerConst,
-                        nameof(SerializationManager.ValidateNode),
+                        "ValidateNode",
                         new []{fieldType, typeof(SequenceDataNode), field.Attribute.CustomTypeSerializer!},
                         Expression.Convert(nodeParam, typeof(SequenceDataNode)),
                         contextParam),
@@ -450,7 +450,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 switchCases.Add(Expression.SwitchCase(
                     Expression.Call(
                         managerConst,
-                        nameof(SerializationManager.ValidateNode),
+                        "ValidateNode",
                         new []{fieldType, typeof(MappingDataNode), field.Attribute.CustomTypeSerializer!},
                         Expression.Convert(nodeParam, typeof(MappingDataNode)),
                         contextParam),
@@ -460,7 +460,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             var @switch = Expression.Switch(ExpressionUtils.GetTypeExpression(nodeParam),
                 Expression.Call(
                     managerConst,
-                    nameof(SerializationManager.ValidateNode),
+                    "ValidateNode",
                     new[] { fieldType },
                     nodeParam,
                     contextParam),

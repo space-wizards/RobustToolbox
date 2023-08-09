@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects;
 [RegisterComponent]
 [NetworkedComponent()]
 [Access(typeof(OccluderSystem))]
-public sealed partial class OccluderComponent : Component, IComponentTreeEntry<OccluderComponent>
+public sealed class OccluderComponent : Component, IComponentTreeEntry<OccluderComponent>
 {
     [DataField("enabled")]
     public bool Enabled = true;
@@ -40,7 +40,7 @@ public sealed partial class OccluderComponent : Component, IComponentTreeEntry<O
     }
 
     [NetSerializable, Serializable]
-    public sealed partial class OccluderComponentState : ComponentState
+    public sealed class OccluderComponentState : ComponentState
     {
         public bool Enabled { get; }
         public Box2 BoundingBox { get; }

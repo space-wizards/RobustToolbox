@@ -16,7 +16,7 @@ namespace Robust.Server.GameObjects
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
     [RegisterComponent, ComponentReference(typeof(SharedUserInterfaceComponent))]
-    public sealed partial class ServerUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
+    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
         internal readonly Dictionary<Enum, BoundUserInterface> _interfaces =
             new();
@@ -35,7 +35,7 @@ namespace Robust.Server.GameObjects
     }
 
     [RegisterComponent]
-    public sealed partial class ActiveUserInterfaceComponent : Component
+    public sealed class ActiveUserInterfaceComponent : Component
     {
         public HashSet<BoundUserInterface> Interfaces = new();
     }

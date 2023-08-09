@@ -259,7 +259,7 @@ namespace Robust.Shared.GameObjects
     ///     Serialized state of a TransformComponent.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed partial class TransformComponentState : ComponentState
+    internal sealed class TransformComponentState : ComponentState
     {
         /// <summary>
         ///     Current parent entity of this entity.

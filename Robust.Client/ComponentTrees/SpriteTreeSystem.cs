@@ -6,7 +6,7 @@ using Robust.Shared.Physics;
 
 namespace Robust.Client.ComponentTrees;
 
-public sealed partial class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, SpriteComponent>
+public sealed class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, SpriteComponent>
 {
     public override void Initialize()
     {

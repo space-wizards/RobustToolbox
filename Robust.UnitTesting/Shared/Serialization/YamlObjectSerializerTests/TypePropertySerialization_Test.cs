@@ -93,7 +93,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
     }
 
     [RegisterComponent]
-    public sealed partial class TestComponent : Component
+    public sealed class TestComponent : Component
     {
         [DataField("testType")] public ITestType? TestType { get; set; }
     }

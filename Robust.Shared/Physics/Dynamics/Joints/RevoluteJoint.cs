@@ -48,7 +48,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         }
     }
 
-    public sealed partial class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
+    public sealed class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
     {
         // Temporary
         private Vector2 _impulse;

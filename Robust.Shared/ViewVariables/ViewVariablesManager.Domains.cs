@@ -257,7 +257,7 @@ internal abstract partial class ViewVariablesManager
     [DataDefinition] // For VV path reading purposes.
     [SuppressMessage("ReSharper", "UnusedMember.Local")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    private sealed partial class VvTest : IEnumerable<object>
+    private sealed class VvTest : IEnumerable<object>
     {
         [DataField("x")]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -269,7 +269,7 @@ internal abstract partial class ViewVariablesManager
         [ViewVariables] public List<object> List => new() {1, 2, 3, 4, 5, 6, 7, 8, 9, X, 11, 12, 13, 14, 15, this};
 
 
-        [ViewVariables] public int[,] MultiDimensionalArray = new int[5, 2] {{1, 2}, {3, 4}, {5, 6}, {7, 8}, {9, 0}};
+        [DataField("multiDimensionalArray")] public int[,] MultiDimensionalArray = new int[5, 2] {{1, 2}, {3, 4}, {5, 6}, {7, 8}, {9, 0}};
 
 
         [DataField("vector")]
@@ -291,7 +291,7 @@ internal abstract partial class ViewVariablesManager
         }
 
         [DataDefinition]
-        private partial struct ComplexDataStructure
+        private struct ComplexDataStructure
         {
             // VV3 uses our serialization system internally, so this allows these values to be changed.
             [DataField("X")]

@@ -16,7 +16,7 @@ namespace Robust.Shared.GameObjects;
 ///     Visualization works client side with overrides of the <c>AppearanceVisualizer</c> class.
 /// </summary>
 [NetworkedComponent]
-public abstract partial class AppearanceComponent : Component
+public abstract class AppearanceComponent : Component
 {
     [ViewVariables] internal bool AppearanceDirty;
 

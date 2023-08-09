@@ -13,7 +13,7 @@ namespace Robust.Shared.Physics
     [NetworkedComponent]
     // [Friend(typeof(SharedJointSystem))]
     [ComponentProtoName("Joint")]
-    public sealed partial class JointComponent : Component
+    public sealed class JointComponent : Component
     {
         [ViewVariables]
         public int JointCount => Joints.Count;
@@ -24,7 +24,7 @@ namespace Robust.Shared.Physics
         internal Dictionary<string, Joint> Joints = new();
 
         [Serializable, NetSerializable]
-        public sealed partial class JointComponentState : ComponentState
+        public sealed class JointComponentState : ComponentState
         {
             public Dictionary<string, JointState> Joints;
 

@@ -104,13 +104,13 @@ namespace Robust.UnitTesting.Shared.Prototypes
         }
     }
 
-    public sealed partial class HotReloadTestOneComponent : Component
+    public sealed class HotReloadTestOneComponent : Component
     {
         [DataField("value")]
         public int Value { get; }
     }
 
-    public sealed partial class HotReloadTestTwoComponent : Component
+    public sealed class HotReloadTestTwoComponent : Component
     {
     }
 }

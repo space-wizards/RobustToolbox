@@ -241,19 +241,19 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(c, Is.True, "C did not fire");
         }
 
-        private sealed partial class DummyComponent : Component
+        private sealed class DummyComponent : Component
         {
         }
 
-        private sealed partial class OrderAComponent : Component
+        private sealed class OrderAComponent : Component
         {
         }
 
-        private sealed partial class OrderBComponent : Component
+        private sealed class OrderBComponent : Component
         {
         }
 
-        private sealed partial class OrderCComponent : Component
+        private sealed class OrderCComponent : Component
         {
         }
 

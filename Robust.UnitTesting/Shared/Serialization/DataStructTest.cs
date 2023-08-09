@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Serialization;
 public sealed class DataStructTest : SerializationTest
 {
     [DataDefinition]
-    public partial struct DefaultIntDataStruct
+    public struct DefaultIntDataStruct
     {
         public int A = 5;
 

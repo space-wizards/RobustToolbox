@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using Robust.Shared.ContentPack;
-using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -18,23 +15,6 @@ namespace Robust.Shared.Serialization.Manager
         internal T GetOrCreateCustomTypeSerializer<T>()
         {
             return (T)GetOrCreateCustomTypeSerializer(typeof(T));
-        }
-
-        public T EnsureCustomReader<T, TType, TNode>()
-            where T : ITypeReader<TType, TNode>
-            where TNode : DataNode
-        {
-            return GetOrCreateCustomTypeSerializer<T>();
-        }
-
-        public T EnsureCustomCopier<T, TType>() where T : ITypeCopier<TType>
-        {
-            return GetOrCreateCustomTypeSerializer<T>();
-        }
-
-        public T EnsureCustomCopyCreator<T, TType>() where T : ITypeCopyCreator<TType>
-        {
-            return GetOrCreateCustomTypeSerializer<T>();
         }
     }
 }

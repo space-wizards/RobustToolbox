@@ -12,7 +12,7 @@ namespace Robust.Client.GameObjects;
 /// </summary>
 [RegisterComponent]
 [Access(typeof(GenericVisualizerSystem))]
-public sealed partial class GenericVisualizerComponent : Component
+public sealed class GenericVisualizerComponent : Component
 {
     /// <summary>
     ///     This is a nested dictionary that maps appearance data keys -> sprite layer keys -> appearance data values -> layer data.

@@ -10,7 +10,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [RegisterComponent, ComponentReference(typeof(SharedEyeComponent))]
-    public sealed partial class EyeComponent : SharedEyeComponent
+    public sealed class EyeComponent : SharedEyeComponent
     {
         public const int DefaultVisibilityMask = 1;
 

@@ -14,7 +14,7 @@ namespace Robust.Server.GameObjects
 {
     [RegisterComponent, ComponentReference(typeof(SharedSpriteComponent))]
     [Obsolete("Use client-side systems, or appearance data & visualizers instead")]
-    public sealed partial class SpriteComponent : SharedSpriteComponent, ISerializationHooks
+    public sealed class SpriteComponent : SharedSpriteComponent, ISerializationHooks
     {
         [DataField("layers", priority: 2, readOnly: true)]
         private List<PrototypeLayerData> Layers = new();

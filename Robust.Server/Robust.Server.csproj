@@ -32,7 +32,6 @@
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
     <ProjectReference Include="..\Robust.Packaging\Robust.Packaging.csproj" />
-    <ProjectReference Include="..\Robust.Serialization.Generator\Robust.Serialization.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="server_config.toml">

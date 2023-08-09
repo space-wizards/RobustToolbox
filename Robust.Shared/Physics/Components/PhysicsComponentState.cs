@@ -6,7 +6,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.Physics.Components
 {
     [Serializable, NetSerializable]
-    public sealed partial class PhysicsComponentState : ComponentState
+    public sealed class PhysicsComponentState : ComponentState
     {
         public readonly bool CanCollide;
         public readonly bool SleepingAllowed;

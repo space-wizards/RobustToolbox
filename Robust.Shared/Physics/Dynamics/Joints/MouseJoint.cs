@@ -46,7 +46,7 @@ internal sealed class MouseJointState : JointState
 }
 
 
-public sealed partial class MouseJoint : Joint, IEquatable<MouseJoint>
+public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 {
     public override JointType JointType => JointType.Mouse;
 

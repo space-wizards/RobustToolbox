@@ -4,7 +4,7 @@ using Robust.Shared.Reflection;
 
 namespace Robust.Server.GameObjects;
 
-internal sealed partial class ServerComponentFactory : ComponentFactory
+internal sealed class ServerComponentFactory : ComponentFactory
 {
     public ServerComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager) : base(typeFactory, reflectionManager)
     {

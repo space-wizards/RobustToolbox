@@ -111,7 +111,7 @@ entities:
         }
 
         [DataDefinition]
-        private sealed partial class MapDeserializeTestComponent : Component
+        private sealed class MapDeserializeTestComponent : Component
         {
             [DataField("foo")] public int Foo { get; set; } = -1;
             [DataField("bar")] public int Bar { get; set; } = -1;

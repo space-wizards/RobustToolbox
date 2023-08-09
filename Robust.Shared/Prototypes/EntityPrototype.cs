@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -20,7 +19,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity", -1)]
-    public sealed partial class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
+    public sealed class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
     {
         private ILocalizationManager _loc = default!;
 
@@ -188,8 +187,8 @@ namespace Robust.Shared.Prototypes
             EntityUid entity,
             IComponentFactory factory,
             IEntityManager entityManager,
-            IEntityLoadContext? context,
-            IDependencyCollection dependencies) //yeah officer this method right here
+            ISerializationManager serManager,
+            IEntityLoadContext? context) //yeah officer this method right here
         {
             if (prototype != null)
             {
@@ -200,7 +199,7 @@ namespace Robust.Shared.Prototypes
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, name, fullData, context as ISerializationContext, dependencies);
+                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
                 }
             }
 
@@ -222,7 +221,7 @@ namespace Robust.Shared.Prototypes
                             $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
                     }
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, name, data, context as ISerializationContext, dependencies);
+                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, data, context as ISerializationContext);
                 }
             }
         }
@@ -230,27 +229,22 @@ namespace Robust.Shared.Prototypes
         private static void EnsureCompExistsAndDeserialize(EntityUid entity,
             IComponentFactory factory,
             IEntityManager entityManager,
+            ISerializationManager serManager,
             string compName,
             IComponent data,
-            ISerializationContext? context,
-            IDependencyCollection dependencies)
+            ISerializationContext? context)
         {
             var compReg = factory.GetRegistration(compName);
 
-            var hooks = SerializationHookContext.DontSkipHooks;
-            var copy = (Component) ((ISerializationGenerated) data).Copy(dependencies, hooks, context);
-
-            ref var component = ref entityManager.TryGetComponentRefOrNullRef(entity, compReg.Idx, out var exists);
-
-            if (exists)
+            if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                component = copy;
+                var newComponent = (Component) factory.GetComponent(compName);
+                newComponent.Owner = entity;
+                entityManager.AddComponent(entity, newComponent);
+                component = newComponent;
             }
-            else
-            {
-                copy.Owner = entity;
-                entityManager.AddComponent(entity, copy);
-            }
+
+            serManager.CopyTo(data, ref component, context, notNullableOverride: true);
         }
 
         public override string ToString()
@@ -273,7 +267,7 @@ namespace Robust.Shared.Prototypes
         public record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
 
         [DataDefinition]
-        public sealed partial class EntityPlacementProperties
+        public sealed class EntityPlacementProperties
         {
             public bool PlacementOverriden { get; private set; }
             public bool SnapOverriden { get; private set; }

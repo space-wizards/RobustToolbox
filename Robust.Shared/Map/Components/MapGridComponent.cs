@@ -22,7 +22,7 @@ namespace Robust.Shared.Map.Components
 {
     [RegisterComponent]
     [NetworkedComponent]
-    public sealed partial class MapGridComponent : Component
+    public sealed class MapGridComponent : Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
@@ -877,7 +877,7 @@ namespace Robust.Shared.Map.Components
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed partial class MapGridComponentState : ComponentState, IComponentDeltaState
+    internal sealed class MapGridComponentState : ComponentState, IComponentDeltaState
     {
         /// <summary>
         ///     The size of the chunks in the map grid.

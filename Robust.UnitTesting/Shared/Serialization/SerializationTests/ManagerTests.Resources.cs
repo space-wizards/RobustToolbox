@@ -232,7 +232,7 @@ public sealed partial class ManagerTests : ISerializationContext
     private interface IDataDefBaseInterface{}
 
     [DataDefinition]
-    private partial struct DataDefStruct : IDataDefBaseInterface
+    private struct DataDefStruct : IDataDefBaseInterface
     {
         [DataField("one")] public string OneValue;
 

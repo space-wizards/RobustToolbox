@@ -300,15 +300,6 @@ namespace Robust.Shared.GameObjects
         bool TryGetComponent([NotNullWhen(true)] EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
-        ///     Returns the component ref of a specific type.
-        /// </summary>
-        /// <param name="uid">Entity UID to look on.</param>
-        /// <param name="type">A trait or component type to check for.</param>
-        /// <param name="exists">True if the component exists, false otherwise.</param>
-        /// <returns>A ref of the component of the specified type or a null ref.</returns>
-        internal ref Component? TryGetComponentRefOrNullRef(EntityUid uid, CompIdx type, out bool exists);
-
-        /// <summary>
         ///     Returns the component of a specific type.
         /// </summary>
         /// <param name="uid">Entity UID to check.</param>

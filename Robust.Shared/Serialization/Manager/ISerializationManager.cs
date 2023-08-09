@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Markdown;
@@ -425,30 +424,6 @@ namespace Robust.Shared.Serialization.Manager
             // ReSharper disable once CoVariantArrayConversion
             return (TNode) PushComposition(type, parents, child, context);
         }
-
-        #endregion
-
-        #region Serializers
-
-        [Obsolete]
-        public ITypeReader<T, TNode> GetReader<T, TNode>() where TNode : DataNode;
-
-        [Obsolete]
-        public bool TryGetCopier<T>([NotNullWhen(true)] out ITypeCopier<T>? copier);
-
-        [Obsolete]
-        public bool TryGetCopyCreator<T>([NotNullWhen(true)] out ITypeCopyCreator<T>? copyCreator);
-
-        [Obsolete]
-        public T EnsureCustomReader<T, TType, TNode>()
-            where T : ITypeReader<TType, TNode>
-            where TNode : DataNode;
-
-        [Obsolete]
-        public T EnsureCustomCopier<T, TType>() where T : ITypeCopier<TType>;
-
-        [Obsolete]
-        public T EnsureCustomCopyCreator<T, TType>() where T : ITypeCopyCreator<TType>;
 
         #endregion
     }

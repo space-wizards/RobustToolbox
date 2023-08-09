@@ -7,7 +7,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [NetworkedComponent()]
-    public abstract partial class SharedEyeComponent : Component
+    public abstract class SharedEyeComponent : Component
     {
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual bool DrawFov { get; set; }
@@ -30,7 +30,7 @@ namespace Robust.Shared.GameObjects
     }
 
     [NetSerializable, Serializable]
-    public sealed partial class EyeComponentState : ComponentState
+    public sealed class EyeComponentState : ComponentState
     {
         public bool DrawFov { get; }
         public Vector2 Zoom { get; }

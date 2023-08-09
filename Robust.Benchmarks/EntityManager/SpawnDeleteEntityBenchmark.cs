@@ -56,7 +56,7 @@ public class SpawnDeleteEntityBenchmark
     }
 
     [ComponentProtoName("A")]
-    public sealed partial class A : Component
+    public sealed class A : Component
     {
     }
 }

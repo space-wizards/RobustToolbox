@@ -112,7 +112,7 @@ public sealed class Gravity2DController : VirtualController
     }
 
     [Serializable, NetSerializable]
-    private sealed partial class Gravity2DComponentState : ComponentState
+    private sealed class Gravity2DComponentState : ComponentState
     {
         public Vector2 Gravity;
     }

@@ -35,7 +35,7 @@ using PhysicsComponent = Robust.Shared.Physics.Components.PhysicsComponent;
 namespace Robust.Shared.Physics.Dynamics
 {
     [RegisterComponent, NetworkedComponent]
-    public sealed partial class PhysicsMapComponent : Component
+    public sealed class PhysicsMapComponent : Component
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 

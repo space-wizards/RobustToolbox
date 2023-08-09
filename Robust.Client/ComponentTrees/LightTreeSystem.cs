@@ -6,7 +6,7 @@ using Robust.Shared.Physics;
 
 namespace Robust.Client.ComponentTrees;
 
-public sealed partial class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, PointLightComponent>
+public sealed class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, PointLightComponent>
 {
     #region Component Tree Overrides
     protected override bool DoFrameUpdate => true;

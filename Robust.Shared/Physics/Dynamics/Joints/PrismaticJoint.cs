@@ -118,7 +118,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     /// can violate the constraint slightly. The joint translation is zero
     /// when the local anchor points coincide in world space.
     /// </summary>
-    public sealed partial class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
+    public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
     {
         /// <summary>
         /// The local translation unit axis in bodyA.

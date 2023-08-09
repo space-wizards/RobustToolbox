@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
-    public sealed partial class IconComponent : Component, ISerializationHooks
+    public sealed class IconComponent : Component, ISerializationHooks
     {
         public IDirectionalTextureProvider? Icon { get; private set; }
 

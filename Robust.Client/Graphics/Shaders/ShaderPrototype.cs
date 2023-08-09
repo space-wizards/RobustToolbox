@@ -14,7 +14,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Client.Graphics
 {
     [Prototype("shader")]
-    public sealed partial class ShaderPrototype : IPrototype, ISerializationHooks
+    public sealed class ShaderPrototype : IPrototype, ISerializationHooks
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
@@ -192,7 +192,7 @@ namespace Robust.Client.Graphics
         }
 
         [DataDefinition]
-        public sealed partial class StencilData
+        public sealed class StencilData
         {
             [DataField("ref")] public int StencilRef;
 

@@ -158,7 +158,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                         }
                     }
 
-                    if (reader is { Item1: false, Item2: false } && !reader.Item3 && !writer && !copier && !validator.Item1 && !validator.Item2 && !validator.Item3)
+                    if (!reader.Item1 && !reader.Item2 && !reader.Item3 && !writer && !copier && !validator.Item1 && !validator.Item2 && !validator.Item3)
                     {
                         throw new InvalidOperationException(
                             $"Could not find any fitting implementation of ITypeReader, ITypeWriter or ITypeCopier for field {fieldDefinition}({fieldDefinition.FieldType}) on type {typeof(T)} on CustomTypeSerializer {fieldDefinition.Attribute.CustomTypeSerializer}");

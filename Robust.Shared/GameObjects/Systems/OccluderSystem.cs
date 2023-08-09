@@ -5,7 +5,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
-public abstract partial class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent, OccluderComponent>
+public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent, OccluderComponent>
 {
     public override void Initialize()
     {

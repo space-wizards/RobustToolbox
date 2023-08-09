@@ -175,7 +175,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             }
         }
 
-        private sealed partial class DummyTwoComponent : Component
+        private sealed class DummyTwoComponent : Component
         {
         }
 

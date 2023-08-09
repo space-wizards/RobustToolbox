@@ -31,7 +31,7 @@ namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(SharedSpriteComponent))]
     [RegisterComponent, ComponentReference(typeof(ISpriteComponent))]
-    public sealed partial class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
+    public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;

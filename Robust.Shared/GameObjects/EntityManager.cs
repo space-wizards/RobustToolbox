@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IDependencyCollection _dependencies = default!;
+        [Dependency] private readonly ISerializationManager _serManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
@@ -554,7 +554,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototypeName, out var metadata, uid);
             try
             {
-                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, null, _dependencies);
+                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, null);
                 return entity;
             }
             catch (Exception e)
@@ -568,12 +568,12 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, this, context, _dependencies);
+            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
         }
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
         {
-            EntityPrototype.LoadEntity(prototype, entity, ComponentFactory, this, context, _dependencies);
+            EntityPrototype.LoadEntity(prototype, entity, ComponentFactory, this, _serManager, context);
         }
 
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)

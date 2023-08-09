@@ -93,7 +93,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         }
 
         [ComponentProtoName("AnchorOnInit")]
-        private sealed partial class AnchorOnInitComponent : Component { };
+        private sealed class AnchorOnInitComponent : Component { };
 
         private sealed class AnchorOnInitTestSystem : EntitySystem
         {

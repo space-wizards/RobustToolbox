@@ -274,7 +274,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [NetworkedComponent()]
-        private sealed partial class DummyComponent : Component, ICompType1, ICompType2
+        private sealed class DummyComponent : Component, ICompType1, ICompType2
         {
         }
 

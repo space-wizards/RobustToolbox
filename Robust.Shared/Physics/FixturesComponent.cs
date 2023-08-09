@@ -17,7 +17,7 @@ namespace Robust.Shared.Physics
     /// </remarks>
     [RegisterComponent]
     [NetworkedComponent]
-    public sealed partial class FixturesComponent : Component
+    public sealed class FixturesComponent : Component
     {
         // This is a snowflake component whose main job is making physics states smaller for massive bodies
         // (e.g. grids)

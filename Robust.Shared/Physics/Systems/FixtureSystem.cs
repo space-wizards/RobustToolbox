@@ -433,7 +433,7 @@ namespace Robust.Shared.Physics.Systems
         }
 
         [Serializable, NetSerializable]
-        private sealed partial class FixtureManagerComponentState : ComponentState
+        private sealed class FixtureManagerComponentState : ComponentState
         {
             public Fixture[] Fixtures = default!;
         }

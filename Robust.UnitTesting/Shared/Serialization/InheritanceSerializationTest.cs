@@ -93,7 +93,7 @@ namespace Robust.UnitTesting.Shared.Serialization
     }
 
     [Virtual]
-    public partial class TestBaseComponent : Component
+    public class TestBaseComponent : Component
     {
 
         [DataField("baseField")] public string? BaseField;

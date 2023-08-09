@@ -1,14 +1,15 @@
+using System;
 using System.Collections.Generic;
 using Arch.Core;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Toolshed.TypeParsers;
+using ComponentType = Arch.Core.Utils.ComponentType;
 
 namespace Robust.Client.GameObjects;
 
 public sealed partial class ClientEntityManager
 {
     private World _clientWorld = default!;
-    // End me
-    private Dictionary<int, EntityReference> _archMap = new();
 
     protected override void InitializeArch()
     {
@@ -26,25 +27,35 @@ public sealed partial class ClientEntityManager
     {
         if (uid.IsClientSide())
         {
-            var entity = _clientWorld.Create();
-            var refo = _clientWorld.Reference(entity);
-            _archMap[uid.GetHashCode()] = refo;
+            _clientWorld.Create();
         }
         else
         {
-            World.Create(uid.GetHashCode());
+            var reference = World.Reference(uid.ToArch());
+            World.Set();
+            World.Create();
         }
     }
 
     protected override void DestroyArch(EntityUid uid)
     {
+        var entity = uid.ToArch();
+
         if (uid.IsClientSide())
         {
-            _clientWorld.Destroy(_archMap[uid.GetHashCode()].Entity);
-            _archMap.Remove(uid.GetHashCode());
+            _clientWorld.Destroy(entity);
             return;
         }
 
-        base.DestroyArch(uid);
+        // This is mainly here for client reasons
+        if (World.IsAlive(entity))
+        {
+            World.Destroy(entity);
+        }
+    }
+
+    public void ReserveEntities(int uid)
+    {
+        World.Reserve(Array.Empty<ComponentType>(), uid);
     }
 }

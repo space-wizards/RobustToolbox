@@ -6,6 +6,6 @@ public sealed partial class ServerEntityManager
 {
     protected override void SpawnEntityArch(EntityUid uid)
     {
-        World.Create(uid.GetArchId());
+        World.Create();
     }
 }

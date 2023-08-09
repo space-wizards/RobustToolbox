@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.SymbolDisplayFormat;
 using static Microsoft.CodeAnalysis.SymbolEqualityComparer;
 
@@ -28,16 +30,15 @@ namespace Robust.Serialization.Generator
         private const string CopyByRefName = "Robust.Shared.Serialization.Manager.Attributes.CopyByRefAttribute";
         private const string SelfSerializeName = "Robust.Shared.Serialization.ISelfSerialize";
 
-        private const string ReaderName = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader`2";
-        private const string CopierName = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier`1";
+        private const string ReaderName = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeReader";
+        private const string CopierName = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier";
+
         private const string CopyCreatorName =
-            "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator`1";
+            "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator";
 
         private const string ValueNodeName = "Robust.Shared.Serialization.Markdown.Value.ValueDataNode";
         private const string SequenceNodeName = "Robust.Shared.Serialization.Markdown.Sequence.SequenceDataNode";
         private const string MappingNodeName = "Robust.Shared.Serialization.Markdown.Mapping.MappingDataNode";
-
-        private const string NullableName = "System.Nullable`1";
 
         private INamedTypeSymbol _dataDefinitionSymbol;
         private INamedTypeSymbol _implicitDataDefinitionSymbol;
@@ -54,9 +55,7 @@ namespace Robust.Serialization.Generator
         private INamedTypeSymbol _sequenceNodeSymbol;
         private INamedTypeSymbol _mappingNodeSymbol;
 
-        private INamedTypeSymbol _nullableSymbol;
-
-        private readonly SymbolDisplayFormat _nullabilityDisplayFormat = FullyQualifiedFormat
+        private readonly SymbolDisplayFormat _displayFormat = FullyQualifiedFormat
             .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
         public void Initialize(GeneratorInitializationContext context)
@@ -84,8 +83,6 @@ namespace Robust.Serialization.Generator
             _valueNodeSymbol = comp.GetTypeByMetadataName(ValueNodeName);
             _sequenceNodeSymbol = comp.GetTypeByMetadataName(SequenceNodeName);
             _mappingNodeSymbol = comp.GetTypeByMetadataName(MappingNodeName);
-
-            _nullableSymbol = comp.GetTypeByMetadataName(NullableName);
 
             var results = FindDataDefinitions(context, comp, receiver);
 
@@ -188,10 +185,10 @@ namespace Robust.Serialization.Generator
                         reader.AppendLine($@"        var {field.Name}Node = mapping[""{dataFieldId}""];
         if ({field.Name}Node is not ValueDataNode {field.Name}ValueNode)
         {{
-            throw new InvalidNodeTypeException(""Cannot read {{nameof(ISelfSerialize)}} from node type {{node.GetType()}}. Expected {{nameof(ValueDataNode)}}"");
+            throw new InvalidNodeTypeException(""Cannot read {{nameof(ISelfSerialize)}} from node type {{node.GetType()}}. Expected {{nameof(ValueDataNode)}}""); 
         }}
-
-        this.{field.Name} = new {field.ToDisplayString(_nullabilityDisplayFormat)}();
+    
+        this.{field.Name} = new {field.ToDisplayString(_displayFormat)}();
         this.{field.Name}.Deserialize({field.Name}ValueNode.Value);
         ");
                         writer.AppendLine(
@@ -392,10 +389,6 @@ namespace Robust.Serialization.Generator
             out bool copier,
             out bool copyCreator)
         {
-            if (field.ContainingType.Name.Contains("GridAtmosphereComponent"))
-            {
-                // Debugger.Launch();
-            }
             serializer = GetBaseDataFieldCustomSerializer(field);
 
             if (serializer == null)
@@ -408,28 +401,23 @@ namespace Robust.Serialization.Generator
                 return false;
             }
 
-            bool InterfaceIs(INamedTypeSymbol @interface, string name)
-            {
-                return $"{@interface.ContainingNamespace.ToDisplayString()}.{@interface.MetadataName}" == name;
-            }
-
             var readers = serializer.AllInterfaces
-                .Where(@interface => InterfaceIs(@interface, ReaderName))
+                .Where(@interface => @interface.Equals(_readerSymbol, Default))
                 .ToArray();
 
-            valueReader = readers.Any(reader => reader.TypeArguments[1].Equals(_valueNodeSymbol, Default));
-            sequenceReader = readers.Any(reader => reader.TypeArguments[1].Equals(_sequenceNodeSymbol, Default));
-            mappingReader = readers.Any(reader => reader.TypeArguments[1].Equals(_mappingNodeSymbol, Default));
+            valueReader = readers.Any(reader => reader.TypeParameters[1].Equals(_valueNodeSymbol, Default));
+            sequenceReader = readers.Any(reader => reader.TypeParameters[1].Equals(_sequenceNodeSymbol, Default));
+            mappingReader = readers.Any(reader => reader.TypeParameters[1].Equals(_mappingNodeSymbol, Default));
 
             var fieldType = GetFieldType(field);
             var copiers = serializer.AllInterfaces
-                .Where(@interface => InterfaceIs(@interface, CopierName))
-                .Where(@interface => @interface.TypeArguments[0].Equals(fieldType, Default));
+                .Where(@interface => @interface.Equals(_copierSymbol, Default))
+                .Where(@interface => @interface.TypeParameters[0].Equals(fieldType, Default));
 
             copier = copiers.Any();
 
             var copyCreators = serializer.AllInterfaces
-                .Where(@interface => InterfaceIs(@interface, CopyCreatorName))
+                .Where(@interface => @interface.Equals(_copyCreatorSymbol, Default))
                 .Where(@interface => @interface.TypeParameters[0].Equals(fieldType, Default));
             copyCreator = copyCreators.Any();
 
@@ -527,25 +515,18 @@ namespace Robust.Serialization.Generator
                 if (mappingNodeOverride)
                 {
                     reader.AppendLine($@"
-        // {type.ToDisplayString(FullyQualifiedFormat)}
-        var {field.Name}Reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_nullabilityDisplayFormat)}, {type.ToDisplayString(_nullabilityDisplayFormat)}, MappingDataNode>();
+        var {field.Name}Reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_displayFormat)}, {field.ToDisplayString(_displayFormat)}, MappingDataNode();
         this.{field.Name} = {field.Name}Reader.Read(serialization, mapping, dependencies, hooks, context, null);
 ");
                 }
                 else
                 {
-                    if (Default.Equals(type.OriginalDefinition, _nullableSymbol))
-                    {
-                        type = ((INamedTypeSymbol) type).TypeArguments[0];
-                    }
-
                     if (valueReader)
                     {
                         reader.AppendLine($@"
         if ({field.Name}Node is ValueDataNode {field.Name}ValueNode)
         {{
-            // {type.ToDisplayString(FullyQualifiedFormat)}
-            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_nullabilityDisplayFormat)}, {type.ToDisplayString(FullyQualifiedFormat)}, ValueDataNode>();
+            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_displayFormat)}, {field.ToDisplayString(_displayFormat)}, ValueDataNode>();
             this.{field.Name} = reader.Read(serialization, {field.Name}ValueNode, dependencies, hooks, context, null);
         }}");
                     }
@@ -555,7 +536,7 @@ namespace Robust.Serialization.Generator
                         reader.AppendLine($@"
         if ({field.Name}Node is SequenceDataNode {field.Name}SequenceNode)
         {{
-            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_nullabilityDisplayFormat)}, {type.ToDisplayString(FullyQualifiedFormat)}, SequenceDataNode>();
+            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_displayFormat)}, {field.ToDisplayString(_displayFormat)}, SequenceDataNode>();
             this.{field.Name} = reader.Read(serialization, {field.Name}SequenceNode, dependencies, hooks, context, null);
         }}");
                     }
@@ -565,7 +546,7 @@ namespace Robust.Serialization.Generator
                         reader.AppendLine($@"
         if ({field.Name}Node is MappingDataNode {field.Name}MappingNode)
         {{
-            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_nullabilityDisplayFormat)}, {type.ToDisplayString(FullyQualifiedFormat)}, MappingDataNode>();
+            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_displayFormat)}, {field.ToDisplayString(_displayFormat)}, MappingDataNode>();
             this.{field.Name} = reader.Read(serialization, {field.Name}MappingNode, dependencies, hooks, context, null);
         }}");
                     }
@@ -581,13 +562,13 @@ namespace Robust.Serialization.Generator
             {
                 namespaces.Add(type.ContainingNamespace);
                 reader.AppendLine(
-                    $@"        this.{field.Name} = {interfaceName}.ReadEnum<{type.ToDisplayString(_nullabilityDisplayFormat)}>({field.Name}Node);");
+                    $@"        this.{field.Name} = {interfaceName}.ReadEnum<{type.ToDisplayString(_displayFormat)}>({field.Name}Node);");
             }
             else if (IsSelfSerialize(type))
             {
                 namespaces.Add(type.ContainingNamespace);
                 reader.AppendLine(
-                    $@"        this.{field.Name} = {interfaceName}.ReadSelfSerialize<{type.ToDisplayString(_nullabilityDisplayFormat)}>({field.Name}Node);");
+                    $@"        this.{field.Name} = {interfaceName}.ReadSelfSerialize<{type.ToDisplayString(_displayFormat)}>({field.Name}Node);");
             }
             else
             {
@@ -597,7 +578,7 @@ namespace Robust.Serialization.Generator
                 {
                     reader.AppendLine($@"
         {{
-            var reader = serialization.GetReader<{type.ToDisplayString(_nullabilityDisplayFormat)}, MappingDataNode>();
+            var reader = serialization.GetReader<{type.ToDisplayString(_displayFormat)}, MappingDataNode>();
             this.{field.Name} = reader.Read(serialization, mapping, dependencies, hooks, context, null);
         }}");
                 }
@@ -606,12 +587,12 @@ namespace Robust.Serialization.Generator
                     reader.AppendLine($@"
         if ({field.Name}Node is ValueDataNode {field.Name}ValueNode)
         {{
-            var reader = serialization.GetReader<{type.ToDisplayString(_nullabilityDisplayFormat)}, ValueDataNode>();
+            var reader = serialization.GetReader<{type.ToDisplayString(_displayFormat)}, ValueDataNode>();
             this.{field.Name} = reader.Read(serialization, {field.Name}ValueNode, dependencies, hooks, context, null);
         }}
         else if ({field.Name}Node is SequenceDataNode {field.Name}SequenceNode)
         {{
-            var reader = serialization.GetReader<{type.ToDisplayString(_nullabilityDisplayFormat)}, SequenceDataNode>();
+            var reader = serialization.GetReader<{type.ToDisplayString(_displayFormat)}, SequenceDataNode>();
             this.{field.Name} = reader.Read(serialization, {field.Name}SequenceNode, dependencies, hooks, context, null);
         }}
         else
@@ -681,7 +662,7 @@ namespace Robust.Serialization.Generator
                 if (mappingNodeOverride)
                 {
                     reader.AppendLine($@"
-        var {field.Name}Reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_nullabilityDisplayFormat)}, {type.ToDisplayString(_nullabilityDisplayFormat)}, MappingDataNode>();
+        var {field.Name}Reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_displayFormat)}, {field.ToDisplayString(_displayFormat)}, MappingDataNode();
         this.{field.Name} = {field.Name}Reader.Read(serialization, mapping, dependencies, hooks, context, null);
 ");
                 }
@@ -692,8 +673,8 @@ namespace Robust.Serialization.Generator
                         reader.AppendLine($@"
         if ({field.Name}Node is ValueDataNode {field.Name}ValueNode)
         {{
-            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_nullabilityDisplayFormat)}, {type.ToDisplayString(FullyQualifiedFormat)}, ValueDataNode>();
-            this.{field.Name} = new {elementType.ToDisplayString(_nullabilityDisplayFormat)}{arrayDimension}
+            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_displayFormat)}, {field.ToDisplayString(_displayFormat)}, ValueDataNode>();
+            this.{field.Name} = new {elementType.ToDisplayString(_displayFormat)}{arrayDimension}
             {{
                 {arrayNestersStart}reader.Read(serialization, {field.Name}ValueNode, dependencies, hooks, context, null){arrayNestersEnd}
             }};
@@ -705,8 +686,8 @@ namespace Robust.Serialization.Generator
                         reader.AppendLine($@"
         if ({field.Name}Node is SequenceDataNode {field.Name}SequenceNode)
         {{
-            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_nullabilityDisplayFormat)}, {type.ToDisplayString(_nullabilityDisplayFormat)}, SequenceDataNode>();
-            this.{field.Name} = new {elementType.ToDisplayString(_nullabilityDisplayFormat)}[{field.Name}SequenceNode.Count];
+            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_displayFormat)}, {field.ToDisplayString(_displayFormat)}, SequenceDataNode>();
+            this.{field.Name} = new {elementType.ToDisplayString(_displayFormat)}[{field.Name}SequenceNode.Count];
             for (var i = 0; i < {field.Name}SequenceNode.Count; i++)
             {{
                 this.{field.Name}[i] = reader.Read(serialization, {field.Name}SequenceNode[i], dependencies, hooks, context, null);
@@ -719,7 +700,7 @@ namespace Robust.Serialization.Generator
                         reader.AppendLine($@"
         if ({field.Name}Node is MappingDataNode {field.Name}MappingNode)
         {{
-            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_nullabilityDisplayFormat)}, {type.ToDisplayString(_nullabilityDisplayFormat)}, MappingDataNode>();
+            var reader = serialization.EnsureCustomReader<{serializer.ToDisplayString(_displayFormat)}, {field.ToDisplayString(_displayFormat)}, MappingDataNode>();
             this.{field.Name} = reader.Read(serialization, {field.Name}MappingNode, dependencies, hooks, context, null);
         }}");
                     }
@@ -735,21 +716,21 @@ namespace Robust.Serialization.Generator
             {
                 namespaces.Add(elementType.ContainingNamespace);
                 reader.AppendLine(
-                    $@"        this.{field.Name} = {interfaceName}.ReadEnumArray<{elementType.ToDisplayString(_nullabilityDisplayFormat)}>({field.Name}Node);");
+                    $@"        this.{field.Name} = {interfaceName}.ReadEnumArray<{elementType.ToDisplayString(_displayFormat)}>({field.Name}Node);");
             }
             else if (IsSelfSerialize(elementType))
             {
                 namespaces.Add(elementType.ContainingNamespace);
                 reader.AppendLine(
-                    $@"        this.{field.Name} = {interfaceName}.ReadSelfSerializeArray<{elementType.ToDisplayString(_nullabilityDisplayFormat)}>({field.Name}Node);");
+                    $@"        this.{field.Name} = {interfaceName}.ReadSelfSerializeArray<{elementType.ToDisplayString(_displayFormat)}>({field.Name}Node);");
             }
             else
             {
                 if (mappingNodeOverride)
                 {
                     reader.AppendLine($@"
-        {{
-            var reader = serialization.GetReader<{type.ToDisplayString(_nullabilityDisplayFormat)}, MappingDataNode>();
+        {{        
+            var reader = serialization.GetReader<{type.ToDisplayString(_displayFormat)}, MappingDataNode>();
             this.{field.Name} = reader.Read(serialization, mapping, dependencies, hooks, context, null);
         }}");
                 }
@@ -758,8 +739,8 @@ namespace Robust.Serialization.Generator
                     reader.AppendLine($@"
         if ({field.Name}Node is ValueDataNode {field.Name}ValueNode)
         {{
-            var reader = serialization.GetReader<{elementType.ToDisplayString(_nullabilityDisplayFormat)}, ValueDataNode>();
-            this.{field.Name} = new {elementType.ToDisplayString(_nullabilityDisplayFormat)}{arrayDimension}
+            var reader = serialization.GetReader<{elementType.ToDisplayString(_displayFormat)}, ValueDataNode>();
+            this.{field.Name} = new {elementType.ToDisplayString(_displayFormat)}{arrayDimension}
             {{
                 {arrayNestersStart}reader.Read(serialization, {field.Name}ValueNode, dependencies, hooks, context, null){arrayNestersEnd}
             }};
@@ -770,8 +751,8 @@ namespace Robust.Serialization.Generator
                         reader.AppendLine($@"
         else if ({field.Name}Node is SequenceDataNode {field.Name}SequenceNode)
         {{
-            var reader = serialization.GetReader<{elementType.ToDisplayString(_nullabilityDisplayFormat)}, ValueDataNode>();
-            this.{field.Name} = new {elementType.ToDisplayString(_nullabilityDisplayFormat)}[{field.Name}SequenceNode.Count];
+            var reader = serialization.GetReader<{elementType.ToDisplayString(_displayFormat)}, ValueDataNode>();
+            this.{field.Name} = new {elementType.ToDisplayString(_displayFormat)}[{field.Name}SequenceNode.Count];
             for (var i = 0; i < {field.Name}SequenceNode.Count; i++)
             {{
                 this.{field.Name}[i] = reader.Read(serialization, (ValueDataNode) {field.Name}SequenceNode[i], dependencies, hooks, context, null);
@@ -823,7 +804,7 @@ namespace Robust.Serialization.Generator
         }}
         else
         {{
-            var copier = serialization.EnsureCustomCopier<{serializer.ToDisplayString(_nullabilityDisplayFormat)}, {type.ToDisplayString(_nullabilityDisplayFormat)}>();
+            var copier = serialization.EnsureCustomCopier<{serializer.ToDisplayString(_displayFormat)}, {field.ToDisplayString(_displayFormat)}, ValueDataNode>();
             copier.CopyTo(serialization, instance.{field.Name}, ref this.{field.Name}, hooks, context);
         }}
 ");
@@ -837,7 +818,7 @@ namespace Robust.Serialization.Generator
         }}
         else
         {{
-            var copier = serialization.EnsureCustomCopyCreator<{serializer.ToDisplayString(_nullabilityDisplayFormat)}, {field.ToDisplayString(_nullabilityDisplayFormat)}, ValueDataNode>();
+            var copier = serialization.EnsureCustomCopyCreator<{serializer.ToDisplayString(_displayFormat)}, {field.ToDisplayString(_displayFormat)}, ValueDataNode>();
             this.{field.Name} = copier.CreateCopy(serialization, instance.{field.Name}, hooks, context);
         }}");
                 }
@@ -860,7 +841,7 @@ namespace Robust.Serialization.Generator
                 if (ShouldReturnSource(element))
                 {
                     copier.AppendLine(
-                        $@"        this.{field.Name} = new {element.ToDisplayString(_nullabilityDisplayFormat)}[instance.{field.Name}.Length];
+                        $@"        this.{field.Name} = new {element.ToDisplayString(_displayFormat)}[instance.{field.Name}.Length];
         for (var i = 0; i < instance.{field.Name}.Length; i++)
         {{
             this.{field.Name}[i] = instance.{field.Name}[i];
@@ -870,7 +851,7 @@ namespace Robust.Serialization.Generator
                 {
                     var nullable = CanHaveNullableOperator(GetFieldType(field));
                     copier.AppendLine(
-                        $@"        this.{field.Name} = new {element.ToDisplayString(_nullabilityDisplayFormat)}[instance.{field.Name}.Length];
+                        $@"        this.{field.Name} = new {element.ToDisplayString(_displayFormat)}[instance.{field.Name}.Length];
         for (var i = 0; i < instance.{field.Name}.Length; i++)
         {{
             this.{field.Name}[i] = instance.{field.Name}[i]{(nullable ? "?" : "")}.Copy(dependencies, hooks, context)!;
@@ -878,23 +859,22 @@ namespace Robust.Serialization.Generator
                 }
                 else
                 {
-
                     copier.AppendLine($@"
         if (instance.{field.Name} == default)
         {{
             this.{field.Name} = default!;
         }}
-        else if (serialization.TryGetCopier<{element.ToDisplayString(_nullabilityDisplayFormat)}>(out var {element.Name}Copier))
+        else if (serialization.TryGetCopier<{element.ToDisplayString(_displayFormat)}>(out var {element.Name}Copier))
         {{
-            this.{field.Name} = new {element.ToDisplayString(_nullabilityDisplayFormat)}[instance.{field.Name}.Length];
+            this.{field.Name} = new {element.ToDisplayString(_displayFormat)}[instance.{field.Name}.Length];
             for (var i = 0; i < instance.{field.Name}.Length; i++)
             {{
                 {element.Name}Copier.CopyTo(serialization, instance.{field.Name}[i], ref this.{field.Name}[i], hooks, context);
             }}
         }}
-        else if (serialization.TryGetCopyCreator<{element.ToDisplayString(_nullabilityDisplayFormat)}>(out var {element.Name}CopyCreator))
+        else if (serialization.TryGetCopyCreator<{element.ToDisplayString(_displayFormat)}>(out var {element.Name}CopyCreator))
         {{
-            this.{field.Name} = new {element.ToDisplayString(_nullabilityDisplayFormat)}[instance.{field.Name}.Length];
+            this.{field.Name} = new {element.ToDisplayString(_displayFormat)}[instance.{field.Name}.Length];
             for (var i = 0; i < instance.{field.Name}.Length; i++)
             {{
                 this.{field.Name}[i] = {element.Name}CopyCreator.CreateCopy(serialization, instance.{field.Name}[i], hooks, context);
@@ -924,14 +904,12 @@ namespace Robust.Serialization.Generator
             else
             {
                 var fieldType = GetFieldType(field);
-                var nonNullableType = fieldType.ToDisplayString(_nullabilityDisplayFormat);
+                var nonNullableType = fieldType.ToDisplayString(_displayFormat);
                 if (nonNullableType.EndsWith("?"))
-                {
                     nonNullableType = nonNullableType.Substring(0, nonNullableType.Length - 1);
-                }
 
                 var defaultFieldConstructor = ((INamedTypeSymbol)fieldType).InstanceConstructors
-                    .Any(c => c.Parameters.IsEmpty && c.DeclaredAccessibility == Accessibility.Public);
+                    .Any(c => c.Parameters.IsEmpty);
                 var isNullableStruct = fieldType.IsValueType &&
                                        fieldType.NullableAnnotation == NullableAnnotation.Annotated;
 
@@ -952,39 +930,27 @@ namespace Robust.Serialization.Generator
                     defaulter = name => $"{name} ?? new()";
                 }
 
-                if (fieldType.NullableAnnotation == NullableAnnotation.Annotated || !fieldType.IsValueType)
-                {
-                    copier.AppendLine($@"
-        if (instance.{field.Name} == null)
-        {{
-            this.{field.Name} = null!;
-        }}");
-                }
-                else
-                {
-                    copier.AppendLine($@"
+                copier.AppendLine($@"
         if (instance.{field.Name} == default)
         {{
             this.{field.Name} = default!;
-        }}");
-                }
-
-                copier.AppendLine($@"        else if (serialization.TryGetCopier<{nonNullableType}>(out var {field.Name}Copier))
+        }}
+        else if (serialization.TryGetCopier<{nonNullableType}>(out var {field.Name}Copier))
         {{");
 
                 if (field is IFieldSymbol && !isNullableStruct)
                 {
                     if (!fieldType.IsValueType)
                     {
-                        copier.AppendLine($@"            this.{field.Name} = {defaulter(field.Name)}!;");
+                        copier.AppendLine($@"            this.{field.Name} = {defaulter(field.Name)};");
                     }
 
-                    copier.AppendLine($@"            {field.Name}Copier.CopyTo(serialization, instance.{accessor(field.Name)}, ref this.{field.Name}!, hooks, context);");
+                    copier.AppendLine($@"            {field.Name}Copier.CopyTo(serialization, instance.{accessor(field.Name)}, ref this.{field.Name}, hooks, context);");
                 }
                 else
                 {
-                    copier.AppendLine($@"            var {field.Name}Target = this.{defaulter(field.Name)}!;
-            {field.Name}Copier.CopyTo(serialization, instance.{accessor(field.Name)}, ref {field.Name}Target!, hooks, context);
+                    copier.AppendLine($@"            var {field.Name}Target = this.{defaulter(field.Name)};
+            {field.Name}Copier.CopyTo(serialization, instance.{accessor(field.Name)}, ref {field.Name}Target, hooks, context);
             this.{field.Name} = {field.Name}Target;");
                 }
 
@@ -992,22 +958,11 @@ namespace Robust.Serialization.Generator
         else if (serialization.TryGetCopyCreator<{nonNullableType}>(out var {field.Name}CopyCreator))
         {{
             this.{field.Name} = {field.Name}CopyCreator.CreateCopy(serialization, instance.{accessor(field.Name)}!, hooks, context);
-        }}");
-
-                if (TryGetRecordCopier((INamedTypeSymbol) fieldType, $"instance.{field.Name}", out var recordCopier))
-                {
-                    copier.AppendLine($@"        else
+        }}
+        else
         {{
-            this.{field.Name} = {recordCopier}
+            throw new ArgumentException(""No copier found for type {field.ToDisplayString(FullyQualifiedFormat)}"");
         }}");
-                }
-                else
-                {
-                    copier.AppendLine($@"        else
-        {{
-            throw new ArgumentException(""No copier found for type {fieldType.ToDisplayString()}"");
-        }}");
-                }
             }
 
             // TODO run serialization hook after deserialization

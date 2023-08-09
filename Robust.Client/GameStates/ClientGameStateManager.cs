@@ -1115,7 +1115,6 @@ namespace Robust.Client.GameStates
                     {
                         comp = _compFactory.GetComponent(id);
                         var newComp = (Component)comp;
-                        _entityManager.ReserveEntities(uid.GetHashCode() + 1);
                         newComp.Owner = uid;
                         _entityManager.AddComponent(uid, newComp, true);
                     }
@@ -1131,7 +1130,6 @@ namespace Robust.Client.GameStates
                     {
                         comp = _compFactory.GetComponent(compChange.NetID);
                         var newComp = (Component)comp;
-                        _entityManager.ReserveEntities(uid.GetHashCode() + 1);
                         newComp.Owner = uid;
                         _entityManager.AddComponent(uid, newComp, true);
                     }
@@ -1324,7 +1322,6 @@ namespace Robust.Client.GameStates
                 {
                     comp = _compFactory.GetComponent(id);
                     var newComp = (Component)comp;
-                    _entityManager.ReserveEntities(uid.GetHashCode() + 1);
                     newComp.Owner = uid;
                     _entityManager.AddComponent(uid, newComp, true);
                 }

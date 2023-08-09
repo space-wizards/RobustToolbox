@@ -31,9 +31,7 @@ public sealed partial class ClientEntityManager
         }
         else
         {
-            var reference = World.Reference(uid.ToArch());
-            World.Set();
-            World.Create();
+            World.Create(uid.ToArch().Id);
         }
     }
 
@@ -52,10 +50,5 @@ public sealed partial class ClientEntityManager
         {
             World.Destroy(entity);
         }
-    }
-
-    public void ReserveEntities(int uid)
-    {
-        World.Reserve(Array.Empty<ComponentType>(), uid);
     }
 }

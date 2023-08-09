@@ -12,6 +12,7 @@ namespace Robust.Serialization.Generator;
 public class Generator : IIncrementalGenerator
 {
     private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
+    private const string DataFieldNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldAttribute";
 
     private static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
         Diagnostics.IdDataDefinitionPartial,
@@ -107,6 +108,8 @@ public class Generator : IIncrementalGenerator
                     if (nonPartial)
                         continue;
 
+                    var fields = GetDataFields(symbol);
+
                     builder.Append($$"""
 {{GetPartialTypeDefinitionLine(symbol)}}
 {
@@ -160,5 +163,38 @@ public class Generator : IIncrementalGenerator
         }
 
         return $"{access} partial {typeKeyword} {symbol.Name}";
+    }
+
+    private static List<DataField> GetDataFields(ITypeSymbol symbol)
+    {
+        var data = new List<DataField>();
+
+        foreach (var member in symbol.GetMembers())
+        {
+            if (member is IFieldSymbol field)
+            {
+                foreach (var attribute in field.GetAttributes())
+                {
+                    if (attribute.AttributeClass?.ToDisplayString() == DataFieldNamespace)
+                    {
+                        data.Add(new DataField(field, attribute));
+                        break;
+                    }
+                }
+            }
+            else if (member is IPropertySymbol property)
+            {
+                foreach (var attribute in property.GetAttributes())
+                {
+                    if (attribute.AttributeClass?.ToDisplayString() == DataFieldNamespace)
+                    {
+                        data.Add(new DataField(property, attribute));
+                        break;
+                    }
+                }
+            }
+        }
+
+        return data;
     }
 }

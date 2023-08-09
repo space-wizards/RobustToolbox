@@ -8,7 +8,7 @@ public sealed partial class ClientEntityManager
 {
     private World _clientWorld = default!;
     // End me
-    private Dictionary<int, int> _archMap = new();
+    private Dictionary<int, EntityReference> _archMap = new();
 
     protected override void InitializeArch()
     {
@@ -26,9 +26,9 @@ public sealed partial class ClientEntityManager
     {
         if (uid.IsClientSide())
         {
-            var normalised = uid.GetArchId() & ~EntityUid.ClientUid;
             var entity = _clientWorld.Create();
-            _archMap[normalised] = entity.Id;
+            var refo = _clientWorld.Reference(entity);
+            _archMap[uid.GetHashCode()] = refo;
         }
         else
         {
@@ -40,8 +40,8 @@ public sealed partial class ClientEntityManager
     {
         if (uid.IsClientSide())
         {
-            var entity = new Entity(_archMap[uid.GetArchId() & ~EntityUid.ClientUid]);
-            _clientWorld.Destroy(entity);
+            _clientWorld.Destroy(_archMap[uid.GetHashCode()].Entity);
+            _archMap.Remove(uid.GetHashCode());
             return;
         }
 

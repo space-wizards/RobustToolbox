@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Arch.Core;
 
 namespace Robust.Shared.GameObjects;
@@ -21,5 +22,7 @@ public partial class EntityManager
         World.Destroy(uid.ToArch());
     }
 
-    protected virtual void SpawnEntityArch(EntityUid uid) {}
+    protected virtual void SpawnEntityArch(EntityUid uid)
+    {
+    }
 }

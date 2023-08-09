@@ -7,6 +7,8 @@ namespace Robust.Shared.Random
     {
         private readonly System.Random _random = new();
 
+        public System.Random GetRandom() => _random;
+
         public float NextFloat()
         {
             return _random.NextFloat();

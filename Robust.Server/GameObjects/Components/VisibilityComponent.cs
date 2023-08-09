@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -17,6 +18,7 @@ namespace Robust.Server.GameObjects
         public int Layer = 1;
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [Obsolete("Do not access directly, only exists for VV")]
         public int LayerVV
         {
             get => Layer;

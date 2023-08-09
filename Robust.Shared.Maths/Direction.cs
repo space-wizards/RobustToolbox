@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 
 namespace Robust.Shared.Maths
 {
@@ -87,6 +88,89 @@ namespace Robust.Shared.Maths
             }
         }
 
+        public static DirectionFlag AsDirectionFlag(this Vector2i indices)
+        {
+            switch (indices.X)
+            {
+                case -1:
+                    switch (indices.Y)
+                    {
+                        case -1:
+                            return DirectionFlag.SouthWest;
+                        case 0:
+                            return DirectionFlag.West;
+                        case 1:
+                            return DirectionFlag.NorthWest;
+                    }
+                    break;
+                case 0:
+                    switch (indices.Y)
+                    {
+                        case -1:
+                            return DirectionFlag.South;
+                        case 1:
+                            return DirectionFlag.North;
+                    }
+                    break;
+                case 1:
+                    switch (indices.Y)
+                    {
+                        case -1:
+                            return DirectionFlag.SouthEast;
+                        case 0:
+                            return DirectionFlag.East;
+                        case 1:
+                            return DirectionFlag.NorthEast;
+                    }
+                    break;
+            }
+
+            throw new ArgumentOutOfRangeException(
+                $"Tried to use a non-supported Vector2i for conversion to direction flag");
+        }
+
+        public static Direction AsDirection(this Vector2i indices)
+        {
+            switch (indices.X)
+            {
+                case -1:
+                    switch (indices.Y)
+                    {
+                        case -1:
+                            return Direction.SouthWest;
+                        case 0:
+                            return Direction.West;
+                        case 1:
+                            return Direction.NorthWest;
+                    }
+                    break;
+                case 0:
+                    switch (indices.Y)
+                    {
+                        case -1:
+                            return Direction.South;
+                        case 1:
+                            return Direction.North;
+                    }
+                    break;
+                case 1:
+                    switch (indices.Y)
+                    {
+                        case -1:
+                            return Direction.SouthEast;
+                        case 0:
+                            return Direction.East;
+                        case 1:
+                            return Direction.NorthEast;
+                    }
+                    break;
+            }
+
+            throw new ArgumentOutOfRangeException(
+                $"Tried to use a non-supported Vector2i for conversion to direction");
+        }
+
+
         /// <summary>
         /// Converts a direction vector to the closest Direction enum.
         /// </summary>
@@ -166,13 +250,13 @@ namespace Robust.Shared.Maths
 
         private static readonly Vector2[] DirectionVectors = {
             new (0, -1),
-            new Vector2(1, -1).Normalized,
+            new Vector2(1, -1).Normalized(),
             new (1, 0),
-            new Vector2(1, 1).Normalized,
+            new Vector2(1, 1).Normalized(),
             new (0, 1),
-            new Vector2(-1, 1).Normalized,
+            new Vector2(-1, 1).Normalized(),
             new (-1, 0),
-            new Vector2(-1, -1).Normalized
+            new Vector2(-1, -1).Normalized()
         };
 
         private static readonly Vector2i[] IntDirectionVectors = {

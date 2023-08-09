@@ -40,7 +40,7 @@ namespace Robust.Shared.GameObjects
                 enabled ^= true;
             }
 
-            _physics.SetCanCollide(body, enabled);
+            _physics.SetCanCollide(uid, enabled, body: body);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Robust.Benchmarks.Migrations
 {
     [DbContext(typeof(BenchmarkContext))]
     [Migration("20220510131430_fix-pk")]
-    partial class fixpk
+    partial class FixPK
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

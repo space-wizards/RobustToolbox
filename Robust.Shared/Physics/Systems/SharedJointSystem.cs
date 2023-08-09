@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -10,32 +11,41 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
 
-public abstract class SharedJointSystem : EntitySystem
+public abstract partial class SharedJointSystem : EntitySystem
 {
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private readonly IGameTiming _gameTiming = default!;
+
+    private EntityQuery<JointComponent> _jointsQuery;
+    private EntityQuery<JointRelayTargetComponent> _relayQuery;
+    private EntityQuery<TransformComponent> _xformQuery;
 
     // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
     // we can delete the component.
     private readonly HashSet<JointComponent> _dirtyJoints = new();
     protected readonly HashSet<Joint> AddedJoints = new();
-
-    private ISawmill _sawmill = default!;
+    protected readonly List<Joint> ToRemove = new();
 
     public override void Initialize()
     {
         base.Initialize();
 
-        _sawmill = Logger.GetSawmill("physics");
+        _jointsQuery = GetEntityQuery<JointComponent>();
+        _relayQuery = GetEntityQuery<JointRelayTargetComponent>();
+        _xformQuery = GetEntityQuery<TransformComponent>();
         UpdatesOutsidePrediction = true;
 
         UpdatesBefore.Add(typeof(SharedPhysicsSystem));
         SubscribeLocalEvent<JointComponent, ComponentShutdown>(OnJointShutdown);
         SubscribeLocalEvent<JointComponent, ComponentInit>(OnJointInit);
+
+        InitializeRelay();
     }
 
     #region Lifetime
@@ -66,12 +76,14 @@ public abstract class SharedJointSystem : EntitySystem
             _physics.WakeBody(joint.BodyBUid, body: bodyB);
 
             // Raise broadcast last so we can do both sides of directed first.
-            var vera = new JointAddedEvent(joint, bodyA, bodyB);
-            RaiseLocalEvent(bodyA.Owner, vera);
-            var smug = new JointAddedEvent(joint, bodyB, bodyA);
-            RaiseLocalEvent(bodyB.Owner, smug);
+            var vera = new JointAddedEvent(joint, joint.BodyAUid, joint.BodyBUid, bodyA, bodyB);
+            RaiseLocalEvent(joint.BodyAUid, vera);
+            var smug = new JointAddedEvent(joint, joint.BodyBUid, joint.BodyAUid, bodyB, bodyA);
+            RaiseLocalEvent(joint.BodyBUid, smug);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
+
+        RefreshRelay(uid, component);
     }
 
     private void OnJointShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)
@@ -83,6 +95,14 @@ public abstract class SharedJointSystem : EntitySystem
     }
 
     #endregion
+
+    public void SetEnabled(Joint joint, bool value)
+    {
+        if (joint.Enabled == value)
+            return;
+
+        joint.Enabled = value;
+    }
 
     public override void Update(float frameTime)
     {
@@ -127,14 +147,14 @@ public abstract class SharedJointSystem : EntitySystem
         var jointsB = jointComponentB.Joints;
 
 
-        _sawmill.Debug($"Initializing joint {joint.ID}");
+        Log.Debug($"Initializing joint {joint.ID}");
 
         // Check for existing joints
         if (!ignoreExisting && jointsA.TryGetValue(joint.ID, out var existing))
         {
             if (existing.BodyBUid != bUid)
             {
-                _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(bUid)}, the connected entity {ToPrettyString(aUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyBUid)}.");
+                Log.Error($"While adding joint {joint.ID} to entity {ToPrettyString(bUid)}, the connected entity {ToPrettyString(aUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyBUid)}.");
                 return;
             }
 
@@ -142,23 +162,23 @@ public abstract class SharedJointSystem : EntitySystem
             // This can occur because of client states coming in blah blah
             // The reason for this is we defer everything until Update
             // (and the reason we defer is to avoid modifying components during iteration when we do the EnsureComponent)
-            if (jointsB.ContainsKey(joint.ID))
+            if (jointsB.TryGetValue(joint.ID, out var value))
             {
-                DebugTools.Assert(jointsB[joint.ID].BodyAUid == aUid);
+                DebugTools.Assert(value.BodyAUid == aUid);
                 return;
             }
 
-            _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(bUid)}, the joint already existed for the connected entity {ToPrettyString(aUid)}.");
+            Log.Error($"While adding joint {joint.ID} to entity {ToPrettyString(bUid)}, the joint already existed for the connected entity {ToPrettyString(aUid)}.");
         }
         else if (!ignoreExisting && jointsB.TryGetValue(joint.ID, out existing))
         {
             if (existing.BodyAUid != aUid)
             {
-                _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(aUid)}, the connected entity {ToPrettyString(bUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyAUid)}.");
+                Log.Error($"While adding joint {joint.ID} to entity {ToPrettyString(aUid)}, the connected entity {ToPrettyString(bUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyAUid)}.");
                 return;
             }
 
-            _sawmill.Error($"While adding joint {joint.ID} to {ToPrettyString(aUid)}, the joint already existed for the connected entity {ToPrettyString(bUid)}.");
+            Log.Error($"While adding joint {joint.ID} to entity {ToPrettyString(aUid)}, the joint already existed for the connected entity {ToPrettyString(bUid)}.");
         }
 
         jointsA.TryAdd(joint.ID, joint);
@@ -183,9 +203,9 @@ public abstract class SharedJointSystem : EntitySystem
         // Note: creating a joint doesn't wake the bodies.
 
         // Raise broadcast last so we can do both sides of directed first.
-        var vera = new JointAddedEvent(joint, bodyA, bodyB);
+        var vera = new JointAddedEvent(joint, aUid, bUid, bodyA, bodyB);
         EntityManager.EventBus.RaiseLocalEvent(aUid, vera);
-        var smug = new JointAddedEvent(joint, bodyB, bodyA);
+        var smug = new JointAddedEvent(joint, bUid, aUid, bodyB, bodyA);
         EntityManager.EventBus.RaiseLocalEvent(bUid, smug);
         EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
     }
@@ -220,7 +240,7 @@ public abstract class SharedJointSystem : EntitySystem
 
         var length = xformA.WorldMatrix.Transform(anchorA.Value) - xformB.WorldMatrix.Transform(anchorB.Value);
 
-        var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, length.Length);
+        var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, length.Length());
         id ??= GetJointId(joint);
         joint.ID = id;
         AddJoint(joint);
@@ -385,26 +405,70 @@ public abstract class SharedJointSystem : EntitySystem
             FilterContactsForJoint(joint, bodyA, bodyB);
 
         // Maybe make this method AddOrUpdate so we can have an Add one that explicitly throws if present?
-        var mapidA = EntityManager.GetComponent<TransformComponent>(bodyA.Owner).MapID;
+        var mapidA = EntityManager.GetComponent<TransformComponent>(joint.BodyAUid).MapID;
 
         if (mapidA == MapId.Nullspace ||
-            mapidA != EntityManager.GetComponent<TransformComponent>(bodyB.Owner).MapID)
+            mapidA != EntityManager.GetComponent<TransformComponent>(joint.BodyBUid).MapID)
         {
-            _sawmill.Error($"Tried to add joint to ineligible bodies");
+            Log.Error($"Tried to add joint to ineligible bodies");
             return;
         }
 
         if (string.IsNullOrEmpty(joint.ID))
         {
-            _sawmill.Error($"Can't add a joint with no ID");
+            Log.Error($"Can't add a joint with no ID");
             DebugTools.Assert($"Can't add a joint with no ID");
             return;
         }
 
         // Need to defer this for prediction reasons, yay!
+        // This can also break prediction for reasons, yay!
+        // Whenever a joint is added or removed, you need to check if its queued for adding.
+        // The client can apply multiple game states in a row without running a tick update,
+        // which can lead to things like cross-map joints.
+        // TODO is this actually needed. Its bad for performance coin.
         AddedJoints.Add(joint);
+
+        if (_gameTiming.IsFirstTimePredicted)
+        {
+            Log.Debug($"Added {joint.JointType} Joint with ID {joint.ID} from {bodyA.BodyType} to {bodyB.BodyType} ");
+        }
     }
 
+    /// <summary>
+    /// Removes joints on this entity and anything relaying to it.
+    /// </summary>
+    public void RecursiveClearJoints(
+        EntityUid uid,
+        TransformComponent? xform = null,
+        JointComponent? component = null,
+        JointRelayTargetComponent? relay = null)
+    {
+        if (!Resolve(uid, ref xform))
+            return;
+
+        Resolve(uid, ref component, ref relay, false);
+
+        if (relay != null)
+        {
+            foreach (var ree in relay.Relayed)
+            {
+                _jointsQuery.TryGetComponent(ree, out var rJoint);
+                ClearJoints(ree, rJoint);
+            }
+
+            RemComp(uid, relay);
+        }
+
+        if (component != null)
+        {
+            ClearJoints(uid, component);
+        }
+    }
+
+    /// <summary>
+    /// Clears any joints for this entity, excluding relayed joints.
+    /// </summary>
     public void ClearJoints(EntityUid uid, JointComponent? component = null)
     {
         if (!Resolve(uid, ref component, false))
@@ -418,6 +482,19 @@ public abstract class SharedJointSystem : EntitySystem
         {
             RemoveJoint(a);
         }
+
+        foreach (var j in AddedJoints)
+        {
+            if (j.BodyAUid == uid || j.BodyBUid == uid)
+                ToRemove.Add(j);
+        }
+        AddedJoints.ExceptWith(ToRemove);
+        ToRemove.Clear();
+
+        if (_gameTiming.IsFirstTimePredicted)
+        {
+            Log.Debug($"Removed all joints from entity {ToPrettyString(uid)}");
+        }
     }
 
     [Obsolete("Use the other ClearJoints overload")]
@@ -426,8 +503,20 @@ public abstract class SharedJointSystem : EntitySystem
         ClearJoints(joint.Owner, joint);
     }
 
+    public void RemoveJoint(EntityUid uid, string id)
+    {
+        if (!TryComp<JointComponent>(uid, out var jointComp))
+            return;
+
+        if (!jointComp.Joints.TryGetValue(id, out var joint))
+            return;
+
+        RemoveJoint(joint);
+    }
+
     public void RemoveJoint(Joint joint)
     {
+        AddedJoints.Remove(joint);
         var bodyAUid = joint.BodyAUid;
         var bodyBUid = joint.BodyBUid;
 
@@ -453,21 +542,19 @@ public abstract class SharedJointSystem : EntitySystem
             return;
         }
 
-        _sawmill.Debug($"Removed joint {joint.ID}");
-
         // Wake up connected bodies.
         if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
-            MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating &&
-            !_container.IsEntityInContainer(bodyAUid))
+            MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
-            _physics.WakeBody(bodyAUid, body: bodyA);
+            var uidA = jointComponentA.Relay ?? bodyAUid;
+            _physics.WakeBody(uidA);
         }
 
         if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
-            MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating &&
-            !_container.IsEntityInContainer(bodyBUid))
+            MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
-            _physics.WakeBody(bodyBUid, body: bodyB);
+            var uidB = jointComponentB.Relay ?? bodyBUid;
+            _physics.WakeBody(uidB);
         }
 
         if (!jointComponentA.Deleted)
@@ -491,19 +578,24 @@ public abstract class SharedJointSystem : EntitySystem
 
         if (bodyA == null)
         {
-            _sawmill.Debug($"Removing joint from entioty {ToPrettyString(bodyAUid)} without a physics component?");
+            Log.Debug($"Tried to remove joint from entity {ToPrettyString(bodyAUid)} without a physics component");
         }
         else if (bodyB == null)
         {
-            _sawmill.Debug($"Removing joint from entioty {ToPrettyString(bodyBUid)} without a physics component?");
+            Log.Debug($"Tried to remove joint from entity {ToPrettyString(bodyBUid)} without a physics component");
         }
         else
         {
-            var vera = new JointRemovedEvent(joint, bodyA, bodyB);
-            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
-            var smug = new JointRemovedEvent(joint, bodyB, bodyA);
-            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
+            var vera = new JointRemovedEvent(joint, bodyAUid, bodyBUid, bodyA, bodyB);
+            EntityManager.EventBus.RaiseLocalEvent(bodyAUid, vera, false);
+            var smug = new JointRemovedEvent(joint, bodyBUid, bodyAUid, bodyB, bodyA);
+            EntityManager.EventBus.RaiseLocalEvent(bodyBUid, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+
+            if (_gameTiming.IsFirstTimePredicted)
+            {
+                Log.Debug($"Removed {joint.JointType} joint with ID {joint.ID} from entity {ToPrettyString(bodyAUid)} to entity {ToPrettyString(bodyBUid)}");
+            }
         }
 
         // We can't just check up front due to how prediction works.
@@ -515,7 +607,7 @@ public abstract class SharedJointSystem : EntitySystem
 
     internal void FilterContactsForJoint(Joint joint, PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
     {
-        if (!Resolve(joint.BodyAUid, ref bodyA) || !Resolve(joint.BodyBUid, ref bodyB))
+        if (!Resolve(joint.BodyBUid, ref bodyB))
             return;
 
         var node = bodyB.Contacts.First;
@@ -525,8 +617,8 @@ public abstract class SharedJointSystem : EntitySystem
             var contact = node.Value;
             node = node.Next;
 
-            if (contact.FixtureA?.Body == bodyA ||
-                contact.FixtureB?.Body == bodyA)
+            if (contact.EntityA == joint.BodyAUid ||
+                contact.EntityB == joint.BodyAUid)
             {
                 // Flag the contact for filtering at the next time step (where either
                 // body is awake).

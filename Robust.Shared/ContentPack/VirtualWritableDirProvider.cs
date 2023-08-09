@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -14,12 +13,22 @@ namespace Robust.Shared.ContentPack
     public sealed class VirtualWritableDirProvider : IWritableDirProvider
     {
         // Just a simple tree. No need to over complicate this.
-        private readonly DirectoryNode _rootDirectoryNode = new();
+        private readonly DirectoryNode _rootDirectoryNode;
+
+        public VirtualWritableDirProvider()
+        {
+            _rootDirectoryNode = new();
+        }
+
+        private VirtualWritableDirProvider(DirectoryNode node)
+        {
+            _rootDirectoryNode = node;
+        }
 
         /// <inheritdoc />
         public string? RootDir => null;
 
-        public void CreateDir(ResourcePath path)
+        public void CreateDir(ResPath path)
         {
             if (!path.IsRooted)
             {
@@ -29,6 +38,7 @@ namespace Robust.Shared.ContentPack
             path = path.Clean();
 
             var directory = _rootDirectoryNode;
+
             foreach (var segment in path.EnumerateSegments())
             {
                 if (directory.Children.TryGetValue(segment, out var child))
@@ -48,7 +58,7 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        public void Delete(ResourcePath path)
+        public void Delete(ResPath path)
         {
             if (!path.IsRooted)
             {
@@ -67,18 +77,18 @@ namespace Robust.Shared.ContentPack
             directory.Children.Remove(path.Filename);
         }
 
-        public bool Exists(ResourcePath path)
+        public bool Exists(ResPath path)
         {
             return TryGetNodeAt(path, out _);
         }
 
-        public (IEnumerable<ResourcePath> files, IEnumerable<ResourcePath> directories) Find(string pattern,
+        public (IEnumerable<ResPath> files, IEnumerable<ResPath> directories) Find(string pattern,
             bool recursive = true)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<string> DirectoryEntries(ResourcePath path)
+        public IEnumerable<string> DirectoryEntries(ResPath path)
         {
             if (!TryGetNodeAt(path, out var dir) || dir is not DirectoryNode dirNode)
                 throw new ArgumentException("Path is not a valid directory node.");
@@ -86,19 +96,17 @@ namespace Robust.Shared.ContentPack
             return dirNode.Children.Keys;
         }
 
-        public bool IsDir(ResourcePath path)
+        public bool IsDir(ResPath path)
         {
             return TryGetNodeAt(path, out var node) && node is DirectoryNode;
         }
 
-        public Stream Open(ResourcePath path, FileMode fileMode, FileAccess access, FileShare share)
+        public Stream Open(ResPath path, FileMode fileMode, FileAccess access, FileShare share)
         {
             if (!path.IsRooted)
             {
                 throw new ArgumentException("Path must be rooted", nameof(path));
             }
-
-            path = path.Clean();
 
             var parentPath = path.Directory;
             if (!TryGetNodeAt(parentPath, out var parent) || !(parent is DirectoryNode parentDir))
@@ -195,12 +203,17 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        public void Rename(ResourcePath oldPath, ResourcePath newPath)
+        public void Rename(ResPath oldPath, ResPath newPath)
         {
             throw new NotImplementedException();
         }
 
-        private bool TryGetNodeAt(ResourcePath path, [NotNullWhen(true)] out INode? node)
+        public void OpenOsWindow(ResPath path)
+        {
+            // Not valid for virtual directories. As this has no effect on the rest of the game no exception is thrown.
+        }
+
+        private bool TryGetNodeAt(ResPath path, [NotNullWhen(true)] out INode? node)
         {
             if (!path.IsRooted)
             {
@@ -209,14 +222,14 @@ namespace Robust.Shared.ContentPack
 
             path = path.Clean();
 
-            if (path == ResourcePath.Root)
+            if (path == ResPath.Root)
             {
                 node = _rootDirectoryNode;
                 return true;
             }
 
             var directory = _rootDirectoryNode;
-            var segments = path.EnumerateSegments().ToArray();
+            var segments = path.EnumerateSegments();
             for (var i = 0; i < segments.Length; i++)
             {
                 var segment = segments[i];
@@ -236,6 +249,14 @@ namespace Robust.Shared.ContentPack
             }
 
             throw new InvalidOperationException("Unreachable.");
+        }
+
+        public IWritableDirProvider OpenSubdirectory(ResPath path)
+        {
+            if (!TryGetNodeAt(path, out var node) || node is not DirectoryNode dirNode)
+                throw new FileNotFoundException();
+
+            return new VirtualWritableDirProvider(dirNode);
         }
 
         private interface INode

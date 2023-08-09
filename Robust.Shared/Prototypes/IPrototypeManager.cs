@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
 
@@ -26,6 +28,11 @@ public interface IPrototypeManager
     /// Returns an <see cref="IEnumerable{T}"/> of all registered prototype kinds by their ID.
     /// </summary>
     IEnumerable<string> GetPrototypeKinds();
+
+    /// <summary>
+    /// Returns the count of the specified prototype.
+    /// </summary>
+    int Count<T>() where T : class, IPrototype;
 
     /// <summary>
     /// Return an <see cref="IEnumerable{T}"/> of all prototypes of a certain kind.
@@ -61,6 +68,11 @@ public interface IPrototypeManager
     /// Returns an <see cref="IEnumerable{T}"/> of parents of a prototype of a certain kind.
     /// </summary>
     IEnumerable<IPrototype> EnumerateParents(Type kind, string id, bool includeSelf = false);
+
+    /// <summary>
+    /// Returns all of the registered prototype kinds.
+    /// </summary>
+    IEnumerable<Type> EnumeratePrototypeKinds();
 
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
@@ -196,9 +208,42 @@ public interface IPrototypeManager
     /// <summary>
     /// Load prototypes from files in a directory, recursively.
     /// </summary>
-    void LoadDirectory(ResourcePath path, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
+    void LoadDirectory(ResPath path, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 
-    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path);
+    /// <summary>
+    /// Validate all prototypes defined in yaml files contained in the given directory.
+    /// </summary>
+    /// <param name="path">The directory containing the yaml files that need validating.</param>
+    /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>
+    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path);
+
+    /// <summary>
+    /// Validate all prototypes defined in yaml files contained in the given directory.
+    /// </summary>
+    /// <param name="path">The directory containing the yaml files that need validating.</param>
+    /// <param name="prototypes">The prototypes ids that were present in the directory.</param>
+    /// <returns>A dictionary containing sets of errors for each file that failed validation.</returns>
+    Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
+        out Dictionary<Type, HashSet<string>> prototypes);
+
+    /// <summary>
+    /// This method uses reflection to validate that prototype id fields correspond to valid prototypes.
+    /// </summary>
+    /// <remarks>
+    /// This will validate any field that has either a <see cref="ValidatePrototypeIdAttribute{T}"/> attribute, or a
+    /// <see cref="DataFieldAttribute"/> with a <see cref="PrototypeIdSerializer{TPrototype}"/> serializer.
+    /// </remarks>
+    /// <param name="prototypes">A collection prototypes to use for validation. Any prototype not in this collection
+    /// will be considered invalid.</param>
+    List<string> ValidateFields(Dictionary<Type, HashSet<string>> prototypes);
+
+    /// <summary>
+    /// This method will serialize all loaded prototypes into yaml and then validate them. This can be used to ensure
+    /// that hard coded default values for data-fields all pass the normal yaml validation steps.
+    /// </summary>
+    /// <returns>Returns a collection of yaml validation errors, sorted by prototype kind id. The outer dictionary is
+    /// empty, everything was successfully validated.</returns>
+    Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx);
 
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 
@@ -212,15 +257,32 @@ public interface IPrototypeManager
     void Clear();
 
     /// <summary>
+    /// Calls <see cref="Clear"/> and then rediscovers all prototype kinds.
+    /// </summary>
+    void ReloadPrototypeKinds();
+
+    /// <summary>
+    /// Calls <see cref="ReloadPrototypeKinds"/> and then loads prototypes from the default directories.
+    /// </summary>
+    void Reset();
+
+    /// <summary>
+    /// Loads prototypes from the default directories.
+    /// </summary>
+    /// <param name="loaded">Dictionary that will be filled with all the loaded prototypes.</param>
+    void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? loaded = null);
+
+    /// <summary>
     /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
     /// </summary>
     void ResolveResults();
 
     /// <summary>
-    /// Reload the changes from LoadString
+    /// Invokes <see cref="PrototypesReloaded"/> with information about the modified prototypes.
+    /// When built with development tools, this will also push inheritance for reloaded prototypes/
     /// </summary>
-    /// <param name="prototypes">Changes from load string</param>
-    void ReloadPrototypes(Dictionary<Type, HashSet<string>> prototypes);
+    void ReloadPrototypes(Dictionary<Type, HashSet<string>> modified,
+        Dictionary<Type, HashSet<string>>? removed = null);
 
     /// <summary>
     ///     Registers a specific prototype name to be ignored.
@@ -245,7 +307,7 @@ public interface IPrototypeManager
     void RegisterKind(Type kind);
 
     /// <summary>
-    ///     Fired when prototype are reloaded. The event args contain the modified prototypes.
+    ///     Fired when prototype are reloaded. The event args contain the modified and removed prototypes.
     /// </summary>
     /// <remarks>
     ///     This does NOT fire on initial prototype load.
@@ -259,7 +321,8 @@ internal interface IPrototypeManagerInternal : IPrototypeManager
 }
 
 public sealed record PrototypesReloadedEventArgs(
-    IReadOnlyDictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet> ByType)
+    IReadOnlyDictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet> ByType,
+    IReadOnlyDictionary<Type, HashSet<string>>? Removed = null)
 {
     public sealed record PrototypeChangeSet(IReadOnlyDictionary<string, IPrototype> Modified);
 }

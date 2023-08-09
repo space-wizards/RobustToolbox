@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -37,11 +36,9 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
-    public sealed partial class NetManager : IClientNetManager, IServerNetManager
+    public sealed partial class NetManager : IClientNetManager, IServerNetManager, IPostInjectInit
     {
         internal const int SharedKeyLength = CryptoAeadXChaCha20Poly1305Ietf.KeyBytes; // 32 bytes
-
-        [Dependency] private readonly IRobustSerializer _serializer = default!;
 
         private static readonly Counter SentPacketsMetrics = Metrics.CreateCounter(
             "robust_net_sent_packets",
@@ -106,10 +103,13 @@ namespace Robust.Shared.Network
 
         private readonly Dictionary<Type, long> _bandwidthUsage = new();
 
+        [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IAuthManager _authManager = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly ILogManager _logMan = default!;
         [Dependency] private readonly ProfManager _prof = default!;
+        [Dependency] private readonly HttpClientHolder _http = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -134,7 +134,8 @@ namespace Robust.Shared.Network
 
         private readonly HashSet<NetUserId> _awaitingDisconnectToConnect = new HashSet<NetUserId>();
 
-        private readonly HttpClient _httpClient = new();
+        private ISawmill _logger = default!;
+        private ISawmill _authLogger = default!;
 
         /// <inheritdoc />
         public int Port => _config.GetCVar(CVars.NetPort);
@@ -242,7 +243,7 @@ namespace Robust.Shared.Network
                 throw new InvalidOperationException("NetManager has already been initialized.");
             }
 
-            HttpClientUserAgent.AddUserAgent(_httpClient);
+            _strings.Sawmill = _logger;
 
             SynchronizeNetTime();
 
@@ -259,7 +260,7 @@ namespace Robust.Shared.Network
             _config.OnValueChanged(CVars.NetFakeLagRand, _fakeLagRandomChanged);
             _config.OnValueChanged(CVars.NetFakeDuplicates, FakeDuplicatesChanged);
 
-            _strings.Initialize(() => { Logger.InfoS("net", "Message string table loaded."); },
+            _strings.Initialize(() => { _logger.Info("Message string table loaded."); },
                 UpdateNetMessageFunctions);
             _serializer.ClientHandshakeComplete += OnSerializerOnClientHandshakeComplete;
 
@@ -278,7 +279,7 @@ namespace Robust.Shared.Network
 
         private void OnSerializerOnClientHandshakeComplete()
         {
-            Logger.InfoS("net", "Client completed serializer handshake.");
+            _logger.Info("Client completed serializer handshake.");
             OnConnected(ServerChannelImpl!);
         }
 
@@ -359,14 +360,12 @@ namespace Robust.Shared.Network
 
             if (_netPeers.Count == 0)
             {
-                Logger.WarningS("net",
-                    "Exactly 0 addresses have been bound to, nothing will be able to connect to the server.");
+                _logger.Warning("Exactly 0 addresses have been bound to, nothing will be able to connect to the server.");
             }
 
             if (!foundIpv6 && dualStack)
             {
-                Logger.WarningS("net",
-                    "IPv6 Dual Stack is enabled but no IPv6 addresses have been bound to. This will not work.");
+                _logger.Warning("IPv6 Dual Stack is enabled but no IPv6 addresses have been bound to. This will not work.");
             }
 
             if (upnp)
@@ -464,22 +463,22 @@ namespace Robust.Shared.Network
                     switch (msg.MessageType)
                     {
                         case NetIncomingMessageType.VerboseDebugMessage:
-                            Logger.DebugS("net", "{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
+                            _logger.Debug("{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
                                 msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.DebugMessage:
-                            Logger.InfoS("net", "{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
+                            _logger.Info("{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
                                 msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.WarningMessage:
-                            Logger.WarningS("net", "{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
+                            _logger.Warning("{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
                                 msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.ErrorMessage:
-                            Logger.ErrorS("net", "{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
+                            _logger.Error("{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
                                 msg.ReadString());
                             break;
 
@@ -498,8 +497,7 @@ namespace Robust.Shared.Network
                             break;
 
                         default:
-                            Logger.WarningS("net",
-                                "{0}: Unhandled incoming packet type from {1}: {2}",
+                            _logger.Warning("{0}: Unhandled incoming packet type from {1}: {2}",
                                 peer.Peer.Configuration.LocalAddress,
                                 msg.SenderConnection.RemoteEndPoint,
                                 msg.MessageType);
@@ -687,8 +685,7 @@ namespace Robust.Shared.Network
             var sender = msg.SenderConnection;
             var newStatus = (NetConnectionStatus) msg.ReadByte();
             var reason = msg.ReadString();
-            Logger.DebugS("net",
-                "{ConnectionEndpoint}: Status changed to {ConnectionStatus}, reason: {ConnectionStatusReason}",
+            _logger.Debug("{ConnectionEndpoint}: Status changed to {ConnectionStatus}, reason: {ConnectionStatusReason}",
                 sender.RemoteEndPoint, newStatus, reason);
 
             if (_awaitingStatusChange.TryGetValue(sender, out var resume))
@@ -738,6 +735,8 @@ namespace Robust.Shared.Network
             NetEncryption? encryption,
             LoginType loginType)
         {
+            _logger.Verbose($"{sender.RemoteEndPoint}: Initial handshake complete!");
+
             var channel = new NetChannel(this, sender, userData, loginType);
             _assignedUserIds.Add(userData.UserId, sender);
             _assignedUsernames.Add(userData.UserName, sender);
@@ -757,7 +756,7 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            Logger.InfoS("net", "{ConnectionEndpoint}: Connected", channel.RemoteEndPoint);
+            _logger.Info("{ConnectionEndpoint}: Connected", channel.RemoteEndPoint);
 
             OnConnected(channel);
         }
@@ -766,7 +765,7 @@ namespace Robust.Shared.Network
         {
             var channel = _channels[connection];
 
-            Logger.InfoS("net", "{ConnectionEndpoint}: Disconnected ({DisconnectReason})", channel.RemoteEndPoint,
+            _logger.Info("{ConnectionEndpoint}: Disconnected ({DisconnectReason})", channel.RemoteEndPoint,
                 reason);
             _assignedUsernames.Remove(channel.UserName);
             _assignedUserIds.Remove(channel.UserId);
@@ -783,7 +782,7 @@ namespace Robust.Shared.Network
                 // A throw aborting in the middle of this method would be *really* bad
                 // and cause fun bugs like ghost clients sticking around.
                 // I say "would" as if it hasn't already happened...
-                Logger.ErrorS("net", "Caught exception in OnDisconnected handler:\n{0}", e);
+                _logger.Error("Caught exception in OnDisconnected handler:\n{0}", e);
             }
 #endif
             _channels.Remove(connection);
@@ -811,22 +810,19 @@ namespace Robust.Shared.Network
             var peer = msg.SenderConnection.Peer;
             if (peer.Status == NetPeerStatus.ShutdownRequested)
             {
-                Logger.WarningS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Received data message, but shutdown is requested.");
+                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Received data message, but shutdown is requested.");
                 return true;
             }
 
             if (peer.Status == NetPeerStatus.NotRunning)
             {
-                Logger.WarningS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Received data message, peer is not running.");
+                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Received data message, peer is not running.");
                 return true;
             }
 
             if (!IsConnected)
             {
-                Logger.WarningS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Received data message, but not connected.");
+                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Received data message, but not connected.");
                 return true;
             }
 
@@ -841,11 +837,17 @@ namespace Robust.Shared.Network
 
             if (msg.LengthBytes < 1)
             {
-                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received empty packet.");
+                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Received empty packet.");
                 return true;
             }
 
-            var channel = _channels[msg.SenderConnection];
+            if (!_channels.TryGetValue(msg.SenderConnection, out var channel))
+            {
+                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Got unexpected data packet before handshake completion.");
+
+                msg.SenderConnection.Disconnect("Unexpected packet before handshake completion");
+                return true;
+            }
 
             var encryption = IsServer ? channel.Encryption : _clientEncryption;
 
@@ -857,8 +859,7 @@ namespace Robust.Shared.Network
 
             if (entry == null)
             {
-                Logger.WarningS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
+                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
 
                 channel.Disconnect("Got NetMessage with invalid ID");
                 return true;
@@ -868,8 +869,7 @@ namespace Robust.Shared.Network
 
             if (!channel.IsHandshakeComplete && !entry.IsHandshake)
             {
-                Logger.WarningS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Got non-handshake message {entry.Type.Name} before handshake completion.");
+                _logger.Warning($"{msg.SenderConnection.RemoteEndPoint}: Got non-handshake message {entry.Type.Name} before handshake completion.");
 
                 channel.Disconnect("Got unacceptable net message before handshake completion");
                 return true;
@@ -897,26 +897,23 @@ namespace Robust.Shared.Network
             }
             catch (InvalidCastException ice)
             {
-                Logger.ErrorS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet: {ice.Message}");
+                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet:\n{ice}");
                 return true;
             }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
-                Logger.WarningS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet: {e.Message}");
+                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet:\n{e}");
                 return true;
             }
 
-            // Logger.DebugS("net", $"RECV: {instance.GetType().Name}");
+            // _logger.DebugS("net", $"RECV: {instance.GetType().Name}");
             try
             {
                 entry.Callback!.Invoke(instance);
             }
             catch (Exception e)
             {
-                Logger.ErrorS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: exception in message handler for {type.Name}:\n{e}");
+                _logger.Error($"{msg.SenderConnection.RemoteEndPoint}: exception in message handler for {type.Name}:\n{e}");
             }
 
             return true;
@@ -1031,7 +1028,7 @@ namespace Robust.Shared.Network
 
         private static void LogSend(NetMessage message, NetDeliveryMethod method, NetOutgoingMessage packet)
         {
-            // Logger.DebugS("net", $"SEND: {message.GetType().Name} {method} {packet.LengthBytes}");
+            // _logger.Debug($"SEND: {message.GetType().Name} {method} {packet.LengthBytes}");
         }
 
         /// <inheritdoc />
@@ -1181,6 +1178,12 @@ namespace Robust.Shared.Network
             public bool IsHandshake;
             public Type Type = default!;
             public ProcessMessage? Callback;
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _logger = _logMan.GetSawmill("net");
+            _authLogger = _logMan.GetSawmill("auth");
         }
     }
 

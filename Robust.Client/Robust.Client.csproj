@@ -1,23 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>WinExe</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>../bin/Client</OutputPath>
     <NoWarn>NU1701</NoWarn>
+    <OutputPath>../bin/Client</OutputPath>
     <RobustILLink>true</RobustILLink>
   </PropertyGroup>
-  <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="6.0.9" />
     <PackageReference Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.2" Condition="'$(UseSystemSqlite)' == 'True'" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.2" Condition="'$(UseSystemSqlite)' != 'True'" />
-    <PackageReference Include="SpaceWizards.NFluidsynth" Version="0.1.0" />
+    <PackageReference Include="SpaceWizards.NFluidsynth" Version="0.1.1" />
     <PackageReference Include="NVorbis" Version="0.10.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
     <PackageReference Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
@@ -43,26 +41,23 @@
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
   </ItemGroup>
-  <ItemGroup>
 
+  <!-- Shader embedding -->
+  <ItemGroup>
     <EmbeddedResource Include="Graphics\Clyde\Shaders\*" />
   </ItemGroup>
+
+  <!-- ILLink configuration -->
   <ItemGroup>
     <RobustLinkRoots Include="Robust.Client" />
+    <RobustLinkRoots Include="Robust.Shared" />
     <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
     <RobustLinkAssemblies Include="OpenToolkit.Graphics" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Update="UserInterface\CustomControls\DefaultWindow.xaml.cs">
-      <DependentUpon>DefaultWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Remove="Debugging\IDebugDrawing.cs" />
-  </ItemGroup>
-  <Import Project="..\MSBuild\Robust.Engine.targets" />
-  <PropertyGroup>
-    <RobustToolsPath>../Tools</RobustToolsPath>
-  </PropertyGroup>
-  <Target Name="RobustAfterBuild" AfterTargets="Build" />
+
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
+
   <Import Project="..\MSBuild\XamlIL.targets" />
+
   <Import Project="..\MSBuild\Robust.Trimming.targets" />
 </Project>

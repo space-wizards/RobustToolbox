@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Timing;
@@ -40,7 +41,7 @@ namespace Robust.Client.GameStates
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
-            _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
+            _font = new VectorFont(cache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
             _lineHeight = _font.GetLineHeight(1);
 
             _gameStateManager.GameStateApplied += HandleGameStateApplied;
@@ -215,17 +216,6 @@ namespace Robust.Client.GameStates
                     overlayMan.RemoveOverlay(typeof(NetEntityOverlay));
                     shell.WriteLine("Disabled network entity report overlay.");
                 }
-            }
-        }
-
-        private sealed class NetShowGraphCommand : LocalizedCommands
-        {
-            // Yeah commands should be localized, but I'm lazy and this is really just a debug command.
-            public override string Command => "net_refresh";
-
-            public override void Execute(IConsoleShell shell, string argStr, string[] args)
-            {
-                IoCManager.Resolve<IClientGameStateManager>().RequestFullState();
             }
         }
     }

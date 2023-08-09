@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -14,15 +15,12 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        [ViewVariables]
-        private Eye? _eye = default!;
+        [ViewVariables] internal Eye? _eye = default!;
 
         // Horrible hack to get around ordering issues.
-        private bool _setCurrentOnInitialize;
-        [DataField("drawFov")]
-        private bool _setDrawFovOnInitialize = true;
-        [DataField("zoom")]
-        private Vector2 _setZoomOnInitialize = Vector2.One;
+        internal bool _setCurrentOnInitialize;
+        [DataField("drawFov")] internal bool _setDrawFovOnInitialize = true;
+        [DataField("zoom")] internal Vector2 _setZoomOnInitialize = Vector2.One;
 
         /// <summary>
         ///     If not null, this entity is used to update the eye's position instead of just using the component's owner.
@@ -117,54 +115,6 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables]
         public MapCoordinates? Position => _eye?.Position;
-
-        /// <inheritdoc />
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            _eye = new Eye
-            {
-                Position = _entityManager.GetComponent<TransformComponent>(Owner).MapPosition,
-                Zoom = _setZoomOnInitialize,
-                DrawFov = _setDrawFovOnInitialize
-            };
-
-            if ((_eyeManager.CurrentEye == _eye) != _setCurrentOnInitialize)
-            {
-                if (_setCurrentOnInitialize)
-                {
-                    _eyeManager.ClearCurrentEye();
-                }
-                else
-                {
-                    _eyeManager.CurrentEye = _eye;
-                }
-            }
-        }
-
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            base.HandleComponentState(curState, nextState);
-
-            if (curState is not EyeComponentState state)
-            {
-                return;
-            }
-
-            DrawFov = state.DrawFov;
-            // TODO: Should be a way for content to override lerping and lerp the zoom
-            Zoom = state.Zoom;
-            Offset = state.Offset;
-            VisibilityMask = state.VisibilityMask;
-        }
-
-        protected override void OnRemove()
-        {
-            base.OnRemove();
-
-            Current = false;
-        }
 
         /// <summary>
         /// Updates the Eye of this entity with the transform position. This has to be called every frame to

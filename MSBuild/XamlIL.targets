@@ -2,7 +2,7 @@
   <PropertyGroup>
     <!-- Avoid MSBuild adding a None entry for XAML files because they'd show up TWICE in the project view. -->
     <DefaultItemExcludes>**/*.xaml</DefaultItemExcludes>
-    <RobustUseExternalMSBuild>false</RobustUseExternalMSBuild>
+    <RobustUseExternalMSBuild>true</RobustUseExternalMSBuild>
     <_RobustUseExternalMSBuild>$(RobustUseExternalMSBuild)</_RobustUseExternalMSBuild>
     <_RobustUseExternalMSBuild Condition="'$(_RobustForceInternalMSBuild)' == 'true'">false</_RobustUseExternalMSBuild>
   </PropertyGroup>
@@ -19,10 +19,17 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false"/>
   </ItemGroup>
 
+  <!-- XamlIL does not make use of special Robust configurations like DebugOpt. Convert these down. -->
+  <PropertyGroup>
+    <RobustInjectorsConfiguration>$(Configuration)</RobustInjectorsConfiguration>
+    <RobustInjectorsConfiguration Condition="'$(Configuration)' == 'DebugOpt'">Debug</RobustInjectorsConfiguration>
+    <RobustInjectorsConfiguration Condition="'$(Configuration)' == 'Tools'">Release</RobustInjectorsConfiguration>
+  </PropertyGroup>
+
   <UsingTask
     Condition="'$(_RobustUseExternalMSBuild)' != 'true' And $(DesignTimeBuild) != true"
     TaskName="CompileRobustXamlTask"
-    AssemblyFile="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\bin\$(Configuration)\netstandard2.0\Robust.Client.Injectors.dll"/>
+    AssemblyFile="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\bin\$(RobustInjectorsConfiguration)\netstandard2.0\Robust.Client.Injectors.dll"/>
   <Target
     Name="CompileRobustXaml"
     Condition="Exists('@(IntermediateAssembly)')"

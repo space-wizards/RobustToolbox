@@ -1,3 +1,4 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -22,9 +23,9 @@ namespace Robust.UnitTesting.Shared.Physics
         [OneTimeSetUp]
         public void Setup()
         {
-            _manifoldManager = IoCManager.Resolve<IManifoldManager>();
-            _circleA = new PhysShapeCircle {Radius = 0.5f};
-            _circleB = new PhysShapeCircle {Radius = 0.5f};
+            _manifoldManager = new CollisionManager();
+            _circleA = new PhysShapeCircle(0.5f);
+            _circleB = new PhysShapeCircle(0.5f);
             _polyA = new PolygonShape();
             _polyB = new PolygonShape();
             _polyA.SetAsBox(0.5f, 0.5f);

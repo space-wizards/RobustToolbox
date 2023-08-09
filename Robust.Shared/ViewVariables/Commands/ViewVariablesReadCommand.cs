@@ -4,7 +4,9 @@ namespace Robust.Shared.ViewVariables.Commands;
 
 public sealed class ViewVariablesReadCommand : ViewVariablesBaseCommand
 {
-    public override string Command => "vvread";
+    public const string Comm = "vvread";
+
+    public override string Command => Comm;
 
     public override async void Execute(IConsoleShell shell, string argStr, string[] args)
     {

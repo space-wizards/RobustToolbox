@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -24,7 +25,7 @@ public abstract partial class SharedPhysicsSystem
             return Vector2.Zero;
 
         var velocity = component.LinearVelocity;
-        var angVelocity = xform.LocalRotation.RotateVec(Vector2.Cross(component.AngularVelocity, point - component.LocalCenter));
+        var angVelocity = xform.LocalRotation.RotateVec(Vector2Helpers.Cross(component.AngularVelocity, point - component.LocalCenter));
         return velocity + angVelocity;
     }
 
@@ -55,9 +56,9 @@ public abstract partial class SharedPhysicsSystem
         var velocity = component.LinearVelocity;
         Vector2 angularComponent = Vector2.Zero;
 
-        while (parent.IsValid())
+        while (parent != xform.MapUid && parent.IsValid())
         {
-            var parentXform = xformQuery.Value.GetComponent(parent);
+            xform = xformQuery.Value.GetComponent(parent);
 
             if (physicsQuery.Value.TryGetComponent(parent, out var body))
             {
@@ -65,12 +66,12 @@ public abstract partial class SharedPhysicsSystem
                 velocity += body.LinearVelocity;
 
                 // add angular velocity that results from the parent's rotation (NOT in map coordinates, but in the parentXform.Parent's frame)
-                angularComponent += Vector2.Cross(body.AngularVelocity, localPos - body.LocalCenter);
-                angularComponent = parentXform.LocalRotation.RotateVec(angularComponent);
+                angularComponent += Vector2Helpers.Cross(body.AngularVelocity, localPos - body.LocalCenter);
+                angularComponent = xform.LocalRotation.RotateVec(angularComponent);
             }
 
-            localPos = parentXform.LocalPosition + parentXform.LocalRotation.RotateVec(localPos);
-            parent = parentXform.ParentUid;
+            localPos = xform.LocalPosition + xform.LocalRotation.RotateVec(localPos);
+            parent = xform.ParentUid;
         }
 
         // angular component of the velocity should now be in terms of map coordinates and can be added onto the sum of
@@ -98,17 +99,15 @@ public abstract partial class SharedPhysicsSystem
         physicsQuery ??= EntityManager.GetEntityQuery<PhysicsComponent>();
 
         xform ??= xformQuery.Value.GetComponent(uid);
-        var parent = xform.ParentUid;
 
         var angularVelocity = component.AngularVelocity;
 
-        while (parent.IsValid())
+        while (xform.ParentUid != xform.MapUid && xform.ParentUid.IsValid())
         {
-            var parentXform = xformQuery.Value.GetComponent(parent);
-
-            if (physicsQuery.Value.TryGetComponent(parent, out var body))
+            if (physicsQuery.Value.TryGetComponent(xform.ParentUid, out var body))
                 angularVelocity += body.AngularVelocity;
-            parent = parentXform.ParentUid;
+
+            xform = xformQuery.Value.GetComponent(xform.ParentUid);
         }
 
         return angularVelocity;
@@ -136,9 +135,9 @@ public abstract partial class SharedPhysicsSystem
         var angularVelocity = component.AngularVelocity;
         Vector2 linearVelocityAngularContribution = Vector2.Zero;
 
-        while (parent.IsValid())
+        while (parent != xform.MapUid && parent.IsValid())
         {
-            var parentXform = xformQuery.Value.GetComponent(parent);
+            xform = xformQuery.Value.GetComponent(parent);
 
             if (physicsQuery.Value.TryGetComponent(parent, out var body))
             {
@@ -149,12 +148,12 @@ public abstract partial class SharedPhysicsSystem
 
                 // add the component of the linear velocity that results from the parent's rotation. This is NOT in map
                 // coordinates, this is the velocity in the parentXform.Parent's frame.
-                linearVelocityAngularContribution += Vector2.Cross(body.AngularVelocity, localPos - body.LocalCenter);
-                linearVelocityAngularContribution = parentXform.LocalRotation.RotateVec(linearVelocityAngularContribution);
+                linearVelocityAngularContribution += Vector2Helpers.Cross(body.AngularVelocity, localPos - body.LocalCenter);
+                linearVelocityAngularContribution = xform.LocalRotation.RotateVec(linearVelocityAngularContribution);
             }
 
-            localPos = parentXform.LocalPosition + parentXform.LocalRotation.RotateVec(localPos);
-            parent = parentXform.ParentUid;
+            localPos = xform.LocalPosition + xform.LocalRotation.RotateVec(localPos);
+            parent = xform.ParentUid;
         }
 
         return (linearVelocity + linearVelocityAngularContribution, angularVelocity);
@@ -169,7 +168,7 @@ public abstract partial class SharedPhysicsSystem
         if (physics.LifeStage != ComponentLifeStage.Running)
             return;
 
-        if (physics.BodyType == BodyType.Static || xform.MapID == MapId.Nullspace || !physics._canCollide)
+        if (physics.BodyType == BodyType.Static || xform.MapID == MapId.Nullspace || !physics.CanCollide)
             return;
 
         // When transferring bodies, we will preserve map angular and linear velocities. For this purpose, we simply
@@ -179,8 +178,9 @@ public abstract partial class SharedPhysicsSystem
         // I guess the question becomes, what do you do with conservation of momentum in that case. I guess its the job
         // of the teleporter to select a velocity at the after the parent has changed.
 
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-        var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var physicsQuery = GetEntityQuery<PhysicsComponent>();
+        FixturesComponent? manager = null;
 
         // for the new velocities (that need to be updated), we can just use the existing function:
         var (newLinear, newAngular) = GetMapVelocities(uid, physics, xform, xformQuery, physicsQuery);
@@ -190,13 +190,13 @@ public abstract partial class SharedPhysicsSystem
         {
             // no previous parent --> simple
             // Old velocity + (old velocity - new velocity)
-            SetLinearVelocity(physics, physics._linearVelocity * 2 - newLinear);
-            SetAngularVelocity(physics, physics._angularVelocity * 2 - newAngular);
+            SetLinearVelocity(uid, physics.LinearVelocity * 2 - newLinear, manager: manager, body: physics);
+            SetAngularVelocity(uid, physics.AngularVelocity * 2 - newAngular, manager: manager, body: physics);
             return;
         }
 
         TransformComponent? parentXform = xformQuery.GetComponent(parent);
-        var localPos = parentXform.InvWorldMatrix.Transform(xform.WorldPosition);
+        var localPos = _transform.GetInvWorldMatrix(parentXform).Transform(_transform.GetWorldPosition(xform));
 
         var oldLinear = physics.LinearVelocity;
         var oldAngular = physics.AngularVelocity;
@@ -213,7 +213,7 @@ public abstract partial class SharedPhysicsSystem
 
                 // add the component of the linear velocity that results from the parent's rotation. This is NOT in map
                 // coordinates, this is the velocity in the parentXform.Parent's frame.
-                linearAngularContribution += Vector2.Cross(body.AngularVelocity, localPos - body.LocalCenter);
+                linearAngularContribution += Vector2Helpers.Cross(body.AngularVelocity, localPos - body.LocalCenter);
                 linearAngularContribution = parentXform.LocalRotation.RotateVec(linearAngularContribution);
             }
 
@@ -226,7 +226,7 @@ public abstract partial class SharedPhysicsSystem
 
         // Finally we can update the Velocities. linear velocity is already in terms of map-coordinates, so no
         // world-rotation is required
-        SetLinearVelocity(physics, physics._linearVelocity + oldLinear - newLinear);
-        SetAngularVelocity(physics, physics._angularVelocity + oldAngular - newAngular);
+        SetLinearVelocity(uid, physics.LinearVelocity + oldLinear - newLinear, manager: manager, body: physics);
+        SetAngularVelocity(uid, physics.AngularVelocity + oldAngular - newAngular, manager: manager, body: physics);
     }
 }

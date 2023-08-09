@@ -18,5 +18,18 @@ namespace Robust.Shared.GameStates
         public short Ping { get; set; }
 
         public EntityUid? ControlledEntity { get; set; }
+
+        public PlayerState Clone()
+        {
+            return new PlayerState
+            {
+                UserId = UserId,
+                Name = Name,
+                Status = Status,
+                Ping = Ping,
+                ControlledEntity = ControlledEntity
+            };
+        }
+
     }
 }

@@ -1,20 +1,20 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
 {
-    public abstract partial class SharedContainerSystem : EntitySystem
+    public abstract partial class SharedContainerSystem
     {
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly SharedJointSystem _joint = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
 
         /// <inheritdoc />
@@ -24,6 +24,28 @@ namespace Robust.Shared.Containers
 
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
+            SubscribeLocalEvent<ContainerManagerComponent, ComponentGetState>(OnContainerGetState);
+        }
+
+        private void OnContainerGetState(EntityUid uid, ContainerManagerComponent component, ref ComponentGetState args)
+        {
+            // naive implementation that just sends the full state of the component
+            Dictionary<string, ContainerManagerComponent.ContainerManagerComponentState.ContainerData> containerSet = new(component.Containers.Count);
+
+            foreach (var container in component.Containers.Values)
+            {
+                var uidArr = new EntityUid[container.ContainedEntities.Count];
+
+                for (var index = 0; index < container.ContainedEntities.Count; index++)
+                {
+                    uidArr[index] = container.ContainedEntities[index];
+                }
+
+                var sContainer = new ContainerManagerComponent.ContainerManagerComponentState.ContainerData(container.ContainerType, container.ID, container.ShowContents, container.OccludesLight, uidArr);
+                containerSet.Add(container.ID, sContainer);
+            }
+
+            args.State = new ContainerManagerComponent.ContainerManagerComponentState(containerSet);
         }
 
         // TODO: Make ContainerManagerComponent ECS and make these proxy methods the real deal.
@@ -177,9 +199,6 @@ namespace Robust.Shared.Containers
             EntityQuery<MetaDataComponent>? metas = null,
             EntityQuery<TransformComponent>? xforms = null)
         {
-            DebugTools.Assert(meta == null || meta.Owner == uid);
-            DebugTools.Assert(xform == null || xform.Owner == uid);
-
             if (meta == null)
             {
                 metas ??= EntityManager.GetEntityQuery<MetaDataComponent>();
@@ -364,17 +383,26 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        /// Attempts to remove all entities in a container.
+        /// Attempts to remove all entities in a container. Returns removed entities.
         /// </summary>
-        public void EmptyContainer(IContainer container, bool force = false, EntityCoordinates? moveTo = null,
-            bool attachToGridOrMap = false, IEntityManager? entMan = null)
+        public List<EntityUid> EmptyContainer(
+            IContainer container,
+            bool force = false,
+            EntityCoordinates? destination = null,
+            bool reparent = true)
         {
-            var query = EntityManager.GetEntityQuery<TransformComponent>();
-            foreach (var entity in container.ContainedEntities.ToArray())
+            var removed = new List<EntityUid>(container.ContainedEntities);
+            for (var i = removed.Count - 1; i >= 0; i--)
             {
-                if (query.TryGetComponent(entity, out var xform))
-                    container.Remove(entity, EntityManager, xform, null, attachToGridOrMap, force, moveTo);
+                if (container.Remove(removed[i], EntityManager, reparent: reparent, force: force, destination: destination))
+                    continue;
+
+                // failed to remove entity.
+                DebugTools.Assert(container.Contains(removed[i]));
+                removed.RemoveSwap(i);
             }
+
+            return removed;
         }
 
         /// <summary>
@@ -392,6 +420,9 @@ namespace Robust.Shared.Containers
 
         public void AttachParentToContainerOrGrid(TransformComponent transform)
         {
+            // TODO make this check upwards for any container, and parent to that.
+            // Currently this just checks the direct parent, so entities will still teleport through containers.
+
             if (!transform.ParentUid.IsValid()
                 || !TryGetContainingContainer(transform.ParentUid, out var container)
                 || !TryInsertIntoContainer(transform, container))

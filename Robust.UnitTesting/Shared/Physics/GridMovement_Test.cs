@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -40,25 +41,25 @@ public sealed class GridMovement_Test : RobustIntegrationTest
 
             var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, 0.5f, 0.5f ));
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
-            physSystem.SetBodyType(onGridBody, BodyType.Dynamic);
+            physSystem.SetBodyType(onGrid, BodyType.Dynamic, body: onGridBody);
             var shapeA = new PolygonShape();
             shapeA.SetAsBox(0.5f, 0.5f);
-            var fixtureA = fixtureSystem.CreateFixture(onGridBody, shapeA);
-            physSystem.SetCollisionMask(fixtureA, 1);
+            fixtureSystem.CreateFixture(onGrid, new Fixture("fix1", shapeA, 1, 0, false), body: onGridBody);
             Assert.That(fixtureSystem.GetFixtureCount(onGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(onGrid).ParentUid, Is.EqualTo(grid.Owner));
-            physSystem.WakeBody(onGridBody);
+            physSystem.WakeBody(onGrid, body: onGridBody);
+            Assert.That(onGridBody.Awake);
 
             var offGrid = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(10f, 10f), mapId));
             var offGridBody = entManager.AddComponent<PhysicsComponent>(offGrid);
-            physSystem.SetBodyType(offGridBody, BodyType.Dynamic);
+            physSystem.SetBodyType(offGrid, BodyType.Dynamic, body: offGridBody);
             var shapeB = new PolygonShape();
             shapeB.SetAsBox(0.5f, 0.5f);
-            var fixtureB = fixtureSystem.CreateFixture(offGridBody, shapeB);
-            physSystem.SetCollisionLayer(fixtureB, 1);
+            fixtureSystem.CreateFixture(offGrid, new Fixture("fix1", shapeB, 0, 1, false), body: offGridBody);
             Assert.That(fixtureSystem.GetFixtureCount(offGrid), Is.EqualTo(1));
             Assert.That(entManager.GetComponent<TransformComponent>(offGrid).ParentUid, Is.Not.EqualTo((grid.Owner)));
-            physSystem.WakeBody(offGridBody);
+            physSystem.WakeBody(offGrid, body: offGridBody);
+            Assert.That(offGridBody.Awake);
 
             // Alright just a quick validation then we start the actual damn test.
             physSystem.Update(0.001f);

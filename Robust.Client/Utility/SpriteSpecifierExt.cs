@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Utility
@@ -18,14 +19,14 @@ namespace Robust.Client.Utility
         public static Texture GetTexture(this SpriteSpecifier.Texture texSpecifier, IResourceCache cache)
         {
             return cache
-                .GetResource<TextureResource>(SharedSpriteComponent.TextureRoot / texSpecifier.TexturePath)
+                .GetResource<TextureResource>(SpriteSpecifierSerializer.TextureRoot / texSpecifier.TexturePath)
                 .Texture;
         }
 
         [Obsolete("Use SpriteSystem")]
         public static RSI.State GetState(this SpriteSpecifier.Rsi rsiSpecifier, IResourceCache cache)
         {
-            if (!cache.TryGetResource<RSIResource>(SharedSpriteComponent.TextureRoot / rsiSpecifier.RsiPath, out var theRsi))
+            if (!cache.TryGetResource<RSIResource>(SpriteSpecifierSerializer.TextureRoot / rsiSpecifier.RsiPath, out var theRsi))
             {
                 Logger.Error("SpriteSpecifier failed to load RSI {0}", rsiSpecifier.RsiPath);
                 return SpriteComponent.GetFallbackState(cache);

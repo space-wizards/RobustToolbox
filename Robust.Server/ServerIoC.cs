@@ -1,4 +1,3 @@
-using Robust.Server.Bql;
 using Robust.Server.Configuration;
 using Robust.Server.Console;
 using Robust.Server.DataMetrics;
@@ -13,6 +12,7 @@ using Robust.Server.Scripting;
 using Robust.Server.Serialization;
 using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
+using Robust.Server.Upload;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -22,13 +22,13 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.Shared.Upload;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server
@@ -69,6 +69,8 @@ namespace Robust.Server
             deps.Register<IServerEntityManagerInternal, ServerEntityManager>();
             deps.Register<IServerGameStateManager, ServerGameStateManager>();
             deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
+            deps.Register<IReplayRecordingManagerInternal, ReplayRecordingManager>();
+            deps.Register<IServerReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IServerNetManager, NetManager>();
             deps.Register<IStatusHost, StatusHost>();
             deps.Register<ISystemConsoleManager, SystemConsoleManager>();
@@ -79,14 +81,17 @@ namespace Robust.Server
             deps.Register<IScriptHost, ScriptHost>();
             deps.Register<IMetricsManager, MetricsManager>();
             deps.Register<IAuthManager, AuthManager>();
-            deps.Register<IBqlQueryManager, BqlQueryManager>();
             deps.Register<HubManager, HubManager>();
             deps.Register<IRobustSerializer, ServerRobustSerializer>();
+            deps.Register<IRobustSerializerInternal, ServerRobustSerializer>();
             deps.Register<IConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<INetConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             deps.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
+            deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
+            deps.Register<NetworkResourceManager>();
+            deps.Register<IHttpClientHolder, HttpClientHolder>();
         }
     }
 }

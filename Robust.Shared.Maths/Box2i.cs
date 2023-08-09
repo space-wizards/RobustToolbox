@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
@@ -24,6 +25,7 @@ namespace Robust.Shared.Maths
         public readonly Vector2i Size => new(Width, Height);
 
         public readonly int Area => Width * Height;
+        public readonly Vector2 Center => Size / 2f + BottomLeft;
 
         public Box2i(Vector2i bottomLeft, Vector2i topRight)
         {
@@ -97,7 +99,7 @@ namespace Robust.Shared.Maths
         }
 
         // override object.Equals
-        public override readonly bool Equals(object? obj)
+        public readonly override bool Equals(object? obj)
         {
             if (obj is Box2i box)
             {
@@ -113,7 +115,7 @@ namespace Robust.Shared.Maths
         }
 
         // override object.GetHashCode
-        public override readonly int GetHashCode()
+        public readonly override int GetHashCode()
         {
             var code = Left.GetHashCode();
             code = (code * 929) ^ Right.GetHashCode();
@@ -132,7 +134,7 @@ namespace Robust.Shared.Maths
             return new(box.Left, box.Bottom, box.Right, box.Top);
         }
 
-        public override readonly string ToString()
+        public readonly override string ToString()
         {
             return $"({Left}, {Bottom}, {Right}, {Top})";
         }
@@ -164,6 +166,66 @@ namespace Robust.Shared.Maths
                 Bottom * scalar,
                 Right * scalar,
                 Top * scalar);
+        }
+    }
+
+    /// <summary>
+    /// Iterates neighbouring tiles to a box2i.
+    /// </summary>
+    public struct Box2iEdgeEnumerator
+    {
+        private readonly bool _corners;
+        private readonly Box2i _box;
+        private readonly int _offset;
+        private int _x;
+        private int _y;
+
+        public Box2iEdgeEnumerator(Box2i box, bool corners, int offset = 1)
+        {
+            _box = box;
+            _corners = corners;
+            _x = _box.Left - offset;
+            _y = _box.Bottom - offset;
+            _offset = offset;
+        }
+
+        public bool MoveNext(out Vector2i index)
+        {
+            for (var x = _x; x < _box.Right + _offset; x++)
+            {
+                for (var y = _y; y < _box.Top + _offset; y++)
+                {
+                    if (x != _box.Left - _offset &&
+                        x != _box.Right + (_offset - 1) &&
+                        y != _box.Bottom - _offset &&
+                        y != _box.Top + (_offset - 1))
+                    {
+                        continue;
+                    }
+
+                    if (!_corners &&
+                        (x == _box.Left - _offset && (y == _box.Bottom - _offset || y == _box.Top + (_offset - 1)) ||
+                        x == _box.Right && (y == _box.Bottom - _offset || y == _box.Top + (_offset - 1))))
+                    {
+                        continue;
+                    }
+
+                    _x = x;
+                    _y = y + 1;
+
+                    if (_y == _box.Top + _offset)
+                    {
+                        _x++;
+                        _y = _box.Bottom - _offset;
+                    }
+
+                    index = new Vector2i(x, y);
+                    return true;
+                }
+            }
+
+            index = default;
+            return false;
         }
     }
 }

@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -27,6 +28,8 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertySelectionColor = "selection-color";
         public const string StyleClassLineEditNotEditable = "notEditable";
         public const string StylePseudoClassPlaceholder = "placeholder";
+
+        public StyleBox? StyleBoxOverride { get; set; }
 
         // It is assumed that these two positions are NEVER inside a surrogate pair in the text buffer.
         private int _cursorPosition;
@@ -57,32 +60,42 @@ namespace Robust.Client.UserInterface.Controls
         public Func<string, bool>? IsValid { get; set; }
 
         /// <summary>
-        ///     The actual text currently stored in the LineEdit.
+        ///     The actual text currently stored in the LineEdit. Setting this does not invoke the text change event, use <see cref="SetText(string, bool)"/> for that.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public string Text
         {
             get => _text;
-            set
+            set => SetText(value);
+        }
+
+        /// <summary>
+        ///     Sets the current text, optionally invoking <see cref="OnTextChanged"/>.
+        /// </summary>
+        public void SetText(string value, bool invokeEvent = false)
+        {
+            if (value == _text)
+                return;
+
+            // Save cursor position or -1 for end
+            var cursorTarget = CursorPosition == _text.Length ? -1 : CursorPosition;
+
+            if (!InternalSetText(value))
             {
-                // Save cursor position or -1 for end
-                var cursorTarget = CursorPosition == _text.Length ? -1 : CursorPosition;
-
-                if (!InternalSetText(value))
-                {
-                    return;
-                }
-
-                var clamped = MathHelper.Clamp(cursorTarget == -1 ? _text.Length : cursorTarget, 0, _text.Length);
-                while (clamped < _text.Length && !Rune.TryGetRuneAt(_text, clamped, out _))
-                {
-                    clamped++;
-                }
-
-                _cursorPosition = clamped;
-                _selectionStart = _cursorPosition;
-                _updatePseudoClass();
+                return;
             }
+
+            var clamped = MathHelper.Clamp(cursorTarget == -1 ? _text.Length : cursorTarget, 0, _text.Length);
+            while (clamped < _text.Length && !Rune.TryGetRuneAt(_text, clamped, out _))
+            {
+                clamped++;
+            }
+
+            _cursorPosition = clamped;
+            _selectionStart = _cursorPosition;
+            _updatePseudoClass();
+            if (invokeEvent)
+                OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
         }
 
         /// <summary>
@@ -248,7 +261,7 @@ namespace Robust.Client.UserInterface.Controls
             if (_mouseSelectingText)
             {
                 var style = _getStyleBox();
-                var contentBox = style.GetContentBox(PixelSizeBox);
+                var contentBox = style.GetContentBox(PixelSizeBox, UIScale);
 
                 if (_lastMousePosition < contentBox.Left)
                 {
@@ -270,16 +283,14 @@ namespace Robust.Client.UserInterface.Controls
         {
             var font = _getFont();
             var style = _getStyleBox();
-            return new Vector2(0, font.GetHeight(UIScale) / UIScale) + style.MinimumSize / UIScale;
+            return new Vector2(0, font.GetHeight(1.0f)) + style.MinimumSize;
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
             var style = _getStyleBox();
-
-            _renderBox.ArrangePixel(
-                (UIBox2i) style.GetContentBox(
-                    UIBox2.FromDimensions(Vector2.Zero, finalSize * UIScale)));
+            var box = UIBox2.FromDimensions(Vector2.Zero, finalSize);
+            _renderBox.Arrange(style.GetContentBox(box, 1));
 
             return finalSize;
         }
@@ -358,7 +369,7 @@ namespace Robust.Client.UserInterface.Controls
             _imeData = null;
         }
 
-        public event Action<LineEditBackspaceEventArgs>? OnBackspace;
+        public event Action<LineEditTextRemovedEventArgs>? OnTextRemoved;
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
         {
@@ -405,7 +416,7 @@ namespace Robust.Client.UserInterface.Controls
                             _selectionStart = _cursorPosition;
                             OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                             _updatePseudoClass();
-                            OnBackspace?.Invoke(new LineEditBackspaceEventArgs(oldText, _text, cursor, selectStart));
+                            OnTextRemoved?.Invoke(new LineEditTextRemovedEventArgs(oldText, _text, cursor, selectStart));
                         }
                     }
 
@@ -436,6 +447,71 @@ namespace Robust.Client.UserInterface.Controls
                             _selectionStart = _cursorPosition;
                             OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                             _updatePseudoClass();
+                            OnTextRemoved?.Invoke(new LineEditTextRemovedEventArgs(_text, _text, _cursorPosition, _selectionStart));
+                        }
+                    }
+
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextWordBackspace)
+                {
+                    if (Editable)
+                    {
+                        var changed = false;
+
+                        // If there is a selection, we just delete the selection. Otherwise we delete the previous word
+                        if (_selectionStart != _cursorPosition)
+                        {
+                            _text = _text.Remove(SelectionLower, SelectionLength);
+                            _cursorPosition = SelectionLower;
+                            changed = true;
+                        }
+                        else if (_cursorPosition != 0)
+                        {
+                            int remAmt = _cursorPosition - TextEditShared.PrevWordPosition(_text, _cursorPosition);
+
+                            _text = _text.Remove(_cursorPosition - remAmt, remAmt);
+                            _cursorPosition -= remAmt;
+                            changed = true;
+                        }
+
+                        if (changed)
+                        {
+                            _selectionStart = _cursorPosition;
+                            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                            _updatePseudoClass();
+                            OnTextRemoved?.Invoke(new LineEditTextRemovedEventArgs(_text, _text, _cursorPosition, _selectionStart));
+                        }
+                    }
+
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextWordDelete)
+                {
+                    if (Editable)
+                    {
+                        var changed = false;
+
+                        // If there is a selection, we just delete the selection. Otherwise we delete the next word
+                        if (_selectionStart != _cursorPosition)
+                        {
+                            _text = _text.Remove(SelectionLower, SelectionLength);
+                            _cursorPosition = SelectionLower;
+                            changed = true;
+                        }
+                        else if (_cursorPosition < _text.Length)
+                        {
+                            int nextWord = TextEditShared.EndWordPosition(_text, _cursorPosition);
+                            _text = _text.Remove(_cursorPosition, nextWord - _cursorPosition);
+                            changed = true;
+                        }
+
+                        if (changed)
+                        {
+                            _selectionStart = _cursorPosition;
+                            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                            _updatePseudoClass();
+                            OnTextRemoved?.Invoke(new LineEditTextRemovedEventArgs(_text, _text, _cursorPosition, _selectionStart));
                         }
                     }
 
@@ -479,7 +555,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorWordRight)
                 {
-                    _selectionStart = _cursorPosition = TextEditShared.NextWordPosition(_text, _cursorPosition);
+                    _selectionStart = _cursorPosition = TextEditShared.EndWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
@@ -513,7 +589,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorSelectWordRight)
                 {
-                    _cursorPosition = TextEditShared.NextWordPosition(_text, _cursorPosition);
+                    _cursorPosition = TextEditShared.EndWordPosition(_text, _cursorPosition);
 
                     args.Handle();
                 }
@@ -672,7 +748,7 @@ namespace Robust.Client.UserInterface.Controls
         private int GetIndexAtPos(float horizontalPos)
         {
             var style = _getStyleBox();
-            var contentBox = style.GetContentBox(PixelSizeBox);
+            var contentBox = style.GetContentBox(PixelSizeBox, UIScale);
 
             var clickPosX = horizontalPos * UIScale;
 
@@ -729,7 +805,7 @@ namespace Robust.Client.UserInterface.Controls
         public float GetOffsetAtIndex(int index)
         {
             var style = _getStyleBox();
-            var contentBox = style.GetContentBox(PixelSizeBox);
+            var contentBox = style.GetContentBox(PixelSizeBox, UIScale);
 
             var font = _getFont();
             var i = 0;
@@ -786,6 +862,11 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private StyleBox _getStyleBox()
         {
+            if (StyleBoxOverride != null)
+            {
+                return StyleBoxOverride;
+            }
+
             if (TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box))
             {
                 return box;
@@ -814,7 +895,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Draw(handle);
 
-            _getStyleBox().Draw(handle, PixelSizeBox);
+            _getStyleBox().Draw(handle, PixelSizeBox, UIScale);
         }
 
         public sealed class LineEditEventArgs : EventArgs
@@ -829,14 +910,14 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public sealed class LineEditBackspaceEventArgs : EventArgs
+        public sealed class LineEditTextRemovedEventArgs : EventArgs
         {
             public string OldText { get; }
             public string NewText { get; }
             public int OldCursorPosition { get; }
             public int OldSelectionStart { get; }
 
-            public LineEditBackspaceEventArgs(
+            public LineEditTextRemovedEventArgs(
                 string oldText,
                 string newText,
                 int oldCursorPosition,

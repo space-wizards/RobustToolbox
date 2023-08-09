@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -36,23 +37,22 @@ namespace Robust.UnitTesting.Shared.Physics
                 var box = entManager.AddComponent<PhysicsComponent>(boxEnt);
                 var poly = new PolygonShape();
                 poly.SetAsBox(0.5f, 0.5f);
-                var fixture = fixtureSystem.CreateFixture(box, poly);
-                physicsSystem.SetDensity(fixture, 1f);
-                physicsSystem.SetFixedRotation(box, false);
-                physicsSystem.SetBodyType(box, BodyType.Dynamic);
+                fixtureSystem.CreateFixture(boxEnt, new Fixture("fix1", poly, 0, 0, false), body: box);
+                physicsSystem.SetFixedRotation(boxEnt, false, body: box);
+                physicsSystem.SetBodyType(boxEnt, BodyType.Dynamic, body: box);
                 Assert.That(box.InvI, Is.GreaterThan(0f));
 
                 // Check regular impulse works
-                physicsSystem.ApplyLinearImpulse(box, new Vector2(0f, 1f));
+                physicsSystem.ApplyLinearImpulse(boxEnt, new Vector2(0f, 1f), body: box);
                 Assert.That(box.LinearVelocity.Length, Is.GreaterThan(0f));
 
                 // Reset the box
-                physicsSystem.SetLinearVelocity(box, Vector2.Zero);
+                physicsSystem.SetLinearVelocity(boxEnt, Vector2.Zero, body: box);
                 Assert.That(box.LinearVelocity.Length, Is.EqualTo(0f));
                 Assert.That(box.AngularVelocity, Is.EqualTo(0f));
 
                 // Check the angular impulse is applied from the point
-                physicsSystem.ApplyLinearImpulse(box, new Vector2(0f, 1f), new Vector2(0.5f, 0f));
+                physicsSystem.ApplyLinearImpulse(boxEnt, new Vector2(0f, 1f), new Vector2(0.5f, 0f), body: box);
                 Assert.That(box.LinearVelocity.Length, Is.GreaterThan(0f));
                 Assert.That(box.AngularVelocity, Is.Not.EqualTo(0f));
             });

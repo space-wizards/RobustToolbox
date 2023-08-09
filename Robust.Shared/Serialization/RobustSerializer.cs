@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -12,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization
 {
-    internal abstract partial class RobustSerializer : IRobustSerializer
+    internal abstract partial class RobustSerializer : IRobustSerializerInternal
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] protected readonly IRobustMappedStringSerializer MappedStringSerializer = default!;
@@ -36,28 +37,32 @@ namespace Robust.Shared.Serialization
 
         private readonly object _statsLock = new();
 
-        public static long LargestObjectSerializedBytes { get; private set; }
+        // These stats aren't tracked correctly because the tracking code isn't thread safe. Oops!
+        public long LargestObjectSerializedBytes { get; private set; }
 
-        public static Type? LargestObjectSerializedType { get; private set; }
+        public Type? LargestObjectSerializedType { get; private set; }
 
-        public static long BytesSerialized { get; private set; }
+        public long BytesSerialized { get; private set; }
 
-        public static long ObjectsSerialized { get; private set; }
+        public long ObjectsSerialized { get; private set; }
 
-        public static long LargestObjectDeserializedBytes { get; private set; }
+        public long LargestObjectDeserializedBytes { get; private set; }
 
-        public static Type? LargestObjectDeserializedType { get; private set; }
+        public Type? LargestObjectDeserializedType { get; private set; }
 
-        public static long BytesDeserialized { get; private set; }
+        public long BytesDeserialized { get; private set; }
 
-        public static long ObjectsDeserialized { get; private set; }
+        public long ObjectsDeserialized { get; private set; }
 
         #endregion
 
         public void Initialize()
         {
-            var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>().ToList();
-#if !FULL_RELEASE
+            var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>()
+                .OrderBy(x => x.FullName, StringComparer.InvariantCulture)
+                .ToList();
+
+#if DEBUG
             // confirm only shared types are marked for serialization, no client & server only types
             foreach (var type in types)
             {
@@ -75,27 +80,29 @@ namespace Robust.Shared.Serialization
 
             LogSzr = _logManager.GetSawmill("szr");
             types.AddRange(AlwaysNetSerializable);
+            types.Add(typeof(Vector2));
 
             MappedStringSerializer.Initialize();
 
             var settings = new Settings
             {
-                CustomTypeSerializers = new[] {MappedStringSerializer.TypeSerializer}
+                CustomTypeSerializers = new[]
+                {
+                    MappedStringSerializer.TypeSerializer,
+                    new Vector2Serializer(),
+                }
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
             LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");
-            /*
-            foreach (var (t, i) in _serializer.GetTypeMap().OrderBy(kv => kv.Key.ToString()))
-            {
-                LogSzr.Info($"{TypeAbbreviation.Abbreviate(t)}: {i}");
-            }
-            */
         }
 
         public byte[] GetSerializableTypesHash() => Convert.FromHexString(_serializer.GetSHA256());
+        public string GetSerializableTypesHashString() => _serializer.GetSHA256();
 
         public (byte[] Hash, byte[] Package) GetStringSerializerPackage() => MappedStringSerializer.GeneratePackage();
+
+        public Dictionary<Type, uint> GetTypeMap() => _serializer.GetTypeMap();
 
         public void Serialize(Stream stream, object toSerialize)
         {

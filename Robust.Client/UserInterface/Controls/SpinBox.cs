@@ -1,6 +1,7 @@
 using Robust.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -35,7 +36,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 _value = value;
                 _lineEdit.Text = value.ToString();
-                ValueChanged?.Invoke(this, new ValueChangedEventArgs(value));
+                ValueChanged?.Invoke(new ValueChangedEventArgs(value));
             }
         }
 
@@ -54,7 +55,7 @@ namespace Robust.Client.UserInterface.Controls
             _lineEdit.Text = value.ToString();
         }
 
-        public event EventHandler<ValueChangedEventArgs>? ValueChanged;
+        public event Action<ValueChangedEventArgs>? ValueChanged;
 
         public SpinBox()
         {

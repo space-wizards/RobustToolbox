@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Maths;
@@ -11,9 +12,9 @@ namespace Robust.Client.Graphics
     /// </summary>
     public abstract class DrawingHandleBase : IDisposable
     {
-        //private protected IRenderHandle _renderHandle;
         private protected readonly int _handleId;
         public bool Disposed { get; private set; }
+
         /// <summary>
         ///     Drawing commands that do NOT receive per-vertex modulation get modulated by this.
         ///     Specifically, *DrawPrimitives w/ DrawVertexUV2DColor IS NOT AFFECTED BY THIS*.
@@ -24,6 +25,13 @@ namespace Robust.Client.Graphics
         ///     I still wish it a prolonged death - it's a performance nightmare. - 20kdc
         /// </summary>
         public Color Modulate { get; set; } = Color.White;
+
+        protected Texture White;
+
+        public DrawingHandleBase(Texture white)
+        {
+            White = white;
+        }
 
         public void Dispose()
         {
@@ -65,7 +73,7 @@ namespace Robust.Client.Graphics
             Span<DrawVertexUV2DColor> drawVertices = stackalloc DrawVertexUV2DColor[vertices.Length];
             PadVerticesV2(vertices, drawVertices, realColor);
 
-            DrawPrimitives(primitiveTopology, Texture.White, drawVertices);
+            DrawPrimitives(primitiveTopology, White, drawVertices);
         }
 
         /// <summary>
@@ -84,7 +92,7 @@ namespace Robust.Client.Graphics
             Span<DrawVertexUV2DColor> drawVertices = stackalloc DrawVertexUV2DColor[vertices.Length];
             PadVerticesV2(vertices, drawVertices, realColor);
 
-            DrawPrimitives(primitiveTopology, Texture.White, indices, drawVertices);
+            DrawPrimitives(primitiveTopology, White, indices, drawVertices);
         }
 
         private void PadVerticesV2(ReadOnlySpan<Vector2> input, Span<DrawVertexUV2DColor> output, Color color)
@@ -92,7 +100,7 @@ namespace Robust.Client.Graphics
             Color colorLinear = Color.FromSrgb(color);
             for (var i = 0; i < output.Length; i++)
             {
-                output[i] = new DrawVertexUV2DColor(input[i], (0.5f, 0.5f), colorLinear);
+                output[i] = new DrawVertexUV2DColor(input[i], new Vector2(0.5f, 0.5f), colorLinear);
             }
         }
 

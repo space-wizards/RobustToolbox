@@ -4,13 +4,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 
 namespace Robust.Shared.Exceptions
 {
-    internal sealed class RuntimeLog : IRuntimeLog
+    internal sealed class RuntimeLog : IRuntimeLog, IPostInjectInit
     {
+        [Dependency] private readonly ILogManager _logManager = default!;
+
         private readonly Dictionary<Type, List<LoggedException>> exceptions = new();
+        private ISawmill _sawmill = default!;
 
         public int ExceptionCount => exceptions.Values.Sum(l => l.Count);
 
@@ -26,11 +30,11 @@ namespace Robust.Shared.Exceptions
 
             if (catcher != null)
             {
-                Logger.ErrorS("runtime", exception, "Caught exception in {Catcher}", catcher);
+                _sawmill.Log(LogLevel.Error, exception, "Caught exception in {Catcher}", catcher);
             }
             else
             {
-                Logger.ErrorS("runtime", exception, "Caught exception");
+                _sawmill.Log(LogLevel.Error, exception, "Caught exception");
             }
         }
 
@@ -62,6 +66,11 @@ namespace Robust.Shared.Exceptions
                 }
             }
             return ret.ToString();
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _sawmill = _logManager.GetSawmill("runtime");
         }
 
         private sealed class LoggedException

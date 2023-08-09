@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Utility;
@@ -28,7 +29,7 @@ internal sealed partial class CollisionManager
 	    var v2 = edgeA.Vertex2;
 
 	    var edge1 = v2 - v1;
-        edge1 = edge1.Normalized;
+        edge1 = edge1.Normalized();
 
 	    // Normal points to the right for a CCW winding
 	    var normal1 = new Vector2(edge1.Y, -edge1.X);
@@ -83,14 +84,14 @@ internal sealed partial class CollisionManager
 		    // See https://box2d.org/posts/2020/06/ghost-collisions/
 
 		    var edge0 = v1 - edgeA.Vertex0;
-		    edge0 = edge0.Normalized;
+		    edge0 = edge0.Normalized();
 		    var normal0 = new Vector2(edge0.Y, -edge0.X);
-		    bool convex1 = Vector2.Cross(edge0, edge1) >= 0.0f;
+		    bool convex1 = Vector2Helpers.Cross(edge0, edge1) >= 0.0f;
 
 		    var edge2 = edgeA.Vertex3 - v2;
-		    edge2 = edge2.Normalized;
+		    edge2 = edge2.Normalized();
 		    var normal2 = new Vector2(edge2.Y, -edge2.X);
-		    bool convex2 = Vector2.Cross(edge1, edge2) >= 0.0f;
+		    bool convex2 = Vector2Helpers.Cross(edge1, edge2) >= 0.0f;
 
 		    const float sinTol = 0.1f;
 		    bool side1 = Vector2.Dot(primaryAxis.Normal, edge1) <= 0.0f;
@@ -100,7 +101,7 @@ internal sealed partial class CollisionManager
 		    {
 			    if (convex1)
 			    {
-				    if (Vector2.Cross(primaryAxis.Normal, normal0) > sinTol)
+				    if (Vector2Helpers.Cross(primaryAxis.Normal, normal0) > sinTol)
 				    {
 					    // Skip region
 					    return;
@@ -118,7 +119,7 @@ internal sealed partial class CollisionManager
 		    {
 			    if (convex2)
 			    {
-				    if (Vector2.Cross(normal2, primaryAxis.Normal) > sinTol)
+				    if (Vector2Helpers.Cross(normal2, primaryAxis.Normal) > sinTol)
 				    {
 					    // Skip region
 					    return;

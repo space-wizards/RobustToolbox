@@ -61,8 +61,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public Vector4 CreateCopy(ISerializationManager serializationManager, Vector4 source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source);
         }

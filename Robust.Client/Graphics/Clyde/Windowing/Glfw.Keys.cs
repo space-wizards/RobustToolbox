@@ -45,37 +45,19 @@ namespace Robust.Client.Graphics.Clyde
                     if (rKey == Key.Unknown)
                         return;
 
-                    string name;
-
-                    if (!_clyde._cfg.GetCVar(CVars.DisplayUSQWERTYHotkeys))
-                    {
-                        name = GLFW.GetKeyName(key, 0);
-                    }
-                    else
-                    {
-                        name = key.ToString();
-                    }
+                    var name = GLFW.GetKeyName(key, 0);
 
                     if (!string.IsNullOrEmpty(name))
                         _printableKeyNameMap.Add(rKey, name);
                 }
             }
 
-            public string KeyGetName(Keyboard.Key key)
+            public string? KeyGetName(Keyboard.Key key)
             {
                 if (_printableKeyNameMap.TryGetValue(key, out var name))
-                {
-                    var textInfo = Thread.CurrentThread.CurrentCulture.TextInfo;
-                    return textInfo.ToTitleCase(name);
-                }
+                    return name;
 
-                name = Keyboard.GetSpecialKeyName(key, _loc);
-                if (name != null)
-                {
-                    return _loc.GetString(name);
-                }
-
-                return _loc.GetString("<unknown key>");
+                return null;
             }
 
             public static Button ConvertGlfwButton(GlfwButton button)
@@ -226,6 +208,7 @@ namespace Robust.Client.Graphics.Clyde
                     {GlfwKey.F14, Key.F14},
                     {GlfwKey.F15, Key.F15},
                     {GlfwKey.Pause, Key.Pause},
+                    {GlfwKey.World1, Key.World1},
                 };
 
                 KeyMapReverse = new Dictionary<Key, GlfwKey>();

@@ -29,8 +29,6 @@
 // Uncomment the line below to swap all the inputs/outputs/calculations of FastNoise to doubles instead of floats
 //#define FN_USE_DOUBLES
 
-#nullable disable
-
 #if FN_USE_DOUBLES
 using FN_DECIMAL = System.Double;
 #else
@@ -39,9 +37,12 @@ using FN_DECIMAL = System.Single;
 using System;
 using System.Runtime.CompilerServices;
 
+#nullable disable
+
 namespace Robust.Shared.Noise
 {
 #pragma warning disable RA0003
+    [Obsolete("Use FastNoiseLite")]
     public sealed class FastNoise
 #pragma warning restore RA0003
     {

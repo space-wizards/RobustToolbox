@@ -1,4 +1,4 @@
-using System.Linq;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -24,8 +24,10 @@ public sealed class PhysicsMap_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
-        var physSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
-        var fixtureSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<FixtureSystem>();
+        var system = entManager.EntitySysManager;
+        var physSystem = system.GetEntitySystem<SharedPhysicsSystem>();
+        var fixtureSystem = system.GetEntitySystem<FixtureSystem>();
+        var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
 
         var mapId = mapManager.CreateMap();
         var mapId2 = mapManager.CreateMap();
@@ -39,28 +41,28 @@ public sealed class PhysicsMap_Test
         var parentXform = entManager.GetComponent<TransformComponent>(parent);
         var parentBody = entManager.AddComponent<PhysicsComponent>(parent);
 
-        physSystem.SetBodyType(parentBody, BodyType.Dynamic);
-        physSystem.SetSleepingAllowed(parentBody, false);
-        fixtureSystem.CreateFixture(parentBody, new Fixture(parentBody, new PhysShapeCircle { Radius = 0.5f }));
-        physSystem.WakeBody(parentBody);
+        physSystem.SetBodyType(parent, BodyType.Dynamic);
+        physSystem.SetSleepingAllowed(parent, parentBody, false);
+        fixtureSystem.CreateFixture(parent, new Fixture("fix1", new PhysShapeCircle(0.5f), 0, 0, false), body: parentBody);
+        physSystem.WakeBody(parent);
         Assert.That(physicsMap.AwakeBodies, Does.Contain(parentBody));
 
         var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var childBody = entManager.AddComponent<PhysicsComponent>(child);
 
-        physSystem.SetBodyType(childBody, BodyType.Dynamic);
-        physSystem.SetSleepingAllowed(childBody, false);
-        fixtureSystem.CreateFixture(childBody, new Fixture(childBody, new PhysShapeCircle { Radius = 0.5f }));
-        physSystem.WakeBody(childBody);
+        physSystem.SetBodyType(child, BodyType.Dynamic);
+        physSystem.SetSleepingAllowed(child, childBody, false);
+        fixtureSystem.CreateFixture(child, new Fixture("fix1", new PhysShapeCircle(0.5f), 0, 0, false), body: childBody);
+        physSystem.WakeBody(child, body: childBody);
 
         Assert.That(physicsMap.AwakeBodies, Does.Contain(childBody));
 
-        parentXform.AttachParent(mapUid2);
+        xformSystem.SetParent(parent, parentXform, mapUid2);
 
         Assert.That(physicsMap.AwakeBodies, Is.Empty);
         Assert.That(physicsMap2.AwakeBodies, Has.Count.EqualTo(2));
 
-        parentXform.AttachParent(mapUid);
+        xformSystem.SetParent(parent, parentXform, mapUid);
 
         Assert.That(physicsMap.AwakeBodies, Has.Count.EqualTo(2));
         Assert.That(physicsMap2.AwakeBodies, Is.Empty);

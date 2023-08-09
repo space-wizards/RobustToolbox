@@ -32,7 +32,8 @@ namespace Robust.UnitTesting.Shared.Map
             EntityUid? gridEnt1;
             EntityUid? gridEnt2;
 
-            await server.WaitPost(() => {
+            await server.WaitPost(() =>
+            {
                 mapId = mapManager.CreateMap();
                 gridId1 = mapManager.CreateGrid(mapId);
                 gridId2 = mapManager.CreateGrid(mapId);
@@ -42,8 +43,8 @@ namespace Robust.UnitTesting.Shared.Map
                 physics2 = entManager.GetComponent<PhysicsComponent>(gridEnt2.Value);
                 // Can't collide static bodies and grids (at time of this writing) start as static
                 // (given most other games would probably prefer them as static) hence we need to make them dynamic.
-                physSystem.SetBodyType(physics1, BodyType.Dynamic);
-                physSystem.SetBodyType(physics2, BodyType.Dynamic);
+                physSystem.SetBodyType(gridEnt1.Value, BodyType.Dynamic, body: physics1);
+                physSystem.SetBodyType(gridEnt2.Value, BodyType.Dynamic, body: physics2);
             });
 
             await server.WaitRunTicks(1);
@@ -58,8 +59,8 @@ namespace Robust.UnitTesting.Shared.Map
                     var contact = node.Value;
                     node = node.Next;
 
-                    var bodyA = contact.FixtureA!.Body;
-                    var bodyB = contact.FixtureB!.Body;
+                    var bodyA = contact.BodyA;
+                    var bodyB = contact.BodyB;
 
                     var other = physics1 == bodyA ? bodyB : bodyA;
 
@@ -88,8 +89,8 @@ namespace Robust.UnitTesting.Shared.Map
                     if (!contact.IsTouching)
                         continue;
 
-                    var bodyA = contact.FixtureA!.Body;
-                    var bodyB = contact.FixtureB!.Body;
+                    var bodyA = contact.BodyA;
+                    var bodyB = contact.BodyB;
 
                     var other = physics1 == bodyA ? bodyB : bodyA;
 

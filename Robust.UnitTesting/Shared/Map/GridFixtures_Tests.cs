@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -59,7 +60,7 @@ namespace Robust.UnitTesting.Shared.Map
                 grid.SetTile(new Vector2i(0, -1), new Tile(1));
                 Assert.That(manager.FixtureCount, Is.EqualTo(2));
 
-                physSystem.SetLinearVelocity(gridBody, Vector2.One);
+                physSystem.SetLinearVelocity(grid.Owner, Vector2.One, manager: manager, body: gridBody);
                 Assert.That(gridBody.LinearVelocity.Length, Is.EqualTo(0f));
             });
         }

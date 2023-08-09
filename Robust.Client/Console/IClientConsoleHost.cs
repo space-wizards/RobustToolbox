@@ -19,6 +19,6 @@ namespace Robust.Client.Console
 
         void AddFormattedLine(FormattedMessage message);
 
-        Task<CompletionResult> GetCompletions(List<string> args, CancellationToken cancel);
+        Task<CompletionResult> GetCompletions(List<string> args, string argStr, CancellationToken cancel);
     }
 }

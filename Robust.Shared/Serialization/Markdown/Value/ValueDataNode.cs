@@ -103,6 +103,12 @@ namespace Robust.Shared.Serialization.Markdown.Value
         }
 
         [Pure]
+        public uint AsUint()
+        {
+            return uint.Parse(Value, CultureInfo.InvariantCulture);
+        }
+
+        [Pure]
         public float AsFloat()
         {
             return float.Parse(Value, CultureInfo.InvariantCulture);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
@@ -17,7 +18,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
     /// </summary>
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class PhysShapeAabb : IPhysShape
+    public sealed class PhysShapeAabb : IPhysShape, IEquatable<PhysShapeAabb>
     {
         public int ChildCount => 1;
 
@@ -37,7 +38,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         private float _radius;
 
-        internal Vector2 Centroid { get; set; } = Vector2.Zero;
+        internal Vector2 Centroid => Vector2.Zero;
 
         public ShapeType ShapeType => ShapeType.Unknown;
 
@@ -79,6 +80,26 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             if (other is not PhysShapeAabb otherAABB) return false;
             return _localBounds.EqualsApprox(otherAABB._localBounds);
+        }
+
+        public bool Equals(PhysShapeAabb? other)
+        {
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
+
+            return _radius.Equals(other._radius) && _localBounds.Equals(other._localBounds);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return ReferenceEquals(this, obj) || obj is PhysShapeAabb other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_radius, _localBounds);
         }
     }
 }

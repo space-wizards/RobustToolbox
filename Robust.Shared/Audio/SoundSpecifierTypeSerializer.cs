@@ -60,7 +60,7 @@ public sealed class SoundSpecifierTypeSerializer :
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
         IDependencyCollection dependencies, ISerializationContext? context = null)
     {
-        if (serializationManager.ValidateNode<ResourcePath>(node, context) is not ErrorNode)
+        if (serializationManager.ValidateNode<ResPath>(node, context) is not ErrorNode)
             return new ValidatedValueNode(node);
 
         return new ErrorNode(node, "SoundSpecifier value is not a valid resource path!");

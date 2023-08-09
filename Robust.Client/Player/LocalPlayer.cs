@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using Robust.Client.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -57,7 +56,7 @@ namespace Robust.Client.Player
         ///     Attaches a client to an entity.
         /// </summary>
         /// <param name="entity">Entity to attach the client to.</param>
-        public void AttachEntity(EntityUid entity)
+        public void AttachEntity(EntityUid entity, IEntityManager entMan, IBaseClient client)
         {
             if (ControlledEntity == entity)
                 return;
@@ -65,16 +64,21 @@ namespace Robust.Client.Player
             // Detach and cleanup first
             DetachEntity();
 
+            if (!entMan.EntityExists(entity))
+            {
+                Logger.Error($"Attempting to attach player to non-existent entity {entity}!");
+                return;
+            }
+
             ControlledEntity = entity;
             InternalSession.AttachedEntity = entity;
 
-            var entMan = IoCManager.Resolve<IEntityManager>();
 
             if (!entMan.TryGetComponent<EyeComponent?>(entity, out var eye))
             {
                 eye = entMan.AddComponent<EyeComponent>(entity);
 
-                if (IoCManager.Resolve<IBaseClient>().RunLevel != ClientRunLevel.SinglePlayerGame)
+                if (client.RunLevel != ClientRunLevel.SinglePlayerGame)
                 {
                     Logger.Warning($"Attaching local player to an entity {entMan.ToPrettyString(entity)} without an eye. This eye will not be netsynced and may cause issues.");
                 }

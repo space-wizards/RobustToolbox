@@ -15,22 +15,29 @@ namespace Robust.Client.WebView
     {
         private IWebViewManagerImpl? _impl;
 
-        public void Initialize(GameController.DisplayMode mode)
+        public void PreInitialize(IDependencyCollection dependencies, GameController.DisplayMode mode)
         {
             DebugTools.Assert(_impl == null, "WebViewManager has already been initialized!");
 
-            var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
+            var cfg = dependencies.Resolve<IConfigurationManagerInternal>();
             cfg.LoadCVarsFromAssembly(typeof(WebViewManager).Assembly);
 
-            IoCManager.RegisterInstance<IWebViewManager>(this);
-            IoCManager.RegisterInstance<IWebViewManagerInternal>(this);
+            dependencies.RegisterInstance<IWebViewManager>(this);
+            dependencies.RegisterInstance<IWebViewManagerInternal>(this);
 
-            if (mode == GameController.DisplayMode.Headless)
+            if (mode == GameController.DisplayMode.Headless || cfg.GetCVar(WCVars.WebHeadless))
                 _impl = new WebViewManagerHeadless();
             else
                 _impl = new WebViewManagerCef();
 
-            _impl.Initialize();
+            dependencies.InjectDependencies(_impl, oneOff: true);
+        }
+
+        public void Initialize()
+        {
+            DebugTools.Assert(_impl != null, "WebViewManager has not yet been initialized!");
+
+            _impl!.Initialize();
         }
 
         public void Update()

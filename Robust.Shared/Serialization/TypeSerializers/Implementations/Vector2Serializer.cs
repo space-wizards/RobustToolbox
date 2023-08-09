@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Numerics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
@@ -54,8 +55,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public Vector2 CreateCopy(ISerializationManager serializationManager, Vector2 source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.X, source.Y);
         }

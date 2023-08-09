@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
@@ -9,7 +10,10 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Toolshed;
+using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Scripting
@@ -18,16 +22,18 @@ namespace Robust.Shared.Scripting
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [SuppressMessage("ReSharper", "CA1822")]
-    public abstract class ScriptGlobalsShared
+    public abstract class ScriptGlobalsShared : IInvocationContext
     {
         private const BindingFlags DefaultHelpFlags =
-            BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;
 
         [field: Dependency] public IEntityManager ent { get; } = default!;
         [field: Dependency] public IEntitySystemManager esm { get; } = default!;
         [field: Dependency] public IPrototypeManager prot { get; } = default!;
         [field: Dependency] public IMapManager map { get; } = default!;
         [field: Dependency] public IDependencyCollection dependencies { get; } = default!;
+
+        [field: Dependency] public ToolshedManager shed { get; } = default!;
 
         protected ScriptGlobalsShared(IDependencyCollection dependencies)
         {
@@ -48,22 +54,12 @@ namespace Robust.Shared.Scripting
 
         public EntityCoordinates gpos(double x, double y, EntityUid gridId)
         {
-            if (!map.TryGetGrid(gridId, out var grid))
-            {
-                return new EntityCoordinates(EntityUid.Invalid, ((float) x, (float) y));
-            }
-
-            return new EntityCoordinates(grid.Owner, ((float) x, (float) y));
+            return new EntityCoordinates(gridId, new Vector2((float) x, (float) y));
         }
 
         public EntityUid eid(int i)
         {
             return new(i);
-        }
-
-        public T gcm<T>(int i)
-        {
-            return ent.GetComponent<T>(eid(i));
         }
 
         public MapGridComponent getgrid(int i)
@@ -74,11 +70,6 @@ namespace Robust.Shared.Scripting
         public MapGridComponent getgrid(EntityUid mapId)
         {
             return map.GetGrid(mapId);
-        }
-
-        public EntityUid spawn(string prototype, EntityCoordinates position)
-        {
-            return ent.SpawnEntity(prototype, position);
         }
 
         public T res<T>()
@@ -125,7 +116,12 @@ namespace Robust.Shared.Scripting
 
         public void help()
         {
-            help(GetType(), DefaultHelpFlags &~ BindingFlags.NonPublic, false, false);
+            help(GetType(), DefaultHelpFlags, false, false);
+        }
+
+        public void help(object obj, BindingFlags flags = DefaultHelpFlags, bool specialNameMethods = true, bool modifiers = true)
+        {
+            help(obj.GetType(), flags, specialNameMethods, modifiers);
         }
 
         public void help(Type type, BindingFlags flags = DefaultHelpFlags, bool specialNameMethods = true, bool modifiers = true)
@@ -169,5 +165,119 @@ namespace Robust.Shared.Scripting
         protected abstract void WriteSyntax(object toString);
         public abstract void write(object toString);
         public abstract void show(object obj);
+
+        public object? tsh(string toolshedCommand)
+        {
+            shed.InvokeCommand(this, toolshedCommand, null, out var res);
+            return res;
+        }
+
+        public T tsh<T>(string toolshedCommand)
+        {
+            shed.InvokeCommand(this, toolshedCommand, null, out var res);
+            return (T)res!;
+        }
+
+        public TOut tsh<TIn, TOut>(TIn value, string toolshedCommand)
+        {
+            shed.InvokeCommand(this, toolshedCommand, value, out var res);
+            return (TOut)res!;
+        }
+
+        #region EntityManager proxy methods
+        public T Comp<T>(EntityUid uid) where T : Component
+            => ent.GetComponent<T>(uid);
+
+        public bool TryComp<T>(EntityUid uid, out T? comp) where T : Component
+            => ent.TryGetComponent(uid, out comp);
+
+        public bool HasComp<T>(EntityUid uid)
+            => ent.HasComponent<T>(uid);
+
+        public EntityUid Spawn(string? prototype, EntityCoordinates position)
+            => ent.SpawnEntity(prototype, position);
+
+        public void Del(EntityUid uid)
+            => ent.DeleteEntity(uid);
+
+        public void Dirty(EntityUid uid)
+            => ent.DirtyEntity(uid);
+
+        public void Dirty(Component comp)
+            => ent.Dirty(comp);
+
+        public string Name(EntityUid uid)
+            => ent.GetComponent<MetaDataComponent>(uid).EntityName;
+
+        public string Desc(EntityUid uid)
+            => ent.GetComponent<MetaDataComponent>(uid).EntityDescription;
+
+        public EntityPrototype? Prototype(EntityUid uid)
+            => ent.GetComponent<MetaDataComponent>(uid).EntityPrototype;
+
+        public EntityStringRepresentation ToPrettyString(EntityUid uid)
+            => ent.ToPrettyString(uid);
+
+        public IEnumerable<IComponent> AllComps(EntityUid uid)
+            => ent.GetComponents(uid);
+
+        public TransformComponent Transform(EntityUid uid)
+            => ent.GetComponent<TransformComponent>(uid);
+
+        public MetaDataComponent MetaData(EntityUid uid)
+            => ent.GetComponent<MetaDataComponent>(uid);
+
+        public EntityCoordinates Pos(EntityUid uid) => Transform(uid).Coordinates;
+
+        public IEnumerable<TComp1> Query<TComp1>(bool includePaused = false)
+            where TComp1 : IComponent
+        {
+            return ent.EntityQuery<TComp1>(includePaused);
+        }
+
+        public IEnumerable<(TComp1, TComp2)> Query<TComp1, TComp2>(bool includePaused = false)
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+        {
+            return ent.EntityQuery<TComp1, TComp2>(includePaused);
+        }
+
+        public IEnumerable<(TComp1, TComp2, TComp3)> Query<TComp1, TComp2, TComp3>(bool includePaused = false)
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+        {
+            return ent.EntityQuery<TComp1, TComp2, TComp3>(includePaused);
+        }
+        #endregion
+
+        public bool CheckInvokable(CommandSpec command, out IConError? error)
+        {
+            error = null;
+            return true; // Do as I say!
+        }
+
+        public ICommonSession? Session => null;
+
+        public void WriteLine(string line)
+        {
+            write(line);
+        }
+
+        public void ReportError(IConError err)
+        {
+            write(err);
+        }
+
+        public IEnumerable<IConError> GetErrors()
+        {
+            return Array.Empty<IConError>();
+        }
+
+        public void ClearErrors()
+        {
+        }
+
+        public Dictionary<string, object?> Variables { get; }  = new();
     }
 }

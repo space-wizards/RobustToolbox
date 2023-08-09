@@ -51,22 +51,22 @@ namespace Robust.Client
         /// <summary>
         ///     Directory to load all assemblies from.
         /// </summary>
-        public ResourcePath AssemblyDirectory { get; init; } = new(@"/Assemblies/");
+        public ResPath AssemblyDirectory { get; init; } = new(@"/Assemblies/");
 
         /// <summary>
         ///     Directory to load all prototypes from.
         /// </summary>
-        public ResourcePath PrototypeDirectory { get; init; } = new(@"/Prototypes/");
+        public ResPath PrototypeDirectory { get; init; } = new(@"/Prototypes/");
 
         /// <summary>
         /// Directory resource path containing window icons to load.
         /// </summary>
-        public ResourcePath? WindowIconSet { get; init; }
+        public ResPath? WindowIconSet { get; init; }
 
         /// <summary>
         /// Resource path for splash image to show when the game starts up.
         /// </summary>
-        public ResourcePath? SplashLogo { get; init; }
+        public ResPath? SplashLogo { get; init; }
 
         /// <summary>
         ///     Whether to disable mounting the "Resources/" folder on FULL_RELEASE.

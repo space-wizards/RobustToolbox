@@ -9,7 +9,7 @@ namespace Robust.Shared
         public static void Setup(IConfigurationManager cfg)
         {
             // Disabled on non-release since I don't want this to start creating files in Steam's bin directory.
-#if FULL_RELEASE
+#if RELEASE
             return;
 #endif
 

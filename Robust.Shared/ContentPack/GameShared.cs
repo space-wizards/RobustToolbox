@@ -34,6 +34,10 @@ namespace Robust.Shared.ContentPack
         {
         }
 
+        public virtual void Shutdown()
+        {
+        }
+
         public void Dispose()
         {
             Dispose(true);
@@ -42,11 +46,6 @@ namespace Robust.Shared.ContentPack
 
         protected virtual void Dispose(bool disposing)
         {
-        }
-
-        ~GameShared()
-        {
-            Dispose(false);
         }
     }
 }

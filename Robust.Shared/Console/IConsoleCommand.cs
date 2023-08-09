@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -8,7 +9,7 @@ namespace Robust.Shared.Console
     /// Basic interface to handle console commands. Any class implementing this will be
     /// registered with the console system through reflection.
     /// </summary>
-    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
+    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors), Obsolete("New commands should utilize RtShellCommand.")]
     public interface IConsoleCommand
     {
         /// <summary>
@@ -34,6 +35,11 @@ namespace Robust.Shared.Console
         /// String printed as summary when "help Command" is used.
         /// </value>
         string Help { get; }
+
+        /// <summary>
+        /// If true, this command will be unavailable to clients while they are connected to a server. Has no effect on servers.
+        /// </summary>
+        bool RequireServerOrSingleplayer => false;
 
         /// <summary>
         /// Executes the client command.
@@ -73,7 +79,7 @@ namespace Robust.Shared.Console
         /// <remarks>
         /// If this method is implemented, <see cref="GetCompletion"/> will not be automatically called.
         /// </remarks>
-        ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, CancellationToken cancel)
+        ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, string argStr, CancellationToken cancel)
         {
             return ValueTask.FromResult(GetCompletion(shell, args));
         }

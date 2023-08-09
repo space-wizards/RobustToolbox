@@ -7,8 +7,10 @@ using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Replays;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -23,6 +25,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IClientGameTiming _gameTiming = default!;
         [Dependency] private readonly IClientGameStateManager _stateMan = default!;
         [Dependency] private readonly IBaseClient _client = default!;
+        [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
 
         protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;
 
@@ -63,12 +66,28 @@ namespace Robust.Client.GameObjects
                 base.DirtyEntity(uid, meta);
         }
 
+        public override void QueueDeleteEntity(EntityUid uid)
+        {
+            if (uid.IsClientSide())
+            {
+                base.QueueDeleteEntity(uid);
+                return;
+            }
+
+            if (ShuttingDown)
+                return;
+
+            // Client-side entity deletion is not supported and will cause errors.
+            if (_client.RunLevel == ClientRunLevel.Connected || _client.RunLevel == ClientRunLevel.InGame)
+                LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
+        }
+
         /// <inheritdoc />
-        public override void Dirty(Component component, MetaDataComponent? meta = null)
+        public override void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
         {
             //  Client only dirties during prediction
             if (_gameTiming.InPrediction)
-                base.Dirty(component, meta);
+                base.Dirty(uid, component, meta);
         }
 
         public override EntityStringRepresentation ToPrettyString(EntityUid uid)
@@ -167,6 +186,12 @@ namespace Robust.Client.GameObjects
             switch (message.Type)
             {
                 case EntityMessageType.SystemMessage:
+
+                    // TODO REPLAYS handle late messages.
+                    // If a message was received late, it will be recorded late here.
+                    // Maybe process the replay to prevent late messages when playing back?
+                    _replayRecording.RecordReplayMessage(message.SystemMessage);
+
                     DispatchReceivedNetworkMsg(message.SystemMessage);
                     return;
             }

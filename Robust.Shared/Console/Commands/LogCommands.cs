@@ -83,7 +83,7 @@ internal sealed class TestLog : LocalizedCommands
 
         var level = result;
 
-        Logger.LogS(level, name, message);
+        _logManager.GetSawmill(name).Log(level, message);
     }
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)

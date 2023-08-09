@@ -110,25 +110,6 @@ namespace Robust.Build.Tasks
             var compiler =
                 new RobustXamlILCompiler(transformerconfig, emitConfig, true);
 
-            var loaderDispatcherDef = new TypeDefinition("CompiledRobustXaml", "!XamlLoader",
-                TypeAttributes.Class, asm.MainModule.TypeSystem.Object);
-
-            var loaderDispatcherMethod = new MethodDefinition("TryLoad",
-                MethodAttributes.Static | MethodAttributes.Public,
-                asm.MainModule.TypeSystem.Object)
-            {
-                Parameters = {new ParameterDefinition(asm.MainModule.TypeSystem.String)}
-            };
-            loaderDispatcherDef.Methods.Add(loaderDispatcherMethod);
-            asm.MainModule.Types.Add(loaderDispatcherDef);
-
-            var stringEquals = asm.MainModule.ImportReference(asm.MainModule.TypeSystem.String.Resolve().Methods.First(
-                m =>
-                    m.IsStatic && m.Name == "Equals" && m.Parameters.Count == 2 &&
-                    m.ReturnType.FullName == "System.Boolean"
-                    && m.Parameters[0].ParameterType.FullName == "System.String"
-                    && m.Parameters[1].ParameterType.FullName == "System.String"));
-
             bool CompileGroup(IResourceGroup group)
             {
                 var typeDef = new TypeDefinition("CompiledRobustXaml", "!" + group.Name, TypeAttributes.Class,
@@ -252,31 +233,6 @@ namespace Robust.Build.Tasks
                                     $"No call to RobustXamlLoader.Load(this) call found anywhere in the type {classType.FullName} and type seems to have custom constructors.");
                             }
                         }
-
-                        //add compiled build method
-                        var compiledBuildMethod = typeSystem.GetTypeReference(builder).Resolve().Methods
-                            .First(m => m.Name == buildName);
-                        var parameterlessCtor = classTypeDefinition.GetConstructors()
-                            .FirstOrDefault(c => c.IsPublic && !c.IsStatic && !c.HasParameters);
-
-                        if (compiledBuildMethod != null && parameterlessCtor != null)
-                        {
-                            var i = loaderDispatcherMethod.Body.Instructions;
-                            var nop = Instruction.Create(OpCodes.Nop);
-                            i.Add(Instruction.Create(OpCodes.Ldarg_0));
-                            i.Add(Instruction.Create(OpCodes.Ldstr, res.Uri));
-                            i.Add(Instruction.Create(OpCodes.Call, stringEquals));
-                            i.Add(Instruction.Create(OpCodes.Brfalse, nop));
-                            if (parameterlessCtor != null)
-                                i.Add(Instruction.Create(OpCodes.Newobj, parameterlessCtor));
-                            else
-                            {
-                                i.Add(Instruction.Create(OpCodes.Call, compiledBuildMethod));
-                            }
-
-                            i.Add(Instruction.Create(OpCodes.Ret));
-                            i.Add(nop);
-                        }
                     }
                     catch (Exception e)
                     {
@@ -293,8 +249,6 @@ namespace Robust.Build.Tasks
                     return false;
             }
 
-            loaderDispatcherMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Ldnull));
-            loaderDispatcherMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
             return true;
         }
 

@@ -1,7 +1,4 @@
-using System;
 using Robust.Shared.GameStates;
-using Robust.Shared.Network;
-using Robust.Shared.Players;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -13,12 +10,6 @@ namespace Robust.Shared.GameObjects
     /// </remarks>
     public interface IComponent
     {
-        /// <summary>
-        ///     Name that this component is represented with in prototypes.
-        /// </summary>
-        /// <seealso cref="IComponentRegistration.Name" />
-        string Name { get; }
-
         /// <summary>
         ///     The current lifetime stage of this component. You can use this to check
         ///     if the component is initialized or being deleted.
@@ -37,6 +28,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Entity that this component is attached to.
         /// </summary>
+        /// <seealso cref="EntityQueryEnumerator{TComp1}"/>
         EntityUid Owner { get; }
 
         /// <summary>
@@ -68,24 +60,5 @@ namespace Robust.Shared.GameObjects
         ///     This is the last game tick Dirty() was called.
         /// </summary>
         GameTick LastModifiedTick { get; }
-
-        /// <summary>
-        ///     Get the component's state for replicating on the client.
-        /// </summary>
-        /// <returns>ComponentState object</returns>
-        ComponentState GetComponentState();
-
-        /// <summary>
-        ///     Handles an incoming component state from the server.
-        /// </summary>
-        /// <remarks>
-        /// This function should only be called on the client.
-        /// Both, one, or neither of the two states can be null.
-        /// On the next tick, curState will be nextState.
-        /// Passing null for both arguments should do nothing.
-        /// </remarks>
-        /// <param name="curState">Current component state for this tick.</param>
-        /// <param name="nextState">Next component state for the next tick.</param>
-        void HandleComponentState(ComponentState? curState, ComponentState? nextState);
     }
 }

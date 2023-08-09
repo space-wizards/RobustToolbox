@@ -158,8 +158,9 @@ namespace Robust.Shared.Timing
         {
             // ranges from -1 to 1, with 0 being 'default'
             var ratio = MathHelper.Clamp(TickTimingAdjustment, -0.99f, 0.99f);
-            var ticks = (1.0 / TickRate * TimeSpan.TicksPerSecond) - (TickPeriod.Ticks * ratio);
-            return TimeSpan.FromTicks((long) ticks);
+
+            // Final period ranges from near 0 (runs very fast to catch up) or 2 * tick period (runs at half speed).
+            return TickPeriod * (1-ratio);
         }
 
         /// <summary>

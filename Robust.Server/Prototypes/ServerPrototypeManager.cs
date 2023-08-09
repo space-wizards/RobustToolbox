@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Server.Console;
 using Robust.Server.Player;
@@ -14,11 +16,13 @@ namespace Robust.Server.Prototypes
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IConGroupController _conGroups = default!;
         [Dependency] private readonly INetManager _netManager = default!;
+        [Dependency] private readonly IBaseServerInternal _server = default!;
 
         public ServerPrototypeManager()
         {
             RegisterIgnore("shader");
             RegisterIgnore("uiTheme");
+            RegisterIgnore("font");
         }
 
         public override void Initialize()
@@ -30,7 +34,7 @@ namespace Robust.Server.Prototypes
 
         private void HandleReloadPrototypes(MsgReloadPrototypes msg)
         {
-#if !FULL_RELEASE
+#if TOOLS
             if (!_playerManager.TryGetSessionByChannel(msg.MsgChannel, out var player) ||
                 !_conGroups.CanAdminReloadPrototypes(player))
             {
@@ -41,9 +45,14 @@ namespace Robust.Server.Prototypes
 
             ReloadPrototypes(msg.Paths);
 
-            Logger.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
+            Sawmill.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
 #endif
         }
 
+        public override void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? changed = null)
+        {
+            LoadDirectory(_server.Options.PrototypeDirectory, changed: changed);
+            ResolveResults();
+        }
     }
 }

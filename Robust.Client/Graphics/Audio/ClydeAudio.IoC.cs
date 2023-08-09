@@ -15,7 +15,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Audio;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
-using Vector2 = Robust.Shared.Maths.Vector2;
+using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.Graphics.Audio
 {
@@ -23,6 +23,7 @@ namespace Robust.Client.Graphics.Audio
     {
         [Robust.Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
         [Robust.Shared.IoC.Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Robust.Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
 
         private Thread? _gameThread;
 

@@ -14,7 +14,7 @@ public sealed class FormattedMessageSerializerTest : SerializationTest
 {
     [Test]
     [TestCase("message")]
-    [TestCase("[color=#FF0000FF]message[/color]")]
+    [TestCase("[color=red]message[/color]")]
     public void SerializationTest(string text)
     {
         var message = FormattedMessage.FromMarkup(text);
@@ -24,7 +24,7 @@ public sealed class FormattedMessageSerializerTest : SerializationTest
 
     [Test]
     [TestCase("message")]
-    [TestCase("[color=#FF0000FF]message[/color]")]
+    [TestCase("[color=red]message[/color]")]
     public void DeserializationTest(string text)
     {
         var node = new ValueDataNode(text);

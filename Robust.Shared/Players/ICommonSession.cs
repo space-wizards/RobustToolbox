@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -43,10 +44,5 @@ namespace Robust.Shared.Players
         /// on the Client only the LocalPlayer has a network channel.
         /// </remarks>
         INetChannel ConnectedClient { get; }
-
-        /// <summary>
-        ///     Porting convenience for admin commands which use such logic as "at the player's feet", etc: the transform component of the attached entity.
-        /// </summary>
-        TransformComponent? AttachedEntityTransform => IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(AttachedEntity);
     }
 }

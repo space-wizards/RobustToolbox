@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -42,6 +43,14 @@ public sealed class Gravity2DController : VirtualController
         component.Gravity = state.Gravity;
     }
 
+    public Vector2 GetGravity(EntityUid uid, Gravity2DComponent? component = null)
+    {
+        if (!Resolve(uid, ref component, false))
+            return Vector2.Zero;
+
+        return component.Gravity;
+    }
+
     public void SetGravity(EntityUid uid, Vector2 value)
     {
         if (!HasComp<MapComponent>(uid))
@@ -74,32 +83,12 @@ public sealed class Gravity2DController : VirtualController
         Dirty(gravity);
     }
 
-    public override void UpdateBeforeSolve(bool prediction, float frameTime)
-    {
-        base.UpdateBeforeSolve(prediction, frameTime);
-        var query = EntityQueryEnumerator<Gravity2DComponent, PhysicsMapComponent>();
-
-        while (query.MoveNext(out var gravity, out var mapComp))
-        {
-            if (gravity.Gravity == Vector2.Zero)
-                continue;
-
-            foreach (var body in mapComp.AwakeBodies)
-            {
-                if (body.BodyType != BodyType.Dynamic || body.IgnoreGravity)
-                    continue;
-
-                _physics.SetLinearVelocity(body, body.LinearVelocity + gravity.Gravity * frameTime);
-            }
-        }
-    }
-
     private void WakeBodiesRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> bodyQuery)
     {
         if (bodyQuery.TryGetComponent(uid, out var body) &&
             body.BodyType == BodyType.Dynamic)
         {
-            _physics.WakeBody(uid, body);
+            _physics.WakeBody(uid, body: body);
         }
 
         var xform = xformQuery.GetComponent(uid);

@@ -9,25 +9,26 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Console
 {
     public sealed class AddStringArgs : EventArgs
     {
-        public string Text { get; }
+        public FormattedMessage Text { get; }
 
         public bool Local { get; }
 
         public bool Error { get; }
 
-        public AddStringArgs(string text, bool local, bool error)
+        public AddStringArgs(FormattedMessage text, bool local, bool error)
         {
             Text = text;
             Local = local;
@@ -46,13 +47,19 @@ namespace Robust.Client.Console
     }
 
     /// <inheritdoc cref="IClientConsoleHost" />
-    internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal
+    internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal, IPostInjectInit
     {
         [Dependency] private readonly IClientConGroupController _conGroup = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IPlayerManager _player = default!;
+        [Dependency] private readonly IBaseClient _client = default!;
+        [Dependency] private readonly ILogManager _logMan = default!;
+
+        [ViewVariables] private readonly Dictionary<string, IConsoleCommand> _availableServerCommands = new();
 
         private bool _requestedCommands;
+        private ISawmill _logger = default!;
+        private ISawmill _conLogger = default!;
 
         public ClientConsoleHost() : base(isServer: false) {}
 
@@ -67,10 +74,43 @@ namespace Robust.Client.Console
 
             _requestedCommands = false;
             NetManager.Connected += OnNetworkConnected;
+            NetManager.Disconnect += OnNetworkDisconnected;
+            _client.RunLevelChanged += OnLevelChanged;
 
             LoadConsoleCommands();
             SendServerCommandRequest();
             LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
+        }
+
+        private readonly Dictionary<string, IConsoleCommand> _availableCommands = new();
+        public override IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => _availableCommands;
+
+        private void OnLevelChanged(object? sender, RunLevelChangedEventArgs e)
+        {
+            UpdateAvailableCommands();
+        }
+
+        private void OnNetworkDisconnected(object? sender, NetDisconnectedArgs e)
+        {
+            _availableServerCommands.Clear();
+            _requestedCommands = false;
+            UpdateAvailableCommands();
+        }
+
+        protected override void UpdateAvailableCommands()
+        {
+            _availableCommands.Clear();
+
+            foreach (var (name, cmd) in RegisteredCommands)
+            {
+                if (!cmd.RequireServerOrSingleplayer || (_client.RunLevel is ClientRunLevel.Initialize or ClientRunLevel.SinglePlayerGame))
+                    _availableCommands.Add(name, cmd);
+            }
+
+            foreach (var (name, cmd) in _availableServerCommands)
+            {
+                _availableCommands.TryAdd(name, cmd);
+            }
         }
 
         private void ProcessCommand(MsgConCmd message)
@@ -93,10 +133,17 @@ namespace Robust.Client.Console
             AddFormatted?.Invoke(this, new AddFormattedMessageArgs(message));
         }
 
+        public override void WriteLine(ICommonSession? session, FormattedMessage msg)
+        {
+            AddFormattedLine(msg);
+        }
+
         /// <inheritdoc />
         public override void WriteError(ICommonSession? session, string text)
         {
-            OutputText(text, true, true);
+            var msg = new FormattedMessage();
+            msg.AddText(text);
+            OutputText(msg, true, true);
         }
 
         public bool IsCmdServer(IConsoleCommand cmd)
@@ -112,8 +159,13 @@ namespace Robust.Client.Console
             if (string.IsNullOrWhiteSpace(command))
                 return;
 
+            WriteLine(null, "");
+            var msg = new FormattedMessage();
+            msg.PushColor(Color.Gold);
+            msg.AddText("> " + command);
+            msg.Pop();
             // echo the command locally
-            WriteLine(null, "> " + command);
+            OutputText(msg, true, false);
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
@@ -122,24 +174,24 @@ namespace Robust.Client.Console
 
             var commandName = args[0];
 
-            if (AvailableCommands.ContainsKey(commandName))
+            if (!AvailableCommands.TryGetValue(commandName, out var cmd))
             {
-                if (!CanExecute(commandName))
-                {
-                    WriteError(null, $"Insufficient perms for command: {commandName}");
-                    return;
-                }
-
-                var command1 = AvailableCommands[commandName];
-                args.RemoveAt(0);
-                var shell = new ConsoleShell(this, null);
-                var cmdArgs = args.ToArray();
-
-                AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
-                command1.Execute(shell, command, cmdArgs);
-            }
-            else
                 WriteError(null, "Unknown command: " + commandName);
+                return;
+            }
+
+            if (!CanExecute(commandName))
+            {
+                WriteError(null, $"Insufficient perms for command: {commandName}");
+                return;
+            }
+
+            args.RemoveAt(0);
+            var shell = new ConsoleShell(this, session ?? _player.LocalPlayer?.Session, session == null);
+            var cmdArgs = args.ToArray();
+
+            AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
+            cmd.Execute(shell, command, cmdArgs);
         }
 
         private bool CanExecute(string cmdName)
@@ -166,7 +218,9 @@ namespace Robust.Client.Console
         /// <inheritdoc />
         public override void WriteLine(ICommonSession? session, string text)
         {
-            OutputText(text, true, false);
+            var msg = new FormattedMessage();
+            msg.AddText(text);
+            OutputText(msg, true, false);
         }
 
         /// <inheritdoc />
@@ -175,12 +229,12 @@ namespace Robust.Client.Console
             // We don't have anything to dispose.
         }
 
-        private void OutputText(string text, bool local, bool error)
+        private void OutputText(FormattedMessage text, bool local, bool error)
         {
             AddString?.Invoke(this, new AddStringArgs(text, local, error));
 
             var level = error ? LogLevel.Warning : LogLevel.Info;
-            Logger.LogS(level, "CON", text);
+            _conLogger.Log(level, text.ToString());
         }
 
         private void OnNetworkConnected(object? sender, NetChannelArgs netChannelArgs)
@@ -190,7 +244,7 @@ namespace Robust.Client.Console
 
         private void HandleConCmdAck(MsgConCmdAck msg)
         {
-            OutputText("< " + msg.Text, false, msg.Error);
+            OutputText(msg.Text, false, msg.Error);
         }
 
         private void HandleConCmdReg(MsgConCmdReg msg)
@@ -200,15 +254,17 @@ namespace Robust.Client.Console
                 string? commandName = cmd.Name;
 
                 // Do not do duplicate commands.
-                if (AvailableCommands.ContainsKey(commandName))
+                if (_availableServerCommands.ContainsKey(commandName))
                 {
-                    Logger.DebugS("console", $"Server sent console command {commandName}, but we already have one with the same name. Ignoring.");
+                    _logger.Error($"Server sent duplicate console command {commandName}");
                     continue;
                 }
 
                 var command = new ServerDummyCommand(commandName, cmd.Help, cmd.Description);
-                AvailableCommands[commandName] = command;
+                _availableServerCommands[commandName] = command;
             }
+
+            UpdateAvailableCommands();
         }
 
         /// <summary>
@@ -226,6 +282,12 @@ namespace Robust.Client.Console
             NetManager.ClientSendMessage(msg);
 
             _requestedCommands = true;
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _logger = _logMan.GetSawmill("console");
+            _conLogger = _logMan.GetSawmill("CON");
         }
 
         /// <summary>
@@ -256,13 +318,14 @@ namespace Robust.Client.Console
             public async ValueTask<CompletionResult> GetCompletionAsync(
                 IConsoleShell shell,
                 string[] args,
+                string argStr,
                 CancellationToken cancel)
             {
                 var host = (ClientConsoleHost)shell.ConsoleHost;
                 var argsList = args.ToList();
                 argsList.Insert(0, Command);
 
-                return await host.DoServerCompletions(argsList, cancel);
+                return await host.DoServerCompletions(argsList, argStr, cancel);
             }
         }
 
@@ -274,16 +337,17 @@ namespace Robust.Client.Console
 
             public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                shell.RemoteExecuteCommand(argStr["> ".Length..]);
+                shell.RemoteExecuteCommand(argStr[">".Length..]);
             }
 
             public override async ValueTask<CompletionResult> GetCompletionAsync(
                 IConsoleShell shell,
                 string[] args,
+                string argStr,
                 CancellationToken cancel)
             {
                 var host = (ClientConsoleHost)shell.ConsoleHost;
-                return await host.DoServerCompletions(args.ToList(), cancel);
+                return await host.DoServerCompletions(args.ToList(), argStr[">".Length..], cancel);
             }
         }
     }

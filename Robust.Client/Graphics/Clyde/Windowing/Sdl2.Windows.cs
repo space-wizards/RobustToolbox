@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Robust.Shared.Map;
@@ -138,6 +139,7 @@ internal partial class Clyde
                 // Clear owner on close to avoid this.
 
                 SDL_SysWMinfo wmInfo = default;
+                SDL_VERSION(out wmInfo.version);
                 if (SDL_GetWindowWMInfo(cmd.Window, ref wmInfo) == SDL_TRUE && wmInfo.subsystem == SDL_SYSWM_WINDOWS)
                 {
                     var hWnd = (HWND)wmInfo.info.win.window;
@@ -209,6 +211,16 @@ internal partial class Clyde
                     WsiShared.EnsureEglAvailable();
             }
 
+            if (OperatingSystem.IsMacOS())
+            {
+                windowFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
+            }
+
+            if (parameters.Fullscreen)
+            {
+                windowFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+            }
+
             nint window = SDL_CreateWindow(
                 "",
                 SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -225,7 +237,7 @@ internal partial class Clyde
                 return default;
             }
 
-            // TODO: Monitors, window maximize, fullscreen.
+            // TODO: Monitors, window maximize.
             // TODO: a bunch of win32 calls for funny window properties I still haven't ported to other platforms.
 
             // Make sure window thread doesn't keep hold of the GL context.
@@ -235,6 +247,7 @@ internal partial class Clyde
             if (OperatingSystem.IsWindows())
             {
                 SDL_SysWMinfo info = default;
+                SDL_VERSION(out info.version);
                 if (SDL_GetWindowWMInfo(window, ref info) == SDL_TRUE && info.subsystem == SDL_SYSWM_WINDOWS)
                     WsiShared.WindowsSharedWindowCreate((HWND) info.info.win.window, _cfg);
             }
@@ -257,13 +270,14 @@ internal partial class Clyde
             var handle = new WindowHandle(_clyde, reg);
             reg.Handle = handle;
 
+            SDL_VERSION(out reg.SysWMinfo.version);
             var res = SDL_GetWindowWMInfo(window, ref reg.SysWMinfo);
             if (res == SDL_FALSE)
                 _sawmill.Error("Failed to get window WM info: {error}", SDL_GetError());
 
             // LoadWindowIcon(window);
 
-            SDL_GL_GetDrawableSize(window, out var fbW, out var fbH);
+            SDL_GetWindowSizeInPixels(window, out var fbW, out var fbH);
             reg.FramebufferSize = (fbW, fbH);
 
             reg.WindowScale = GetWindowScale(window);
@@ -500,11 +514,24 @@ internal partial class Clyde
             cmd.Tcs.TrySetResult(SDL_GetClipboardText());
         }
 
-        private static (float h, float v) GetWindowScale(nint window)
+        private static Vector2 GetWindowScale(nint window)
         {
-            var display = SDL_GetWindowDisplayIndex(window);
-            SDL_GetDisplayDPI(display, out _, out var hDpi, out var vDpi);
-            return (hDpi / 96f, vDpi / 96f);
+            // Get scale by diving size in pixels with size in points.
+            SDL_GetWindowSizeInPixels(window, out var pixW, out var pixH);
+            SDL_GetWindowSize(window, out var pointW, out var pointH);
+
+            // Avoiding degenerate cases, not sure if these can actually happen.
+            if (pixW == 0 || pixH == 0 || pointW == 0 || pointH == 0)
+                return new Vector2(1, 1);
+
+            var scaleH = pixW / (float) pointW;
+            var scaleV = pixH / (float) pointH;
+
+            // Round to 5% increments to avoid rounding errors causing constantly different scales.
+            scaleH = MathF.Round(scaleH * 20) / 20;
+            scaleV = MathF.Round(scaleV * 20) / 20;
+
+            return new Vector2(scaleH, scaleV);
         }
 
         private static void CheckWindowDisposed(WindowReg reg)

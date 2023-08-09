@@ -81,6 +81,9 @@ namespace Robust.Client.Graphics.Clyde
                     reg.Resized?.Invoke(args);
                     OnWindowResized?.Invoke(args);
                     break;
+                case DEventInputModeChanged:
+                    RaiseInputModeChanged();
+                    break;
             }
         }
 
@@ -149,6 +152,11 @@ namespace Robust.Client.Graphics.Clyde
             _eventDispatchQueue.Enqueue(new DEventMouseEnterLeave(ev));
         }
 
+        private void SendInputModeChanged()
+        {
+            _eventDispatchQueue.Enqueue(new DEventInputModeChanged());
+        }
+
         // D stands for Dispatch
         private abstract record DEventBase;
 
@@ -171,5 +179,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed record DEventMouseMove(MouseMoveEventArgs Args) : DEventBase;
         private sealed record DEventMouseEnterLeave(MouseEnterLeaveEventArgs Args) : DEventBase;
+        private sealed record DEventInputModeChanged : DEventBase;
     }
 }

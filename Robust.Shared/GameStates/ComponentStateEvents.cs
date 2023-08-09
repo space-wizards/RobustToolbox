@@ -53,13 +53,13 @@ namespace Robust.Shared.GameStates
     public struct ComponentGetStateAttemptEvent
     {
         /// <summary>
-        ///     Input parameter. The player the state is being sent to.
+        ///     Input parameter. The player the state is being sent to. This may be null if the state is for replay recordings.
         /// </summary>
-        public readonly ICommonSession Player;
+        public readonly ICommonSession? Player;
 
         public bool Cancelled = false;
 
-        public ComponentGetStateAttemptEvent(ICommonSession player)
+        public ComponentGetStateAttemptEvent(ICommonSession? player)
         {
             Player = player;
         }

@@ -482,7 +482,7 @@ public class ArchetypeComponentAccessBenchmark
     public struct Struct9{}
     public struct Struct10{}
 
-    private sealed class Archetype<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
+    public sealed class Archetype<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>
     {
         private int _nextId;
         private readonly Dictionary<int, int> _ids;
@@ -905,7 +905,7 @@ public class ArchetypeComponentAccessBenchmark
             var curLength = array.Length;
             if (curLength <= idx.Value)
             {
-                var newLength = MathHelper.NextPowerOfTwo(Math.Max(8, idx.Value));
+                var newLength = MathHelper.NextPowerOfTwo(System.Math.Max(8, idx.Value));
                 Array.Resize(ref array, newLength);
             }
 

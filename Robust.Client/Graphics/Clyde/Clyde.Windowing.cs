@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Client.Input;
@@ -33,7 +34,7 @@ namespace Robust.Client.Graphics.Clyde
         private Renderer _chosenRenderer;
 #pragma warning restore 414
 
-        private ResourcePath? _windowIconPath;
+        private ResPath? _windowIconPath;
         private Thread? _windowingThread;
         private bool _vSync;
         private WindowMode _windowMode;
@@ -82,13 +83,6 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public string GetKeyName(Keyboard.Key key)
-        {
-            DebugTools.AssertNotNull(_windowing);
-
-            return _windowing!.KeyGetName(key);
-        }
-
         public uint? GetX11WindowId()
         {
             return _windowing?.WindowGetX11Id(_mainWindow!) ?? null;
@@ -103,7 +97,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var iconPath = _cfg.GetCVar(CVars.DisplayWindowIconSet);
             if (!string.IsNullOrWhiteSpace(iconPath))
-                _windowIconPath = new ResourcePath(iconPath);
+                _windowIconPath = new ResPath(iconPath);
 
             _windowingThread = Thread.CurrentThread;
 

@@ -3,6 +3,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
@@ -11,6 +12,9 @@ namespace Robust.Server.GameObjects;
 [UsedImplicitly]
 public sealed class AudioSystem : SharedAudioSystem
 {
+    [Dependency] private readonly TransformSystem _transform = default!;
+
+
     private uint _streamIndex;
 
     private sealed class AudioSourceServer : IPlayingAudioStream
@@ -99,7 +103,7 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         var id = CacheIdentifier();
 
-        var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(EntityManager));
+        var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(EntityManager, _transform));
 
         var msg = new PlayAudioPositionalMessage
         {
@@ -123,6 +127,16 @@ public sealed class AudioSystem : SharedAudioSystem
 
         var filter = Filter.Pvs(source, entityManager: EntityManager, playerManager: PlayerManager, cfgManager: CfgManager).RemoveWhereAttachedEntity(e => e == user);
         return Play(sound, filter, source, true, audioParams);
+    }
+
+    public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user,
+        AudioParams? audioParams = null)
+    {
+        if (sound == null)
+            return null;
+
+        var filter = Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager).RemoveWhereAttachedEntity(e => e == user);
+        return Play(sound, filter, coordinates, true, audioParams);
     }
 
     public override IPlayingAudioStream? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)

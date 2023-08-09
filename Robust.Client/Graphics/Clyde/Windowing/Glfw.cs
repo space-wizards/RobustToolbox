@@ -5,7 +5,6 @@ using Robust.Client.Input;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
 
 namespace Robust.Client.Graphics.Clyde
@@ -16,7 +15,6 @@ namespace Robust.Client.Graphics.Clyde
         {
             [Dependency] private readonly ILogManager _logManager = default!;
             [Dependency] private readonly IConfigurationManager _cfg = default!;
-            [Dependency] private readonly ILocalizationManager _loc = default!;
             [Dependency] private readonly IInputManager _inputManager = default!;
 
             private readonly Clyde _clyde;

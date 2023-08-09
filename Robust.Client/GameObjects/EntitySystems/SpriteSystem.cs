@@ -1,14 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
+using static Robust.Client.GameObjects.SpriteComponent;
 
 namespace Robust.Client.GameObjects
 {
@@ -18,13 +25,28 @@ namespace Robust.Client.GameObjects
     [UsedImplicitly]
     public sealed partial class SpriteSystem : EntitySystem
     {
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly SpriteTreeSystem _treeSystem = default!;
-        [Dependency] private readonly TransformSystem _transform = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly IPrototypeManager _proto = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
-        private HashSet<ISpriteComponent> _manualUpdate = new();
+
+        /// <summary>
+        ///     Entities that require a sprite frame update.
+        /// </summary>
+        private readonly HashSet<EntityUid> _queuedFrameUpdate = new();
+
+        private ISawmill _sawmill = default!;
+
+        internal void Render(EntityUid uid, SpriteComponent sprite, DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
+        {
+            if (!sprite.IsInert)
+                _queuedFrameUpdate.Add(uid);
+
+            sprite.RenderInternal(drawingHandle, eyeRotation, worldRotation, worldPosition, sprite.EnableDirectionOverride ? sprite.DirectionOverride : null);
+        }
 
         public override void Initialize()
         {
@@ -34,7 +56,16 @@ namespace Robust.Client.GameObjects
 
             _proto.PrototypesReloaded += OnPrototypesReloaded;
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
+            SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
+
             _cfg.OnValueChanged(CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
+            _sawmill = _logManager.GetSawmill("sprite");
+        }
+
+        private void OnInit(EntityUid uid, SpriteComponent component, ComponentInit args)
+        {
+            // I'm not 100% this is needed, but I CBF with this ATM. Somebody kill server sprite component please.
+            QueueUpdateInert(uid, component);
         }
 
         public override void Shutdown()
@@ -50,6 +81,9 @@ namespace Robust.Client.GameObjects
         }
 
         private void QueueUpdateInert(EntityUid uid, SpriteComponent sprite, ref SpriteUpdateInertEvent ev)
+            => QueueUpdateInert(uid, sprite);
+
+        public void QueueUpdateInert(EntityUid uid, SpriteComponent sprite)
         {
             if (sprite._inertUpdateQueued)
                 return;
@@ -58,52 +92,96 @@ namespace Robust.Client.GameObjects
             _inertUpdateQueue.Enqueue(sprite);
         }
 
+        private void DoUpdateIsInert(SpriteComponent component)
+        {
+            component._inertUpdateQueued = false;
+            component.IsInert = true;
+
+            foreach (var layer in component.Layers)
+            {
+                // Since StateId is a struct, we can't null-check it directly.
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated || layer.Blank)
+                {
+                    continue;
+                }
+
+                var rsi = layer.RSI ?? component.BaseRSI;
+                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+                {
+                    state = GetFallbackState();
+                }
+
+                if (state.IsAnimated)
+                {
+                    component.IsInert = false;
+                    break;
+                }
+            }
+        }
+
         /// <inheritdoc />
         public override void FrameUpdate(float frameTime)
         {
             while (_inertUpdateQueue.TryDequeue(out var sprite))
             {
-                sprite.DoUpdateIsInert();
+                DoUpdateIsInert(sprite);
             }
 
-            foreach (var sprite in _manualUpdate)
+            var realtime = _timing.RealTime.TotalSeconds;
+            var spriteQuery = GetEntityQuery<SpriteComponent>();
+            var syncQuery = GetEntityQuery<SyncSpriteComponent>();
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
+
+            foreach (var uid in _queuedFrameUpdate)
             {
-                if (!sprite.Deleted && !sprite.IsInert)
-                    sprite.FrameUpdate(frameTime);
-            }
-
-            var pvsBounds = _eyeManager.GetWorldViewbounds();
-
-            var currentMap = _eyeManager.CurrentMap;
-            if (currentMap == MapId.Nullspace)
-            {
-                return;
-            }
-
-            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
-            var spriteState = (frameTime, _manualUpdate);
-
-            _treeSystem.QueryAabb( ref spriteState, static (ref (float frameTime,
-                    HashSet<ISpriteComponent> _manualUpdate) tuple, in ComponentTreeEntry<SpriteComponent> value) =>
+                if (!spriteQuery.TryGetComponent(uid, out var sprite) ||
+                    metaQuery.GetComponent(uid).EntityPaused)
                 {
-                    if (value.Component.IsInert)
-                        return true;
+                    continue;
+                }
 
-                    if (!tuple._manualUpdate.Contains(value.Component))
-                        value.Component.FrameUpdate(tuple.frameTime);
+                if (sprite.IsInert)
+                    continue;
 
-                    return true;
-                }, currentMap, pvsBounds, true);
+                var sync = syncQuery.HasComponent(uid);
 
-            _manualUpdate.Clear();
+                foreach (var layer in sprite.Layers)
+                {
+                    if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated)
+                        continue;
+
+                    var rsi = layer.RSI ?? sprite.BaseRSI;
+                    if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+                        state = GetFallbackState();
+
+                    if (!state.IsAnimated)
+                        continue;
+
+                    if (sync)
+                    {
+                        layer.AnimationTime = (float)(realtime % state.TotalDelay);
+                        layer.AnimationTimeLeft = -layer.AnimationTime;
+                        layer.AnimationFrame = 0;
+                    }
+                    else
+                    {
+                        layer.AnimationTime += frameTime;
+                        layer.AnimationTimeLeft -= frameTime;
+                    }
+
+                    layer.AdvanceFrameAnimation(state);
+                }
+            }
+
+            _queuedFrameUpdate.Clear();
         }
 
         /// <summary>
         ///     Force update of the sprite component next frame
         /// </summary>
-        public void ForceUpdate(ISpriteComponent sprite)
+        public void ForceUpdate(EntityUid uid)
         {
-            _manualUpdate.Add(sprite);
+            _queuedFrameUpdate.Add(uid);
         }
     }
 

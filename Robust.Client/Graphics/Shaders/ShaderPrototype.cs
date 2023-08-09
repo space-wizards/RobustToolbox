@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -10,38 +11,26 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics
 {
     [Prototype("shader")]
     public sealed class ShaderPrototype : IPrototype, ISerializationHooks
     {
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-
         [ViewVariables]
-        [IdDataFieldAttribute]
+        [IdDataField]
         public string ID { get; } = default!;
 
-        private ShaderKind Kind;
-
-        // Source shader variables.
-        private ShaderSourceResource? Source;
-        private Dictionary<string, object>? ShaderParams;
-
-        // Canvas shader variables.
-        private ClydeHandle CompiledCanvasShader;
-
-        private ShaderInstance? _cachedInstance;
-
-        private bool _stencilEnabled;
-        private int _stencilRef => StencilDataHolder?.StencilRef ?? 0;
-        private int _stencilReadMask => StencilDataHolder?.ReadMask ?? unchecked((int) uint.MaxValue);
-        private int _stencilWriteMask => StencilDataHolder?.WriteMask ?? unchecked((int) uint.MaxValue);
-        private StencilFunc _stencilFunc => StencilDataHolder?.StencilFunc ?? StencilFunc.Always;
-        private StencilOp _stencilOp => StencilDataHolder?.StencilOp ?? StencilOp.Keep;
+        [ViewVariables] private ShaderKind Kind;
+        [ViewVariables] private Dictionary<string, object>? _params;
+        [ViewVariables] private ShaderSourceResource? _source;
+        [ViewVariables] private ShaderInstance? _cachedInstance;
+        [ViewVariables] private ParsedShader? _parsed => _source?.ParsedShader;
 
         [DataField("stencil")]
-        private StencilData? StencilDataHolder;
+        private StencilParameters? _stencil;
 
         /// <summary>
         ///     Retrieves a ready-to-use instance of this shader.
@@ -70,27 +59,31 @@ namespace Robust.Client.Graphics
             switch (Kind)
             {
                 case ShaderKind.Source:
-                    instance = IoCManager.Resolve<IClydeInternal>().InstanceShader(Source!.ClydeHandle);
+                    instance = IoCManager.Resolve<IClydeInternal>().InstanceShader(_source!);
                     _applyDefaultParameters(instance);
                     break;
 
                 case ShaderKind.Canvas:
-                    instance = IoCManager.Resolve<IClydeInternal>().InstanceShader(CompiledCanvasShader);
+
+                    var hasLight = _rawMode != "unshaded";
+                    ShaderBlendMode? blend = null;
+                    if (_rawBlendMode != null)
+                    {
+                        if (!Enum.TryParse<ShaderBlendMode>(_rawBlendMode.ToUpper(), out var parsed))
+                            Logger.Error($"invalid mode: {_rawBlendMode}");
+                        else
+                            blend = parsed;
+                    }
+
+                    instance = IoCManager.Resolve<IClydeInternal>().InstanceShader(_source!, hasLight, blend);
                     break;
 
                 default:
                     throw new ArgumentOutOfRangeException();
             }
 
-            if (_stencilEnabled)
-            {
-                instance.StencilTestEnabled = true;
-                instance.StencilRef = _stencilRef;
-                instance.StencilFunc = _stencilFunc;
-                instance.StencilOp = _stencilOp;
-                instance.StencilReadMask = _stencilReadMask;
-                instance.StencilWriteMask = _stencilWriteMask;
-            }
+            if (_stencil is {} data)
+                instance.Stencil = data with { Enabled = true};
 
             instance.MakeImmutable();
             _cachedInstance = instance;
@@ -101,11 +94,20 @@ namespace Robust.Client.Graphics
             return Instance().Duplicate();
         }
 
-        [DataField("kind", readOnly: true, required: true)] private string _rawKind = default!;
-        [DataField("path", readOnly: true)] private ResourcePath? path;
-        [DataField("params", readOnly: true)] private Dictionary<string, string>? paramMapping;
-        [DataField("light_mode", readOnly: true)] private string? rawMode;
-        [DataField("blend_mode", readOnly: true)] private string? rawBlendMode;
+        [DataField("kind", required: true)]
+        private readonly string _rawKind = default!;
+
+        [DataField("path")]
+        private readonly ResPath? _path;
+
+        [DataField("params")]
+        private readonly Dictionary<string, string>? _paramMapping;
+
+        [DataField("light_mode")]
+        private readonly string? _rawMode;
+
+        [DataField("blend_mode")]
+        private readonly string? _rawBlendMode;
 
         void ISerializationHooks.AfterDeserialization()
         {
@@ -113,96 +115,39 @@ namespace Robust.Client.Graphics
             {
                 case "source":
                     Kind = ShaderKind.Source;
-                    if (path == null) throw new InvalidOperationException();
-                    Source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>(path);
 
-                    if (paramMapping != null)
+                    // TODO use a custom type serializer.
+                    if (_path == null)
+                        throw new InvalidOperationException("Source shaders must specify a source file.");
+
+                    _source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>(_path.Value);
+
+                    if (_paramMapping != null)
                     {
-                        ShaderParams = new Dictionary<string, object>();
-                        foreach (var item in paramMapping!)
+                        _params = new Dictionary<string, object>();
+                        foreach (var item in _paramMapping!)
                         {
                             var name = item.Key;
-                            if (!Source.ParsedShader.Uniforms.TryGetValue(name, out var uniformDefinition))
+                            if (!_source.ParsedShader.Uniforms.TryGetValue(name, out var uniformDefinition))
                             {
-                                Logger.ErrorS("shader", "Shader param '{0}' does not exist on shader '{1}'", name, path);
+                                Logger.ErrorS("shader", "Shader param '{0}' does not exist on shader '{1}'", name, _path);
                                 continue;
                             }
 
                             var value = _parseUniformValue(item.Value, uniformDefinition.Type.Type);
-                            ShaderParams.Add(name, value);
+                            _params.Add(name, value);
                         }
                     }
                     break;
 
                 case "canvas":
                     Kind = ShaderKind.Canvas;
-                    var source = "";
-
-                    if(rawMode != null)
-                    {
-                        switch (rawMode)
-                        {
-                            case "normal":
-                                break;
-
-                            case "unshaded":
-                                source += "light_mode unshaded;\n";
-                                break;
-
-                            default:
-                                throw new InvalidOperationException($"Invalid light mode: '{rawMode}'");
-                        }
-                    }
-
-                    if(rawBlendMode != null){
-                        switch (rawBlendMode)
-                        {
-                            case "mix":
-                                source += "blend_mode mix;\n";
-                                break;
-
-                            case "add":
-                                source += "blend_mode add;\n";
-                                break;
-
-                            case "subtract":
-                                source += "blend_mode subtract;\n";
-                                break;
-
-                            case "multiply":
-                                source += "blend_mode multiply;\n";
-                                break;
-
-                            default:
-                                throw new InvalidOperationException($"Invalid blend mode: '{rawBlendMode}'");
-                        }
-                    }
-
-                    source += "void fragment() {\n    COLOR = zTexture(UV);\n}";
-
-                    var preset = ShaderParser.Parse(source, _resourceCache);
-                    CompiledCanvasShader = IoCManager.Resolve<IClydeInternal>().LoadShader(preset, $"canvas_preset_{ID}");
+                    _source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl");
                     break;
 
                 default:
                     throw new InvalidOperationException($"Invalid shader kind: '{_rawKind}'");
             }
-
-            if (StencilDataHolder != null) _stencilEnabled = true;
-        }
-
-        [DataDefinition]
-        public sealed class StencilData
-        {
-            [DataField("ref")] public int StencilRef;
-
-            [DataField("op")] public StencilOp StencilOp;
-
-            [DataField("func")] public StencilFunc StencilFunc;
-
-            [DataField("readMask")] public int ReadMask = unchecked((int) uint.MaxValue);
-
-            [DataField("writeMask")] public int WriteMask = unchecked((int) uint.MaxValue);
         }
 
         private static object _parseUniformValue(YamlNode node, ShaderDataType dataType)
@@ -230,19 +175,23 @@ namespace Robust.Client.Graphics
                     {
                         return node.AsVector4();
                     }
+                case ShaderDataType.Mat3:
+                    return node.AsMatrix3();
+                case ShaderDataType.Mat4:
+                    return node.AsMatrix4();
                 default:
-                    throw new NotSupportedException("Unsupported uniform type.");
+                    throw new NotSupportedException($"Unsupported uniform type '{dataType}'.");
             }
         }
 
         private void _applyDefaultParameters(ShaderInstance instance)
         {
-            if (ShaderParams == null)
+            if (_params == null)
             {
                 return;
             }
 
-            foreach (var (key, value) in ShaderParams)
+            foreach (var (key, value) in _params)
             {
                 switch (value)
                 {
@@ -268,6 +217,12 @@ namespace Robust.Client.Graphics
                         instance.SetParameter(key, i);
                         break;
                     case bool i:
+                        instance.SetParameter(key, i);
+                        break;
+                    case Matrix3 i:
+                        instance.SetParameter(key, i);
+                        break;
+                    case Matrix4 i:
                         instance.SetParameter(key, i);
                         break;
                 }

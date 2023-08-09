@@ -236,7 +236,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
         /// <param name="uid">Entity UID to look on.</param>
         /// <returns>The component of Type from the Entity.</returns>
-        T GetComponent<T>(EntityUid uid);
+        T GetComponent<T>(EntityUid uid) where T : IComponent;
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -297,7 +297,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent([NotNullWhen(true)] EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component);
+        bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -353,6 +353,11 @@ namespace Robust.Shared.GameObjects
         IEnumerable<T> GetComponents<T>(EntityUid uid);
 
         /// <summary>
+        /// Returns the number of components on this entity.
+        /// </summary>
+        int ComponentCount(EntityUid uid);
+
+        /// <summary>
         ///     Returns ALL networked components on an entity, including deleted ones.
         /// </summary>
         /// <param name="uid">Entity UID to look on.</param>
@@ -385,6 +390,18 @@ namespace Robust.Shared.GameObjects
         /// <param name="player">The player to generate the state for.</param>
         /// <returns>True if the player should get the component state.</returns>
         bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
+
+        /// <summary>
+        /// Returns all instances of a component in an array.
+        /// Use sparingly.
+        /// </summary>
+        (EntityUid Uid, T Component)[] AllComponents<T>() where T : Component;
+
+        /// <summary>
+        /// Returns all instances of a component in a List.
+        /// Use sparingly.
+        /// </summary>
+        List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : Component;
 
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
             where TComp1 : Component;
@@ -471,7 +488,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="includePaused"></param>
         /// <returns>All components that are the specified type.</returns>
-        IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false);
+        IEnumerable<(EntityUid Uid, Component Component)> GetAllComponents(Type type, bool includePaused = false);
 
         /// <summary>
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.

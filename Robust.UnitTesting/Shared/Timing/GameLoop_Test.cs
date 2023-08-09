@@ -3,6 +3,7 @@ using System.Reflection;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.Exceptions;
+using Robust.Shared.Log;
 using Robust.Shared.Profiling;
 using Robust.Shared.Timing;
 
@@ -28,7 +29,12 @@ namespace Robust.UnitTesting.Shared.Timing
             newStopwatch.SetupGet(p => p.Elapsed).Returns(elapsedVal);
             var gameTiming = GameTimingFactory(newStopwatch.Object);
             gameTiming.Paused = false;
-            var loop = new GameLoop(gameTiming, new RuntimeLog(), new ProfManager());
+            var loop = new GameLoop(
+                gameTiming,
+                new RuntimeLog(),
+                new ProfManager(),
+                new LogManager().RootSawmill,
+                new GameLoopOptions(false));
 
             var callCount = 0;
             loop.Tick += (sender, args) => callCount++;

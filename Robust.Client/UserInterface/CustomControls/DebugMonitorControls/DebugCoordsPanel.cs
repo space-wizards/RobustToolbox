@@ -60,17 +60,21 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 
             var mouseScreenPos = _inputManager.MouseScreenPosition;
             var screenSize = _displayManager.ScreenSize;
+            var screenScale = _displayManager.MainWindow.ContentScale;
 
-            MapCoordinates mouseWorldMap;
             EntityCoordinates mouseGridPos;
             TileRef tile;
 
-            mouseWorldMap = _eyeManager.ScreenToMap(mouseScreenPos);
+            var mouseWorldMap = _eyeManager.ScreenToMap(mouseScreenPos);
+            if (mouseWorldMap == MapCoordinates.Nullspace)
+                return;
 
-            if (_mapManager.TryFindGridAt(mouseWorldMap, out var mouseGrid))
+            var mapSystem = _entityManager.System<SharedMapSystem>();
+
+            if (_mapManager.TryFindGridAt(mouseWorldMap, out var mouseGridUid, out var mouseGrid))
             {
-                mouseGridPos = mouseGrid.MapToGrid(mouseWorldMap);
-                tile = mouseGrid.GetTileRef(mouseGridPos);
+                mouseGridPos = mapSystem.MapToGrid(mouseGridUid, mouseWorldMap);
+                tile = mapSystem.GetTileRef(mouseGridUid, mouseGrid, mouseGridPos);
             }
             else
             {
@@ -82,7 +86,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             var controlHovered = UserInterfaceManager.CurrentlyHovered;
 
             _textBuilder.Append($@"Positioning Debug:
-Screen Size: {screenSize}
+Screen Size: {screenSize} (scale: {screenScale})
 Mouse Pos:
     Screen: {mouseScreenPos}
     {mouseWorldMap}

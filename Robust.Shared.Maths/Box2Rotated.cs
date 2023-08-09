@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -29,7 +30,7 @@ namespace Robust.Shared.Maths
         public readonly Vector2 TopLeft => Origin + Rotation.RotateVec(Box.TopLeft - Origin);
         public readonly Vector2 TopRight => Origin + Rotation.RotateVec(Box.TopRight - Origin);
         public readonly Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
-        public readonly Vector2 Centre => Origin + Rotation.RotateVec((Box.BottomLeft + Box.TopRight)/2 - Origin);
+        public readonly Vector2 Center => Origin + Rotation.RotateVec((Box.BottomLeft + Box.TopRight)/2 - Origin);
 
         public Matrix3 Transform => Matrix3.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation);
 
@@ -101,7 +102,7 @@ namespace Robust.Shared.Maths
             return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
         }
 
-        public bool Contains(Vector2 worldPoint)
+        public readonly bool Contains(Vector2 worldPoint)
         {
             // Get the worldpoint in our frame of reference so we can do a faster AABB check.
             var localPoint = GetLocalPoint(worldPoint);
@@ -111,7 +112,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Convert a point in world-space coordinates to our local coordinates.
         /// </summary>
-        private Vector2 GetLocalPoint(Vector2 point)
+        private readonly Vector2 GetLocalPoint(Vector2 point)
         {
             return Origin + (-Rotation).RotateVec(point - Origin);
         }
@@ -125,14 +126,14 @@ namespace Robust.Shared.Maths
         }
 
         /// <inheritdoc />
-        public override readonly bool Equals(object? obj)
+        public readonly override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Box2Rotated other && Equals(other);
         }
 
         /// <inheritdoc />
-        public override readonly int GetHashCode()
+        public readonly override int GetHashCode()
         {
             unchecked
             {
@@ -161,7 +162,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Returns a string representation of this type.
         /// </summary>
-        public override readonly string ToString()
+        public readonly override string ToString()
         {
             return $"{Box}, {Rotation}";
         }

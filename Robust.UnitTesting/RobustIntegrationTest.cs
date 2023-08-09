@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
@@ -13,21 +14,21 @@ using NUnit.Framework;
 using Robust.Client;
 using Robust.Client.GameStates;
 using Robust.Client.Timing;
+using Robust.Client.UserInterface;
 using Robust.Server;
 using Robust.Server.Console;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
-using Robust.Shared.Analyzers;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -245,6 +246,8 @@ namespace Robust.UnitTesting
             private protected readonly ChannelReader<object> _fromInstanceReader;
             private protected readonly ChannelWriter<object> _fromInstanceWriter;
 
+            private protected TextWriter _testOut;
+
             private int _currentTicksId = 1;
             private int _ackTicksId;
 
@@ -302,6 +305,7 @@ namespace Robust.UnitTesting
             private protected IntegrationInstance(IntegrationOptions? options)
             {
                 Options = options;
+                _testOut = TestContext.Out;
 
                 var toInstance = Channel.CreateUnbounded<object>(new UnboundedChannelOptions
                 {
@@ -538,6 +542,23 @@ namespace Robust.UnitTesting
             {
                 Stop();
             }
+
+            protected void LoadExtraPrototypes(IDependencyCollection deps, IntegrationOptions options)
+            {
+                var resMan = deps.Resolve<IResourceManagerInternal>();
+                if (options.ExtraPrototypes != null)
+                {
+                    resMan.MountString("/Prototypes/__integration_extra.yml", options.ExtraPrototypes);
+                }
+
+                if (options.ExtraPrototypeList is {} list)
+                {
+                    for (var i = 0; i < list.Count; i++)
+                    {
+                        resMan.MountString($"/Prototypes/__integration_extra_{i}.yml", list[i]);
+                    }
+                }
+            }
         }
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
@@ -640,12 +661,7 @@ namespace Robust.UnitTesting
                 {
                     Options.BeforeStart?.Invoke();
                     cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
-
-                    if (Options.ExtraPrototypes != null)
-                    {
-                        deps.Resolve<IResourceManagerInternal>()
-                            .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
-                    }
+                    LoadExtraPrototypes(deps, Options);
                 }
 
                 cfg.OverrideConVars(new[]
@@ -653,11 +669,14 @@ namespace Robust.UnitTesting
                     ("log.runtimelog", "false"),
                     (CVars.SysWinTickPeriod.Name, "-1"),
                     (CVars.SysGCCollectStart.Name, "false"),
-                    (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
+                    (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString()),
+
+                    (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
 
                 server.ContentStart = Options?.ContentStart ?? false;
-                if (server.Start(serverOptions, () => new TestLogHandler(cfg, "SERVER")))
+                var logHandler = Options?.OverrideLogHandler ?? (() => new TestLogHandler(cfg, "SERVER", _testOut));
+                if (server.Start(serverOptions, logHandler))
                 {
                     throw new Exception("Server failed to start.");
                 }
@@ -729,6 +748,8 @@ namespace Robust.UnitTesting
                 {
                     var modLoader = new ModLoader();
                     IoCManager.InjectDependencies(modLoader);
+                    var cast = (IPostInjectInit) modLoader;
+                    cast.PostInject();
                     modLoader.SetEnableSandboxing(true);
                     modLoader.LoadGameAssembly(assembly.Location);
                 });
@@ -803,12 +824,7 @@ namespace Robust.UnitTesting
                 {
                     Options.BeforeStart?.Invoke();
                     cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
-
-                    if (Options.ExtraPrototypes != null)
-                    {
-                        deps.Resolve<IResourceManagerInternal>()
-                            .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
-                    }
+                    LoadExtraPrototypes(deps, Options);
                 }
 
                 cfg.OverrideConVars(new[]
@@ -827,6 +843,8 @@ namespace Robust.UnitTesting
                     (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString()),
 
                     (CVars.ResPrototypeReloadWatch.Name, "false"),
+
+                    (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
 
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
@@ -836,13 +854,27 @@ namespace Robust.UnitTesting
                 client.ContentStart = Options?.ContentStart ?? false;
                 client.StartupSystemSplash(
                     clientOptions,
-                    () => new TestLogHandler(cfg, "CLIENT"),
+                    Options?.OverrideLogHandler ?? (() => new TestLogHandler(cfg, "CLIENT", _testOut)),
                     globalExceptionLog: false);
                 client.StartupContinue(GameController.DisplayMode.Headless);
 
                 GameLoop.RunInit();
 
                 return client;
+            }
+
+            /// <summary>
+            /// Directly pass a bound key event to a control.
+            /// </summary>
+            public async Task DoGuiEvent(Control control, GUIBoundKeyEventArgs args)
+            {
+                await WaitPost(() =>
+                {
+                    if (args.State == BoundKeyState.Down)
+                        control.KeyBindDown(args);
+                    else
+                        control.KeyBindUp(args);
+                });
             }
         }
 
@@ -975,13 +1007,27 @@ namespace Robust.UnitTesting
             public Action? BeforeRegisterComponents { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
+
+            /// <summary>
+            /// String containing extra prototypes to load. Contents of the string are treated like a yaml file in the
+            /// resources folder.
+            /// </summary>
             public string? ExtraPrototypes { get; set; }
+
+            /// <summary>
+            /// List of strings containing extra prototypes to load. Contents of the strings are treated like yaml files
+            /// in the resources folder.
+            /// </summary>
+            public List<string>? ExtraPrototypeList;
+
             public LogLevel? FailureLogLevel { get; set; } = RTCVars.FailureLogLevel.DefaultValue;
             public bool ContentStart { get; set; } = false;
 
             public Dictionary<string, string> CVarOverrides { get; } = new();
             public bool Asynchronous { get; set; } = true;
             public bool? Pool { get; set; }
+
+            public Func<ILogHandler>? OverrideLogHandler { get; set; }
         }
 
         /// <summary>

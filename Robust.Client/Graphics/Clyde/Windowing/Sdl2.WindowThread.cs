@@ -48,6 +48,14 @@ internal partial class Clyde
             }
         }
 
+        public void PollEvents()
+        {
+            while (SDL_PollEvent(out _) == 1)
+            {
+                // We let callbacks process all events because of stuff like resizing.
+            }
+        }
+
         private void ProcessSdl2Cmd(CmdBase cmdb)
         {
             switch (cmdb)
@@ -161,26 +169,40 @@ internal partial class Clyde
 
         private unsafe void SendCmd(CmdBase cmd)
         {
-            _cmdWriter.TryWrite(cmd);
+            if (_clyde._threadWindowApi)
+            {
+                _cmdWriter.TryWrite(cmd);
 
-            SDL_Event ev = default;
-            ev.type = (SDL_EventType)_sdlEventWakeup;
-            // Post empty event to unstuck WaitEvents if necessary.
-            // This self-registered event type is ignored by the winthread, but it'll still wake it up.
+                SDL_Event ev = default;
+                ev.type = (SDL_EventType)_sdlEventWakeup;
+                // Post empty event to unstuck WaitEvents if necessary.
+                // This self-registered event type is ignored by the winthread, but it'll still wake it up.
 
-            // This can fail if the event queue is full.
-            // That's not really a problem since in that case something else will be sure to wake the thread up anyways.
-            // NOTE: have to avoid using PushEvents since that invokes callbacks which causes a deadlock.
-            SDL_PeepEvents(&ev, 1, SDL_eventaction.SDL_ADDEVENT, ev.type, ev.type);
+                // This can fail if the event queue is full.
+                // That's not really a problem since in that case something else will be sure to wake the thread up anyways.
+                // NOTE: have to avoid using PushEvents since that invokes callbacks which causes a deadlock.
+                SDL_PeepEvents(&ev, 1, SDL_eventaction.SDL_ADDEVENT, ev.type, ev.type);
+            }
+            else
+            {
+                ProcessSdl2Cmd(cmd);
+            }
         }
 
         private void SendEvent(EventBase ev)
         {
-            var task = _eventWriter.WriteAsync(ev);
-
-            if (!task.IsCompletedSuccessfully)
+            if (_clyde._threadWindowApi)
             {
-                task.AsTask().Wait();
+                var task = _eventWriter.WriteAsync(ev);
+
+                if (!task.IsCompletedSuccessfully)
+                {
+                    task.AsTask().Wait();
+                }
+            }
+            else
+            {
+                ProcessEvent(ev);
             }
         }
 

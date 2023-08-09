@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.Maths;
@@ -24,7 +25,7 @@ namespace Robust.UnitTesting.Shared.Physics
         [Test]
         public void TestCircleAABB()
         {
-            var circle = new PhysShapeCircle {Radius = 0.5f};
+            var circle = new PhysShapeCircle(0.5f);
             var aabb = circle.ComputeAABB(_transform, 0);
             Assert.That(aabb.Width, Is.EqualTo(1f));
             Assert.That(aabb, Is.EqualTo(new Box2(0.5f, 0.5f, 1.5f, 1.5f)));
@@ -33,7 +34,7 @@ namespace Robust.UnitTesting.Shared.Physics
         [Test]
         public void TestRotatedCircleAABB()
         {
-            var circle = new PhysShapeCircle {Radius = 0.5f};
+            var circle = new PhysShapeCircle(0.5f);
             var aabb = circle.ComputeAABB(_rotatedTransform, 0);
             Assert.That(aabb.Width, Is.EqualTo(1f));
             Assert.That(aabb, Is.EqualTo(new Box2(0.5f, 0.5f, 1.5f, 1.5f)));

@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Linq;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -35,6 +36,7 @@ namespace Robust.Client.Graphics
                 StateId = stateId;
                 Directions = direction;
                 Delays = delays;
+                TotalDelay = delays.Sum();
                 Icons = icons;
 
                 foreach (var delay in delays)
@@ -115,6 +117,8 @@ namespace Robust.Client.Graphics
             {
                 return Delays;
             }
+
+            public float TotalDelay;
 
             Texture IDirectionalTextureProvider.Default => Frame0;
 

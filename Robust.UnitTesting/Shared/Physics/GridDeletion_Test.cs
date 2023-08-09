@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -39,8 +40,8 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
             grid = mapManager.CreateGrid(mapId);
 
             physics = entManager.GetComponent<PhysicsComponent>(grid.Owner);
-            physSystem.SetBodyType(physics, BodyType.Dynamic);
-            physSystem.SetLinearVelocity(physics, new Vector2(50f, 0f));
+            physSystem.SetBodyType(grid.Owner, BodyType.Dynamic, body: physics);
+            physSystem.SetLinearVelocity(grid.Owner, new Vector2(50f, 0f), body: physics);
             Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
         });
 

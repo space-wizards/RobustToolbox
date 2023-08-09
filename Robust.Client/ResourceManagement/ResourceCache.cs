@@ -12,17 +12,17 @@ namespace Robust.Client.ResourceManagement
 {
     internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
     {
-        private readonly Dictionary<Type, Dictionary<ResourcePath, BaseResource>> CachedResources =
+        private readonly Dictionary<Type, Dictionary<ResPath, BaseResource>> CachedResources =
             new();
 
         private readonly Dictionary<Type, BaseResource> _fallbacks = new();
 
         public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
         {
-            return GetResource<T>(new ResourcePath(path), useFallback);
+            return GetResource<T>(new ResPath(path), useFallback);
         }
 
-        public T GetResource<T>(ResourcePath path, bool useFallback = true) where T : BaseResource, new()
+        public T GetResource<T>(ResPath path, bool useFallback = true) where T : BaseResource, new()
         {
             var cache = GetTypeDict<T>();
             if (cache.TryGetValue(path, out var cached))
@@ -43,7 +43,7 @@ namespace Robust.Client.ResourceManagement
                 {
                     Logger.Error(
                         $"Exception while loading resource {typeof(T)} at '{path}', resorting to fallback.\n{Environment.StackTrace}\n{e}");
-                    return GetResource<T>(_resource.Fallback, false);
+                    return GetResource<T>(_resource.Fallback.Value, false);
                 }
                 else
                 {
@@ -56,10 +56,10 @@ namespace Robust.Client.ResourceManagement
 
         public bool TryGetResource<T>(string path, [NotNullWhen(true)] out T? resource) where T : BaseResource, new()
         {
-            return TryGetResource(new ResourcePath(path), out resource);
+            return TryGetResource(new ResPath(path), out resource);
         }
 
-        public bool TryGetResource<T>(ResourcePath path, [NotNullWhen(true)] out T? resource) where T : BaseResource, new()
+        public bool TryGetResource<T>(ResPath path, [NotNullWhen(true)] out T? resource) where T : BaseResource, new()
         {
             var cache = GetTypeDict<T>();
             if (cache.TryGetValue(path, out var cached))
@@ -85,10 +85,10 @@ namespace Robust.Client.ResourceManagement
 
         public void ReloadResource<T>(string path) where T : BaseResource, new()
         {
-            ReloadResource<T>(new ResourcePath(path));
+            ReloadResource<T>(new ResPath(path));
         }
 
-        public void ReloadResource<T>(ResourcePath path) where T : BaseResource, new()
+        public void ReloadResource<T>(ResPath path) where T : BaseResource, new()
         {
             var cache = GetTypeDict<T>();
 
@@ -110,20 +110,20 @@ namespace Robust.Client.ResourceManagement
 
         public bool HasResource<T>(string path) where T : BaseResource, new()
         {
-            return HasResource<T>(new ResourcePath(path));
+            return HasResource<T>(new ResPath(path));
         }
 
-        public bool HasResource<T>(ResourcePath path) where T : BaseResource, new()
+        public bool HasResource<T>(ResPath path) where T : BaseResource, new()
         {
             return TryGetResource<T>(path, out var _);
         }
 
         public void CacheResource<T>(string path, T resource) where T : BaseResource, new()
         {
-            CacheResource(new ResourcePath(path), resource);
+            CacheResource(new ResPath(path), resource);
         }
 
-        public void CacheResource<T>(ResourcePath path, T resource) where T : BaseResource, new()
+        public void CacheResource<T>(ResPath path, T resource) where T : BaseResource, new()
         {
             GetTypeDict<T>()[path] = resource;
         }
@@ -141,14 +141,14 @@ namespace Robust.Client.ResourceManagement
                 throw new InvalidOperationException($"Resource of type '{typeof(T)}' has no fallback.");
             }
 
-            fallback = GetResource<T>(res.Fallback, useFallback: false);
+            fallback = GetResource<T>(res.Fallback.Value, useFallback: false);
             _fallbacks.Add(typeof(T), fallback);
             return (T) fallback;
         }
 
-        public IEnumerable<KeyValuePair<ResourcePath, T>> GetAllResources<T>() where T : BaseResource, new()
+        public IEnumerable<KeyValuePair<ResPath, T>> GetAllResources<T>() where T : BaseResource, new()
         {
-            return GetTypeDict<T>().Select(p => new KeyValuePair<ResourcePath, T>(p.Key, (T) p.Value));
+            return GetTypeDict<T>().Select(p => new KeyValuePair<ResPath, T>(p.Key, (T) p.Value));
         }
 
         public event Action<TextureLoadedEventArgs>? OnRawTextureLoaded;
@@ -190,11 +190,11 @@ namespace Robust.Client.ResourceManagement
         #endregion IDisposable Members
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Dictionary<ResourcePath, BaseResource> GetTypeDict<T>()
+        private Dictionary<ResPath, BaseResource> GetTypeDict<T>()
         {
             if (!CachedResources.TryGetValue(typeof(T), out var ret))
             {
-                ret = new Dictionary<ResourcePath, BaseResource>();
+                ret = new Dictionary<ResPath, BaseResource>();
                 CachedResources.Add(typeof(T), ret);
             }
 
@@ -211,11 +211,11 @@ namespace Robust.Client.ResourceManagement
             OnRsiLoaded?.Invoke(eventArgs);
         }
 
-        public void MountLoaderApi(IFileApi api, string apiPrefix, ResourcePath? prefix=null)
+        public void MountLoaderApi(IFileApi api, string apiPrefix, ResPath? prefix=null)
         {
-            prefix ??= ResourcePath.Root;
+            prefix ??= ResPath.Root;
             var root = new LoaderApiLoader(api, apiPrefix);
-            AddRoot(prefix, root);
+            AddRoot(prefix.Value, root);
         }
     }
 }

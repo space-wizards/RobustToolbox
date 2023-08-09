@@ -1,12 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="6.0.2" />
@@ -20,8 +18,9 @@
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageReference Include="Linguini.Bundle" Version="0.1.3" />
     <PackageReference Include="SharpZstd.Interop" Version="1.5.2-beta2" />
-    <PackageReference Include="SpaceWizards.Sodium" Version="0.2.0" />
+    <PackageReference Include="SpaceWizards.Sodium" Version="0.2.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
+    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.20348-rc2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
@@ -50,5 +49,7 @@
       <DependentUpon>RobustMappedStringSerializer.cs</DependentUpon>
     </Compile>
   </ItemGroup>
-  <Import Project="..\MSBuild\Robust.Engine.targets" />
+
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.CompNetworkGenerator.targets" />
 </Project>

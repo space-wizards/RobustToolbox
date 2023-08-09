@@ -15,6 +15,12 @@ namespace Robust.Client.UserInterface.Controls
 
         public event Action? OnHistoryChanged;
 
+        /// <summary>
+        ///     If true, this will cause <see cref="LineEdit.OnTextChanged"/> to be invoked when the history
+        ///     selection changes.
+        /// </summary>
+        public bool InvokeOnHistorySelect = true;
+
         public HistoryLineEdit()
         {
             OnTextEntered += OnSubmit;
@@ -67,7 +73,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 HistoryIndex--;
-                Text = History[HistoryIndex];
+                SetText(History[HistoryIndex], InvokeOnHistorySelect);
                 CursorPosition = Text.Length;
 
                 args.Handle();
@@ -83,11 +89,11 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (HistoryIndex == History.Count)
                 {
-                    Text = _historyTemp!;
+                    SetText(_historyTemp ?? string.Empty, InvokeOnHistorySelect);
                 }
                 else
                 {
-                    Text = History[HistoryIndex];
+                    SetText(History[HistoryIndex], InvokeOnHistorySelect);
                 }
 
                 CursorPosition = Text.Length;

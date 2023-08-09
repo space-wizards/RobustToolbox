@@ -653,16 +653,17 @@ namespace Robust.Client.Graphics.Clyde
                     throw new DataException("Texture not found");
                 }
 
-                Span<byte> rgba = stackalloc byte[4];
+                Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
                 unsafe
                 {
                     fixed (byte* p = rgba)
                     {
-                        GL.GetTextureImage(loaded.OpenGLObject.Handle, 0, PF.Rgba, PT.UnsignedByte, 4, (IntPtr) p);
+
+                        GL.GetTextureImage(loaded.OpenGLObject.Handle, 0, PF.Rgba, PT.UnsignedByte, 4*this.Size.X*this.Size.Y, (IntPtr) p);
                     }
                 }
-
-                return new Color(rgba[0], rgba[1], rgba[2], rgba[3]);
+                int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
+                return new Color(rgba[pixelPos+0], rgba[pixelPos+1], rgba[pixelPos+2], rgba[pixelPos+3]);
             }
         }
 

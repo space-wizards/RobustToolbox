@@ -83,7 +83,7 @@ def build_windows(skip_build: bool) -> None:
     # Run a full build.
     print(Fore.GREEN + "Building project for Windows x64..." + Style.RESET_ALL)
 
-    base_bin = p("Robust.Client.WebView", "bin", "Release", "net6.0")
+    base_bin = p("Robust.Client.WebView", "bin", "Release", "net7.0")
 
     if not skip_build:
         build_client_rid("Windows", "win-x64")
@@ -106,6 +106,11 @@ def build_windows(skip_build: bool) -> None:
         "Robust.Client.WebView.deps.json",
         "Xilium.CefGlue.dll",
         "Xilium.CefGlue.pdb",
+        # These are copies of regular Robust dlls that Robust.Client.WebView needs when ran on its own.
+        "Robust.Client.dll",
+        "Robust.Shared.dll",
+        "Robust.Shared.Maths.dll",
+        "SharpZstd.Interop.dll",
     ]
 
     for f in files_to_copy:
@@ -124,6 +129,10 @@ def build_windows(skip_build: bool) -> None:
         "libsndfile-1.dll",
         "openal32.dll",
         "swnfd.dll",
+        "zstd.pdb",
+        "zstd.dll",
+        "zlib1.dll",
+        "libsodium.dll"
     })
 
     # Cool we're done.
@@ -133,7 +142,7 @@ def build_linux(skip_build: bool) -> None:
     # Run a full build.
     print(Fore.GREEN + "Building project for Linux x64..." + Style.RESET_ALL)
 
-    base_bin = p("Robust.Client.WebView", "bin", "Release", "net6.0")
+    base_bin = p("Robust.Client.WebView", "bin", "Release", "net7.0")
 
     if not skip_build:
         build_client_rid("Linux", "linux-x64")
@@ -153,6 +162,11 @@ def build_linux(skip_build: bool) -> None:
         "Robust.Client.WebView.deps.json",
         "Xilium.CefGlue.dll",
         "Xilium.CefGlue.pdb",
+        # These are copies of regular Robust dlls that Robust.Client.WebView needs when ran on its own.
+        "Robust.Client.dll",
+        "Robust.Shared.dll",
+        "Robust.Shared.Maths.dll",
+        "SharpZstd.Interop.dll",
     ]
 
     for f in files_to_copy:

@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Robust.Server.GameObjects;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
@@ -43,58 +44,52 @@ public sealed class ScaleCommand : LocalizedCommands
 
         // Event for content to use
         // We'll just set engine stuff here
+        var physics = _entityManager.System<SharedPhysicsSystem>();
+        var appearance = _entityManager.System<AppearanceSystem>();
+
         _entityManager.EnsureComponent<ScaleVisualsComponent>(uid);
         var @event = new ScaleEntityEvent();
         _entityManager.EventBus.RaiseLocalEvent(uid, ref @event);
 
-        var appearanceComponent = _entityManager.EnsureComponent<ServerAppearanceComponent>(uid);
-        if (!appearanceComponent.TryGetData<Vector2>(ScaleVisuals.Scale, out var oldScale))
+        var appearanceComponent = _entityManager.EnsureComponent<AppearanceComponent>(uid);
+        if (!appearance.TryGetData<Vector2>(uid, ScaleVisuals.Scale, out var oldScale, appearanceComponent))
             oldScale = Vector2.One;
 
-        appearanceComponent.SetData(ScaleVisuals.Scale, oldScale * scale);
+        appearance.SetData(uid, ScaleVisuals.Scale, oldScale * scale, appearanceComponent);
 
         if (_entityManager.TryGetComponent(uid, out FixturesComponent? manager))
         {
-            foreach (var (_, fixture) in manager.Fixtures)
+            foreach (var fixture in manager.Fixtures.Values)
             {
                 switch (fixture.Shape)
                 {
                     case EdgeShape edge:
-                        edge.Vertex0 *= scale;
-                        edge.Vertex1 *= scale;
-                        edge.Vertex2 *= scale;
-                        edge.Vertex3 *= scale;
+                        physics.SetVertices(uid, fixture, edge,
+                            edge.Vertex0 * scale,
+                            edge.Vertex1 * scale,
+                            edge.Vertex2 * scale,
+                            edge.Vertex3 * scale, manager);
                         break;
                     case PhysShapeCircle circle:
-                        circle.Position *= scale;
-                        circle.Radius *= scale;
+                        physics.SetPositionRadius(uid, fixture, circle, circle.Position * scale, circle.Radius * scale, manager);
                         break;
                     case PolygonShape poly:
                         var verts = poly.Vertices;
 
-                        for (var i = 0; i < verts.Length; i++)
+                        for (var i = 0; i < poly.VertexCount; i++)
                         {
                             verts[i] *= scale;
                         }
 
-                        poly.SetVertices(verts);
+                        physics.SetVertices(uid, fixture, poly, verts, manager);
                         break;
                     default:
                         throw new NotImplementedException();
                 }
             }
-
-            _entityManager.EntitySysManager.GetEntitySystem<FixtureSystem>().FixtureUpdate(manager);
         }
     }
 
-    public readonly struct ScaleEntityEvent
-    {
-        public readonly EntityUid Uid;
-
-        public ScaleEntityEvent(EntityUid uid)
-        {
-            Uid = uid;
-        }
-    }
+    [ByRefEvent]
+    public readonly record struct ScaleEntityEvent(EntityUid Uid) {}
 }

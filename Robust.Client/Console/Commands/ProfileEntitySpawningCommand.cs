@@ -1,4 +1,4 @@
-﻿#if !FULL_RELEASE
+﻿#if TOOLS
 using System;
 using JetBrains.Profiler.Api;
 using Robust.Shared.Console;

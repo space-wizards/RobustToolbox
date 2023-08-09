@@ -20,11 +20,14 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using EyeComponent = Robust.Server.GameObjects.EyeComponent;
+using MapSystem = Robust.Server.GameObjects.MapSystem;
 
 namespace Robust.UnitTesting
 {
@@ -67,6 +70,7 @@ namespace Robust.UnitTesting
             var configurationManager = deps.Resolve<IConfigurationManagerInternal>();
 
             configurationManager.Initialize(Project == UnitTestProject.Server);
+            deps.Resolve<IReflectionManager>().Initialize();
 
             foreach (var assembly in assemblies)
             {
@@ -84,6 +88,7 @@ namespace Robust.UnitTesting
 
             var systems = deps.Resolve<IEntitySystemManager>();
             // Required systems
+            systems.LoadExtraSystemType<MapSystem>();
             systems.LoadExtraSystemType<EntityLookupSystem>();
 
             // uhhh so maybe these are the wrong system for the client, but I CBF adding sprite system and all the rest,
@@ -91,6 +96,7 @@ namespace Robust.UnitTesting
 
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
+            systems.LoadExtraSystemType<Gravity2DController>();
 
             if (Project == UnitTestProject.Client)
             {
@@ -107,7 +113,7 @@ namespace Robust.UnitTesting
             else
             {
                 systems.LoadExtraSystemType<ServerMetaDataSystem>();
-                systems.LoadExtraSystemType<PVSSystem>();
+                systems.LoadExtraSystemType<PvsSystem>();
                 systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
                 systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
                 systems.LoadExtraSystemType<BroadPhaseSystem>();
@@ -124,6 +130,11 @@ namespace Robust.UnitTesting
             // Required components for the engine to work
             // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?
             var compFactory = deps.Resolve<IComponentFactory>();
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(EyeComponent)))
+            {
+                compFactory.RegisterClass<EyeComponent>();
+            }
 
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MapComponent)))
             {
@@ -175,6 +186,21 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<JointComponent>();
             }
 
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(GridTreeComponent)))
+            {
+                compFactory.RegisterClass<GridTreeComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(MovedGridsComponent)))
+            {
+                compFactory.RegisterClass<MovedGridsComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(JointRelayTargetComponent)))
+            {
+                compFactory.RegisterClass<JointRelayTargetComponent>();
+            }
+
             if (!compFactory.AllRegisteredTypes.Contains(typeof(OccluderComponent)))
             {
                 compFactory.RegisterClass<OccluderComponent>();
@@ -195,6 +221,11 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<LightTreeComponent>();
             }
 
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(Gravity2DComponent)))
+            {
+                compFactory.RegisterClass<Gravity2DComponent>();
+            }
+
             // So by default EntityManager does its own EntitySystemManager initialize during Startup.
             // We want to bypass this and load our own systems hence we will manually initialize it here.
             entMan.Initialize();
@@ -208,7 +239,7 @@ namespace Robust.UnitTesting
 
             var modLoader = deps.Resolve<TestingModLoader>();
             modLoader.Assemblies = contentAssemblies;
-            modLoader.TryLoadModulesFrom(ResourcePath.Root, "");
+            modLoader.TryLoadModulesFrom(ResPath.Root, "");
 
             entMan.Startup();
             mapMan.Startup();

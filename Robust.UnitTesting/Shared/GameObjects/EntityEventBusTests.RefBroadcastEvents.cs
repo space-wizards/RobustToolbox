@@ -59,8 +59,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             public override void Initialize()
             {
                 // The below is not allowed, as you're subscribing by-ref and by-value to the same event...
+#pragma warning disable RA0013
                 SubscribeLocalEvent<TestStructEvent>(MyRefHandler);
                 SubscribeLocalEvent<TestStructEvent>(MyValueHandler);
+#pragma warning restore RA0013
             }
 
             private void MyValueHandler(TestStructEvent args) { }

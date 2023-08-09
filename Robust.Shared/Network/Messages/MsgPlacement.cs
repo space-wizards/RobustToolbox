@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Lidgren.Network;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -16,6 +17,11 @@ namespace Robust.Shared.Network.Messages
 
         public PlacementManagerMessage PlaceType { get; set; }
         public string Align { get; set; }
+
+        /// <summary>
+        /// Should we replace existing entities if possible
+        /// </summary>
+        public bool Replacement { get; set; }
         public bool IsTile { get; set; }
         public ushort TileType { get; set; }
         public string EntityTemplateName { get; set; }
@@ -36,6 +42,7 @@ namespace Robust.Shared.Network.Messages
                 case PlacementManagerMessage.RequestPlacement:
                     Align = buffer.ReadString();
                     IsTile = buffer.ReadBoolean();
+                    Replacement = buffer.ReadBoolean();
 
                     if (IsTile) TileType = buffer.ReadUInt16();
                     else EntityTemplateName = buffer.ReadString();
@@ -70,6 +77,7 @@ namespace Robust.Shared.Network.Messages
                 case PlacementManagerMessage.RequestPlacement:
                     buffer.Write(Align);
                     buffer.Write(IsTile);
+                    buffer.Write(Replacement);
 
                     if(IsTile) buffer.Write(TileType);
                     else buffer.Write(EntityTemplateName);

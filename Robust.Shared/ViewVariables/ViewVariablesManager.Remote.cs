@@ -6,6 +6,7 @@ using System.Security.AccessControl;
 using System.Threading.Tasks;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
+using Robust.Shared.ViewVariables.Commands;
 
 namespace Robust.Shared.ViewVariables;
 
@@ -117,7 +118,7 @@ internal abstract partial class ViewVariablesManager
 
     private async void ReadRemotePathRequest(MsgViewVariablesReadPathReq req)
     {
-        if (!CheckPermissions(req.MsgChannel))
+        if (!CheckPermissions(req.MsgChannel, ViewVariablesReadCommand.Comm))
         {
             SendMessage(new MsgViewVariablesReadPathRes(req)
             {
@@ -155,7 +156,7 @@ internal abstract partial class ViewVariablesManager
 
     private async void WriteRemotePathRequest(MsgViewVariablesWritePathReq req)
     {
-        if (!CheckPermissions(req.MsgChannel))
+        if (!CheckPermissions(req.MsgChannel, ViewVariablesWriteCommand.Comm))
         {
             _netMan.ServerSendMessage(new MsgViewVariablesWritePathRes(req)
             {
@@ -202,7 +203,7 @@ internal abstract partial class ViewVariablesManager
 
     private async void InvokeRemotePathRequest(MsgViewVariablesInvokePathReq req)
     {
-        if (!CheckPermissions(req.MsgChannel))
+        if (!CheckPermissions(req.MsgChannel, ViewVariablesInvokeCommand.Comm))
         {
             _netMan.ServerSendMessage(new MsgViewVariablesInvokePathRes(req)
             {
@@ -268,7 +269,7 @@ internal abstract partial class ViewVariablesManager
 
     private async void ListRemotePathRequest(MsgViewVariablesListPathReq req)
     {
-        if (!CheckPermissions(req.MsgChannel))
+        if (!CheckPermissions(req.MsgChannel, "vv"))
         {
             _netMan.ServerSendMessage(new MsgViewVariablesListPathRes(req)
             {
@@ -377,6 +378,6 @@ internal abstract partial class ViewVariablesManager
         }
     }
 
-    protected abstract bool CheckPermissions(INetChannel channel);
+    protected abstract bool CheckPermissions(INetChannel channel, string command);
     protected abstract bool TryGetSession(Guid guid, [NotNullWhen(true)] out ICommonSession? session);
 }

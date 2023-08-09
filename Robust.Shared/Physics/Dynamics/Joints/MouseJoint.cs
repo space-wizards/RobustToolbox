@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -108,14 +109,6 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
     }
 
     private float _damping;
-
-    /// <summary>
-    /// The initial world target point. This is assumed
-    /// to coincide with the body anchor initially.
-    /// </summary>
-    public Vector2 Target =>
-        IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(BodyAUid).WorldPosition;
-
     private float _invMassB;
     private float _invIB;
     private Vector2 _rB;
@@ -127,10 +120,8 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 
     public MouseJoint() {}
 
-    public MouseJoint(EntityUid uidA, EntityUid uidB, Vector2 localAnchorA, Vector2 localAnchorB)
+    public MouseJoint(EntityUid uidA, EntityUid uidB, Vector2 localAnchorA, Vector2 localAnchorB) : base(uidA, uidB)
     {
-        BodyAUid = uidA;
-        BodyBUid = uidB;
         LocalAnchorA = localAnchorA;
         LocalAnchorB = localAnchorB;
     }
@@ -222,17 +213,18 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 
         _mass = K.GetInverse();
 
-        _C = cB + _rB - Target;
+        var target = positions[bodyA.IslandIndex[island.Index]];
+        _C = cB + _rB - target;
         _C *= _beta;
 
         // Cheat with some damping
-        wB *= 0.98f;
+        wB*= MathF.Max(0.0f, 1.0f - 0.02f * (60.0f * data.FrameTime));
 
         if (data.WarmStarting)
         {
             _impulse *= data.DtRatio;
             vB += _impulse * _invMassB;
-            wB += _invIB * Vector2.Cross(_rB, _impulse);
+            wB += _invIB * Vector2Helpers.Cross(_rB, _impulse);
         }
         else
         {
@@ -254,21 +246,21 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         var wB = angularVelocities[offset + _indexB];
 
         // Cdot = v + cross(w, r)
-        var Cdot = vB + Vector2.Cross(wB, _rB);
+        var Cdot = vB + Vector2Helpers.Cross(wB, _rB);
         var impulse = Transform.Mul(_mass, -(Cdot + _C + _impulse * _gamma));
 
         var oldImpulse = _impulse;
         _impulse += impulse;
         float maxImpulse = data.FrameTime * _maxForce;
 
-        if (_impulse.LengthSquared > maxImpulse * maxImpulse)
+        if (_impulse.LengthSquared() > maxImpulse * maxImpulse)
         {
-            _impulse *= maxImpulse / _impulse.Length;
+            _impulse *= maxImpulse / _impulse.Length();
         }
         impulse = _impulse - oldImpulse;
 
         vB += impulse * _invMassB;
-        wB += _invIB * Vector2.Cross(_rB, impulse);
+        wB += _invIB * Vector2Helpers.Cross(_rB, impulse);
 
         linearVelocities[offset + _indexB] = vB;
         angularVelocities[offset + _indexB] = wB;
@@ -280,6 +272,33 @@ public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
         float[] angles)
     {
         return true;
+    }
+
+    public override Joint Clone(EntityUid uidA, EntityUid uidB)
+    {
+        var mouse = new MouseJoint(uidA, uidB, LocalAnchorA, LocalAnchorB)
+        {
+            Enabled = Enabled,
+            MaxForce = MaxForce,
+            Damping = Damping,
+            Stiffness = Stiffness,
+            _impulse = _impulse,
+            Breakpoint = Breakpoint,
+        };
+        return mouse;
+    }
+
+    public override void CopyTo(Joint original)
+    {
+        if (original is not MouseJoint mouse)
+            return;
+
+        mouse.Enabled = Enabled;
+        mouse.MaxForce = MaxForce;
+        mouse.Damping = Damping;
+        mouse.Stiffness = Stiffness;
+        mouse._impulse = _impulse;
+        mouse.Breakpoint = Breakpoint;
     }
 
     public bool Equals(MouseJoint? other)

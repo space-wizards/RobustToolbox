@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Avalonia.Metadata;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -28,6 +29,9 @@ namespace Robust.Client.UserInterface
         private readonly List<Control> _orderedChildren = new();
 
         private bool _visible = true;
+        // Determines if this control requires space, even when
+        // it's visibility has been set to false
+        private bool _reservesSpace = false;
 
         // _marginSetSize is the size calculated by the margins,
         // but it's different from _size if min size is higher.
@@ -70,19 +74,37 @@ namespace Robust.Client.UserInterface
         //    _nameScope = nameScope;
         //}
 
-        public UITheme Theme { get; set; }
+        public UITheme Theme { get; internal set; }
 
-        protected virtual void OnThemeUpdated(){}
-        internal void ThemeUpdateRecursive()
+        private UITheme? _themeOverride;
+
+        public UITheme? ThemeOverride
         {
-            var curTheme = UserInterfaceManager.CurrentTheme;
-            if (Theme == curTheme) return; //don't update themes if the themes are up to date
-            Theme = curTheme;
+            get => _themeOverride;
+            set
+            {
+                if (_themeOverride == value)
+                    return;
+                _themeOverride = value;
+                ThemeUpdateRecursive(Parent?.Theme ?? UserInterfaceManager.CurrentTheme);
+            }
+        }
+
+        protected virtual void OnThemeUpdated()
+        {
+        }
+
+        public void ThemeUpdateRecursive(UITheme theme)
+        {
+            theme = _themeOverride ?? theme;
+            if (Theme == theme)
+                return;
+
+            Theme = theme;
             OnThemeUpdated();
             foreach (var child in Children)
             {
-                // Don't descent into children that have a style sheet since those aren't affected.
-                child.ThemeUpdateRecursive();
+                child.ThemeUpdateRecursive(Theme);
             }
         }
 
@@ -206,6 +228,33 @@ namespace Robust.Client.UserInterface
                 }
             }
         }
+
+        /// <summary>
+        ///     Whether or not this control and its children require
+        ///     space to be reserved, even when not visible.
+        /// </summary>
+        /// <seealso cref="ReservesSpace"/>
+        [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
+        public bool ReservesSpace
+        {
+            get => _reservesSpace;
+            set
+            {
+                if (_reservesSpace == value)
+                {
+                    return;
+                }
+
+                _reservesSpace = value;
+
+                // TODO: unhardcode this.
+                // Many containers ignore children if they're invisible, so that's why we're replicating that here.
+                Parent?.InvalidateMeasure();
+                InvalidateMeasure();
+            }
+        }
+
 
         /// <summary>
         ///     Whether or not this control is an (possibly indirect) child of
@@ -638,6 +687,7 @@ namespace Robust.Client.UserInterface
         protected virtual void ChildAdded(Control newChild)
         {
             OnChildAdded?.Invoke(newChild);
+            newChild.ThemeUpdateRecursive(Theme);
             InvalidateMeasure();
         }
 

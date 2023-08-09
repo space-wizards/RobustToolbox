@@ -33,6 +33,7 @@ namespace Robust.Client.ViewVariables.Instances
     internal sealed class ViewVariablesInstanceEntity : ViewVariablesInstance
     {
         private readonly IEntityManager _entityManager;
+        private readonly ISawmill _logger;
 
         private const int TabClientVars = 0;
         private const int TabClientComponents = 1;
@@ -62,9 +63,10 @@ namespace Robust.Client.ViewVariables.Instances
 
         private bool _serverLoaded;
 
-        public ViewVariablesInstanceEntity(IClientViewVariablesManagerInternal vvm, IEntityManager entityManager, IRobustSerializer robustSerializer) : base(vvm, robustSerializer)
+        public ViewVariablesInstanceEntity(IClientViewVariablesManagerInternal vvm, IEntityManager entityManager, IRobustSerializer robustSerializer, ISawmill logger) : base(vvm, robustSerializer)
         {
             _entityManager = entityManager;
+            _logger = logger;
         }
 
         public override void Initialize(DefaultWindow window, object obj)
@@ -86,7 +88,7 @@ namespace Robust.Client.ViewVariables.Instances
                 var stringified = PrettyPrint.PrintUserFacingWithType(obj, out var typeStringified);
                 if (typeStringified != "")
                 {
-                    //var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
+                    //var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
                     // Custom ToString() implementation.
                     var headBox = new BoxContainer
                     {
@@ -108,7 +110,7 @@ namespace Robust.Client.ViewVariables.Instances
                     top = new Label {Text = stringified};
                 }
 
-                if (_entityManager.TryGetComponent(_entity, out ISpriteComponent? sprite))
+                if (_entityManager.TryGetComponent(_entity, out SpriteComponent? sprite))
                 {
                     var hBox = new BoxContainer
                     {
@@ -433,7 +435,7 @@ namespace Robust.Client.ViewVariables.Instances
             }
             catch (Exception e)
             {
-                Logger.Warning($"Failed to add component!\n{e}");
+                _logger.Warning($"Failed to add component!\n{e}");
             }
 
             PopulateClientComponents();
@@ -450,7 +452,7 @@ namespace Robust.Client.ViewVariables.Instances
             }
             catch (Exception e)
             {
-                Logger.Warning($"Couldn't remove component!\n{e}");
+                _logger.Warning($"Couldn't remove component!\n{e}");
             }
 
             PopulateClientComponents();

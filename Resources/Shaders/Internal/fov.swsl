@@ -5,6 +5,7 @@ preset raw;
 #include "/Shaders/Internal/fov_shared.swsl"
 
 const highp float g_MinVariance = 0.0;
+uniform highp vec4 occludeColor;
 
 void fragment()
 {
@@ -18,5 +19,5 @@ void fragment()
         discard;
     }
 
-    COLOR = vec4(0.0, 0.0, 0.0, 1.0);
+    COLOR = vec4(occludeColor.rgb, 1.0);
 }

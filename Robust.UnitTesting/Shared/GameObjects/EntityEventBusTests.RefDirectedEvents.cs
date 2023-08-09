@@ -77,7 +77,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             {
                 // The below is not allowed, as you're subscribing by-ref and by-value to the same event...
                 SubscribeLocalEvent<DummyComponent, TestStructEvent>(MyRefHandler);
+#pragma warning disable RA0013
                 SubscribeLocalEvent<DummyTwoComponent, TestStructEvent>(MyValueHandler);
+#pragma warning restore RA0013
             }
 
             private void MyValueHandler(EntityUid uid, DummyTwoComponent component, TestStructEvent args) { }

@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Client.Input;
 using Robust.Client.Map;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
@@ -12,6 +13,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Profiling;
@@ -40,6 +42,8 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly IDependencyCollection _deps = default!;
+        [Dependency] private readonly ILocalizationManager _loc = default!;
+        [Dependency] private readonly IInputManager _inputManager = default!;
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
@@ -60,8 +64,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private GLShaderProgram? _currentProgram;
 
-        private int _lightmapDivider = 2;
-        private int _maxLightsPerScene = 128;
+        private float _lightResolutionScale = 0.5f;
+        private int _maxLights = 2048;
+        private int _maxOccluders = 2048;
+        private int _maxShadowcastingLights = 128;
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
@@ -72,6 +78,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private IBindingsContext _glBindingsContext = default!;
         private bool _earlyGLInit;
+        private bool _threadWindowApi;
 
         public Clyde()
         {
@@ -82,16 +89,27 @@ namespace Robust.Client.Graphics.Clyde
 
         public bool InitializePreWindowing()
         {
-            _sawmillOgl = Logger.GetSawmill("clyde.ogl");
+            _sawmillOgl = _logManager.GetSawmill("clyde.ogl");
 
             _cfg.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
             _cfg.OnValueChanged(CVars.DisplayVSync, VSyncChanged, true);
             _cfg.OnValueChanged(CVars.DisplayWindowMode, WindowModeChanged, true);
-            _cfg.OnValueChanged(CVars.DisplayLightMapDivider, LightmapDividerChanged, true);
-            _cfg.OnValueChanged(CVars.DisplayMaxLightsPerScene, MaxLightsPerSceneChanged, true);
-            _cfg.OnValueChanged(CVars.DisplaySoftShadows, SoftShadowsChanged, true);
+            _cfg.OnValueChanged(CVars.LightResolutionScale, LightResolutionScaleChanged, true);
+            _cfg.OnValueChanged(CVars.MaxShadowcastingLights, MaxShadowcastingLightsChanged, true);
+            _cfg.OnValueChanged(CVars.LightSoftShadows, SoftShadowsChanged, true);
+            _cfg.OnValueChanged(CVars.MaxLightCount, MaxLightsChanged, true);
+            _cfg.OnValueChanged(CVars.MaxOccluderCount, MaxOccludersChanged, true);
             // I can't be bothered to tear down and set these threads up in a cvar change handler.
+
+            // Windows and Linux can be trusted to not explode with threaded windowing,
+            // macOS cannot.
+            if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
+                _cfg.OverrideDefault(CVars.DisplayThreadWindowApi, true);
+
             _threadWindowBlit = _cfg.GetCVar(CVars.DisplayThreadWindowBlit);
+            _threadWindowApi = _cfg.GetCVar(CVars.DisplayThreadWindowApi);
+
+            InitKeys();
 
             return InitWindowing();
         }
@@ -107,7 +125,7 @@ namespace Robust.Client.Graphics.Clyde
             return true;
         }
 
-        public bool SeparateWindowThread => true;
+        public bool SeparateWindowThread => _threadWindowApi;
 
         public void EnterWindowLoop()
         {
@@ -121,6 +139,11 @@ namespace Robust.Client.Graphics.Clyde
 
         public void FrameProcess(FrameEventArgs eventArgs)
         {
+            if (!_threadWindowApi)
+            {
+                _windowing!.PollEvents();
+            }
+
             _windowing?.FlushDispose();
             FlushShaderInstanceDispose();
             FlushRenderTargetDispose();
@@ -151,6 +174,14 @@ namespace Robust.Client.Graphics.Clyde
             _entityManager.EventBus.SubscribeEvent<GridStartupEvent>(EventSource.Local, this, _updateOnGridCreated);
             _entityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, _updateOnGridRemoved);
             _entityManager.EventBus.SubscribeEvent<GridModifiedEvent>(EventSource.Local, this, _updateOnGridModified);
+        }
+
+        public void ShutdownGridEcsEvents()
+        {
+            _entityManager.EventBus.UnsubscribeEvent<TileChangedEvent>(EventSource.Local, this);
+            _entityManager.EventBus.UnsubscribeEvent<GridStartupEvent>(EventSource.Local, this);
+            _entityManager.EventBus.UnsubscribeEvent<GridRemovalEvent>(EventSource.Local, this);
+            _entityManager.EventBus.UnsubscribeEvent<GridModifiedEvent>(EventSource.Local, this);
         }
 
         private void GLInitBindings(bool gles)

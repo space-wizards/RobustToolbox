@@ -13,6 +13,7 @@ namespace Robust.Shared.Utility
     public struct RemQueue<T>
     {
         public List<T>? List;
+        public int Count => List?.Count ?? 0;
 
         public void Add(T t)
         {
@@ -23,6 +24,11 @@ namespace Robust.Shared.Utility
         public Enumerator GetEnumerator()
         {
             return new(List);
+        }
+
+        public void Clear()
+        {
+            List?.Clear();
         }
 
         public struct Enumerator : IEnumerator<T>

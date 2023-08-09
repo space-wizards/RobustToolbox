@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -6,6 +7,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Physics.Systems;
 
@@ -43,16 +45,18 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
 
             body1 = entManager.AddComponent<PhysicsComponent>(ent1);
             body2 = entManager.AddComponent<PhysicsComponent>(ent2);
+            var manager1 = entManager.EnsureComponent<FixturesComponent>(ent1);
+            var manager2 = entManager.EnsureComponent<FixturesComponent>(ent2);
             entManager.AddComponent<CollisionWakeComponent>(ent2);
 
-            physicsSystem.SetBodyType(body1, BodyType.Dynamic);
-            physicsSystem.SetBodyType(body2, BodyType.Dynamic);
-            physicsSystem.SetCanCollide(body1, true);
-            physicsSystem.SetCanCollide(body2, true);
+            physicsSystem.SetBodyType(ent1, BodyType.Dynamic, manager: manager1, body: body1);
+            physicsSystem.SetBodyType(ent2, BodyType.Dynamic, manager: manager2, body: body2);
+            physicsSystem.SetCanCollide(ent1, true, manager: manager1, body: body1);
+            physicsSystem.SetCanCollide(ent2, true, manager: manager2, body: body2);
             var shape = new PolygonShape();
             shape.SetAsBox(0.5f, 0.5f);
 
-            fixSystem.CreateFixture(body2, shape);
+            fixSystem.CreateFixture(ent2, new Fixture("fix1", shape, 0, 0, false), manager: manager2, body: body2);
 
             joint = jointSystem.CreateDistanceJoint(ent1, ent2, id: "distance-joint");
             joint.CollideConnected = false;
@@ -63,7 +67,7 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             Assert.That(joint.Enabled);
-            physicsSystem.SetAwake(body2, false);
+            physicsSystem.SetAwake(ent2, body2, false);
             Assert.That(!body2.Awake);
 
             entManager.DeleteEntity(ent2);

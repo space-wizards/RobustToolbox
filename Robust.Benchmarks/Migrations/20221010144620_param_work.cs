@@ -5,7 +5,7 @@ using Robust.Benchmarks.Exporters;
 
 namespace Robust.Benchmarks.Migrations
 {
-    public partial class param_work : Migration
+    public partial class ParamWork : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

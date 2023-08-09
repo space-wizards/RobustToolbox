@@ -1,10 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
 
   </PropertyGroup>
-  <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -20,4 +18,5 @@
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
   </ItemGroup>
 
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
 </Project>

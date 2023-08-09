@@ -161,3 +161,9 @@ command-description-EqualCommand =
     Performs an equality comparison, returning true if the inputs are equal.
 command-description-NotEqualCommand =
     Performs an equality comparison, returning true if the inputs are not equal.
+
+command-description-entitysystemupdateorder-tick =
+    Lists the tick update order of entity systems.
+
+command-description-entitysystemupdateorder-frame =
+    Lists the frame update order of entity systems.

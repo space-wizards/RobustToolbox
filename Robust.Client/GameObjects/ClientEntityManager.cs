@@ -18,7 +18,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public sealed class ClientEntityManager : EntityManager, IClientEntityManagerInternal
+    public sealed partial class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;

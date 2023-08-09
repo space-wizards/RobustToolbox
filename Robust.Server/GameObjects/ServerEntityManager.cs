@@ -25,7 +25,7 @@ namespace Robust.Server.GameObjects
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
     [UsedImplicitly] // DI Container
-    public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal
+    public sealed partial class ServerEntityManager : EntityManager, IServerEntityManagerInternal
     {
         private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
             "robust_entities_count",

@@ -1,4 +1,6 @@
 using System;
+using System.Runtime.CompilerServices;
+using Arch.Core;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -72,6 +74,23 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EntityUid FromArch(in Entity entity) => new(entity.Id + 1);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Entity ToArch()
+        {
+            if (IsClientSide())
+            {
+                return new Entity(GetArchId() & ~ClientUid);
+            }
+
+            return new Entity(GetArchId());
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetArchId() => _uid - 1;
 
         /// <summary>
         ///     Checks if the ID value is valid. Does not check if it identifies

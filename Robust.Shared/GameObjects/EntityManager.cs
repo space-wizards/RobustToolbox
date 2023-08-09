@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Arch.Core;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Markdown.Mapping;
 
@@ -111,6 +112,7 @@ namespace Robust.Shared.GameObjects
 
             _eventBus = new EntityEventBus(this);
 
+            InitializeArch();
             InitializeComponents();
             _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
             _sawmill = LogManager.GetSawmill("entity");
@@ -243,6 +245,7 @@ namespace Robust.Shared.GameObjects
             FlushEntities();
             _eventBus.ClearEventTables();
             _entitySystemManager.Shutdown();
+            ShutdownArch();
             ClearComponents();
             ShuttingDown = false;
             Started = false;
@@ -638,6 +641,7 @@ namespace Robust.Shared.GameObjects
             }
 
             Entities.Remove(uid);
+            DestroyArch(uid);
         }
 
         public virtual void QueueDeleteEntity(EntityUid uid)
@@ -730,6 +734,8 @@ namespace Robust.Shared.GameObjects
 
             // allocate the required TransformComponent
             AddComponent<TransformComponent>(uid);
+
+            SpawnEntityArch(uid);
 
             return uid;
         }

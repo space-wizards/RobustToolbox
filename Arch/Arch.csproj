@@ -1,46 +1,43 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <AssemblyName>Arch</AssemblyName>
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <AssemblyName>Arch</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefaultItemExcludes>src/Arch/**/*</DefaultItemExcludes>
+    <DefineConstants>PURE_ECS;CONTRACTS_FULL</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
 
-        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-        <DefaultItemExcludes>src/Arch/**/*</DefaultItemExcludes>
-        <DefineConstants>$(DefineConstants);PURE_ECS</DefineConstants>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  <ItemGroup>
+    <Compile Include="Arch\src\Arch\**\*.cs">
+      <Link>Arch\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Remove="Arch\src\Arch\obj\**\*.cs" />
+  </ItemGroup>
 
-        <SkipRobustAnalyzer>true</SkipRobustAnalyzer>
-    </PropertyGroup>
+  <ItemGroup>
+    <Using Include="System" />
+    <Using Include="System.Collections" />
+    <Using Include="System.Collections.Generic" />
+    <Using Include="System.Diagnostics" />
+    <Using Include="System.Diagnostics.CodeAnalysis" />
+    <Using Include="System.IO" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Runtime.CompilerServices" />
+    <Using Include="System.Runtime.InteropServices" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <Compile Include="Arch\src\Arch\**\*.cs">
-            <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-        </Compile>
-        <Compile Remove="Arch\src\Arch\obj\**\*.cs" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include=".\Arch\src\Arch.SourceGen\Arch.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <Using Include="System" />
-        <Using Include="System.Collections" />
-        <Using Include="System.Collections.Generic" />
-        <Using Include="System.Diagnostics" />
-        <Using Include="System.Diagnostics.CodeAnalysis" />
-        <Using Include="System.IO" />
-        <Using Include="System.Linq" />
-        <Using Include="System.Runtime.CompilerServices" />
-        <Using Include="System.Runtime.InteropServices" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include=".\Arch\src\Arch.SourceGen\Arch.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Collections.Pooled" Version="2.0.0-preview.27" />
-        <PackageReference Include="CommunityToolkit.HighPerformance" Version="7.1.2" />
-        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
-        <PackageReference Include="ZeroAllocJobScheduler" Version="1.0.2" />
-    </ItemGroup>
-
-    <Import Project="../MSBuild/Robust.Properties.targets" />
+  <ItemGroup>
+    <PackageReference Include="Collections.Pooled" Version="2.0.0-preview.27" />
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="7.1.2" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" />
+    <PackageReference Include="ZeroAllocJobScheduler" Version="1.0.2" />
+  </ItemGroup>
 </Project>

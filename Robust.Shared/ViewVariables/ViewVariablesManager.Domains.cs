@@ -6,7 +6,6 @@ using System.Linq;
 using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.ViewVariables;
@@ -258,7 +257,7 @@ internal abstract partial class ViewVariablesManager
     [DataDefinition] // For VV path reading purposes.
     [SuppressMessage("ReSharper", "UnusedMember.Local")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    private sealed class VvTest : IEnumerable<object>
+    private sealed partial class VvTest : IEnumerable<object>
     {
         [DataField("x")]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -292,7 +291,7 @@ internal abstract partial class ViewVariablesManager
         }
 
         [DataDefinition]
-        private struct ComplexDataStructure
+        private partial struct ComplexDataStructure
         {
             // VV3 uses our serialization system internally, so this allows these values to be changed.
             [DataField("X")]

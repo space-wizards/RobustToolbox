@@ -24,20 +24,19 @@
 // VERSION: 1.0.1
 // https://github.com/Auburn/FastNoise
 
+using System;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Noise;
-
-using System;
-using System.Runtime.CompilerServices;
 
 // Switch between using floats or doubles for input position
 using FNLfloat = System.Single;
 //using FNLfloat = System.Double;
 
 [DataDefinition, Serializable, NetSerializable]
-public sealed class FastNoiseLite
+public sealed partial class FastNoiseLite
 {
     private const short INLINE = 256; // MethodImplOptions.AggressiveInlining;
     private const short OPTIMISE = 512; // MethodImplOptions.AggressiveOptimization;

@@ -8,13 +8,13 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Shared.GameObjects
 {
     [NetworkedComponent]
-    public abstract class SharedUserInterfaceComponent : Component
+    public abstract partial class SharedUserInterfaceComponent : Component
     {
         [DataField("interfaces")]
         internal List<PrototypeData> _interfaceData = new();
 
         [DataDefinition]
-        public sealed class PrototypeData
+        public sealed partial class PrototypeData
         {
             [DataField("key", required: true)]
             public Enum UiKey { get; } = default!;

@@ -23,8 +23,6 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Robust.Shared.Configuration;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
@@ -36,7 +34,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class PolygonShape : IPhysShape, ISerializationHooks, IEquatable<PolygonShape>, IApproxEquatable<PolygonShape>
+    public sealed partial class PolygonShape : IPhysShape, ISerializationHooks, IEquatable<PolygonShape>, IApproxEquatable<PolygonShape>
     {
         // TODO: Serialize this someday. This probably needs a dedicated shapeserializer that derives vertexcount
         // from the yml nodes just for convenience.

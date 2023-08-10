@@ -1,9 +1,5 @@
-using System;
-using System.Collections.Generic;
 using Arch.Core;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Toolshed.TypeParsers;
-using ComponentType = Arch.Core.Utils.ComponentType;
 
 namespace Robust.Client.GameObjects;
 
@@ -23,16 +19,20 @@ public sealed partial class ClientEntityManager
         World.Destroy(_clientWorld);
     }
 
-    protected override void SpawnEntityArch(EntityUid uid)
+    protected override void SpawnEntityArch(EntityUid uid, MetaDataComponent metadata)
     {
+        Entity entity;
+
         if (uid.IsClientSide())
         {
-            _clientWorld.Create();
+            entity = _clientWorld.Create(DefaultArchetype);
         }
         else
         {
-            World.Create(uid.ToArch().Id);
+            entity = World.Create(uid.ToArch().Id, DefaultArchetype);
         }
+
+        World.Set(entity, metadata);
     }
 
     protected override void DestroyArch(EntityUid uid)

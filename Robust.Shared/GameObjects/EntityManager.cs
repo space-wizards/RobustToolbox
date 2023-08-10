@@ -12,6 +12,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Arch.Core;
+using Robust.Shared.Collections;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Markdown.Mapping;
 
@@ -39,6 +40,8 @@ namespace Robust.Shared.GameObjects
         // positions on spawn....
         private SharedTransformSystem _xforms = default!;
 
+        private QueryDescription _archMetaQuery = new QueryDescription().WithAll<MetaDataComponent>();
+
         private EntityQuery<MetaDataComponent> _metaQuery;
         private EntityQuery<TransformComponent> _xformQuery;
 
@@ -61,11 +64,6 @@ namespace Robust.Shared.GameObjects
         protected readonly HashSet<EntityUid> QueuedDeletionsSet = new();
 
         private EntityDiffContext _context = new();
-
-        /// <summary>
-        ///     All entities currently stored in the manager.
-        /// </summary>
-        protected readonly HashSet<EntityUid> Entities = new();
 
         private EntityEventBus _eventBus = null!;
 
@@ -435,10 +433,19 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public int EntityCount => Entities.Count;
+        public int EntityCount => World.Size;
 
         /// <inheritdoc />
-        public IEnumerable<EntityUid> GetEntities() => Entities;
+        public IEnumerable<EntityUid> GetEntities()
+        {
+            var ents = new List<Entity>();
+            World.GetEntities(_archMetaQuery, ents);
+
+            foreach (var entity in ents)
+            {
+                yield return EntityUid.FromArch(entity);
+            }
+        }
 
         /// <summary>
         /// Marks this entity as dirty so that it will be updated over the network.
@@ -640,7 +647,6 @@ namespace Robust.Shared.GameObjects
                 _sawmill.Error($"Caught exception while raising {nameof(EntityDeletedMessage)} on '{ToPrettyString(uid, metadata)}'\n{e}");
             }
 
-            Entities.Remove(uid);
             DestroyArch(uid);
         }
 
@@ -687,7 +693,7 @@ namespace Robust.Shared.GameObjects
                 DeleteEntity(e);
             }
 
-            if (Entities.Count != 0)
+            if (World.Size > 0)
                 _sawmill.Error("Entities were spawned while flushing entities.");
         }
 
@@ -728,14 +734,13 @@ namespace Robust.Shared.GameObjects
             metadata = new MetaDataComponent { Owner = uid };
 #pragma warning restore CS0618
 
-            Entities.Add(uid);
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid, metadata, false, false);
 
             // allocate the required TransformComponent
             AddComponent<TransformComponent>(uid);
 
-            SpawnEntityArch(uid);
+            SpawnEntityArch(uid, metadata);
 
             return uid;
         }

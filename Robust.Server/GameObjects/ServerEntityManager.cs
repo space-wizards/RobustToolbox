@@ -152,7 +152,7 @@ namespace Robust.Server.GameObjects
 
             base.TickUpdate(frameTime, noPredictions, histogram);
 
-            EntitiesCount.Set(Entities.Count);
+            EntitiesCount.Set(EntityCount);
         }
 
         public uint GetLastMessageSequence(IPlayerSession session)

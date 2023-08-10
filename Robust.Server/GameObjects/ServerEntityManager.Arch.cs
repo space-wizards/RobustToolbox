@@ -4,8 +4,9 @@ namespace Robust.Server.GameObjects;
 
 public sealed partial class ServerEntityManager
 {
-    protected override void SpawnEntityArch(EntityUid uid)
+    protected override void SpawnEntityArch(EntityUid uid, MetaDataComponent metadata)
     {
-        World.Create();
+        var entity = World.Create(DefaultArchetype);
+        World.Set(entity, metadata);
     }
 }

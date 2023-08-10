@@ -806,4 +806,80 @@ public partial class EntitySystem
     }
 
     #endregion
+
+    #region NetEntities
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> of an entity. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected NetEntity ToNetEntity(EntityUid uid, MetaDataComponent? metadata = null)
+    {
+        return EntityManager.ToNetEntity(uid, metadata);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> of an entity. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected NetEntity? ToNetEntity(EntityUid? uid, MetaDataComponent? metadata = null)
+    {
+        return EntityManager.ToNetEntity(uid, metadata);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid ToEntity(NetEntity netEntity)
+    {
+        return EntityManager.ToEntity(netEntity);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid? ToEntity(NetEntity? netEntity)
+    {
+        return EntityManager.ToEntity(netEntity);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected HashSet<NetEntity> ToNetEntitySet(HashSet<EntityUid> uids)
+    {
+        return EntityManager.ToNetEntitySet(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected HashSet<EntityUid> ToEntitySet(HashSet<NetEntity> netEntities)
+    {
+        return EntityManager.ToEntitySet(netEntities);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected List<NetEntity> ToNetEntityList(List<EntityUid> uids)
+    {
+        return EntityManager.ToNetEntityList(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected List<EntityUid> ToEntityList(List<NetEntity> netEntities)
+    {
+        return EntityManager.ToEntityList(netEntities);
+    }
+
+    #endregion
 }

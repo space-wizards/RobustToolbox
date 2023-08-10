@@ -27,14 +27,15 @@ namespace Robust.Server.GameStates;
 
 internal sealed partial class PvsSystem : EntitySystem
 {
-    [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
-    [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Shared.IoC.Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
-    [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
-    [Shared.IoC.Dependency] private readonly IParallelManager _parallelManager = default!;
     [Shared.IoC.Dependency] private readonly IComponentFactory _factory = default!;
+    [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
+    [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
+    [Shared.IoC.Dependency] private readonly ObjectPoolManager _poolManager = default!;
+    [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
+    [Shared.IoC.Dependency] private readonly IParallelManager _parallelManager = default!;
+    [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
+    [Shared.IoC.Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
+    [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
 
     public const float ChunkSize = 8;
 
@@ -78,9 +79,6 @@ internal sealed partial class PvsSystem : EntitySystem
     private readonly ObjectPool<Stack<EntityUid>> _stackPool
         = new DefaultObjectPool<Stack<EntityUid>>(
             new StackPolicy<EntityUid>(), MaxVisPoolSize);
-
-    private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
-        = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
 
     private readonly ObjectPool<Dictionary<EntityUid, MetaDataComponent>> _chunkCachePool =
         new DefaultObjectPool<Dictionary<EntityUid, MetaDataComponent>>(
@@ -1007,7 +1005,7 @@ internal sealed partial class PvsSystem : EntitySystem
     public (List<EntityState>?, List<EntityUid>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
     {
         List<EntityState>? stateEntities;
-        var toSend = _uidSetPool.Get();
+        var toSend = _poolManager.GetEntitySet();
         DebugTools.Assert(toSend.Count == 0);
         bool enumerateAll = false;
 
@@ -1119,7 +1117,7 @@ internal sealed partial class PvsSystem : EntitySystem
             }
         }
 
-        _uidSetPool.Return(toSend);
+        _poolManager.Return(toSend);
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         if (stateEntities.Count == 0)
@@ -1220,14 +1218,14 @@ internal sealed partial class PvsSystem : EntitySystem
         if (session.Status != SessionStatus.InGame)
             return Array.Empty<EntityUid>();
 
-        var viewers = _uidSetPool.Get();
+        var viewers = _poolManager.GetEntitySet();
 
         if (session.AttachedEntity != null)
         {
             // Fast path
             if (session is IPlayerSession { ViewSubscriptionCount: 0 })
             {
-                _uidSetPool.Return(viewers);
+                _poolManager.Return(viewers);
                 return new[] { session.AttachedEntity.Value };
             }
 
@@ -1245,7 +1243,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         var viewerArray = viewers.ToArray();
 
-        _uidSetPool.Return(viewers);
+        _poolManager.Return(viewers);
         return viewerArray;
     }
 

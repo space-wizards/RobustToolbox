@@ -110,7 +110,6 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
                 compData[j++] = new ComponentChange(id, compState, tick);
             }
 
-            // TODO: Do we even care about netentity for replays?
             var meta = _entMan.GetComponent<MetaDataComponent>(uid);
             entStates[i++] = new EntityState(uid, meta.NetEntity, compData, tick, netComps);
         }

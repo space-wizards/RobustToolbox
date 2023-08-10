@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 147.0.0
+
+### Breaking changes
+
+* Renamed one of the EntitySystem.Dirty() methods to `DirtyEntity()` to avoid confusion with the component-dirtying methods.
+
+### New features
+
+* Added debug commands that return the entity system update order.
+
+### Bugfixes
+
+* Fixed a bug in MetaDataSystem that was causing the metadata component to not be marked as dirty.
+
+
 ## 146.0.0
 
 ### Breaking changes

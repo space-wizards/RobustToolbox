@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects
     ///     This type contains a network identification number of an entity.
     ///     This can be used by the EntityManager to access an entity
     /// </summary>
-    [Serializable, CopyByRef]
+    [CopyByRef]
     public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>, ISpanFormattable
     {
         /// <summary>

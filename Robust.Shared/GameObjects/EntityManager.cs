@@ -556,7 +556,7 @@ namespace Robust.Shared.GameObjects
             MetaDataComponent metadata)
         {
             // Note about this method: #if EXCEPTION_TOLERANCE is not used here because we're gonna it in the future...
-            var netEntity = ToNetEntity(uid);
+            var netEntity = ToNetEntity(uid, metadata);
             var transform = _xformQuery.GetComponent(uid);
 
             // Detach the base entity to null before iterating over children

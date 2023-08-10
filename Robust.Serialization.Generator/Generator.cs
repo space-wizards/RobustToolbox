@@ -5,7 +5,6 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Robust.Analyzers;
 
 namespace Robust.Serialization.Generator;
 
@@ -84,10 +83,11 @@ public class Generator : IIncrementalGenerator
                     }
 
                     builder.AppendLine($"""
+#nullable enable
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 
 namespace {symbol.ContainingNamespace.ToDisplayString()};
-
 """);
 
                     var containingType = symbol.ContainingType;
@@ -131,7 +131,7 @@ namespace {symbol.ContainingNamespace.ToDisplayString()};
                         builder.AppendLine("}");
                     }
 
-                    var fileName = symbol
+                    var symbolName = symbol
                         .ToDisplayString(SymbolDisplayFormat.CSharpShortErrorMessageFormat)
                         .Replace('<', '{')
                         .Replace('>', '}');
@@ -142,7 +142,7 @@ namespace {symbol.ContainingNamespace.ToDisplayString()};
                         .NormalizeWhitespace()
                         .ToFullString();
 
-                    sourceContext.AddSource($"{fileName}.g.cs", sourceText);
+                    sourceContext.AddSource($"{symbol.ContainingNamespace.ToDisplayString()}.{symbolName}.g.cs", sourceText);
                 }
             }
         );
@@ -210,13 +210,13 @@ namespace {symbol.ContainingNamespace.ToDisplayString()};
     {
         var builder = new StringBuilder();
         builder.AppendLine($$"""
-public {{definition.Type.Name}}({{definition.Type.Name}} other)
+public {{definition.Type.Name}}({{definition.Type.Name}} other, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null) : this()
 {
 """);
 
         foreach (var field in definition.Fields)
         {
-            var type = field.Type.WithNullableAnnotation(NullableAnnotation.None);
+            var type = field.Type;
             var name = field.Symbol.Name;
 
             if (CanBeCopiedByValue(type))
@@ -225,11 +225,12 @@ public {{definition.Type.Name}}({{definition.Type.Name}} other)
             }
             else if (type.GetAttributes().Any(attribute => attribute.AttributeClass?.ToDisplayString() == DataDefinitionNamespace))
             {
-                builder.AppendLine($"{name} = other.{name}.Copy();");
+                var nullability = type.IsValueType ? string.Empty : "?";
+                builder.AppendLine($"{name} = other.{name}{nullability}.Copy(serialization, hookCtx, context)!;");
             }
             else
             {
-                builder.AppendLine($"// TODO {name}");
+                builder.AppendLine($"{name} = serialization.CreateCopy(other.{name}, hookCtx, context);");
             }
         }
 
@@ -238,9 +239,10 @@ public {{definition.Type.Name}}({{definition.Type.Name}} other)
         if (NeedsImplicitConstructor(definition.Type))
         {
             builder.AppendLine($$"""
-
 // Implicit constructor
+{{(definition.Type.IsValueType ? "#pragma warning disable CS8618" : string.Empty)}}
 public {{definition.Type.Name}}()
+{{(definition.Type.IsValueType ? "#pragma warning enable CS8618" : string.Empty)}}
 {
 }
 """);
@@ -253,9 +255,14 @@ public {{definition.Type.Name}}()
     {
         var builder = new StringBuilder();
         builder.AppendLine($$"""
-public {{definition.Type.Name}} Copy()
+public {{definition.Type.Name}} Copy(ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
 {
-    return new {{definition.Type.Name}}(this);
+    return new {{definition.Type.Name}}(this, serialization, hookCtx, context);
+}
+
+public object CopyObject(ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+{
+    return Copy(serialization, hookCtx, context);
 }
 """);
 

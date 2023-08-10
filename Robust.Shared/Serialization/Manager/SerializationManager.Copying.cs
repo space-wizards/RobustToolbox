@@ -372,6 +372,12 @@ public sealed partial class SerializationManager
             return;
         }
 
+        if (source is ISerializationGenerated generated)
+        {
+            target = generated.CopyObject(this, hookCtx, context);
+            return;
+        }
+
         if (target == null)
         {
             target = CreateCopy(source, hookCtx, context);
@@ -402,6 +408,12 @@ public sealed partial class SerializationManager
         {
             NotNullOverrideCheck<T>(notNullableOverride);
             target = default!;
+            return;
+        }
+
+        if (source is ISerializationGenerated<T> generated)
+        {
+            target = generated.Copy(this, hookCtx, context);
             return;
         }
 

@@ -634,7 +634,7 @@ namespace Robust.Shared.GameObjects
 
             Entities.Remove(uid);
             // Need to get the ID above before MetadataComponent shutdown but only remove it after everything else is done.
-            _nentityLookup.Remove(netEntity);
+            NetEntityLookup.Remove(netEntity);
         }
 
         public virtual void QueueDeleteEntity(EntityUid uid)
@@ -725,7 +725,7 @@ namespace Robust.Shared.GameObjects
                 NetEntity = netEntity,
             };
 
-            _nentityLookup[netEntity] = uid;
+            NetEntityLookup[netEntity] = uid;
 #pragma warning restore CS0618
 
             Entities.Add(uid);

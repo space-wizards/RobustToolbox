@@ -8,7 +8,14 @@ public partial class EntityManager
 {
     private const int PoolSize = 256;
 
-    private readonly Dictionary<NetEntity, EntityUid> _nentityLookup = new();
+    /// <summary>
+    /// Inverse lookup for net entities.
+    /// Regular lookup uses MetadataComponent.
+    /// </summary>
+    protected readonly Dictionary<NetEntity, EntityUid> NetEntityLookup = new();
+
+    private readonly ObjectPool<HashSet<EntityUid>> _entitySetPool =
+        new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), PoolSize);
 
     private readonly ObjectPool<HashSet<NetEntity>> _netEntitySetPool =
         new DefaultObjectPool<HashSet<NetEntity>>(new SetPolicy<NetEntity>(), PoolSize);
@@ -16,10 +23,7 @@ public partial class EntityManager
 
     public EntityUid ToEntity(NetEntity nEntity)
     {
-        if (_nentityLookup.TryGetValue(nEntity, out var entity))
-            return entity;
-
-        return EntityUid.Invalid;
+        return NetEntityLookup.TryGetValue(nEntity, out var entity) ? entity : EntityUid.Invalid;
     }
 
     public NetEntity ToNetEntity(EntityUid uid, MetaDataComponent? metadata = null)
@@ -36,7 +40,15 @@ public partial class EntityManager
 
     public HashSet<EntityUid> ToEntityUids(HashSet<NetEntity> netEntities)
     {
+        var entities = _entitySetPool.Get();
+        entities.EnsureCapacity(netEntities.Count);
 
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(ToEntity(netEntity));
+        }
+
+        return entities;
     }
 
     /// <summary>
@@ -49,7 +61,8 @@ public partial class EntityManager
 
         foreach (var ent in entities)
         {
-            newSet.Add(ToNetEntity(ent));
+            _metaQuery.TryGetComponent(ent, out var metadata);
+            newSet.Add(ToNetEntity(ent, metadata));
         }
 
         return newSet;

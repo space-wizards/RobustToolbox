@@ -691,6 +691,7 @@ namespace Robust.Client.GameStates
 
                     var newMeta = metas.GetComponent(uid);
                     newMeta.NetEntity = es.NetEntity;
+                    _entityManager.SetNetEntity(uid, es.NetEntity);
                     newMeta.LastStateApplied = curState.ToSequence;
                 }
 

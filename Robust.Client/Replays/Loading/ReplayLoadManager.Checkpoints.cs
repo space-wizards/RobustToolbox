@@ -367,7 +367,7 @@ public sealed partial class ReplayLoadManager
         }
 
         DebugTools.Assert(newState.NetComponents == null || newState.NetComponents.Count == combined.Count);
-        return new EntityState(newState.Uid, combined, newState.EntityLastModified, newState.NetComponents ?? oldNetComps);
+        return new EntityState(newState.Uid, newState.NetEntity, combined, newState.EntityLastModified, newState.NetComponents ?? oldNetComps);
     }
 
     private void UpdatePlayerStates(ReadOnlySpan<PlayerState> span, Dictionary<NetUserId, PlayerState> playerStates)

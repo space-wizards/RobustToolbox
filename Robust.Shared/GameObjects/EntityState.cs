@@ -11,6 +11,11 @@ namespace Robust.Shared.GameObjects
     {
         public EntityUid Uid { get; }
 
+        /// <summary>
+        /// Network identifier for the entity.
+        /// </summary>
+        public NetEntity NetEntity;
+
         public NetListAsArray<ComponentChange> ComponentChanges { get; }
 
         public bool Empty => (ComponentChanges.Value is null or { Count: 0 }) && NetComponents == null;
@@ -23,9 +28,10 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public HashSet<ushort>? NetComponents;
 
-        public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified, HashSet<ushort>? netComps = null)
+        public EntityState(EntityUid uid, NetEntity netEntity, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified, HashSet<ushort>? netComps = null)
         {
             Uid = uid;
+            NetEntity = netEntity;
             ComponentChanges = changedComponents;
             EntityLastModified = lastModified;
             NetComponents = netComps;

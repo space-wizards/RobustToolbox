@@ -690,6 +690,7 @@ namespace Robust.Client.GameStates
                     _toApply.Add(uid, (false, GameTick.Zero, es, null));
 
                     var newMeta = metas.GetComponent(uid);
+                    newMeta.NetEntity = es.NetEntity;
                     newMeta.LastStateApplied = curState.ToSequence;
                 }
 

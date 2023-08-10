@@ -1,9 +1,6 @@
 using System;
 using JetBrains.Annotations;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
-using Robust.Shared.Timing;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
 

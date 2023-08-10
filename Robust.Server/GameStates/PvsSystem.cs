@@ -1177,7 +1177,8 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         DebugTools.Assert(meta.EntityLastModifiedTick >= meta.LastComponentRemoved);
-        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
+        DebugTools.Assert(meta.NetEntity.IsValid());
+        var entState = new EntityState(entityUid, meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
 
         return entState;
     }
@@ -1209,7 +1210,7 @@ internal sealed partial class PvsSystem : EntitySystem
             netComps.Add(netId);
         }
 
-        var entState = new EntityState(entityUid, changed, meta.EntityLastModifiedTick, netComps);
+        var entState = new EntityState(entityUid, meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
 
         return entState;
     }

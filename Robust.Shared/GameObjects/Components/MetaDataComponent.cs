@@ -64,6 +64,12 @@ namespace Robust.Shared.GameObjects
         internal EntityPrototype? _entityPrototype;
 
         /// <summary>
+        /// Network identifier for this entity.
+        /// </summary>
+        [ViewVariables]
+        public NetEntity NetEntity { get; internal set; } = NetEntity.Invalid;
+
+        /// <summary>
         /// When this entity was paused, if applicable. Note that this is the actual time, not the duration which gets
         /// returned by <see cref="MetaDataSystem.GetPauseTime"/>.
         /// </summary>

@@ -112,11 +112,11 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     internal sealed class BoundUIWrapMessage : EntityEventArgs
     {
-        public readonly EntityUid Entity;
+        public readonly NetEntity Entity;
         public readonly BoundUserInterfaceMessage Message;
         public readonly Enum UiKey;
 
-        public BoundUIWrapMessage(EntityUid entity, BoundUserInterfaceMessage message, Enum uiKey)
+        public BoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
         {
             Message = message;
             UiKey = uiKey;

@@ -9,8 +9,6 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public sealed class EntityState
     {
-        public EntityUid Uid { get; }
-
         /// <summary>
         /// Network identifier for the entity.
         /// </summary>
@@ -28,9 +26,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public HashSet<ushort>? NetComponents;
 
-        public EntityState(EntityUid uid, NetEntity netEntity, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified, HashSet<ushort>? netComps = null)
+        public EntityState(NetEntity netEntity, NetListAsArray<ComponentChange> changedComponents, GameTick lastModified, HashSet<ushort>? netComps = null)
         {
-            Uid = uid;
             NetEntity = netEntity;
             ComponentChanges = changedComponents;
             EntityLastModified = lastModified;

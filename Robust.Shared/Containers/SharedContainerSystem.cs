@@ -34,11 +34,11 @@ namespace Robust.Shared.Containers
 
             foreach (var container in component.Containers.Values)
             {
-                var uidArr = new EntityUid[container.ContainedEntities.Count];
+                var uidArr = new NetEntity[container.ContainedEntities.Count];
 
                 for (var index = 0; index < container.ContainedEntities.Count; index++)
                 {
-                    uidArr[index] = container.ContainedEntities[index];
+                    uidArr[index] = ToNetEntity(container.ContainedEntities[index]);
                 }
 
                 var sContainer = new ContainerManagerComponent.ContainerManagerComponentState.ContainerData(container.ContainerType, container.ID, container.ShowContents, container.OccludesLight, uidArr);

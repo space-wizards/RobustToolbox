@@ -161,9 +161,9 @@ namespace Robust.Shared.Containers
                 public readonly string Id;
                 public readonly bool ShowContents;
                 public readonly bool OccludesLight;
-                public readonly EntityUid[] ContainedEntities;
+                public readonly NetEntity[] ContainedEntities;
 
-                public ContainerData(string containerType, string id, bool showContents, bool occludesLight, EntityUid[] containedEntities)
+                public ContainerData(string containerType, string id, bool showContents, bool occludesLight, NetEntity[] containedEntities)
                 {
                     ContainerType = containerType;
                     Id = id;
@@ -172,7 +172,7 @@ namespace Robust.Shared.Containers
                     ContainedEntities = containedEntities;
                 }
 
-                public void Deconstruct(out string type, out string id, out bool showEnts, out bool occludesLight, out EntityUid[] ents)
+                public void Deconstruct(out string type, out string id, out bool showEnts, out bool occludesLight, out NetEntity[] ents)
                 {
                     type = ContainerType;
                     id = Id;

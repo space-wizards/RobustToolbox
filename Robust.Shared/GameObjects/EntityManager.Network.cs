@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Robust.Shared.Map;
 
 namespace Robust.Shared.GameObjects;
 
@@ -92,6 +93,36 @@ public partial class EntityManager
         }
 
         return netEntities;
+    }
+
+    #endregion
+
+    #region NetCoordinates
+
+    public NetCoordinates ToNetCoordinates(EntityCoordinates coordinates)
+    {
+        return new NetCoordinates(ToNetEntity(coordinates.EntityId), coordinates.Position);
+    }
+
+    public NetCoordinates? ToNetCoordinates(EntityCoordinates? coordinates)
+    {
+        if (coordinates == null)
+            return null;
+
+        return new NetCoordinates(ToNetEntity(coordinates.Value.EntityId), coordinates.Value.Position);
+    }
+
+    public EntityCoordinates ToCoordinates(NetCoordinates coordinates)
+    {
+        return new EntityCoordinates(ToEntity(coordinates.NetEntity), coordinates.Position);
+    }
+
+    public EntityCoordinates? ToCoordinates(NetCoordinates? coordinates)
+    {
+        if (coordinates == null)
+            return null;
+
+        return new EntityCoordinates(ToEntity(coordinates.Value.NetEntity), coordinates.Value.Position);
     }
 
     #endregion

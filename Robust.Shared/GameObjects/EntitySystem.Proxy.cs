@@ -881,5 +881,38 @@ public partial class EntitySystem
         return EntityManager.ToEntityList(netEntities);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected NetCoordinates ToNetCoordinates(EntityCoordinates coordinates)
+    {
+        return EntityManager.ToNetCoordinates(coordinates);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> of an entity. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected NetCoordinates? ToNetCoordinates(EntityCoordinates? coordinates)
+    {
+        return EntityManager.ToNetCoordinates(coordinates);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityCoordinates ToCoordinates(NetCoordinates netEntity)
+    {
+        return EntityManager.ToCoordinates(netEntity);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityCoordinates? ToCoordinates(NetCoordinates? netEntity)
+    {
+        return EntityManager.ToCoordinates(netEntity);
+    }
+
     #endregion
 }

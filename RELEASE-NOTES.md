@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed log messages for unknown components not working due to threaded IoC issues.
 
 ### Other
 
@@ -204,7 +204,7 @@ END TEMPLATE-->
 * `IHttpClientHolder` holds a shared `HttpClient` for use by content. It has Happy Eyeballs fixed and an appropriate `User-Agent`.
 * Added `DataNode.ToString()`. Makes it easier to save yaml files and debug code.
 * Added some cvars to modify discord rich presence icons.
-* .ogg files now read the `Artist` and `Title` tags and make them available via new fields in `AudioStream`. 
+* .ogg files now read the `Artist` and `Title` tags and make them available via new fields in `AudioStream`.
 * The default fragment shaders now have access to the local light level (`lowp vec3 lightSample`).
 * Added `IPrototypeManager.ValidateAllPrototypesSerializable()`, which can be used to check that all currently loaded prototypes can be serialised & deserialised.
 
@@ -213,7 +213,7 @@ END TEMPLATE-->
 * Fix certain debug commands and tools crashing on non-SS14 RobustToolbox games due to a missing font.
 * Discord rich presence strings are now truncated if they are too long.
 * Fixed a couple of broadphase/entity-lookup update bugs that were affecting containers and entities attached to other (non-grid/map) entities.
-* Fixed `INetChannel.Disconnect()` not properly disconnecting clients in integration tests. 
+* Fixed `INetChannel.Disconnect()` not properly disconnecting clients in integration tests.
 
 ### Other
 

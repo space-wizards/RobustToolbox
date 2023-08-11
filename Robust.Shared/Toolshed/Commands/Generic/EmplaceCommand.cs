@@ -74,8 +74,7 @@ internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEnt
             if (breakout.TryReadVar(name, out var value))
                 return value;
         }
-
-        // TODO: Emplace behavior should be generalized and not hardcoded.
+        
         if (Value is EntityUid id)
         {
             switch (name)

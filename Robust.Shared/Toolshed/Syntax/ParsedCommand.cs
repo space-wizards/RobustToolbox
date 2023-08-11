@@ -92,13 +92,13 @@ public sealed class ParsedCommand
     {
         noCommand = false;
         var start = parserContext.Index;
-        var cmd = parserContext.GetWord(c => c is not ':' and not '{' and not '}' && !char.IsWhiteSpace(c));
+        var cmd = parserContext.GetWord(ParserContext.IsCommandToken);
         subCommand = null;
         invocable = null;
         command = null;
         if (cmd is null)
         {
-            if (parserContext.PeekChar() is null)
+            if (parserContext.PeekRune() is null)
             {
                 noCommand = true;
                 error = new OutOfInputError();
@@ -157,7 +157,7 @@ public sealed class ParsedCommand
 
             var subCmdStart = parserContext.Index;
 
-            if (parserContext.GetWord() is not { } subcmd)
+            if (parserContext.GetWord(ParserContext.IsToken) is not { } subcmd)
             {
                 error = new OutOfInputError();
                 error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index));
@@ -174,7 +174,7 @@ public sealed class ParsedCommand
             subCommand = subcmd;
         }
 
-        if (parserContext.Consume(char.IsWhiteSpace) == 0 && makeCompletions)
+        if (parserContext.ConsumeWhitespace() == 0 && makeCompletions)
         {
             error = null;
             var cmds = parserContext.Toolshed.CommandsTakingType(pipedType ?? typeof(void));

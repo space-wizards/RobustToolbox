@@ -10,7 +10,7 @@ internal sealed class ExpressionTypeParser : TypeParser<CommandRun>
 {
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var res = CommandRun.TryParse(false, false, parserContext, null, null, false, out var r, out _, out error);
+        var res = CommandRun.TryParse(false, parserContext, null, null, false, out var r, out _, out error);
         result = r;
         return res;
     }
@@ -18,7 +18,7 @@ internal sealed class ExpressionTypeParser : TypeParser<CommandRun>
     public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        CommandRun.TryParse(false, true, parserContext, null, null, false, out _, out var autocomplete, out _);
+        CommandRun.TryParse(true, parserContext, null, null, false, out _, out var autocomplete, out _);
         if (autocomplete is null)
             return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((null, null));
 

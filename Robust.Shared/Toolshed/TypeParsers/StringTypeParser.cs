@@ -16,10 +16,10 @@ internal class StringTypeParser : TypeParser<string>
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
         error = null;
-        parserContext.Consume(char.IsWhiteSpace);
-        if (parserContext.PeekChar() is not '"')
+        parserContext.ConsumeWhitespace();
+        if (parserContext.PeekRune() != new Rune('"'))
         {
-            if (parserContext.PeekChar() is null)
+            if (parserContext.PeekRune() is null)
             {
                 error = new OutOfInputError();
                 result = null;
@@ -32,7 +32,7 @@ internal class StringTypeParser : TypeParser<string>
             return false;
         }
 
-        parserContext.GetChar();
+        parserContext.GetRune();
 
         var output = new StringBuilder();
 
@@ -40,23 +40,23 @@ internal class StringTypeParser : TypeParser<string>
         {
             while (parserContext.PeekChar() is not '"' and not '\\' and not null)
             {
-                output.Append(parserContext.GetChar());
+                output.Append(parserContext.GetRune());
             }
 
             if (parserContext.PeekChar() is '"' or null)
             {
-                if (parserContext.PeekChar() is null)
+                if (parserContext.PeekRune() is null)
                 {
                     error = new OutOfInputError();
                     result = null;
                     return false;
                 }
 
-                parserContext.GetChar();
+                parserContext.GetRune();
                 break;
             }
 
-            parserContext.GetChar(); // okay it's \
+            parserContext.GetRune(); // okay it's \
 
             switch (parserContext.GetChar())
             {
@@ -76,7 +76,7 @@ internal class StringTypeParser : TypeParser<string>
             }
         }
 
-        parserContext.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
         result = output.ToString();
         return true;

@@ -161,6 +161,7 @@ public abstract partial class ToolshedCommand
             out ValueTask<(CompletionResult?, IConError?)>? autocomplete
         )
     {
+
         return _implementors[subCommand ?? ""].TryParseArguments(doAutocomplete, parserContext, subCommand, pipedType, out args, out resolvedTypeArguments, out error, out autocomplete);
     }
 }

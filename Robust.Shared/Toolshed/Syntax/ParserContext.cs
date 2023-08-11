@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using JetBrains.Annotations;
@@ -10,7 +11,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Syntax;
 
-public sealed class ParserContext
+public sealed partial class ParserContext
 {
     [Dependency] public readonly ToolshedManager Toolshed = default!;
 
@@ -40,9 +41,11 @@ public sealed class ParserContext
         return MaxIndex >= (Index + length - 1);
     }
 
-    public bool EatMatch(char c)
+    public bool EatMatch(char c) => EatMatch(new Rune(c));
+
+    public bool EatMatch(Rune c)
     {
-        if (PeekChar() == c)
+        if (PeekRune() == c)
         {
             Index++;
             return true;
@@ -51,20 +54,68 @@ public sealed class ParserContext
         return false;
     }
 
+    public bool EatMatch(string c)
+    {
+        if (PeekWord() == c)
+        {
+            GetWord();
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <remarks>
+    ///     This should only be used for comparisons! It'll return '\0' (NOT null) for large runes.
+    /// </remarks>
     public char? PeekChar()
+    {
+        if (PeekRune() is not { } rune)
+            return null;
+
+        if (rune.Utf16SequenceLength > 1)
+            return '\x01';
+        Span<char> buffer = stackalloc char[2];
+        rune.EncodeToUtf16(buffer);
+
+        return buffer[0];
+    }
+
+    public Rune? PeekRune()
     {
         if (!SpanInRange(1))
             return null;
 
-        return Input[Index];
+        return Rune.GetRuneAt(Input, Index);
     }
 
+    public Rune? GetRune()
+    {
+        if (PeekRune() is { } c)
+        {
+            Index += c.Utf16SequenceLength;
+            return c;
+        }
+
+        return null;
+    }
+
+    /// <remarks>
+    ///     This should only be used for comparisons! It'll return '\0' (NOT null) for large runes.
+    /// </remarks>
     public char? GetChar()
     {
-        if (PeekChar() is { } c)
+        if (PeekRune() is { } c)
         {
-            Index++;
-            return c;
+            Index += c.Utf16SequenceLength;
+
+            if (c.Utf16SequenceLength > 1)
+                return '\x01';
+
+            Span<char> buffer = stackalloc char[2];
+            c.EncodeToUtf16(buffer);
+
+            return buffer[0];
         }
 
         return null;
@@ -86,19 +137,19 @@ public sealed class ParserContext
         Logger.DebugS("parser", builder.ToString());
     }
 
-    private string? MaybeGetWord(bool advanceIndex, Func<char, bool>? test)
+    private string? MaybeGetWord(bool advanceIndex, Func<Rune, bool>? test)
     {
         var startingIndex = Index;
-        test ??= static c => c != ' ';
+        test ??= static c => !Rune.IsWhiteSpace(c);
 
         var builder = new StringBuilder();
 
-        Consume(char.IsWhiteSpace);
+        ConsumeWhitespace();
 
         // Walk forward until we run into whitespace
-        while (PeekChar() is { } c && test(c))
+        while (PeekRune() is { } c && test(c))
         {
-            builder.Append(GetChar());
+            builder.Append(GetRune());
         }
 
         if (startingIndex == Index)
@@ -110,40 +161,83 @@ public sealed class ParserContext
         return builder.ToString();
     }
 
-    public string? PeekWord(Func<char, bool>? test = null) => MaybeGetWord(false, test);
+    public string? PeekWord(Func<Rune, bool>? test = null) => MaybeGetWord(false, test);
 
-    public string? GetWord(Func<char, bool>? test = null) => MaybeGetWord(true, test);
+    public string? GetWord(Func<Rune, bool>? test = null) => MaybeGetWord(true, test);
 
     public ParserRestorePoint Save()
     {
-        return new ParserRestorePoint(Index);
+        return new ParserRestorePoint(Index, new(_terminatorStack));
     }
 
     public void Restore(ParserRestorePoint point)
     {
         Index = point.Index;
+        _terminatorStack = point.TerminatorStack;
     }
 
-    public int Consume(Func<char, bool> control)
+    public int ConsumeWhitespace()
+    {
+        if (NoMultilineExprs)
+            return Consume(static x => Rune.IsWhiteSpace(x) && x != new Rune('\n'));
+        return Consume(Rune.IsWhiteSpace);
+    }
+
+    private Stack<string> _terminatorStack = new();
+
+    public void PushTerminator(string term)
+    {
+        _terminatorStack.Push(term);
+    }
+
+    public bool PeekTerminated()
+    {
+        if (_terminatorStack.Count == 0)
+            return false;
+
+        ConsumeWhitespace();
+        return PeekWord(Rune.IsSymbol) == _terminatorStack.Peek();
+    }
+
+    public bool EatTerminator()
+    {
+        if (PeekTerminated())
+        {
+            GetWord(Rune.IsSymbol);
+            _terminatorStack.Pop();
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool CheckEndLine()
+    {
+        if (NoMultilineExprs)
+            return EatMatch('\n');
+        return false;
+    }
+
+    public int Consume(Func<Rune, bool> control)
     {
         var amount = 0;
 
-        while (PeekChar() is { } c && control(c))
+        while (PeekRune() is { } c && control(c))
         {
-            GetChar();
+            GetRune();
             amount++;
         }
 
         return amount;
     }
 
-    public ParserContext? SliceBlock(char startDelim, char endDelim)
+    public ParserContext? SliceBlock(Rune startDelim, Rune endDelim)
     {
         var checkpoint = Save();
 
-        Consume(char.IsWhiteSpace);
+        ConsumeWhitespace();
 
-        if (GetChar() != startDelim)
+        if (GetRune() != startDelim)
         {
             Restore(checkpoint);
             return null;
@@ -155,7 +249,7 @@ public sealed class ParserContext
 
         while (stack > 0)
         {
-            var c = GetChar();
+            var c = GetRune();
             if (c == startDelim)
                 stack++;
 
@@ -176,7 +270,17 @@ public sealed class ParserContext
     }
 }
 
-public readonly record struct ParserRestorePoint(int Index);
+public readonly struct ParserRestorePoint
+{
+    public readonly int Index;
+    internal readonly Stack<string> TerminatorStack;
+
+    public ParserRestorePoint(int index, Stack<string> terminatorStack)
+    {
+        Index = index;
+        TerminatorStack = terminatorStack;
+    }
+}
 
 public record struct OutOfInputError : IConError
 {

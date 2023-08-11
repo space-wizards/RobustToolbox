@@ -73,6 +73,7 @@ internal sealed class ToolshedCommandImplementor
 
         for (var i = 0; i < Owner.TypeParameterParsers.Length; i++)
         {
+            parserContext.DebugPrint();
             var start = parserContext.Index;
             var chkpoint = parserContext.Save();
             if (!_toolshedManager.TryParse(parserContext, Owner.TypeParameterParsers[i], out var parsed, out error) || parsed is not { } ty)
@@ -121,6 +122,7 @@ internal sealed class ToolshedCommandImplementor
         args = new();
         foreach (var argument in impl.ConsoleGetArguments())
         {
+            parserContext.DebugPrint();
             var start = parserContext.Index;
             var chkpoint = parserContext.Save();
             if (!_toolshedManager.TryParse(parserContext, argument.ParameterType, out var parsed, out error))

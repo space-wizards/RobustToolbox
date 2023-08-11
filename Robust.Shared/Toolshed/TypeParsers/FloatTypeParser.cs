@@ -13,7 +13,7 @@ internal sealed class FloatTypeParser : TypeParser<float>
 {
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var maybeFloat = parserContext.GetWord();
+        var maybeFloat = parserContext.GetWord(ParserContext.IsNumeric);
         if (!float.TryParse(maybeFloat, out var @float))
         {
             if (maybeFloat is null)

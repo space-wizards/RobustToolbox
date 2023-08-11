@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
@@ -77,7 +78,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
 
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var firstWord = parserContext.GetWord(char.IsLetterOrDigit);
+        var firstWord = parserContext.GetWord(Rune.IsLetterOrDigit);
         if (firstWord is null)
         {
             error = new OutOfInputError();

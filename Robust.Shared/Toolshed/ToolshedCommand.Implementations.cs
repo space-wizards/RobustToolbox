@@ -40,8 +40,7 @@ public abstract partial class ToolshedCommand
         }
 
         impl = GetConcreteImplementationsInternal(pipedType, typeArguments, subCommand);
-        if (impl.Count == 0 && pipedType is not null && pipedType != typeof(void))
-            impl = GetConcreteImplementationsInternal(typeof(IEnumerable<>).MakeGenericType(pipedType), typeArguments, subCommand);
+
         _concreteImplementations[idx] = impl;
         return impl;
     }
@@ -63,10 +62,12 @@ public abstract partial class ToolshedCommand
             {
                 if (x.ConsoleGetPipedArgument() is { } param)
                 {
-                    return param.ParameterType.IsGenericType;
+                    if (pipedType?.IsAssignableTo(param.ParameterType) ?? false)
+                        return 1000; // We want exact match to be preferred!
+                    return param.ParameterType.IsGenericType ? 100 : 0;
                 }
 
-                return false;
+                return 0;
             })
             .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
             .Where(x =>

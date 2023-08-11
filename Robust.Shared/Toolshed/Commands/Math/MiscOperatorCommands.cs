@@ -14,12 +14,12 @@ public sealed class DefaultIfNullCommand : ToolshedCommand
             [PipedArgument] TIn? value,
             [CommandArgument] Block<TIn, TOut> follower
         )
-        where TOut : unmanaged
+        where TIn : unmanaged
     {
         if (value is null)
-            return null;
+            return default;
 
-        return follower.Invoke(value!, ctx);
+        return follower.Invoke(value.Value, ctx);
     }
 }
 

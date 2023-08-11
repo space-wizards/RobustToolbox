@@ -2,14 +2,17 @@
 using System.Linq;
 using System.Numerics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Toolshed.Syntax;
 
-namespace Robust.Shared.Toolshed.Commands.Entities;
+namespace Robust.Shared.Toolshed.Commands.Entities.World;
 
 [ToolshedCommand]
 internal sealed class TpCommand : ToolshedCommand
 {
+    private SharedTransformSystem? _xform = default!;
+
     [CommandImplementation("coords")]
     public EntityUid TpCoords(
             [CommandInvocationContext] IInvocationContext ctx,
@@ -17,7 +20,8 @@ internal sealed class TpCommand : ToolshedCommand
             [CommandArgument] ValueRef<EntityCoordinates> target
         )
     {
-        Transform(teleporter).Coordinates = target.Evaluate(ctx);
+        _xform ??= GetSys<SharedTransformSystem>();
+        _xform.SetCoordinates(teleporter, target.Evaluate(ctx));
         return teleporter;
     }
 
@@ -36,7 +40,8 @@ internal sealed class TpCommand : ToolshedCommand
         [CommandArgument] ValueRef<EntityUid> target
     )
     {
-        Transform(teleporter).Coordinates = Transform(target.Evaluate(ctx)).Coordinates;
+        _xform ??= GetSys<SharedTransformSystem>();
+        _xform.SetCoordinates(teleporter, Transform(target.Evaluate(ctx)).Coordinates);
         return teleporter;
     }
 
@@ -55,7 +60,8 @@ internal sealed class TpCommand : ToolshedCommand
         [CommandArgument] ValueRef<EntityUid> target
     )
     {
-        Transform(teleporter).Coordinates = new EntityCoordinates(target.Evaluate(ctx), Vector2.Zero);
+        _xform ??= GetSys<SharedTransformSystem>();
+        _xform.SetCoordinates(teleporter, new EntityCoordinates(target.Evaluate(ctx), Vector2.Zero));
         return teleporter;
     }
 

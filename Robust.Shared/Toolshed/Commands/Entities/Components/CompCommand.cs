@@ -25,4 +25,42 @@ internal sealed class CompCommand : ToolshedCommand
         TryComp(input, out T? res);
         return res;
     }
+
+    [CommandImplementation("add")]
+    public EntityUid Add<T>([PipedArgument] EntityUid input)
+        where T: Component, new()
+    {
+        AddComp<T>(input);
+        return input;
+    }
+
+    [CommandImplementation("add")]
+    public IEnumerable<EntityUid> Add<T>([PipedArgument] IEnumerable<EntityUid> input)
+        where T : Component, new()
+        => input.Select(Add<T>);
+
+    [CommandImplementation("ensure")]
+    public EntityUid Ensure<T>([PipedArgument] EntityUid input)
+        where T: Component, new()
+    {
+        EnsureComp<T>(input);
+        return input;
+    }
+
+    [CommandImplementation("ensure")]
+    public IEnumerable<EntityUid> Ensure<T>([PipedArgument] IEnumerable<EntityUid> input)
+        where T : Component, new()
+        => input.Select(Ensure<T>);
+
+    [CommandImplementation("has")]
+    public bool Has<T>([PipedArgument] EntityUid input)
+        where T: IComponent
+    {
+        return HasComp<T>(input);
+    }
+
+    [CommandImplementation("has")]
+    public IEnumerable<bool> Has<T>([PipedArgument] IEnumerable<EntityUid> input)
+        where T : IComponent
+        => input.Select(Has<T>);
 }

@@ -13,7 +13,7 @@ internal sealed class QuantityParser : TypeParser<Quantity>
 {
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var word = parserContext.GetWord();
+        var word = parserContext.GetWord(ParserContext.IsNumeric);
         error = null;
 
         if (word?.TrimEnd('%') is not { } maybeParseable || !float.TryParse(maybeParseable, out var v))

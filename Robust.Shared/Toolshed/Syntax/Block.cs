@@ -22,11 +22,14 @@ public sealed class Block
             out IConError? error
         )
     {
-        parserContext.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
         var enclosed = parserContext.EatMatch('{');
 
-        CommandRun.TryParse(enclosed, doAutoComplete, parserContext, pipedType, null, !enclosed, out var expr, out autoComplete, out error);
+        if (enclosed)
+            parserContext.PushTerminator("}");
+
+        CommandRun.TryParse(doAutoComplete, parserContext, pipedType, null, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {
@@ -34,7 +37,7 @@ public sealed class Block
             return false;
         }
 
-        if (enclosed && !parserContext.EatMatch('}'))
+        if (enclosed && !parserContext.EatTerminator() && error == null)
         {
             error = new MissingClosingBrace();
             block = null;
@@ -66,7 +69,7 @@ public sealed class Block<T>
     public static bool TryParse(bool doAutoComplete, ParserContext parserContext, Type? pipedType,
         [NotNullWhen(true)] out Block<T>? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
     {
-        parserContext.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
         var enclosed = parserContext.EatMatch('{');
 
@@ -107,7 +110,7 @@ public sealed class Block<TIn, TOut>
     public static bool TryParse(bool doAutoComplete, ParserContext parserContext, Type? pipedType,
         [NotNullWhen(true)] out Block<TIn, TOut>? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
     {
-        parserContext.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
         var enclosed = parserContext.EatMatch('{');
 

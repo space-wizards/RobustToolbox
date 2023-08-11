@@ -162,12 +162,6 @@ internal static class ReflectionExtensions
     // IEnumerable<EntityUid> ^ IEnumerable<T> -> EntityUid
     public static Type Intersect(this Type left, Type right)
     {
-        if (right.IsGenericType && right.GetGenericTypeDefinition() == typeof(Nullable<>) &&
-            (!left.IsGenericType || left.GetGenericTypeDefinition() != typeof(Nullable<>)))
-        {
-            return left;
-        }
-
         if (!left.IsGenericType)
             return left;
 
@@ -191,8 +185,6 @@ internal static class ReflectionExtensions
             DumpGenericInfo(p);
         }
     }
-
-
 
     public static bool IsAssignableToGeneric(this Type left, Type right, ToolshedManager toolshed, bool recursiveDescent = true)
     {

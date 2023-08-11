@@ -219,7 +219,7 @@ namespace Robust.Server.Console
             if ((result.Options.Length == 0 && result.Hint is null) || message.Args.Length <= 1)
             {
                 var parser = new ParserContext(message.ArgString, _toolshed);
-                CommandRun.TryParse(false, true, parser, null, null, false, out _, out var completions, out _);
+                CommandRun.TryParse(true, parser, null, null, false, out _, out var completions, out _);
                 if (completions == null)
                 {
                     goto done;

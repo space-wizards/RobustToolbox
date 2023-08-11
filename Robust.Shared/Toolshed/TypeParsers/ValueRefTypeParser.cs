@@ -36,7 +36,7 @@ internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
         error = null;
-        parserContext.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
         var chkpoint = parserContext.Save();
         var success = _toolshed.TryParse<T>(parserContext, out var value, out error);
@@ -56,7 +56,7 @@ internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
         if (parserContext.EatMatch('$'))
         {
             // We're parsing a variable.
-            if (parserContext.GetWord(x => char.IsLetterOrDigit(x) || x == '_') is not { } word)
+            if (parserContext.GetWord(ParserContext.IsToken) is not { } word)
             {
                 error = new OutOfInputError();
                 result = null;
@@ -83,7 +83,7 @@ internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
     public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        parserContext.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
         if (parserContext.EatMatch('$'))
         {

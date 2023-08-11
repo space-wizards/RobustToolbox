@@ -9,9 +9,9 @@ internal sealed class ArrowCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Arrow<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] T input,
-        [CommandArgument] ValueRef<T> @ref
+            [CommandInvocationContext] IInvocationContext ctx,
+            [PipedArgument] T input,
+            [CommandArgument] ValueRef<T> @ref
         )
     {
         @ref.Set(ctx, input);
@@ -20,10 +20,10 @@ internal sealed class ArrowCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public List<T> Arrow<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] IEnumerable<T> input,
-        [CommandArgument] ValueRef<List<T>> @ref
-    )
+            [CommandInvocationContext] IInvocationContext ctx,
+            [PipedArgument] IEnumerable<T> input,
+            [CommandArgument] ValueRef<List<T>> @ref
+        )
     {
         var list = input.ToList();
         @ref.Set(ctx, list);

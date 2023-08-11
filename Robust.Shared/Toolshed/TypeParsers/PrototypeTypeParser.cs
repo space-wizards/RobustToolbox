@@ -20,7 +20,7 @@ internal sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
 
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var proto = parserContext.GetWord(char.IsLetterOrDigit);
+        var proto = parserContext.GetWord(ParserContext.IsToken);
 
         if (proto is null || !_prototype.TryIndex<T>(proto, out var resolved))
         {

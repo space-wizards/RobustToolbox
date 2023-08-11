@@ -18,7 +18,7 @@ internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
         var start = parserContext.Index;
-        var word = parserContext.GetWord();
+        var word = parserContext.GetWord(ParserContext.IsToken);
         error = null;
 
         if (!EntityUid.TryParse(word, out var ent))

@@ -13,7 +13,7 @@ internal sealed class IntTypeParser : TypeParser<int>
 {
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var maybeInt = parserContext.GetWord();
+        var maybeInt = parserContext.GetWord(ParserContext.IsNumeric);
         if (!int.TryParse(maybeInt, out var @int))
         {
             if (maybeInt is null)

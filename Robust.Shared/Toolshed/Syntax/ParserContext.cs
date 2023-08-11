@@ -47,7 +47,7 @@ public sealed partial class ParserContext
     {
         if (PeekRune() == c)
         {
-            Index++;
+            GetRune();
             return true;
         }
 
@@ -124,6 +124,7 @@ public sealed partial class ParserContext
     [PublicAPI]
     public void DebugPrint()
     {
+        Logger.DebugS("parser", string.Join(", ", _terminatorStack));
         Logger.DebugS("parser", Input);
         MakeDebugPointer(Index);
         MakeDebugPointer(MaxIndex, '|');
@@ -196,14 +197,14 @@ public sealed partial class ParserContext
             return false;
 
         ConsumeWhitespace();
-        return PeekWord(Rune.IsSymbol) == _terminatorStack.Peek();
+        return PeekWord(IsTerminator) == _terminatorStack.Peek();
     }
 
     public bool EatTerminator()
     {
         if (PeekTerminated())
         {
-            GetWord(Rune.IsSymbol);
+            GetWord(IsTerminator);
             _terminatorStack.Pop();
             return true;
         }

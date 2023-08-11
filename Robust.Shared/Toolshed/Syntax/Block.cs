@@ -37,13 +37,6 @@ public sealed class Block
             return false;
         }
 
-        if (enclosed && !parserContext.EatTerminator() && error == null)
-        {
-            error = new MissingClosingBrace();
-            block = null;
-            return false;
-        }
-
         block = new Block(expr);
         return true;
     }
@@ -73,17 +66,13 @@ public sealed class Block<T>
 
         var enclosed = parserContext.EatMatch('{');
 
+        if (enclosed)
+            parserContext.PushTerminator("}");
+
         CommandRun<T>.TryParse(enclosed, doAutoComplete, parserContext, pipedType, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {
-            block = null;
-            return false;
-        }
-
-        if (enclosed && !parserContext.EatMatch('}'))
-        {
-            error = new MissingClosingBrace();
             block = null;
             return false;
         }
@@ -114,17 +103,13 @@ public sealed class Block<TIn, TOut>
 
         var enclosed = parserContext.EatMatch('{');
 
+        if (enclosed)
+            parserContext.PushTerminator("}");
+
         CommandRun<TIn, TOut>.TryParse(enclosed, doAutoComplete, parserContext, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {
-            block = null;
-            return false;
-        }
-
-        if (enclosed && !parserContext.EatMatch('}'))
-        {
-            error = new MissingClosingBrace();
             block = null;
             return false;
         }

@@ -161,3 +161,52 @@ command-description-EqualCommand =
     Performs an equality comparison, returning true if the inputs are equal.
 command-description-NotEqualCommand =
     Performs an equality comparison, returning true if the inputs are not equal.
+command-description-append =
+    Appends a value to the input enumerable.
+command-description-DefaultIfNullCommand =
+    Replaces the input with the type's default value if it is null, albeit only for value types (not objects).
+command-description-OrValueCommand =
+    If the input is null, uses the provided alternate value.
+command-description-DebugPrintCommand =
+    Prints the given value transparently, for debug prints in a command run.
+command-description-int =
+    Integer constant.
+command-description-float =
+    Float constant.
+command-description-string =
+    String constant.
+command-description-bool =
+    Bool constant.
+command-description-join =
+    Joins two sequences together into one sequence.
+command-description-reduce =
+    Given a block to use as a reducer, turns a sequence into a single value.
+    The left hand side of the block is implied, and the right hand is stored in $value.
+command-description-rep =
+    Repeats the input value N times to form a sequence.
+command-description-take =
+    Takes N values from the input sequence
+command-description-spawn-at =
+    Spawns an entity at the given coordinates.
+command-description-spawn-on =
+    Spawns an entity on the given entity, at it's coordinates.
+command-description-spawn-attached =
+    Spawns an entity attached to the given entity, at (0 0) relative to it.
+command-description-mappos =
+    Returns an entity's coordinates relative to it's current map.
+command-description-pos =
+    Returns an entity's coordinates.
+command-description-tp-coords =
+    Teleports the target to the given coordinates.
+command-description-tp-to =
+    Teleports the target to the given other entity.
+command-description-tp-into =
+    Teleports the target "into" the given other entity, attaching it at (0 0) relative to it.
+command-description-comp-get =
+    Gets the given component from the given entity.
+command-description-comp-add =
+    Adds the given component to the given entity.
+command-description-comp-ensure =
+    Ensures the given entity has the given component.
+command-description-comp-has =
+    Check if the given entity has the given component.

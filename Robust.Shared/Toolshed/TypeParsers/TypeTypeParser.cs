@@ -42,6 +42,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
         {"nuint", typeof(nuint)},
         {"float", typeof(float)},
         {"double", typeof(double)},
+        {"decimal", typeof(decimal)},
         {nameof(Vector2), typeof(Vector2)},
         {nameof(TimeSpan), typeof(TimeSpan)},
         {nameof(DateTime), typeof(DateTime)},

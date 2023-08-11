@@ -19,6 +19,7 @@ public sealed partial class ParserContext
         && c != new Rune(')')
         && c != new Rune('"')
         && c != new Rune('\'')
+        && c != new Rune(':')
         && !Rune.IsWhiteSpace(c)
         && !Rune.IsControl(c);
 
@@ -30,4 +31,7 @@ public sealed partial class ParserContext
             || c == new Rune('-')
             || c == new Rune('.')
             || c == new Rune('%');
+
+    public static bool IsTerminator(Rune c)
+        => Rune.IsSymbol(c) || Rune.IsPunctuation(c) || Rune.IsSeparator(c);
 }

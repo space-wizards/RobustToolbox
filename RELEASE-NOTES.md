@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed log messages for unknown components not working due to threaded IoC issues.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,23 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 148.0.0
+
+### Breaking changes
+
+* Several NuGet dependencies are now private assets.
+* Added `IViewportControl.PixelToMap()` and `PixelToMapEvent`. These are variants of the existing screen-to-map functions that should account for distortion effects.
+
+### New features
+
+* Added several new rich-text tags, including italic and bold-italic.
+
+### Bugfixes
+
+* Fixed log messages for unknown components not working due to threaded IoC issues.
+* Replay recordings no longer record invalid prototype uploads.
 
 
 ## 147.0.0

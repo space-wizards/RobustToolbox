@@ -12,7 +12,6 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.UnitTesting.Server;
-using SharpFont.PostScript;
 
 namespace Robust.UnitTesting.Shared.Physics;
 

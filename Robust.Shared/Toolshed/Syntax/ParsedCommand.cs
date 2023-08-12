@@ -117,7 +117,7 @@ public sealed class ParsedCommand
 
                 noCommand = true;
                 error = new NotValidCommandError(targetType);
-                error.Contextualize(parserContext.Input, (start, parserContext.Index));
+                error.Contextualize(parserContext.Input, (start, parserContext.Index+1));
                 autocomplete = null;
                 return false;
             }

@@ -33,5 +33,5 @@ public sealed partial class ParserContext
             || c == new Rune('%');
 
     public static bool IsTerminator(Rune c)
-        => Rune.IsSymbol(c) || Rune.IsPunctuation(c) || Rune.IsSeparator(c);
+        => (Rune.IsSymbol(c) || Rune.IsPunctuation(c) || Rune.IsSeparator(c) || c == new Rune('}')) && !Rune.IsWhiteSpace(c);
 }

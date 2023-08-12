@@ -197,14 +197,19 @@ public sealed partial class ParserContext
             return false;
 
         ConsumeWhitespace();
-        return PeekWord(IsTerminator) == _terminatorStack.Peek();
+        DebugPrint();
+        var term = PeekWord(IsTerminator);
+        Logger.Debug($"{term} = {_terminatorStack.Peek()} ?");
+        return  term == _terminatorStack.Peek();
     }
 
     public bool EatTerminator()
     {
         if (PeekTerminated())
         {
+            DebugPrint();
             GetWord(IsTerminator);
+            DebugPrint();
             _terminatorStack.Pop();
             return true;
         }

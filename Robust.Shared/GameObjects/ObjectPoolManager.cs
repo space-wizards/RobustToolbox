@@ -57,7 +57,13 @@ public sealed class ObjectPoolManager
     }
 
     [PublicAPI]
-    public void Return(List<EntityUid> list) => _entityListPool.Return(list);
+    public void Return(List<EntityUid>? list)
+    {
+        if (list == null)
+            return;
+
+        _entityListPool.Return(list);
+    }
 
     #endregion
 
@@ -93,7 +99,13 @@ public sealed class ObjectPoolManager
     }
 
     [PublicAPI]
-    public void Return(List<NetEntity> list) => _netEntityListPool.Return(list);
+    public void Return(List<NetEntity>? list)
+    {
+        if (list == null)
+            return;
+
+        _netEntityListPool.Return(list);
+    }
 
     #endregion
 }

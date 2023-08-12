@@ -78,7 +78,7 @@ namespace Robust.Shared.GameObjects
         public event Action<EntityUid>? EntityAdded;
         public event Action<EntityUid>? EntityInitialized;
         public event Action<EntityUid>? EntityStarted;
-        public event Action<EntityUid>? EntityDeleted;
+        public event Action<EntityUid, MetaDataComponent>? EntityDeleted;
 
         /// <summary>
         /// Raised when an entity is queued for deletion. Not raised if an entity is deleted.
@@ -610,7 +610,7 @@ namespace Robust.Shared.GameObjects
 
             try
             {
-                EntityDeleted?.Invoke(uid);
+                EntityDeleted?.Invoke(uid, metadata);
             }
             catch (Exception e)
             {

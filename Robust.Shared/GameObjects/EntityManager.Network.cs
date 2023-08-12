@@ -11,16 +11,19 @@ public partial class EntityManager
     /// </summary>
     protected readonly Dictionary<NetEntity, EntityUid> NetEntityLookup = new();
 
+    /// <inheritdoc />
     public virtual bool IsClientSide(EntityUid uid, MetaDataComponent? metadata = null)
     {
         return false;
     }
 
+    /// <inheritdoc />
     public EntityUid ToEntity(NetEntity nEntity)
     {
         return NetEntityLookup.TryGetValue(nEntity, out var entity) ? entity : EntityUid.Invalid;
     }
 
+    /// <inheritdoc />
     public EntityUid? ToEntity(NetEntity? nEntity)
     {
         if (nEntity == null)
@@ -29,11 +32,13 @@ public partial class EntityManager
         return NetEntityLookup.TryGetValue(nEntity.Value, out var entity) ? entity : null;
     }
 
+    /// <inheritdoc />
     public NetEntity ToNetEntity(EntityUid uid, MetaDataComponent? metadata = null)
     {
         return MetaQuery.Resolve(uid, ref metadata) ? metadata.NetEntity : NetEntity.Invalid;
     }
 
+    /// <inheritdoc />
     public NetEntity? ToNetEntity(EntityUid? uid, MetaDataComponent? metadata = null)
     {
         if (uid == null)
@@ -44,6 +49,7 @@ public partial class EntityManager
 
     #region Helpers
 
+    /// <inheritdoc />
     public HashSet<EntityUid> ToEntitySet(HashSet<NetEntity> netEntities)
     {
         var entities = _poolManager.GetEntitySet();
@@ -57,6 +63,7 @@ public partial class EntityManager
         return entities;
     }
 
+    /// <inheritdoc />
     public List<EntityUid> ToEntityList(List<NetEntity> netEntities)
     {
         var entities = _poolManager.GetEntityList();
@@ -70,9 +77,7 @@ public partial class EntityManager
         return entities;
     }
 
-    /// <summary>
-    /// Returns the <see cref="NetEntity"/> to a HashSet of <see cref="EntityUid"/>
-    /// </summary>
+    /// <inheritdoc />
     public HashSet<NetEntity> ToNetEntitySet(HashSet<EntityUid> entities)
     {
         var newSet = _poolManager.GetNetEntitySet();
@@ -87,6 +92,7 @@ public partial class EntityManager
         return newSet;
     }
 
+    /// <inheritdoc />
     public List<NetEntity> ToNetEntityList(List<EntityUid> entities)
     {
         var netEntities = _poolManager.GetNetEntityList();
@@ -104,11 +110,13 @@ public partial class EntityManager
 
     #region NetCoordinates
 
+    /// <inheritdoc />
     public NetCoordinates ToNetCoordinates(EntityCoordinates coordinates)
     {
         return new NetCoordinates(ToNetEntity(coordinates.EntityId), coordinates.Position);
     }
 
+    /// <inheritdoc />
     public NetCoordinates? ToNetCoordinates(EntityCoordinates? coordinates)
     {
         if (coordinates == null)
@@ -117,11 +125,13 @@ public partial class EntityManager
         return new NetCoordinates(ToNetEntity(coordinates.Value.EntityId), coordinates.Value.Position);
     }
 
+    /// <inheritdoc />
     public EntityCoordinates ToCoordinates(NetCoordinates coordinates)
     {
         return new EntityCoordinates(ToEntity(coordinates.NetEntity), coordinates.Position);
     }
 
+    /// <inheritdoc />
     public EntityCoordinates? ToCoordinates(NetCoordinates? coordinates)
     {
         if (coordinates == null)

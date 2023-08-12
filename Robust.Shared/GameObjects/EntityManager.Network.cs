@@ -11,6 +11,11 @@ public partial class EntityManager
     /// </summary>
     protected readonly Dictionary<NetEntity, EntityUid> NetEntityLookup = new();
 
+    public virtual bool IsClientSide(EntityUid uid, MetaDataComponent? metadata = null)
+    {
+        return false;
+    }
+
     public EntityUid ToEntity(NetEntity nEntity)
     {
         return NetEntityLookup.TryGetValue(nEntity, out var entity) ? entity : EntityUid.Invalid;
@@ -26,7 +31,7 @@ public partial class EntityManager
 
     public NetEntity ToNetEntity(EntityUid uid, MetaDataComponent? metadata = null)
     {
-        return _metaQuery.Resolve(uid, ref metadata) ? metadata.NetEntity : NetEntity.Invalid;
+        return MetaQuery.Resolve(uid, ref metadata) ? metadata.NetEntity : NetEntity.Invalid;
     }
 
     public NetEntity? ToNetEntity(EntityUid? uid, MetaDataComponent? metadata = null)
@@ -34,7 +39,7 @@ public partial class EntityManager
         if (uid == null)
             return null;
 
-        return _metaQuery.Resolve(uid.Value, ref metadata) ? metadata.NetEntity : null;
+        return MetaQuery.Resolve(uid.Value, ref metadata) ? metadata.NetEntity : null;
     }
 
     #region Helpers
@@ -75,7 +80,7 @@ public partial class EntityManager
 
         foreach (var ent in entities)
         {
-            _metaQuery.TryGetComponent(ent, out var metadata);
+            MetaQuery.TryGetComponent(ent, out var metadata);
             newSet.Add(ToNetEntity(ent, metadata));
         }
 

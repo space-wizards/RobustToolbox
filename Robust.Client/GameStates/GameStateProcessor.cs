@@ -353,7 +353,7 @@ namespace Robust.Client.GameStates
             LastFullStateRequested = _timing.LastRealTick;
         }
 
-        public void MergeImplicitData(Dictionary<EntityUid, Dictionary<ushort, ComponentState>> implicitData)
+        public void MergeImplicitData(Dictionary<NetEntity, Dictionary<ushort, ComponentState>> implicitData)
         {
             foreach (var (netEntity, implicitEntState) in implicitData)
             {
@@ -385,17 +385,17 @@ namespace Robust.Client.GameStates
             }
         }
 
-        public Dictionary<ushort, ComponentState> GetLastServerStates(EntityUid entity)
+        public Dictionary<ushort, ComponentState> GetLastServerStates(NetEntity netEntity)
         {
-            return _lastStateFullRep[entity];
+            return _lastStateFullRep[netEntity];
         }
 
-        public Dictionary<EntityUid, Dictionary<ushort, ComponentState>> GetFullRep()
+        public Dictionary<NetEntity, Dictionary<ushort, ComponentState>> GetFullRep()
         {
             return _lastStateFullRep;
         }
 
-        public bool TryGetLastServerStates(EntityUid entity,
+        public bool TryGetLastServerStates(NetEntity entity,
             [NotNullWhen(true)] out Dictionary<ushort, ComponentState>? dictionary)
         {
             return _lastStateFullRep.TryGetValue(entity, out dictionary);

@@ -16,4 +16,12 @@ public sealed partial class ClientEntityManager
     {
         NetEntityLookup[netEntity] = uid;
     }
+
+    public override bool IsClientSide(EntityUid uid, MetaDataComponent? metadata = null)
+    {
+        if (!MetaQuery.Resolve(uid, ref metadata))
+            return false;
+
+        return !metadata.NetEntity.IsValid();
+    }
 }

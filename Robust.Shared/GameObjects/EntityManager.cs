@@ -38,7 +38,7 @@ namespace Robust.Shared.GameObjects
         // positions on spawn....
         private SharedTransformSystem _xforms = default!;
 
-        private EntityQuery<MetaDataComponent> _metaQuery;
+        protected EntityQuery<MetaDataComponent> MetaQuery;
         private EntityQuery<TransformComponent> _xformQuery;
 
         #endregion Dependencies
@@ -126,7 +126,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public bool IsDefault(EntityUid uid)
         {
-            if (!_metaQuery.TryGetComponent(uid, out var metadata) || metadata.EntityPrototype == null)
+            if (!MetaQuery.TryGetComponent(uid, out var metadata) || metadata.EntityPrototype == null)
                 return false;
 
             var prototype = metadata.EntityPrototype;
@@ -235,7 +235,7 @@ namespace Robust.Shared.GameObjects
             _eventBus.CalcOrdering();
             _mapSystem = System<SharedMapSystem>();
             _xforms = System<SharedTransformSystem>();
-            _metaQuery = GetEntityQuery<MetaDataComponent>();
+            MetaQuery = GetEntityQuery<MetaDataComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
         }
 
@@ -501,7 +501,7 @@ namespace Robust.Shared.GameObjects
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?
-            if (!_metaQuery.TryGetComponent(e, out var meta) || meta.EntityDeleted)
+            if (!MetaQuery.TryGetComponent(e, out var meta) || meta.EntityDeleted)
                 return;
 
             if (meta.EntityLifeStage == EntityLifeStage.Terminating)
@@ -540,7 +540,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var child in transform._children)
             {
-                if (!_metaQuery.TryGetComponent(child, out var childMeta) || childMeta.EntityDeleted)
+                if (!MetaQuery.TryGetComponent(child, out var childMeta) || childMeta.EntityDeleted)
                 {
                     _sawmill.Error($"A deleted entity was still the transform child of another entity. Parent: {ToPrettyString(uid, metadata)}.");
                     transform._children.Remove(child);
@@ -577,7 +577,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    RecursiveDeleteEntity(child, _metaQuery.GetComponent(child));
+                    RecursiveDeleteEntity(child, MetaQuery.GetComponent(child));
                 }
                 catch(Exception e)
                 {
@@ -765,7 +765,7 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(_metaQuery.GetComponent(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+            EntityPrototype.LoadEntity(MetaQuery.GetComponent(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
         }
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
@@ -777,7 +777,7 @@ namespace Robust.Shared.GameObjects
         {
             try
             {
-                var meta = _metaQuery.GetComponent(entity);
+                var meta = MetaQuery.GetComponent(entity);
                 InitializeEntity(entity, meta);
                 StartEntity(entity);
 

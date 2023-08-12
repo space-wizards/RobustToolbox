@@ -809,6 +809,11 @@ public partial class EntitySystem
 
     #region NetEntities
 
+    protected bool IsClientSide(EntityUid entity)
+    {
+        return EntityManager.IsClientSide(entity);
+    }
+
     /// <summary>
     ///     Returns the <see cref="NetEntity"/> of an entity. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
     /// </summary>

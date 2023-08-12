@@ -43,7 +43,8 @@ namespace Robust.Client.GameObjects
 
         private void MessageReceived(BoundUIWrapMessage ev)
         {
-            var uid = ev.Entity;
+            var uid = ToEntity(ev.Entity);
+
             if (!TryComp<ClientUserInterfaceComponent>(uid, out var cmp))
                 return;
 
@@ -125,7 +126,7 @@ namespace Robust.Client.GameObjects
 
         internal void SendUiMessage(BoundUserInterface bui, BoundUserInterfaceMessage msg)
         {
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, msg, bui.UiKey));
+            RaiseNetworkEvent(new BoundUIWrapMessage(ToNetEntity(bui.Owner), msg, bui.UiKey));
         }
     }
 }

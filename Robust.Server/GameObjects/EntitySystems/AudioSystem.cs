@@ -88,7 +88,7 @@ public sealed class AudioSystem : SharedAudioSystem
             FileName = filename,
             Coordinates = ToNetCoordinates(transform.Coordinates),
             FallbackCoordinates = ToNetCoordinates(fallbackCoordinates),
-            EntityUid = ToNetEntity(uid),
+            NetEntity = ToNetEntity(uid),
             AudioParams = audioParams ?? AudioParams.Default,
             Identifier = id,
         };

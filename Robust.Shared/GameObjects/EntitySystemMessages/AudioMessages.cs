@@ -38,7 +38,7 @@ public sealed class PlayAudioPositionalMessage : AudioMessage
 [Serializable, NetSerializable]
 public sealed class PlayAudioEntityMessage : AudioMessage
 {
-    public NetEntity EntityUid { get; set; }
+    public NetEntity NetEntity { get; set; }
     public NetCoordinates Coordinates { get; set; }
     public NetCoordinates FallbackCoordinates { get; set; }
 }

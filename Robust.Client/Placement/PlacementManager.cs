@@ -225,7 +225,7 @@ namespace Robust.Client.Placement
                         }
                     }))
                 .Bind(EngineKeyFunctions.EditorPlaceObject, new PointerStateInputCmdHandler(
-                    (session, coords, uid) =>
+                    (session, netCoords, nent) =>
                     {
                         if (!IsActive)
                             return false;
@@ -239,6 +239,9 @@ namespace Robust.Client.Placement
 
                         if (Eraser)
                         {
+                            var uid = EntityManager.ToEntity(nent);
+                            var coords = EntityManager.ToCoordinates(netCoords);
+
                             if (HandleDeletion(coords))
                                 return true;
 
@@ -428,7 +431,7 @@ namespace Robust.Client.Placement
 
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
-            msg.EntityUid = entity;
+            msg.EntityUid = EntityManager.ToNetEntity(entity);
             _networkManager.ClientSendMessage(msg);
         }
 
@@ -436,7 +439,7 @@ namespace Robust.Client.Placement
         {
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
-            msg.EntityCoordinates = new EntityCoordinates(StartPoint.EntityId, rect.BottomLeft);
+            msg.NetCoordinates = new NetCoordinates(EntityManager.ToNetEntity(StartPoint.EntityId), rect.BottomLeft);
             msg.RectSize = rect.Size;
             _networkManager.ClientSendMessage(msg);
         }
@@ -790,7 +793,7 @@ namespace Robust.Client.Placement
                 message.EntityTemplateName = CurrentPermission.EntityType;
 
             // world x and y
-            message.EntityCoordinates = coordinates;
+            message.NetCoordinates = EntityManager.ToNetCoordinates(coordinates);
 
             message.DirRcv = Direction;
 

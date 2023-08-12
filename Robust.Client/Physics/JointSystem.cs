@@ -20,7 +20,7 @@ namespace Robust.Client.Physics
         {
             if (args.Current is not JointComponentState jointState) return;
 
-            component.Relay = jointState.Relay;
+            component.Relay = ToEntity(jointState.Relay);
 
             // Initial state gets applied before the entity (& entity's transform) have been initialized.
             // So just let joint init code handle that.

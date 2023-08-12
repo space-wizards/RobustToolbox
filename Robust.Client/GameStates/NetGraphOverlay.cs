@@ -26,6 +26,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IEntityManager _entManager = default!;
 
         private const int HistorySize = 60 * 5; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
@@ -86,7 +87,9 @@ namespace Robust.Client.GameStates
                 var sb = new StringBuilder();
                 foreach (var entState in entStates.Span)
                 {
-                    if (entState.Uid != WatchEntId)
+                    var uid = _entManager.ToEntity(entState.NetEntity);
+
+                    if (uid != WatchEntId)
                         continue;
 
                     if (!entState.ComponentChanges.HasContents)
@@ -115,7 +118,9 @@ namespace Robust.Client.GameStates
 
             foreach (var ent in args.Detached)
             {
-                if (ent != WatchEntId)
+                var uid = _entManager.ToEntity(ent);
+
+                if (uid != WatchEntId)
                     continue;
 
                 conShell.WriteLine($"watchEnt: Left PVS at tick {args.AppliedState.ToSequence}, eid={WatchEntId}" + "\n");
@@ -126,7 +131,9 @@ namespace Robust.Client.GameStates
             {
                 foreach (var entDelete in entDeletes.Span)
                 {
-                    if (entDelete == WatchEntId)
+                    var uid = _entManager.ToEntity(entDelete);
+
+                    if (uid == WatchEntId)
                         entDelString = "\n  Deleted";
                 }
             }

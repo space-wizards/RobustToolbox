@@ -152,7 +152,7 @@ namespace Robust.Client.GameObjects
             var funcId = _inputManager.NetworkBindMap.KeyFunctionID(keyFunction);
 
             var message = new FullInputCmdMessage(_timing.CurTick, _timing.TickFraction, funcId, state,
-                coords, new ScreenCoordinates(0, 0, default), EntityUid.Invalid);
+                ToNetCoordinates(coords), new ScreenCoordinates(0, 0, default), NetEntity.Invalid);
 
             HandleInputCommand(localPlayer.Session, keyFunction, message);
         }

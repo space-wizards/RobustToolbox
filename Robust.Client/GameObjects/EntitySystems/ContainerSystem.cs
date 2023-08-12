@@ -98,7 +98,7 @@ namespace Robust.Client.GameObjects
 
             // Add new containers and update existing contents.
 
-            foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.Containers.Values)
+            foreach (var (containerType, id, showEnts, occludesLight, nents) in cast.Containers.Values)
             {
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
@@ -112,6 +112,8 @@ namespace Robust.Client.GameObjects
 
                 // Remove gone entities.
                 var toRemove = new ValueList<EntityUid>();
+                var entityUids = ToEntityArray(nents);
+
                 foreach (var entity in container.ContainedEntities)
                 {
                     if (!entityUids.Contains(entity))

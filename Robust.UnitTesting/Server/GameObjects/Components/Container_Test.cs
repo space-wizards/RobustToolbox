@@ -285,7 +285,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(cont.OccludesLight, Is.True);
             Assert.That(cont.ShowContents, Is.True);
             Assert.That(cont.ContainedEntities.Length, Is.EqualTo(1));
-            Assert.That(cont.ContainedEntities[0], Is.EqualTo(childEnt));
+            Assert.That(cont.ContainedEntities[0], Is.EqualTo(entManager.ToNetEntity(childEnt)));
         }
 
         private sealed class ContainerOnlyContainer : BaseContainer

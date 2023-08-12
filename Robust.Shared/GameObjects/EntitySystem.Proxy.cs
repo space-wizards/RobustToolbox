@@ -881,6 +881,24 @@ public partial class EntitySystem
         return EntityManager.ToEntityList(netEntities);
     }
 
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected NetEntity[] ToNetEntityArray(EntityUid[] uids)
+    {
+        return EntityManager.ToNetEntityArray(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid[] ToEntityArray(NetEntity[] netEntities)
+    {
+        return EntityManager.ToEntityArray(netEntities);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetCoordinates ToNetCoordinates(EntityCoordinates coordinates)
     {

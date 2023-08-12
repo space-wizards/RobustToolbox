@@ -86,9 +86,9 @@ public sealed class AudioSystem : SharedAudioSystem
         var msg = new PlayAudioEntityMessage
         {
             FileName = filename,
-            Coordinates = transform.Coordinates,
-            FallbackCoordinates = fallbackCoordinates,
-            EntityUid = uid,
+            Coordinates = ToNetCoordinates(transform.Coordinates),
+            FallbackCoordinates = ToNetCoordinates(fallbackCoordinates),
+            EntityUid = ToNetEntity(uid),
             AudioParams = audioParams ?? AudioParams.Default,
             Identifier = id,
         };
@@ -108,8 +108,8 @@ public sealed class AudioSystem : SharedAudioSystem
         var msg = new PlayAudioPositionalMessage
         {
             FileName = filename,
-            Coordinates = coordinates,
-            FallbackCoordinates = fallbackCoordinates,
+            Coordinates = ToNetCoordinates(coordinates),
+            FallbackCoordinates = ToNetCoordinates(fallbackCoordinates),
             AudioParams = audioParams ?? AudioParams.Default,
             Identifier = id
         };

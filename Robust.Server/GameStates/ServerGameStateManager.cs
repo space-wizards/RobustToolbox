@@ -238,7 +238,7 @@ namespace Robust.Server.GameStates
         {
             public HashSet<int>[] PlayerChunks;
             public EntityUid[][] ViewerEntities;
-            public (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] ChunkCache;
+            public (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] ChunkCache;
         }
 
         private PvsData? GetPVSData(IPlayerSession[] players)

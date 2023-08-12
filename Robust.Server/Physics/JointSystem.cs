@@ -24,6 +24,6 @@ public sealed class JointSystem : SharedJointSystem
             states.Add(id, joint.GetState());
         }
 
-        args.State = new JointComponentState(component.Relay, states);
+        args.State = new JointComponentState(ToNetEntity(component.Relay), states);
     }
 }

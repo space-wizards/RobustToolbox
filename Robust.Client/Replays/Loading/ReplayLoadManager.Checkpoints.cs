@@ -7,6 +7,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System.Threading.Tasks;
+using Robust.Client.Upload.Commands;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Replays;
@@ -250,34 +251,54 @@ public sealed partial class ReplayLoadManager
                 continue;
 
             message.Messages.RemoveSwap(i);
-            var changed = new Dictionary<Type, HashSet<string>>();
-            _protoMan.LoadString(protoUpload.PrototypeData, true, changed);
 
-            foreach (var (kind, ids) in changed)
+            try
             {
-                var protos = prototypes[kind];
-                var count = protos.Count;
-                protos.UnionWith(ids);
-                if (!ignoreDuplicates && ids.Count + count != protos.Count)
-                {
-                    // An existing prototype was overwritten. Much like for resource uploading, supporting this
-                    // requires tracking the last-modified time of prototypes and either resetting or applying
-                    // prototype changes when jumping around in time. This also requires reworking how the initial
-                    // implicit state data is generated, because we can't simply cache it anymore.
-                    // Also, does reloading prototypes in release mode modify existing entities?
-
-                    var msg = $"Overwriting an existing prototype! Kind: {kind.Name}. Ids: {string.Join(", ", ids)}";
-                    if (_confMan.GetCVar(CVars.ReplayIgnoreErrors))
-                        _sawmill.Error(msg);
-                    else
-                        throw new NotSupportedException(msg);
-                }
+                LoadPrototype(protoUpload.PrototypeData, prototypes, ignoreDuplicates);
             }
+            catch (Exception e)
+            {
+                if (e is NotSupportedException || !_confMan.GetCVar(CVars.ReplayIgnoreErrors))
+                    throw;
 
-            _protoMan.ResolveResults();
-            _protoMan.ReloadPrototypes(changed);
-            _locMan.ReloadLocalizations();
+                var msg = $"Caught exception while parsing uploaded prototypes in a replay. Exception: {e}";
+                _sawmill.Error(msg);
+            }
         }
+    }
+
+    private void LoadPrototype(
+        string data,
+        Dictionary<Type, HashSet<string>> prototypes,
+        bool ignoreDuplicates)
+    {
+        var changed = new Dictionary<Type, HashSet<string>>();
+        _protoMan.LoadString(data, true, changed);
+
+        foreach (var (kind, ids) in changed)
+        {
+            var protos = prototypes[kind];
+            var count = protos.Count;
+            protos.UnionWith(ids);
+            if (!ignoreDuplicates && ids.Count + count != protos.Count)
+            {
+                // An existing prototype was overwritten. Much like for resource uploading, supporting this
+                // requires tracking the last-modified time of prototypes and either resetting or applying
+                // prototype changes when jumping around in time. This also requires reworking how the initial
+                // implicit state data is generated, because we can't simply cache it anymore.
+                // Also, does reloading prototypes in release mode modify existing entities?
+
+                var msg = $"Overwriting an existing prototype! Kind: {kind.Name}. Ids: {string.Join(", ", ids)}";
+                if (_confMan.GetCVar(CVars.ReplayIgnoreErrors))
+                    _sawmill.Error(msg);
+                else
+                    throw new NotSupportedException(msg);
+            }
+        }
+
+        _protoMan.ResolveResults();
+        _protoMan.ReloadPrototypes(changed);
+        _locMan.ReloadLocalizations();
     }
 
     private void UpdateDeletions(NetListAsArray<EntityUid> entityDeletions,

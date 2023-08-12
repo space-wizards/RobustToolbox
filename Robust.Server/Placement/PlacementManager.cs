@@ -99,7 +99,7 @@ namespace Robust.Server.Placement
 
             //TODO: Distance check, so you can't place things off of screen.
 
-            var coordinates = msg.EntityCoordinates;
+            var coordinates = msg.NetCoordinates;
 
             if (!coordinates.IsValid(_entityManager))
             {
@@ -221,7 +221,7 @@ namespace Robust.Server.Placement
 
         private void HandleRectRemoveReq(MsgPlacement msg)
         {
-            EntityCoordinates start = msg.EntityCoordinates;
+            EntityCoordinates start = msg.NetCoordinates;
             Vector2 rectSize = msg.RectSize;
             foreach (EntityUid entity in EntitySystem.Get<EntityLookupSystem>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))

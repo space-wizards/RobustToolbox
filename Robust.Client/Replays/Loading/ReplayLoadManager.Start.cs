@@ -68,10 +68,10 @@ public sealed partial class ReplayLoadManager
             var metaState = (MetaDataComponentState?)ent.ComponentChanges.Value?
                 .FirstOrDefault(c => c.NetID == _metaId).State;
             if (metaState == null)
-                throw new MissingMetadataException(ent.Uid);
+                throw new MissingMetadataException(ent.NetEntity);
 
-            _entMan.CreateEntityUninitialized(metaState.PrototypeId, ent.Uid);
-            entities.Add(ent.Uid);
+            var uid = _entMan.CreateEntityUninitialized(metaState.PrototypeId);
+            entities.Add(uid);
 
             if (i++ % 50 == 0)
             {

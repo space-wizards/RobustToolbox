@@ -30,6 +30,7 @@ public sealed partial class ReplayLoadManager : IReplayLoadManager
     [Dependency] private readonly IClientGameStateManager _gameState = default!;
     [Dependency] private readonly IClientRobustSerializer _serializer = default!;
     [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
+    [Dependency] private readonly ObjectPoolManager _pool = default!;
 
     private ushort _metaId;
     private bool _initialized;

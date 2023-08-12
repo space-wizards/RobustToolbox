@@ -61,6 +61,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly ObjectPoolManager _pool = default!;
         [Dependency] private readonly IConsoleHost _conHost = default!;
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
@@ -210,7 +211,7 @@ namespace Robust.Client.GameStates
             PvsLeave?.Invoke(message);
         }
 
-        public void QueuePvsDetach(List<EntityUid> entities, GameTick tick)
+        public void QueuePvsDetach(List<NetEntity> entities, GameTick tick)
         {
             _processor.AddLeavePvsMessage(entities, tick);
             if (_replayRecording.IsRecording)
@@ -392,10 +393,10 @@ namespace Robust.Client.GameStates
             }
         }
 
-        public void RequestFullState(EntityUid? missingEntity = null)
+        public void RequestFullState(NetEntity? missingEntity = null)
         {
             _sawmill.Info("Requesting full server state");
-            _network.ClientSendMessage(new MsgStateRequestFull { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? EntityUid.Invalid });
+            _network.ClientSendMessage(new MsgStateRequestFull { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? NetEntity.Invalid });
             _processor.RequestFullState();
         }
 
@@ -676,16 +677,17 @@ namespace Robust.Client.GameStates
 
                 foreach (var es in curSpan)
                 {
-                    if (metas.HasComponent(es.Uid))
+                    var uid = _entityManager.ToEntity(es.NetEntity);
+
+                    if (metas.HasComponent(uid))
                         continue;
 
                     count++;
-                    var uid = es.Uid;
                     var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
                     if (metaState == null)
-                        throw new MissingMetadataException(uid);
+                        throw new MissingMetadataException(es.NetEntity);
 
-                    _entities.CreateEntity(metaState.PrototypeId, uid);
+                    _entities.CreateEntity(metaState.PrototypeId);
                     _toCreate.Add(uid, es);
                     _toApply.Add(uid, (false, GameTick.Zero, es, null));
 
@@ -700,7 +702,9 @@ namespace Robust.Client.GameStates
 
             foreach (var es in curSpan)
             {
-                if (!metas.TryGetComponent(es.Uid, out var meta) || _toCreate.ContainsKey(es.Uid))
+                var uid = _entityManager.ToEntity(es.NetEntity);
+
+                if (!metas.TryGetComponent(uid, out var meta) || _toCreate.ContainsKey(uid))
                 {
                     continue;
                 }
@@ -717,7 +721,7 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                _toApply.Add(es.Uid, (isEnteringPvs, meta.LastStateApplied, es, null));
+                _toApply.Add(uid, (isEnteringPvs, meta.LastStateApplied, es, null));
                 meta.LastStateApplied = curState.ToSequence;
             }
 
@@ -731,7 +735,7 @@ namespace Robust.Client.GameStates
             {
                 foreach (var es in nextState.EntityStates.Span)
                 {
-                    var uid = es.Uid;
+                    var uid = _entityManager.ToEntity(es.NetEntity);
 
                     if (!metas.TryGetComponent(uid, out var meta))
                         continue;
@@ -832,10 +836,10 @@ namespace Robust.Client.GameStates
 
             // Construct hashset for set.Contains() checks.
             var entityStates = state.EntityStates.Span;
-            var stateEnts = new HashSet<EntityUid>(entityStates.Length);
+            var stateEnts = _pool.GetEntitySet(entityStates.Length);
             foreach (var entState in entityStates)
             {
-                stateEnts.Add(entState.Uid);
+                stateEnts.Add(_entityManager.ToEntity(entState.NetEntity));
             }
 
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
@@ -887,10 +891,12 @@ namespace Robust.Client.GameStates
             {
                 _entities.DeleteEntity(ent);
             }
+
+            _pool.Return(stateEnts);
         }
 
         private void ProcessDeletions(
-            ReadOnlySpan<EntityUid> delSpan,
+            ReadOnlySpan<NetEntity> delSpan,
             EntityQuery<TransformComponent> xforms,
             EntityQuery<MetaDataComponent> metas,
             SharedTransformSystem xformSys)
@@ -907,8 +913,10 @@ namespace Robust.Client.GameStates
 
             using var _ = _prof.Group("Deletion");
 
-            foreach (var id in delSpan)
+            foreach (var netEntity in delSpan)
             {
+                var id = _entityManager.ToEntity(netEntity);
+
                 if (!xforms.TryGetComponent(id, out var xform))
                     continue; // Already deleted? or never sent to us?
 
@@ -938,7 +946,7 @@ namespace Robust.Client.GameStates
             Detach(GameTick.MaxValue, null, entities, metas, xforms, xformSys, containerSys, lookupSys);
         }
 
-        private List<EntityUid> ProcessPvsDeparture(
+        private List<NetEntity> ProcessPvsDeparture(
             GameTick toTick,
             EntityQuery<MetaDataComponent> metas,
             EntityQuery<TransformComponent> xforms,
@@ -947,7 +955,7 @@ namespace Robust.Client.GameStates
             EntityLookupSystem lookupSys)
         {
             var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
-            var detached = new List<EntityUid>();
+            var detached = new List<NetEntity>();
 
             if (toDetach.Count == 0)
                 return detached;
@@ -969,16 +977,18 @@ namespace Robust.Client.GameStates
 
         private void Detach(GameTick maxTick,
             GameTick? lastStateApplied,
-            List<EntityUid> entities,
+            List<NetEntity> entities,
             EntityQuery<MetaDataComponent> metas,
             EntityQuery<TransformComponent> xforms,
             SharedTransformSystem xformSys,
             ContainerSystem containerSys,
             EntityLookupSystem lookupSys,
-            List<EntityUid>? detached = null)
+            List<NetEntity>? detached = null)
         {
-            foreach (var ent in entities)
+            foreach (var netEntity in entities)
             {
+                var ent = _entityManager.ToEntity(netEntity);
+
                 if (!metas.TryGetComponent(ent, out var meta))
                     continue;
 
@@ -1366,12 +1376,12 @@ namespace Robust.Client.GameStates
 
     public sealed class MissingMetadataException : Exception
     {
-        public readonly EntityUid Uid;
+        public readonly NetEntity NetEntity;
 
-        public MissingMetadataException(EntityUid uid)
-            : base($"Server state is missing the metadata component for a new entity: {uid}.")
+        public MissingMetadataException(NetEntity netEntity)
+            : base($"Server state is missing the metadata component for a new entity: {netEntity}.")
         {
-            Uid = uid;
+            NetEntity = netEntity;
         }
     }
 }

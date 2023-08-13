@@ -16,6 +16,8 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string MemberAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
         private const string GlobalEntityUidName = "global::Robust.Shared.GameObjects.EntityUid";
         private const string GlobalNullableEntityUidName = "global::Robust.Shared.GameObjects.EntityUid?";
+        private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
+        private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
 
         private static string GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
         {
@@ -119,15 +121,31 @@ namespace Robust.Shared.CompNetworkGenerator
             foreach (var (type, name, attribute) in fields)
             {
                 var typeDisplayStr = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var isEntityUid = typeDisplayStr == GlobalEntityUidName || typeDisplayStr == GlobalNullableEntityUidName;
+                var (isEntityUid, isEntityCoordinates) = (false, false);
+                var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
+                var nullableAnnotation = nullable ? "?" : string.Empty;
+
+                switch (typeDisplayStr)
+                {
+                    case GlobalEntityUidName:
+                    case GlobalNullableEntityUidName:
+                        isEntityUid = true;
+                        break;
+                    case GlobalEntityCoordinatesName:
+                    case GlobalNullableEntityCoordinatesName:
+                        isEntityCoordinates = true;
+                        break;
+                }
 
                 if (isEntityUid)
                 {
-                    var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
-                    var nullableAnnotation = nullable ? "?" : string.Empty;
-
                     stateFields.Append($@"
         public NetEntity{nullableAnnotation} {name} = default!;");
+                }
+                else if (isEntityCoordinates)
+                {
+                    stateFields.Append($@"
+        public NetCoordinates{nullableAnnotation} {name} = default!;");
                 }
                 else
                 {
@@ -135,24 +153,32 @@ namespace Robust.Shared.CompNetworkGenerator
         public {typeDisplayStr} {name} = default!;");
                 }
 
-                // get first ctor arg of the field attribute, which determines whether the field should be cloned
-                // (like if its a dict or list)
-                if (attribute.ConstructorArguments[0].Value is bool val && val)
+                if (isEntityUid)
                 {
+                    getStateInit.Append($@"
+                {name} = ToNetEntity(component.{name}),");
+
+                    handleStateSetters.Append($@"
+            component.{name} = ToEntity(state.{name});");
+                }
+                else if (isEntityCoordinates)
+                {
+                    getStateInit.Append($@"
+                {name} = ToNetCoordinates(component.{name}),");
+
+                    handleStateSetters.Append($@"
+            component.{name} = ToCoordinates(state.{name});");
+                }
+                else if (attribute.ConstructorArguments[0].Value is bool val && val)
+                {
+                    // get first ctor arg of the field attribute, which determines whether the field should be cloned
+                    // (like if its a dict or list)
                     getStateInit.Append($@"
                 {name} = component.{name},");
 
                     handleStateSetters.Append($@"
             if (state.{name} != null)
                 component.{name} = new(state.{name});");
-                }
-                else if (isEntityUid)
-                {
-                    getStateInit.Append($@"
-                {name} = EntityManager.ToNetEntity(component.{name}),");
-
-                    handleStateSetters.Append($@"
-            component.{name} = EntityManager.ToEntity(state.{name});");
                 }
                 else
                 {
@@ -177,6 +203,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization;
+using Robust.Shared.Map;
 
 namespace {nameSpace};
 

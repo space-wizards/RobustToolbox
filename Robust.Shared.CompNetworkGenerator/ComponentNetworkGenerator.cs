@@ -121,7 +121,6 @@ namespace Robust.Shared.CompNetworkGenerator
             foreach (var (type, name, attribute) in fields)
             {
                 var typeDisplayStr = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var (isEntityUid, isEntityCoordinates) = (false, false);
                 var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
                 var nullableAnnotation = nullable ? "?" : string.Empty;
 
@@ -129,64 +128,51 @@ namespace Robust.Shared.CompNetworkGenerator
                 {
                     case GlobalEntityUidName:
                     case GlobalNullableEntityUidName:
-                        isEntityUid = true;
+                        stateFields.Append($@"
+        public NetEntity{nullableAnnotation} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = ToNetEntity(component.{name}),");
+                        handleStateSetters.Append($@"
+            component.{name} = ToEntity(state.{name});");
+
                         break;
                     case GlobalEntityCoordinatesName:
                     case GlobalNullableEntityCoordinatesName:
-                        isEntityCoordinates = true;
-                        break;
-                }
-
-                if (isEntityUid)
-                {
-                    stateFields.Append($@"
-        public NetEntity{nullableAnnotation} {name} = default!;");
-                }
-                else if (isEntityCoordinates)
-                {
-                    stateFields.Append($@"
+                        stateFields.Append($@"
         public NetCoordinates{nullableAnnotation} {name} = default!;");
-                }
-                else
-                {
-                    stateFields.Append($@"
-        public {typeDisplayStr} {name} = default!;");
-                }
 
-                if (isEntityUid)
-                {
-                    getStateInit.Append($@"
-                {name} = ToNetEntity(component.{name}),");
-
-                    handleStateSetters.Append($@"
-            component.{name} = ToEntity(state.{name});");
-                }
-                else if (isEntityCoordinates)
-                {
-                    getStateInit.Append($@"
+                        getStateInit.Append($@"
                 {name} = ToNetCoordinates(component.{name}),");
-
-                    handleStateSetters.Append($@"
+                        handleStateSetters.Append($@"
             component.{name} = ToCoordinates(state.{name});");
-                }
-                else if (attribute.ConstructorArguments[0].Value is bool val && val)
-                {
-                    // get first ctor arg of the field attribute, which determines whether the field should be cloned
-                    // (like if its a dict or list)
-                    getStateInit.Append($@"
+
+                        break;
+                    default:
+                        stateFields.Append($@"
+        public {typeDisplayStr} {name} = default!;");
+
+                        if (attribute.ConstructorArguments[0].Value is bool val && val)
+                        {
+                            // get first ctor arg of the field attribute, which determines whether the field should be cloned
+                            // (like if its a dict or list)
+                            getStateInit.Append($@"
                 {name} = component.{name},");
 
-                    handleStateSetters.Append($@"
+                            handleStateSetters.Append($@"
             if (state.{name} != null)
                 component.{name} = new(state.{name});");
-                }
-                else
-                {
-                    getStateInit.Append($@"
+                        }
+                        else
+                        {
+                            getStateInit.Append($@"
                 {name} = component.{name},");
 
-                    handleStateSetters.Append($@"
+                            handleStateSetters.Append($@"
             component.{name} = state.{name};");
+                        }
+
+                        break;
                 }
             }
 

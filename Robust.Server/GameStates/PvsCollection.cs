@@ -392,21 +392,10 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     #region UpdateIndex
 
-    private bool IsOverride(TIndex index)
+    private bool TryGetLocation(TIndex index, out IIndexLocation? location)
     {
-        if (_locationChangeBuffer.TryGetValue(index, out var change)
-            && change is GlobalOverride or LocalOverride)
-        {
-            return true;
-        }
-
-        if (_indexLocations.TryGetValue(index, out var indexLoc)
-            && indexLoc is GlobalOverride or LocalOverride)
-        {
-            return true;
-        }
-
-        return false;
+        return _locationChangeBuffer.TryGetValue(index, out location)
+               || _indexLocations.TryGetValue(index, out location);
     }
 
     /// <summary>
@@ -417,12 +406,17 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="recursive">If true, this will also recursively send any children of the given index.</param>
     public void AddGlobalOverride(TIndex index, bool removeFromOverride, bool recursive)
     {
-        if(!removeFromOverride && IsOverride(index))
+        if (!TryGetLocation(index, out var oldLocation))
+        {
+            RegisterUpdate(index, new GlobalOverride(recursive));
+            return;
+        }
+
+        if (!removeFromOverride && oldLocation is LocalOverride)
             return;
 
-        if (_indexLocations.TryGetValue(index, out var oldLocation)
-            && oldLocation is GlobalOverride existing
-            && existing.Recursive == recursive)
+        if (oldLocation is GlobalOverride global &&
+            (!removeFromOverride || global.Recursive == recursive))
         {
             return;
         }
@@ -438,12 +432,20 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
     public void UpdateIndex(TIndex index, ICommonSession session, bool removeFromOverride = false)
     {
-        if(!removeFromOverride && IsOverride(index))
+        if (!TryGetLocation(index, out var oldLocation))
+        {
+            RegisterUpdate(index, new LocalOverride(session));
+            return;
+        }
+
+        if (!removeFromOverride || oldLocation is GlobalOverride)
             return;
 
-        if (_indexLocations.TryGetValue(index, out var oldLocation) &&
-            oldLocation is LocalOverride local &&
-            local.Session == session) return;
+        if (oldLocation is LocalOverride local &&
+            (!removeFromOverride || local.Session == session))
+        {
+            return;
+        }
 
         RegisterUpdate(index, new LocalOverride(session));
     }
@@ -456,34 +458,42 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
     public void UpdateIndex(TIndex index, EntityCoordinates coordinates, bool removeFromOverride = false)
     {
-        if(!removeFromOverride && IsOverride(index))
+        if (!removeFromOverride
+            && TryGetLocation(index, out var oldLocation)
+            && oldLocation is GlobalOverride or LocalOverride)
+        {
+            return;
+        }
+
+        if (!_entityManager.TryGetComponent(coordinates.EntityId, out TransformComponent? xform))
             return;
 
-        var gridIdOpt = coordinates.GetGridUid(_entityManager);
-        if (gridIdOpt is EntityUid gridId && gridId.IsValid())
+        if (xform.GridUid is { } gridId && gridId.IsValid())
         {
             var gridIndices = GetChunkIndices(coordinates.Position);
             UpdateIndex(index, gridId, gridIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
             return;
         }
 
-        var mapCoordinates = coordinates.ToMap(_entityManager, _transformSystem);
-        var mapIndices = GetChunkIndices(coordinates.Position);
-        UpdateIndex(index, mapCoordinates.MapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
+        var worldPos = _transformSystem.GetWorldMatrix(xform).Transform(coordinates.Position);
+        var mapIndices = GetChunkIndices(worldPos);
+        UpdateIndex(index, xform.MapID, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
     }
 
     public IChunkIndexLocation GetChunkIndex(EntityCoordinates coordinates)
     {
-        var gridIdOpt = coordinates.GetGridUid(_entityManager);
-        if (gridIdOpt is EntityUid gridId && gridId.IsValid())
+        if (!_entityManager.TryGetComponent(coordinates.EntityId, out TransformComponent? xform))
+            return new MapChunkLocation(default, default);
+
+        if (xform.GridUid is { } gridId && gridId.IsValid())
         {
             var gridIndices = GetChunkIndices(coordinates.Position);
             return new GridChunkLocation(gridId, gridIndices);
         }
 
-        var mapCoordinates = coordinates.ToMap(_entityManager, _transformSystem);
-        var mapIndices = GetChunkIndices(coordinates.Position);
-        return new MapChunkLocation(mapCoordinates.MapId, mapIndices);
+        var worldPos = _transformSystem.GetWorldMatrix(xform).Transform(coordinates.Position);
+        var mapIndices = GetChunkIndices(worldPos);
+        return new MapChunkLocation(xform.MapID, mapIndices);
     }
 
     /// <summary>
@@ -496,11 +506,14 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="forceDirty">If true, this will mark the previous chunk as dirty even if the entity did not move from that chunk.</param>
     public void UpdateIndex(TIndex index, EntityUid gridId, Vector2i chunkIndices, bool removeFromOverride = false, bool forceDirty = false)
     {
-        if(!removeFromOverride && IsOverride(index))
+        _locationChangeBuffer.TryGetValue(index, out var bufferedLocation);
+        _indexLocations.TryGetValue(index, out var oldLocation);
+
+        //removeFromOverride is false 99% of the time.
+        if ((bufferedLocation ?? oldLocation) is GlobalOverride or LocalOverride && !removeFromOverride)
             return;
 
-        if (_indexLocations.TryGetValue(index, out var oldLocation) &&
-            oldLocation is GridChunkLocation oldGrid &&
+        if (oldLocation is GridChunkLocation oldGrid &&
             oldGrid.ChunkIndices == chunkIndices &&
             oldGrid.GridId == gridId)
         {
@@ -524,21 +537,25 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="forceDirty">If true, this will mark the previous chunk as dirty even if the entity did not move from that chunk.</param>
     public void UpdateIndex(TIndex index, MapId mapId, Vector2i chunkIndices, bool removeFromOverride = false, bool forceDirty = false)
     {
-        if(!removeFromOverride && IsOverride(index))
+        _locationChangeBuffer.TryGetValue(index, out var bufferedLocation);
+        _indexLocations.TryGetValue(index, out var oldLocation);
+
+        //removeFromOverride is false 99% of the time.
+        if ((bufferedLocation ?? oldLocation) is GlobalOverride or LocalOverride && !removeFromOverride)
             return;
 
-        if (_indexLocations.TryGetValue(index, out var oldLocation) &&
-            oldLocation is MapChunkLocation oldMap &&
+        // Is this entity just returning to its old location?
+        if (oldLocation is MapChunkLocation oldMap &&
             oldMap.ChunkIndices == chunkIndices &&
             oldMap.MapId == mapId)
         {
-            _locationChangeBuffer.Remove(index);
+            if (bufferedLocation != null)
+                _locationChangeBuffer.Remove(index);
 
             if (forceDirty)
                 _dirtyChunks.Add(oldMap);
             return;
         }
-
 
         RegisterUpdate(index, new MapChunkLocation(mapId, chunkIndices));
     }

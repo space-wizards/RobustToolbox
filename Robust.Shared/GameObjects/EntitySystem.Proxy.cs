@@ -872,6 +872,25 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected List<NetEntity> ToNetEntityList(ICollection<EntityUid> uids)
+    {
+        return EntityManager.ToNetEntityList(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected List<EntityUid> ToEntityList(ICollection<NetEntity> netEntities)
+    {
+        return EntityManager.ToEntityList(netEntities);
+    }
+
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity> ToNetEntityList(List<EntityUid> uids)
     {
         return EntityManager.ToNetEntityList(uids);
@@ -971,6 +990,78 @@ public partial class EntitySystem
     protected EntityCoordinates? ToCoordinates(NetCoordinates? netEntity)
     {
         return EntityManager.ToCoordinates(netEntity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public HashSet<EntityCoordinates> ToEntitySet(HashSet<NetCoordinates> netEntities)
+    {
+        return EntityManager.ToEntitySet(netEntities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<EntityCoordinates> ToEntityList(List<NetCoordinates> netEntities)
+    {
+        return EntityManager.ToEntityList(netEntities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<EntityCoordinates> ToEntityList(ICollection<NetCoordinates> netEntities)
+    {
+        return EntityManager.ToEntityList(netEntities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<EntityCoordinates?> ToEntityList(List<NetCoordinates?> netEntities)
+    {
+        return EntityManager.ToEntityList(netEntities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityCoordinates[] ToEntityArray(NetCoordinates[] netEntities)
+    {
+        return EntityManager.ToEntityArray(netEntities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityCoordinates?[] ToEntityArray(NetCoordinates?[] netEntities)
+    {
+        return EntityManager.ToEntityArray(netEntities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public HashSet<NetCoordinates> ToNetCoordinatesSet(HashSet<EntityCoordinates> entities)
+    {
+        return EntityManager.ToNetCoordinatesSet(entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<NetCoordinates> ToNetCoordinatesList(List<EntityCoordinates> entities)
+    {
+        return EntityManager.ToNetCoordinatesList(entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<NetCoordinates> ToNetCoordinatesList(ICollection<EntityCoordinates> entities)
+    {
+        return EntityManager.ToNetCoordinatesList(entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<NetCoordinates?> ToNetCoordinatesList(List<EntityCoordinates?> entities)
+    {
+        return EntityManager.ToNetCoordinatesList(entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NetCoordinates[] ToNetCoordinatesArray(EntityCoordinates[] entities)
+    {
+        return EntityManager.ToNetCoordinatesArray(entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public NetCoordinates?[] ToNetCoordinatesArray(EntityCoordinates?[] entities)
+    {
+        return EntityManager.ToNetCoordinatesArray(entities);
     }
 
     #endregion

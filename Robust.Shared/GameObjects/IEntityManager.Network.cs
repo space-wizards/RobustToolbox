@@ -43,6 +43,11 @@ public partial interface IEntityManager
     /// <summary>
     /// List version of <see cref="ToEntity(Robust.Shared.GameObjects.NetEntity)"/>
     /// </summary>
+    public List<EntityUid> ToEntityList(ICollection<NetEntity> netEntities);
+
+    /// <summary>
+    /// List version of <see cref="ToEntity(Robust.Shared.GameObjects.NetEntity)"/>
+    /// </summary>
     public List<EntityUid?> ToEntityList(List<NetEntity?> netEntities);
 
     /// <summary>
@@ -64,6 +69,11 @@ public partial interface IEntityManager
     /// List version of <see cref="ToNetEntity(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.MetaDataComponent?)"/>
     /// </summary>
     public List<NetEntity> ToNetEntityList(List<EntityUid> entities);
+
+    /// <summary>
+    /// List version of <see cref="ToNetEntity(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.MetaDataComponent?)"/>
+    /// </summary>
+    public List<NetEntity> ToNetEntityList(ICollection<EntityUid> entities);
 
     /// <summary>
     /// List version of <see cref="ToNetEntity(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.MetaDataComponent?)"/>
@@ -99,4 +109,28 @@ public partial interface IEntityManager
     /// Returns the corresponding <see cref="EntityCoordinates"/> for the specified network coordinates.
     /// </summary>
     public EntityCoordinates? ToCoordinates(NetCoordinates? coordinates);
+
+    public HashSet<EntityCoordinates> ToEntitySet(HashSet<NetCoordinates> netEntities);
+
+    public List<EntityCoordinates> ToEntityList(List<NetCoordinates> netEntities);
+
+    public List<EntityCoordinates> ToEntityList(ICollection<NetCoordinates> netEntities);
+
+    public List<EntityCoordinates?> ToEntityList(List<NetCoordinates?> netEntities);
+
+    public EntityCoordinates[] ToEntityArray(NetCoordinates[] netEntities);
+
+    public EntityCoordinates?[] ToEntityArray(NetCoordinates?[] netEntities);
+
+    public HashSet<NetCoordinates> ToNetCoordinatesSet(HashSet<EntityCoordinates> entities);
+
+    public List<NetCoordinates> ToNetCoordinatesList(List<EntityCoordinates> entities);
+
+    public List<NetCoordinates> ToNetCoordinatesList(ICollection<EntityCoordinates> entities);
+
+    public List<NetCoordinates?> ToNetCoordinatesList(List<EntityCoordinates?> entities);
+
+    public NetCoordinates[] ToNetCoordinatesArray(EntityCoordinates[] entities);
+
+    public NetCoordinates?[] ToNetCoordinatesArray(EntityCoordinates?[] entities);
 }

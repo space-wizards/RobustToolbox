@@ -21,7 +21,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
         private static string GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
         {
-            Debugger.Launch();
+            // Debugger.Launch();
             var nameSpace = classSymbol.ContainingNamespace.ToDisplayString();
             var componentName = classSymbol.Name;
             var stateName = $"{componentName}_AutoState";

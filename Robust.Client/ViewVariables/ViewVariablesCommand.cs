@@ -72,7 +72,7 @@ namespace Robust.Client.ViewVariables
             if (!_entities.EntityExists(entity))
             {
                 shell.WriteLine("That entity does not exist locally. Attempting to open remote view...");
-                _cvvm.OpenVV(new ViewVariablesEntitySelector(entity));
+                _cvvm.OpenVV(new ViewVariablesEntitySelector(_entities.ToNetEntity(entity)));
                 return;
             }
 

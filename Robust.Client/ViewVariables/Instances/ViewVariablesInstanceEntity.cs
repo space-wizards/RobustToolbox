@@ -268,7 +268,7 @@ namespace Robust.Client.ViewVariables.Instances
                 button.OnPressed += _ =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entity, componentType.FullName));
+                        new ViewVariablesComponentSelector(_entityManager.ToNetEntity(_entity), componentType.FullName));
                 };
                 removeButton.OnPressed += _ =>
                 {
@@ -504,7 +504,7 @@ namespace Robust.Client.ViewVariables.Instances
                 try
                 {
                     _entitySession =
-                        await ViewVariablesManager.RequestSession(new ViewVariablesEntitySelector(_entity));
+                        await ViewVariablesManager.RequestSession(new ViewVariablesEntitySelector(_entityManager.ToNetEntity(_entity)));
                 }
                 catch (SessionDenyException e)
                 {

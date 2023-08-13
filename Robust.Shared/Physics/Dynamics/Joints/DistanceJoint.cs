@@ -47,9 +47,9 @@ internal sealed class DistanceJointState : JointState
     public float Stiffness { get; internal set; }
     public float Damping { get; internal set; }
 
-    public override Joint GetJoint()
+    public override Joint GetJoint(IEntityManager entManager)
     {
-        return new DistanceJoint(this);
+        return new DistanceJoint(this, entManager);
     }
 }
 
@@ -123,7 +123,7 @@ public sealed class DistanceJoint : Joint, IEquatable<DistanceJoint>
         LocalAnchorB = anchorB;
     }
 
-    internal DistanceJoint(DistanceJointState state) : base(state)
+    internal DistanceJoint(DistanceJointState state, IEntityManager entManager) : base(state, entManager)
     {
         _damping = state.Damping;
         _length = state.Length;
@@ -242,7 +242,7 @@ public sealed class DistanceJoint : Joint, IEquatable<DistanceJoint>
         return F;
     }
 
-    public override JointState GetState()
+    public override JointState GetState(IEntityManager entManager)
     {
         var distanceState = new DistanceJointState
         {
@@ -255,7 +255,7 @@ public sealed class DistanceJoint : Joint, IEquatable<DistanceJoint>
             LocalAnchorB = LocalAnchorB
         };
 
-        base.GetState(distanceState);
+        base.GetState(distanceState, entManager);
         return distanceState;
     }
 

@@ -78,9 +78,35 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    public List<EntityUid?> ToEntityList(List<NetEntity?> netEntities)
+    {
+        var entities = new List<EntityUid?>(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(ToEntity(netEntity));
+        }
+
+        return entities;
+    }
+
+    /// <inheritdoc />
     public EntityUid[] ToEntityArray(NetEntity[] netEntities)
     {
         var entities = new EntityUid[netEntities.Length];
+
+        for (var i = 0; i < netEntities.Length; i++)
+        {
+            entities[i] = ToEntity(netEntities[i]);
+        }
+
+        return entities;
+    }
+
+    /// <inheritdoc />
+    public EntityUid?[] ToEntityArray(NetEntity?[] netEntities)
+    {
+        var entities = new EntityUid?[netEntities.Length];
 
         for (var i = 0; i < netEntities.Length; i++)
         {
@@ -120,9 +146,34 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    public List<NetEntity?> ToNetEntityList(List<EntityUid?> entities)
+    {
+        var netEntities = new List<NetEntity?>(entities.Count);
+
+        foreach (var netEntity in entities)
+        {
+            netEntities.Add(ToNetEntity(netEntity));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
     public NetEntity[] ToNetEntityArray(EntityUid[] entities)
     {
         var netEntities = new NetEntity[entities.Length];
+
+        for (var i = 0; i < entities.Length; i++)
+        {
+            netEntities[i] = ToNetEntity(entities[i]);
+        }
+
+        return netEntities;
+    }
+
+    public NetEntity?[] ToNetEntityArray(EntityUid?[] entities)
+    {
+        var netEntities = new NetEntity?[entities.Length];
 
         for (var i = 0; i < entities.Length; i++)
         {

@@ -114,7 +114,7 @@ namespace Robust.Server.GameObjects
             // get the wrapped message and populate it with the sender & UI key information.
             var message = msg.Message;
             message.Session = args.SenderSession;
-            message.Entity = uid;
+            message.Entity = ToNetEntity(uid);
             message.UiKey = msg.UiKey;
 
             // Raise as object so the correct type is used.
@@ -361,7 +361,7 @@ namespace Robust.Server.GameObjects
                 return false;
 
             _openInterfaces.GetOrNew(session).Add(bui);
-            RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Owner, session));
+            RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, ToNetEntity(bui.Owner), session));
 
             RaiseNetworkEvent(new BoundUIWrapMessage(ToNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
 
@@ -406,7 +406,7 @@ namespace Robust.Server.GameObjects
             if (_openInterfaces.TryGetValue(session, out var buis))
                 buis.Remove(bui);
 
-            RaiseLocalEvent(owner, new BoundUIClosedEvent(bui.UiKey, owner, session));
+            RaiseLocalEvent(owner, new BoundUIClosedEvent(bui.UiKey, ToNetEntity(owner), session));
 
             if (bui._subscribedSessions.Count == 0)
                 DeactivateInterface(bui.Owner, bui, activeUis);

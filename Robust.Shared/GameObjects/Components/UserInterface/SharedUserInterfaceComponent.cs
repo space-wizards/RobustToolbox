@@ -78,7 +78,7 @@ namespace Robust.Shared.GameObjects
         ///     The Entity receiving the message.
         ///     Only set when the message is raised as a directed event.
         /// </summary>
-        public EntityUid Entity { get; set; } = EntityUid.Invalid;
+        public NetEntity Entity { get; set; } = NetEntity.Invalid;
 
         /// <summary>
         ///     The session sending or receiving this message.
@@ -131,7 +131,7 @@ namespace Robust.Shared.GameObjects
 
     public sealed class BoundUIOpenedEvent : BoundUserInterfaceMessage
     {
-        public BoundUIOpenedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
+        public BoundUIOpenedEvent(Enum uiKey, NetEntity uid, ICommonSession session)
         {
             UiKey = uiKey;
             Entity = uid;
@@ -141,7 +141,7 @@ namespace Robust.Shared.GameObjects
 
     public sealed class BoundUIClosedEvent : BoundUserInterfaceMessage
     {
-        public BoundUIClosedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
+        public BoundUIClosedEvent(Enum uiKey, NetEntity uid, ICommonSession session)
         {
             UiKey = uiKey;
             Entity = uid;

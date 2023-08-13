@@ -54,7 +54,7 @@ namespace Robust.Client.GameObjects
             if(_playerManager.LocalPlayer != null)
                 message.Session = _playerManager.LocalPlayer.Session;
 
-            message.Entity = uid;
+            message.Entity = ToNetEntity(uid);
             message.UiKey = uiKey;
 
             // Raise as object so the correct type is used.
@@ -98,7 +98,7 @@ namespace Robust.Client.GameObjects
 
             var playerSession = _playerManager.LocalPlayer?.Session;
             if(playerSession != null)
-                RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, uid, playerSession), true);
+                RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, ToNetEntity(uid), playerSession), true);
 
             return true;
         }
@@ -119,7 +119,7 @@ namespace Robust.Client.GameObjects
 
             var playerSession = _playerManager.LocalPlayer?.Session;
             if(playerSession != null)
-                RaiseLocalEvent(uid, new BoundUIClosedEvent(uiKey, uid, playerSession), true);
+                RaiseLocalEvent(uid, new BoundUIClosedEvent(uiKey, ToNetEntity(uid), playerSession), true);
 
             return true;
         }

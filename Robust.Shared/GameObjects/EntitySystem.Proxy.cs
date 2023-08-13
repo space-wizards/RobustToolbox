@@ -890,6 +890,24 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected List<NetEntity?> ToNetEntityList(List<EntityUid?> uids)
+    {
+        return EntityManager.ToNetEntityList(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected List<EntityUid?> ToEntityList(List<NetEntity?> netEntities)
+    {
+        return EntityManager.ToEntityList(netEntities);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity[] ToNetEntityArray(EntityUid[] uids)
     {
         return EntityManager.ToNetEntityArray(uids);
@@ -900,6 +918,24 @@ public partial class EntitySystem
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid[] ToEntityArray(NetEntity[] netEntities)
+    {
+        return EntityManager.ToEntityArray(netEntities);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected NetEntity?[] ToNetEntityArray(EntityUid?[] uids)
+    {
+        return EntityManager.ToNetEntityArray(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid?[] ToEntityArray(NetEntity?[] netEntities)
     {
         return EntityManager.ToEntityArray(netEntities);
     }

@@ -41,6 +41,21 @@ public partial interface IEntityManager
     public List<EntityUid> ToEntityList(List<NetEntity> netEntities);
 
     /// <summary>
+    /// List version of <see cref="ToEntity(Robust.Shared.GameObjects.NetEntity)"/>
+    /// </summary>
+    public List<EntityUid?> ToEntityList(List<NetEntity?> netEntities);
+
+    /// <summary>
+    /// List version of <see cref="ToEntity(Robust.Shared.GameObjects.NetEntity)"/>
+    /// </summary>
+    EntityUid[] ToEntityArray(NetEntity[] netEntities);
+
+    /// <summary>
+    /// List version of <see cref="ToEntity(Robust.Shared.GameObjects.NetEntity)"/>
+    /// </summary>
+    EntityUid?[] ToEntityArray(NetEntity?[] netEntities);
+
+    /// <summary>
     /// HashSet version of <see cref="ToNetEntity(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.MetaDataComponent?)"/>
     /// </summary>
     public HashSet<NetEntity> ToNetEntitySet(HashSet<EntityUid> entities);
@@ -49,6 +64,21 @@ public partial interface IEntityManager
     /// List version of <see cref="ToNetEntity(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.MetaDataComponent?)"/>
     /// </summary>
     public List<NetEntity> ToNetEntityList(List<EntityUid> entities);
+
+    /// <summary>
+    /// List version of <see cref="ToNetEntity(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.MetaDataComponent?)"/>
+    /// </summary>
+    public List<NetEntity?> ToNetEntityList(List<EntityUid?> entities);
+
+    /// <summary>
+    /// List version of <see cref="ToNetEntity(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.MetaDataComponent?)"/>
+    /// </summary>
+    NetEntity[] ToNetEntityArray(EntityUid[] entities);
+
+    /// <summary>
+    /// List version of <see cref="ToNetEntity(Robust.Shared.GameObjects.EntityUid,Robust.Shared.GameObjects.MetaDataComponent?)"/>
+    /// </summary>
+    NetEntity?[] ToNetEntityArray(EntityUid?[] entities);
 
     /// <summary>
     /// Returns the corresponding <see cref="NetCoordinates"/> for the specified local coordinates.

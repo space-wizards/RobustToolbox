@@ -20,12 +20,12 @@ namespace Robust.Shared.ViewVariables
     [Virtual]
     public class ViewVariablesEntitySelector : ViewVariablesObjectSelector
     {
-        public ViewVariablesEntitySelector(EntityUid entity)
+        public ViewVariablesEntitySelector(NetEntity entity)
         {
             Entity = entity;
         }
 
-        public EntityUid Entity { get; }
+        public NetEntity Entity { get; }
     }
 
     /// <inheritdoc />
@@ -35,7 +35,7 @@ namespace Robust.Shared.ViewVariables
     [Serializable, NetSerializable]
     public sealed class ViewVariablesComponentSelector : ViewVariablesEntitySelector
     {
-        public ViewVariablesComponentSelector(EntityUid uid, string componentType) : base(uid)
+        public ViewVariablesComponentSelector(NetEntity uid, string componentType) : base(uid)
         {
             ComponentType = componentType;
         }

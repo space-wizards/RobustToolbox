@@ -14,9 +14,12 @@ namespace Robust.Shared.CompNetworkGenerator
     {
         private const string ClassAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
         private const string MemberAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
+        private const string GlobalEntityUidName = "global::Robust.Shared.GameObjects.EntityUid";
+        private const string GlobalNullableEntityUidName = "global::Robust.Shared.GameObjects.EntityUid?";
 
         private static string GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
         {
+            Debugger.Launch();
             var nameSpace = classSymbol.ContainingNamespace.ToDisplayString();
             var componentName = classSymbol.Name;
             var stateName = $"{componentName}_AutoState";
@@ -115,8 +118,22 @@ namespace Robust.Shared.CompNetworkGenerator
 
             foreach (var (type, name, attribute) in fields)
             {
-                stateFields.Append($@"
-        public {type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {name} = default!;");
+                var typeDisplayStr = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var isEntityUid = typeDisplayStr == GlobalEntityUidName || typeDisplayStr == GlobalNullableEntityUidName;
+
+                if (isEntityUid)
+                {
+                    var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
+                    var nullableAnnotation = nullable ? "?" : string.Empty;
+
+                    stateFields.Append($@"
+        public NetEntity{nullableAnnotation} {name} = default!;");
+                }
+                else
+                {
+                    stateFields.Append($@"
+        public {typeDisplayStr} {name} = default!;");
+                }
 
                 // get first ctor arg of the field attribute, which determines whether the field should be cloned
                 // (like if its a dict or list)
@@ -128,6 +145,14 @@ namespace Robust.Shared.CompNetworkGenerator
                     handleStateSetters.Append($@"
             if (state.{name} != null)
                 component.{name} = new(state.{name});");
+                }
+                else if (isEntityUid)
+                {
+                    getStateInit.Append($@"
+                {name} = EntityManager.ToNetEntity(component.{name}),");
+
+                    handleStateSetters.Append($@"
+            component.{name} = EntityManager.ToEntity(state.{name});");
                 }
                 else
                 {

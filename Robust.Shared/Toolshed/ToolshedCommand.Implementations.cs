@@ -62,9 +62,14 @@ public abstract partial class ToolshedCommand
             {
                 if (x.ConsoleGetPipedArgument() is { } param)
                 {
-                    if (pipedType?.IsAssignableTo(param.ParameterType) ?? false)
+                    if (pipedType!.IsAssignableTo(param.ParameterType))
                         return 1000; // We want exact match to be preferred!
-                    return param.ParameterType.IsGenericType ? 100 : 0;
+
+                    if (param.ParameterType.GetMostGenericPossible() == pipedType!.GetMostGenericPossible())
+                        return 500; // If not, try to prefer the same base type.
+
+                    // Finally, prefer specialized (type exact) implementations.
+                    return param.ParameterType.IsGenericTypeParameter ? 0 : 100;
                 }
 
                 return 0;
@@ -101,7 +106,7 @@ public abstract partial class ToolshedCommand
 
                     return x;
                 }
-                catch (ArgumentException _)
+                catch (ArgumentException)
                 {
                     // oopsy, toolshed guessed wrong somewhere. Likely due to lack of constraint solver.
                     return null;

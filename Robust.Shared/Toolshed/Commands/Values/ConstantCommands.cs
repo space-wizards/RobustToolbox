@@ -1,27 +1,27 @@
 ﻿namespace Robust.Shared.Toolshed.Commands.Values;
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "i")]
 internal sealed class IntCommand : ToolshedCommand
 {
     [CommandImplementation]
     public int Impl([CommandArgument] int value) => value;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "f")]
 internal sealed class FloatCommand : ToolshedCommand
 {
     [CommandImplementation]
     public float Impl([CommandArgument] float value) => value;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "s")]
 internal sealed class StringCommand : ToolshedCommand
 {
     [CommandImplementation]
     public string Impl([CommandArgument] string value) => value;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "b")]
 internal sealed class BoolCommand : ToolshedCommand
 {
     [CommandImplementation]

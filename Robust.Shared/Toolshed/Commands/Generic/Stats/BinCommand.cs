@@ -4,10 +4,10 @@ using System.Collections.Generic;
 namespace Robust.Shared.Toolshed.Commands.Generic.Stats;
 
 [ToolshedCommand]
-public sealed class ClassifyCommand : ToolshedCommand
+public sealed class BinCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public IReadOnlyDictionary<T, int> Classify<T>([PipedArgument] IEnumerable<T> input)
+    public IDictionary<T, int> Bin<T>([PipedArgument] IEnumerable<T> input)
         where T: IComparable<T>
     {
         var dict = new Dictionary<T, int>();

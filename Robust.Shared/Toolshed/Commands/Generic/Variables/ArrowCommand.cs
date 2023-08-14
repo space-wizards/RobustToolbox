@@ -2,7 +2,7 @@
 using System.Linq;
 using Robust.Shared.Toolshed.Syntax;
 
-namespace Robust.Shared.Toolshed.Commands.Generic ;
+namespace Robust.Shared.Toolshed.Commands.Generic.Variables ;
 
 [ToolshedCommand(Name = "=>")]
 internal sealed class ArrowCommand : ToolshedCommand

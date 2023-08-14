@@ -83,7 +83,7 @@ public abstract partial class ToolshedCommand
 
             if (!typeName.EndsWith(commandStr))
             {
-                throw new InvalidComponentNameException($"Component {GetType()} must end with the word Component");
+                throw new InvalidComponentNameException($"Command {GetType()} must end with the word Command");
             }
 
             name = typeName[..^commandStr.Length].ToLowerInvariant();

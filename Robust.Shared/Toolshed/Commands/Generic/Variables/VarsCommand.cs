@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace Robust.Shared.Toolshed.Commands.Misc;
+namespace Robust.Shared.Toolshed.Commands.Generic.Variables;
 
 [ToolshedCommand]
 internal sealed class VarsCommand : ToolshedCommand

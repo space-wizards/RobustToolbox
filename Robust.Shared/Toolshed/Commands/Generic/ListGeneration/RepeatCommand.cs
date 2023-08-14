@@ -2,7 +2,7 @@
 using System.Linq;
 using Robust.Shared.Toolshed.Syntax;
 
-namespace Robust.Shared.Toolshed.Commands.Generic;
+namespace Robust.Shared.Toolshed.Commands.Generic.ListGeneration;
 
 [ToolshedCommand(Name = "rep")]
 public sealed class RepeatCommand : ToolshedCommand

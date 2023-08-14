@@ -20,7 +20,7 @@ public sealed class ParsedCommand
 
     public Type? PipedType => Bundle.PipedArgumentType;
     internal Invocable Invocable { get; }
-    private CommandArgumentBundle Bundle { get; }
+    internal CommandArgumentBundle Bundle { get; }
     public string? SubCommand { get; }
 
     public static bool TryParse(

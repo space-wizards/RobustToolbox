@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added IgnoreUIChecksComponent that lets entities ignore bound user interface range checks which would normally close the UI.
 
 ### Bugfixes
 
@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* EntityQuery.HasComponent override for nullable entity uids.
 
 ### Internal
 

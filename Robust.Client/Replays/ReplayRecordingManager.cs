@@ -126,7 +126,7 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
         var query = _entMan.AllEntityQueryEnumerator<MetaDataComponent>();
         while (query.MoveNext(out var uid, out var comp))
         {
-            if (uid.IsClientSide())
+            if (_entMan.IsClientSide(uid))
                 continue;
 
             var nent = comp.NetEntity;

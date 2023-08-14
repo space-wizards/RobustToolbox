@@ -163,7 +163,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             PopulateClientComponents();
 
-            if (!_entity.IsClientSide())
+            if (!_entityManager.IsClientSide(_entity))
             {
                 _serverVariables = new BoxContainer
                 {

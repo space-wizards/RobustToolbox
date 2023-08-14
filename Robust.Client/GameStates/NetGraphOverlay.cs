@@ -74,7 +74,7 @@ namespace Robust.Client.GameStates
             _history.Add((toSeq, sz, lag, buffer));
 
             // not watching an ent
-            if(!WatchEntId.IsValid() || WatchEntId.IsClientSide())
+            if(!WatchEntId.IsValid() || _entManager.IsClientSide(WatchEntId))
                 return;
 
             string? entStateString = null;

@@ -20,6 +20,9 @@ public partial class EntityManager
     /// <inheritdoc />
     public EntityUid ToEntity(NetEntity nEntity)
     {
+        if (nEntity == NetEntity.Invalid)
+            return EntityUid.Invalid;
+
         return NetEntityLookup.TryGetValue(nEntity, out var entity) ? entity : EntityUid.Invalid;
     }
 
@@ -29,12 +32,15 @@ public partial class EntityManager
         if (nEntity == null)
             return null;
 
-        return NetEntityLookup.TryGetValue(nEntity.Value, out var entity) ? entity : null;
+        return ToEntity(nEntity.Value);
     }
 
     /// <inheritdoc />
     public NetEntity ToNetEntity(EntityUid uid, MetaDataComponent? metadata = null)
     {
+        if (uid == EntityUid.Invalid)
+            return NetEntity.Invalid;
+
         return MetaQuery.Resolve(uid, ref metadata) ? metadata.NetEntity : NetEntity.Invalid;
     }
 
@@ -44,7 +50,7 @@ public partial class EntityManager
         if (uid == null)
             return null;
 
-        return MetaQuery.Resolve(uid.Value, ref metadata) ? metadata.NetEntity : null;
+        return ToNetEntity(uid.Value, metadata);
     }
 
     #region NetCoordinates

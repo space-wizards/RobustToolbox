@@ -145,14 +145,14 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
             Assert.That(cEntMan.EntityExists(clientChildB));
 
             // Client-side where appropriate
-            Assert.That(entC.IsClientSide());
-            Assert.That(childC.IsClientSide());
-            Assert.That(clientChildA.IsClientSide());
-            Assert.That(clientChildB.IsClientSide());
-            Assert.That(!entA.IsClientSide());
-            Assert.That(!entB.IsClientSide());
-            Assert.That(!childA.IsClientSide());
-            Assert.That(!childB.IsClientSide());
+            Assert.That(cEntMan.IsClientSide(entC));
+            Assert.That(cEntMan.IsClientSide(childC));
+            Assert.That(cEntMan.IsClientSide(clientChildA));
+            Assert.That(cEntMan.IsClientSide(clientChildB));
+            Assert.That(!cEntMan.IsClientSide(entA));
+            Assert.That(!cEntMan.IsClientSide(entB));
+            Assert.That(!cEntMan.IsClientSide(childA));
+            Assert.That(!cEntMan.IsClientSide(childB));
 
             // Correct parents.
             Assert.That(Parent(entA), Is.EqualTo(grid2));

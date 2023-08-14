@@ -68,7 +68,7 @@ namespace Robust.Shared.GameObjects
 
         private EntityEventBus _eventBus = null!;
 
-        protected virtual int NextEntityUid { get; set; } = (int) EntityUid.FirstUid;
+        protected int NextEntityUid = (int) EntityUid.FirstUid;
 
         protected int NextNetworkId = (int) NetEntity.First;
 
@@ -307,19 +307,19 @@ namespace Robust.Shared.GameObjects
 
         public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, euid, overrides);
+            return CreateEntity(prototypeName, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, default, overrides);
+            return CreateEntity(prototypeName, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, default, overrides);
+            var newEntity = CreateEntity(prototypeName, overrides);
 
             if (coordinates.IsValid(this))
             {
@@ -332,7 +332,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, default, overrides);
+            var newEntity = CreateEntity(prototypeName, overrides);
             var transform = _xformQuery.GetComponent(newEntity);
 
             if (coordinates.MapId == MapId.Nullspace)
@@ -689,10 +689,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private protected EntityUid AllocEntity(
             EntityPrototype? prototype,
-            out MetaDataComponent metadata,
-            EntityUid uid = default)
+            out MetaDataComponent metadata)
         {
-            var entity = AllocEntity(out metadata, uid);
+            var entity = AllocEntity(out metadata);
             metadata._entityPrototype = prototype;
             Dirty(entity, metadata, metadata);
             return entity;
@@ -701,12 +700,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private EntityUid AllocEntity(out MetaDataComponent metadata, EntityUid uid = default)
+        private EntityUid AllocEntity(out MetaDataComponent metadata)
         {
-            if (uid == default)
-            {
-                uid = GenerateEntityUid();
-            }
+            var uid = GenerateEntityUid();
 
             if (EntityExists(uid))
             {
@@ -741,14 +737,14 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, EntityUid uid = default, IEntityLoadContext? context = null)
+        private protected virtual EntityUid CreateEntity(string? prototypeName, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return AllocEntity(out _, uid);
+                return AllocEntity(out _);
 
             PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype);
 
-            var entity = AllocEntity(prototype, out var metadata, uid);
+            var entity = AllocEntity(prototype, out var metadata);
             try
             {
                 EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, context);
@@ -844,9 +840,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.
         /// </summary>
-        protected virtual EntityUid GenerateEntityUid()
+        protected EntityUid GenerateEntityUid()
         {
-            return new(NextEntityUid++);
+            return new EntityUid(NextEntityUid++);
         }
 
         /// <summary>

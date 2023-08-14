@@ -479,7 +479,7 @@ public abstract partial class SharedTransformSystem
             if (value.EntityId == uid)
             {
                 DetachParentToNull(uid, xform);
-                if (_netMan.IsServer || uid.IsClientSide())
+                if (_netMan.IsServer || IsClientSide(uid))
                     QueueDel(uid);
                 throw new InvalidOperationException($"Attempted to parent an entity to itself: {ToPrettyString(uid)}");
             }
@@ -489,7 +489,7 @@ public abstract partial class SharedTransformSystem
                 if (!_xformQuery.Resolve(value.EntityId, ref newParent, false))
                 {
                     DetachParentToNull(uid, xform);
-                    if (_netMan.IsServer || uid.IsClientSide())
+                    if (_netMan.IsServer || IsClientSide(uid))
                         QueueDel(uid);
                     throw new InvalidOperationException($"Attempted to parent entity {ToPrettyString(uid)} to non-existent entity {value.EntityId}");
                 }
@@ -497,7 +497,7 @@ public abstract partial class SharedTransformSystem
                 if (newParent.LifeStage > ComponentLifeStage.Running || LifeStage(value.EntityId) > EntityLifeStage.MapInitialized)
                 {
                     DetachParentToNull(uid, xform);
-                    if (_netMan.IsServer || uid.IsClientSide())
+                    if (_netMan.IsServer || IsClientSide(uid))
                         QueueDel(uid);
                     throw new InvalidOperationException($"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(uid)}, new parent: {ToPrettyString(value.EntityId)}");
                 }

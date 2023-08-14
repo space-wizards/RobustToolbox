@@ -27,8 +27,6 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
 
-        protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;
-
         public override void Initialize()
         {
             SetupNetworking();
@@ -43,9 +41,9 @@ namespace Robust.Client.GameObjects
             base.FlushEntities();
         }
 
-        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, EntityUid uid)
+        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName)
         {
-            return base.CreateEntity(prototypeName, uid);
+            return base.CreateEntity(prototypeName);
         }
 
         void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
@@ -68,7 +66,7 @@ namespace Robust.Client.GameObjects
 
         public override void QueueDeleteEntity(EntityUid uid)
         {
-            if (uid.IsClientSide())
+            if (IsClientSide(uid))
             {
                 base.QueueDeleteEntity(uid);
                 return;

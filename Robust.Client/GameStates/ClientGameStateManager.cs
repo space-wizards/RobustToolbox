@@ -688,7 +688,7 @@ namespace Robust.Client.GameStates
                     if (metaState == null)
                         throw new MissingMetadataException(es.NetEntity);
 
-                    _entities.CreateEntity(metaState.PrototypeId);
+                    uid = _entities.CreateEntity(metaState.PrototypeId);
                     _toCreate.Add(es.NetEntity, es);
                     _toApply.Add(uid, (false, GameTick.Zero, es, null));
 
@@ -851,7 +851,7 @@ namespace Robust.Client.GameStates
             var toDelete = new List<EntityUid>(Math.Max(64, _entities.EntityCount - stateEnts.Count));
             foreach (var ent in currentEnts)
             {
-                if (ent.IsClientSide())
+                if (_entities.IsClientSide(ent))
                 {
                     if (deleteClientEntities)
                         toDelete.Add(ent);
@@ -880,7 +880,7 @@ namespace Robust.Client.GameStates
 
                     if (deleteClientChildren
                         && !deleteClientEntities // don't add duplicates
-                        && child.Value.IsClientSide())
+                        && _entities.IsClientSide(child.Value))
                     {
                         toDelete.Add(child.Value);
                     }
@@ -1301,7 +1301,7 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            if (!uid.IsClientSide() && _entities.TryGetComponent(uid, out TransformComponent? xform))
+            if (!_entities.IsClientSide(uid) && _entities.TryGetComponent(uid, out TransformComponent? xform))
                 _recursiveRemoveState(meta.NetEntity, xform, _entities.GetEntityQuery<MetaDataComponent>(), _entities.GetEntityQuery<TransformComponent>());
 
             // Set ApplyingState to true to avoid logging errors about predicting the deletion of networked entities.

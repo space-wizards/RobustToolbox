@@ -15,7 +15,7 @@ public sealed class ClientDirtySystem : EntitySystem
 {
     [Dependency] private readonly IClientGameTiming _timing = default!;
     [Dependency] private readonly IComponentFactory _compFact = default!;
-    
+
     // Entities that have removed networked components
     // could pool the ushort sets, but predicted component changes are rare... soo...
     internal readonly Dictionary<EntityUid, HashSet<ushort>> RemovedComponents = new();
@@ -40,11 +40,11 @@ public sealed class ClientDirtySystem : EntitySystem
 
     private void OnTerminate(ref EntityTerminatingEvent ev)
     {
-        if (!_timing.InPrediction || ev.Entity.IsClientSide())
+        if (!_timing.InPrediction || IsClientSide(ev.Entity))
             return;
 
         // Client-side entity deletion is not supported and will cause errors.
-        Logger.Error($"Predicting the deletion of a networked entity: {ToPrettyString(ev.Entity)}. Trace: {Environment.StackTrace}");
+        Log.Error($"Predicting the deletion of a networked entity: {ToPrettyString(ev.Entity)}. Trace: {Environment.StackTrace}");
     }
 
     private void OnCompRemoved(RemovedComponentEventArgs args)
@@ -53,7 +53,7 @@ public sealed class ClientDirtySystem : EntitySystem
             return;
 
         var comp = args.BaseArgs.Component;
-        if (!_timing.InPrediction || comp.Owner.IsClientSide() || !comp.NetSyncEnabled)
+        if (!_timing.InPrediction || IsClientSide(comp.Owner) || !comp.NetSyncEnabled)
             return;
 
         // Was this component added during prediction? If yes, then there is no need to re-add it when resetting.
@@ -73,7 +73,7 @@ public sealed class ClientDirtySystem : EntitySystem
 
     private void OnEntityDirty(EntityUid e)
     {
-        if (_timing.InPrediction && !e.IsClientSide())
+        if (_timing.InPrediction && !IsClientSide(e))
             DirtyEntities.Add(e);
     }
 }

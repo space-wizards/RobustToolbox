@@ -41,7 +41,8 @@ public partial class EntityManager
         if (uid == EntityUid.Invalid)
             return NetEntity.Invalid;
 
-        return MetaQuery.Resolve(uid, ref metadata) ? metadata.NetEntity : NetEntity.Invalid;
+        // I wanted this to logMissing but it seems to break a loootttt of dodgy stuff on content.
+        return MetaQuery.Resolve(uid, ref metadata, false) ? metadata.NetEntity : NetEntity.Invalid;
     }
 
     /// <inheritdoc />

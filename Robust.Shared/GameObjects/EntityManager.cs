@@ -704,10 +704,12 @@ namespace Robust.Shared.GameObjects
         {
             var uid = GenerateEntityUid();
 
+#if DEBUG
             if (EntityExists(uid))
             {
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
+#endif
 
             // we want this called before adding components
             EntityAdded?.Invoke(uid);

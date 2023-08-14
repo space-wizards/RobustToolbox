@@ -535,7 +535,7 @@ namespace Robust.Client.Placement
                     return false;
                 }
                 coordinates = EntityCoordinates.FromMap(MapManager,
-                                                        EyeManager.ScreenToMap(InputManager.MouseScreenPosition));
+                                                        EyeManager.PixelToMap(InputManager.MouseScreenPosition));
                 return true;
             }
         }

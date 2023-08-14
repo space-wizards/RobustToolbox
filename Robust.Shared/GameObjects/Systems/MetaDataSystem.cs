@@ -48,7 +48,7 @@ public abstract class MetaDataSystem : EntitySystem
             return;
 
         metadata._entityName = value;
-        Dirty(uid, metadata);
+        Dirty(uid, metadata, metadata);
     }
 
     public void SetEntityDescription(EntityUid uid, string value, MetaDataComponent? metadata = null)
@@ -57,7 +57,7 @@ public abstract class MetaDataSystem : EntitySystem
             return;
 
         metadata._entityDescription = value;
-        Dirty(uid, metadata);
+        Dirty(uid, metadata, metadata);
     }
 
     internal void SetEntityPrototype(EntityUid uid, EntityPrototype? value, MetaDataComponent? metadata = null)
@@ -100,7 +100,7 @@ public abstract class MetaDataSystem : EntitySystem
             RaiseLocalEvent(uid, ref ev);
         }
 
-        Dirty(uid, metadata);
+        Dirty(uid, metadata, metadata);
     }
 
     /// <summary>

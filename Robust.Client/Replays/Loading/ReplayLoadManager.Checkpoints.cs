@@ -7,6 +7,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System.Threading.Tasks;
+using Robust.Client.Upload.Commands;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Replays;
@@ -82,8 +83,8 @@ public sealed partial class ReplayLoadManager
         }
 
         HashSet<ResPath> uploadedFiles = new();
-        var detached = new HashSet<NetEntity>();
-        var detachQueue = new Dictionary<GameTick, List<NetEntity>>();
+        var detached = new HashSet<EntityUid>();
+        var detachQueue = new Dictionary<GameTick, List<EntityUid>>();
 
         if (initMessages != null)
             UpdateMessages(initMessages, uploadedFiles, prototypes, cvars, detachQueue, ref timeBase, true);
@@ -91,11 +92,11 @@ public sealed partial class ReplayLoadManager
         ProcessQueue(GameTick.MaxValue, detachQueue, detached);
 
         var entSpan = state0.EntityStates.Value;
-        Dictionary<NetEntity, EntityState> entStates = new(entSpan.Count);
+        Dictionary<EntityUid, EntityState> entStates = new(entSpan.Count);
         foreach (var entState in entSpan)
         {
             var modifiedState = AddImplicitData(entState);
-            entStates.Add(entState.NetEntity, modifiedState);
+            entStates.Add(entState.Uid, modifiedState);
         }
 
         await callback(0, states.Count, LoadingState.ProcessingFiles, true);
@@ -111,11 +112,11 @@ public sealed partial class ReplayLoadManager
             default,
             entStates.Values.ToArray(),
             playerStates.Values.ToArray(),
-            Array.Empty<NetEntity>());
+            Array.Empty<EntityUid>());
         checkPoints.Add(new CheckpointState(state0, timeBase, cvars, 0, detached));
 
         DebugTools.Assert(state0.EntityDeletions.Value.Count == 0);
-        var empty = Array.Empty<NetEntity>();
+        var empty = Array.Empty<EntityUid>();
 
         TimeSpan GetTime(GameTick tick)
         {
@@ -175,8 +176,8 @@ public sealed partial class ReplayLoadManager
 
     private void ProcessQueue(
         GameTick curTick,
-        Dictionary<GameTick, List<NetEntity>> detachQueue,
-        HashSet<NetEntity> detached)
+        Dictionary<GameTick, List<EntityUid>> detachQueue,
+        HashSet<EntityUid> detached)
     {
         foreach (var (tick, ents) in detachQueue)
         {
@@ -191,7 +192,7 @@ public sealed partial class ReplayLoadManager
         HashSet<ResPath> uploadedFiles,
         Dictionary<Type, HashSet<string>> prototypes,
         Dictionary<string, object> cvars,
-        Dictionary<GameTick, List<NetEntity>> detachQueue,
+        Dictionary<GameTick, List<EntityUid>> detachQueue,
         ref (TimeSpan, GameTick) timeBase,
         bool ignoreDuplicates = false)
     {
@@ -250,38 +251,58 @@ public sealed partial class ReplayLoadManager
                 continue;
 
             message.Messages.RemoveSwap(i);
-            var changed = new Dictionary<Type, HashSet<string>>();
-            _protoMan.LoadString(protoUpload.PrototypeData, true, changed);
 
-            foreach (var (kind, ids) in changed)
+            try
             {
-                var protos = prototypes[kind];
-                var count = protos.Count;
-                protos.UnionWith(ids);
-                if (!ignoreDuplicates && ids.Count + count != protos.Count)
-                {
-                    // An existing prototype was overwritten. Much like for resource uploading, supporting this
-                    // requires tracking the last-modified time of prototypes and either resetting or applying
-                    // prototype changes when jumping around in time. This also requires reworking how the initial
-                    // implicit state data is generated, because we can't simply cache it anymore.
-                    // Also, does reloading prototypes in release mode modify existing entities?
-
-                    var msg = $"Overwriting an existing prototype! Kind: {kind.Name}. Ids: {string.Join(", ", ids)}";
-                    if (_confMan.GetCVar(CVars.ReplayIgnoreErrors))
-                        _sawmill.Error(msg);
-                    else
-                        throw new NotSupportedException(msg);
-                }
+                LoadPrototype(protoUpload.PrototypeData, prototypes, ignoreDuplicates);
             }
+            catch (Exception e)
+            {
+                if (e is NotSupportedException || !_confMan.GetCVar(CVars.ReplayIgnoreErrors))
+                    throw;
 
-            _protoMan.ResolveResults();
-            _protoMan.ReloadPrototypes(changed);
-            _locMan.ReloadLocalizations();
+                var msg = $"Caught exception while parsing uploaded prototypes in a replay. Exception: {e}";
+                _sawmill.Error(msg);
+            }
         }
     }
 
-    private void UpdateDeletions(NetListAsArray<NetEntity> entityDeletions,
-        Dictionary<NetEntity, EntityState> entStates, HashSet<NetEntity> detached)
+    private void LoadPrototype(
+        string data,
+        Dictionary<Type, HashSet<string>> prototypes,
+        bool ignoreDuplicates)
+    {
+        var changed = new Dictionary<Type, HashSet<string>>();
+        _protoMan.LoadString(data, true, changed);
+
+        foreach (var (kind, ids) in changed)
+        {
+            var protos = prototypes[kind];
+            var count = protos.Count;
+            protos.UnionWith(ids);
+            if (!ignoreDuplicates && ids.Count + count != protos.Count)
+            {
+                // An existing prototype was overwritten. Much like for resource uploading, supporting this
+                // requires tracking the last-modified time of prototypes and either resetting or applying
+                // prototype changes when jumping around in time. This also requires reworking how the initial
+                // implicit state data is generated, because we can't simply cache it anymore.
+                // Also, does reloading prototypes in release mode modify existing entities?
+
+                var msg = $"Overwriting an existing prototype! Kind: {kind.Name}. Ids: {string.Join(", ", ids)}";
+                if (_confMan.GetCVar(CVars.ReplayIgnoreErrors))
+                    _sawmill.Error(msg);
+                else
+                    throw new NotSupportedException(msg);
+            }
+        }
+
+        _protoMan.ResolveResults();
+        _protoMan.ReloadPrototypes(changed);
+        _locMan.ReloadLocalizations();
+    }
+
+    private void UpdateDeletions(NetListAsArray<EntityUid> entityDeletions,
+        Dictionary<EntityUid, EntityState> entStates, HashSet<EntityUid> detached)
     {
         foreach (var ent in entityDeletions.Span)
         {
@@ -290,16 +311,16 @@ public sealed partial class ReplayLoadManager
         }
     }
 
-    private void UpdateEntityStates(ReadOnlySpan<EntityState> span, Dictionary<NetEntity, EntityState> entStates,
-        ref int spawnedTracker, ref int stateTracker, HashSet<NetEntity> detached)
+    private void UpdateEntityStates(ReadOnlySpan<EntityState> span, Dictionary<EntityUid, EntityState> entStates,
+        ref int spawnedTracker, ref int stateTracker, HashSet<EntityUid> detached)
     {
         foreach (var entState in span)
         {
-            detached.Remove(entState.NetEntity);
-            if (!entStates.TryGetValue(entState.NetEntity, out var oldEntState))
+            detached.Remove(entState.Uid);
+            if (!entStates.TryGetValue(entState.Uid, out var oldEntState))
             {
                 var modifiedState = AddImplicitData(entState);
-                entStates[entState.NetEntity] = modifiedState;
+                entStates[entState.Uid] = modifiedState;
                 spawnedTracker++;
 
 #if DEBUG
@@ -312,11 +333,11 @@ public sealed partial class ReplayLoadManager
             }
 
             stateTracker++;
-            DebugTools.Assert(oldEntState.NetEntity == entState.NetEntity);
-            entStates[entState.NetEntity] = MergeStates(entState, oldEntState.ComponentChanges.Value, oldEntState.NetComponents);
+            DebugTools.Assert(oldEntState.Uid == entState.Uid);
+            entStates[entState.Uid] = MergeStates(entState, oldEntState.ComponentChanges.Value, oldEntState.NetComponents);
 
 #if DEBUG
-            foreach (var state in entStates[entState.NetEntity].ComponentChanges.Span)
+            foreach (var state in entStates[entState.Uid].ComponentChanges.Span)
             {
                 DebugTools.Assert(state.State is not IComponentDeltaState delta || delta.FullState);
             }
@@ -367,7 +388,7 @@ public sealed partial class ReplayLoadManager
         }
 
         DebugTools.Assert(newState.NetComponents == null || newState.NetComponents.Count == combined.Count);
-        return new EntityState(newState.NetEntity, combined, newState.EntityLastModified, newState.NetComponents ?? oldNetComps);
+        return new EntityState(newState.Uid, combined, newState.EntityLastModified, newState.NetComponents ?? oldNetComps);
     }
 
     private void UpdatePlayerStates(ReadOnlySpan<PlayerState> span, Dictionary<NetUserId, PlayerState> playerStates)

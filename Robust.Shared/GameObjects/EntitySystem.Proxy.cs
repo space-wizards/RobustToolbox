@@ -186,7 +186,7 @@ public partial class EntitySystem
     ///     Marks an entity as dirty.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty(EntityUid uid, MetaDataComponent? meta = null)
+    protected void DirtyEntity(EntityUid uid, MetaDataComponent? meta = null)
     {
         EntityManager.DirtyEntity(uid, meta);
     }
@@ -296,7 +296,7 @@ public partial class EntitySystem
         if (!Exists(uid))
             return false;
 
-        Dirty(uid);
+        DirtyEntity(uid);
         return true;
     }
 

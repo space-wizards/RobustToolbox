@@ -16,7 +16,7 @@ public abstract partial class SharedContainerSystem : EntitySystem
         var metaQuery = GetEntityQuery<MetaDataComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
         var physicsQuery = GetEntityQuery<PhysicsComponent>();
-        var jointQuery = GetEntityQuery<JointComponent>();
+
         foreach (var cont in component.Containers.Values)
         {
             foreach (var ent in cont.ContainedEntities)

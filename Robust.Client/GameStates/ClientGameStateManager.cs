@@ -1028,7 +1028,7 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
 
                     if (container != null)
-                        containerSys.AddExpectedEntity(ent, container);
+                        containerSys.AddExpectedEntity(_entities.ToNetEntity(ent), container);
                 }
 
                 detached?.Add(netEntity);
@@ -1271,7 +1271,7 @@ namespace Robust.Client.GameStates
                 _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(uid, xform);
 
                 if (container != null)
-                    containerSys.AddExpectedEntity(uid, container);
+                    containerSys.AddExpectedEntity(_entities.ToNetEntity(uid), container);
             }
         }
 

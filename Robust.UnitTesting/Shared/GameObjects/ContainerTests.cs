@@ -110,7 +110,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
 
                  var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
-                 Assert.That(containerSystem.ExpectedEntities.ContainsKey(itemUid));
+                 Assert.That(containerSystem.ExpectedEntities.ContainsKey(entMan.ToNetEntity(itemUid)));
                  Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(1));
              });
 
@@ -139,7 +139,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
                  var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
-                 Assert.That(!containerSystem.ExpectedEntities.ContainsKey(itemUid));
+                 Assert.That(!containerSystem.ExpectedEntities.ContainsKey(entMan.ToNetEntity(itemUid)));
                  Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(0));
              });
          }
@@ -236,7 +236,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
 
                  var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
-                 Assert.That(containerSystem.ExpectedEntities.ContainsKey(itemUid));
+                 Assert.That(containerSystem.ExpectedEntities.ContainsKey(entMan.ToNetEntity(itemUid)));
                  Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(1));
              });
 
@@ -271,7 +271,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
                  var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
-                 Assert.That(!containerSystem.ExpectedEntities.ContainsKey(itemUid));
+                 Assert.That(!containerSystem.ExpectedEntities.ContainsKey(entMan.ToNetEntity(itemUid)));
                  Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(0));
              });
         }

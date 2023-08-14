@@ -721,7 +721,12 @@ namespace Robust.Shared.GameObjects
                 NetEntity = netEntity,
             };
 
-            NetEntityLookup[netEntity] = uid;
+            // TODO: Dump on server
+            if (netEntity.IsValid())
+            {
+                NetEntityLookup[netEntity] = uid;
+            }
+
 #pragma warning restore CS0618
 
             Entities.Add(uid);

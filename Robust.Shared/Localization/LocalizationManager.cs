@@ -240,7 +240,7 @@ namespace Robust.Shared.Localization
             // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
 
-            var root = new ResourcePath($"/Locale/{culture.Name}/");
+            var root = new ResPath($"/Locale/{culture.Name}/");
 
             var files = resourceManager.ContentFindFiles(root)
                 .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))
@@ -264,7 +264,7 @@ namespace Robust.Shared.Localization
             }
         }
 
-        private void WriteWarningForErrs(ResourcePath path, List<ParseError> errs, ReadOnlyMemory<char> resource)
+        private void WriteWarningForErrs(ResPath path, List<ParseError> errs, ReadOnlyMemory<char> resource)
         {
             foreach (var err in errs)
             {

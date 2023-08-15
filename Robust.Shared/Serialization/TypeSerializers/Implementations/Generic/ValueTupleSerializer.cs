@@ -61,8 +61,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public (T1, T2) CreateCopy(ISerializationManager serializationManager, (T1, T2) source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return (serializationManager.CreateCopy(source.Item1, hookCtx, context),
                 serializationManager.CreateCopy(source.Item2, hookCtx, context));

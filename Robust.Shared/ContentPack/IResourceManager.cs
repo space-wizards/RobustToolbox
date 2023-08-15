@@ -23,7 +23,7 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         /// <param name="prefix"></param>
         /// <param name="loader"></param>
-        void AddRoot(ResourcePath prefix, IContentRoot loader);
+        void AddRoot(ResPath prefix, IContentRoot loader);
 
         /// <summary>
         ///     Read a file from the mounted content roots.
@@ -34,7 +34,7 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         /// <seealso cref="ResourceManagerExt.ContentFileReadOrNull"/>
-        Stream ContentFileRead(ResourcePath path);
+        Stream ContentFileRead(ResPath path);
 
         /// <summary>
         ///     Read a file from the mounted content roots.
@@ -53,7 +53,7 @@ namespace Robust.Shared.ContentPack
         /// <returns>True if the file exists, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        bool ContentFileExists(ResourcePath path);
+        bool ContentFileExists(ResPath path);
 
         /// <summary>
         ///     Check if a file exists in any of the mounted content roots.
@@ -73,7 +73,7 @@ namespace Robust.Shared.ContentPack
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         /// <seealso cref="ResourceManagerExt.ContentFileReadOrNull"/>
-        bool TryContentFileRead(ResourcePath path, [NotNullWhen(true)] out Stream? fileStream);
+        bool TryContentFileRead(ResPath? path, [NotNullWhen(true)] out Stream? fileStream);
 
         /// <summary>
         ///     Try to read a file from the mounted content roots.
@@ -95,9 +95,9 @@ namespace Robust.Shared.ContentPack
         /// <returns>Enumeration of all absolute file paths of the files found.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        IEnumerable<ResourcePath> ContentFindFiles(ResourcePath path);
+        IEnumerable<ResPath> ContentFindFiles(ResPath? path);
 
-        IEnumerable<ResourcePath> ContentFindRelativeFiles(ResourcePath path)
+        IEnumerable<ResPath> ContentFindRelativeFiles(ResPath path)
         {
             foreach (var absPath in ContentFindFiles(path))
             {
@@ -107,7 +107,7 @@ namespace Robust.Shared.ContentPack
                     throw new InvalidOperationException("This is unreachable");
                 }
 
-                yield return rel;
+                yield return rel.Value;
             }
         }
 
@@ -121,7 +121,7 @@ namespace Robust.Shared.ContentPack
         /// <returns>Enumeration of all absolute file paths of the files found.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        IEnumerable<ResourcePath> ContentFindFiles(string path);
+        IEnumerable<ResPath> ContentFindFiles(string path);
 
         /// <summary>
         /// Gets entries in a content directory.
@@ -133,13 +133,13 @@ namespace Robust.Shared.ContentPack
         /// </remarks>
         /// <param name="path"></param>
         /// <returns>A sequence of entry names. If the entry name ends in a slash, it's a directory.</returns>
-        IEnumerable<string> ContentGetDirectoryEntries(ResourcePath path);
+        IEnumerable<string> ContentGetDirectoryEntries(ResPath path);
 
         /// <summary>
         ///     Returns a list of paths to all top-level content directories
         /// </summary>
         /// <returns></returns>
-        IEnumerable<ResourcePath> GetContentRoots();
+        IEnumerable<ResPath> GetContentRoots();
 
         /// <summary>
         ///     Read a file from the mounted content paths to a string.
@@ -147,14 +147,14 @@ namespace Robust.Shared.ContentPack
         /// <param name="path">Path of the file to read.</param>
         string ContentFileReadAllText(string path)
         {
-            return ContentFileReadAllText(new ResourcePath(path));
+            return ContentFileReadAllText(new ResPath(path));
         }
 
         /// <summary>
         ///     Read a file from the mounted content paths to a string.
         /// </summary>
         /// <param name="path">Path of the file to read.</param>
-        string ContentFileReadAllText(ResourcePath path)
+        string ContentFileReadAllText(ResPath path)
         {
             return ContentFileReadAllText(path, EncodingHelpers.UTF8);
         }
@@ -164,7 +164,7 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         /// <param name="path">Path of the file to read.</param>
         /// <param name="encoding">Text encoding to use when reading.</param>
-        string ContentFileReadAllText(ResourcePath path, Encoding encoding)
+        string ContentFileReadAllText(ResPath path, Encoding encoding)
         {
             using var stream = ContentFileRead(path);
             using var reader = new StreamReader(stream, encoding);
@@ -172,7 +172,7 @@ namespace Robust.Shared.ContentPack
             return reader.ReadToEnd();
         }
 
-        public YamlStream ContentFileReadYaml(ResourcePath path)
+        public YamlStream ContentFileReadYaml(ResPath path)
         {
             using var reader = ContentFileReadText(path);
 
@@ -182,12 +182,12 @@ namespace Robust.Shared.ContentPack
             return yamlStream;
         }
 
-        public StreamReader ContentFileReadText(ResourcePath path)
+        public StreamReader ContentFileReadText(ResPath path)
         {
             return ContentFileReadText(path, EncodingHelpers.UTF8);
         }
 
-        public StreamReader ContentFileReadText(ResourcePath path, Encoding encoding)
+        public StreamReader ContentFileReadText(ResPath path, Encoding encoding)
         {
             var stream = ContentFileRead(path);
             return new StreamReader(stream, encoding);

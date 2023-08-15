@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -87,10 +88,12 @@ namespace Robust.Client.Placement
 
         public virtual void Render(DrawingHandleWorld handle)
         {
-            var sce = pManager.CurrentPlacementOverlayEntity;
-            if (sce is not {} scent || pManager.EntityManager.Deleted(scent))
+            var uid = pManager.CurrentPlacementOverlayEntity;
+            if (!pManager.EntityManager.TryGetComponent(uid, out SpriteComponent? sprite) || !sprite.Visible)
+            {
+                // TODO draw something for placement of invisible & sprite-less entities.
                 return;
-            var sc = pManager.EntityManager.GetComponent<SpriteComponent>(sce!.Value);
+            }
 
             IEnumerable<EntityCoordinates> locationcollection;
             switch (pManager.PlacementType)
@@ -118,8 +121,8 @@ namespace Robust.Client.Placement
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
                 var worldRot = pManager.EntityManager.GetComponent<TransformComponent>(coordinate.EntityId).WorldRotation + dirAng;
 
-                sc.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
-                spriteSys.Render(sce.Value, sc, handle, pManager.EyeManager.CurrentEye.Rotation, worldRot, worldPos);
+                sprite.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
+                spriteSys.Render(uid.Value, sprite, handle, pManager.EyeManager.CurrentEye.Rotation, worldRot, worldPos);
             }
         }
 
@@ -131,7 +134,7 @@ namespace Robust.Client.Placement
         public IEnumerable<EntityCoordinates> LineCoordinates()
         {
             var mouseScreen = pManager.InputManager.MouseScreenPosition;
-            var mousePos = pManager.EyeManager.ScreenToMap(mouseScreen);
+            var mousePos = pManager.EyeManager.PixelToMap(mouseScreen);
 
             if (mousePos.MapId == MapId.Nullspace)
                 yield break;
@@ -162,7 +165,7 @@ namespace Robust.Client.Placement
         public IEnumerable<EntityCoordinates> GridCoordinates()
         {
             var mouseScreen = pManager.InputManager.MouseScreenPosition;
-            var mousePos = pManager.EyeManager.ScreenToMap(mouseScreen);
+            var mousePos = pManager.EyeManager.PixelToMap(mouseScreen);
 
             if (mousePos.MapId == MapId.Nullspace)
                 yield break;
@@ -196,12 +199,12 @@ namespace Robust.Client.Placement
 
         public TextureResource GetSprite(string key)
         {
-            return pManager.ResourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/") / key);
+            return pManager.ResourceCache.GetResource<TextureResource>(new ResPath("/Textures/") / key);
         }
 
         public bool TryGetSprite(string key, [NotNullWhen(true)] out TextureResource? sprite)
         {
-            return pManager.ResourceCache.TryGetResource(new ResourcePath(@"/Textures/") / key, out sprite);
+            return pManager.ResourceCache.TryGetResource(new ResPath(@"/Textures/") / key, out sprite);
         }
 
         /// <summary>
@@ -251,13 +254,13 @@ namespace Robust.Client.Placement
 
         protected EntityCoordinates ScreenToCursorGrid(ScreenCoordinates coords)
         {
-            var mapCoords = pManager.EyeManager.ScreenToMap(coords.Position);
-            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var grid))
+            var mapCoords = pManager.EyeManager.PixelToMap(coords.Position);
+            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var gridUid, out var grid))
             {
                 return EntityCoordinates.FromMap(pManager.MapManager, mapCoords);
             }
 
-            return EntityCoordinates.FromMap(pManager.EntityManager, grid.Owner, mapCoords);
+            return EntityCoordinates.FromMap(pManager.EntityManager, gridUid, mapCoords);
         }
     }
 }

@@ -40,9 +40,16 @@ internal abstract partial class ViewVariablesManager
 
     private ViewVariablesPath? ResolveRelativePath(ViewVariablesPath? path, string[] segments)
     {
+        ViewVariablesComponentPath? oldComp;
+
         // Who needs recursion, am I right?
         while (true)
         {
+            if (path is ViewVariablesComponentPath compPath)
+                path.ParentComponent = compPath;
+
+            oldComp = path?.ParentComponent;
+
             // Empty path, return current path. This can happen as we slowly take away segments from the array.
             if (segments.Length == 0)
             {
@@ -89,7 +96,7 @@ internal abstract partial class ViewVariablesManager
 
                 path = memberInfo switch
                 {
-                    FieldInfo or PropertyInfo => new ViewVariablesFieldOrPropertyPath(obj, memberInfo),
+                    FieldInfo or PropertyInfo => new ViewVariablesFieldOrPropertyPath(obj, memberInfo, _entMan),
                     MethodInfo methodInfo => new ViewVariablesMethodPath(obj, methodInfo),
                     _ => throw new InvalidOperationException("Invalid member! Must be a property, field or method.")
                 };
@@ -100,15 +107,30 @@ internal abstract partial class ViewVariablesManager
                 access = VVAccess.ReadWrite;
             }
 
-            // After this, obj is essentially the parent.
+            UpdateParentComp(path, ref oldComp);
 
+            // After this, obj is essentially the parent.
             foreach (Match match in indexers)
             {
                 path = ResolveIndexing(path, ParseArguments(match.Value[1..^1]), access.Value);
+                UpdateParentComp(path, ref oldComp);
             }
 
             segments = segments[1..];
         }
+    }
+
+    private void UpdateParentComp(ViewVariablesPath? newPath, ref ViewVariablesComponentPath? oldPath)
+    {
+        if (newPath == null)
+            return;
+
+        if (newPath is ViewVariablesComponentPath newCompPath)
+            newPath.ParentComponent = newCompPath;
+        else if (newPath != null)
+            newPath.ParentComponent ??= oldPath;
+
+        oldPath = newPath?.ParentComponent;
     }
 
     private ViewVariablesPath? ResolveIndexing(ViewVariablesPath? path, string[] arguments, VVAccess access)

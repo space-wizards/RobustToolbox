@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Map;
-using Vector2 = Robust.Shared.Maths.Vector2;
+using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -35,11 +35,11 @@ namespace Robust.Client.Placement.Modes
             }
 
             var closestNode = (from Vector2 node in nodes
-                                   orderby (node - MouseCoords.Position).LengthSquared ascending
+                                   orderby (node - MouseCoords.Position).LengthSquared() ascending
                                    select node).First();
 
             MouseCoords = new EntityCoordinates(MouseCoords.EntityId,
-                closestNode + (pManager.PlacementOffset.X, pManager.PlacementOffset.Y));
+                closestNode + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y));
         }
 
         public override bool IsValidPosition(EntityCoordinates position)

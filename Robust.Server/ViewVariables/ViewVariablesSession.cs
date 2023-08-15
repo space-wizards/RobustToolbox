@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -11,8 +13,10 @@ namespace Robust.Server.ViewVariables
     internal sealed class ViewVariablesSession : IViewVariablesSession
     {
         private readonly List<ViewVariablesTrait> _traits = new();
+        private readonly ISawmill _logger;
         public IServerViewVariablesInternal Host { get; }
         public IRobustSerializer RobustSerializer { get; }
+        public IEntityManager EntityManager { get; }
         public NetUserId PlayerUser { get; }
         public object Object { get; }
         public uint SessionId { get; }
@@ -25,7 +29,7 @@ namespace Robust.Server.ViewVariables
         /// </param>
         /// <param name="host">The view variables host owning this session.</param>
         public ViewVariablesSession(NetUserId playerUser, object o, uint sessionId, IServerViewVariablesInternal host,
-            IRobustSerializer robustSerializer)
+            IRobustSerializer robustSerializer, IEntityManager entMan, ISawmill logger)
         {
             PlayerUser = playerUser;
             Object = o;
@@ -33,11 +37,13 @@ namespace Robust.Server.ViewVariables
             ObjectType = o.GetType();
             Host = host;
             RobustSerializer = robustSerializer;
+            EntityManager = entMan;
+            _logger = logger;
 
             var traitIds = Host.TraitIdsFor(ObjectType);
             if (traitIds.Contains(ViewVariablesTraits.Members))
             {
-                var trait = new ViewVariablesTraitMembers(this);
+                var trait = new ViewVariablesTraitMembers(this, _logger);
                 _traits.Add(trait);
             }
 
@@ -88,6 +94,11 @@ namespace Robust.Server.ViewVariables
                     break;
                 }
             }
+
+            // Auto-dirty component. Only works when modifying a field that is directly on a component,
+            // Does not work for nested objects.
+            if (Object is Component comp)
+                EntityManager.Dirty(comp);
         }
 
         public bool TryGetRelativeObject(object[] propertyIndex, out object? value)

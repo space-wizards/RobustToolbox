@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -56,31 +57,45 @@ namespace Robust.Shared.GameObjects
         event Action<EntityUid>? EntityDeleted;
         event Action<EntityUid>? EntityDirtied; // only raised after initialization
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid);
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName);
+        EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
+        EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
 
         void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null);
 
+        void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null);
+
+        void StartEntity(EntityUid entity);
+
+        EntityUid[] SpawnEntities(EntityCoordinates coordinates, params string?[] protoNames);
+
+        EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames);
+
+        EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames);
+
+        EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames);
+
         /// <summary>
-        /// Spawns an initialized entity at the default location, using the given prototype.
+        /// Spawns an initialized entity and sets its local coordinates to the given entity coordinates. Note that this
+        /// means that if you specify coordinates relative to some entity, the newly spawned entity will be a child of
+        /// that entity.
         /// </summary>
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates);
+        EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
         /// <summary>
-        /// Spawns an entity at a specific position
+        /// Spawns an entity at a specific world position.
         /// </summary>
         /// <param name="protoName"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates);
+        EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
 
         /// <summary>
         /// How many entities are currently active.
@@ -96,6 +111,8 @@ namespace Robust.Shared.GameObjects
         public void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null);
 
         public void Dirty(Component component, MetaDataComponent? metadata = null);
+
+        public void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null);
 
         public void QueueDeleteEntity(EntityUid uid);
 

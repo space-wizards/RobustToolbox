@@ -1,0 +1,5 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Shared.CompNetworkGenerator\Robust.Shared.CompNetworkGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+  </ItemGroup>
+</Project>

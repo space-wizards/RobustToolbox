@@ -11,17 +11,21 @@ cmd-parse-failure-uid = {$arg} is not a valid entity UID.
 cmd-parse-failure-mapid = {$arg} is not a valid MapId.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 
+cmd-error-file-not-found = Could not find file: {$file}.
+cmd-error-dir-not-found = Could not find directory: {$dir}.
+
+cmd-failure-no-attached-entity = There is no entity attached to this shell.
 
 ## 'help' command
-cmd-help-desc = Display general help or help text for a specific command
-cmd-help-help = Usage: help [command name]
+cmd-oldhelp-desc = Display general help or help text for a specific command
+cmd-oldhelp-help = Usage: help [command name]
     When no command name is provided, displays general-purpose help text. If a command name is provided, displays help text for that command.
 
-cmd-help-no-args = To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'. To search for commands, use 'list <filter>'.
-cmd-help-unknown = Unknown command: { $command }
-cmd-help-top = { $command } - { $description }
-cmd-help-invalid-args = Invalid amount of arguments.
-cmd-help-arg-cmdname = [command name]
+cmd-oldhelp-no-args = To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'. To search for commands, use 'list <filter>'.
+cmd-oldhelp-unknown = Unknown command: { $command }
+cmd-oldhelp-top = { $command } - { $description }
+cmd-oldhelp-invalid-args = Invalid amount of arguments.
+cmd-oldhelp-arg-cmdname = [command name]
 
 ## 'cvar' command
 cmd-cvar-desc = Gets or sets a CVar.
@@ -377,8 +381,11 @@ cmd-netaudit-help = netaudit
 cmd-tp-desc = Teleports a player to any location in the round.
 cmd-tp-help = tp <x> <y> [<mapID>]
 
-cmd-tpto-desc = Teleports the current player or the specified players/entities to the location of last player/entity specified.d.
+cmd-tpto-desc = Teleports the current player or the specified players/entities to the location of the first player/entity.
 cmd-tpto-help = tpto <username|uid> [username|uid]...
+cmd-tpto-destination-hint = destination (uid or username)
+cmd-tpto-victim-hint = entity to teleport (uid or username)
+cmd-tpto-parse-error = Cant resolve entity or player: {$str}
 
 cmd-listplayers-desc = Lists all players currently connected.
 cmd-listplayers-help = listplayers
@@ -530,21 +537,6 @@ cmd-vv-help = Usage: vv <path|entity ID|guihover>
 cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
 cmd-vvinvoke-help = Usage: vvinvoke <path> [arguments...]
 
-cmd-replaystart-desc = Starts a replay recording, optionally with some time limit.
-cmd-replaystart-help = Usage: replaystart [minutes] [directory] [overwrite bool]
-cmd-replaystart-success = Started recording a replay.
-cmd-replaystart-already-recording = Already recording a replay.
-cmd-replaystart-error = An error occurred while trying to start the recording.
-
-cmd-replaystop-desc = Stops a replay recording.
-cmd-replaystop-help = Usage: replaystop
-cmd-replaystop-success = Stopped recording a replay.
-cmd-replaystop-not-recording = Not currently recording a replay.
-
-cmd-replaystats-desc = Displays information about the current replay recording.
-cmd-replaystats-help = Usage: replaystats
-cmd-replaystats-result = Duration: {$time} min, Ticks: {$ticks}, Size: {$size} mb, rate: {$rate} mb/min.
-
 cmd-dump_dependency_injectors-desc = Dump IoCManager's dependency injector cache.
 cmd-dump_dependency_injectors-help = Usage: dump_dependency_injectors
 cmd-dump_dependency_injectors-total-count = Total count: { $total }
@@ -554,6 +546,18 @@ cmd-dump_netserializer_type_map-help = Usage: dump_netserializer_type_map
 
 cmd-hub_advertise_now-desc = Immediately advertise to the master hub server
 cmd-hub_advertise_now-help = Usage: hub_advertise_now
+
+cmd-echo-desc = Echo arguments back to the console
+cmd-echo-help = Usage: echo "<message>"
+
+## 'vfs_ls' command
+cmd-vfs_ls-desc = List directory contents in the VFS.
+cmd-vfs_ls-help = Usage: vfs_list <path>
+    Example:
+    vfs_list /Assemblies
+
+cmd-vfs_ls-err-args = Need exactly 1 argument.
+cmd-vfs_ls-hint-path = <path>
 
 cmd-reloadtiletextures-desc = Reloads the tile texture atlas to allow hot reloading tile sprites
 cmd-reloadtiletextures-help = Usage: reloadtiletextures

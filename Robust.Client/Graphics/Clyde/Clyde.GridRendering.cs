@@ -33,7 +33,7 @@ namespace Robust.Client.Graphics.Clyde
             SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
             SetTexture(TextureUnit.Texture1, _lightingReady ? viewport.LightRenderTarget.Texture : _stockTextureWhite);
 
-            var (gridProgram, _) = ActivateShaderInstance(_defaultShader.Handle);
+            var gridProgram = ActivateShaderInstance(_defaultShader.Handle).Item1;
             SetupGlobalUniformsImmediate(gridProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
 
             gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);

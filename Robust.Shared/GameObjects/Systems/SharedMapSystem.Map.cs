@@ -1,6 +1,8 @@
 using Robust.Shared.GameStates;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -45,15 +47,20 @@ public abstract partial class SharedMapSystem
 
     private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
     {
+        EnsureComp<GridTreeComponent>(uid);
+        EnsureComp<MovedGridsComponent>(uid);
+
         var msg = new MapChangedEvent(uid, component.MapId, true);
         RaiseLocalEvent(uid, msg, true);
     }
 
     private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
     {
-        var iMap = (IMapManagerInternal)MapManager;
+        DebugTools.Assert(component.MapId != MapId.Nullspace);
+        Logger.InfoS("map", $"Deleting map {component.MapId}");
 
-        iMap.TrueDeleteMap(component.MapId);
+        var iMap = (IMapManagerInternal)MapManager;
+        iMap.RemoveMapId(component.MapId);
 
         var msg = new MapChangedEvent(uid, component.MapId, false);
         RaiseLocalEvent(uid, msg, true);

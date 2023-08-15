@@ -1,15 +1,16 @@
 # schema file for Yamale
 meta:
   format: int()
-  name: str()
-  author: str()
   postmapinit: bool()
 tilemap: map(str(), key=int())
-entities: list(include('entity'), min=1)
+entities: list(include('proto'), min=1)
+---
+proto:
+  proto: str(required=True)
+  entities: list(include('entity'), min=1)
 ---
 entity:
   uid: int()
-  type: str(required=False)
   components: list(comp())
   missingComponents: list(str(), required=False)
 

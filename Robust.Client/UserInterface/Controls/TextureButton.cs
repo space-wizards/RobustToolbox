@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
@@ -10,7 +11,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class TextureButton : BaseButton
     {
-        private Vector2 _scale = (1, 1);
+        private Vector2 _scale = new(1, 1);
         private Texture? _textureNormal;
         public const string StylePropertyTexture = "texture";
         public const string StylePseudoClassNormal = "normal";
@@ -36,26 +37,18 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public string TextureThemePath
-        {
-            set {
-                TextureNormal = Theme.ResolveTexture(value);
-                _texturePath = value;
-            }
-        }
-
-
         protected override void OnThemeUpdated()
         {
             if (_texturePath != null) TextureNormal = Theme.ResolveTexture(_texturePath);
             base.OnThemeUpdated();
         }
+
         public string TexturePath
         {
             set
             {
-                TextureNormal = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
                 _texturePath = value;
+                if (_texturePath != null) TextureNormal = Theme.ResolveTexture(_texturePath);
             }
         }
 

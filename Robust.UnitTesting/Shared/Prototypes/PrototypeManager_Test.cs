@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -9,6 +10,8 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.UnitTesting.Shared.Prototypes
 {
@@ -25,8 +28,6 @@ namespace Robust.UnitTesting.Shared.Prototypes
             var factory = IoCManager.Resolve<IComponentFactory>();
             factory.RegisterClass<TestBasicPrototypeComponent>();
             factory.RegisterClass<PointLightComponent>();
-            // I'm so sorry
-            factory.RegisterClass<SpriteComponent>();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
@@ -55,7 +56,6 @@ namespace Robust.UnitTesting.Shared.Prototypes
                 Assert.That(prototype.Name, Is.EqualTo("Wall Light"));
                 Assert.That(prototype.ID, Is.EqualTo(id));
                 Assert.That(prototype.Components, Contains.Key("Transform"));
-                Assert.That(prototype.Components, Contains.Key("Sprite"));
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 

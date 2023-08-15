@@ -58,7 +58,7 @@ namespace Robust.Shared
         /// </summary>
         /// <seealso cref="NetMtuExpand"/>
         public static readonly CVarDef<int> NetMtu =
-            CVarDef.Create("net.mtu", NetPeerConfiguration.kDefaultMTU, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu", 1000, CVar.ARCHIVE);
 
         /// <summary>
         /// If set, automatically try to detect MTU above <see cref="NetMtu"/>.
@@ -195,10 +195,10 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_exit_budget", 75, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
-        /// ZSTD compression level to use when compressing game states. Also used for replays.
+        /// ZSTD compression level to use when compressing game states. Used by both networking and replays.
         /// </summary>
         public static readonly CVarDef<int> NetPVSCompressLevel =
-            CVarDef.Create("net.pvs_compress_level", 3, CVar.SERVERONLY);
+            CVarDef.Create("net.pvs_compress_level", 3, CVar.ARCHIVE);
 
         /// <summary>
         /// Log late input messages from clients.
@@ -318,6 +318,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> SysGCCollectStart =
             CVarDef.Create("sys.gc_collect_start", true);
+
+        /// <summary>
+        /// Use precise sleeping methods in the game loop.
+        /// </summary>
+        public static readonly CVarDef<bool> SysPreciseSleep =
+            CVarDef.Create("sys.precise_sleep", true);
 
         /*
          * METRICS
@@ -478,51 +484,52 @@ namespace Robust.Shared
         /// Engine version that launcher needs to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildEngineVersion =
-            CVarDef.Create("build.engine_version", "", CVar.SERVERONLY);
+            CVarDef.Create("build.engine_version",
+                typeof(CVars).Assembly.GetName().Version?.ToString(3) ?? String.Empty);
 
         /// <summary>
         /// Fork ID, as a hint to the launcher to manage local files.
         /// This can be anything, it does not need a strict format.
         /// </summary>
         public static readonly CVarDef<string> BuildForkId =
-            CVarDef.Create("build.fork_id", "", CVar.SERVERONLY);
+            CVarDef.Create("build.fork_id", "");
 
         /// <summary>
         /// Version string, as a hint to the launcher to manage local files.
         /// This can be anything, it does not need a strict format.
         /// </summary>
         public static readonly CVarDef<string> BuildVersion =
-            CVarDef.Create("build.version", "", CVar.SERVERONLY);
+            CVarDef.Create("build.version", "");
 
         /// <summary>
         /// Content pack the launcher should download to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildDownloadUrl =
-            CVarDef.Create("build.download_url", string.Empty, CVar.SERVERONLY);
+            CVarDef.Create("build.download_url", string.Empty);
 
         /// <summary>
         /// URL of the content manifest the launcher should download to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildManifestUrl =
-            CVarDef.Create("build.manifest_url", string.Empty, CVar.SERVERONLY);
+            CVarDef.Create("build.manifest_url", string.Empty);
 
         /// <summary>
         /// URL at which the launcher can download the manifest game files.
         /// </summary>
         public static readonly CVarDef<string> BuildManifestDownloadUrl =
-            CVarDef.Create("build.manifest_download_url", string.Empty, CVar.SERVERONLY);
+            CVarDef.Create("build.manifest_download_url", string.Empty);
 
         /// <summary>
         /// SHA-256 hash of the content pack hosted at <c>build.download_url</c>
         /// </summary>
         public static readonly CVarDef<string> BuildHash =
-            CVarDef.Create("build.hash", "", CVar.SERVERONLY);
+            CVarDef.Create("build.hash", "");
 
         /// <summary>
         /// SHA-256 hash of the manifest hosted at <c>build.manifest_url</c>
         /// </summary>
         public static readonly CVarDef<string> BuildManifestHash =
-            CVarDef.Create("build.manifest_hash", "", CVar.SERVERONLY);
+            CVarDef.Create("build.manifest_hash", "");
 
         /*
          * WATCHDOG
@@ -1053,7 +1060,7 @@ namespace Robust.Shared
             CVarDef.Create("physics.angsleeptol", 0.3f / 180.0f * MathF.PI);
 
         public static readonly CVarDef<float> LinearSleepTolerance =
-            CVarDef.Create("physics.linsleeptol", 0.1f);
+            CVarDef.Create("physics.linsleeptol", 0.01f);
 
         public static readonly CVarDef<bool> SleepAllowed =
             CVarDef.Create("physics.sleepallowed", true);
@@ -1181,6 +1188,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DiscordEnabled =
             CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
 
+        public static readonly CVarDef<string> DiscordRichPresenceMainIconId =
+            CVarDef.Create("discord.rich_main_icon_id", "devstation", CVar.CLIENTONLY);
+
+        public static readonly CVarDef<string> DiscordRichPresenceSecondIconId =
+            CVarDef.Create("discord.rich_second_icon_id", "logo", CVar.CLIENTONLY);
+
         /*
          * RES
          */
@@ -1256,6 +1269,15 @@ namespace Robust.Shared
 
         public static readonly CVarDef<float> MidiVolume =
             CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<int> MidiMinRendererParallel =
+            CVarDef.Create("midi.min_renderers_parallel_update", 3, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<float> MidiPositionUpdateDelay =
+            CVarDef.Create("midi.position_update_delay", 0.125f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<float> MidiOcclusionUpdateDelay =
+            CVarDef.Create("midi.occlusion_update_delay", 0.25f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * HUB
@@ -1413,33 +1435,99 @@ namespace Robust.Shared
          */
 
         /// <summary>
-        /// The folder within the server data directory where a replay will be recorded. Note that existing files in
-        /// this directory will be removed when starting a new recording.
+        /// A relative path pointing to a folder within the server data directory where all replays will be stored.
         /// </summary>
-        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replay", CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<string> ReplayDirectory = CVarDef.Create("replay.directory", "replays",
+            CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum compressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
-        public static readonly CVarDef<int> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size", 1024 * 100, CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<int> ReplayMaxCompressedSize = CVarDef.Create("replay.max_compressed_size",
+            1024 * 256, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum uncompressed size of a replay recording (in kilobytes) before recording automatically stops.
         /// </summary>
-        public static readonly CVarDef<int> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size", 1024 * 300, CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<int> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
+            1024 * 1024, CVar.ARCHIVE);
 
         /// <summary>
         /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data
-        /// for one or more tick. Actual files may be slightly larger, this is just a lower threshold. After
-        /// compressing, the files are generally ~30% of their uncompressed size.
+        /// for one or more ticks. Actual files may be slightly larger, this is just a threshold for the file to get
+        /// written. After compressing, the files are generally ~30% of their uncompressed size.
         /// </summary>
-        public static readonly CVarDef<int> ReplayTickBatchSize = CVarDef.Create("replay.replay_tick_batchSize", 1024, CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<int> ReplayTickBatchSize = CVarDef.Create("replay.replay_tick_batchSize",
+            1024, CVar.ARCHIVE);
 
         /// <summary>
-        /// Whether or not recording replays is enabled.
+        /// The max amount of pending write commands while recording replays.
         /// </summary>
-        public static readonly CVarDef<bool> ReplayEnabled = CVarDef.Create("replay.enabled", true, CVar.SERVERONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<int> ReplayWriteChannelSize = CVarDef.Create("replay.write_channel_size", 5);
 
+        /// <summary>
+        /// Whether or not server-side replay recording is enabled.
+        /// </summary>
+        public static readonly CVarDef<bool> ReplayServerRecordingEnabled = CVarDef.Create(
+            "replay.server_recording_enabled",
+            true,
+            CVar.SERVERONLY | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Whether or not client-side replay recording is enabled.
+        /// </summary>
+        public static readonly CVarDef<bool> ReplayClientRecordingEnabled = CVarDef.Create(
+            "replay.client_recording_enabled",
+            true,
+            CVar.SERVER | CVar.REPLICATED | CVar.ARCHIVE);
+
+        /// <summary>
+        /// Determines the threshold before visual events (muzzle flashes, chat pop-ups, etc) are suppressed when
+        /// jumping forward in time. Jumps larger than this will simply skip directly to the target tick.
+        /// </summary>
+        public static readonly CVarDef<int> ReplaySkipThreshold = CVarDef.Create("replay.skip_threshold", 30);
+
+        /// <summary>
+        /// Maximum number of ticks before a new checkpoint tick is generated.
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointInterval = CVarDef.Create("replay.checkpoint_interval", 200);
+
+        /// <summary>
+        /// Maximum number of entities that can be spawned before a new checkpoint tick is generated.
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointEntitySpawnThreshold = CVarDef.Create("replay.checkpoint_entity_spawn_threshold", 100);
+
+        /// <summary>
+        /// Maximum number of entity states that can be applied before a new checkpoint tick is generated.
+        /// </summary>
+        public static readonly CVarDef<int> CheckpointEntityStateThreshold = CVarDef.Create("replay.checkpoint_entity_state_threshold", 50 * 600);
+
+        /// <summary>
+        /// Whether or not to constantly apply game states while using something like a slider to scrub through replays.
+        /// If false, this will only jump to a point in time when the scrubbing ends.
+        /// </summary>
+        public static readonly CVarDef<bool> ReplayDynamicalScrubbing = CVarDef.Create("replay.dynamical_scrubbing", true);
+
+        /// <summary>
+        /// When recording replays, should we attempt to make a valid content bundle that can be directly executed by
+        /// the launcher?
+        /// </summary>
+        /// <remarks>
+        /// This requires the server's build information to be sufficiently filled out.
+        /// </remarks>
+        public static readonly CVarDef<bool> ReplayMakeContentBundle =
+            CVarDef.Create("replay.make_content_bundle", true);
+
+        /// <summary>
+        /// If true, this will cause the replay client to ignore some errors while loading a replay file.
+        /// </summary>
+        /// <remarks>
+        /// This might make otherwise broken replays playable, but ignoring these errors is also very likely to
+        /// cause unexpected and confusing errors elsewhere. By default this is disabled so that users report the
+        /// original exception rather than sending people on a wild-goose chase to find a non-existent bug.
+        /// </remarks>
+        public static readonly CVarDef<bool> ReplayIgnoreErrors =
+            CVarDef.Create("replay.ignore_errors", false, CVar.CLIENTONLY | CVar.ARCHIVE);
         /*
          * CFG
          */
@@ -1454,5 +1542,43 @@ namespace Robust.Shared
         /// and will complain if anything unknown is found (probably indicating a typo of some kind).
         /// </remarks>
         public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
+
+        /*
+        * Network Resource Manager
+        */
+
+        /// <summary>
+        /// Controls whether new resources can be uploaded by admins.
+        /// Does not prevent already uploaded resources from being sent.
+        /// </summary>
+        public static readonly CVarDef<bool> ResourceUploadingEnabled =
+            CVarDef.Create("netres.enabled", true, CVar.REPLICATED | CVar.SERVER);
+
+        /// <summary>
+        /// Controls the data size limit in megabytes for uploaded resources. If they're too big, they will be dropped.
+        /// Set to zero or a negative value to disable limit.
+        /// </summary>
+        public static readonly CVarDef<float> ResourceUploadingLimitMb =
+            CVarDef.Create("netres.limit", 3f, CVar.REPLICATED | CVar.SERVER);
+
+        /*
+         * LAUNCH
+         * CVars relating to how the client is launched. Primarily set from the launcher.
+         */
+
+        /// <summary>
+        /// Game was launched from the launcher.
+        /// </summary>
+        /// <remarks>
+        /// The game should not try to automatically connect to a server, there's other variables for that.
+        /// </remarks>
+        public static readonly CVarDef<bool> LaunchLauncher =
+            CVarDef.Create("launch.launcher", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Game was launched from a content bundle.
+        /// </summary>
+        public static readonly CVarDef<bool> LaunchContentBundle =
+            CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
     }
 }

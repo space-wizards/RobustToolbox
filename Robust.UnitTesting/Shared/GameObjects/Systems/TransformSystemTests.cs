@@ -1,3 +1,4 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -70,10 +71,8 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             xformSystem.SetParent(child1, child1Xform, parent, parentXform: parentXform);
             xformSystem.SetParent(child2, child2Xform, parent, parentXform: parentXform);
 
-            var query = entManager.GetEntityQuery<TransformComponent>();
-
-            var mover1 = xformSystem.GetMoverCoordinates(child1Xform, query);
-            var mover2 = xformSystem.GetMoverCoordinates(child2Xform, query);
+            var mover1 = xformSystem.GetMoverCoordinates(child1, child1Xform);
+            var mover2 = xformSystem.GetMoverCoordinates(child2, child2Xform);
 
             Assert.That(mover1.Position, Is.EqualTo(Vector2.One));
             Assert.That(mover2.Position, Is.EqualTo(new Vector2(10f, 10f)));
@@ -82,7 +81,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var child3Xform = entManager.GetComponent<TransformComponent>(child3);
             xformSystem.SetParent(child3, child3Xform, child2, parentXform: child2Xform);
 
-            Assert.That(xformSystem.GetMoverCoordinates(child3Xform, query).Position, Is.EqualTo(Vector2.One));
+            Assert.That(xformSystem.GetMoverCoordinates(child3, child3Xform).Position, Is.EqualTo(Vector2.One));
         }
 
         /// <summary>

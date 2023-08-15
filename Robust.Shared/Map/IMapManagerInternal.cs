@@ -1,9 +1,4 @@
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Map.Components;
-using Robust.Shared.Maths;
-using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
@@ -12,18 +7,6 @@ namespace Robust.Shared.Map
     internal interface IMapManagerInternal : IMapManager
     {
         IGameTiming GameTiming { get; }
-        IEntityManager EntityManager { get; }
-
-        /// <summary>
-        /// Specific version of FindGridsIntersecting that allows re-usable data structures to be passed in for optimisation reasons.
-        /// </summary>
-        IEnumerable<MapGridComponent> FindGridsIntersecting(
-            MapId mapId,
-            Box2 worldAabb,
-            List<MapGridComponent> grids,
-            EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<PhysicsComponent> physicsQuery,
-            bool approx = false);
 
         /// <summary>
         ///     Raises the OnTileChanged event.
@@ -34,7 +17,6 @@ namespace Robust.Shared.Map
 
         MapId CreateMap(MapId? mapId, EntityUid euid);
 
-        void TrueDeleteMap(MapId mapId);
-        void OnGridBoundsChange(EntityUid uid, MapGridComponent grid);
+        void RemoveMapId(MapId mapId);
     }
 }

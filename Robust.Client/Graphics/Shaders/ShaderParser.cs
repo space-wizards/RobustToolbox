@@ -19,7 +19,7 @@ namespace Robust.Client.Graphics
         private readonly List<ShaderConstantDefinition> _constantsParsing = new();
         private readonly List<ShaderVaryingDefinition> _varyingsParsing = new();
         private readonly List<ShaderFunctionDefinition> _functionsParsing = new();
-        private readonly LinkedList<ResourcePath> _includes = new();
+        private readonly LinkedList<ResPath> _includes = new();
 
         public static ParsedShader Parse(TextReader reader, IResourceManager resManager)
         {
@@ -105,7 +105,8 @@ namespace Robust.Client.Graphics
                         TokenWord t when t.Word == "subtract" => ShaderBlendMode.Subtract,
                         TokenWord t when t.Word == "multiply" => ShaderBlendMode.Multiply,
                         TokenWord t when t.Word == "none" => ShaderBlendMode.None,
-                        _ => throw new ShaderParseException("Expected 'mix', 'add', 'subtract', 'none' or 'multiply'.")
+                        TokenWord t when t.Word == "normal" => ShaderBlendMode.Normal,
+                        _ => throw new ShaderParseException("Expected 'mix', 'add', 'subtract', 'normal', 'none' or 'multiply'.")
                     };
 
                     token = _takeToken();

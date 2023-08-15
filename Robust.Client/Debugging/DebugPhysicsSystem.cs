@@ -47,6 +47,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -128,8 +129,8 @@ namespace Robust.Client.Debugging
                 CollisionManager.GetPointStates(ref state1, ref state2, oldManifold, manifold);
 
                 Span<Vector2> points = stackalloc Vector2[2];
-                var transformA = _physics.GetPhysicsTransform(fixtureA.Body.Owner);
-                var transformB = _physics.GetPhysicsTransform(fixtureB.Body.Owner);
+                var transformA = _physics.GetPhysicsTransform(contact.EntityA);
+                var transformB = _physics.GetPhysicsTransform(contact.EntityB);
                 contact.GetWorldManifold(transformA, transformB, out var normal, points);
 
                 ContactPoint cp = Points[PointCount];
@@ -217,7 +218,7 @@ namespace Robust.Client.Debugging
             _debugPhysicsSystem = system;
             _lookup = lookup;
             _physicsSystem = physicsSystem;
-            _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
+            _font = new VectorFont(cache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
         }
 
         private void DrawWorld(DrawingHandleWorld worldHandle, OverlayDrawArgs args)
@@ -370,7 +371,7 @@ namespace Robust.Client.Debugging
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.ShapeInfo) != 0x0)
             {
                 var hoverBodies = new List<PhysicsComponent>();
-                var bounds = Box2.UnitCentered.Translated(_eyeManager.ScreenToMap(mousePos.Position).Position);
+                var bounds = Box2.UnitCentered.Translated(_eyeManager.PixelToMap(mousePos.Position).Position);
 
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, bounds))
                 {
@@ -403,7 +404,7 @@ namespace Robust.Client.Debugging
 
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.Distance) != 0x0)
             {
-                var mapPos = _eyeManager.ScreenToMap(mousePos);
+                var mapPos = _eyeManager.PixelToMap(mousePos);
 
                 if (mapPos.MapId != args.MapId)
                     return;
@@ -467,7 +468,7 @@ namespace Robust.Client.Debugging
 
                     break;
                 case PolygonShape poly:
-                    Span<Vector2> verts = stackalloc Vector2[poly.Vertices.Length];
+                    Span<Vector2> verts = stackalloc Vector2[poly.VertexCount];
 
                     for (var i = 0; i < verts.Length; i++)
                     {

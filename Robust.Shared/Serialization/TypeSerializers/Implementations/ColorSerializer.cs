@@ -44,8 +44,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         [MustUseReturnValue]
         public Color CreateCopy(ISerializationManager serializationManager, Color source,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
+            IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
             return new(source.R, source.G, source.B, source.A);
         }

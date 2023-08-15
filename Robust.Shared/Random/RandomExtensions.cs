@@ -78,7 +78,7 @@ namespace Robust.Shared.Random
         {
             DebugTools.Assert(chance <= 1 && chance >= 0, $"Chance must be in the range 0-1. It was {chance}.");
 
-            return random.NextDouble() <= chance;
+            return random.NextDouble() < chance;
         }
 
         internal static void Shuffle<T>(Span<T> array, System.Random random)

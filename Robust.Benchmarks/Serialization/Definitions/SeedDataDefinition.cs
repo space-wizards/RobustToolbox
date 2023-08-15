@@ -87,7 +87,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
         #endregion
 
         #region Cosmetics
-        [DataField("plantRsi", required: true)] public ResourcePath PlantRsi { get; set; } = default!;
+        [DataField("plantRsi", required: true)] public ResPath PlantRsi { get; set; } = default!;
         [DataField("plantIconState")] public string PlantIconState { get; set; } = "produce";
         [DataField("bioluminescent")] public bool Bioluminescent { get; set; }
         [DataField("bioluminescentColor")] public Color BioluminescentColor { get; set; } = Color.White;

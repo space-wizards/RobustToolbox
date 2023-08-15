@@ -18,7 +18,7 @@ namespace Robust.Client.ResourceManagement
     /// </summary>
     public sealed class RSIResource : BaseResource
     {
-        public override ResourcePath? Fallback => new("/Textures/error.rsi");
+        public override ResPath? Fallback => new("/Textures/error.rsi");
 
         public RSI RSI { get; private set; } = default!;
 
@@ -32,14 +32,12 @@ namespace Robust.Client.ResourceManagement
         /// </summary>
         public const uint MAXIMUM_RSI_VERSION = RsiLoading.MAXIMUM_RSI_VERSION;
 
-        public override void Load(IResourceCache cache, ResourcePath path)
+        public override void Load(IResourceCache cache, ResPath path)
         {
-            var clyde = IoCManager.Resolve<IClyde>();
-
             var loadStepData = new LoadStepData {Path = path};
             LoadPreTexture(cache, loadStepData);
 
-            loadStepData.AtlasTexture = clyde.LoadTextureFromImage(
+            loadStepData.AtlasTexture = cache.Clyde.LoadTextureFromImage(
                 loadStepData.AtlasSheet,
                 loadStepData.Path.ToString());
 
@@ -373,7 +371,7 @@ namespace Robust.Client.ResourceManagement
         internal sealed class LoadStepData
         {
             public bool Bad;
-            public ResourcePath Path = default!;
+            public ResPath Path = default!;
             public Image<Rgba32> AtlasSheet = default!;
             public int DimX;
             public StateReg[] AtlasList = default!;

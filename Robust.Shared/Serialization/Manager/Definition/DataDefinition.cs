@@ -98,6 +98,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     var validator = (false, false, false);
                     foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
                     {
+                        DebugTools.Assert(@interface.IsGenericType, $"Tried to use a custom type serializer for {GetType()} that isn't generic?");
                         var genericTypedef = @interface.GetGenericTypeDefinition();
                         if (genericTypedef == typeof(ITypeWriter<>))
                         {

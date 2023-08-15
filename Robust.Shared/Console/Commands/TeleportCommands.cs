@@ -1,9 +1,16 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands;
 
@@ -31,7 +38,7 @@ internal sealed class TeleportCommand : LocalizedCommands
         var transform = _entityManager.GetComponent<TransformComponent>(entity);
         var position = new Vector2(posX, posY);
 
-        transform.AttachToGridOrMap();
+        xformSystem.AttachToGridOrMap(entity, transform);
 
         MapId mapId;
         if (args.Length == 3 && int.TryParse(args[2], out var intMapId))
@@ -45,11 +52,11 @@ internal sealed class TeleportCommand : LocalizedCommands
             return;
         }
 
-        if (_map.TryFindGridAt(mapId, position, out var grid))
+        if (_map.TryFindGridAt(mapId, position, out var gridUid, out var grid))
         {
-            var gridPos = grid.WorldToLocal(position);
+            var gridPos = xformSystem.GetInvWorldMatrix(gridUid).Transform(position);
 
-            xformSystem.SetCoordinates(entity, transform, new EntityCoordinates(grid.Owner, gridPos));
+            xformSystem.SetCoordinates(entity, transform, new EntityCoordinates(gridUid, gridPos));
         }
         else
         {
@@ -59,6 +66,104 @@ internal sealed class TeleportCommand : LocalizedCommands
         }
 
         shell.WriteLine($"Teleported {shell.Player} to {mapId}:{posX},{posY}.");
+    }
+}
+
+public sealed class TeleportToCommand : LocalizedCommands
+{
+    [Dependency] private readonly ISharedPlayerManager _players = default!;
+    [Dependency] private readonly IEntityManager _entities = default!;
+
+    public override string Command => "tpto";
+    public override bool RequireServerOrSingleplayer => true;
+
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        if (args.Length == 0)
+            return;
+
+        var target = args[0];
+
+        if (!TryGetTransformFromUidOrUsername(target, shell, out _, out var targetTransform))
+            return;
+
+        var transformSystem = _entities.System<SharedTransformSystem>();
+        var targetCoords = targetTransform.Coordinates;
+
+        if (args.Length == 1)
+        {
+            var ent = shell.Player?.AttachedEntity;
+
+            if (!_entities.TryGetComponent(ent, out TransformComponent? playerTransform))
+            {
+                shell.WriteError(Loc.GetString("cmd-failure-no-attached-entity"));
+                return;
+            }
+
+            transformSystem.SetCoordinates(ent.Value, targetCoords);
+            playerTransform.AttachToGridOrMap();
+        }
+        else
+        {
+            foreach (var victim in args)
+            {
+                if (victim == target)
+                    continue;
+
+                if (!TryGetTransformFromUidOrUsername(victim, shell, out var uid, out var victimTransform))
+                    return;
+
+                transformSystem.SetCoordinates(uid.Value, targetCoords);
+                victimTransform.AttachToGridOrMap();
+            }
+        }
+    }
+
+    private bool TryGetTransformFromUidOrUsername(
+        string str,
+        IConsoleShell shell,
+        [NotNullWhen(true)] out EntityUid? victimUid,
+        [NotNullWhen(true)] out TransformComponent? transform)
+    {
+        if (EntityUid.TryParse(str, out var uid) && _entities.TryGetComponent(uid, out transform))
+        {
+            victimUid = uid;
+            return true;
+        }
+
+        if (_players.Sessions.TryFirstOrDefault(x => x.ConnectedClient.UserName == str, out var session)
+            && _entities.TryGetComponent(session.AttachedEntity, out transform))
+        {
+            victimUid = session.AttachedEntity;
+            return true;
+        }
+
+        shell.WriteError(Loc.GetString("cmd-tpto-parse-error", ("str",str)));
+
+        transform = null;
+        victimUid = default;
+        return false;
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length == 0)
+            return CompletionResult.Empty;
+
+        var last = args[^1];
+
+        var users = _players.Sessions
+            .Select(x => x.Name ?? string.Empty)
+            .Where(x => !string.IsNullOrWhiteSpace(x) && x.StartsWith(last, StringComparison.CurrentCultureIgnoreCase));
+
+        var hint = args.Length == 1 ? "cmd-tpto-destination-hint" : "cmd-tpto-victim-hint";
+        hint = Loc.GetString(hint);
+
+        var opts = CompletionResult.FromHintOptions(users, hint);
+        if (last != string.Empty && !EntityUid.TryParse(last, out _))
+            return opts;
+
+        return CompletionResult.FromHintOptions(opts.Options.Concat(CompletionHelper.EntityUids(last, _entities)), hint);
     }
 }
 

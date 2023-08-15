@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
@@ -85,11 +86,6 @@ namespace Robust.Server.GameObjects
                 _visibilityMask = value;
                 Dirty();
             }
-        }
-
-        public override ComponentState GetComponentState()
-        {
-            return new EyeComponentState(DrawFov, Zoom, Offset, VisibilityMask);
         }
     }
 }

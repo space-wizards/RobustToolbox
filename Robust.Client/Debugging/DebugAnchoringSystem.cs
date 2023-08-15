@@ -1,4 +1,5 @@
 #if DEBUG
+using System.Numerics;
 using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -60,9 +61,9 @@ namespace Robust.Client.Debugging
             }
 
             var mouseSpot = _inputManager.MouseScreenPosition;
-            var spot = _eyeManager.ScreenToMap(mouseSpot);
+            var spot = _eyeManager.PixelToMap(mouseSpot);
 
-            if (!_mapManager.TryFindGridAt(spot, out var grid))
+            if (!_mapManager.TryFindGridAt(spot, out var gridUid, out var grid))
             {
                 _label.Text = string.Empty;
                 _hovered = null;
@@ -72,9 +73,9 @@ namespace Robust.Client.Debugging
             var tile = grid.GetTileRef(spot);
             _label.Position = mouseSpot.Position + new Vector2(32, 0);
 
-            if (_hovered?.GridId == grid.Owner && _hovered?.Tile == tile) return;
+            if (_hovered?.GridId == gridUid && _hovered?.Tile == tile) return;
 
-            _hovered = (grid.Owner, tile);
+            _hovered = (gridUid, tile);
 
             var text = new StringBuilder();
 

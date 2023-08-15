@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -91,7 +92,7 @@ namespace Robust.Shared.Map
                 return false;
             }
 
-            return (otherCoords.Position - Position).LengthSquared < range * range;
+            return (otherCoords.Position - Position).LengthSquared() < range * range;
         }
 
         /// <inheritdoc />

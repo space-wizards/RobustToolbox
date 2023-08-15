@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -22,6 +23,11 @@ namespace Robust.Client.UserInterface.CustomControls
         ///     The coordinates, in ABSOLUTE SCREEN PIXEL COORDINATES. NOT CONTROL-RELATIVE COORDINATES.
         /// </param>
         MapCoordinates ScreenToMap(Vector2 coords);
+
+        /// <summary>
+        /// Similar to <see cref="ScreenToMap(Vector2)"/>, except it should compensate for the effects of shaders on viewports.
+        /// </summary>
+        MapCoordinates PixelToMap(Vector2 point);
 
         /// <summary>
         ///     Converts a point on the map to screen coordinates.

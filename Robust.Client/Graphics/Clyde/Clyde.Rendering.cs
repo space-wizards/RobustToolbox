@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
@@ -9,6 +10,8 @@ using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -273,6 +276,7 @@ namespace Robust.Client.Graphics.Clyde
                 BatchPrimitiveType.TriangleStrip => PrimitiveType.TriangleStrip,
                 BatchPrimitiveType.LineList => PrimitiveType.Lines,
                 BatchPrimitiveType.LineStrip => PrimitiveType.LineStrip,
+                BatchPrimitiveType.LineLoop => PrimitiveType.LineLoop,
                 BatchPrimitiveType.PointList => PrimitiveType.Points,
                 _ => PrimitiveType.Triangles
             };
@@ -406,7 +410,7 @@ namespace Robust.Client.Graphics.Clyde
             return Color.FromSrgb(color);
         }
 
-        private (GLShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
+        private (GLShaderProgram, LoadedShaderInstance) ActivateShaderInstance(ClydeHandle handle)
         {
             var instance = _shaderInstances[handle];
             var shader = _loadedShaders[instance.ShaderHandle];
@@ -439,7 +443,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             if (!instance.ParametersDirty)
-                return (program, shader);
+                return (program, instance);
 
             instance.ParametersDirty = false;
 
@@ -505,7 +509,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            return (program, shader);
+            return (program, instance);
         }
 
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
@@ -649,6 +653,7 @@ namespace Robust.Client.Graphics.Clyde
                 DrawPrimitiveTopology.TriangleStrip => BatchPrimitiveType.TriangleStrip,
                 DrawPrimitiveTopology.LineList => BatchPrimitiveType.LineList,
                 DrawPrimitiveTopology.LineStrip => BatchPrimitiveType.LineStrip,
+                DrawPrimitiveTopology.LineLoop => BatchPrimitiveType.LineLoop,
                 DrawPrimitiveTopology.PointList => BatchPrimitiveType.PointList,
                 _ => BatchPrimitiveType.TriangleList
             };
@@ -891,6 +896,9 @@ namespace Robust.Client.Graphics.Clyde
                     case ShaderBlendMode.None:
                         GL.BlendFunc(BlendingFactor.One, BlendingFactor.Zero);
                         break;
+                    case ShaderBlendMode.Normal:
+                        GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                        break;
                 }
         }
 
@@ -1030,6 +1038,7 @@ namespace Robust.Client.Graphics.Clyde
             TriangleStrip,
             LineList,
             LineStrip,
+            LineLoop,
             PointList,
         }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
@@ -153,6 +154,7 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component exists with the given type <see cref="componentType"/>.
         /// </exception>
+        [Pure]
         string GetComponentName(Type componentType);
 
         /// <summary>
@@ -208,6 +210,11 @@ namespace Robust.Shared.GameObjects
         ComponentRegistration GetRegistration(CompIdx idx);
 
         /// <summary>
+        ///     Returns true if the given component name has been registered as ignored.
+        /// </summary>
+        bool IsIgnored(string componentName);
+
+        /// <summary>
         ///     Tries to get the registration belonging to a component.
         /// </summary>
         /// <param name="componentName">The name of the component.</param>
@@ -257,5 +264,11 @@ namespace Robust.Shared.GameObjects
         void GenerateNetIds();
 
         Type IdxToType(CompIdx idx);
+
+        /// <summary>
+        /// Gets a hash of all the registered components.
+        /// </summary>
+        /// <param name="networkedOnly">Whether to include all components or only networked ones.</param>
+        byte[] GetHash(bool networkedOnly);
     }
 }

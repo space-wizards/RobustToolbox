@@ -24,7 +24,7 @@ namespace Robust.Shared.Console.Commands
                 return;
             }
 
-            var path = new ResourcePath(args[0]).ToRootedPath();
+            var path = new ResPath(args[0]).ToRootedPath();
             if (!_resources.UserData.Exists(path))
             {
                 shell.WriteError("File does not exist.");

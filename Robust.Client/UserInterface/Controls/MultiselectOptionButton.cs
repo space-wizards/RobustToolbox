@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
@@ -120,9 +121,9 @@ namespace Robust.Client.UserInterface.Controls
             if (show)
             {
                 var globalPos = GlobalPosition;
-                _popupVBox.Measure(Vector2.Infinity);
+                _popupVBox.Measure(Vector2Helpers.Infinity);
                 var (minX, minY) = _popupVBox.DesiredSize;
-                var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
+                var box = UIBox2.FromDimensions(globalPos, new Vector2(Math.Max(minX, Width), minY));
                 UserInterfaceManager.ModalRoot.AddChild(_popup);
                 _popup.Open(box);
             }

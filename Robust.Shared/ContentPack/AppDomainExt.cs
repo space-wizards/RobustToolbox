@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.Collections;
 
 namespace Robust.Shared.ContentPack
 {
@@ -14,7 +15,23 @@ namespace Robust.Shared.ContentPack
         /// <returns></returns>
         public static Assembly GetAssemblyByName(this AppDomain domain, string name)
         {
-            return domain.GetAssemblies().Single(assembly => assembly.GetName().Name == name);
+            var assemblies = new ValueList<Assembly>(1);
+
+            foreach (var assembly in domain.GetAssemblies())
+            {
+                if (assembly.GetName().Name != name)
+                    continue;
+
+                assemblies.Add(assembly);
+            }
+
+            if (assemblies.Count != 1)
+            {
+                var assemblyDesc = string.Join(" ", assemblies.Select(o => o.GetName().Name));
+                throw new InvalidOperationException($"Expected 1 assembly for {name}, found {assemblies.Count}. Found {assemblyDesc}");
+            }
+
+            return assemblies[0];
         }
     }
 }

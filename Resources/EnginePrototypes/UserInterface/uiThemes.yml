@@ -1,3 +1,44 @@
 ﻿- type: uiTheme
   id: Default
-  path: /textures/interface/Default
+  path: /Textures/Interface/Default/
+  colors:
+    # Root
+    rootBackground: "#000000"
+
+    # Windows
+    windowBackground: "#111111"
+    windowBorder: "#444444"
+    windowHeader: "#001e3d"
+
+    windowCloseButton: "#FFFFFF"
+    windowCloseButtonHover: "#FF7F7F"
+    windowCloseButtonPressed: "#FF0000"
+
+    # Scrollbars
+    scrollBarDefault: "#80808059"
+    scrollBarHovered: "#8C8C8C59"
+    scrollBarGrabbed: "#8C8C8C59"
+
+    # Buttons
+    buttonBackground: "#171717"
+    buttonBackgroundHovered: "#272727"
+    buttonBackgroundPressed: "#173717"
+    buttonBorder: "#444444"
+    buttonBorderHovered: "#444444"
+    buttonBorderPressed: "#447044"
+    buttonBackgroundDisabled: "#333333"
+    buttonBorderDisabled: "#222222"
+
+    # LineEdit
+    lineEditUneditableText: "#444444"
+    lineEditPlaceholderText: "#7d7d7d"
+    lineEditBackground: "#000000"
+    lineEditBorder: "#444444"
+
+    # TabContainer
+    tabContainerBackground: "#000000"
+    tabContainerBorder: "#444444"
+    tabContainerActiveTabBackground: "#173717"
+    tabContainerActiveTabBorder: "#447044"
+    tabContainerInactiveTabBackground: "#171717"
+    tabContainerInactiveTabBorder: "#444444"

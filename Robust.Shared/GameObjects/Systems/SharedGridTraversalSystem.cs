@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -84,17 +83,17 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
         var parentIsMap = xform.GridUid == null && maps.HasComponent(xform.ParentUid);
         if (!parentIsMap && !grids.HasComponent(xform.ParentUid))
             return;
-        var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
+        var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager, _transform);
 
         // Change parent if necessary
-        if (_mapManager.TryFindGridAt(xform.MapID, mapPos, out var grid))
+        if (_mapManager.TryFindGridAt(xform.MapID, mapPos, out var gridUid, out _))
         {
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
-            if (grid.Owner != xform.GridUid)
+            if (gridUid != xform.GridUid)
             {
-                _transform.SetParent(entity, xform, grid.Owner);
-                var ev = new ChangedGridEvent(entity, xform.GridUid, grid.Owner);
-                RaiseLocalEvent(entity, ref ev, true);
+                _transform.SetParent(entity, xform, gridUid, xforms);
+                var ev = new ChangedGridEvent(entity, xform.GridUid, gridUid);
+                RaiseLocalEvent(entity, ref ev);
             }
         }
         else
@@ -112,18 +111,10 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
     }
 }
 
-[Obsolete]
 [ByRefEvent]
-public readonly struct ChangedGridEvent
+public readonly record struct ChangedGridEvent(EntityUid Entity, EntityUid? OldGrid, EntityUid? NewGrid)
 {
-    public readonly EntityUid Entity;
-    public readonly EntityUid? OldGrid;
-    public readonly EntityUid? NewGrid;
-
-    public ChangedGridEvent(EntityUid entity, EntityUid? oldGrid, EntityUid? newGrid)
-    {
-        Entity = entity;
-        OldGrid = oldGrid;
-        NewGrid = newGrid;
-    }
+    public readonly EntityUid Entity = Entity;
+    public readonly EntityUid? OldGrid = OldGrid;
+    public readonly EntityUid? NewGrid = NewGrid;
 }

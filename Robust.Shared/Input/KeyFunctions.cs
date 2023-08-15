@@ -43,6 +43,10 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction GuiTabNavigateNext = "GuiTabNavigateNext";
         public static readonly BoundKeyFunction GuiTabNavigatePrev = "GuiTabNavigatePrev";
 
+        // Buttons to navigate UI windows
+        public static readonly BoundKeyFunction WindowCloseRecent = "WindowCloseRecent";
+        public static readonly BoundKeyFunction WindowCloseAll = "WindowCloseAll";
+
         // Cursor keys in LineEdit and such.
         public static readonly BoundKeyFunction TextCursorLeft = "TextCursorLeft";
         public static readonly BoundKeyFunction TextCursorRight = "TextCursorRight";

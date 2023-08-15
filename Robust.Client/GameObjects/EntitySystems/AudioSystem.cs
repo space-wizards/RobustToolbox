@@ -19,6 +19,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
 using Robust.Shared.Random;
+using Robust.Shared.Replays;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -28,6 +29,7 @@ namespace Robust.Client.GameObjects;
 [UsedImplicitly]
 public sealed class AudioSystem : SharedAudioSystem
 {
+    [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
     [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
     [Dependency] private readonly IClydeAudio _clyde = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -37,6 +39,7 @@ public sealed class AudioSystem : SharedAudioSystem
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+    [Dependency] private readonly ILogManager _logManager = default!;
 
     private readonly List<PlayingStream> _playingClydeStreams = new();
 
@@ -53,7 +56,7 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
         SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
 
-        _sawmill = Logger.GetSawmill("audio");
+        _sawmill = _logManager.GetSawmill("audio");
 
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
     }
@@ -79,8 +82,8 @@ public sealed class AudioSystem : SharedAudioSystem
     private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
     {
         var stream = EntityManager.EntityExists(ev.EntityUid)
-            ? (PlayingStream?) Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams)
-            : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
+            ? (PlayingStream?) Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams, false)
+            : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams, false);
 
         if (stream != null)
             stream.NetIdentifier = ev.Identifier;
@@ -88,14 +91,14 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private void PlayAudioGlobalHandler(PlayAudioGlobalMessage ev)
     {
-        var stream = (PlayingStream?) Play(ev.FileName, ev.AudioParams);
+        var stream = (PlayingStream?) Play(ev.FileName, ev.AudioParams, false);
         if (stream != null)
             stream.NetIdentifier = ev.Identifier;
     }
 
     private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
     {
-        var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
+        var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams, false);
         if (stream != null)
             stream.NetIdentifier = ev.Identifier;
     }
@@ -106,7 +109,8 @@ public sealed class AudioSystem : SharedAudioSystem
         if (stream == null)
             return;
 
-        StreamDone(stream);
+        stream.Done = true;
+        stream.Source.Dispose();
         _playingClydeStreams.Remove(stream);
     }
     #endregion
@@ -129,7 +133,16 @@ public sealed class AudioSystem : SharedAudioSystem
         }
         finally
         {
-            _playingClydeStreams.RemoveAll(p => p.Done);
+
+            for (var i = _playingClydeStreams.Count - 1; i >= 0; i--)
+            {
+                var stream = _playingClydeStreams[i];
+                if (stream.Done)
+                {
+                    stream.Source.Dispose();
+                    _playingClydeStreams.RemoveSwap(i);
+                }
+            }
         }
     }
 
@@ -140,7 +153,7 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         if (!stream.Source.IsPlaying)
         {
-            StreamDone(stream);
+            stream.Done = true;
             return;
         }
 
@@ -162,13 +175,13 @@ public sealed class AudioSystem : SharedAudioSystem
             || mapPos == MapCoordinates.Nullspace
             || mapPos.Value.MapId != listener.MapId)
         {
-            StreamDone(stream);
+            stream.Done = true;
             return;
         }
 
         // Max distance check
         var delta = mapPos.Value.Position - listener.Position;
-        var distance = delta.Length;
+        var distance = delta.Length();
         if (distance > stream.MaxDistance)
         {
             stream.Source.SetVolumeDirect(0);
@@ -277,16 +290,10 @@ public sealed class AudioSystem : SharedAudioSystem
         return false;
     }
 
-    private static void StreamDone(PlayingStream stream)
-    {
-        stream.Source.Dispose();
-        stream.Done = true;
-    }
-
     #region Play AudioStream
     private bool TryGetAudio(string filename, [NotNullWhen(true)] out AudioResource? audio)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out audio))
+        if (_resourceCache.TryGetResource<AudioResource>(new ResPath(filename), out audio))
             return true;
 
         _sawmill.Error($"Server tried to play audio file {filename} which does not exist.");
@@ -307,9 +314,9 @@ public sealed class AudioSystem : SharedAudioSystem
         return source != null;
     }
 
-    private PlayingStream CreateAndStartPlayingStream(IClydeAudioSource source, AudioParams? audioParams)
+    private PlayingStream CreateAndStartPlayingStream(IClydeAudioSource source, AudioParams? audioParams, AudioStream stream)
     {
-        ApplyAudioParams(audioParams, source);
+        ApplyAudioParams(audioParams, source, stream);
         source.StartPlaying();
         var playing = new PlayingStream
         {
@@ -329,8 +336,17 @@ public sealed class AudioSystem : SharedAudioSystem
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(string filename, AudioParams? audioParams = null)
+    private IPlayingAudioStream? Play(string filename, AudioParams? audioParams = null, bool recordReplay = true)
     {
+        if (recordReplay && _replayRecording.IsRecording)
+        {
+            _replayRecording.RecordReplayMessage(new PlayAudioGlobalMessage
+            {
+                FileName = filename,
+                AudioParams = audioParams ?? AudioParams.Default
+            });
+        }
+
         return TryGetAudio(filename, out var audio) ? Play(audio, audioParams) : default;
     }
 
@@ -349,7 +365,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
         source.SetGlobal();
 
-        return CreateAndStartPlayingStream(source, audioParams);
+        return CreateAndStartPlayingStream(source, audioParams, stream);
     }
 
     /// <summary>
@@ -359,9 +375,20 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="entity">The entity "emitting" the audio.</param>
     /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(string filename, EntityUid entity, EntityCoordinates fallbackCoordinates,
-        AudioParams? audioParams = null)
+    private IPlayingAudioStream? Play(string filename, EntityUid entity, EntityCoordinates? fallbackCoordinates,
+        AudioParams? audioParams = null, bool recordReplay = true)
     {
+        if (recordReplay && _replayRecording.IsRecording)
+        {
+            _replayRecording.RecordReplayMessage(new PlayAudioEntityMessage
+            {
+                FileName = filename,
+                EntityUid = entity,
+                FallbackCoordinates = fallbackCoordinates ?? default,
+                AudioParams = audioParams ?? AudioParams.Default
+            });
+        }
+
         return TryGetAudio(filename, out var audio) ? Play(audio, entity, fallbackCoordinates, audioParams) : default;
     }
 
@@ -389,7 +416,7 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!source.SetPosition(worldPos))
             return Play(stream, fallbackCoordinates.Value, fallbackCoordinates.Value, audioParams);
 
-        var playing = CreateAndStartPlayingStream(source, audioParams);
+        var playing = CreateAndStartPlayingStream(source, audioParams, stream);
         playing.TrackingEntity = entity;
         playing.TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null;
         return playing;
@@ -403,8 +430,19 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
     /// <param name="audioParams"></param>
     private IPlayingAudioStream? Play(string filename, EntityCoordinates coordinates,
-        EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null)
+        EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null, bool recordReplay = true)
     {
+        if (recordReplay && _replayRecording.IsRecording)
+        {
+            _replayRecording.RecordReplayMessage(new PlayAudioPositionalMessage
+            {
+                FileName = filename,
+                Coordinates = coordinates,
+                FallbackCoordinates = fallbackCoordinates,
+                AudioParams = audioParams ?? AudioParams.Default
+            });
+        }
+
         return TryGetAudio(filename, out var audio) ? Play(audio, coordinates, fallbackCoordinates, audioParams) : default;
     }
 
@@ -431,7 +469,7 @@ public sealed class AudioSystem : SharedAudioSystem
             return null;
         }
 
-        var playing = CreateAndStartPlayingStream(source, audioParams);
+        var playing = CreateAndStartPlayingStream(source, audioParams, stream);
         playing.TrackingCoordinates = coordinates;
         playing.TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null;
         return playing;
@@ -455,7 +493,7 @@ public sealed class AudioSystem : SharedAudioSystem
         return null;
     }
 
-    private void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source)
+    private void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source, AudioStream audio)
     {
         if (!audioParams.HasValue)
             return;
@@ -470,8 +508,12 @@ public sealed class AudioSystem : SharedAudioSystem
         source.SetRolloffFactor(audioParams.Value.RolloffFactor);
         source.SetMaxDistance(audioParams.Value.MaxDistance);
         source.SetReferenceDistance(audioParams.Value.ReferenceDistance);
-        source.SetPlaybackPosition(audioParams.Value.PlayOffsetSeconds);
         source.IsLooping = audioParams.Value.Loop;
+
+        // TODO clamp the offset inside of SetPlaybackPosition() itself.
+        var offset = audioParams.Value.PlayOffsetSeconds;
+        offset = Math.Clamp(offset, 0f, (float) audio.Length.TotalSeconds);
+        source.SetPlaybackPosition(offset);
     }
 
     public sealed class PlayingStream : IPlayingAudioStream
@@ -482,7 +524,18 @@ public sealed class AudioSystem : SharedAudioSystem
         public EntityCoordinates? TrackingCoordinates;
         public EntityCoordinates? TrackingFallbackCoordinates;
         public bool Done;
-        public float Volume;
+
+        public float Volume
+        {
+            get => _volume;
+            set
+            {
+                _volume = value;
+                Source.SetVolume(value);
+            }
+        }
+
+        private float _volume;
 
         public float MaxDistance;
         public float ReferenceDistance;
@@ -520,13 +573,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid entity, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
-        {
-            return Play(audio, entity, null, audioParams);
-        }
-
-        _sawmill.Error($"Server tried to play audio file {filename} which does not exist.");
-        return default;
+        return Play(filename, entity, null, audioParams);
     }
 
     /// <inheritdoc />
@@ -534,7 +581,6 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
     }
-
 
     /// <inheritdoc />
     public override IPlayingAudioStream? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)
@@ -551,21 +597,13 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override IPlayingAudioStream? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
-        {
-            return Play(audio, uid, null, audioParams);
-        }
-        return null;
+        return Play(filename, uid, null, audioParams);
     }
 
     /// <inheritdoc />
     public override IPlayingAudioStream? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
-        {
-            return Play(audio, uid, null, audioParams);
-        }
-        return null;
+        return Play(filename, uid, null, audioParams);
     }
 
     /// <inheritdoc />

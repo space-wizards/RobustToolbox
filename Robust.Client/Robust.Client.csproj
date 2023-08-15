@@ -10,25 +10,26 @@
     <RobustILLink>true</RobustILLink>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
+    <PackageReference Include="DiscordRichPresence" Version="1.0.175" PrivateAssets="compile" />
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="6.0.9" />
-    <PackageReference Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.2" Condition="'$(UseSystemSqlite)' == 'True'" />
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.2" Condition="'$(UseSystemSqlite)' != 'True'" />
-    <PackageReference Include="SpaceWizards.NFluidsynth" Version="0.1.1" />
-    <PackageReference Include="NVorbis" Version="0.10.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="6.0.9" PrivateAssets="compile" />
+    <PackageReference Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.2" Condition="'$(UseSystemSqlite)' == 'True'" PrivateAssets="compile" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.2" Condition="'$(UseSystemSqlite)' != 'True'" PrivateAssets="compile" />
+    <PackageReference Include="SpaceWizards.NFluidsynth" Version="0.1.1" PrivateAssets="compile" />
+    <PackageReference Include="NVorbis" Version="0.10.1" PrivateAssets="compile" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
-    <PackageReference Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
-    <PackageReference Include="OpenTK.OpenAL" Version="4.7.5" />
-    <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
+    <PackageReference Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" PrivateAssets="compile" />
+    <PackageReference Include="OpenTK.OpenAL" Version="4.7.5" PrivateAssets="compile" />
+    <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" PrivateAssets="compile" />
     <PackageReference Include="Robust.Natives" Version="0.1.1" />
-    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.20348-rc2" />
-    <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" Version="1.2.0" />
+    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.20348-rc2" PrivateAssets="compile" />
+    <PackageReference Condition="'$(FullRelease)' != 'True'" Include="JetBrains.Profiler.Api" Version="1.2.0" PrivateAssets="compile" />
+    <PackageReference Include="SpaceWizards.Sodium" Version="0.2.1" PrivateAssets="compile" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.0.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.0.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.0.1" PrivateAssets="compile" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.0.1" PrivateAssets="compile" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.1" PrivateAssets="compile" />
 
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
   </ItemGroup>
@@ -50,6 +51,7 @@
   <!-- ILLink configuration -->
   <ItemGroup>
     <RobustLinkRoots Include="Robust.Client" />
+    <RobustLinkRoots Include="Robust.Shared" />
     <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
     <RobustLinkAssemblies Include="OpenToolkit.Graphics" />
   </ItemGroup>

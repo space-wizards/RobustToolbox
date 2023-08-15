@@ -75,14 +75,7 @@ namespace Robust.Shared.GameObjects
 
             LifeStage = ComponentLifeStage.Initializing;
             entManager.EventBus.RaiseComponentEvent(this, type, CompInitInstance);
-            Initialize();
-
-#if DEBUG
-            if (LifeStage != ComponentLifeStage.Initialized)
-            {
-                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Initialize)} in derived method.");
-            }
-#endif
+            LifeStage = ComponentLifeStage.Initialized;
         }
 
         /// <summary>
@@ -95,14 +88,7 @@ namespace Robust.Shared.GameObjects
 
             LifeStage = ComponentLifeStage.Starting;
             entManager.EventBus.RaiseComponentEvent(this, CompStartupInstance);
-            Startup();
-
-#if DEBUG
-            if (LifeStage != ComponentLifeStage.Running)
-            {
-                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Startup)} in derived method.");
-            }
-#endif
+            LifeStage = ComponentLifeStage.Running;
         }
 
         /// <summary>
@@ -171,26 +157,6 @@ namespace Robust.Shared.GameObjects
         private static readonly ComponentRemove CompRemoveInstance = new();
 
         /// <summary>
-        /// Called when all of the entity's other components have been added and are available,
-        /// But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
-        /// </summary>
-        protected virtual void Initialize()
-        {
-            LifeStage = ComponentLifeStage.Initialized;
-        }
-
-        /// <summary>
-        ///     Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
-        /// </summary>
-        /// <remarks>
-        /// Components are allowed to remove themselves in their own Startup function.
-        /// </remarks>
-        protected virtual void Startup()
-        {
-            LifeStage = ComponentLifeStage.Running;
-        }
-
-        /// <summary>
         /// Called when the component is removed from an entity.
         /// Shuts down the component.
         /// The component has already been marked as deleted in the component manager.
@@ -207,21 +173,6 @@ namespace Robust.Shared.GameObjects
             IoCManager.Resolve(ref entManager);
             entManager.Dirty(this);
         }
-
-        private static readonly ComponentState DefaultComponentState = new();
-
-        /// <inheritdoc />
-        public virtual ComponentState GetComponentState()
-        {
-            DebugTools.Assert(
-                Attribute.GetCustomAttribute(GetType(), typeof(NetworkedComponentAttribute)) != null,
-                $"Calling base {nameof(GetComponentState)} without being networked.");
-
-            return DefaultComponentState;
-        }
-
-        /// <inheritdoc />
-        public virtual void HandleComponentState(ComponentState? curState, ComponentState? nextState) { }
 
         // these two methods clear the LastModifiedTick/CreationTick to mark it as "not different from prototype load".
         // This is used as optimization in the game state system to avoid sending redundant component data.

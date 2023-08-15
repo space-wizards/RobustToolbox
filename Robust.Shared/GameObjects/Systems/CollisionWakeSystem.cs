@@ -40,7 +40,7 @@ namespace Robust.Shared.GameObjects
             else if (TryComp(uid, out PhysicsComponent? physics))
                 _physics.SetCanCollide(uid, true, body: physics);
 
-            Dirty(component);
+            Dirty(uid, component);
         }
 
         private void OnHandleState(EntityUid uid, CollisionWakeComponent component, ref ComponentHandleState args)
@@ -79,7 +79,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
         {
-            UpdateCanCollide(uid, component, (PhysicsComponent) args.OurBody);
+            UpdateCanCollide(uid, component, args.OurBody);
         }
 
         private void OnJointAdd(EntityUid uid, CollisionWakeComponent component, JointAddedEvent args)

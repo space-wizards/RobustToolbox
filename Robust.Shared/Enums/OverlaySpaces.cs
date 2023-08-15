@@ -24,7 +24,7 @@ namespace Robust.Shared.Enums {
         WorldSpace = 1 << 2,
 
         /// <summary>
-        ///     This overlay will be drawn beneath FOV; above lighting and entities.
+        ///     This overlay will be drawn beneath FOV and lighting, but above entities.
         /// </summary>
         WorldSpaceBelowFOV = 1 << 3,
 

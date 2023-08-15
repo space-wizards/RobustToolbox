@@ -36,6 +36,9 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.GuiTabNavigateNext);
             common.AddFunction(EngineKeyFunctions.GuiTabNavigatePrev);
 
+            common.AddFunction(EngineKeyFunctions.WindowCloseRecent);
+            common.AddFunction(EngineKeyFunctions.WindowCloseAll);
+
             common.AddFunction(EngineKeyFunctions.TextCursorLeft);
             common.AddFunction(EngineKeyFunctions.TextCursorRight);
             common.AddFunction(EngineKeyFunctions.TextCursorUp);

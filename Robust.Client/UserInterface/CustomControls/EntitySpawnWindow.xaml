@@ -1,8 +1,8 @@
 <EntitySpawnWindow
     xmlns="https://spacestation14.io"
     Title="{Loc entity-spawn-window-title}"
-    SetSize="250 300"
-    MinSize="250 200">
+    SetSize="350 400"
+    MinSize="350 200">
     <BoxContainer Orientation="Vertical">
         <BoxContainer Orientation="Horizontal">
             <LineEdit Name="SearchBar" Access="Public" HorizontalExpand="True" PlaceHolder="{Loc entity-spawn-window-search-bar-placeholder}"/>
@@ -12,6 +12,7 @@
             <PrototypeListContainer Name="PrototypeList" Access="Public"/>
         </ScrollContainer>
         <BoxContainer Orientation="Horizontal">
+            <Button Name="ReplaceButton" Access="Public" ToggleMode="True" Text="{Loc entity-spawn-window-replace-button-text}"/>
             <Button Name="EraseButton" Access="Public" ToggleMode="True" Text="{Loc entity-spawn-window-erase-button-text}"/>
             <OptionButton Name="OverrideMenu" Access="Public" HorizontalExpand="True" ToolTip="{Loc entity-spawn-window-override-menu-tooltip}" />
         </BoxContainer>

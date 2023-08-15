@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -75,9 +76,11 @@ namespace Robust.Shared.Containers
             if (contained != ContainedEntity)
                 return false;
 
-            var flags = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(contained).Flags;
-            DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0);
-
+#if DEBUG
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var flags = entMan.GetComponent<MetaDataComponent>(contained).Flags;
+            DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0, $"Entity has bad container flags. Ent: {entMan.ToPrettyString(contained)}. Container: {ID}, Owner: {entMan.ToPrettyString(Owner)}");
+#endif
             return true;
         }
 
@@ -85,7 +88,12 @@ namespace Robust.Shared.Containers
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
         {
             DebugTools.Assert(ContainedEntity == null);
-            DebugTools.Assert(!toInsert.IsClientSide() || Owner.IsClientSide() || !Manager.NetSyncEnabled);
+
+            #if DEBUG
+            // TODO make this a proper debug assert when gun code no longer fudges client-side spawn prediction.
+            if (toInsert.IsClientSide() && !Owner.IsClientSide() && Manager.NetSyncEnabled)
+                Logger.Warning("Inserting a client-side entity into a networked container slot. This will block the container slot and may cause issues.");
+            #endif
             ContainedEntity = toInsert;
         }
 

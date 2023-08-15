@@ -1,3 +1,4 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.GameObjects;
@@ -22,9 +23,10 @@ namespace Robust.UnitTesting.Shared.Physics
     bodyType: Dynamic
   - type: Fixtures
     fixtures:
-    - shape:
-        !type:PhysShapeCircle
-        radius: 0.35
+      fix1:
+        shape:
+          !type:PhysShapeCircle
+          radius: 0.35
   - type: CollisionWake
 ";
 

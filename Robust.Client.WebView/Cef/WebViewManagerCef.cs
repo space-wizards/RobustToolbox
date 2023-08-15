@@ -60,7 +60,7 @@ namespace Robust.Client.WebView.Cef
 
             var cachePath = "";
             if (_resourceManager.UserData is WritableDirProvider userData)
-                cachePath = userData.GetFullPath(new ResourcePath("/cef_cache"));
+                cachePath = userData.GetFullPath(new ResPath("/cef_cache"));
 
             var settings = new CefSettings()
             {
@@ -85,12 +85,10 @@ namespace Robust.Client.WebView.Cef
 
             _app = new RobustCefApp(_sawmill);
 
-            // We pass no main arguments...
-            CefRuntime.Initialize(new CefMainArgs(null), settings, _app, IntPtr.Zero);
-
-            // TODO CEF: After this point, debugging breaks. No, literally. My client crashes but ONLY with the debugger.
-            // I have tried using the DEBUG and RELEASE versions of libcef.so, stripped or non-stripped...
-            // And nothing seemed to work. Odd.
+            // So these arguments look like nonsense, but it turns out CEF is just *like that*.
+            // The first argument is literally nonsense, but it needs to be there as otherwise the second argument doesn't apply
+            // The second argument turns off CEF's bullshit error handling, which breaks dotnet's error handling.
+            CefRuntime.Initialize(new CefMainArgs(new string[]{"binary","--disable-in-process-stack-traces"}), settings, _app, IntPtr.Zero);
 
             if (_cfg.GetCVar(WCVars.WebResProtocol))
             {
@@ -171,10 +169,10 @@ namespace Robust.Client.WebView.Cef
 
                 _sawmill.Debug($"HANDLING: {request.Url}");
 
-                var resourcePath = new ResourcePath(uri.AbsolutePath);
-                if (_resourceManager.TryContentFileRead(resourcePath, out var stream))
+                var resPath = new ResPath(uri.AbsolutePath);
+                if (_resourceManager.TryContentFileRead(resPath, out var stream))
                 {
-                    if (!_parent.TryGetResourceMimeType(resourcePath.Extension, out var mime))
+                    if (!_parent.TryGetResourceMimeType(resPath.Extension, out var mime))
                         mime = "application/octet-stream";
 
                     return new RequestResultStream(stream, mime, HttpStatusCode.OK).MakeHandler();

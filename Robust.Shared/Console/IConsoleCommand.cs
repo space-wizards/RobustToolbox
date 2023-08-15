@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -8,7 +9,7 @@ namespace Robust.Shared.Console
     /// Basic interface to handle console commands. Any class implementing this will be
     /// registered with the console system through reflection.
     /// </summary>
-    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
+    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors), Obsolete("New commands should utilize RtShellCommand.")]
     public interface IConsoleCommand
     {
         /// <summary>
@@ -78,7 +79,7 @@ namespace Robust.Shared.Console
         /// <remarks>
         /// If this method is implemented, <see cref="GetCompletion"/> will not be automatically called.
         /// </remarks>
-        ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, CancellationToken cancel)
+        ValueTask<CompletionResult> GetCompletionAsync(IConsoleShell shell, string[] args, string argStr, CancellationToken cancel)
         {
             return ValueTask.FromResult(GetCompletion(shell, args));
         }

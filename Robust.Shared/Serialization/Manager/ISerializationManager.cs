@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;

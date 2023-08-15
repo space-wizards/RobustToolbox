@@ -73,7 +73,7 @@ namespace Robust.Server.ViewVariables
 
                 if (message.ReinterpretValue && !TryReinterpretValue(value, out value))
                 {
-                    Logger.WarningS("vv", $"Couldn't reinterpret value \"{message.Value}\" sent by {session.PlayerUser}!");
+                    Sawmill.Warning($"Couldn't reinterpret value \"{message.Value}\" sent by {session.PlayerUser}!");
                     return;
                 }
 
@@ -112,7 +112,7 @@ namespace Robust.Server.ViewVariables
             }
 
             var player = _playerManager.GetSessionByChannel(message.MsgChannel);
-            if (!_groupController.CanViewVar(player))
+            if (!_groupController.CanCommand(player, "vv"))
             {
                 Deny(ViewVariablesResponseCode.NoAccess);
                 return;
@@ -172,7 +172,7 @@ namespace Robust.Server.ViewVariables
                     }
                     catch (Exception e)
                     {
-                        Logger.ErrorS("vv", "Exception while retrieving value for session. {0}", e);
+                        Sawmill.Error("Exception while retrieving value for session. {0}", e);
                         Deny(ViewVariablesResponseCode.NoObject);
                         return;
                     }
@@ -228,7 +228,7 @@ namespace Robust.Server.ViewVariables
 
             var sessionId = _nextSessionId++;
             var session = new ViewVariablesSession(message.MsgChannel.UserId, theObject, sessionId, this,
-                _robustSerializer);
+                _robustSerializer, _entityManager, Sawmill);
 
             _sessions.Add(sessionId, session);
 
@@ -286,16 +286,16 @@ namespace Robust.Server.ViewVariables
             }
         }
 
-        protected override bool CheckPermissions(INetChannel channel)
+        protected override bool CheckPermissions(INetChannel channel, string command)
         {
-            return _playerManager.TryGetSessionByChannel(channel, out var session) && _groupController.CanViewVar(session);
+            return _playerManager.TryGetSessionByChannel(channel, out var session) && _groupController.CanCommand(session, command);
         }
 
         protected override bool TryGetSession(Guid guid, [NotNullWhen(true)] out ICommonSession? session)
         {
             if (guid != Guid.Empty
                 && _playerManager.TryGetSessionById(new NetUserId(guid), out var player)
-                && !_groupController.CanViewVar(player)) // Can't VV other admins.
+                && !_groupController.CanCommand(player, "vv")) // Can't VV other admins.
             {
                 session = player;
                 return true;

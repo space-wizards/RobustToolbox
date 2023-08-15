@@ -162,7 +162,8 @@ namespace Robust.Client.Graphics
                 if (sheetW - scaled.CurSheetX < img.Width)
                 {
                     scaled.CurSheetX = 0;
-                    scaled.CurSheetY = scaled.CurSheetMaxY;
+                    // +1 Adds a pixel of vertical padding, to avoid arifacts when aliasing
+                    scaled.CurSheetY = scaled.CurSheetMaxY + 1;
                 }
 
                 if (sheetH - scaled.CurSheetY < img.Height)
@@ -188,7 +189,8 @@ namespace Robust.Client.Graphics
                 info.Texture = atlasTexture;
 
                 scaled.CurSheetMaxY = Math.Max(scaled.CurSheetMaxY, scaled.CurSheetY + bitmap.Rows);
-                scaled.CurSheetX += bitmap.Width;
+                // +1 adds a pixel of horizontal padding, to avoid artifacts when aliasing
+                scaled.CurSheetX += bitmap.Width + 1;
             }
 
             scaled.GlyphInfos.Add(glyph, info);

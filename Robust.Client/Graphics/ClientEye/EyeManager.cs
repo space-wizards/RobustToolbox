@@ -1,3 +1,4 @@
+using System.Numerics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.GameObjects;
@@ -23,6 +24,7 @@ namespace Robust.Client.Graphics
         [Dependency] private readonly IClyde _displayManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
+        private ISawmill _logMill = default!;
 
         // We default to this when we get set to a null eye.
         private readonly FixedEye _defaultEye = new();
@@ -52,6 +54,7 @@ namespace Robust.Client.Graphics
         void IEyeManager.Initialize()
         {
             MainViewport = _uiManager.MainViewport;
+            _logMill = IoCManager.Resolve<ILogManager>().RootSawmill;
         }
 
         /// <inheritdoc />
@@ -128,14 +131,14 @@ namespace Robust.Client.Graphics
         /// <inheritdoc />
         public ScreenCoordinates CoordinatesToScreen(EntityCoordinates point)
         {
-            return MapToScreen(point.ToMap(_entityManager));
+            return MapToScreen(point.ToMap(_entityManager, _entityManager.System<SharedTransformSystem>()));
         }
 
         public ScreenCoordinates MapToScreen(MapCoordinates point)
         {
             if (CurrentEye.Position.MapId != point.MapId)
             {
-                Logger.Error($"Attempted to convert map coordinates ({point}) to screen coordinates with an eye on another map ({CurrentEye.Position.MapId})");
+                _logMill.Error($"Attempted to convert map coordinates ({point}) to screen coordinates with an eye on another map ({CurrentEye.Position.MapId})");
                 return new(default, WindowId.Invalid);
             }
 
@@ -145,18 +148,31 @@ namespace Robust.Client.Graphics
         /// <inheritdoc />
         public MapCoordinates ScreenToMap(ScreenCoordinates point)
         {
-            var (pos, window) = point;
-
             if (_uiManager.MouseGetControl(point) is not IViewportControl viewport)
                 return default;
 
-            return viewport.ScreenToMap(pos);
+            return viewport.ScreenToMap(point.Position);
         }
 
         /// <inheritdoc />
         public MapCoordinates ScreenToMap(Vector2 point)
         {
             return MainViewport.ScreenToMap(point);
+        }
+
+        /// <inheritdoc />
+        public MapCoordinates PixelToMap(ScreenCoordinates point)
+        {
+            if (_uiManager.MouseGetControl(point) is not IViewportControl viewport)
+                return default;
+
+            return viewport.PixelToMap(point.Position);
+        }
+
+        /// <inheritdoc />
+        public MapCoordinates PixelToMap(Vector2 point)
+        {
+            return MainViewport.PixelToMap(point);
         }
     }
 

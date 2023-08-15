@@ -3,6 +3,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
@@ -11,6 +12,9 @@ namespace Robust.Server.GameObjects;
 [UsedImplicitly]
 public sealed class AudioSystem : SharedAudioSystem
 {
+    [Dependency] private readonly TransformSystem _transform = default!;
+
+
     private uint _streamIndex;
 
     private sealed class AudioSourceServer : IPlayingAudioStream
@@ -99,7 +103,7 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         var id = CacheIdentifier();
 
-        var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(EntityManager));
+        var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(EntityManager, _transform));
 
         var msg = new PlayAudioPositionalMessage
         {

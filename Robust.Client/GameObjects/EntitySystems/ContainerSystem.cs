@@ -211,7 +211,7 @@ namespace Robust.Client.GameObjects
             if (container.Deleted)
                 return;
 
-            container.Insert(message.Entity);
+            container.Insert(message.Entity, EntityManager);
         }
 
         private IContainer ContainerFactory(ContainerManagerComponent component, string containerType, string id)

@@ -94,7 +94,6 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Use a system update loop instead")]
         public static void SpawnRepeatingTimer(this EntityUid entity, int milliseconds, Action onFired, CancellationToken cancellationToken)
         {
-            var entMan = IoCManager.Resolve<IEntityManager>();
             entity
                 .EnsureTimerComponent()
                 .SpawnRepeating(milliseconds, onFired, cancellationToken);

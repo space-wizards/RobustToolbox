@@ -3,6 +3,7 @@ using Pidgin;
 using Robust.Shared.Maths;
 using static Pidgin.Parser;
 using static Pidgin.Parser<char>;
+
 namespace Robust.Shared.Utility;
 
 public sealed partial class FormattedMessage
@@ -65,15 +66,14 @@ public sealed partial class FormattedMessage
 
     //This checks for a backslash and one reserved character
     private static readonly Parser<char, char> EscapeSequence =
-        Escape.Then(OneOf(Escape, Begin, End, Slash));
+        Try(Escape.Then(OneOf(Escape, Begin, End, Slash)));
 
     //Parses text by repeatedly parsing escape sequences or any character except [ and \
     //The result is put into a new markup node representing text (it has no name)
     private static readonly Parser<char, List<MarkupNode>> Text =
          EscapeSequence.Or(Token(c => c != '[' && c != '\\'))
                 .AtLeastOnceString()
-                .Select(s => new MarkupNode(s))
-                .Select(tag => new List<MarkupNode>{tag});
+                .Select(s => new List<MarkupNode>{new(s)});
 
     //Parses a string of letters or digits beginning with a letter
 	private static readonly Parser<char, string> Identifier =

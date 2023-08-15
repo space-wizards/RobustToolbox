@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
@@ -9,7 +10,10 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Toolshed;
+using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Scripting
@@ -18,7 +22,7 @@ namespace Robust.Shared.Scripting
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [SuppressMessage("ReSharper", "CA1822")]
-    public abstract class ScriptGlobalsShared
+    public abstract class ScriptGlobalsShared : IInvocationContext
     {
         private const BindingFlags DefaultHelpFlags =
             BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;
@@ -28,6 +32,8 @@ namespace Robust.Shared.Scripting
         [field: Dependency] public IPrototypeManager prot { get; } = default!;
         [field: Dependency] public IMapManager map { get; } = default!;
         [field: Dependency] public IDependencyCollection dependencies { get; } = default!;
+
+        [field: Dependency] public ToolshedManager shed { get; } = default!;
 
         protected ScriptGlobalsShared(IDependencyCollection dependencies)
         {
@@ -48,12 +54,7 @@ namespace Robust.Shared.Scripting
 
         public EntityCoordinates gpos(double x, double y, EntityUid gridId)
         {
-            if (!map.TryGetGrid(gridId, out var grid))
-            {
-                return new EntityCoordinates(EntityUid.Invalid, ((float) x, (float) y));
-            }
-
-            return new EntityCoordinates(grid.Owner, ((float) x, (float) y));
+            return new EntityCoordinates(gridId, new Vector2((float) x, (float) y));
         }
 
         public EntityUid eid(int i)
@@ -165,11 +166,29 @@ namespace Robust.Shared.Scripting
         public abstract void write(object toString);
         public abstract void show(object obj);
 
+        public object? tsh(string toolshedCommand)
+        {
+            shed.InvokeCommand(this, toolshedCommand, null, out var res);
+            return res;
+        }
+
+        public T tsh<T>(string toolshedCommand)
+        {
+            shed.InvokeCommand(this, toolshedCommand, null, out var res);
+            return (T)res!;
+        }
+
+        public TOut tsh<TIn, TOut>(TIn value, string toolshedCommand)
+        {
+            shed.InvokeCommand(this, toolshedCommand, value, out var res);
+            return (TOut)res!;
+        }
+
         #region EntityManager proxy methods
-        public T Comp<T>(EntityUid uid)
+        public T Comp<T>(EntityUid uid) where T : Component
             => ent.GetComponent<T>(uid);
-            
-        public bool TryComp<T>(EntityUid uid, out T? comp)
+
+        public bool TryComp<T>(EntityUid uid, out T? comp) where T : Component
             => ent.TryGetComponent(uid, out comp);
 
         public bool HasComp<T>(EntityUid uid)
@@ -195,7 +214,7 @@ namespace Robust.Shared.Scripting
 
         public EntityPrototype? Prototype(EntityUid uid)
             => ent.GetComponent<MetaDataComponent>(uid).EntityPrototype;
-            
+
         public EntityStringRepresentation ToPrettyString(EntityUid uid)
             => ent.ToPrettyString(uid);
 
@@ -231,5 +250,34 @@ namespace Robust.Shared.Scripting
             return ent.EntityQuery<TComp1, TComp2, TComp3>(includePaused);
         }
         #endregion
+
+        public bool CheckInvokable(CommandSpec command, out IConError? error)
+        {
+            error = null;
+            return true; // Do as I say!
+        }
+
+        public ICommonSession? Session => null;
+
+        public void WriteLine(string line)
+        {
+            write(line);
+        }
+
+        public void ReportError(IConError err)
+        {
+            write(err);
+        }
+
+        public IEnumerable<IConError> GetErrors()
+        {
+            return Array.Empty<IConError>();
+        }
+
+        public void ClearErrors()
+        {
+        }
+
+        public Dictionary<string, object?> Variables { get; }  = new();
     }
 }

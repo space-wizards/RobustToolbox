@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Moq;
 using NUnit.Framework;
 using Robust.Server.Configuration;
 using Robust.Server.Reflection;
@@ -14,6 +15,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
+using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
@@ -40,6 +42,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IAuthManager, AuthManager>();
             container.Register<IGameTiming, GameTiming>();
             container.Register<ProfManager, ProfManager>();
+            container.Register<HttpClientHolder>();
+            container.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);
             container.BuildGraph();
 
             var cfg = container.Resolve<IConfigurationManagerInternal>();

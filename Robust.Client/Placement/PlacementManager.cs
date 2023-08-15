@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -85,6 +86,8 @@ namespace Robust.Client.Placement
         /// Determines whether we are using the mode to delete an entity on click
         /// </summary>
         public bool Eraser { get; private set; }
+
+        public bool Replacement { get; set; } = true;
 
         /// <summary>
         /// Holds the selection rectangle for the eraser
@@ -497,9 +500,9 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            if (PlayerManager.LocalPlayer?.ControlledEntity is {Valid: true} ent)
+            if (EntityManager.TryGetComponent(PlayerManager.LocalPlayer?.ControlledEntity, out TransformComponent? xform))
             {
-                map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
+                map = xform.MapID;
             }
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
@@ -529,7 +532,7 @@ namespace Robust.Client.Placement
                     return false;
                 }
                 coordinates = EntityCoordinates.FromMap(MapManager,
-                                                        EyeManager.ScreenToMap(InputManager.MouseScreenPosition));
+                                                        EyeManager.PixelToMap(InputManager.MouseScreenPosition));
                 return true;
             }
         }
@@ -691,6 +694,9 @@ namespace Robust.Client.Placement
             IsActive = true;
 
             CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(templateName, MapCoordinates.Nullspace);
+            EntityManager.RunMapInit(
+                CurrentPlacementOverlayEntity.Value,
+                EntityManager.GetComponent<MetaDataComponent>(CurrentPlacementOverlayEntity.Value));
         }
 
         public void PreparePlacementSprite(SpriteComponent sprite)
@@ -721,7 +727,7 @@ namespace Robust.Client.Placement
             }
             else
             {
-                sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
+                sc.AddLayer(new ResPath("/Textures/Interface/tilebuildoverlay.png"));
             }
             sc.NoRotation = noRot;
 
@@ -735,7 +741,7 @@ namespace Robust.Client.Placement
         private void PreparePlacementTile()
         {
             var sc = SetupPlacementOverlayEntity();
-            sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
+            sc.AddLayer(new ResPath("/Textures/Interface/tilebuildoverlay.png"));
 
             IsActive = true;
         }
@@ -770,11 +776,13 @@ namespace Robust.Client.Placement
                 _pendingTileChanges.Add(tuple);
             }
 
-            var message = new MsgPlacement();
-            message.PlaceType = PlacementManagerMessage.RequestPlacement;
-
-            message.Align = CurrentMode.ModeName;
-            message.IsTile = CurrentPermission.IsTile;
+            var message = new MsgPlacement
+            {
+                PlaceType = PlacementManagerMessage.RequestPlacement,
+                Align = CurrentMode.ModeName,
+                IsTile = CurrentPermission.IsTile,
+                Replacement = Replacement
+            };
 
             if (CurrentPermission.IsTile)
                 message.TileType = CurrentPermission.TileType;

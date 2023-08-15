@@ -35,6 +35,7 @@ namespace Robust.Shared.Log
         /// <summary>
         ///     Log a message, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
+        [Obsolete("Use ISawmill.Log")]
         public static void LogS(LogLevel logLevel, string sawmillname, string message, params object?[] args)
         {
             var sawmill = LogManagerSingleton.GetSawmill(sawmillname);
@@ -44,6 +45,7 @@ namespace Robust.Shared.Log
         /// <summary>
         ///     Log a message, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
+        [Obsolete("Use ISawmill.Log")]
         public static void LogS(LogLevel logLevel, string sawmillname, Exception? exception, string message, params object?[] args)
         {
             var sawmill = LogManagerSingleton.GetSawmill(sawmillname);
@@ -53,6 +55,7 @@ namespace Robust.Shared.Log
         /// <summary>
         ///     Log a message.
         /// </summary>
+        [Obsolete("Use ISawmill.Log")]
         public static void LogS(LogLevel logLevel, string sawmillname, string message)
         {
             var sawmill = LogManagerSingleton.GetSawmill(sawmillname);
@@ -62,11 +65,13 @@ namespace Robust.Shared.Log
         /// <summary>
         /// Log a message, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
+        [Obsolete("Use ISawmill.Log")]
         public static void Log(LogLevel logLevel, string message, params object?[] args)
         {
             LogManagerSingleton.RootSawmill.Log(logLevel, message, args);
         }
 
+        [Obsolete("Use ISawmill.Log")]
         public static void Log(LogLevel logLevel, Exception exception, string message, params object?[] args)
         {
             LogManagerSingleton.RootSawmill.Log(logLevel, message, args);
@@ -75,6 +80,7 @@ namespace Robust.Shared.Log
         /// <summary>
         /// Log a message.
         /// </summary>
+        [Obsolete("Use ISawmill.Log")]
         public static void Log(LogLevel logLevel, string message)
         {
             LogManagerSingleton.RootSawmill.Log(logLevel, message);
@@ -84,126 +90,147 @@ namespace Robust.Shared.Log
         /// Log a message as debug, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Log")]
         public static void DebugS(string sawmill, string message, params object?[] args) => LogS(LogLevel.Debug, sawmill, message, args);
 
         /// <summary>
         /// Log a message as debug.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Log")]
         public static void DebugS(string sawmill, string message) => LogS(LogLevel.Debug, sawmill, message);
 
         /// <summary>
         /// Log a message as debug, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Debug")]
         public static void Debug(string message, params object?[] args) => Log(LogLevel.Debug, message, args);
 
         /// <summary>
         /// Log a message as debug.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Debug")]
         public static void Debug(string message) => Log(LogLevel.Debug, message);
 
         /// <summary>
         /// Log a message as info, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Info")]
         public static void InfoS(string sawmill, string message, params object?[] args) => LogS(LogLevel.Info, sawmill, message, args);
 
         /// <summary>
         /// Log a message as info.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Info")]
         public static void InfoS(string sawmill, string message) => LogS(LogLevel.Info, sawmill, message);
 
         /// <summary>
         /// Log a message as info, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Info")]
         public static void Info(string message, params object?[] args) => Log(LogLevel.Info, message, args);
 
         /// <summary>
         /// Log a message as info.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Info")]
         public static void Info(string message) => Log(LogLevel.Info, message);
 
         /// <summary>
         /// Log a message as warning, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Warning")]
         public static void WarningS(string sawmill, string message, params object?[] args) => LogS(LogLevel.Warning, sawmill, message, args);
 
         /// <summary>
         /// Log a message as warning.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Warning")]
         public static void WarningS(string sawmill, string message) => LogS(LogLevel.Warning, sawmill, message);
 
         /// <summary>
         /// Log a message as warning, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Warning")]
         public static void Warning(string message, params object?[] args) => Log(LogLevel.Warning, message, args);
 
         /// <summary>
         /// Log a message as warning.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Warning")]
         public static void Warning(string message) => Log(LogLevel.Warning, message);
 
         /// <summary>
         /// Log a message as error, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Error")]
         public static void ErrorS(string sawmill, string message, params object?[] args) => LogS(LogLevel.Error, sawmill, message, args);
 
         /// <summary>
         /// Log a message as error, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Error")]
         public static void ErrorS(string sawmill, Exception exception, string message, params object?[] args) => LogS(LogLevel.Error, sawmill, exception, message, args);
 
         /// <summary>
         /// Log a message as error.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Error")]
         public static void ErrorS(string sawmill, string message) => LogS(LogLevel.Error, sawmill, message);
 
         /// <summary>
         /// Log a message as error, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Error")]
         public static void Error(string message, params object?[] args) => Log(LogLevel.Error, message, args);
 
         /// <summary>
         /// Log a message as error.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Error")]
         public static void Error(string message) => Log(LogLevel.Error, message);
 
         /// <summary>
         /// Log a message as fatal, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Fatal")]
         public static void FatalS(string sawmill, string message, params object?[] args) => LogS(LogLevel.Fatal, sawmill, message, args);
 
         /// <summary>
         /// Log a message as fatal.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Fatal")]
         public static void FatalS(string sawmill, string message) => LogS(LogLevel.Fatal, sawmill, message);
 
         /// <summary>
         /// Log a message as fatal, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Fatal")]
         public static void Fatal(string message, params object?[] args) => Log(LogLevel.Fatal, message, args);
 
         /// <summary>
         /// Log a message as fatal.
         /// </summary>
         /// <seealso cref="Log" />
+        [Obsolete("Use ISawmill.Fatal")]
         public static void Fatal(string message) => Log(LogLevel.Fatal, message);
     }
 }

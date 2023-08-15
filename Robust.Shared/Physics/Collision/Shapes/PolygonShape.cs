@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -37,17 +38,23 @@ namespace Robust.Shared.Physics.Collision.Shapes
     [DataDefinition]
     public sealed class PolygonShape : IPhysShape, ISerializationHooks, IEquatable<PolygonShape>, IApproxEquatable<PolygonShape>
     {
+        // TODO: Serialize this someday. This probably needs a dedicated shapeserializer that derives vertexcount
+        // from the yml nodes just for convenience.
         [ViewVariables]
         public int VertexCount => Vertices.Length;
 
-        [DataField("vertices"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        [DataField("vertices"),
+         Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+             Other = AccessPermissions.Read)]
         public Vector2[] Vertices = Array.Empty<Vector2>();
 
-        [ViewVariables, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        [ViewVariables,
+         Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute,
+             Other = AccessPermissions.Read)]
         public Vector2[] Normals = Array.Empty<Vector2>();
 
         [ViewVariables, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
-        internal Vector2 Centroid { get; set; } = Vector2.Zero;
+        public Vector2 Centroid { get; internal set; } = Vector2.Zero;
 
         public int ChildCount => 1;
 
@@ -57,7 +64,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         [DataField("radius"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public float Radius { get; set; } = PhysicsConstants.PolygonRadius;
 
-        public void SetVertices(List<Vector2> vertices)
+        public bool Set(List<Vector2> vertices)
         {
             Span<Vector2> verts = stackalloc Vector2[vertices.Count];
 
@@ -66,57 +73,64 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 verts[i] = vertices[i];
             }
 
-            SetVertices(verts);
+            return Set(verts, vertices.Count);
         }
 
-        public void SetVertices(Span<Vector2> vertices)
+        public bool Set(ReadOnlySpan<Vector2> vertices, int count)
         {
-            DebugTools.Assert(vertices.Length >= 3 && vertices.Length <= PhysicsConstants.MaxPolygonVertices);
-            SetVertices(vertices, PhysicsConstants.ConvexHulls);
+            DebugTools.Assert(count is >= 3 and <= PhysicsConstants.MaxPolygonVertices);
+
+            var hull = PhysicsHull.ComputeHull(vertices, count);
+
+            if (hull.Count < 3)
+            {
+                return false;
+            }
+
+            Set(hull);
+            return true;
         }
 
-        public void SetVertices(Span<Vector2> vertices, bool convexHulls)
+        public void Set(PhysicsHull hull)
         {
-            var vertexCount = vertices.Length;
-
-            if (convexHulls)
-            {
-                //FPE note: This check is required as the GiftWrap algorithm early exits on triangles
-                //So instead of giftwrapping a triangle, we just force it to be clock wise.
-                if (vertexCount <= 3)
-                    Vertices = Physics.Vertices.ForceCounterClockwise(vertices);
-                else
-                    Vertices = GiftWrap.SetConvexHull(vertices);
-            }
-            else
-            {
-                Array.Resize(ref Vertices, vertexCount);
-
-                for (var i = 0; i < vertices.Length; i++)
-                {
-                    Vertices[i] = vertices[i];
-                }
-            }
-
-            // Convex hull may prune some vertices hence the count may change by this point.
-            vertexCount = Vertices.Length;
-
+            DebugTools.Assert(hull.Count >= 3);
+            var vertexCount = hull.Count;
+            Array.Resize(ref Vertices, vertexCount);
             Array.Resize(ref Normals, vertexCount);
+
+            for (var i = 0; i < vertexCount; i++)
+            {
+                Vertices[i] = hull.Points[i];
+            }
 
             // Compute normals. Ensure the edges have non-zero length.
             for (var i = 0; i < vertexCount; i++)
             {
                 var next = i + 1 < vertexCount ? i + 1 : 0;
                 var edge = Vertices[next] - Vertices[i];
-                DebugTools.Assert(edge.LengthSquared > float.Epsilon * float.Epsilon);
+                DebugTools.Assert(edge.LengthSquared() > float.Epsilon * float.Epsilon);
 
-                //FPE optimization: Normals.Add(MathHelper.Cross(edge, 1.0f));
-                var temp = new Vector2(edge.Y, -edge.X);
-                Normals[i] = temp.Normalized;
+                var temp = Vector2Helpers.Cross(edge, 1f);
+                Normals[i] = temp.Normalized();
             }
 
-            // TODO: Updates (network etc)
             Centroid = ComputeCentroid(Vertices, VertexCount);
+        }
+
+        public bool Validate()
+        {
+            var count = VertexCount;
+            if (count is < 3 or > PhysicsConstants.MaxPolygonVertices)
+                return false;
+
+            var hull = new PhysicsHull();
+            for (var i = 0; i < count; i++)
+            {
+                hull.Points[i] = Vertices[i];
+            }
+
+            hull.Count = count;
+            return PhysicsHull.ValidateHull(hull);
         }
 
         private static Vector2 ComputeCentroid(Vector2[] vs, int count)
@@ -142,7 +156,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 var e1 = p2 - p1;
                 var e2 = p3 - p1;
 
-                float D = Vector2.Cross(e1, e2);
+                float D = Vector2Helpers.Cross(e1, e2);
 
                 float triangleArea = 0.5f * D;
                 area += triangleArea;
@@ -170,9 +184,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         void ISerializationHooks.AfterDeserialization()
         {
-            SetVertices(Vertices);
-
-            DebugTools.Assert(Physics.Vertices.IsCounterClockwise(Vertices.AsSpan()));
+            // TODO: Someday don't need this.
+            Set(Vertices.AsSpan(), VertexCount);
         }
 
         public void SetAsBox(float halfWidth, float halfHeight)
@@ -195,14 +208,14 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public void SetAsBox(float halfWidth, float halfHeight, Vector2 center, float angle)
         {
-            Vertices = new Vector2[4];
-            Normals = new Vector2[4];
-            // Damn normies
+            Array.Resize(ref Vertices, 4);
+            Array.Resize(ref Normals, 4);
 
             Vertices[0] = new Vector2(-halfWidth, -halfHeight);
             Vertices[1] = new Vector2(halfWidth, -halfHeight);
             Vertices[2] = new Vector2(halfWidth, halfHeight);
             Vertices[3] = new Vector2(-halfWidth, halfHeight);
+
             Normals[0] = new Vector2(0f, -1f);
             Normals[1] = new Vector2(1f, 0f);
             Normals[2] = new Vector2(0f, 1f);
@@ -225,8 +238,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public bool Equals(IPhysShape? other)
         {
             if (other is not PolygonShape poly) return false;
-            if (Vertices.Length != poly.Vertices.Length) return false;
-            for (var i = 0; i < Vertices.Length; i++)
+            if (VertexCount != poly.VertexCount) return false;
+            for (var i = 0; i < VertexCount; i++)
             {
                 var vert = Vertices[i];
                 if (!vert.Equals(poly.Vertices[i])) return false;
@@ -242,9 +255,9 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public bool EqualsApprox(PolygonShape other, double tolerance)
         {
-            if (Vertices.Length != other.Vertices.Length || !MathHelper.CloseTo(Radius, other.Radius, tolerance)) return false;
+            if (VertexCount != other.VertexCount || !MathHelper.CloseTo(Radius, other.Radius, tolerance)) return false;
 
-            for (var i = 0; i < Vertices.Length; i++)
+            for (var i = 0; i < VertexCount; i++)
             {
                 if (!Vertices[i].EqualsApprox(other.Vertices[i], tolerance)) return false;
             }
@@ -258,11 +271,11 @@ namespace Robust.Shared.Physics.Collision.Shapes
             var lower = Transform.Mul(transform, Vertices[0]);
             var upper = lower;
 
-            for (var i = 1; i < Vertices.Length; ++i)
+            for (var i = 1; i < VertexCount; ++i)
             {
                 var v = Transform.Mul(transform, Vertices[i]);
-                lower = Vector2.ComponentMin(lower, v);
-                upper = Vector2.ComponentMax(upper, v);
+                lower = Vector2.Min(lower, v);
+                upper = Vector2.Max(upper, v);
             }
 
             var r = new Vector2(Radius, Radius);
@@ -323,7 +336,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Vertices, Radius);
+            return HashCode.Combine(VertexCount, Vertices.AsSpan(0, VertexCount).ToArray(), Radius);
         }
     }
 }

@@ -14,21 +14,21 @@ using NUnit.Framework;
 using Robust.Client;
 using Robust.Client.GameStates;
 using Robust.Client.Timing;
+using Robust.Client.UserInterface;
 using Robust.Server;
 using Robust.Server.Console;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
-using Robust.Shared.Analyzers;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -542,6 +542,23 @@ namespace Robust.UnitTesting
             {
                 Stop();
             }
+
+            protected void LoadExtraPrototypes(IDependencyCollection deps, IntegrationOptions options)
+            {
+                var resMan = deps.Resolve<IResourceManagerInternal>();
+                if (options.ExtraPrototypes != null)
+                {
+                    resMan.MountString("/Prototypes/__integration_extra.yml", options.ExtraPrototypes);
+                }
+
+                if (options.ExtraPrototypeList is {} list)
+                {
+                    for (var i = 0; i < list.Count; i++)
+                    {
+                        resMan.MountString($"/Prototypes/__integration_extra_{i}.yml", list[i]);
+                    }
+                }
+            }
         }
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
@@ -644,12 +661,7 @@ namespace Robust.UnitTesting
                 {
                     Options.BeforeStart?.Invoke();
                     cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
-
-                    if (Options.ExtraPrototypes != null)
-                    {
-                        deps.Resolve<IResourceManagerInternal>()
-                            .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
-                    }
+                    LoadExtraPrototypes(deps, Options);
                 }
 
                 cfg.OverrideConVars(new[]
@@ -736,6 +748,8 @@ namespace Robust.UnitTesting
                 {
                     var modLoader = new ModLoader();
                     IoCManager.InjectDependencies(modLoader);
+                    var cast = (IPostInjectInit) modLoader;
+                    cast.PostInject();
                     modLoader.SetEnableSandboxing(true);
                     modLoader.LoadGameAssembly(assembly.Location);
                 });
@@ -810,12 +824,7 @@ namespace Robust.UnitTesting
                 {
                     Options.BeforeStart?.Invoke();
                     cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
-
-                    if (Options.ExtraPrototypes != null)
-                    {
-                        deps.Resolve<IResourceManagerInternal>()
-                            .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
-                    }
+                    LoadExtraPrototypes(deps, Options);
                 }
 
                 cfg.OverrideConVars(new[]
@@ -852,6 +861,20 @@ namespace Robust.UnitTesting
                 GameLoop.RunInit();
 
                 return client;
+            }
+
+            /// <summary>
+            /// Directly pass a bound key event to a control.
+            /// </summary>
+            public async Task DoGuiEvent(Control control, GUIBoundKeyEventArgs args)
+            {
+                await WaitPost(() =>
+                {
+                    if (args.State == BoundKeyState.Down)
+                        control.KeyBindDown(args);
+                    else
+                        control.KeyBindUp(args);
+                });
             }
         }
 
@@ -984,7 +1007,19 @@ namespace Robust.UnitTesting
             public Action? BeforeRegisterComponents { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
+
+            /// <summary>
+            /// String containing extra prototypes to load. Contents of the string are treated like a yaml file in the
+            /// resources folder.
+            /// </summary>
             public string? ExtraPrototypes { get; set; }
+
+            /// <summary>
+            /// List of strings containing extra prototypes to load. Contents of the strings are treated like yaml files
+            /// in the resources folder.
+            /// </summary>
+            public List<string>? ExtraPrototypeList;
+
             public LogLevel? FailureLogLevel { get; set; } = RTCVars.FailureLogLevel.DefaultValue;
             public bool ContentStart { get; set; } = false;
 

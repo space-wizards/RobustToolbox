@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
+using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.UserInterface.CustomControls.DebugMonitorControls;
+using Robust.Client.UserInterface.Stylesheets;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Exceptions;
@@ -23,6 +26,7 @@ using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -34,6 +38,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IClientGameTiming _gameTiming = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IStateManager _stateManager = default!;
@@ -49,6 +54,12 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IRuntimeLog _runtime = default!;
+
+        /// <summary>
+        /// Upper limit on the number of times that controls can be measured / arranged each tick before being deferred
+        /// to the next frame update. This is just meant to prevent infinite loops from completely locking up the UI.
+        /// </summary>
+        public const int ControlUpdateLimit = 25_000;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
         [ViewVariables]
@@ -89,6 +100,8 @@ namespace Robust.Client.UserInterface
 
         private ISawmill _sawmillUI = default!;
 
+        public event Action<Control>? OnKeyBindDown;
+
         public void Initialize()
         {
             _dependencies = new DependencyCollection(_rootDependencies);
@@ -120,6 +133,8 @@ namespace Robust.Client.UserInterface
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
             _initThemes();
+
+            _stylesheet = new DefaultStylesheet(_resourceCache, this).Stylesheet;
         }
 
         public void PostInitialize()
@@ -212,6 +227,12 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_styleUpdateQueue.Count != 0)
                 {
+                    if (total >= ControlUpdateLimit)
+                    {
+                        _sawmillUI.Warning($"Hit style update limit. Queued: {_styleUpdateQueue.Count}. Next in queue: {_styleUpdateQueue.Peek()}. Parent: {_styleUpdateQueue.Peek().Parent}");
+                        break;
+                    }
+
                     var control = _styleUpdateQueue.Dequeue();
 
                     if (control.Disposed)
@@ -229,12 +250,20 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_measureUpdateQueue.Count != 0)
                 {
+                    if (total >= ControlUpdateLimit)
+                    {
+                        _sawmillUI.Warning($"Hit measure update limit. Queued: {_measureUpdateQueue.Count}. Next in queue: {_measureUpdateQueue.Peek()}. Parent: {_measureUpdateQueue.Peek().Parent}");
+                        break;
+                    }
+
                     var control = _measureUpdateQueue.Dequeue();
 
                     if (control.Disposed)
                         continue;
 
                     RunMeasure(control);
+                    if (!control.IsMeasureValid && control.IsInsideTree)
+                        _sawmillUI.Warning($"Control's measure is invalid after measuring. Control: {control}. Parent: {control.Parent}.");
                     total += 1;
                 }
 
@@ -246,12 +275,19 @@ namespace Robust.Client.UserInterface
                 var total = 0;
                 while (_arrangeUpdateQueue.Count != 0)
                 {
+                    if (total >= ControlUpdateLimit)
+                    {
+                        _sawmillUI.Warning($"Hit arrange update limit. Queued: {_arrangeUpdateQueue.Count}. Next in queue: {_arrangeUpdateQueue.Peek()}. Parent: {_arrangeUpdateQueue.Peek().Parent}");
+                        break;
+                    }
                     var control = _arrangeUpdateQueue.Dequeue();
 
                     if (control.Disposed)
                         continue;
 
                     RunArrange(control);
+                    if (!control.IsArrangeValid && control.IsInsideTree)
+                        _sawmillUI.Warning($"Control's arrangement is invalid after arranging. Control: {control}. Parent: {control.Parent}.");
                     total += 1;
                 }
 

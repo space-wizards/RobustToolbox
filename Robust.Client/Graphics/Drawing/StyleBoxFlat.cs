@@ -7,11 +7,16 @@ namespace Robust.Client.Graphics
     {
         public Color BackgroundColor { get; set; }
         public Color BorderColor { get; set; }
+
+        /// <summary>
+        /// Thickness of the border, in virtual pixels.
+        /// </summary>
         public Thickness BorderThickness { get; set; }
 
-        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
+        protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box, float uiScale)
         {
-            var (btl, btt, btr, btb) = BorderThickness;
+            var thickness = BorderThickness.Scale(uiScale);
+            var (btl, btt, btr, btb) = thickness;
             if (btl > 0)
                 handle.DrawRect(new UIBox2(box.Left, box.Top, box.Left + btl, box.Bottom), BorderColor);
 
@@ -24,7 +29,7 @@ namespace Robust.Client.Graphics
             if (btb > 0)
                 handle.DrawRect(new UIBox2(box.Left, box.Bottom - btb, box.Right, box.Bottom), BorderColor);
 
-            handle.DrawRect(BorderThickness.Deflate(box), BackgroundColor);
+            handle.DrawRect(thickness.Deflate(box), BackgroundColor);
         }
 
         public StyleBoxFlat()

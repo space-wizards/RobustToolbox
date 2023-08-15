@@ -14,7 +14,7 @@ public interface IMarkupTag
     /// Called when an opening node for this tag is encountered.<br/>
     /// Used for pushing new values used for rendering text contained within this tag.<br/>
     /// Important: Push some kind of default value into the context or throw when missing a required parameter
-    /// or attribute. The order in which state gets poped of the context breaks.
+    /// or attribute. The order in which state gets popped of the context breaks otherwise.
     /// </summary>
     /// <param name="node">The markup node containing the parameter and attributes</param>
     /// <param name="context">The context to push the state on</param>
@@ -54,7 +54,6 @@ public interface IMarkupTag
     }
 
     /// <summary>
-    /// Rendering inline controls is currently not implemented!
     /// Called inside the constructor of <see cref="RichTextEntry"/> to
     /// supply a control that gets rendered inline before this tags children<br/>
     /// Text continues to the right of the control until the next line and then continues bellow it

@@ -141,4 +141,29 @@ public partial class EntityManager
         uid = null;
         return false;
     }
+
+    public EntityUid SpawnNextToOrDrop(string? protoName, EntityUid target, ComponentRegistry? overrides = null)
+    {
+        var uid = Spawn(protoName, overrides);
+        _xforms.PlaceNextToOrDrop(uid, target);
+        return uid;
+    }
+
+    public EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        ComponentRegistry? overrides = null)
+    {
+        var uid = Spawn(protoName, overrides);
+
+        if (!TryGetComponent(containerUid, out ContainerManagerComponent? containerComp)
+            || !containerComp.Containers.TryGetValue(containerId, out var container)
+            || !container.Insert(uid, this))
+        {
+            _xforms.PlaceNextToOrDrop(uid, containerUid);
+        }
+
+        return uid;
+    }
 }

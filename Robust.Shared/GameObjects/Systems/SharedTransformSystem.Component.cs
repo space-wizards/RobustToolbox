@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using Robust.Shared.Map.Components;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Robust.Shared.Containers;
 
 namespace Robust.Shared.GameObjects;
 
@@ -1372,5 +1373,31 @@ public abstract partial class SharedTransformSystem
         }
         component._gridInitialized = true;
         component._gridUid = uid;
+    }
+
+    /// <summary>
+    /// Attempts to place one entity next to another entity. If the target entity is in a container, this will attempt
+    /// to insert that entity into the same container.
+    /// </summary>
+    public void PlaceNextToOrDrop(EntityUid uid, EntityUid target)
+    {
+        var xform = _xformQuery.GetComponent(target);
+        var meta = _metaQuery.GetComponent(target);
+
+        if ((meta.Flags & MetaDataFlags.InContainer) == 0)
+        {
+            SetCoordinates(uid, _xformQuery.GetComponent(uid), xform.Coordinates, unanchor: false);
+            return;
+        }
+
+        var containerComp = Comp<ContainerManagerComponent>(xform.ParentUid);
+        foreach (var container in containerComp.Containers.Values)
+        {
+            if (!container.Contains(target))
+                continue;
+
+            if (!container.Insert(uid, EntityManager))
+                PlaceNextToOrDrop(uid, xform.ParentUid);
+        }
     }
 }

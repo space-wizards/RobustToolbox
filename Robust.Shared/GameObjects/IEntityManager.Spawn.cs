@@ -56,6 +56,16 @@ public partial interface IEntityManager
         ComponentRegistry? overrides = null);
 
     /// <summary>
+    /// Attempts to spawn an entity inside of a container. If it fails to insert into the container, it will
+    /// instead attempt to spawn the entity next to the target's parent.
+    /// </summary>
+    public EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        ComponentRegistry? overrides = null);
+
+    /// <summary>
     /// Attempts to spawn an entity adjacent to some other entity. If the other entity is in a container, this will
     /// attempt to insert the new entity into the same container.
     /// </summary>
@@ -64,4 +74,11 @@ public partial interface IEntityManager
         EntityUid target,
         [NotNullWhen(true)] out EntityUid? uid,
         ComponentRegistry? overrides = null);
+
+    /// <summary>
+    /// Attempts to spawn an entity adjacent to some other entity. If the other entity is in a container, this will
+    /// attempt to insert the new entity into the same container. If it fails to insert into the container, it will
+    /// instead attempt to spawn the entity next to the target's parent.
+    /// </summary>
+    EntityUid SpawnNextToOrDrop(string? protoName, EntityUid target, ComponentRegistry? overrides = null);
 }

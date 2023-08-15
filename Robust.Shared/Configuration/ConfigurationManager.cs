@@ -130,7 +130,7 @@ namespace Robust.Shared.Configuration
                 using var file = File.OpenRead(configFile);
                 var result = LoadFromTomlStream(file);
                 _configFile = configFile;
-                _sawmill.Info($"Configuration Loaded from '{Path.GetFullPath(configFile)}'");
+                _sawmill.Info($"Configuration loaded from file");
                 return result;
             }
             catch (Exception e)

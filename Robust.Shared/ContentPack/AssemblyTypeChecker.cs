@@ -69,13 +69,6 @@ namespace Robust.Shared.ContentPack
             {
                 _sawmill.Debug("Robust directory not available");
             }
-            else
-            {
-                _sawmill.Debug("Robust directory is {0}", ourPath);
-                loadDirs.Add(Path.GetDirectoryName(ourPath)!);
-            }
-
-            _sawmill.Debug(".NET runtime directory is {0}", dotnetDir);
 
             if (EngineModuleDirectories != null)
             {

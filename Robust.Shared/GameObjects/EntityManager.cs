@@ -496,8 +496,6 @@ namespace Robust.Shared.GameObjects
             if (!Started)
                 return;
 
-            var xformSys = EntitySysManager.GetEntitySystem<SharedTransformSystem>();
-
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?

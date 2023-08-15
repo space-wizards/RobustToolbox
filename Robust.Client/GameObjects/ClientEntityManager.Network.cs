@@ -19,7 +19,8 @@ public sealed partial class ClientEntityManager
 
     public override bool IsClientSide(EntityUid uid, MetaDataComponent? metadata = null)
     {
-        if (!MetaQuery.Resolve(uid, ref metadata))
+        // Can't log false because some content code relies on invalid UIDs.
+        if (!MetaQuery.Resolve(uid, ref metadata, false))
             return false;
 
         return !metadata.NetEntity.IsValid();

@@ -64,6 +64,7 @@ namespace Robust.Client
             deps.Register<IComponentFactory, ComponentFactory>();
             deps.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             deps.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
+            deps.Register<ClydeTileDefinitionManager, ClydeTileDefinitionManager>();
             deps.Register<GameController, GameController>();
             deps.Register<IGameController, GameController>();
             deps.Register<IGameControllerInternal, GameController>();

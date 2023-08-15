@@ -554,3 +554,6 @@ cmd-dump_netserializer_type_map-help = Usage: dump_netserializer_type_map
 
 cmd-hub_advertise_now-desc = Immediately advertise to the master hub server
 cmd-hub_advertise_now-help = Usage: hub_advertise_now
+
+cmd-reloadtiletextures-desc = Reloads the tile texture atlas to allow hot reloading tile sprites
+cmd-reloadtiletextures-help = Usage: reloadtiletextures

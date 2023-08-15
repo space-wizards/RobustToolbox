@@ -635,18 +635,54 @@ public partial class EntitySystem
 
     #region Entity Spawning
 
-    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, EntityCoordinates, ComponentRegistry?)" />
+    // This method will be obsoleted soon.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
     {
-        return EntityManager.SpawnEntity(prototype, coordinates);
+        return ((IEntityManager)EntityManager).SpawnEntity(prototype, coordinates);
     }
 
-    /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, MapCoordinates, ComponentRegistry?)" />
+    /// <inheritdoc cref="IEntityManager.Spawn(string?, MapCoordinates, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid Spawn(string? prototype, MapCoordinates coordinates)
+        => EntityManager.Spawn(prototype, coordinates);
+
+    /// <inheritdoc cref="IEntityManager.Spawn(string?, ComponentRegistry?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid Spawn(string? prototype)
+        => EntityManager.Spawn(prototype);
+
+    /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates)
+        => EntityManager.SpawnAttachedTo(prototype, coordinates);
+
+    /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid SpawnAtPosition(string? prototype, EntityCoordinates coordinates)
+        => EntityManager.SpawnAtPosition(prototype, coordinates);
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TrySpawnInContainer(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ComponentRegistry? overrides = null)
     {
-        return EntityManager.SpawnEntity(prototype, coordinates);
+        return EntityManager.TrySpawnInContainer(protoName, containerUid, containerId, out uid, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TrySpawnNextTo(
+        string? protoName,
+        EntityUid target,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.TrySpawnNextTo(protoName, target, out uid, overrides);
     }
 
     #endregion

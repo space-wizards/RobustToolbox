@@ -318,12 +318,7 @@ namespace Robust.Shared.GameObjects
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
             var newEntity = CreateEntity(prototypeName, default, overrides);
-
-            if (coordinates.IsValid(this))
-            {
-                _xforms.SetCoordinates(newEntity, _xformQuery.GetComponent(newEntity), coordinates, unanchor: false);
-            }
-
+            _xforms.SetCoordinates(newEntity, _xformQuery.GetComponent(newEntity), coordinates, unanchor: false);
             return newEntity;
         }
 
@@ -358,77 +353,6 @@ namespace Robust.Shared.GameObjects
             }
 
             return newEntity;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public EntityUid[] SpawnEntities(EntityCoordinates coordinates, params string?[] protoNames)
-        {
-            var ents = new EntityUid[protoNames.Length];
-
-            for (var i = 0; i < protoNames.Length; i++)
-            {
-                ents[i] = SpawnEntity(protoNames[i], coordinates);
-            }
-
-            return ents;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames)
-        {
-            var ents = new EntityUid[protoNames.Length];
-
-            for (var i = 0; i < protoNames.Length; i++)
-            {
-                ents[i] = SpawnEntity(protoNames[i], coordinates);
-            }
-
-            return ents;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames)
-        {
-            var ents = new EntityUid[protoNames.Count];
-
-            for (var i = 0; i < protoNames.Count; i++)
-            {
-                ents[i] = SpawnEntity(protoNames[i], coordinates);
-            }
-
-            return ents;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames)
-        {
-            var ents = new EntityUid[protoNames.Count];
-
-            for (var i = 0; i < protoNames.Count; i++)
-            {
-                ents[i] = SpawnEntity(protoNames[i], coordinates);
-            }
-
-            return ents;
-        }
-
-        /// <inheritdoc />
-        public virtual EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        {
-            if (!coordinates.IsValid(this))
-                throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
-
-            var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
-            InitializeAndStartEntity(entity, coordinates.GetMapId(this));
-            return entity;
-        }
-
-        /// <inheritdoc />
-        public virtual EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
-        {
-            var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
-            InitializeAndStartEntity(entity, coordinates.MapId);
-            return entity;
         }
 
         /// <inheritdoc />

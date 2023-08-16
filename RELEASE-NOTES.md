@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 148.1.0
+
+### New features
+
+* Added IgnoreUIChecksComponent that lets entities ignore bound user interface range checks which would normally close the UI.
+* Add support for F16-F24 keybinds.
+
+### Bugfixes
+
+* Fix gamestate bug where PVS is disabled.
+
+### Other
+
+* EntityQuery.HasComponent override for nullable entity uids.
+
+
 ## 148.0.0
 
 ### Breaking changes

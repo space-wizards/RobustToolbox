@@ -17,6 +17,8 @@ namespace Robust.Server.GameObjects
         [Dependency] private readonly IPlayerManager _playerMan = default!;
         [Dependency] private readonly TransformSystem _xformSys = default!;
 
+        private EntityQuery<IgnoreUIRangeComponent> _ignoreUIRangeQuery;
+
         private readonly List<IPlayerSession> _sessionCache = new();
 
         private readonly Dictionary<IPlayerSession, List<BoundUserInterface>> _openInterfaces = new();
@@ -30,6 +32,8 @@ namespace Robust.Server.GameObjects
             SubscribeLocalEvent<ServerUserInterfaceComponent, ComponentInit>(OnUserInterfaceInit);
             SubscribeLocalEvent<ServerUserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
             _playerMan.PlayerStatusChanged += OnPlayerStatusChanged;
+
+            _ignoreUIRangeQuery = GetEntityQuery<IgnoreUIRangeComponent>();
         }
 
         public override void Shutdown()
@@ -172,6 +176,9 @@ namespace Robust.Server.GameObjects
             {
                 // The component manages the set of sessions, so this invalid session should be removed soon.
                 if (!query.TryGetComponent(session.AttachedEntity, out var xform))
+                    continue;
+
+                if (_ignoreUIRangeQuery.HasComponent(session.AttachedEntity))
                     continue;
 
                 if (uiMap != xform.MapID)

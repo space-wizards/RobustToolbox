@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
@@ -5,14 +6,13 @@ using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
-using System;
 
 namespace Robust.Shared.GameObjects;
 
 [RegisterComponent]
 [NetworkedComponent()]
 [Access(typeof(OccluderSystem))]
-public sealed class OccluderComponent : Component, IComponentTreeEntry<OccluderComponent>
+public sealed partial class OccluderComponent : Component, IComponentTreeEntry<OccluderComponent>
 {
     [DataField("enabled")]
     public bool Enabled = true;

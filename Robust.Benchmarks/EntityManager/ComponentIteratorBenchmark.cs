@@ -69,7 +69,7 @@ public class ComponentIteratorBenchmark
     }
 
     [ComponentProtoName("A")]
-    public sealed class A : Component
+    public sealed partial class A : Component
     {
     }
 }

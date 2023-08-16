@@ -6,7 +6,7 @@ namespace Robust.Server.Maps;
 /// Added to Maps that were loaded by MapLoaderSystem. If not present then this map was created externally.
 /// </summary>
 [RegisterComponent]
-public sealed class LoadedMapComponent : Component
+public sealed partial class LoadedMapComponent : Component
 {
 
 }

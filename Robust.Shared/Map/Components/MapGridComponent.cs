@@ -18,7 +18,7 @@ namespace Robust.Shared.Map.Components
 {
     [RegisterComponent]
     [NetworkedComponent]
-    public sealed class MapGridComponent : Component
+    public sealed partial class MapGridComponent : Component
     {
         [Dependency] private readonly IEntityManager _entManager = default!;
         private SharedMapSystem MapSystem => _entManager.System<SharedMapSystem>();

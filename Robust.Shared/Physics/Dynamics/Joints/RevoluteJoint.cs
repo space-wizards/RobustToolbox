@@ -23,7 +23,6 @@
 using System;
 using System.Numerics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -49,7 +48,7 @@ internal sealed class RevoluteJointState : JointState
     }
 }
 
-public sealed class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
+public sealed partial class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
 {
     // Temporary
     private Vector2 _impulse;

@@ -1,7 +1,7 @@
-using Robust.Shared.GameObjects;
-using Robust.Shared.Serialization.Manager.Attributes;
 using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Client.GameObjects;
 
@@ -11,7 +11,7 @@ namespace Robust.Client.GameObjects;
 /// </summary>
 [RegisterComponent]
 [Access(typeof(GenericVisualizerSystem))]
-public sealed class GenericVisualizerComponent : Component
+public sealed partial class GenericVisualizerComponent : Component
 {
     /// <summary>
     ///     This is a nested dictionary that maps appearance data keys -> sprite layer keys -> appearance data values -> layer data.

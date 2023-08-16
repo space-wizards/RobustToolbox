@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using JetBrains.Annotations;
 using NUnit.Framework;
@@ -223,7 +222,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
   name: {LoadStringTestDummyId}";
     }
 
-    public sealed class TestBasicPrototypeComponent : Component
+    public sealed partial class TestBasicPrototypeComponent : Component
     {
 
         [DataField("foo")] public string Foo = null!;

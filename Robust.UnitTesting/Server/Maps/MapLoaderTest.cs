@@ -10,7 +10,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Server.Maps
 {
@@ -115,7 +114,7 @@ entities:
         }
 
         [DataDefinition]
-        private sealed class MapDeserializeTestComponent : Component
+        private sealed partial class MapDeserializeTestComponent : Component
         {
             [DataField("foo")] public int Foo { get; set; } = -1;
             [DataField("bar")] public int Bar { get; set; } = -1;

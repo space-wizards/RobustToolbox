@@ -109,7 +109,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [ComponentProtoName(TestComponentName)]
-        private sealed class TestComponent : Component
+        private sealed partial class TestComponent : Component
         {
         }
     }

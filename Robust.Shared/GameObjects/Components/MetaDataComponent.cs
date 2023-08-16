@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -7,7 +8,6 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using System;
 
 namespace Robust.Shared.GameObjects
 {
@@ -57,7 +57,7 @@ namespace Robust.Shared.GameObjects
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
     [RegisterComponent, NetworkedComponent]
-    public sealed class MetaDataComponent : Component
+    public sealed partial class MetaDataComponent : Component
     {
         [DataField("name")] internal string? _entityName;
         [DataField("desc")] internal string? _entityDescription;

@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -17,7 +15,7 @@ namespace Robust.Shared.Physics
     /// In its own component to decrease physics comp state size significantly.
     /// </remarks>
     [RegisterComponent, NetworkedComponent]
-    public sealed class FixturesComponent : Component
+    public sealed partial class FixturesComponent : Component
     {
         // This is a snowflake component whose main job is making physics states smaller for massive bodies
         // (e.g. grids)

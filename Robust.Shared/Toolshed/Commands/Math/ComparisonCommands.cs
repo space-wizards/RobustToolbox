@@ -5,7 +5,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Math;
 
 [ToolshedCommand(Name = ">")]
-public sealed class GreaterThanCommand : ToolshedCommand
+internal sealed class GreaterThanCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public bool Comparison<T>(
@@ -23,7 +23,7 @@ public sealed class GreaterThanCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "<")]
-public sealed class LessThanCommand : ToolshedCommand
+internal sealed class LessThanCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public bool Comparison<T>(
@@ -41,7 +41,7 @@ public sealed class LessThanCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = ">=")]
-public sealed class GreaterThanOrEqualCommand : ToolshedCommand
+internal sealed class GreaterThanOrEqualCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public bool Comparison<T>(
@@ -59,7 +59,7 @@ public sealed class GreaterThanOrEqualCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "<=")]
-public sealed class LessThanOrEqualCommand : ToolshedCommand
+internal sealed class LessThanOrEqualCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public bool Comparison<T>(
@@ -77,7 +77,7 @@ public sealed class LessThanOrEqualCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "==")]
-public sealed class EqualCommand : ToolshedCommand
+internal sealed class EqualCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public bool Comparison<T>(
@@ -95,7 +95,7 @@ public sealed class EqualCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "!=")]
-public sealed class NotEqualCommand : ToolshedCommand
+internal sealed class NotEqualCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public bool Comparison<T>(

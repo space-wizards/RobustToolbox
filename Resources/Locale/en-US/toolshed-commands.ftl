@@ -169,13 +169,13 @@ command-description-OrValueCommand =
     If the input is null, uses the provided alternate value.
 command-description-DebugPrintCommand =
     Prints the given value transparently, for debug prints in a command run.
-command-description-int =
+command-description-i =
     Integer constant.
-command-description-float =
+command-description-f =
     Float constant.
-command-description-string =
+command-description-s =
     String constant.
-command-description-bool =
+command-description-b =
     Bool constant.
 command-description-join =
     Joins two sequences together into one sequence.
@@ -210,3 +210,51 @@ command-description-comp-ensure =
     Ensures the given entity has the given component.
 command-description-comp-has =
     Check if the given entity has the given component.
+command-description-AddVecCommand =
+    Adds a scalar (single value) to every element in the input.
+command-description-SubVecCommand =
+    Subtracts a scalar (single value) from every element in the input.
+command-description-MulVecCommand =
+    Multiplies a scalar (single value) by every element in the input.
+command-description-DivVecCommand =
+    Divides every element in the input by a scalar (single value).
+command-description-rng-to =
+    Returns a number from its input to its argument (i.e. n..m inclusive)
+command-description-rng-from =
+    Returns a number to its input from its argument (i.e. m..n inclusive)
+command-description-rng-prob =
+    Returns a boolean based on the input probability/chance (from 0 to 1)
+command-description-sum =
+    Computes the sum of the input.
+command-description-bin =
+    "Bins" the input, counting up how many times each unique element occurs.
+command-description-extremes =
+    Returns the two extreme ends of a list, interwoven.
+command-description-sortby =
+    Sorts the input least to greatest by the computed key.
+command-description-sortmapby =
+    Sorts the input least to greatest by the computed key, replacing the value with it's computed key afterward.
+command-description-sort =
+    Sorts the input least to greatest.
+command-description-sortdownby =
+    Sorts the input greatest to least by the computed key.
+command-description-sortmapdownby =
+    Sorts the input greatest to least by the computed key, replacing the value with it's computed key afterward.
+command-description-sortdown =
+    Sorts the input greatest to least.
+command-description-iota =
+    Returns a list of numbers 1 to N.
+command-description-to =
+    Returns a list of numbers N to M.
+command-description-curtick =
+    The current game tick.
+command-description-curtime =
+    The current game time (a TimeSpan)
+command-description-realtime =
+    The current realtime since startup (a TimeSpan)
+command-description-servertime =
+    The current server game time, or zero if we are the server (a TimeSpan)
+command-description-replace =
+    Replaces the input entities with the given prototype, preserving position and rotation (but nothing else)
+command-description-allcomps =
+    Returns all components on the given entity.

@@ -13,23 +13,26 @@ namespace Robust.Shared.Toolshed.Syntax;
 
 public sealed partial class ParserContext
 {
-    [Dependency] public readonly ToolshedManager Toolshed = default!;
+    public readonly ToolshedManager Toolshed;
+    public readonly ToolshedEnvironment Environment;
 
     public readonly string Input;
     public int MaxIndex { get; private set; }
 
     public int Index { get; private set; } = 0;
 
-    public ParserContext(string input, ToolshedManager toolshed)
+    public ParserContext(string input, ToolshedManager toolshed, ToolshedEnvironment? environment = null)
     {
         Toolshed = toolshed;
+        Environment = environment ?? toolshed.DefaultEnvironment;
         Input = input;
         MaxIndex = input.Length - 1;
     }
 
     private ParserContext(ParserContext parserContext, int sliceSize, int? index)
     {
-        IoCManager.InjectDependencies(this);
+        Toolshed = parserContext.Toolshed;
+        Environment = parserContext.Environment;
         DebugTools.Assert(sliceSize > 0);
         Input = parserContext.Input;
         Index = index ?? parserContext.Index;

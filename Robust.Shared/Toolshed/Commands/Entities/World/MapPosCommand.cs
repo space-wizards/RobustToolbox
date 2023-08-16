@@ -6,7 +6,7 @@ using Robust.Shared.Map;
 namespace Robust.Shared.Toolshed.Commands.Entities.World;
 
 [ToolshedCommand]
-public sealed class MapPosCommand : ToolshedCommand
+internal sealed class MapPosCommand : ToolshedCommand
 {
     private SharedTransformSystem? _xform;
 

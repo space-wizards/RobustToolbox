@@ -11,7 +11,7 @@ namespace Robust.Shared.Toolshed.Commands.Entities.World;
 [ToolshedCommand]
 internal sealed class TpCommand : ToolshedCommand
 {
-    private SharedTransformSystem? _xform = default!;
+    private SharedTransformSystem? _xform;
 
     [CommandImplementation("coords")]
     public EntityUid TpCoords(

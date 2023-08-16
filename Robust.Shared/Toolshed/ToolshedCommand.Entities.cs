@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Toolshed.Errors;
 
 namespace Robust.Shared.Toolshed;
 
@@ -13,6 +14,25 @@ public abstract partial class ToolshedCommand
 
     [PublicAPI, IoC.Dependency]
     protected readonly IEntitySystemManager EntitySystemManager = default!;
+
+    /// <summary>
+    ///     Returns the entity that's executing this command, if any.
+    /// </summary>
+    [PublicAPI]
+    protected EntityUid? ExecutingEntity(IInvocationContext ctx)
+    {
+        if (ctx.Session is null)
+        {
+            ctx.ReportError(new NotForServerConsoleError());
+            return null;
+        }
+
+        if (ctx.Session.AttachedEntity is { } ent)
+            return ent;
+
+        ctx.ReportError(new SessionHasNoEntityError(ctx.Session));
+        return null;
+    }
 
     /// <summary>
     ///     A shorthand for retrieving <see cref="MetaDataComponent"/> for an entity.
@@ -55,6 +75,14 @@ public abstract partial class ToolshedCommand
     [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Del(EntityUid entityUid)
         => EntityManager.DeleteEntity(entityUid);
+
+
+    /// <summary>
+    ///     A shorthand for queueing the deletion of an entity.
+    /// </summary>
+    [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void QDel(EntityUid entityUid)
+        => EntityManager.QueueDeleteEntity(entityUid);
 
     /// <summary>
     ///     A shorthand for checking if an entity is deleted or otherwise non-existant.

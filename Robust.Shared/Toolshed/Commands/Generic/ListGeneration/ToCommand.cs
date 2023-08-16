@@ -6,7 +6,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Generic.ListGeneration;
 
 [ToolshedCommand]
-public sealed class ToCommand : ToolshedCommand
+internal sealed class ToCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> To<T>(

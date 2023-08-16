@@ -18,7 +18,7 @@ internal sealed class ReduceCommand : ToolshedCommand
         => input.Aggregate((x, next) => reducer.Invoke(x, new ReduceContext<T>(ctx, next))!);
 }
 
-internal record struct ReduceContext<T>(IInvocationContext Inner, T Value) : IInvocationContext
+internal record ReduceContext<T>(IInvocationContext Inner, T Value) : IInvocationContext
 {
     public bool CheckInvokable(CommandSpec command, out IConError? error)
     {
@@ -26,6 +26,9 @@ internal record struct ReduceContext<T>(IInvocationContext Inner, T Value) : IIn
     }
 
     public ICommonSession? Session => Inner.Session;
+    public ToolshedManager Toolshed => Inner.Toolshed;
+    public ToolshedEnvironment Environment => Inner.Environment;
+
     public void WriteLine(string line)
     {
         Inner.WriteLine(line);
@@ -46,7 +49,7 @@ internal record struct ReduceContext<T>(IInvocationContext Inner, T Value) : IIn
         Inner.ClearErrors();
     }
 
-    public Dictionary<string, object?> Variables { get; }
+    public Dictionary<string, object?> Variables { get; } = new();
 
     public object? ReadVar(string name)
     {

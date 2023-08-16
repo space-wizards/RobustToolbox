@@ -27,7 +27,7 @@ internal sealed class EmplaceCommand : ToolshedCommand
     }
 }
 
-internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEntityManager EntityManager) : IInvocationContext
+internal record EmplaceContext<T>(IInvocationContext Inner, T Value, IEntityManager EntityManager) : IInvocationContext
 {
     public bool CheckInvokable(CommandSpec command, out IConError? error)
     {
@@ -35,6 +35,8 @@ internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEnt
     }
 
     public ICommonSession? Session => Inner.Session;
+    public ToolshedManager Toolshed => Inner.Toolshed;
+    public ToolshedEnvironment Environment => Inner.Environment;
 
     public void WriteLine(string line)
     {
@@ -74,7 +76,7 @@ internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEnt
             if (breakout.TryReadVar(name, out var value))
                 return value;
         }
-        
+
         if (Value is EntityUid id)
         {
             switch (name)

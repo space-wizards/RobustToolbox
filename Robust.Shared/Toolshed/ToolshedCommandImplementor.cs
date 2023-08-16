@@ -112,7 +112,7 @@ internal sealed class ToolshedCommandImplementor
         if (impls.FirstOrDefault() is not { } impl)
         {
             args = null;
-            error = new NoImplementationError(Owner.Name, resolvedTypeArguments, subCommand, pipedType);
+            error = new NoImplementationError(Owner.Name, resolvedTypeArguments, subCommand, pipedType, parserContext.Environment);
             error.Contextualize(parserContext.Input, (firstStart, parserContext.Index));
             autocomplete = null;
             return false;

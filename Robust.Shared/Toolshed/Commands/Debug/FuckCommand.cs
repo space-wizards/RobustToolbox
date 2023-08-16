@@ -10,4 +10,10 @@ internal sealed class FuckCommand : ToolshedCommand
     {
         throw new Exception("fuck!");
     }
+
+    [CommandImplementation]
+    public object? Fuck()
+    {
+        throw new Exception("fuck!");
+    }
 }

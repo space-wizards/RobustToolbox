@@ -106,7 +106,7 @@ public sealed class ParsedCommand
                 autocomplete = null;
                 if (makeCompletions)
                 {
-                    var cmds = parserContext.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
+                    var cmds = parserContext.Environment.CommandsTakingType(pipedType ?? typeof(void));
                     autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
                 }
 
@@ -123,14 +123,14 @@ public sealed class ParsedCommand
             }
         }
 
-        if (!parserContext.Toolshed.TryGetCommand(cmd, out var cmdImpl))
+        if (!parserContext.Environment.TryGetCommand(cmd, out var cmdImpl))
         {
             error = new UnknownCommandError(cmd);
             error.Contextualize(parserContext.Input, (start, parserContext.Index));
             autocomplete = null;
             if (makeCompletions)
             {
-                var cmds = parserContext.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
+                var cmds = parserContext.Environment.CommandsTakingType(pipedType ?? typeof(void));
                 autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
             }
 
@@ -143,7 +143,7 @@ public sealed class ParsedCommand
             autocomplete = null;
             if (makeCompletions)
             {
-                var cmds = parserContext.Toolshed.CommandsTakingType(pipedType ?? typeof(void)).Where(x => x.Cmd.Name == cmd);
+                var cmds = parserContext.Environment.CommandsTakingType(pipedType ?? typeof(void)).Where(x => x.Cmd.Name == cmd);
                 autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((
                     CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
             }
@@ -177,7 +177,7 @@ public sealed class ParsedCommand
         if (parserContext.ConsumeWhitespace() == 0 && makeCompletions)
         {
             error = null;
-            var cmds = parserContext.Toolshed.CommandsTakingType(pipedType ?? typeof(void));
+            var cmds = parserContext.Environment.CommandsTakingType(pipedType ?? typeof(void));
             autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), null));
             return false;
         }
@@ -194,7 +194,7 @@ public sealed class ParsedCommand
 
         if (!cmdImpl.TryGetImplementation(bundle.PipedArgumentType, subCommand, types, out var impl))
         {
-            error = new NoImplementationError(cmd, types, subCommand, bundle.PipedArgumentType);
+            error = new NoImplementationError(cmd, types, subCommand, bundle.PipedArgumentType, parserContext.Environment);
             error.Contextualize(parserContext.Input, (start, parserContext.Index));
             autocomplete = null;
             return false;
@@ -248,12 +248,10 @@ public record struct UnknownCommandError(string Cmd) : IConError
     public StackTrace? Trace { get; set; }
 }
 
-public record struct NoImplementationError(string Cmd, Type[] Types, string? SubCommand, Type? PipedType) : IConError
+public record NoImplementationError(string Cmd, Type[] Types, string? SubCommand, Type? PipedType, ToolshedEnvironment ctx) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        var newCon = IoCManager.Resolve<ToolshedManager>();
-
         var msg = FormattedMessage.FromMarkup($"Could not find an implementation for {Cmd} given the input type {PipedType?.PrettyName() ?? "void"}.");
         msg.PushNewline();
 
@@ -267,10 +265,10 @@ public record struct NoImplementationError(string Cmd, Type[] Types, string? Sub
         msg.AddText($"Signature: {Cmd}{(SubCommand is not null ? $":{SubCommand}" : "")}{typeArgs} {PipedType?.PrettyName() ?? "void"} -> ???");
 
         var piped = PipedType ?? typeof(void);
-        var cmdImpl = newCon.GetCommand(Cmd);
+        var cmdImpl = ctx.GetCommand(Cmd);
         var accepted = cmdImpl.AcceptedTypes(SubCommand).ToHashSet();
 
-        foreach (var (command, subCommand) in newCon.CommandsTakingType(piped))
+        foreach (var (command, subCommand) in ctx.CommandsTakingType(piped))
         {
             if (!command.TryGetReturnType(subCommand, piped, Array.Empty<Type>(), out var retType) || !accepted.Any(x => retType.IsAssignableTo(x)))
                 continue;
@@ -292,7 +290,7 @@ public record struct NoImplementationError(string Cmd, Type[] Types, string? Sub
     public StackTrace? Trace { get; set; }
 }
 
-public record struct UnknownSubcommandError(string Cmd, string SubCmd, ToolshedCommand Command) : IConError
+public record UnknownSubcommandError(string Cmd, string SubCmd, ToolshedCommand Command) : IConError
 {
     public FormattedMessage DescribeInner()
     {
@@ -308,7 +306,7 @@ public record struct UnknownSubcommandError(string Cmd, string SubCmd, ToolshedC
     public StackTrace? Trace { get; set; }
 }
 
-public record struct NotValidCommandError(Type? TargetType) : IConError
+public record NotValidCommandError(Type? TargetType) : IConError
 {
     public FormattedMessage DescribeInner()
     {

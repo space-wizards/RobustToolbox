@@ -36,8 +36,6 @@ public sealed partial class ToolshedManager
 
     private ISawmill _log = default!;
 
-    private readonly Dictionary<string, ToolshedCommand> _commands = new();
-
     /// <summary>
     ///     If you're not an engine developer, you probably shouldn't call this.
     /// </summary>
@@ -49,69 +47,10 @@ public sealed partial class ToolshedManager
 #endif
 
         _log = _logManager.GetSawmill("toolshed");
-        var watch = new Stopwatch();
-        watch.Start();
 
-        var tys = _reflection.FindTypesWithAttribute<ToolshedCommandAttribute>();
-        foreach (var ty in tys)
-        {
-            if (!ty.IsAssignableTo(typeof(ToolshedCommand)))
-            {
-                _log.Error($"The type {ty.AssemblyQualifiedName} has {nameof(ToolshedCommandAttribute)} without being a child of {nameof(ToolshedCommand)}");
-                continue;
-            }
-
-            var command = (ToolshedCommand)Activator.CreateInstance(ty)!;
-            IoCManager.InjectDependencies(command);
-
-            _commands.Add(command.Name, command);
-        }
+        DefaultEnvironment = new();
 
         InitializeParser();
-        InitializeQueries();
-
-        _log.Info($"Initialized console in {watch.Elapsed}");
-    }
-
-    /// <summary>
-    ///     Provides every registered command, including subcommands.
-    /// </summary>
-    /// <returns>Enumerable of every command.</returns>
-    public IEnumerable<CommandSpec> AllCommands()
-    {
-        foreach (var (_, cmd) in _commands)
-        {
-            if (cmd.HasSubCommands)
-            {
-                foreach (var subcommand in cmd.Subcommands)
-                {
-                    yield return new(cmd, subcommand);
-                }
-            }
-            else
-            {
-                yield return new(cmd, null);
-            }
-        }
-    }
-
-    /// <summary>
-    ///     Gets a command's object by name.
-    /// </summary>
-    /// <param name="commandName">Command to get.</param>
-    /// <returns>A command object.</returns>
-    /// <exception cref="IndexOutOfRangeException">Thrown when there is no command of the given name.</exception>
-    public ToolshedCommand GetCommand(string commandName) => _commands[commandName];
-
-    /// <summary>
-    ///     Attempts to get a command's object by name.
-    /// </summary>
-    /// <param name="commandName">Command to get.</param>
-    /// <param name="command">The command obtained, if any.</param>
-    /// <returns>Success.</returns>
-    public bool TryGetCommand(string commandName, [NotNullWhen(true)] out ToolshedCommand? command)
-    {
-        return _commands.TryGetValue(commandName, out command);
     }
 
     private Dictionary<NetUserId, IInvocationContext> _contexts = new();
@@ -198,7 +137,7 @@ public sealed partial class ToolshedManager
     {
         ctx.ClearErrors();
 
-        var parser = new ParserContext(command, this);
+        var parser = new ParserContext(command, this, ctx.Environment);
         if (!CommandRun.TryParse(false, parser, input?.GetType(), null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
         {
 

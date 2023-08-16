@@ -9,4 +9,6 @@ public sealed partial class ToolshedManager
     ///     Invocation contexts can entirely ignore this, though it's bad form to do so if they have a session on hand.
     /// </remarks>
     public IPermissionController? ActivePermissionController { get; set; }
+
+    public ToolshedEnvironment DefaultEnvironment { get; private set; } = default!;
 }

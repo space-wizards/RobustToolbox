@@ -9,8 +9,8 @@ namespace Robust.Shared.Toolshed.Commands.Misc;
 internal sealed class CmdCommand : ToolshedCommand
 {
     [CommandImplementation("list")]
-    public IEnumerable<CommandSpec> List()
-        => Toolshed.AllCommands();
+    public IEnumerable<CommandSpec> List([CommandInvocationContext] IInvocationContext ctx)
+        => ctx.Environment.AllCommands();
 
     [CommandImplementation("moo")]
     public string Moo()

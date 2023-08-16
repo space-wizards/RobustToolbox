@@ -5,7 +5,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Math;
 
 [ToolshedCommand]
-public sealed class JoinCommand : ToolshedCommand
+internal sealed class JoinCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public string Join(
@@ -37,7 +37,7 @@ public sealed class JoinCommand : ToolshedCommand
 }
 
 [ToolshedCommand]
-public sealed class AppendCommand : ToolshedCommand
+internal sealed class AppendCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Append<T>(

@@ -138,9 +138,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
-                 var containerSystem = sEntManager.System<ContainerSystem>();
+                 var containerSystem = cEntManager.System<ContainerSystem>();
                  Assert.That(!containerSystem.ExpectedEntities.ContainsKey(sEntManager.ToNetEntity(itemUid)));
-                 Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(0));
+                 Assert.That(containerSystem.ExpectedEntities, Is.Empty);
              });
          }
 

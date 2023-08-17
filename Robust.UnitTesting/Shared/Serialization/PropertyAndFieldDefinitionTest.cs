@@ -114,10 +114,10 @@ namespace Robust.UnitTesting.Shared.Serialization
         public sealed class PropertyAndFieldDefinitionTestDefinition
         {
             [DataField(GetOnlyPropertyName)]
-            public int GetOnlyProperty { get; }
+            public int GetOnlyProperty { get; private set; }
 
             [field: DataField(GetOnlyPropertyFieldTargetedName)]
-            public int GetOnlyPropertyFieldTargeted { get; }
+            public int GetOnlyPropertyFieldTargeted { get; private set; }
 
             [DataField(GetAndSetPropertyName)]
             public int GetAndSetProperty { get; set; }

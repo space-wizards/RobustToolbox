@@ -11,5 +11,5 @@ public sealed class FontPrototype : IPrototype
     public string ID { get; } = default!;
 
     [DataField("path", required: true)]
-    public ResPath Path { get; } = default!;
+    public ResPath Path { get; private set; } = default!;
 }

@@ -4,11 +4,11 @@ namespace Robust.Shared.Serialization;
 
 public interface ISerializationGenerated<T> : ISerializationGenerated
 {
-    public T Copy(ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null);
+    public void Copy(ref T target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null);
+
+    public T Instantiate();
 }
 
 public interface ISerializationGenerated
 {
-    public object CopyObject(ISerializationManager serialization, SerializationHookContext hookCtx,
-        ISerializationContext? context = null);
 }

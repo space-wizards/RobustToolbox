@@ -107,7 +107,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
     public sealed partial class HotReloadTestOneComponent : Component
     {
         [DataField("value")]
-        public int Value { get; }
+        public int Value { get; private set; }
     }
 
     public sealed partial class HotReloadTestTwoComponent : Component

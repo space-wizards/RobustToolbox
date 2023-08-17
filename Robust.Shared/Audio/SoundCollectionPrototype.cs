@@ -1,8 +1,8 @@
+using System.Collections.Generic;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using System.Collections.Generic;
 
 namespace Robust.Shared.Audio;
 
@@ -14,5 +14,5 @@ public sealed class SoundCollectionPrototype : IPrototype
     public string ID { get; } = default!;
 
     [DataField("files")]
-    public List<ResPath> PickFiles { get; } = new();
+    public List<ResPath> PickFiles { get; private set; } = new();
 }

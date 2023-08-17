@@ -95,19 +95,19 @@ namespace Robust.Client.Graphics
         }
 
         [DataField("kind", required: true)]
-        private readonly string _rawKind = default!;
+        private string _rawKind { get; set; } = default!;
 
         [DataField("path")]
-        private readonly ResPath? _path;
+        private ResPath? _path { get; set; }
 
         [DataField("params")]
-        private readonly Dictionary<string, string>? _paramMapping;
+        private Dictionary<string, string>? _paramMapping { get; set; }
 
         [DataField("light_mode")]
-        private readonly string? _rawMode;
+        private string? _rawMode { get; set; }
 
         [DataField("blend_mode")]
-        private readonly string? _rawBlendMode;
+        private string? _rawBlendMode { get; set; }
 
         void ISerializationHooks.AfterDeserialization()
         {

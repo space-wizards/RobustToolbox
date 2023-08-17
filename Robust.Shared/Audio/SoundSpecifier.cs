@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -7,8 +8,6 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
-using System;
 
 namespace Robust.Shared.Audio;
 
@@ -28,7 +27,7 @@ public sealed partial class SoundPathSpecifier : SoundSpecifier
     public const string Node = "path";
 
     [DataField(Node, customTypeSerializer: typeof(ResPathSerializer), required: true)]
-    public ResPath Path { get; }
+    public ResPath Path { get; private set; }
 
     [UsedImplicitly]
     private SoundPathSpecifier()
@@ -59,7 +58,7 @@ public sealed partial class SoundCollectionSpecifier : SoundSpecifier
     public const string Node = "collection";
 
     [DataField(Node, customTypeSerializer: typeof(PrototypeIdSerializer<SoundCollectionPrototype>), required: true)]
-    public string? Collection { get; }
+    public string? Collection { get; private set; }
 
     [UsedImplicitly]
     public SoundCollectionSpecifier() { }

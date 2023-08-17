@@ -35,6 +35,23 @@ public sealed partial class SerializationManager
         return Activator.CreateInstance(type)!;
     }
 
+    public bool TryGetCopierOrCreator<TType>(out ITypeCopier<TType>? copier, out ITypeCopyCreator<TType>? copyCreator, ISerializationContext? context = null)
+    {
+        if (context != null)
+        {
+            context.SerializerProvider.TryGetTypeSerializer<ITypeCopier<TType>, TType>(out copier);
+            context.SerializerProvider.TryGetTypeSerializer<ITypeCopyCreator<TType>, TType>(out copyCreator);
+
+            if (copier != null || copyCreator != null)
+                return true;
+        }
+
+        _regularSerializerProvider.TryGetTypeSerializer<ITypeCopier<TType>, TType>(out copier);
+        _regularSerializerProvider.TryGetTypeSerializer<ITypeCopyCreator<TType>, TType>(out copyCreator);
+
+        return copier != null || copyCreator != null;
+    }
+
     public sealed class SerializerProvider
     {
         public SerializerProvider(IEnumerable<Type> typeSerializers)

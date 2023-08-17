@@ -1,6 +1,5 @@
 using System;
 using JetBrains.Annotations;
-using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -390,6 +389,11 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             bool notNullableOverride = false)
             where TCopyCreator : ITypeCopyCreator<T>;
+
+        bool TryGetCopierOrCreator<TType>(
+            out ITypeCopier<TType>? copier,
+            out ITypeCopyCreator<TType>? copyCreator,
+            ISerializationContext? context = null);
 
         #endregion
 

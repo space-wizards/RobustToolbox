@@ -61,7 +61,7 @@ namespace Robust.Shared.Map.Components
         ///     Grid chunks than make up this grid.
         /// </summary>
         [DataField("chunks")]
-        internal readonly Dictionary<Vector2i, MapChunk> Chunks = new();
+        internal Dictionary<Vector2i, MapChunk> Chunks { get; private set; } = new();
 
         [ViewVariables]
         public Box2 LocalAABB { get; internal set; }

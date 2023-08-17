@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -994,6 +995,11 @@ namespace Robust.Shared.GameObjects
             }
 
             return comps;
+        }
+
+        internal ref Component GetCompRefOrNullRefInternal(EntityUid uid, CompIdx idx)
+        {
+            return ref CollectionsMarshal.GetValueRefOrNullRef(_entTraitArray[idx.Value], uid);
         }
 
         public AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()

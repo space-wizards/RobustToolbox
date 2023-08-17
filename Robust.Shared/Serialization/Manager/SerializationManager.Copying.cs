@@ -372,11 +372,7 @@ public sealed partial class SerializationManager
             return;
         }
 
-        if (source is ISerializationGenerated generated)
-        {
-            target = generated.CopyObject(this, hookCtx, context);
-            return;
-        }
+        // TODO ISerializationGenerated fast path
 
         if (target == null)
         {
@@ -413,7 +409,8 @@ public sealed partial class SerializationManager
 
         if (source is ISerializationGenerated<T> generated)
         {
-            target = generated.Copy(this, hookCtx, context);
+            generated.Copy(ref target, this, hookCtx, context);
+            RunAfterHook(target, hookCtx);
             return;
         }
 

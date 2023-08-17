@@ -33,7 +33,7 @@ public sealed class UITheme : IPrototype
     private ResPath _path;
 
     [DataField("colors", readOnly: true)] // This is a prototype, why is this readonly??
-    public Dictionary<string, Color>? Colors { get; }
+    public Dictionary<string, Color>? Colors { get; private set; }
     public ResPath Path => _path == default ? new ResPath(DefaultPath+"/"+ID) : _path;
 
     private void ValidateFilePath(IResourceCache resourceCache)
@@ -70,7 +70,7 @@ public sealed class UITheme : IPrototype
 
         if (!texturePath.EndsWith(".png"))
             texturePath = $"{texturePath}.png";
-        
+
         var resPath = new ResPath(texturePath);
         if (resPath.IsRelative)
         {

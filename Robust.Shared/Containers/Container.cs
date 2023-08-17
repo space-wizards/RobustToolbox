@@ -24,7 +24,7 @@ namespace Robust.Shared.Containers
         /// The generic container class uses a list of entities
         /// </summary>
         [DataField("ents")]
-        private readonly List<EntityUid> _containerList = new();
+        private List<EntityUid> _containerList { get; set; } = new();
 
         private readonly List<EntityUid> _expectedEntities = new();
 

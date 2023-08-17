@@ -5,7 +5,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Generic.Variables ;
 
 [ToolshedCommand(Name = "=>")]
-internal sealed class ArrowCommand : ToolshedCommand
+public sealed class ArrowCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Arrow<T>(

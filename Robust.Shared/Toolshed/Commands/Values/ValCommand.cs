@@ -4,7 +4,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Values;
 
 [ToolshedCommand]
-internal sealed class ValCommand : ToolshedCommand
+public sealed class ValCommand : ToolshedCommand
 {
     public override Type[] TypeParameterParsers => new[] {typeof(Type)};
 

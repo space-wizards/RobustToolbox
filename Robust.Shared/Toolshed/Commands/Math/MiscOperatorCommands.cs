@@ -6,7 +6,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Math;
 
 [ToolshedCommand(Name = "?"), MapLikeCommand]
-internal sealed class DefaultIfNullCommand : ToolshedCommand
+public sealed class DefaultIfNullCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public TOut? DefaultIfNull<TOut, TIn>(
@@ -24,7 +24,7 @@ internal sealed class DefaultIfNullCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "or?")]
-internal sealed class OrValueCommand : ToolshedCommand
+public sealed class OrValueCommand : ToolshedCommand
 {
     // Yes, these really do have different signatures.
 
@@ -54,7 +54,7 @@ internal sealed class OrValueCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "??")]
-internal sealed class DebugPrintCommand : ToolshedCommand
+public sealed class DebugPrintCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T DebugPrint<T>(

@@ -6,7 +6,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Generic.Ordering;
 
 [ToolshedCommand, MapLikeCommand]
-internal sealed class SortMapDownByCommand : ToolshedCommand
+public sealed class SortMapDownByCommand : ToolshedCommand
 {
     public override Type[] TypeParameterParsers => new[] {typeof(Type)};
 

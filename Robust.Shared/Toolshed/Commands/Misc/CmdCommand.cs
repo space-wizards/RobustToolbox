@@ -6,7 +6,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
-internal sealed class CmdCommand : ToolshedCommand
+public sealed class CmdCommand : ToolshedCommand
 {
     [CommandImplementation("list")]
     public IEnumerable<CommandSpec> List([CommandInvocationContext] IInvocationContext ctx)

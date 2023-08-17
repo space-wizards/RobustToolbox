@@ -6,7 +6,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Math;
 
 [ToolshedCommand(Name = "+")]
-internal sealed class AddCommand : ToolshedCommand
+public sealed class AddCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>(
@@ -37,7 +37,7 @@ internal sealed class AddCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "+/")]
-internal sealed class AddVecCommand : ToolshedCommand
+public sealed class AddVecCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Operation<T>(
@@ -55,7 +55,7 @@ internal sealed class AddVecCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "-")]
-internal sealed class SubtractCommand : ToolshedCommand
+public sealed class SubtractCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>(
@@ -86,7 +86,7 @@ internal sealed class SubtractCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "-/")]
-internal sealed class SubVecCommand : ToolshedCommand
+public sealed class SubVecCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Operation<T>(
@@ -104,7 +104,7 @@ internal sealed class SubVecCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "*")]
-internal sealed class MultiplyCommand : ToolshedCommand
+public sealed class MultiplyCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>(
@@ -133,7 +133,7 @@ internal sealed class MultiplyCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "*/")]
-internal sealed class MulVecCommand : ToolshedCommand
+public sealed class MulVecCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Operation<T>(
@@ -151,7 +151,7 @@ internal sealed class MulVecCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "/")]
-internal sealed class DivideCommand : ToolshedCommand
+public sealed class DivideCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>(
@@ -180,7 +180,7 @@ internal sealed class DivideCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "//")]
-internal sealed class DivVecCommand : ToolshedCommand
+public sealed class DivVecCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Operation<T>(
@@ -199,7 +199,7 @@ internal sealed class DivVecCommand : ToolshedCommand
 
 
 [ToolshedCommand]
-internal sealed class MinCommand : ToolshedCommand
+public sealed class MinCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>(
@@ -228,7 +228,7 @@ internal sealed class MinCommand : ToolshedCommand
 }
 
 [ToolshedCommand]
-internal sealed class MaxCommand : ToolshedCommand
+public sealed class MaxCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>(
@@ -257,7 +257,7 @@ internal sealed class MaxCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "&")]
-internal sealed class BitAndCommand : ToolshedCommand
+public sealed class BitAndCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>(
@@ -286,7 +286,7 @@ internal sealed class BitAndCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "|")]
-internal sealed class BitOrCommand : ToolshedCommand
+public sealed class BitOrCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>(
@@ -315,7 +315,7 @@ internal sealed class BitOrCommand : ToolshedCommand
 }
 
 [ToolshedCommand(Name = "^")]
-internal sealed class BitXorCommand : ToolshedCommand
+public sealed class BitXorCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>(
@@ -344,7 +344,7 @@ internal sealed class BitXorCommand : ToolshedCommand
 }
 
 [ToolshedCommand]
-internal sealed class NegCommand : ToolshedCommand
+public sealed class NegCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>([PipedArgument] T x)

@@ -5,7 +5,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Generic.ListGeneration;
 
 [ToolshedCommand(Name = "rep")]
-internal sealed class RepeatCommand : ToolshedCommand
+public sealed class RepeatCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Repeat<T>(

@@ -9,7 +9,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
 [ToolshedCommand, MapLikeCommand(false)]
-internal sealed class EmplaceCommand : ToolshedCommand
+public sealed class EmplaceCommand : ToolshedCommand
 {
     [CommandImplementation]
     IEnumerable<TOut> Emplace<TIn, TOut>(

@@ -3,7 +3,7 @@
 namespace Robust.Shared.Toolshed.Commands.Generic.Variables;
 
 [ToolshedCommand]
-internal sealed class VarsCommand : ToolshedCommand
+public sealed class VarsCommand : ToolshedCommand
 {
     [CommandImplementation]
     public void Vars([CommandInvocationContext] IInvocationContext ctx)

@@ -7,7 +7,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
 [ToolshedCommand]
-internal sealed class ReduceCommand : ToolshedCommand
+public sealed class ReduceCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Reduce<T>(

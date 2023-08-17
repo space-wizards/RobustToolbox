@@ -4,7 +4,7 @@ using System.Linq;
 namespace Robust.Shared.Toolshed.Commands.Generic.Ordering;
 
 [ToolshedCommand]
-internal sealed class ExtremesCommand : ToolshedCommand
+public sealed class ExtremesCommand : ToolshedCommand
 {
     [TakesPipedTypeAsGeneric, CommandImplementation]
     public IEnumerable<T> Extremes<T>([PipedArgument] IEnumerable<T> input)

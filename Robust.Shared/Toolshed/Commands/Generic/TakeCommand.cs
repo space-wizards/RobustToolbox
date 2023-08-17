@@ -5,7 +5,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
 [ToolshedCommand]
-internal sealed class TakeCommand : ToolshedCommand
+public sealed class TakeCommand : ToolshedCommand
 {
     [CommandImplementation]
     public IEnumerable<T> Take<T>(

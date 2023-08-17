@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
-internal sealed class SearchCommand : ToolshedCommand
+public sealed class SearchCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<FormattedMessage> Search<T>([PipedArgument] IEnumerable<T> input, [CommandArgument] string term)

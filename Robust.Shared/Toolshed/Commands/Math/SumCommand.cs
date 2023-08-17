@@ -5,7 +5,7 @@ using System.Numerics;
 namespace Robust.Shared.Toolshed.Commands.Math;
 
 [ToolshedCommand]
-internal sealed class SumCommand : ToolshedCommand
+public sealed class SumCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Sum<T>([PipedArgument] IEnumerable<T> input)

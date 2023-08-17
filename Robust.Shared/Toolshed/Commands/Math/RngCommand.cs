@@ -5,7 +5,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Math;
 
 [ToolshedCommand]
-internal sealed class RngCommand : ToolshedCommand
+public sealed class RngCommand : ToolshedCommand
 {
     [Dependency] private readonly IRobustRandom _random = default!;
 

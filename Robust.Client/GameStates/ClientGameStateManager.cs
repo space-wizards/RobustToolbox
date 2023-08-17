@@ -158,7 +158,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        public void InputCommandDispatched(FullInputCmdMessage message)
+        public void InputCommandDispatched(ClientFullInputCmdMessage clientMessage, FullInputCmdMessage message)
         {
             if (!IsPredictionEnabled)
             {

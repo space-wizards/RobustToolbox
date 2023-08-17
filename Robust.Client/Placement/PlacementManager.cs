@@ -239,18 +239,15 @@ namespace Robust.Client.Placement
 
                         if (Eraser)
                         {
-                            var uid = EntityManager.ToEntity(nent);
-                            var coords = EntityManager.ToCoordinates(netCoords);
-
-                            if (HandleDeletion(coords))
+                            if (HandleDeletion(netCoords))
                                 return true;
 
-                            if (uid == EntityUid.Invalid)
+                            if (nent == EntityUid.Invalid)
                             {
                                 return false;
                             }
 
-                            HandleDeletion(uid);
+                            HandleDeletion(nent);
                         }
                         else
                         {

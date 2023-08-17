@@ -144,11 +144,47 @@ namespace Robust.Shared.Input
         }
     }
 
+    public sealed class ClientFullInputCmdMessage : InputCmdMessage, IFullInputCmdMessage
+    {
+        /// <summary>
+        ///     New state of the Input Function.
+        /// </summary>
+        public BoundKeyState State { get; init; }
+
+        /// <summary>
+        ///     Local Coordinates of the pointer when the command was created.
+        /// </summary>
+        public EntityCoordinates Coordinates { get; init; }
+
+        /// <summary>
+        ///     Screen Coordinates of the pointer when the command was created.
+        /// </summary>
+        public ScreenCoordinates ScreenCoordinates { get; init; }
+
+        /// <summary>
+        ///     Entity that was under the pointer when the command was created (if any).
+        /// </summary>
+        public EntityUid Uid { get; init; }
+
+        public ClientFullInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId) : base(tick, subTick, inputFunctionId)
+        {
+        }
+    }
+
+    public interface IFullInputCmdMessage
+    {
+        GameTick Tick { get; }
+        BoundKeyState State { get; }
+        KeyFunctionId InputFunctionId { get; }
+        ushort SubTick { get; }
+        uint InputSequence { get; set; }
+    }
+
     /// <summary>
     ///     An input command that has both state and pointer info.
     /// </summary>
     [Serializable, NetSerializable]
-    public sealed class FullInputCmdMessage : InputCmdMessage
+    public sealed class FullInputCmdMessage : InputCmdMessage, IFullInputCmdMessage
     {
         /// <summary>
         ///     New state of the Input Function.
@@ -168,7 +204,7 @@ namespace Robust.Shared.Input
         /// <summary>
         ///     Entity that was under the pointer when the command was created (if any).
         /// </summary>
-        public NetEntity Uid { get; }
+        public NetEntity Uid { get; init; }
 
         /// <summary>
         ///     Creates an instance of <see cref="FullInputCmdMessage"/>.

@@ -108,7 +108,7 @@ command-description-where =
 command-description-do =
     Backwards compatibility with BQL, applies the given old commands over the input sequence.
 command-description-named =
-    Filters the input entities by their name, with the regex $selector^.
+    Filters the input entities by their name, with the regex ^selector$.
 command-description-prototyped =
     Filters the input entities by their prototype.
 command-description-nearby =
@@ -258,3 +258,7 @@ command-description-replace =
     Replaces the input entities with the given prototype, preserving position and rotation (but nothing else)
 command-description-allcomps =
     Returns all components on the given entity.
+command-description-entitysystemupdateorder-tick =
+    Lists the tick update order of entity systems.
+command-description-entitysystemupdateorder-frame =
+    Lists the frame update order of entity systems.

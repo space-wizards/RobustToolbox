@@ -2,6 +2,7 @@ using System.Globalization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Placement;
 
 namespace Robust.Shared.Console.Commands;
 
@@ -21,14 +22,20 @@ public sealed class SpawnCommand : LocalizedCommands
 
         var pAE = shell.Player?.AttachedEntity ?? EntityUid.Invalid;
 
+        PlacementEntityEvent? placementEv = null;
+
         if (args.Length == 1 && pAE != EntityUid.Invalid)
         {
-            _entityManager.SpawnEntity(args[0], _entityManager.GetComponent<TransformComponent>(pAE).Coordinates);
+            var entityCoordinates = _entityManager.GetComponent<TransformComponent>(pAE).Coordinates;
+            var createdEntity = _entityManager.SpawnEntity(args[0], entityCoordinates);
+            placementEv = new PlacementEntityEvent(createdEntity, entityCoordinates, PlacementEventAction.Create, shell.Player?.UserId);
         }
         else if (args.Length == 2)
         {
             var uid = EntityUid.Parse(args[1]);
-            _entityManager.SpawnEntity(args[0], _entityManager.GetComponent<TransformComponent>(uid).Coordinates);
+            var entityCoordinates = _entityManager.GetComponent<TransformComponent>(uid).Coordinates;
+            var createdEntity = _entityManager.SpawnEntity(args[0], entityCoordinates);
+            placementEv = new PlacementEntityEvent(createdEntity, entityCoordinates, PlacementEventAction.Create, shell.Player?.UserId);
         }
         else if (pAE != EntityUid.Invalid)
         {
@@ -37,7 +44,11 @@ public sealed class SpawnCommand : LocalizedCommands
                 float.Parse(args[2], CultureInfo.InvariantCulture),
                 _entityManager.GetComponent<TransformComponent>(pAE).MapID);
 
-            _entityManager.SpawnEntity(args[0], coords);
+            var createdEntity = _entityManager.SpawnEntity(args[0], coords);
+            placementEv = new PlacementEntityEvent(createdEntity, _entityManager.GetComponent<TransformComponent>(createdEntity).Coordinates, PlacementEventAction.Create, shell.Player?.UserId);
         }
+
+        if (placementEv != null)
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEv.Value);
     }
 }

@@ -25,6 +25,11 @@ namespace Robust.Client.UserInterface.CustomControls
         MapCoordinates ScreenToMap(Vector2 coords);
 
         /// <summary>
+        /// Similar to <see cref="ScreenToMap(Vector2)"/>, except it should compensate for the effects of shaders on viewports.
+        /// </summary>
+        MapCoordinates PixelToMap(Vector2 point);
+
+        /// <summary>
         ///     Converts a point on the map to screen coordinates.
         /// </summary>
         /// <returns>

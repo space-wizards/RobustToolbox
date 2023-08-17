@@ -54,6 +54,158 @@ END TEMPLATE-->
 *None yet*
 
 
+## 148.1.0
+
+### New features
+
+* Added IgnoreUIChecksComponent that lets entities ignore bound user interface range checks which would normally close the UI.
+* Add support for F16-F24 keybinds.
+
+### Bugfixes
+
+* Fix gamestate bug where PVS is disabled.
+
+### Other
+
+* EntityQuery.HasComponent override for nullable entity uids.
+
+
+## 148.0.0
+
+### Breaking changes
+
+* Several NuGet dependencies are now private assets.
+* Added `IViewportControl.PixelToMap()` and `PixelToMapEvent`. These are variants of the existing screen-to-map functions that should account for distortion effects.
+
+### New features
+
+* Added several new rich-text tags, including italic and bold-italic.
+
+### Bugfixes
+
+* Fixed log messages for unknown components not working due to threaded IoC issues.
+* Replay recordings no longer record invalid prototype uploads.
+
+
+## 147.0.0
+
+### Breaking changes
+
+* Renamed one of the EntitySystem.Dirty() methods to `DirtyEntity()` to avoid confusion with the component-dirtying methods.
+
+### New features
+
+* Added debug commands that return the entity system update order.
+
+### Bugfixes
+
+* Fixed a bug in MetaDataSystem that was causing the metadata component to not be marked as dirty.
+
+
+## 146.0.0
+
+### Breaking changes
+
+* Remove readOnly for DataFields and rename some ShaderPrototype C# fields internally to align with the normal schema.
+
+### Bugfixes
+
+* Add InvariantCulture to angle validation.
+
+### Internal
+
+* Add some additional EntityQuery<T> usages and remove a redundant CanCollide call on fixture shutdown.
+
+
+## 145.0.0
+
+### Breaking changes
+
+* Removed some old SpriteComponent data-fields ("rsi", and "layerDatums").
+
+### New features
+
+* Added `ActorSystem.TryGetActorFromUserId()`.
+* Added IPrototypeManager.EnumerateKinds().
+
+### Bugfixes
+
+* Fixed SpriteSpecifierSerializer yaml validation not working properly.
+* Fixed IoC/Threading exceptions in `Resource.Load()`.
+* Fixed `TransformSystem.SetCoordinates()` throwing uninformative client-side errors.
+* Fixed `IResourceManager.ContentFileExists()` and `TryContentFileRead()` throwing exceptions on windows when trying to open a directory.
+
+
+## 144.0.1
+
+### Bugfixes
+
+* Fix some EntityLookup queries incorrectly being double transformed internally.
+* Shrink TileEnlargement even further for EntityLookup default queries.
+
+
+## 144.0.0
+
+### Breaking changes
+
+* Add new args to entitylookup methods to allow for shrinkage of tile-bounds checks. Default changed to shrink the grid-local AABB by the polygon skin to avoid clipping neighboring tile entities.
+* Non-hard fixtures will no longer count by default for EntityLookup.
+
+### New features
+
+* Added new EntityLookup flag to return non-hard fixtures or not.
+
+
+## 143.3.0
+
+### New features
+
+* Entity placement and spawn commands now raise informative events that content can handle.
+* Replay clients can now optionally ignore some errors instead of refusing to load the replay.
+
+### Bugfixes
+
+* `AudioParams.PlayOffsetSecond` will no longer apply an offset that is larger then the length of the audio stream.
+* Fixed yaml serialization of arrays of virtual/abstract objects.
+
+
+### Other
+
+* Removed an incorrect gamestate debug assert.
+
+
+## 143.2.0
+
+### New features
+
+* Add support for tests to load extra prototypes from multiple sources.
+
+### Bugfixes
+
+* Fix named toolshed command.
+* Unsubscribe from grid rendering events on shutdown.
+
+### Other
+
+* Remove unnecessary test prototypes.
+
+
+## 143.1.0
+
+### New features
+
+* Add locale support for grammatical measure words.
+
+### Bugfixes
+
+* Don't raise contact events for entities that were QueueDeleted during the tick.
+* Exception on duplicate broadcast subscriptions as this was unsupported behaviour.
+
+### Other
+
+* Add VV ReadWrite to PhysicsComponent BodyStatus.
+
+
 ## 143.0.0
 
 ### New features
@@ -85,7 +237,7 @@ END TEMPLATE-->
 * `IHttpClientHolder` holds a shared `HttpClient` for use by content. It has Happy Eyeballs fixed and an appropriate `User-Agent`.
 * Added `DataNode.ToString()`. Makes it easier to save yaml files and debug code.
 * Added some cvars to modify discord rich presence icons.
-* .ogg files now read the `Artist` and `Title` tags and make them available via new fields in `AudioStream`. 
+* .ogg files now read the `Artist` and `Title` tags and make them available via new fields in `AudioStream`.
 * The default fragment shaders now have access to the local light level (`lowp vec3 lightSample`).
 * Added `IPrototypeManager.ValidateAllPrototypesSerializable()`, which can be used to check that all currently loaded prototypes can be serialised & deserialised.
 
@@ -94,7 +246,7 @@ END TEMPLATE-->
 * Fix certain debug commands and tools crashing on non-SS14 RobustToolbox games due to a missing font.
 * Discord rich presence strings are now truncated if they are too long.
 * Fixed a couple of broadphase/entity-lookup update bugs that were affecting containers and entities attached to other (non-grid/map) entities.
-* Fixed `INetChannel.Disconnect()` not properly disconnecting clients in integration tests. 
+* Fixed `INetChannel.Disconnect()` not properly disconnecting clients in integration tests.
 
 ### Other
 

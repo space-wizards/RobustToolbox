@@ -171,6 +171,13 @@ namespace Robust.Shared.Prototypes
             }
         }
 
+        public IEnumerable<Type> EnumeratePrototypeKinds()
+        {
+            if (!_hasEverBeenReloaded)
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+            return _kinds.Keys;
+        }
+        
         /// <inheritdoc />
         public T Index<T>(string id) where T : class, IPrototype
         {

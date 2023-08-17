@@ -1,6 +1,6 @@
 ﻿- type: uiTheme
   id: Default
-  path: /Textures/Interface/Default
+  path: /Textures/Interface/Default/
   colors:
     # Root
     rootBackground: "#000000"

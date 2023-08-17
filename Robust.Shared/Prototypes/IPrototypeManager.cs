@@ -9,7 +9,6 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
 
@@ -69,6 +68,11 @@ public interface IPrototypeManager
     /// Returns an <see cref="IEnumerable{T}"/> of parents of a prototype of a certain kind.
     /// </summary>
     IEnumerable<IPrototype> EnumerateParents(Type kind, string id, bool includeSelf = false);
+
+    /// <summary>
+    /// Returns all of the registered prototype kinds.
+    /// </summary>
+    IEnumerable<Type> EnumeratePrototypeKinds();
 
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.

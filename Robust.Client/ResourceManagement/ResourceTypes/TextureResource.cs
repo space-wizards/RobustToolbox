@@ -20,8 +20,6 @@ namespace Robust.Client.ResourceManagement
 
         public override void Load(IResourceCache cache, ResPath path)
         {
-            var clyde = IoCManager.Resolve<IClyde>();
-
             if (path.Directory.Filename.EndsWith(".rsi"))
             {
                 Logger.WarningS(
@@ -33,7 +31,7 @@ namespace Robust.Client.ResourceManagement
             var data = new LoadStepData {Path = path};
 
             LoadPreTexture(cache, data);
-            LoadTexture(clyde, data);
+            LoadTexture(cache.Clyde, data);
             LoadFinish(cache, data);
         }
 

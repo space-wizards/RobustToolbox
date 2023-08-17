@@ -11,6 +11,7 @@ using Robust.Shared.Utility;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Robust.Shared;
 using Robust.Shared.Replays;
 using static Robust.Shared.Replays.ReplayConstants;
 
@@ -136,9 +137,21 @@ public sealed partial class ReplayLoadManager
         if (data == null)
             throw new Exception("Failed to load yaml metadata");
 
+        TimeSpan duration;
         var finalData = LoadYamlFinalMetadata(fileReader);
         if (finalData == null)
-            throw new Exception("Failed to load final yaml metadata");
+        {
+            var msg = "Failed to load final yaml metadata";
+            if (!_confMan.GetCVar(CVars.ReplayIgnoreErrors))
+                throw new Exception(msg);
+
+            _sawmill.Error(msg);
+            duration = TimeSpan.FromDays(1);
+        }
+        else
+        {
+            duration = TimeSpan.Parse(((ValueDataNode) finalData[MetaFinalKeyDuration]).Value);
+        }
 
         var typeHash = Convert.FromHexString(((ValueDataNode) data[MetaKeyTypeHash]).Value);
         var stringHash = Convert.FromHexString(((ValueDataNode) data[MetaKeyStringHash]).Value);
@@ -146,7 +159,6 @@ public sealed partial class ReplayLoadManager
         var timeBaseTick = ((ValueDataNode) data[MetaKeyBaseTick]).Value;
         var timeBaseTimespan = ((ValueDataNode) data[MetaKeyBaseTime]).Value;
         var clientSide = bool.Parse(((ValueDataNode) data[MetaKeyIsClientRecording]).Value);
-        var duration = TimeSpan.Parse(((ValueDataNode) finalData[MetaFinalKeyDuration]).Value);
 
         if (!typeHash.SequenceEqual(_serializer.GetSerializableTypesHash()))
             throw new Exception($"{nameof(IRobustSerializer)} hashes do not match. Loading replays using a bad replay-client version?");

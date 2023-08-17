@@ -144,6 +144,10 @@ namespace Robust.Shared.Input
         }
     }
 
+    /// <summary>
+    /// Handles inputs clientside. This is used so the client can still interact with client-only entities without relying on
+    /// <see cref="NetEntity"/>.
+    /// </summary>
     public sealed class ClientFullInputCmdMessage : InputCmdMessage, IFullInputCmdMessage
     {
         /// <summary>

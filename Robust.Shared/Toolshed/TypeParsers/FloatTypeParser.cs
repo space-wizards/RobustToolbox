@@ -1,5 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
@@ -9,50 +11,22 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class FloatTypeParser : TypeParser<float>
+internal sealed class FloatTypeParser : NumberBaseTypeParser<float>
 {
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
-    {
-        var maybeFloat = parserContext.GetWord(ParserContext.IsNumeric);
-        if (!float.TryParse(maybeFloat, out var @float))
-        {
-            if (maybeFloat is null)
-            {
-                error = new OutOfInputError();
-            }
-            else
-            {
-                error = new InvalidInteger(maybeFloat);
-            }
-
-            result = null;
-            return false;
-        }
-
-        result = @float;
-        error = null;
-        return true;
-    }
-
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
-        string? argName)
-    {
-        return new ValueTask<(CompletionResult? result, IConError? error)>(
-                (CompletionResult.FromHint($"any float (decimal number)"), null)
-            );
-    }
 }
 
-public record struct InvalidFloat(string Value) : IConError
+internal sealed class DoubleTypeParser : NumberBaseTypeParser<double>
 {
-    public FormattedMessage DescribeInner()
-    {
-        return FormattedMessage.FromMarkup(
-            $"The value {Value} is not a valid floating point number. Only decimal numbers are accepted.");
-    }
-
-    public string? Expression { get; set; }
-    public Vector2i? IssueSpan { get; set; }
-    public StackTrace? Trace { get; set; }
 }
 
+internal sealed class DecimalTypeParser : NumberBaseTypeParser<decimal>
+{
+}
+
+internal sealed class HalfTypeParser : NumberBaseTypeParser<Half>
+{
+}
+
+internal sealed class ComplexTypeParser : NumberBaseTypeParser<Complex>
+{
+}

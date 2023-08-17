@@ -63,7 +63,7 @@ public readonly record struct Prototype<T>(T Value) : IAsType<string>
     }
 }
 
-public record struct NotAValidPrototype(string Proto, string Kind) : IConError
+public record NotAValidPrototype(string Proto, string Kind) : IConError
 {
     public FormattedMessage DescribeInner()
     {

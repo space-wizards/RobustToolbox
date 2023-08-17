@@ -287,7 +287,7 @@ public readonly struct ParserRestorePoint
     }
 }
 
-public record struct OutOfInputError : IConError
+public record OutOfInputError : IConError
 {
     public FormattedMessage DescribeInner()
     {

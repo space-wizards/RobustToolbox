@@ -60,7 +60,7 @@ internal sealed class QuantityParser : TypeParser<Quantity>
 
 public readonly record struct Quantity(float? Amount, float? Percentage);
 
-public record struct InvalidQuantity(string Value) : IConError
+public record InvalidQuantity(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {

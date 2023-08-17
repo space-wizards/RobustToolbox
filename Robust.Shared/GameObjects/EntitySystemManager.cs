@@ -393,6 +393,9 @@ namespace Robust.Shared.GameObjects
             return mFrameUpdate!.DeclaringType != typeof(EntitySystem);
         }
 
+        internal IEnumerable<Type> FrameUpdateOrder => _frameUpdateOrder.Select(c => c.GetType());
+        internal IEnumerable<Type> TickUpdateOrder => _updateOrder.Select(c => c.System.GetType());
+
         private struct UpdateReg
         {
             [ViewVariables] public IEntitySystem System;

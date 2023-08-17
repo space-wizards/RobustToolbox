@@ -88,6 +88,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void ShutdownGridEcsEvents()
+        {
+
+        }
+
         public void SetWindowTitle(string title)
         {
             // Nada.

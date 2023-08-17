@@ -191,6 +191,15 @@ internal partial class Clyde
             MapKey(SDL_SCANCODE_F13, Key.F13);
             MapKey(SDL_SCANCODE_F14, Key.F14);
             MapKey(SDL_SCANCODE_F15, Key.F15);
+            MapKey(SDL_SCANCODE_F16, Key.F16);
+            MapKey(SDL_SCANCODE_F17, Key.F17);
+            MapKey(SDL_SCANCODE_F18, Key.F18);
+            MapKey(SDL_SCANCODE_F19, Key.F19);
+            MapKey(SDL_SCANCODE_F20, Key.F20);
+            MapKey(SDL_SCANCODE_F21, Key.F21);
+            MapKey(SDL_SCANCODE_F22, Key.F22);
+            MapKey(SDL_SCANCODE_F23, Key.F23);
+            MapKey(SDL_SCANCODE_F24, Key.F24);
             MapKey(SDL_SCANCODE_PAUSE, Key.Pause);
 
             KeyMapReverse = new Dictionary<Key, SDL_Scancode>();

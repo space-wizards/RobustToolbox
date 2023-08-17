@@ -191,7 +191,7 @@ namespace Robust.Server.GameStates
 
             using (_usageHistogram.WithLabels("Clean Dirty").NewTimer())
             {
-                _pvs.CleanupDirty(_playerManager.ServerSessions);
+                _pvs.CleanupDirty(players);
             }
 
             // keep the deletion history buffers clean

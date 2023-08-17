@@ -16,9 +16,9 @@ namespace Robust.Client.UserInterface
     /// </summary>
     internal struct RichTextEntry
     {
-        private static readonly Color DefaultColor = new(200, 200, 200);
-
+        private readonly Color _defaultColor;
         private readonly MarkupTagManager _tagManager;
+        private readonly Type[]? _tagsAllowed;
 
         public readonly FormattedMessage Message;
 
@@ -39,13 +39,15 @@ namespace Robust.Client.UserInterface
 
         private readonly Dictionary<int, Control> _tagControls = new();
 
-        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager)
+        public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
             Message = message;
             Height = 0;
             Width = 0;
             LineBreaks = default;
+            _defaultColor = defaultColor ?? new(200, 200, 200);
             _tagManager = tagManager;
+            _tagsAllowed = tagsAllowed;
 
             var nodeIndex = -1;
             foreach (var node in Message.Nodes)
@@ -55,7 +57,7 @@ namespace Robust.Client.UserInterface
                 if (node.Name == null)
                     continue;
 
-                if (!_tagManager.TryGetMarkupTag(node.Name, out var tag) || !tag.TryGetControl(node, out var control))
+                if (!_tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag) || !tag.TryGetControl(node, out var control))
                     continue;
 
                 parent.Children.Add(control);
@@ -82,7 +84,7 @@ namespace Robust.Client.UserInterface
             var wordWrap = new WordWrap(maxSizeX);
             var context = new MarkupDrawingContext();
             context.Font.Push(defaultFont);
-            context.Color.Push(DefaultColor);
+            context.Color.Push(_defaultColor);
 
             // Go over every node.
             // Nodes can change the markup drawing context and return additional text.
@@ -171,7 +173,7 @@ namespace Robust.Client.UserInterface
             float uiScale)
         {
             context.Clear();
-            context.Color.Push(DefaultColor);
+            context.Color.Push(_defaultColor);
             context.Font.Push(defaultFont);
 
             var globalBreakCounter = 0;
@@ -186,7 +188,7 @@ namespace Robust.Client.UserInterface
                 var text = ProcessNode(node, context);
                 if (!context.Color.TryPeek(out var color) || !context.Font.TryPeek(out var font))
                 {
-                    color = DefaultColor;
+                    color = _defaultColor;
                     font = defaultFont;
                 }
 
@@ -226,15 +228,17 @@ namespace Robust.Client.UserInterface
                 return node.Value.StringValue ?? "";
 
             //Skip the node if there is no markup tag for it.
-            if (!_tagManager.TryGetMarkupTag(node.Name, out var tag))
+            if (!_tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag))
                 return "";
 
             if (!node.Closing)
             {
+                context.Tags.Add(tag);
                 tag.PushDrawContext(node, context);
                 return tag.TextBefore(node);
             }
 
+            context.Tags.Remove(tag);
             tag.PopDrawContext(node, context);
             return tag.TextAfter(node);
         }

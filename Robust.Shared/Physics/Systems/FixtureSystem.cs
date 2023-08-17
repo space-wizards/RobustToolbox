@@ -45,9 +45,6 @@ namespace Robust.Shared.Physics.Systems
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
             _physics.DestroyContacts(body);
-
-            // TODO im 99% sure  _broadphaseSystem.RemoveBody(body, component) gets triggered by this as well, so is this even needed?
-            _physics.SetCanCollide(uid, false, false, manager: component, body: body);
         }
 
         #region Public

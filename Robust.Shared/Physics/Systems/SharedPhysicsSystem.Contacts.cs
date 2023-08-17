@@ -164,6 +164,21 @@ public abstract partial class SharedPhysicsSystem
             4096);
 
         InitializePool();
+        EntityManager.EntityQueueDeleted += OnContactEntityQueueDel;
+    }
+
+    private void ShutdownContacts()
+    {
+        EntityManager.EntityQueueDeleted -= OnContactEntityQueueDel;
+    }
+
+    private void OnContactEntityQueueDel(EntityUid obj)
+    {
+        // If an entity is queuedeleted then we want to purge its contacts before SimulateWorld runs in the same tick.
+        if (!TryComp<PhysicsComponent>(obj, out var physicsComp))
+            return;
+
+        DestroyContacts(physicsComp);
     }
 
     private void InitializePool()
@@ -401,7 +416,7 @@ public abstract partial class SharedPhysicsSystem
                     contact.Flags &= ~ContactFlags.Island;
                     if (index >= contacts.Length)
                     {
-                        _sawmill.Error($"Insufficient contact length at 388! Index {index} and length is {contacts.Length}. Tell Sloth");
+                        Log.Error($"Insufficient contact length at 388! Index {index} and length is {contacts.Length}. Tell Sloth");
                     }
                     contacts[index++] = contact;
                 }
@@ -411,14 +426,14 @@ public abstract partial class SharedPhysicsSystem
 
             if (indexA >= fixtureA.Proxies.Length)
             {
-                _sawmill.Error($"Found invalid contact index of {indexA} on {fixtureA.ID} / {ToPrettyString(uidA)}, expected {fixtureA.Proxies.Length}");
+                Log.Error($"Found invalid contact index of {indexA} on {fixtureA.ID} / {ToPrettyString(uidA)}, expected {fixtureA.Proxies.Length}");
                 DestroyContact(contact);
                 continue;
             }
 
             if (indexB >= fixtureB.Proxies.Length)
             {
-                _sawmill.Error($"Found invalid contact index of {indexB} on {fixtureB.ID} / {ToPrettyString(uidB)}, expected {fixtureB.Proxies.Length}");
+                Log.Error($"Found invalid contact index of {indexB} on {fixtureB.ID} / {ToPrettyString(uidB)}, expected {fixtureB.Proxies.Length}");
                 DestroyContact(contact);
                 continue;
             }
@@ -460,7 +475,7 @@ public abstract partial class SharedPhysicsSystem
             contact.Flags &= ~ContactFlags.Island;
             if (index >= contacts.Length)
             {
-                _sawmill.Error($"Insufficient contact length at 429! Index {index} and length is {contacts.Length}. Tell Sloth");
+                Log.Error($"Insufficient contact length at 429! Index {index} and length is {contacts.Length}. Tell Sloth");
             }
             contacts[index++] = contact;
         }
@@ -476,7 +491,7 @@ public abstract partial class SharedPhysicsSystem
         {
             if (i >= contacts.Length)
             {
-                _sawmill.Error($"Invalid contact length for contact events!");
+                Log.Error($"Invalid contact length for contact events!");
                 continue;
             }
 
@@ -588,7 +603,7 @@ public abstract partial class SharedPhysicsSystem
             // of everything
             if (contact.FixtureA == null || contact.FixtureB == null)
             {
-                _sawmill.Error($"Found a null contact for contact at {i}");
+                Log.Error($"Found a null contact for contact at {i}");
                 status[i] = ContactStatus.NoContact;
                 wake[i] = false;
                 DebugTools.Assert(false);

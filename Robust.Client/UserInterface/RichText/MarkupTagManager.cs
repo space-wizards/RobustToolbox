@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Sandboxing;
@@ -15,24 +16,29 @@ public sealed class MarkupTagManager
     /// <summary>
     /// Tags defined in engine need to be instantiated here because of sandboxing
     /// </summary>
-    private readonly Dictionary<string, IMarkupTag> _markupTagTypes = new()
-    {
-        {"color", new ColorTag()},
-        {"cmdlink", new CommandLinkTag()},
-        {"font", new FontTag()},
-        {"bold", new BoldTag()},
-        {"italic", new ItalicTag()}
-    };
+    private readonly Dictionary<string, IMarkupTag> _markupTagTypes = new IMarkupTag[] {
+        new BoldItalicTag(),
+        new BoldTag(),
+        new BulletTag(),
+        new ColorTag(),
+        new CommandLinkTag(),
+        new FontTag(),
+        new HeadingTag(),
+        new ItalicTag()
+    }.ToDictionary(x => x.Name.ToLower(), x => x);
 
     /// <summary>
     /// A list of <see cref="IMarkupTag"/> types that shouldn't be instantiated through reflection
     /// </summary>
     private readonly List<Type> _engineTypes = new()
     {
+        typeof(BoldItalicTag),
+        typeof(BoldTag),
+        typeof(BulletTag),
         typeof(ColorTag),
         typeof(CommandLinkTag),
         typeof(FontTag),
-        typeof(BoldTag),
+        typeof(HeadingTag),
         typeof(ItalicTag)
     };
 
@@ -59,9 +65,11 @@ public sealed class MarkupTagManager
         return _markupTagTypes.GetValueOrDefault(name);
     }
 
-    public bool TryGetMarkupTag(string name, [NotNullWhen(true)] out IMarkupTag? tag)
+    public bool TryGetMarkupTag(string name, Type[]? tagsAllowed, [NotNullWhen(true)] out IMarkupTag? tag)
     {
-        if (_markupTagTypes.TryGetValue(name, out var markupTag))
+        if (_markupTagTypes.TryGetValue(name, out var markupTag)
+            // Using a whitelist prevents new tags from sneaking in.
+            && (tagsAllowed == null || Array.IndexOf(tagsAllowed, markupTag.GetType()) != -1))
         {
             tag = markupTag;
             return true;

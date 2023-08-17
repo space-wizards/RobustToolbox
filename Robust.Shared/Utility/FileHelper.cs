@@ -38,33 +38,57 @@ internal static class FileHelper
 
     private static unsafe bool TryGetFileWindows(string path, [NotNullWhen(true)] out FileStream? stream)
     {
-        HANDLE file;
-        fixed (char* pPath = path)
+        if (path.EndsWith("\\"))
         {
-            file = Windows.CreateFileW(
-                (ushort*)pPath,
-                Windows.GENERIC_READ,
-                FILE.FILE_SHARE_READ,
-                null,
-                OPEN.OPEN_EXISTING,
-                FILE.FILE_ATTRIBUTE_NORMAL,
-                HANDLE.NULL);
+            stream = null;
+            return false;
         }
 
-        if (file == HANDLE.INVALID_VALUE)
+        try
         {
-            var lastError = Marshal.GetLastWin32Error();
-            if (lastError is ERROR.ERROR_FILE_NOT_FOUND or ERROR.ERROR_PATH_NOT_FOUND)
+            HANDLE file;
+            fixed (char* pPath = path)
+            {
+                file = Windows.CreateFileW(
+                    (ushort*)pPath,
+                    Windows.GENERIC_READ,
+                    FILE.FILE_SHARE_READ,
+                    null,
+                    OPEN.OPEN_EXISTING,
+                    FILE.FILE_ATTRIBUTE_NORMAL,
+                    HANDLE.NULL);
+            }
+
+            if (file == HANDLE.INVALID_VALUE)
+            {
+                var lastError = Marshal.GetLastWin32Error();
+                if (lastError is ERROR.ERROR_FILE_NOT_FOUND or ERROR.ERROR_PATH_NOT_FOUND)
+                {
+                    stream = null;
+                    return false;
+                }
+
+                Marshal.ThrowExceptionForHR(Windows.HRESULT_FROM_WIN32(lastError));
+            }
+
+            var sf = new SafeFileHandle(file, ownsHandle: true);
+            stream = new FileStream(sf, FileAccess.Read);
+            return true;
+
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // UnauthorizedAccessException aka this is a folder not a file because of course that is what that means.
+            // Who the fuck though this was the right way of handling that? This should clearly just be a
+            // ERROR_FILE_NOT_FOUND or some other result like that,
+            // https://github.com/dotnet/runtime/issues/70275
+            if (Directory.Exists(path))
             {
                 stream = null;
                 return false;
             }
 
-            Marshal.ThrowExceptionForHR(Windows.HRESULT_FROM_WIN32(lastError));
+            throw;
         }
-
-        var sf = new SafeFileHandle(file, ownsHandle: true);
-        stream = new FileStream(sf, FileAccess.Read);
-        return true;
     }
 }

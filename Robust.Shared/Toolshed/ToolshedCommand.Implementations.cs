@@ -49,6 +49,7 @@ public abstract partial class ToolshedCommand
         string? subCommand)
     {
         var impls = GetGenericImplementations()
+            .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
             .Where(x =>
             {
                 if (x.ConsoleGetPipedArgument() is { } param)
@@ -74,7 +75,6 @@ public abstract partial class ToolshedCommand
 
                 return 0;
             })
-            .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
             .Where(x =>
             {
                 if (x.IsGenericMethodDefinition)

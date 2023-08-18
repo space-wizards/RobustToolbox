@@ -390,6 +390,7 @@ namespace Robust.Shared.Serialization.Manager
             bool notNullableOverride = false)
             where TCopyCreator : ITypeCopyCreator<T>;
 
+        [Obsolete]
         bool TryGetCopierOrCreator<TType>(
             out ITypeCopier<TType>? copier,
             out ITypeCopyCreator<TType>? copyCreator,

@@ -35,6 +35,7 @@ public sealed partial class SerializationManager
         return Activator.CreateInstance(type)!;
     }
 
+    [Obsolete]
     public bool TryGetCopierOrCreator<TType>(out ITypeCopier<TType>? copier, out ITypeCopyCreator<TType>? copyCreator, ISerializationContext? context = null)
     {
         if (context != null)

@@ -69,6 +69,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public EntityUid EntityA;
         public EntityUid EntityB;
 
+        public string FixtureAId = string.Empty;
+        public string FixtureBId = string.Empty;
+
         public Fixture? FixtureA;
         public Fixture? FixtureB;
 

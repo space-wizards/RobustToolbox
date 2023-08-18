@@ -52,7 +52,6 @@ public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixtu
             var key = (ValueDataNode)subNode.Key;
 
             var fixture = serializationManager.Read<Fixture>(subNode.Value, hookCtx, context, notNullableOverride: true);
-            fixture.ID = key.Value;
             value.Add(key.Value, fixture);
         }
 
@@ -67,8 +66,6 @@ public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixtu
         foreach (var (id, fixture) in source)
         {
             var newFixture = serializationManager.CreateCopy(fixture, hookCtx, context);
-            newFixture.ID = id;
-
             target.Add(id, newFixture);
         }
     }

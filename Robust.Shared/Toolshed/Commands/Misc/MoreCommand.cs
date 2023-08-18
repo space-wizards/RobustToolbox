@@ -1,6 +1,7 @@
 ﻿namespace Robust.Shared.Toolshed.Commands.Misc;
 
-public sealed class MoreCommand
+[ToolshedCommand]
+public sealed class MoreCommand : ToolshedCommand
 {
     [CommandImplementation]
     public object? More([CommandInvocationContext] IInvocationContext ctx)

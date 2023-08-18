@@ -27,6 +27,7 @@ public sealed partial class ParserContext
         =>
             Rune.IsDigit(c)
             || c == new Rune('e')
+            || c == new Rune('i')
             || c == new Rune('+')
             || c == new Rune('-')
             || c == new Rune('.')

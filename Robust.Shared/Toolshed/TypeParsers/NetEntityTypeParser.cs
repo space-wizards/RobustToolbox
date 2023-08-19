@@ -23,7 +23,7 @@ internal sealed class NetEntityTypeParser : TypeParser<NetEntity>
             result = null;
 
             if (word is not null)
-                error = new InvalidEntityUid(word);
+                error = new InvalidNetEntity(word);
             else
                 error = new OutOfInputError();
 
@@ -42,11 +42,11 @@ internal sealed class NetEntityTypeParser : TypeParser<NetEntity>
     }
 }
 
-public record struct InvalidEntityUid(string Value) : IConError
+public record struct InvalidNetEntity(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"Couldn't parse {Value} as an entity ID. Entity IDs are numeric, optionally starting with a c to indicate client-sided-ness.");
+        return FormattedMessage.FromMarkup($"Couldn't parse {Value} as a NetEntity.");
     }
 
     public string? Expression { get; set; }
@@ -54,7 +54,7 @@ public record struct InvalidEntityUid(string Value) : IConError
     public StackTrace? Trace { get; set; }
 }
 
-public record struct DeadEntity(EntityUid Entity) : IConError
+public record struct DeadEntity(NetEntity Entity) : IConError
 {
     public FormattedMessage DescribeInner()
     {

@@ -117,7 +117,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"c{_uid.ToString()}";
+            return _uid.ToString();
         }
 
         public string ToString(string? format, IFormatProvider? formatProvider)

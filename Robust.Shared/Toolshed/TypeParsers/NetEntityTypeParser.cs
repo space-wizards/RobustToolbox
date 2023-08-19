@@ -10,17 +10,15 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
+internal sealed class NetEntityTypeParser : TypeParser<NetEntity>
 {
-    [Dependency] private readonly IEntityManager _entity = default!;
-
     public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
         var start = parser.Index;
         var word = parser.GetWord();
         error = null;
 
-        if (!EntityUid.TryParse(word, out var ent))
+        if (!NetEntity.TryParse(word, out var ent))
         {
             result = null;
 

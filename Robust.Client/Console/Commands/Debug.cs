@@ -431,6 +431,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class GridTileCount : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IMapManager _map = default!;
 
         public override string Command => "gridtc";
@@ -443,7 +444,8 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var gridUid))
+            if (!NetEntity.TryParse(args[0], out var gridUidNet) ||
+                !_entManager.TryGetEntity(gridUidNet, out var gridUid))
             {
                 shell.WriteLine($"{args[0]} is not a valid entity UID.");
                 return;

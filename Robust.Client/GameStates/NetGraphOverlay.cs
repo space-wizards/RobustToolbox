@@ -301,6 +301,10 @@ namespace Robust.Client.GameStates
 
         private sealed class NetWatchEntCommand : LocalizedCommands
         {
+            [Dependency] private readonly IEntityManager _entManager = default!;
+            [Dependency] private readonly IOverlayManager _overlayManager = default!;
+            [Dependency] private readonly IPlayerManager _playerManager = default!;
+
             public override string Command => "net_watchent";
 
             public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -308,20 +312,18 @@ namespace Robust.Client.GameStates
                 EntityUid eValue;
                 if (args.Length == 0)
                 {
-                    eValue = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+                    eValue = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
                 }
-                else if (!EntityUid.TryParse(args[0], out eValue))
+                else if (!NetEntity.TryParse(args[0], out var netEntity) || !_entManager.TryGetEntity(netEntity, out eValue))
                 {
                     shell.WriteError("Invalid argument: Needs to be 0 or an entityId.");
                     return;
                 }
 
-                var overlayMan = IoCManager.Resolve<IOverlayManager>();
-
-                if (!overlayMan.TryGetOverlay(out NetGraphOverlay? overlay))
+                if (!_overlayManager.TryGetOverlay(out NetGraphOverlay? overlay))
                 {
-                    overlay = new();
-                    overlayMan.AddOverlay(overlay);
+                    overlay = new NetGraphOverlay();
+                    _overlayManager.AddOverlay(overlay);
                 }
 
                 overlay.WatchEntId = eValue;

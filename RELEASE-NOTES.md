@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `SpinBox.LineEditControl` exposes the underlying `LineEdit`.
 
 ### Bugfixes
 

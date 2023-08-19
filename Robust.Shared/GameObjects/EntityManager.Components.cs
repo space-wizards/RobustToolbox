@@ -1411,6 +1411,13 @@ namespace Robust.Shared.GameObjects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
+        public bool HasComponent(EntityUid? uid)
+        {
+            return uid != null && HasComponent(uid.Value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public bool Resolve(EntityUid uid, [NotNullWhen(true)] ref TComp1? component, bool logMissing = true)
         {
             if (component != null)

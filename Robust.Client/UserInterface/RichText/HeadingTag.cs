@@ -1,4 +1,4 @@
-using System.Linq;
+using System;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -6,23 +6,25 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class ItalicTag : IMarkupTag
+public sealed class HeadingTag : IMarkupTag
 {
-    public const string ItalicFont = "DefaultItalic";
-
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
-    public string Name => "italic";
+    public string Name => "head";
 
     /// <inheritdoc/>
     public void PushDrawContext(MarkupNode node, MarkupDrawingContext context)
     {
-        var font = FontTag.CreateFont(context.Font, node, _resourceCache, _prototypeManager,
-            context.Tags.Any(static x => x is BoldTag)
-                ? BoldItalicTag.BoldItalicFont
-                : ItalicFont
+        if (!node.Value.TryGetLong(out var levelParam))
+            return;
+
+        var level = Math.Min(Math.Max((int)levelParam, 1), 3);
+        node.Attributes["size"] = new MarkupParameter(
+            (int)Math.Ceiling(FontTag.DefaultSize * 2 / Math.Sqrt(level))
         );
+
+        var font = FontTag.CreateFont(context.Font, node, _resourceCache, _prototypeManager, BoldTag.BoldFont);
         context.Font.Push(font);
     }
 

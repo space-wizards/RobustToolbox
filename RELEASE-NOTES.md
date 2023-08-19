@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `SpinBox.LineEditControl` exposes the underlying `LineEdit`.
 
 ### Bugfixes
 
@@ -52,6 +52,39 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 148.1.0
+
+### New features
+
+* Added IgnoreUIChecksComponent that lets entities ignore bound user interface range checks which would normally close the UI.
+* Add support for F16-F24 keybinds.
+
+### Bugfixes
+
+* Fix gamestate bug where PVS is disabled.
+
+### Other
+
+* EntityQuery.HasComponent override for nullable entity uids.
+
+
+## 148.0.0
+
+### Breaking changes
+
+* Several NuGet dependencies are now private assets.
+* Added `IViewportControl.PixelToMap()` and `PixelToMapEvent`. These are variants of the existing screen-to-map functions that should account for distortion effects.
+
+### New features
+
+* Added several new rich-text tags, including italic and bold-italic.
+
+### Bugfixes
+
+* Fixed log messages for unknown components not working due to threaded IoC issues.
+* Replay recordings no longer record invalid prototype uploads.
 
 
 ## 147.0.0
@@ -204,7 +237,7 @@ END TEMPLATE-->
 * `IHttpClientHolder` holds a shared `HttpClient` for use by content. It has Happy Eyeballs fixed and an appropriate `User-Agent`.
 * Added `DataNode.ToString()`. Makes it easier to save yaml files and debug code.
 * Added some cvars to modify discord rich presence icons.
-* .ogg files now read the `Artist` and `Title` tags and make them available via new fields in `AudioStream`. 
+* .ogg files now read the `Artist` and `Title` tags and make them available via new fields in `AudioStream`.
 * The default fragment shaders now have access to the local light level (`lowp vec3 lightSample`).
 * Added `IPrototypeManager.ValidateAllPrototypesSerializable()`, which can be used to check that all currently loaded prototypes can be serialised & deserialised.
 
@@ -213,7 +246,7 @@ END TEMPLATE-->
 * Fix certain debug commands and tools crashing on non-SS14 RobustToolbox games due to a missing font.
 * Discord rich presence strings are now truncated if they are too long.
 * Fixed a couple of broadphase/entity-lookup update bugs that were affecting containers and entities attached to other (non-grid/map) entities.
-* Fixed `INetChannel.Disconnect()` not properly disconnecting clients in integration tests. 
+* Fixed `INetChannel.Disconnect()` not properly disconnecting clients in integration tests.
 
 ### Other
 

@@ -6,25 +6,32 @@ namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
-    protected World World = default!;
+    private World _world = default!;
     protected ComponentType[] DefaultArchetype = new ComponentType[] { typeof(MetaDataComponent) };
 
-    protected virtual void InitializeArch()
+    protected void InitializeArch()
     {
-        World = World.Create();
+        _world = World.Create();
     }
 
-    protected virtual void ShutdownArch()
+    protected void ShutdownArch()
     {
-        World.Destroy(World);
+        World.Destroy(_world);
     }
 
-    protected virtual void DestroyArch(EntityUid uid)
+    protected void DestroyArch(EntityUid uid)
     {
-        World.Destroy(uid.ToArch());
+        _world.Destroy(uid.ToArch());
     }
 
-    protected virtual void SpawnEntityArch(EntityUid uid, MetaDataComponent metadata)
+    private EntityUid SpawnEntityArch()
     {
+        var entity = _world.Create(DefaultArchetype);
+        return EntityUid.FromArch(entity);
+    }
+
+    private void CleanupArch()
+    {
+        _world.TrimExcess();
     }
 }

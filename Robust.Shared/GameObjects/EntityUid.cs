@@ -68,11 +68,6 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Entity ToArch()
         {
-            if (IsClientSide())
-            {
-                return new Entity(GetArchId() & ~ClientUid);
-            }
-
             return new Entity(GetArchId());
         }
 

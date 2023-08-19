@@ -12,8 +12,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Arch.Core;
-using Robust.Shared.Collections;
-using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Shared.GameObjects
@@ -43,7 +41,7 @@ namespace Robust.Shared.GameObjects
 
         private QueryDescription _archMetaQuery = new QueryDescription().WithAll<MetaDataComponent>();
 
-        private EntityQuery<MetaDataComponent> _metaQuery;
+        protected EntityQuery<MetaDataComponent> MetaQuery;
         private EntityQuery<TransformComponent> _xformQuery;
 
         #endregion Dependencies
@@ -67,8 +65,6 @@ namespace Robust.Shared.GameObjects
         private EntityDiffContext _context = new();
 
         private EntityEventBus _eventBus = null!;
-
-        protected int NextEntityUid = (int) EntityUid.FirstUid;
 
         protected int NextNetworkId = (int) NetEntity.First;
 
@@ -436,13 +432,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public int EntityCount => World.Size;
+        public int EntityCount => _world.Size;
 
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntities()
         {
             var ents = new List<Entity>();
-            World.GetEntities(_archMetaQuery, ents);
+            _world.GetEntities(_archMetaQuery, ents);
 
             foreach (var entity in ents)
             {
@@ -689,7 +685,9 @@ namespace Robust.Shared.GameObjects
                 DeleteEntity(e);
             }
 
-            if (World.Size > 0)
+            CleanupArch();
+
+            if (_world.Size > 0)
                 _sawmill.Error("Entities were spawned while flushing entities.");
         }
 
@@ -711,7 +709,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private EntityUid AllocEntity(out MetaDataComponent metadata)
         {
-            var uid = GenerateEntityUid();
+            var uid = SpawnEntityArch();
 
 #if DEBUG
             if (EntityExists(uid))
@@ -743,10 +741,10 @@ namespace Robust.Shared.GameObjects
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid, metadata, false, false);
 
+            _world.Set(uid.ToArch(), metadata);
+
             // allocate the required TransformComponent
             AddComponent<TransformComponent>(uid);
-
-            SpawnEntityArch(uid, metadata);
 
             return uid;
         }
@@ -852,14 +850,6 @@ namespace Robust.Shared.GameObjects
             // Part of shared the EntityManager so that systems can have convenient proxy methods, but the
             // server should never be calling this.
             DebugTools.Assert("Why are you raising predictive events on the server?");
-        }
-
-        /// <summary>
-        ///     Factory for generating a new EntityUid for an entity currently being created.
-        /// </summary>
-        protected EntityUid GenerateEntityUid()
-        {
-            return new EntityUid(NextEntityUid++);
         }
 
         /// <summary>

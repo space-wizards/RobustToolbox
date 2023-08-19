@@ -239,6 +239,15 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
                                  """);
         }
 
+        builder.AppendLine($$"""
+                             public void Copy(ref object target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                             {
+                                 var cast = ({{definition.GenericTypeName}}) target;
+                                 Copy(ref cast, serialization, hookCtx, context);
+                                 target = cast!;
+                             }
+                             """);
+
         return builder.ToString();
     }
 

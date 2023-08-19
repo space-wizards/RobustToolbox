@@ -372,7 +372,12 @@ public sealed partial class SerializationManager
             return;
         }
 
-        // TODO ISerializationGenerated fast path
+        if (source is ISerializationGenerated generated)
+        {
+            generated.Copy(ref target!, this, hookCtx, context);
+            RunAfterHook(target, hookCtx);
+            return;
+        }
 
         if (target == null)
         {

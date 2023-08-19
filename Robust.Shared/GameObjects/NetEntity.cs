@@ -1,6 +1,10 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
 
@@ -137,4 +141,82 @@ public struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFo
     {
         return _id.CompareTo(other._id);
     }
+
+    #region ViewVariables
+
+
+    [ViewVariables]
+    private string Representation
+    {
+        get
+        {
+            var entManager = IoCManager.Resolve<IEntityManager>();
+            return entManager.ToPrettyString(entManager.ToEntity(this));
+        }
+    }
+
+    [ViewVariables(VVAccess.ReadWrite)]
+    private string Name
+    {
+        get => MetaData?.EntityName ?? string.Empty;
+        set
+        {
+            if (MetaData is {} metaData)
+                metaData.EntityName = value;
+        }
+    }
+
+    [ViewVariables(VVAccess.ReadWrite)]
+    private string Description
+    {
+        get => MetaData?.EntityDescription ?? string.Empty;
+        set
+        {
+            if (MetaData is {} metaData)
+                metaData.EntityDescription = value;
+        }
+    }
+
+    [ViewVariables]
+    private EntityPrototype? Prototype => MetaData?.EntityPrototype;
+
+    [ViewVariables]
+    private GameTick LastModifiedTick => MetaData?.EntityLastModifiedTick ?? GameTick.Zero;
+
+    [ViewVariables]
+    private bool Paused => MetaData?.EntityPaused ?? false;
+
+    [ViewVariables]
+    private EntityLifeStage LifeStage => MetaData?.EntityLifeStage ?? EntityLifeStage.Deleted;
+
+    [ViewVariables]
+    private MetaDataComponent? MetaData
+    {
+        get
+        {
+            var entManager = IoCManager.Resolve<IEntityManager>();
+            return entManager.GetComponentOrNull<MetaDataComponent>(entManager.ToEntity(this));
+        }
+    }
+
+    [ViewVariables]
+    private TransformComponent? Transform
+    {
+        get
+        {
+            var entManager = IoCManager.Resolve<IEntityManager>();
+            return entManager.GetComponentOrNull<TransformComponent>(entManager.ToEntity(this));
+        }
+    }
+
+    [ViewVariables]
+    private EntityUid Uid
+    {
+        get
+        {
+            return IoCManager.Resolve<IEntityManager>().ToEntity(this);
+        }
+    }
+
+    #endregion
 }

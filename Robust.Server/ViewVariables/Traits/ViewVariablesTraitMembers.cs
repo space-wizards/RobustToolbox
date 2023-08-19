@@ -31,12 +31,6 @@ namespace Robust.Server.ViewVariables.Traits
                 var obj = Session.Object;
                 var objType = Session.ObjectType;
 
-                if (Session.Object is NetEntity netEntity)
-                {
-                    obj = IoCManager.Resolve<IEntityManager>().ToEntity(netEntity);
-                    objType = typeof(EntityUid);
-                }
-
                 foreach (var property in objType.GetAllProperties())
                 {
                     if (!ViewVariablesUtility.TryGetViewVariablesAccess(property, out var access))

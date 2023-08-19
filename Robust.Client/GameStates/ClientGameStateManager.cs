@@ -1202,6 +1202,7 @@ namespace Robust.Client.GameStates
         }
 
         #region Debug Commands
+
         private bool TryParseUid(IConsoleShell shell, string[] args, out EntityUid uid, [NotNullWhen(true)] out MetaDataComponent? meta)
         {
             if (args.Length != 1)

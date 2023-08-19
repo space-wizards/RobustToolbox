@@ -201,11 +201,11 @@ sealed class TpGridCommand : LocalizedCommands
             return;
         }
 
-        var gridId = EntityUid.Parse(args[0]);
+        var gridIdNet = NetEntity.Parse(args[0]);
         var xPos = float.Parse(args[1], CultureInfo.InvariantCulture);
         var yPos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
-        if (!_ent.EntityExists(gridId))
+        if (!_ent.TryGetEntity(gridIdNet, out var gridId) || !_ent.EntityExists(gridId))
         {
             shell.WriteError($"Entity does not exist: {args[0]}");
             return;

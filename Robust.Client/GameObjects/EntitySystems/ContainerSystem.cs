@@ -25,7 +25,7 @@ namespace Robust.Client.GameObjects
 
         private readonly HashSet<EntityUid> _updateQueue = new();
 
-        public readonly Dictionary<EntityUid, IContainer> ExpectedEntities = new();
+        public readonly Dictionary<NetEntity, IContainer> ExpectedEntities = new();
 
         public override void Initialize()
         {
@@ -45,12 +45,13 @@ namespace Robust.Client.GameObjects
 
         protected override void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing)
         {
-            DebugTools.Assert(ExpectedEntities.TryGetValue(missing, out var expectedContainer) && expectedContainer == cont && cont.ExpectedEntities.Contains(missing));
+            var netEntity = ToNetEntity(missing);
+            DebugTools.Assert(ExpectedEntities.TryGetValue(netEntity, out var expectedContainer) && expectedContainer == cont && cont.ExpectedEntities.Contains(netEntity));
         }
 
         private void HandleEntityInitialized(EntityUid uid)
         {
-            if (!RemoveExpectedEntity(uid, out var container))
+            if (!RemoveExpectedEntity(ToNetEntity(uid), out var container))
                 return;
 
             if (container.Deleted)
@@ -98,7 +99,7 @@ namespace Robust.Client.GameObjects
 
             // Add new containers and update existing contents.
 
-            foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.Containers.Values)
+            foreach (var (containerType, id, showEnts, occludesLight, nents) in cast.Containers.Values)
             {
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
@@ -112,6 +113,8 @@ namespace Robust.Client.GameObjects
 
                 // Remove gone entities.
                 var toRemove = new ValueList<EntityUid>();
+                var entityUids = ToEntityArray(nents);
+
                 foreach (var entity in container.ContainedEntities)
                 {
                     if (!entityUids.Contains(entity))
@@ -134,10 +137,10 @@ namespace Robust.Client.GameObjects
                 }
 
                 // Remove entities that were expected, but have been removed from the container.
-                var removedExpected = new ValueList<EntityUid>();
+                var removedExpected = new ValueList<NetEntity>();
                 foreach (var entityUid in container.ExpectedEntities)
                 {
-                    if (!entityUids.Contains(entityUid))
+                    if (!nents.Contains(entityUid))
                     {
                         removedExpected.Add(entityUid);
                     }
@@ -149,11 +152,14 @@ namespace Robust.Client.GameObjects
                 }
 
                 // Add new entities.
-                foreach (var entity in entityUids)
+                for (var i = 0; i < nents.Length; i++)
                 {
+                    var entity = entityUids[i];
+                    var netEnt = nents[i];
+
                     if (!EntityManager.TryGetComponent(entity, out MetaDataComponent? meta))
                     {
-                        AddExpectedEntity(entity, container);
+                        AddExpectedEntity(netEnt, container);
                         continue;
                     }
 
@@ -166,14 +172,14 @@ namespace Robust.Client.GameObjects
                     // containers/players.
                     if ((meta.Flags & MetaDataFlags.Detached) != 0)
                     {
-                        AddExpectedEntity(entity, container);
+                        AddExpectedEntity(netEnt, container);
                         continue;
                     }
 
                     if (container.Contains(entity))
                         continue;
 
-                    RemoveExpectedEntity(entity, out _);
+                    RemoveExpectedEntity(netEnt, out _);
                     container.Insert(entity, EntityManager,
                         xformQuery.GetComponent(entity),
                         xform,
@@ -198,7 +204,7 @@ namespace Robust.Client.GameObjects
             if (message.OldParent != null && message.OldParent.Value.IsValid())
                 return;
 
-            if (!RemoveExpectedEntity(message.Entity, out var container))
+            if (!RemoveExpectedEntity(ToNetEntity(message.Entity), out var container))
                 return;
 
             if (xform.ParentUid != container.Owner)
@@ -225,36 +231,42 @@ namespace Robust.Client.GameObjects
             return newContainer;
         }
 
-        public void AddExpectedEntity(EntityUid uid, IContainer container)
+        public void AddExpectedEntity(NetEntity entity, IContainer container)
         {
-            DebugTools.Assert(!TryComp(uid, out MetaDataComponent? meta) ||
-                (meta.Flags & ( MetaDataFlags.Detached | MetaDataFlags.InContainer) ) == MetaDataFlags.Detached,
-                $"Adding entity {ToPrettyString(uid)} to list of expected entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");
+#if DEBUG
+            var uid = ToEntity(entity);
 
-            if (!ExpectedEntities.TryAdd(uid, container))
+            if (TryComp<MetaDataComponent>(uid, out var meta))
+            {
+                DebugTools.Assert((meta.Flags & ( MetaDataFlags.Detached | MetaDataFlags.InContainer) ) == MetaDataFlags.Detached,
+                    $"Adding entity {ToPrettyString(uid)} to list of expected entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");
+            }
+#endif
+
+            if (!ExpectedEntities.TryAdd(entity, container))
             {
                 // It is possible that we were expecting this entity in one container, but it has now moved to another
                 // container, and this entity's state is just being applied before the old container is getting updated.
-                var oldContainer = ExpectedEntities[uid];
-                ExpectedEntities[uid] = container;
-                DebugTools.Assert(oldContainer.ExpectedEntities.Contains(uid),
-                    $"Entity {ToPrettyString(uid)} is expected, but not expected in the given container? Container: {oldContainer.ID} in {ToPrettyString(oldContainer.Owner)}");
-                oldContainer.ExpectedEntities.Remove(uid);
+                var oldContainer = ExpectedEntities[entity];
+                ExpectedEntities[entity] = container;
+                DebugTools.Assert(oldContainer.ExpectedEntities.Contains(entity),
+                    $"Entity {entity} is expected, but not expected in the given container? Container: {oldContainer.ID} in {ToPrettyString(oldContainer.Owner)}");
+                oldContainer.ExpectedEntities.Remove(entity);
             }
 
-            DebugTools.Assert(!container.ExpectedEntities.Contains(uid),
-                $"Contained entity {ToPrettyString(uid)} was not yet expected by the system, but was already expected by the container: {container.ID} in {ToPrettyString(container.Owner)}");
-            container.ExpectedEntities.Add(uid);
+            DebugTools.Assert(!container.ExpectedEntities.Contains(entity),
+                $"Contained entity {entity} was not yet expected by the system, but was already expected by the container: {container.ID} in {ToPrettyString(container.Owner)}");
+            container.ExpectedEntities.Add(entity);
         }
 
-        public bool RemoveExpectedEntity(EntityUid uid, [NotNullWhen(true)] out IContainer? container)
+        public bool RemoveExpectedEntity(NetEntity entity, [NotNullWhen(true)] out IContainer? container)
         {
-            if (!ExpectedEntities.Remove(uid, out container))
+            if (!ExpectedEntities.Remove(entity, out container))
                 return false;
 
-            DebugTools.Assert(container.ExpectedEntities.Contains(uid),
-                $"While removing expected contained entity {ToPrettyString(uid)}, the entity was missing from the container expected set. Container: {container.ID} in {ToPrettyString(container.Owner)}");
-            container.ExpectedEntities.Remove(uid);
+            DebugTools.Assert(container.ExpectedEntities.Contains(entity),
+                $"While removing expected contained entity {entity}, the entity was missing from the container expected set. Container: {container.ID} in {ToPrettyString(container.Owner)}");
+            container.ExpectedEntities.Remove(entity);
             return true;
         }
 

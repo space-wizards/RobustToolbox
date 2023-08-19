@@ -20,7 +20,7 @@ namespace Robust.Client.Physics
         {
             if (args.Current is not JointComponentState jointState) return;
 
-            component.Relay = jointState.Relay;
+            component.Relay = ToEntity(jointState.Relay);
 
             // Initial state gets applied before the entity (& entity's transform) have been initialized.
             // So just let joint init code handle that.
@@ -29,7 +29,7 @@ namespace Robust.Client.Physics
                 component.Joints.Clear();
                 foreach (var (id, state) in jointState.Joints)
                 {
-                    component.Joints[id] = state.GetJoint();
+                    component.Joints[id] = state.GetJoint(EntityManager);
                 }
                 return;
             }
@@ -62,7 +62,7 @@ namespace Robust.Client.Physics
                     continue;
                 }
 
-                var other = state.UidA == uid ? state.UidB : state.UidA;
+                var other = state.UidA == ToNetEntity(uid) ? ToEntity(state.UidB) : ToEntity(state.UidA);
 
 
                 // Add new joint (if possible).
@@ -82,11 +82,11 @@ namespace Robust.Client.Physics
                 // TODO: component state handling ordering.
                 if (Transform(uid).MapID == MapId.Nullspace)
                 {
-                    AddedJoints.Add(state.GetJoint());
+                    AddedJoints.Add(state.GetJoint(EntityManager));
                     continue;
                 }
 
-                AddJoint(state.GetJoint());
+                AddJoint(state.GetJoint(EntityManager));
             }
         }
     }

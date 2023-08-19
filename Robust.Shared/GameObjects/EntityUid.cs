@@ -4,7 +4,6 @@ using Arch.Core;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -16,15 +15,10 @@ namespace Robust.Shared.GameObjects
     ///     This type contains a network identification number of an entity.
     ///     This can be used by the EntityManager to access an entity
     /// </summary>
-    [Serializable, NetSerializable, CopyByRef]
+    [CopyByRef]
     public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>, ISpanFormattable
     {
-        /// <summary>
-        ///     If this bit is set on a UID, it's client sided.
-        ///     Use <see cref="IsClientSide" /> to check this.
-        /// </summary>
-        internal const int ClientUid = 2 << 29;
-        readonly int _uid;
+        private readonly int _uid;
 
         /// <summary>
         ///     An Invalid entity UID you can compare against.
@@ -51,14 +45,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public static EntityUid Parse(ReadOnlySpan<char> uid)
         {
-            if (uid.StartsWith("c"))
-            {
-                return new EntityUid(int.Parse(uid[1..]) | ClientUid);
-            }
-            else
-            {
-                return new EntityUid(int.Parse(uid));
-            }
+            return new EntityUid(int.Parse(uid));
         }
 
         public static bool TryParse(ReadOnlySpan<char> uid, out EntityUid entityUid)
@@ -100,12 +87,6 @@ namespace Robust.Shared.GameObjects
         public bool IsValid()
         {
             return _uid > 0;
-        }
-
-        [Pure]
-        public bool IsClientSide()
-        {
-            return (_uid & (2 << 29)) != 0;
         }
 
         /// <inheritdoc />
@@ -155,10 +136,6 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override string ToString()
         {
-            if (IsClientSide())
-            {
-                return $"c{_uid & ~ClientUid}";
-            }
             return _uid.ToString();
         }
 
@@ -173,14 +150,6 @@ namespace Robust.Shared.GameObjects
             ReadOnlySpan<char> format,
             IFormatProvider? provider)
         {
-            if (IsClientSide())
-            {
-                return FormatHelpers.TryFormatInto(
-                    destination,
-                    out charsWritten,
-                    $"c{_uid & ~ClientUid}");
-            }
-
             return _uid.TryFormat(destination, out charsWritten);
         }
 

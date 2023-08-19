@@ -122,7 +122,7 @@ namespace Robust.Client.Player
 
             if (myState != null)
             {
-                UpdateAttachedEntity(myState.ControlledEntity);
+                UpdateAttachedEntity(_entManager.GetEntity(myState.ControlledEntity));
                 UpdateSessionStatus(myState.Status);
             }
 
@@ -181,11 +181,13 @@ namespace Robust.Client.Player
                 if (_sessions.TryGetValue(state.UserId, out var session))
                 {
                     var local = (PlayerSession) session;
+                    var controlled = _entManager.GetEntity(state.ControlledEntity);
+
                     // Exists, update data.
                     if (local.Name == state.Name
                         && local.Status == state.Status
                         && local.Ping == state.Ping
-                        && local.AttachedEntity == state.ControlledEntity)
+                        && local.AttachedEntity == controlled)
                     {
                         continue;
                     }
@@ -194,7 +196,7 @@ namespace Robust.Client.Player
                     local.Name = state.Name;
                     local.Status = state.Status;
                     local.Ping = state.Ping;
-                    local.AttachedEntity = state.ControlledEntity;
+                    local.AttachedEntity = controlled;
                 }
                 else
                 {
@@ -206,7 +208,7 @@ namespace Robust.Client.Player
                         Name = state.Name,
                         Status = state.Status,
                         Ping = state.Ping,
-                        AttachedEntity = state.ControlledEntity,
+                        AttachedEntity = _entManager.GetEntity(state.ControlledEntity),
                     };
                     _sessions.Add(state.UserId, newSession);
                     if (state.UserId == LocalPlayer!.UserId)

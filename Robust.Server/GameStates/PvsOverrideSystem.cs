@@ -16,7 +16,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// </summary>
     public void AddGlobalOverride(EntityUid uid)
     {
-        _pvs.EntityPVSCollection.UpdateIndex(uid, true);
+        _pvs.EntityPVSCollection.UpdateIndex(ToNetEntity(uid), true);
     }
 
     /// <summary>
@@ -25,7 +25,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// </summary>
     public void AddSessionOverride(EntityUid uid, ICommonSession session)
     {
-        _pvs.EntityPVSCollection.UpdateIndex(uid, session, true);
+        _pvs.EntityPVSCollection.UpdateIndex(ToNetEntity(uid), session, true);
     }
 
     /// <summary>
@@ -36,6 +36,6 @@ public sealed class PvsOverrideSystem : EntitySystem
         if (!Resolve(uid, ref xform))
             return;
 
-        _pvs.EntityPVSCollection.UpdateIndex(uid, xform.Coordinates, true);
+        _pvs.EntityPVSCollection.UpdateIndex(ToNetEntity(uid), xform.Coordinates, true);
     }
 }

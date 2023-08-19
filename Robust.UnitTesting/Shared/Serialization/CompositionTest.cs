@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
-using TerraFX.Interop.Windows;
 
 namespace Robust.UnitTesting.Shared.Serialization;
 

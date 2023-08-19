@@ -26,7 +26,7 @@ namespace Robust.Shared.Containers
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
 
         [ViewVariables]
-        public abstract List<EntityUid> ExpectedEntities { get; }
+        public abstract List<NetEntity> ExpectedEntities { get; }
 
         /// <inheritdoc />
         public abstract string ContainerType { get; }
@@ -72,13 +72,13 @@ namespace Robust.Shared.Containers
             PhysicsComponent? physics = null,
             bool force = false)
         {
+            IoCManager.Resolve(ref entMan);
             DebugTools.Assert(!Deleted);
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
             DebugTools.Assert(physics == null || physics.Owner == toinsert);
-            DebugTools.Assert(!ExpectedEntities.Contains(toinsert));
-            IoCManager.Resolve(ref entMan);
+            DebugTools.Assert(!ExpectedEntities.Contains(entMan.GetNetEntity(toinsert)));
 
             //Verify we can insert into this container
             if (!force && !CanInsert(toinsert, entMan))

@@ -105,9 +105,9 @@ internal sealed class PrismaticJointState : JointState
     /// The desired motor speed in radians per second.
     public float MotorSpeed;
 
-    public override Joint GetJoint()
+    public override Joint GetJoint(IEntityManager entManager)
     {
-        return new PrismaticJoint(this);
+        return new PrismaticJoint(this, entManager);
     }
 
 }
@@ -219,7 +219,7 @@ public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
         ReferenceAngle = referenceAngle;
     }
 
-    internal PrismaticJoint(PrismaticJointState state) : base(state)
+    internal PrismaticJoint(PrismaticJointState state, IEntityManager entManager) : base(state, entManager)
     {
         LocalAxisA = state.LocalAxisA;
         ReferenceAngle = state.ReferenceAngle;
@@ -233,7 +233,7 @@ public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
 
     public override JointType JointType => JointType.Prismatic;
 
-    public override JointState GetState()
+    public override JointState GetState(IEntityManager entManager)
     {
         var prismaticState = new PrismaticJointState
         {
@@ -241,7 +241,7 @@ public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
             LocalAnchorB = LocalAnchorB
         };
 
-        base.GetState(prismaticState);
+        base.GetState(prismaticState, entManager);
         return prismaticState;
     }
 

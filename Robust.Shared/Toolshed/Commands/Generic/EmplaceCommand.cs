@@ -119,7 +119,7 @@ internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEnt
             {
                 case "ent":
                 {
-                    return session.AttachedEntity!;
+                    return EntityManager.GetNetEntity(session.AttachedEntity!);
                 }
                 case "name":
                 {

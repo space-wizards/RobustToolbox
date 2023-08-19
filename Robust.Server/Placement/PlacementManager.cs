@@ -98,8 +98,10 @@ namespace Robust.Server.Placement
                 return;
 
             //TODO: Distance check, so you can't place things off of screen.
+            // I don't think that's this manager's biggest problem
 
-            var coordinates = msg.EntityCoordinates;
+            var netCoordinates = msg.NetCoordinates;
+            var coordinates = _entityManager.GetCoordinates(netCoordinates);
 
             if (!coordinates.IsValid(_entityManager))
             {
@@ -211,17 +213,19 @@ namespace Robust.Server.Placement
         private void HandleEntRemoveReq(MsgPlacement msg)
         {
             //TODO: Some form of admin check
-            if (!_entityManager.EntityExists(msg.EntityUid))
+            var entity = _entityManager.GetEntity(msg.EntityUid);
+
+            if (!_entityManager.EntityExists(entity))
                 return;
 
-            var placementEraseEvent = new PlacementEntityEvent(msg.EntityUid, _entityManager.GetComponent<TransformComponent>(msg.EntityUid).Coordinates, PlacementEventAction.Erase, msg.MsgChannel.UserId);
+            var placementEraseEvent = new PlacementEntityEvent(entity, _entityManager.GetComponent<TransformComponent>(entity).Coordinates, PlacementEventAction.Erase, msg.MsgChannel.UserId);
             _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
-            _entityManager.DeleteEntity(msg.EntityUid);
+            _entityManager.DeleteEntity(entity);
         }
 
         private void HandleRectRemoveReq(MsgPlacement msg)
         {
-            EntityCoordinates start = msg.EntityCoordinates;
+            EntityCoordinates start = _entityManager.GetCoordinates(msg.NetCoordinates);
             Vector2 rectSize = msg.RectSize;
             foreach (EntityUid entity in EntitySystem.Get<EntityLookupSystem>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))

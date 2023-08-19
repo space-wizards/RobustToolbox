@@ -24,6 +24,6 @@ namespace Robust.Server.GameStates
 
         Action<ICommonSession, GameTick>? ClientAck { get; set; }
 
-        Action<ICommonSession, GameTick, EntityUid?>? ClientRequestFull { get; set; }
+        Action<ICommonSession, GameTick, NetEntity?>? ClientRequestFull { get; set; }
     }
 }

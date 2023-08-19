@@ -479,7 +479,7 @@ public abstract partial class SharedTransformSystem
             if (value.EntityId == uid)
             {
                 DetachParentToNull(uid, xform);
-                if (_netMan.IsServer || uid.IsClientSide())
+                if (_netMan.IsServer || IsClientSide(uid))
                     QueueDel(uid);
                 throw new InvalidOperationException($"Attempted to parent an entity to itself: {ToPrettyString(uid)}");
             }
@@ -489,7 +489,7 @@ public abstract partial class SharedTransformSystem
                 if (!_xformQuery.Resolve(value.EntityId, ref newParent, false))
                 {
                     DetachParentToNull(uid, xform);
-                    if (_netMan.IsServer || uid.IsClientSide())
+                    if (_netMan.IsServer || IsClientSide(uid))
                         QueueDel(uid);
                     throw new InvalidOperationException($"Attempted to parent entity {ToPrettyString(uid)} to non-existent entity {value.EntityId}");
                 }
@@ -497,7 +497,7 @@ public abstract partial class SharedTransformSystem
                 if (newParent.LifeStage > ComponentLifeStage.Running || LifeStage(value.EntityId) > EntityLifeStage.MapInitialized)
                 {
                     DetachParentToNull(uid, xform);
-                    if (_netMan.IsServer || uid.IsClientSide())
+                    if (_netMan.IsServer || IsClientSide(uid))
                         QueueDel(uid);
                     throw new InvalidOperationException($"Attempted to re-parent to a terminating object. Entity: {ToPrettyString(uid)}, new parent: {ToPrettyString(value.EntityId)}");
                 }
@@ -681,10 +681,12 @@ public abstract partial class SharedTransformSystem
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
         DebugTools.Assert(!component.ParentUid.IsValid() || (!Deleted(component.ParentUid) && !EntityManager.IsQueuedForDeletion(component.ParentUid)));
+        var parent = ToNetEntity(component.ParentUid);
+
         args.State = new TransformComponentState(
             component.LocalPosition,
             component.LocalRotation,
-            component.ParentUid,
+            parent,
             component.NoLocalRotation,
             component.Anchored);
     }
@@ -693,13 +695,14 @@ public abstract partial class SharedTransformSystem
     {
         if (args.Current is TransformComponentState newState)
         {
+            var parent = ToEntity(newState.ParentID);
             var newParentId = newState.ParentID;
             var oldAnchored = xform.Anchored;
 
             // update actual position data, if required
             if (!xform.LocalPosition.EqualsApprox(newState.LocalPosition)
                 || !xform.LocalRotation.EqualsApprox(newState.Rotation)
-                || xform.ParentUid != newParentId)
+                || xform.ParentUid != parent)
             {
                 // remove from any old grid lookups
                 if (xform.Anchored && TryComp(xform.ParentUid, out MapGridComponent? grid))
@@ -712,7 +715,7 @@ public abstract partial class SharedTransformSystem
                 xform._anchored |= newState.Anchored;
 
                 // Update the action position, rotation, and parent (and hence also map, grid, etc).
-                SetCoordinates(uid, xform, new EntityCoordinates(newParentId, newState.LocalPosition), newState.Rotation, unanchor: false);
+                SetCoordinates(uid, xform, new EntityCoordinates(parent, newState.LocalPosition), newState.Rotation, unanchor: false);
 
                 xform._anchored = newState.Anchored;
 
@@ -747,7 +750,7 @@ public abstract partial class SharedTransformSystem
             xform.PrevRotation = newState.Rotation;
             xform._noLocalRotation = newState.NoLocalRotation;
 
-            DebugTools.Assert(xform.ParentUid == newState.ParentID, "Transform state failed to set parent");
+            DebugTools.Assert(xform.ParentUid == parent, "Transform state failed to set parent");
             DebugTools.Assert(xform.Anchored == newState.Anchored, "Transform state failed to set anchored");
         }
 
@@ -755,7 +758,7 @@ public abstract partial class SharedTransformSystem
         {
             xform.NextPosition = nextTransform.LocalPosition;
             xform.NextRotation = nextTransform.Rotation;
-            xform.LerpParent = nextTransform.ParentID;
+            xform.LerpParent = ToEntity(nextTransform.ParentID);
             ActivateLerp(xform);
         }
         else

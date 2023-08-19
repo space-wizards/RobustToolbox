@@ -65,7 +65,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             EntityCoordinates mouseGridPos;
             TileRef tile;
 
-            var mouseWorldMap = _eyeManager.ScreenToMap(mouseScreenPos);
+            var mouseWorldMap = _eyeManager.PixelToMap(mouseScreenPos);
             if (mouseWorldMap == MapCoordinates.Nullspace)
                 return;
 

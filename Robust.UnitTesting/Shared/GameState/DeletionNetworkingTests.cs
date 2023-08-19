@@ -63,20 +63,24 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         // Set up map & grids
         EntityUid grid1 = default;
         EntityUid grid2 = default;
-        EntityUid map = default;
+        NetEntity grid1Net = default;
+        NetEntity grid2Net = default;
+
         await server.WaitPost(() =>
         {
             var mapId = mapMan.CreateMap();
-            map = mapMan.GetMapEntityId(mapId);
+            mapMan.GetMapEntityId(mapId);
             var gridComp = mapMan.CreateGrid(mapId);
             gridComp.SetTile(Vector2i.Zero, new Tile(1));
             grid1 = gridComp.Owner;
             xformSys.SetLocalPosition(grid1, new Vector2(-2,0));
+            grid1Net = sEntMan.GetNetEntity(grid1);
 
             gridComp = mapMan.CreateGrid(mapId);
             gridComp.SetTile(Vector2i.Zero, new Tile(1));
             grid2 = gridComp.Owner;
             xformSys.SetLocalPosition(grid2, new Vector2(2,0));
+            grid2Net = sEntMan.GetNetEntity(grid2);
         });
 
         // Spawn player entity on grid 1
@@ -95,8 +99,8 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         // Check player got properly attached
         await client.WaitPost(() =>
         {
-            var ent = cPlayerMan.LocalPlayer?.ControlledEntity;
-            Assert.That(ent, Is.EqualTo(player));
+            var ent = cEntMan.GetNetEntity(cPlayerMan.LocalPlayer?.ControlledEntity);
+            Assert.That(ent, Is.EqualTo(sEntMan.GetNetEntity(player)));
         });
 
         // Spawn two entities, each with one child.
@@ -104,6 +108,12 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         EntityUid entB = default;
         EntityUid childA = default;
         EntityUid childB = default;
+
+        NetEntity entANet = default;
+        NetEntity entBNet = default;
+        NetEntity childANet = default;
+        NetEntity childBNet = default!;
+
         var coords = new EntityCoordinates(grid2, new Vector2(0.5f, 0.5f));
         await server.WaitPost(() =>
         {
@@ -111,18 +121,32 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
             entB = sEntMan.SpawnEntity("", coords);
             childA = sEntMan.SpawnEntity("", new EntityCoordinates(entA, default));
             childB = sEntMan.SpawnEntity("", new EntityCoordinates(entB, default));
+
+            entANet = sEntMan.GetNetEntity(entA);
+            entBNet = sEntMan.GetNetEntity(entB);
+            childANet = sEntMan.GetNetEntity(childA);
+            childBNet = sEntMan.GetNetEntity(childB);
         });
 
         await RunTicks();
+
+        // Get the client version of the entities.
+        entA = cEntMan.GetEntity(entANet);
+        entB = cEntMan.GetEntity(entBNet);
+        childA = cEntMan.GetEntity(childANet);
+        childB = cEntMan.GetEntity(childBNet);
 
         // Spawn client-side children and one client-side entity
         EntityUid entC = default;
         EntityUid childC = default;
         EntityUid clientChildA = default;
         EntityUid clientChildB = default;
+
+        NetEntity entCNet = NetEntity.Invalid;
+
         await client.WaitPost(() =>
         {
-            entC = cEntMan.SpawnEntity("", coords);
+            entC = cEntMan.SpawnEntity("", cEntMan.GetCoordinates(sEntMan.GetNetCoordinates(coords)));
             childC = cEntMan.SpawnEntity("", new EntityCoordinates(entC, default));
             clientChildA = cEntMan.SpawnEntity("", new EntityCoordinates(entA, default));
             clientChildB = cEntMan.SpawnEntity("", new EntityCoordinates(entB, default));
@@ -131,7 +155,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         await RunTicks();
 
         // Verify entities exist and have the correct parents.
-        EntityUid Parent(EntityUid uid) => cEntMan!.GetComponent<TransformComponent>(uid).ParentUid;
+        NetEntity Parent(EntityUid uid) => cEntMan.GetNetEntity(cEntMan.GetComponent<TransformComponent>(uid).ParentUid);
         await client.WaitPost(() =>
         {
             // Exist
@@ -145,24 +169,25 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
             Assert.That(cEntMan.EntityExists(clientChildB));
 
             // Client-side where appropriate
-            Assert.That(entC.IsClientSide());
-            Assert.That(childC.IsClientSide());
-            Assert.That(clientChildA.IsClientSide());
-            Assert.That(clientChildB.IsClientSide());
-            Assert.That(!entA.IsClientSide());
-            Assert.That(!entB.IsClientSide());
-            Assert.That(!childA.IsClientSide());
-            Assert.That(!childB.IsClientSide());
+            Assert.That(cEntMan.IsClientSide(entC));
+            Assert.That(cEntMan.IsClientSide(childC));
+            Assert.That(cEntMan.IsClientSide(clientChildA));
+            Assert.That(cEntMan.IsClientSide(clientChildB));
+            Assert.That(!cEntMan.IsClientSide(entA));
+            Assert.That(!cEntMan.IsClientSide(entB));
+            Assert.That(!cEntMan.IsClientSide(childA));
+            Assert.That(!cEntMan.IsClientSide(childB));
 
             // Correct parents.
-            Assert.That(Parent(entA), Is.EqualTo(grid2));
-            Assert.That(Parent(entB), Is.EqualTo(grid2));
-            Assert.That(Parent(entC), Is.EqualTo(grid2));
-            Assert.That(Parent(childA), Is.EqualTo(entA));
-            Assert.That(Parent(childB), Is.EqualTo(entB));
-            Assert.That(Parent(childC), Is.EqualTo(entC));
-            Assert.That(Parent(clientChildA), Is.EqualTo(entA));
-            Assert.That(Parent(clientChildB), Is.EqualTo(entB));
+
+            Assert.That(Parent(entA), Is.EqualTo(grid2Net));
+            Assert.That(Parent(entB), Is.EqualTo(grid2Net));
+            Assert.That(Parent(entC), Is.EqualTo(grid2Net));
+            Assert.That(Parent(childA), Is.EqualTo(entANet));
+            Assert.That(Parent(childB), Is.EqualTo(entBNet));
+            Assert.That(Parent(childC), Is.EqualTo(entCNet));
+            Assert.That(Parent(clientChildA), Is.EqualTo(entANet));
+            Assert.That(Parent(clientChildB), Is.EqualTo(entBNet));
         });
 
         // Delete client-side entity.
@@ -175,7 +200,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         });
 
         // Delete server-side entity.
-        await server.WaitPost(() => sEntMan.DeleteEntity(entB));
+        await server.WaitPost(() => sEntMan.DeleteEntity(sEntMan.GetEntity(entBNet)));
         await RunTicks();
         await client.WaitPost(() =>
         {
@@ -191,7 +216,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         await RunTicks();
         await client.WaitPost(() =>
         {
-            Assert.That(!cEntMan.EntityExists(grid2));
+            Assert.That(!cEntMan.EntityExists(cEntMan.GetEntity(sEntMan.GetNetEntity(grid2))));
             Assert.That(!cEntMan.EntityExists(entA));
             Assert.That(!cEntMan.EntityExists(childA));
 

@@ -61,7 +61,7 @@ namespace Robust.Client.Debugging
             }
 
             var mouseSpot = _inputManager.MouseScreenPosition;
-            var spot = _eyeManager.ScreenToMap(mouseSpot);
+            var spot = _eyeManager.PixelToMap(mouseSpot);
 
             if (!_mapManager.TryFindGridAt(spot, out var gridUid, out var grid))
             {

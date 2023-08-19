@@ -8,7 +8,7 @@ namespace Robust.Client.UserInterface.RichText;
 /// </summary>
 public sealed class ColorTag : IMarkupTag
 {
-    private static readonly Color DefaultColor = new(200, 200, 200);
+    public static readonly Color DefaultColor = new(200, 200, 200);
 
     public string Name => "color";
 

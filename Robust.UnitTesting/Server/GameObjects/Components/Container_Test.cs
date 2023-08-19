@@ -285,7 +285,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(cont.OccludesLight, Is.True);
             Assert.That(cont.ShowContents, Is.True);
             Assert.That(cont.ContainedEntities.Length, Is.EqualTo(1));
-            Assert.That(cont.ContainedEntities[0], Is.EqualTo(childEnt));
+            Assert.That(cont.ContainedEntities[0], Is.EqualTo(entManager.GetNetEntity(childEnt)));
         }
 
         private sealed class ContainerOnlyContainer : BaseContainer
@@ -294,14 +294,14 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             /// The generic container class uses a list of entities
             /// </summary>
             private readonly List<EntityUid> _containerList = new();
-            private readonly List<EntityUid> _expectedEntities = new();
+            private readonly List<NetEntity> _expectedEntities = new();
 
             public override string ContainerType => nameof(ContainerOnlyContainer);
 
             /// <inheritdoc />
             public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
 
-            public override List<EntityUid> ExpectedEntities => _expectedEntities;
+            public override List<NetEntity> ExpectedEntities => _expectedEntities;
 
             /// <inheritdoc />
             protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)

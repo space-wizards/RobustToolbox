@@ -29,11 +29,13 @@ public sealed class PvsSystemTests : RobustIntegrationTest
 
         var mapMan = server.ResolveDependency<IMapManager>();
         var sEntMan = server.ResolveDependency<IEntityManager>();
-        var netMan = client.ResolveDependency<IClientNetManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
-        var cPlayerMan = client.ResolveDependency<cIPlayerManager>();
         var sPlayerMan = server.ResolveDependency<sIPlayerManager>();
         var xforms = sEntMan.System<SharedTransformSystem>();
+
+        var cEntMan = client.ResolveDependency<IEntityManager>();
+        var netMan = client.ResolveDependency<IClientNetManager>();
+        var cPlayerMan = client.ResolveDependency<cIPlayerManager>();
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
@@ -87,8 +89,8 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         // Check player got properly attached
         await client.WaitPost(() =>
         {
-            var ent = cPlayerMan.LocalPlayer?.ControlledEntity;
-            Assert.That(ent, Is.EqualTo(player));
+            var ent = cEntMan.GetNetEntity(cPlayerMan.LocalPlayer?.ControlledEntity);
+            Assert.That(ent, Is.EqualTo(sEntMan.GetNetEntity(player)));
         });
 
         // Move the player off-grid and back onto the grid in the same tick

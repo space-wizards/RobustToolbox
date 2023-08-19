@@ -1,4 +1,5 @@
-﻿using Robust.Shared.GameObjects;
+﻿using System;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Players;
 
@@ -18,7 +19,7 @@ namespace Robust.Shared.Input.Binding
         {
         }
 
-        public abstract bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message);
+        public abstract bool HandleCmdMessage(IEntityManager entManager, ICommonSession? session, IFullInputCmdMessage message);
 
         /// <summary>
         ///     Makes a quick input command from enabled and disabled delegates.
@@ -56,12 +57,9 @@ namespace Robust.Shared.Input.Binding
                 DisabledDelegate?.Invoke(session);
             }
 
-            public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
+            public override bool HandleCmdMessage(IEntityManager entManager, ICommonSession? session, IFullInputCmdMessage message)
             {
-                if (!(message is FullInputCmdMessage msg))
-                    return false;
-
-                switch (msg.State)
+                switch (message.State)
                 {
                     case BoundKeyState.Up:
                         Disabled(session);
@@ -111,14 +109,28 @@ namespace Robust.Shared.Input.Binding
             FireOutsidePrediction = outsidePrediction;
         }
 
-        public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
+        public override bool HandleCmdMessage(IEntityManager entManager, ICommonSession? session, IFullInputCmdMessage message)
         {
-            if (!(message is FullInputCmdMessage msg) || (_ignoreUp && msg.State != BoundKeyState.Down))
+            if ((_ignoreUp && message.State != BoundKeyState.Down))
                 return false;
 
-            var handled = _callback?.Invoke(new PointerInputCmdArgs(session, msg.Coordinates,
-                msg.ScreenCoordinates, msg.Uid, msg.State, msg));
-            return handled.HasValue && handled.Value;
+            switch (message)
+            {
+                case ClientFullInputCmdMessage clientInput:
+                {
+                    var handled = _callback?.Invoke(new PointerInputCmdArgs(session, clientInput.Coordinates,
+                        clientInput.ScreenCoordinates, clientInput.Uid, message.State, message));
+                    return handled.HasValue && handled.Value;
+                }
+                case FullInputCmdMessage fullInput:
+                {
+                    var handled = _callback?.Invoke(new PointerInputCmdArgs(session, entManager.GetCoordinates(fullInput.Coordinates),
+                        fullInput.ScreenCoordinates, entManager.GetEntity(fullInput.Uid), fullInput.State, message));
+                    return handled.HasValue && handled.Value;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public readonly struct PointerInputCmdArgs
@@ -128,11 +140,11 @@ namespace Robust.Shared.Input.Binding
             public readonly ScreenCoordinates ScreenCoordinates;
             public readonly EntityUid EntityUid;
             public readonly BoundKeyState State;
-            public readonly FullInputCmdMessage OriginalMessage;
+            public readonly IFullInputCmdMessage OriginalMessage;
 
             public PointerInputCmdArgs(ICommonSession? session, EntityCoordinates coordinates,
                 ScreenCoordinates screenCoordinates, EntityUid entityUid, BoundKeyState state,
-                FullInputCmdMessage originalMessage)
+                IFullInputCmdMessage originalMessage)
             {
                 Session = session;
                 Coordinates = coordinates;
@@ -158,17 +170,28 @@ namespace Robust.Shared.Input.Binding
         }
 
         /// <inheritdoc />
-        public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
+        public override bool HandleCmdMessage(IEntityManager entManager, ICommonSession? session, IFullInputCmdMessage message)
         {
-            if (!(message is FullInputCmdMessage msg))
-                return false;
-
-            switch (msg.State)
+            switch (message)
             {
-                case BoundKeyState.Up:
-                    return _disabled?.Invoke(session, msg.Coordinates, msg.Uid) == true;
-                case BoundKeyState.Down:
-                    return _enabled?.Invoke(session, msg.Coordinates, msg.Uid) == true;
+                case ClientFullInputCmdMessage clientInput:
+                    switch (clientInput.State)
+                    {
+                        case BoundKeyState.Up:
+                            return _disabled?.Invoke(session, clientInput.Coordinates, clientInput.Uid) == true;
+                        case BoundKeyState.Down:
+                            return _enabled?.Invoke(session, clientInput.Coordinates, clientInput.Uid) == true;
+                    }
+                    break;
+                case FullInputCmdMessage fullInput:
+                    switch (fullInput.State)
+                    {
+                        case BoundKeyState.Up:
+                            return _disabled?.Invoke(session, entManager.GetCoordinates(fullInput.Coordinates), entManager.GetEntity(fullInput.Uid)) == true;
+                        case BoundKeyState.Down:
+                            return _enabled?.Invoke(session, entManager.GetCoordinates(fullInput.Coordinates), entManager.GetEntity(fullInput.Uid)) == true;
+                    }
+                    break;
             }
 
             //Client Sanitization: unknown key state, just ignore
@@ -183,7 +206,7 @@ namespace Robust.Shared.Input.Binding
     public sealed class NullInputCmdHandler : InputCmdHandler
     {
         /// <inheritdoc />
-        public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
+        public override bool HandleCmdMessage(IEntityManager entManager, ICommonSession? session, IFullInputCmdMessage message)
         {
             return true;
         }

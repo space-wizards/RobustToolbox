@@ -43,9 +43,9 @@ internal sealed class RevoluteJointState : JointState
     public float MotorSpeed { get; internal set; }
     public float MaxMotorTorque { get; internal set; }
 
-    public override Joint GetJoint()
+    public override Joint GetJoint(IEntityManager entManager)
     {
-        return new RevoluteJoint(this);
+        return new RevoluteJoint(this, entManager);
     }
 }
 
@@ -122,7 +122,7 @@ public sealed class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
 
     public RevoluteJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}
 
-    internal RevoluteJoint(RevoluteJointState state) : base(state)
+    internal RevoluteJoint(RevoluteJointState state, IEntityManager entManager) : base(state, entManager)
     {
         EnableLimit = state.EnableLimit;
         EnableMotor = state.EnableMotor;
@@ -135,11 +135,11 @@ public sealed class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
 
     public override JointType JointType => JointType.Revolute;
 
-    public override JointState GetState()
+    public override JointState GetState(IEntityManager entManager)
     {
         var revoluteState = new RevoluteJointState();
 
-        base.GetState(revoluteState);
+        base.GetState(revoluteState, entManager);
         return revoluteState;
     }
 

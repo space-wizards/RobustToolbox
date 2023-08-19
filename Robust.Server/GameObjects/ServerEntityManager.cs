@@ -42,8 +42,6 @@ namespace Robust.Server.GameObjects
 
         private ISawmill _netEntSawmill = default!;
 
-        protected override int NextEntityUid { get; set; } = (int) EntityUid.FirstUid;
-
         public override void Initialize()
         {
             _netEntSawmill = LogManager.GetSawmill("net.ent");
@@ -54,9 +52,9 @@ namespace Robust.Server.GameObjects
             base.Initialize();
         }
 
-        EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype, EntityUid uid)
+        EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype)
         {
-            return AllocEntity(prototype, out _, uid);
+            return AllocEntity(prototype, out _);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
@@ -79,9 +77,9 @@ namespace Robust.Server.GameObjects
             StartEntity(entity);
         }
 
-        private protected override EntityUid CreateEntity(string? prototypeName, EntityUid uid = default, IEntityLoadContext? context = null)
+        private protected override EntityUid CreateEntity(string? prototypeName, IEntityLoadContext? context = null)
         {
-            var entity = base.CreateEntity(prototypeName, uid, context);
+            var entity = base.CreateEntity(prototypeName, context);
 
             if (!string.IsNullOrWhiteSpace(prototypeName))
             {

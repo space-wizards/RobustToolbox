@@ -72,7 +72,7 @@ public sealed class ToolshedEnvironment
         {
             if (!ty.IsAssignableTo(typeof(ToolshedCommand)))
             {
-                _log.Error($"The type {ty.AssemblyQualifiedName} was provided in a ToolshedContext's constructor without being a child of {nameof(ToolshedCommand)}");
+                _log.Error($"The type {ty.AssemblyQualifiedName} was provided in a ToolshedEnvironment's constructor without being a child of {nameof(ToolshedCommand)}");
                 continue;
             }
 

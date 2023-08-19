@@ -36,7 +36,7 @@ public sealed class AddCommand : ToolshedCommand
             return Operation(ctx, left, new ValueRef<T>(right));
         });
 
-    [CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation]
     public Vector2 Operation(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] Vector2 x,
@@ -47,7 +47,7 @@ public sealed class AddCommand : ToolshedCommand
         return x + yVal;
     }
 
-    [CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation]
     public IEnumerable<Vector2> Operation(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] IEnumerable<Vector2> x,
@@ -77,7 +77,7 @@ public sealed class AddVecCommand : ToolshedCommand
         return x.Select(i => i + yVal);
     }
 
-    [CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation]
     public IEnumerable<Vector2> Operation(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] IEnumerable<Vector2> x,
@@ -119,7 +119,7 @@ public sealed class SubtractCommand : ToolshedCommand
             return Operation(ctx, left, new ValueRef<T>(right));
         });
 
-    [CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation]
     public Vector2 Operation(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] Vector2 x,
@@ -130,7 +130,7 @@ public sealed class SubtractCommand : ToolshedCommand
         return x - yVal;
     }
 
-    [CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation]
     public IEnumerable<Vector2> Operation(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] IEnumerable<Vector2> x,
@@ -160,7 +160,7 @@ public sealed class SubVecCommand : ToolshedCommand
         return x.Select(i => i - yVal);
     }
 
-    [CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation]
     public IEnumerable<Vector2> Operation(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] IEnumerable<Vector2> x,
@@ -200,7 +200,7 @@ public sealed class MultiplyCommand : ToolshedCommand
             return Operation(ctx, left, new ValueRef<T>(right));
         });
 
-    [CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation]
     public Vector2 Operation(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] Vector2 x,
@@ -211,7 +211,7 @@ public sealed class MultiplyCommand : ToolshedCommand
         return x * yVal;
     }
 
-    [CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation]
     public IEnumerable<Vector2> Operation(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] IEnumerable<Vector2> x,
@@ -241,7 +241,7 @@ public sealed class MulVecCommand : ToolshedCommand
         return x.Select(i => i * yVal);
     }
 
-    [CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation]
     public IEnumerable<Vector2> Operation(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] IEnumerable<Vector2> x,
@@ -262,9 +262,15 @@ public sealed class DivideCommand : ToolshedCommand
         [PipedArgument] T x,
         [CommandArgument] ValueRef<T> y
     )
-        where T : IDivisionOperators<T, T, T>
+        where T : INumberBase<T>
     {
-        var yVal = y.Evaluate(ctx)!;
+        var yVal = y.Evaluate(ctx);
+        if (yVal is null)
+            return x;
+
+        if (T.IsZero(yVal))
+            return T.Zero;
+
         return x / yVal;
     }
 
@@ -274,7 +280,7 @@ public sealed class DivideCommand : ToolshedCommand
         [PipedArgument] IEnumerable<T> x,
         [CommandArgument] ValueRef<IEnumerable<T>> y
     )
-        where T : IDivisionOperators<T, T, T>
+        where T : INumberBase<T>
         => x.Zip(y.Evaluate(ctx)!).Select(inp =>
         {
             var (left, right) = inp;
@@ -291,11 +297,15 @@ public sealed class DivVecCommand : ToolshedCommand
         [PipedArgument] IEnumerable<T> x,
         [CommandArgument] ValueRef<T> y
     )
-        where T : IDivisionOperators<T, T, T>
+        where T : INumberBase<T>
     {
         var yVal = y.Evaluate(ctx);
         if (yVal is null)
             return x;
+
+        if (T.IsZero(yVal))
+            return x.Select(_ => T.Zero);
+
         return x.Select(i => i / yVal);
     }
 }

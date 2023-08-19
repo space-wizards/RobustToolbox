@@ -45,7 +45,7 @@ internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
     }
 }
 
-public record struct InvalidEntityUid(string Value) : IConError
+public record InvalidEntityUid(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {
@@ -57,7 +57,7 @@ public record struct InvalidEntityUid(string Value) : IConError
     public StackTrace? Trace { get; set; }
 }
 
-public record struct DeadEntity(EntityUid Entity) : IConError
+public record DeadEntity(EntityUid Entity) : IConError
 {
     public FormattedMessage DescribeInner()
     {

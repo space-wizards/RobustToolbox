@@ -55,10 +55,7 @@ internal sealed class ToolshedCommandImplementor
             var start = parserContext.Index;
             // We do our own parsing, assuming this is some kind of map-like operation.
             var chkpoint = parserContext.Save();
-            DebugTools.AssertNotNull(pipedType);
-            DebugTools.Assert(pipedType?.IsGenericType ?? false);
-            DebugTools.Assert(pipedType?.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-            if (!Block.TryParse(doAutocomplete, parserContext, mapLike.TakesPipedType ? pipedType.GetGenericArguments()[0] : null, out var block, out autocomplete, out error))
+            if (!Block.TryParse(doAutocomplete, parserContext, mapLike.TakesPipedType ? pipedType!.GetGenericArguments()[0] : null, out var block, out autocomplete, out error))
             {
                 error?.Contextualize(parserContext.Input, (start, parserContext.Index));
                 resolvedTypeArguments = Array.Empty<Type>();

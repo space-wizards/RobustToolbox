@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
@@ -11,6 +12,19 @@ namespace Robust.Shared.Toolshed.Commands.Generic;
 [ToolshedCommand, MapLikeCommand(false)]
 public sealed class EmplaceCommand : ToolshedCommand
 {
+    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+
+    [CommandImplementation]
+    TOut Emplace<TIn, TOut>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] TIn value,
+        [CommandArgument] Block<TOut> block
+    )
+    {
+        var emplaceCtx = new EmplaceContext<TIn>(ctx, value, EntityManager);
+        return block.Invoke(null, emplaceCtx)!;
+    }
+
     [CommandImplementation]
     IEnumerable<TOut> Emplace<TIn, TOut>(
             [CommandInvocationContext] IInvocationContext ctx,

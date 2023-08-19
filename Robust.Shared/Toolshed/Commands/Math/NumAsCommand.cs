@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -7,6 +8,8 @@ namespace Robust.Shared.Toolshed.Commands.Math;
 [ToolshedCommand]
 public sealed class CheckedToCommand : ToolshedCommand
 {
+    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public TOut Operation<TOut, T>([PipedArgument] T x)
         where TOut: INumberBase<TOut>
@@ -18,13 +21,15 @@ public sealed class CheckedToCommand : ToolshedCommand
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<TOut> Operation<TOut, T>([PipedArgument] IEnumerable<T> x)
         where TOut: INumberBase<TOut>
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation<TOut, T>);
 }
 
 [ToolshedCommand]
 public sealed class SaturateToCommand : ToolshedCommand
 {
+    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public TOut Operation<TOut, T>([PipedArgument] T x)
         where TOut: INumberBase<TOut>
@@ -36,13 +41,15 @@ public sealed class SaturateToCommand : ToolshedCommand
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<TOut> Operation<TOut, T>([PipedArgument] IEnumerable<T> x)
         where TOut: INumberBase<TOut>
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation<TOut, T>);
 }
 
 [ToolshedCommand]
 public sealed class TruncToCommand : ToolshedCommand
 {
+    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public TOut Operation<TOut, T>([PipedArgument] T x)
         where TOut: INumberBase<TOut>
@@ -54,6 +61,6 @@ public sealed class TruncToCommand : ToolshedCommand
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<TOut> Operation<TOut, T>([PipedArgument] IEnumerable<T> x)
         where TOut: INumberBase<TOut>
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation<TOut, T>);
 }

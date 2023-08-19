@@ -25,9 +25,7 @@ public sealed partial class ParserContext
 
     public static bool IsNumeric(Rune c)
         =>
-            Rune.IsDigit(c)
-            || c == new Rune('e')
-            || c == new Rune('i')
+            IsToken(c)
             || c == new Rune('+')
             || c == new Rune('-')
             || c == new Rune('.')

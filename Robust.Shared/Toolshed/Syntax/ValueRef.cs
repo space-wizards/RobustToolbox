@@ -71,14 +71,14 @@ public class ValueRef<T, TAuto>
         else if (VarName is not null)
         {
             var value = ctx.ReadVar(VarName);
-            // resharper is literally just wrong this can be null
-            if (value is not T {} v || value is not null)
+
+            if (value is not T v)
             {
-                ctx.ReportError(new BadVarTypeError(value?.GetType() ?? typeof(object), typeof(T), VarName));
+                ctx.ReportError(new BadVarTypeError(value?.GetType() ?? typeof(void), typeof(T), VarName));
                 return default;
             }
 
-            return (T?)value;
+            return v;
         }
         else if (InnerBlock is not null)
         {

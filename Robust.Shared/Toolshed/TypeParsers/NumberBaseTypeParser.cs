@@ -18,6 +18,13 @@ public abstract class NumberBaseTypeParser<T> : TypeParser<T>
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
         var maybeNumber = parserContext.GetWord(ParserContext.IsNumeric);
+        if (maybeNumber?.Length == 0)
+        {
+            error = new OutOfInputError();
+            result = null;
+            return false;
+        }
+
         if (!T.TryParse(maybeNumber, NumberStyles.Number, CultureInfo.InvariantCulture, out var @number))
         {
             if (maybeNumber is null)

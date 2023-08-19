@@ -17,7 +17,7 @@ public sealed class IsCanonicalCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -33,7 +33,7 @@ public sealed class IsComplexCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -49,7 +49,7 @@ public sealed class IsEvenCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -65,7 +65,7 @@ public sealed class IsOddCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -81,7 +81,7 @@ public sealed class IsFiniteCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -97,7 +97,7 @@ public sealed class IsImaginaryCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 
     // everyone on the internet is imaginary except you.
@@ -120,7 +120,7 @@ public sealed class IsInfiniteCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -136,7 +136,7 @@ public sealed class IsIntegerCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -152,7 +152,7 @@ public sealed class IsNaNCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -168,7 +168,7 @@ public sealed class IsNegativeCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -184,7 +184,7 @@ public sealed class IsPositiveCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -200,7 +200,7 @@ public sealed class IsRealCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 
     // nobody on the internet is real except you.
@@ -223,7 +223,7 @@ public sealed class IsSubnormalCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }
 
@@ -239,6 +239,6 @@ public sealed class IsZeroCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<bool> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IBinaryInteger<T>
+        where T : INumberBase<T>
         => x.Select(Operation);
 }

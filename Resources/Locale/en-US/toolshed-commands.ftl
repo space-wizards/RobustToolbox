@@ -262,3 +262,123 @@ command-description-entitysystemupdateorder-tick =
     Lists the tick update order of entity systems.
 command-description-entitysystemupdateorder-frame =
     Lists the frame update order of entity systems.
+command-description-more =
+    Prints the contents of $more, i.e. any extras that Toolshed didn't print from the last command.
+command-description-ModulusCommand =
+    Computes the modulus of two values.
+    This is usually remainder, check C#'s documentation for the type.
+command-description-ModVecCommand =
+    Performs the modulus operation over the input with the given constant right-hand value.
+command-description-BitAndNotCommand =
+    Performs bitwise AND-NOT over the input.
+command-description-BitOrNotCommand =
+    Performs bitwise OR-NOT over the input.
+command-description-BitXnorCommand =
+    Performs bitwise XNOR over the input.
+command-description-BitNotCommand =
+    Performs bitwise NOT on the input.
+command-description-abs =
+    Computes the absolute value of the input (removing the sign)
+command-description-average =
+    Computes the average (arithmetic mean) of the input.
+command-description-bibytecount =
+    Returns the size of the input in bytes, given that the input implements IBinaryInteger.
+    This is NOT sizeof.
+command-description-shortestbitlength =
+    Returns the minimum number of bits needed to represent the input value.
+command-description-countleadzeros =
+    Counts the number of leading binary zeros in the input value.
+command-description-counttrailingzeros =
+    Counts the number of trailing binary zeros in the input value.
+command-description-fpi =
+    pi (3.14159...) as a float.
+command-description-fe =
+    e (2.71828...) as a float.
+command-description-ftau =
+    tau (6.28318...) as a float.
+command-description-fepsilon =
+    The epsilon value for a float, exactly 1.4e-45.
+command-description-dpi =
+    pi (3.14159...) as a double.
+command-description-de =
+    e (2.71828...) as a double.
+command-description-dtau =
+    tau (6.28318...) as a double.
+command-description-depsilon =
+    The epsilon value for a double, exactly 4.9406564584124654E-324.
+command-description-hpi =
+    pi (3.14...) as a half.
+command-description-he =
+    e (2.71...) as a half.
+command-description-htau =
+    tau (6.28...) as a half.
+command-description-hepsilon =
+    The epsilon value for a half, exactly 5.9604645E-08.
+command-description-floor =
+    Returns the floor of the input value (rounding toward zero).
+command-description-ceil =
+    Returns the ceil of the input value (rounding away from zero).
+command-description-round =
+    Rounds the input value.
+command-description-trunc =
+    Truncates the input value.
+command-description-round2frac =
+    Rounds the input value to the specified number of fractional digits.
+command-description-exponentbytecount =
+    Returns the number of bytes required to store the exponent.
+command-description-significandbytecount =
+    Returns the number of bytes required to store the significand.
+command-description-significandbitcount =
+    Returns the exact bit length of the significand.
+command-description-exponentshortestbitcount =
+    Returns the minimum number of bits to store the exponent.
+command-description-stepnext =
+    Steps to the next float value, adding one to the significand with carry.
+command-description-stepprev =
+    Steps to the previous float value, subtracting one from the significand with carry.
+command-description-checkedto =
+    Converts from the input numeric type to the target, erroring if not possible.
+command-description-saturateto =
+    Converts from the input numeric type to the target, saturating if the value is out of range.
+    For example, converting 382 to a byte would saturate to 255 (the maximum value of a byte).
+command-description-truncto =
+    Converts from the input numeric type to the target, with truncation.
+    In the case of integers, this is a bit cast with sign extension.
+command-description-iscanonical =
+    Returns whether the input is in canonical form.
+command-description-iscomplex =
+    Returns whether the input is a complex number (by value, not by type)
+command-description-iseven =
+    Returns whether the input is even.
+    Not a javascript package.
+command-description-isodd =
+    Returns whether the input is odd.
+command-description-isfinite =
+    Returns whether the input is finite.
+command-description-isimaginary =
+    Returns whether the input is purely imaginary (no real part).
+command-description-isinfinite =
+    Returns whether the input is infinite.
+command-description-isinteger =
+    Returns whether the input is an integer (by value, not by type)
+command-description-isnan =
+    Returns whether the input is Not a Number (NaN).
+    This is a special floating point value, so this is by value, not by type.
+command-description-isnegative =
+    Returns whether the input is negative.
+command-description-ispositive =
+    Returns whether the input is positive.
+command-description-isreal =
+    Returns whether the input is purely real (no imaginary part).
+command-description-issubnormal =
+    Returns whether the input is in sub-normal form.
+command-description-iszero =
+    Returns whether the input is zero.
+command-description-pow =
+    Computes the power of its lefthand to its righthand. x^y.
+command-description-sqrt =
+    Computes the square root of its input.
+command-description-cbrt =
+    Computes the cube root of its input.
+command-description-root =
+    Computes the Nth root of its input.

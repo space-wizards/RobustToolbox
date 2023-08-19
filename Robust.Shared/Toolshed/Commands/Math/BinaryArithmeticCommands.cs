@@ -5,7 +5,7 @@ using System.Numerics;
 namespace Robust.Shared.Toolshed.Commands.Math;
 
 [ToolshedCommand]
-public sealed class ByteCountCommand : ToolshedCommand
+public sealed class BIByteCountCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public int Operation<T>([PipedArgument] T x)

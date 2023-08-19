@@ -791,9 +791,9 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var (netEntity, visiblity) in visibleEnts)
         {
-#if DEBUG
-            EntityUid uid = ToEntity(netEntity);
+            var uid = ToEntity(netEntity);
 
+#if DEBUG
             // if an entity is visible, its parents should always be visible.
             DebugTools.Assert((_xformQuery.GetComponent(uid).ParentUid is not { Valid: true } parent) ||
                               visibleEnts.ContainsKey(_metaQuery.GetComponent(parent).NetEntity),
@@ -802,7 +802,6 @@ internal sealed partial class PvsSystem : EntitySystem
 
             if (sessionData.RequestedFull)
             {
-                uid = ToEntity(netEntity);
                 entityStates.Add(GetFullEntityState(session, uid, _metaQuery.GetComponent(uid)));
                 continue;
             }

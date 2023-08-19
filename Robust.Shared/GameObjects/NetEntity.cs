@@ -115,7 +115,7 @@ public struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFo
     /// <inheritdoc />
     public override string ToString()
     {
-        return $"n{_id.ToString()}";
+        return _id.ToString();
     }
 
     public string ToString(string? format, IFormatProvider? formatProvider)

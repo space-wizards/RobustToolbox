@@ -324,7 +324,7 @@ namespace Robust.Client.GameStates
                     catch (MissingMetadataException e)
                     {
                         // Something has gone wrong. Probably a missing meta-data component. Perhaps a full server state will fix it.
-                        RequestFullState(e.Uid);
+                        RequestFullState(e.NetEntity);
                         throw;
                     }
 #endif
@@ -1046,20 +1046,20 @@ namespace Robust.Client.GameStates
             {
                 foreach (var netEntity in toCreate.Keys)
                 {
+                    var entity = _entityManager.ToEntity(netEntity);
 #if EXCEPTION_TOLERANCE
                     try
                     {
 #endif
-                    var entity = _entityManager.ToEntity(netEntity);
                     _entities.InitializeEntity(entity, metaQuery.GetComponent(entity));
 #if EXCEPTION_TOLERANCE
                     }
                     catch (Exception e)
                     {
-                        _sawmill.Error($"Server entity threw in Init: ent={_entityManager.ToPrettyString(entity)}");
+                        _sawmill.Error($"Server entity threw in Init: ent={_entities.ToPrettyString(entity)}");
                         _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
                         brokenEnts.Add(entity);
-                        toCreate.Remove(entity);
+                        toCreate.Remove(netEntity);
                     }
 #endif
                 }
@@ -1069,11 +1069,11 @@ namespace Robust.Client.GameStates
             {
                 foreach (var netEntity in toCreate.Keys)
                 {
+                    var entity = _entityManager.ToEntity(netEntity);
 #if EXCEPTION_TOLERANCE
                     try
                     {
 #endif
-                    var entity = _entityManager.ToEntity(netEntity);
                     _entities.StartEntity(entity);
 #if EXCEPTION_TOLERANCE
                     }
@@ -1082,7 +1082,7 @@ namespace Robust.Client.GameStates
                         _sawmill.Error($"Server entity threw in Start: ent={_entityManager.ToPrettyString(entity)}");
                         _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
                         brokenEnts.Add(entity);
-                        toCreate.Remove(entity);
+                        toCreate.Remove(netEntity);
                     }
 #endif
                 }

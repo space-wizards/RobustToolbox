@@ -53,6 +53,31 @@ public sealed partial class SerializationManager
         return copier != null || copyCreator != null;
     }
 
+    [Obsolete]
+    public bool TryCustomCopy<T>(T source, ref T target, SerializationHookContext hookCtx, ISerializationContext? context = null)
+    {
+        if (TryGetCopierOrCreator<T>(out var copier, out var copyCreator))
+        {
+            if (copier != null)
+            {
+                CopyTo(copier, source, ref target, hookCtx, context);
+                return true;
+            }
+
+            target = CreateCopy(copyCreator!, source, hookCtx, context);
+            return true;
+        }
+
+        return false;
+    }
+
+    [Obsolete]
+    public void CustomCopy<T>(T source, ref T target, SerializationHookContext hookCtx, ISerializationContext? context = null)
+    {
+        if (!TryCustomCopy(source, ref target, hookCtx, context))
+            throw new ArgumentException($"Could not custom copy type {typeof(T)}");
+    }
+
     public sealed class SerializerProvider
     {
         public SerializerProvider(IEnumerable<Type> typeSerializers)

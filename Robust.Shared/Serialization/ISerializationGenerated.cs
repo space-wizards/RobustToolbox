@@ -1,12 +1,14 @@
 ﻿using Robust.Shared.Serialization.Manager;
 
+#pragma warning disable CS0612 // Type or member is obsolete
+
 namespace Robust.Shared.Serialization;
 
 public interface ISerializationGenerated<T> : ISerializationGenerated
 {
-    public void Copy(ref T target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null);
+    void Copy(ref T target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null);
 
-    public T Instantiate();
+    T Instantiate();
 }
 
 public interface ISerializationGenerated

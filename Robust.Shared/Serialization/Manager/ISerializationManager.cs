@@ -396,6 +396,20 @@ namespace Robust.Shared.Serialization.Manager
             out ITypeCopyCreator<TType>? copyCreator,
             ISerializationContext? context = null);
 
+        [Obsolete]
+        bool TryCustomCopy<T>(
+            T source,
+            ref T target,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null);
+
+        [Obsolete]
+        void CustomCopy<T>(
+            T source,
+            ref T target,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null);
+
         #endregion
 
         #region Flags And Constants

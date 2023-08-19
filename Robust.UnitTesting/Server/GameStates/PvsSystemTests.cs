@@ -89,8 +89,8 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         // Check player got properly attached
         await client.WaitPost(() =>
         {
-            var ent = cEntMan.ToNetEntity(cPlayerMan.LocalPlayer?.ControlledEntity);
-            Assert.That(ent, Is.EqualTo(sEntMan.ToNetEntity(player)));
+            var ent = cEntMan.GetNetEntity(cPlayerMan.LocalPlayer?.ControlledEntity);
+            Assert.That(ent, Is.EqualTo(sEntMan.GetNetEntity(player)));
         });
 
         // Move the player off-grid and back onto the grid in the same tick

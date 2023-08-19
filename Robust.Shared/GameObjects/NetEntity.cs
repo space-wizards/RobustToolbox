@@ -151,7 +151,7 @@ public struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFo
         get
         {
             var entManager = IoCManager.Resolve<IEntityManager>();
-            return entManager.ToPrettyString(entManager.ToEntity(this));
+            return entManager.ToPrettyString(entManager.GetEntity(this));
         }
     }
 
@@ -195,7 +195,7 @@ public struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFo
         get
         {
             var entManager = IoCManager.Resolve<IEntityManager>();
-            return entManager.GetComponentOrNull<MetaDataComponent>(entManager.ToEntity(this));
+            return entManager.GetComponentOrNull<MetaDataComponent>(entManager.GetEntity(this));
         }
     }
 
@@ -205,7 +205,7 @@ public struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFo
         get
         {
             var entManager = IoCManager.Resolve<IEntityManager>();
-            return entManager.GetComponentOrNull<TransformComponent>(entManager.ToEntity(this));
+            return entManager.GetComponentOrNull<TransformComponent>(entManager.GetEntity(this));
         }
     }
 
@@ -214,7 +214,7 @@ public struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFo
     {
         get
         {
-            return IoCManager.Resolve<IEntityManager>().ToEntity(this);
+            return IoCManager.Resolve<IEntityManager>().GetEntity(this);
         }
     }
 

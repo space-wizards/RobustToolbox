@@ -15,7 +15,7 @@ namespace Robust.Server.ViewVariables.Traits
         public ViewVariablesTraitEntity(IViewVariablesSession session) : base(session)
         {
             var netEntity = (NetEntity) Session.Object;
-            _entity = IoCManager.Resolve<IEntityManager>().ToEntity(netEntity);
+            _entity = IoCManager.Resolve<IEntityManager>().GetEntity(netEntity);
         }
 
         public override ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)

@@ -597,7 +597,7 @@ namespace Robust.Client.GameStates
 
             foreach (var netEntity in createdEntities)
             {
-                var createdEntity = _entityManager.ToEntity(netEntity);
+                var createdEntity = _entityManager.GetEntity(netEntity);
                 var compData = new Dictionary<ushort, ComponentState>();
                 outputData.Add(netEntity, compData);
 
@@ -678,7 +678,7 @@ namespace Robust.Client.GameStates
 
                 foreach (var es in curSpan)
                 {
-                    var uid = _entityManager.ToEntity(es.NetEntity);
+                    var uid = _entityManager.GetEntity(es.NetEntity);
 
                     if (metas.HasComponent(uid))
                         continue;
@@ -703,7 +703,7 @@ namespace Robust.Client.GameStates
 
             foreach (var es in curSpan)
             {
-                var uid = _entityManager.ToEntity(es.NetEntity);
+                var uid = _entityManager.GetEntity(es.NetEntity);
 
                 if (!metas.TryGetComponent(uid, out var meta) || _toCreate.ContainsKey(es.NetEntity))
                 {
@@ -736,7 +736,7 @@ namespace Robust.Client.GameStates
             {
                 foreach (var es in nextState.EntityStates.Span)
                 {
-                    var uid = _entityManager.ToEntity(es.NetEntity);
+                    var uid = _entityManager.GetEntity(es.NetEntity);
 
                     if (!metas.TryGetComponent(uid, out var meta))
                         continue;
@@ -840,7 +840,7 @@ namespace Robust.Client.GameStates
             var stateEnts = _pool.GetEntitySet(entityStates.Length);
             foreach (var entState in entityStates)
             {
-                stateEnts.Add(_entityManager.ToEntity(entState.NetEntity));
+                stateEnts.Add(_entityManager.GetEntity(entState.NetEntity));
             }
 
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
@@ -916,7 +916,7 @@ namespace Robust.Client.GameStates
 
             foreach (var netEntity in delSpan)
             {
-                var id = _entityManager.ToEntity(netEntity);
+                var id = _entityManager.GetEntity(netEntity);
 
                 if (!xforms.TryGetComponent(id, out var xform))
                     continue; // Already deleted? or never sent to us?
@@ -988,7 +988,7 @@ namespace Robust.Client.GameStates
         {
             foreach (var netEntity in entities)
             {
-                var ent = _entityManager.ToEntity(netEntity);
+                var ent = _entityManager.GetEntity(netEntity);
 
                 if (!metas.TryGetComponent(ent, out var meta))
                     continue;
@@ -1028,7 +1028,7 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
 
                     if (container != null)
-                        containerSys.AddExpectedEntity(_entities.ToNetEntity(ent), container);
+                        containerSys.AddExpectedEntity(_entities.GetNetEntity(ent), container);
                 }
 
                 detached?.Add(netEntity);
@@ -1046,7 +1046,7 @@ namespace Robust.Client.GameStates
             {
                 foreach (var netEntity in toCreate.Keys)
                 {
-                    var entity = _entityManager.ToEntity(netEntity);
+                    var entity = _entityManager.GetEntity(netEntity);
 #if EXCEPTION_TOLERANCE
                     try
                     {
@@ -1069,7 +1069,7 @@ namespace Robust.Client.GameStates
             {
                 foreach (var netEntity in toCreate.Keys)
                 {
-                    var entity = _entityManager.ToEntity(netEntity);
+                    var entity = _entityManager.GetEntity(netEntity);
 #if EXCEPTION_TOLERANCE
                     try
                     {
@@ -1271,7 +1271,7 @@ namespace Robust.Client.GameStates
                 _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(uid, xform);
 
                 if (container != null)
-                    containerSys.AddExpectedEntity(_entities.ToNetEntity(uid), container);
+                    containerSys.AddExpectedEntity(_entities.GetNetEntity(uid), container);
             }
         }
 

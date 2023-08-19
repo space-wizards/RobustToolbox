@@ -121,7 +121,7 @@ namespace Robust.Client.GameStates
             int i = 0;
             foreach (var (nent, netEnt) in _netEnts)
             {
-                var uid = _entityManager.ToEntity(nent);
+                var uid = _entityManager.GetEntity(nent);
 
                 if (!_entityManager.EntityExists(uid))
                 {

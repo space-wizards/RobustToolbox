@@ -211,8 +211,8 @@ public abstract class Joint : IEquatable<Joint>
     protected Joint(JointState state, IEntityManager entManager)
     {
         ID = state.ID;
-        BodyAUid = entManager.ToEntity(state.UidA);
-        BodyBUid = entManager.ToEntity(state.UidB);
+        BodyAUid = entManager.GetEntity(state.UidA);
+        BodyBUid = entManager.GetEntity(state.UidB);
         Enabled = state.Enabled;
         _collideConnected = state.CollideConnected;
         _localAnchorA = state.LocalAnchorA;
@@ -229,8 +229,8 @@ public abstract class Joint : IEquatable<Joint>
         state.ID = ID;
         state.CollideConnected = _collideConnected;
         state.Enabled = Enabled;
-        state.UidA = entManager.ToNetEntity(BodyAUid);
-        state.UidB = entManager.ToNetEntity(BodyBUid);
+        state.UidA = entManager.GetNetEntity(BodyAUid);
+        state.UidB = entManager.GetNetEntity(BodyBUid);
         state.Breakpoint = _breakpoint;
     }
 

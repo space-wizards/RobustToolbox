@@ -146,7 +146,7 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
             UserId = session.UserId,
             Status = session.Status,
             Name = session.Name,
-            ControlledEntity = _entMan.ToNetEntity(session.AttachedEntity),
+            ControlledEntity = _entMan.GetNetEntity(session.AttachedEntity),
         };
     }
 }

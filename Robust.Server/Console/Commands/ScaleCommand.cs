@@ -24,7 +24,7 @@ public sealed class ScaleCommand : LocalizedCommands
             return;
         }
 
-        if (!EntityUid.TryParse(args[0], out var uid))
+        if (!NetEntity.TryParse(args[0], out var netEntity))
         {
             shell.WriteError($"Unable to find entity {args[0]}");
             return;
@@ -47,6 +47,7 @@ public sealed class ScaleCommand : LocalizedCommands
         var physics = _entityManager.System<SharedPhysicsSystem>();
         var appearance = _entityManager.System<AppearanceSystem>();
 
+        var uid = _entityManager.GetEntity(netEntity);
         _entityManager.EnsureComponent<ScaleVisualsComponent>(uid);
         var @event = new ScaleEntityEvent();
         _entityManager.EventBus.RaiseLocalEvent(uid, ref @event);

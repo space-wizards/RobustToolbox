@@ -87,7 +87,7 @@ namespace Robust.Client.GameStates
                 var sb = new StringBuilder();
                 foreach (var entState in entStates.Span)
                 {
-                    var uid = _entManager.ToEntity(entState.NetEntity);
+                    var uid = _entManager.GetEntity(entState.NetEntity);
 
                     if (uid != WatchEntId)
                         continue;
@@ -118,7 +118,7 @@ namespace Robust.Client.GameStates
 
             foreach (var ent in args.Detached)
             {
-                var uid = _entManager.ToEntity(ent);
+                var uid = _entManager.GetEntity(ent);
 
                 if (uid != WatchEntId)
                     continue;
@@ -131,7 +131,7 @@ namespace Robust.Client.GameStates
             {
                 foreach (var entDelete in entDeletes.Span)
                 {
-                    var uid = _entManager.ToEntity(entDelete);
+                    var uid = _entManager.GetEntity(entDelete);
 
                     if (uid == WatchEntId)
                         entDelString = "\n  Deleted";

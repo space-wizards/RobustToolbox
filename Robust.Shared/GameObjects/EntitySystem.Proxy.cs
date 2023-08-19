@@ -809,9 +809,34 @@ public partial class EntitySystem
 
     #region NetEntities
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool IsClientSide(EntityUid entity)
     {
         return EntityManager.IsClientSide(entity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetEntity(NetEntity nEntity, out EntityUid entity)
+    {
+        return EntityManager.TryGetEntity(nEntity, out entity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
+    {
+        return EntityManager.TryGetEntity(nEntity, out entity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetNetEntity(EntityUid uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
+    {
+        return EntityManager.TryGetNetEntity(uid, out netEntity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
+    {
+        return EntityManager.TryGetNetEntity(uid, out netEntity);
     }
 
     /// <summary>
@@ -820,7 +845,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity ToNetEntity(EntityUid uid, MetaDataComponent? metadata = null)
     {
-        return EntityManager.ToNetEntity(uid, metadata);
+        return EntityManager.GetNetEntity(uid, metadata);
     }
 
     /// <summary>
@@ -829,7 +854,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity? ToNetEntity(EntityUid? uid, MetaDataComponent? metadata = null)
     {
-        return EntityManager.ToNetEntity(uid, metadata);
+        return EntityManager.GetNetEntity(uid, metadata);
     }
 
     /// <summary>
@@ -838,7 +863,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid ToEntity(NetEntity netEntity)
     {
-        return EntityManager.ToEntity(netEntity);
+        return EntityManager.GetEntity(netEntity);
     }
 
     /// <summary>
@@ -847,7 +872,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid? ToEntity(NetEntity? netEntity)
     {
-        return EntityManager.ToEntity(netEntity);
+        return EntityManager.GetEntity(netEntity);
     }
 
     /// <summary>
@@ -856,7 +881,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected HashSet<NetEntity> ToNetEntitySet(HashSet<EntityUid> uids)
     {
-        return EntityManager.ToNetEntitySet(uids);
+        return EntityManager.GetNetEntitySet(uids);
     }
 
     /// <summary>
@@ -865,7 +890,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected HashSet<EntityUid> ToEntitySet(HashSet<NetEntity> netEntities)
     {
-        return EntityManager.ToEntitySet(netEntities);
+        return EntityManager.GetEntitySet(netEntities);
     }
 
     /// <summary>
@@ -874,7 +899,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity> ToNetEntityList(ICollection<EntityUid> uids)
     {
-        return EntityManager.ToNetEntityList(uids);
+        return EntityManager.GetNetEntityList(uids);
     }
 
     /// <summary>
@@ -883,7 +908,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<EntityUid> ToEntityList(ICollection<NetEntity> netEntities)
     {
-        return EntityManager.ToEntityList(netEntities);
+        return EntityManager.GetEntityList(netEntities);
     }
 
 
@@ -893,7 +918,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity> ToNetEntityList(List<EntityUid> uids)
     {
-        return EntityManager.ToNetEntityList(uids);
+        return EntityManager.GetNetEntityList(uids);
     }
 
     /// <summary>
@@ -902,7 +927,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<EntityUid> ToEntityList(List<NetEntity> netEntities)
     {
-        return EntityManager.ToEntityList(netEntities);
+        return EntityManager.GetEntityList(netEntities);
     }
 
     /// <summary>
@@ -911,7 +936,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity?> ToNetEntityList(List<EntityUid?> uids)
     {
-        return EntityManager.ToNetEntityList(uids);
+        return EntityManager.GetNetEntityList(uids);
     }
 
     /// <summary>
@@ -920,7 +945,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<EntityUid?> ToEntityList(List<NetEntity?> netEntities)
     {
-        return EntityManager.ToEntityList(netEntities);
+        return EntityManager.GetEntityList(netEntities);
     }
 
     /// <summary>
@@ -929,7 +954,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity[] ToNetEntityArray(EntityUid[] uids)
     {
-        return EntityManager.ToNetEntityArray(uids);
+        return EntityManager.GetNetEntityArray(uids);
     }
 
     /// <summary>
@@ -938,7 +963,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid[] ToEntityArray(NetEntity[] netEntities)
     {
-        return EntityManager.ToEntityArray(netEntities);
+        return EntityManager.GetEntityArray(netEntities);
     }
 
     /// <summary>
@@ -947,7 +972,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity?[] ToNetEntityArray(EntityUid?[] uids)
     {
-        return EntityManager.ToNetEntityArray(uids);
+        return EntityManager.GetNetEntityArray(uids);
     }
 
     /// <summary>
@@ -956,13 +981,13 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid?[] ToEntityArray(NetEntity?[] netEntities)
     {
-        return EntityManager.ToEntityArray(netEntities);
+        return EntityManager.GetEntityArray(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetCoordinates ToNetCoordinates(EntityCoordinates coordinates)
     {
-        return EntityManager.ToNetCoordinates(coordinates);
+        return EntityManager.GetNetCoordinates(coordinates);
     }
 
     /// <summary>
@@ -971,7 +996,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetCoordinates? ToNetCoordinates(EntityCoordinates? coordinates)
     {
-        return EntityManager.ToNetCoordinates(coordinates);
+        return EntityManager.GetNetCoordinates(coordinates);
     }
 
     /// <summary>
@@ -980,7 +1005,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityCoordinates ToCoordinates(NetCoordinates netEntity)
     {
-        return EntityManager.ToCoordinates(netEntity);
+        return EntityManager.GetCoordinates(netEntity);
     }
 
     /// <summary>
@@ -989,79 +1014,79 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityCoordinates? ToCoordinates(NetCoordinates? netEntity)
     {
-        return EntityManager.ToCoordinates(netEntity);
+        return EntityManager.GetCoordinates(netEntity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public HashSet<EntityCoordinates> ToEntitySet(HashSet<NetCoordinates> netEntities)
     {
-        return EntityManager.ToEntitySet(netEntities);
+        return EntityManager.GetEntitySet(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public List<EntityCoordinates> ToEntityList(List<NetCoordinates> netEntities)
     {
-        return EntityManager.ToEntityList(netEntities);
+        return EntityManager.GetEntityList(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public List<EntityCoordinates> ToEntityList(ICollection<NetCoordinates> netEntities)
     {
-        return EntityManager.ToEntityList(netEntities);
+        return EntityManager.GetEntityList(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public List<EntityCoordinates?> ToEntityList(List<NetCoordinates?> netEntities)
     {
-        return EntityManager.ToEntityList(netEntities);
+        return EntityManager.GetEntityList(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityCoordinates[] ToEntityArray(NetCoordinates[] netEntities)
     {
-        return EntityManager.ToEntityArray(netEntities);
+        return EntityManager.GetEntityArray(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityCoordinates?[] ToEntityArray(NetCoordinates?[] netEntities)
     {
-        return EntityManager.ToEntityArray(netEntities);
+        return EntityManager.GetEntityArray(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public HashSet<NetCoordinates> ToNetCoordinatesSet(HashSet<EntityCoordinates> entities)
     {
-        return EntityManager.ToNetCoordinatesSet(entities);
+        return EntityManager.GetNetCoordinatesSet(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public List<NetCoordinates> ToNetCoordinatesList(List<EntityCoordinates> entities)
     {
-        return EntityManager.ToNetCoordinatesList(entities);
+        return EntityManager.GetNetCoordinatesList(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public List<NetCoordinates> ToNetCoordinatesList(ICollection<EntityCoordinates> entities)
     {
-        return EntityManager.ToNetCoordinatesList(entities);
+        return EntityManager.GetNetCoordinatesList(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public List<NetCoordinates?> ToNetCoordinatesList(List<EntityCoordinates?> entities)
     {
-        return EntityManager.ToNetCoordinatesList(entities);
+        return EntityManager.GetNetCoordinatesList(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NetCoordinates[] ToNetCoordinatesArray(EntityCoordinates[] entities)
     {
-        return EntityManager.ToNetCoordinatesArray(entities);
+        return EntityManager.GetNetCoordinatesArray(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public NetCoordinates?[] ToNetCoordinatesArray(EntityCoordinates?[] entities)
     {
-        return EntityManager.ToNetCoordinatesArray(entities);
+        return EntityManager.GetNetCoordinatesArray(entities);
     }
 
     #endregion

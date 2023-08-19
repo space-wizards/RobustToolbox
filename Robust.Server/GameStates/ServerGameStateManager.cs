@@ -274,7 +274,7 @@ namespace Robust.Server.GameStates
                         DebugTools.Assert(chunk.Value.tree.RootNodes.Count == 1,
                             $"Root node count is {chunk.Value.tree.RootNodes.Count} instead of 1.");
                         var nent = chunk.Value.tree.RootNodes.FirstOrDefault();
-                        var ent = _entityManager.ToEntity(nent);
+                        var ent = _entityManager.GetEntity(nent);
                         DebugTools.Assert(_entityManager.EntityExists(ent), $"Root node does not exist. Node {ent}.");
                         DebugTools.Assert(_entityManager.HasComponent<MapComponent>(ent)
                                           || _entityManager.HasComponent<MapGridComponent>(ent));

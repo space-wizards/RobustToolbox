@@ -428,7 +428,7 @@ namespace Robust.Client.Placement
 
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
-            msg.EntityUid = EntityManager.ToNetEntity(entity);
+            msg.EntityUid = EntityManager.GetNetEntity(entity);
             _networkManager.ClientSendMessage(msg);
         }
 
@@ -436,7 +436,7 @@ namespace Robust.Client.Placement
         {
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
-            msg.NetCoordinates = new NetCoordinates(EntityManager.ToNetEntity(StartPoint.EntityId), rect.BottomLeft);
+            msg.NetCoordinates = new NetCoordinates(EntityManager.GetNetEntity(StartPoint.EntityId), rect.BottomLeft);
             msg.RectSize = rect.Size;
             _networkManager.ClientSendMessage(msg);
         }
@@ -790,7 +790,7 @@ namespace Robust.Client.Placement
                 message.EntityTemplateName = CurrentPermission.EntityType;
 
             // world x and y
-            message.NetCoordinates = EntityManager.ToNetCoordinates(coordinates);
+            message.NetCoordinates = EntityManager.GetNetCoordinates(coordinates);
 
             message.DirRcv = Direction;
 

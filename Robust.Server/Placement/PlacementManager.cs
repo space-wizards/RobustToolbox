@@ -101,7 +101,7 @@ namespace Robust.Server.Placement
             // I don't think that's this manager's biggest problem
 
             var netCoordinates = msg.NetCoordinates;
-            var coordinates = _entityManager.ToCoordinates(netCoordinates);
+            var coordinates = _entityManager.GetCoordinates(netCoordinates);
 
             if (!coordinates.IsValid(_entityManager))
             {
@@ -213,7 +213,7 @@ namespace Robust.Server.Placement
         private void HandleEntRemoveReq(MsgPlacement msg)
         {
             //TODO: Some form of admin check
-            var entity = _entityManager.ToEntity(msg.EntityUid);
+            var entity = _entityManager.GetEntity(msg.EntityUid);
 
             if (!_entityManager.EntityExists(entity))
                 return;
@@ -225,7 +225,7 @@ namespace Robust.Server.Placement
 
         private void HandleRectRemoveReq(MsgPlacement msg)
         {
-            EntityCoordinates start = _entityManager.ToCoordinates(msg.NetCoordinates);
+            EntityCoordinates start = _entityManager.GetCoordinates(msg.NetCoordinates);
             Vector2 rectSize = msg.RectSize;
             foreach (EntityUid entity in EntitySystem.Get<EntityLookupSystem>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))

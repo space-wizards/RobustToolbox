@@ -78,7 +78,7 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
             DebugTools.Assert(physics == null || physics.Owner == toinsert);
-            DebugTools.Assert(!ExpectedEntities.Contains(entMan.ToNetEntity(toinsert)));
+            DebugTools.Assert(!ExpectedEntities.Contains(entMan.GetNetEntity(toinsert)));
 
             //Verify we can insert into this container
             if (!force && !CanInsert(toinsert, entMan))

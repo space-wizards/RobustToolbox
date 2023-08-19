@@ -82,7 +82,7 @@ internal sealed partial class ReplayPlaybackManager
         var metas = _entMan.GetEntityQuery<MetaDataComponent>();
         foreach (var es in checkpoint.DetachedStates)
         {
-            var uid = _entMan.ToEntity(es.NetEntity);
+            var uid = _entMan.GetEntity(es.NetEntity);
             if (metas.TryGetComponent(uid, out var meta) && !meta.EntityDeleted)
                 continue;
 

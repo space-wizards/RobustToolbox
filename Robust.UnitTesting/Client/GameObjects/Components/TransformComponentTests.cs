@@ -54,18 +54,18 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var childTrans = entMan.GetComponent<TransformComponent>(child);
             ComponentHandleState handleState;
 
-            var compState = new TransformComponentState(new Vector2(5, 5), new Angle(0), entMan.ToNetEntity(gridB.Owner), false, false);
+            var compState = new TransformComponentState(new Vector2(5, 5), new Angle(0), entMan.GetNetEntity(gridB.Owner), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(parent, parentTrans, ref handleState);
 
-            compState = new TransformComponentState(new Vector2(6, 6), new Angle(0), entMan.ToNetEntity(gridB.Owner), false, false);
+            compState = new TransformComponentState(new Vector2(6, 6), new Angle(0), entMan.GetNetEntity(gridB.Owner), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(child, childTrans, ref handleState);
             // World pos should be 6, 6 now.
 
             // Act
             var oldWpos = childTrans.WorldPosition;
-            compState = new TransformComponentState(new Vector2(1, 1), new Angle(0), entMan.ToNetEntity(parent), false, false);
+            compState = new TransformComponentState(new Vector2(1, 1), new Angle(0), entMan.GetNetEntity(parent), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(child, childTrans, ref handleState);
             var newWpos = childTrans.WorldPosition;
@@ -103,15 +103,15 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var node2Trans = entMan.GetComponent<TransformComponent>(node2);
             var node3Trans = entMan.GetComponent<TransformComponent>(node3);
 
-            var compState = new TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), entMan.ToNetEntity(gridB.Owner), false, false);
+            var compState = new TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), entMan.GetNetEntity(gridB.Owner), false, false);
             var handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(node1, node1Trans, ref handleState);
 
-            compState = new TransformComponentState(new Vector2(1, 1), Angle.FromDegrees(45), entMan.ToNetEntity(node1), false, false);
+            compState = new TransformComponentState(new Vector2(1, 1), Angle.FromDegrees(45), entMan.GetNetEntity(node1), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(node2, node2Trans, ref handleState);
 
-            compState = new TransformComponentState(new Vector2(0, 0), Angle.FromDegrees(45), entMan.ToNetEntity(node2), false, false);
+            compState = new TransformComponentState(new Vector2(0, 0), Angle.FromDegrees(45), entMan.GetNetEntity(node2), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(node3, node3Trans, ref handleState);
 

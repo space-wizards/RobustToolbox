@@ -73,7 +73,7 @@ namespace Robust.Client.ViewVariables.Instances
         public override void Initialize(DefaultWindow window, object obj)
         {
             _netEntity = (NetEntity) obj;
-            _entity = _entityManager.ToEntity(_netEntity);
+            _entity = _entityManager.GetEntity(_netEntity);
 
             var scrollContainer = new ScrollContainer();
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
@@ -270,7 +270,7 @@ namespace Robust.Client.ViewVariables.Instances
                 button.OnPressed += _ =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entityManager.ToNetEntity(_entity), componentType.FullName));
+                        new ViewVariablesComponentSelector(_entityManager.GetNetEntity(_entity), componentType.FullName));
                 };
                 removeButton.OnPressed += _ =>
                 {

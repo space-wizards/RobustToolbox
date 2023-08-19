@@ -218,7 +218,7 @@ namespace Robust.Client.ViewVariables
         {
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
-            if (obj is NetEntity netEntity && _entityManager.ToEntity(netEntity).IsValid())
+            if (obj is NetEntity netEntity && _entityManager.GetEntity(netEntity).IsValid())
             {
                 instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer, Sawmill);
             }

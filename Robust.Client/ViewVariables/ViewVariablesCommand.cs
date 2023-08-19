@@ -69,7 +69,7 @@ namespace Robust.Client.ViewVariables
                 return;
             }
 
-            var entity = _entities.ToEntity(netEntity);
+            var entity = _entities.GetEntity(netEntity);
 
             if (!_entities.EntityExists(entity))
             {

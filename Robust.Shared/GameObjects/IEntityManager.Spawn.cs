@@ -57,7 +57,7 @@ public partial interface IEntityManager
 
     /// <summary>
     /// Attempts to spawn an entity inside of a container. If it fails to insert into the container, it will
-    /// instead attempt to spawn the entity next to the target's parent.
+    /// instead attempt to spawn the entity next to the target.
     /// </summary>
     public EntityUid SpawnInContainerOrDrop(
         string? protoName,

@@ -89,6 +89,9 @@ public partial class EntityManager
         if (!_xformQuery.TryGetComponent(target, out var xform))
             return false;
 
+        if (!xform.ParentUid.IsValid())
+            return false;
+        
         if (!_metaQuery.TryGetComponent(target, out var meta))
             return false;
 
@@ -137,13 +140,17 @@ public partial class EntityManager
         if (container.Insert(uid.Value, this))
             return true;
 
-        Deleted(uid.Value);
+        DeleteEntity(uid.Value);
         uid = null;
         return false;
     }
 
     public EntityUid SpawnNextToOrDrop(string? protoName, EntityUid target, ComponentRegistry? overrides = null)
     {
+        var xform = _xformQuery.GetComponent(target);
+        if (!xform.ParentUid.IsValid())
+            return Spawn(protoName);
+        
         var uid = Spawn(protoName, overrides);
         _xforms.PlaceNextToOrDrop(uid, target);
         return uid;
@@ -161,7 +168,10 @@ public partial class EntityManager
             || !containerComp.Containers.TryGetValue(containerId, out var container)
             || !container.Insert(uid, this))
         {
-            _xforms.PlaceNextToOrDrop(uid, containerUid);
+            
+            var xform = _xformQuery.GetComponent(containerUid);
+            if (xform.ParentUid.IsValid())
+                _xforms.PlaceNextToOrDrop(uid, containerUid, targetXform: xform);
         }
 
         return uid;

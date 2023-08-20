@@ -620,23 +620,19 @@ public abstract partial class SharedTransformSystem
 
     public TransformComponent? GetParent(EntityUid uid)
     {
-        return GetParent(uid, _xformQuery);
-    }
-
-    public TransformComponent? GetParent(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
-    {
-        return GetParent(xformQuery.GetComponent(uid), xformQuery);
+        return GetParent(_xformQuery.GetComponent(uid));
     }
 
     public TransformComponent? GetParent(TransformComponent xform)
     {
-        return GetParent(xform, _xformQuery);
+        if (!xform.ParentUid.IsValid()) 
+            return null;
+        return _xformQuery.GetComponent(xform.ParentUid);
     }
 
-    public TransformComponent? GetParent(TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+    public EntityUid GetParentUid(EntityUid uid)
     {
-        if (!xform.ParentUid.IsValid()) return null;
-        return xformQuery.GetComponent(xform.ParentUid);
+        return _xformQuery.GetComponent(uid).ParentUid;
     }
 
     public void SetParent(EntityUid uid, EntityUid parent)
@@ -1379,25 +1375,34 @@ public abstract partial class SharedTransformSystem
     /// Attempts to place one entity next to another entity. If the target entity is in a container, this will attempt
     /// to insert that entity into the same container.
     /// </summary>
-    public void PlaceNextToOrDrop(EntityUid uid, EntityUid target)
+    public void PlaceNextToOrDrop(EntityUid uid, EntityUid target, 
+        TransformComponent? xform = null, TransformComponent? targetXform = null)
     {
-        var xform = _xformQuery.GetComponent(target);
+        if (!_xformQuery.Resolve(target, ref targetXform))
+            return;
+        
+        if (!_xformQuery.Resolve(uid, ref xform))
+            return;
+
         var meta = _metaQuery.GetComponent(target);
 
         if ((meta.Flags & MetaDataFlags.InContainer) == 0)
         {
-            SetCoordinates(uid, _xformQuery.GetComponent(uid), xform.Coordinates, unanchor: false);
+            if (targetXform.ParentUid.IsValid())
+                SetCoordinates(uid, xform, targetXform.Coordinates);
+            else
+                DetachParentToNull(uid, xform);
             return;
         }
 
-        var containerComp = Comp<ContainerManagerComponent>(xform.ParentUid);
+        var containerComp = Comp<ContainerManagerComponent>(targetXform.ParentUid);
         foreach (var container in containerComp.Containers.Values)
         {
             if (!container.Contains(target))
                 continue;
 
-            if (!container.Insert(uid, EntityManager))
-                PlaceNextToOrDrop(uid, xform.ParentUid);
+            if (!container.Insert(uid, EntityManager, xform))
+                PlaceNextToOrDrop(uid, targetXform.ParentUid, xform);
         }
     }
 }

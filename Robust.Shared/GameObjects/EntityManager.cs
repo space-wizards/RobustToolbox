@@ -661,6 +661,15 @@ namespace Robust.Shared.GameObjects
             return uid.HasValue && EntityExists(uid.Value);
         }
 
+        /// <inheritdoc />
+        public bool IsPaused(EntityUid? uid, MetaDataComponent? metadata = null)
+        {
+            if (uid == null)
+                return false;
+
+            return _metaQuery.Resolve(uid.Value, ref metadata) && metadata.EntityPaused;
+        }
+
         public bool Deleted(EntityUid uid)
         {
             return !_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;

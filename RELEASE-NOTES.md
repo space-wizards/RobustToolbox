@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `SpinBox.LineEditControl` exposes the underlying `LineEdit`.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,19 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 148.2.0
+
+### New features
+
+* `SpinBox.LineEditControl` exposes the underlying `LineEdit`.
+* Add VV attributes to various fields across overlay and sessions.
+* Add IsPaused to EntityManager to check if an entity is paused.
+
+### Bugfixes
+
+* Fix SetActiveTheme not updating the theme.
 
 
 ## 148.1.0

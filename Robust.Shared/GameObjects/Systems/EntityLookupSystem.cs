@@ -479,8 +479,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var fixturesQuery = GetEntityQuery<FixturesComponent>();
 
         DebugTools.Assert(HasComp<MapGridComponent>(args.Sender));
-        DebugTools.Assert(!newMap.IsValid() || HasComp<MapComponent>(newMap));
-        DebugTools.Assert(!oldMap.IsValid() || HasComp<MapComponent>(oldMap));
+        DebugTools.Assert(!IsValid(newMap) || HasComp<MapComponent>(newMap));
+        DebugTools.Assert(!IsValid(oldMap) || HasComp<MapComponent>(oldMap));
 
         var oldBuffer = CompOrNull<PhysicsMapComponent>(oldMap)?.MoveBuffer;
         var newBuffer = CompOrNull<PhysicsMapComponent>(newMap)?.MoveBuffer;
@@ -513,7 +513,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (xform.Broadphase == null || !xform.Broadphase.Value.CanCollide)
             return;
 
-        DebugTools.Assert(_netMan.IsClient || !xform.Broadphase.Value.PhysicsMap.IsValid() || xform.Broadphase.Value.PhysicsMap == oldMap);
+        DebugTools.Assert(_netMan.IsClient || !IsValid(xform.Broadphase.Value.PhysicsMap) || xform.Broadphase.Value.PhysicsMap == oldMap);
         xform.Broadphase = xform.Broadphase.Value with { PhysicsMap = newMap };
 
         if (!fixturesQuery.TryGetComponent(uid, out var fixtures))
@@ -850,7 +850,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var parent = xform.ParentUid;
 
         // TODO provide variant that also returns world rotation (and maybe position). Avoids having to iterate though parents twice.
-        while (parent.IsValid())
+        while (IsValid(parent))
         {
             if (_broadQuery.TryGetComponent(parent, out broadphase))
                 return true;

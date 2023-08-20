@@ -40,7 +40,7 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(entMan.EntityExists(entity));
 
             var parent = entMan.GetComponent<TransformComponent>(entity).ParentUid;
-            if (parent.IsValid() && TryGetManagerComp(parent, out manager, entMan) && manager.ContainsEntity(entity))
+            if (entMan.IsValid(parent) && TryGetManagerComp(parent, out manager, entMan) && manager.ContainsEntity(entity))
                 return true;
 
             manager = default;

@@ -214,7 +214,7 @@ namespace Robust.Shared.Containers
                 xform = xforms.Value.GetComponent(uid);
             }
 
-            if (!xform.ParentUid.Valid)
+            if (!IsValid(xform.ParentUid))
                 return false;
 
             return IsEntityOrParentInContainer(xform.ParentUid, metas: metas, xforms: xforms);
@@ -320,7 +320,7 @@ namespace Robust.Shared.Containers
         {
             container = null;
 
-            if (!uid.IsValid())
+            if (!IsValid(uid))
                 return false;
 
             var conQuery = EntityManager.GetEntityQuery<ContainerManagerComponent>();
@@ -328,7 +328,7 @@ namespace Robust.Shared.Containers
             var child = uid;
             var parent = xform.ParentUid;
 
-            while (parent.IsValid())
+            while (IsValid(parent))
             {
                 if (((metaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) &&
                     conQuery.TryGetComponent(parent, out var conManager) &&
@@ -423,19 +423,24 @@ namespace Robust.Shared.Containers
             // TODO make this check upwards for any container, and parent to that.
             // Currently this just checks the direct parent, so entities will still teleport through containers.
 
-            if (!transform.ParentUid.IsValid()
+            if (!IsValid(transform.ParentUid)
                 || !TryGetContainingContainer(transform.ParentUid, out var container)
                 || !TryInsertIntoContainer(transform, container))
+            {
                 transform.AttachToGridOrMap();
+            }
         }
 
         private bool TryInsertIntoContainer(TransformComponent transform, IContainer container)
         {
-            if (container.Insert(transform.Owner)) return true;
+            if (container.Insert(transform.Owner))
+                return true;
 
-            if (Transform(container.Owner).ParentUid.IsValid()
+            if (IsValid(Transform(container.Owner).ParentUid)
                 && TryGetContainingContainer(container.Owner, out var newContainer))
+            {
                 return TryInsertIntoContainer(transform, newContainer);
+            }
 
             return false;
         }
@@ -449,8 +454,10 @@ namespace Robust.Shared.Containers
 
             // RECURSION ALERT
             var transform = Transform(entity);
-            if (transform.ParentUid.IsValid())
+            if (IsValid(transform.ParentUid))
+            {
                 return TryGetManagerComp(transform.ParentUid, out manager);
+            }
 
             return false;
         }

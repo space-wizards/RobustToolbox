@@ -101,7 +101,7 @@ namespace Robust.Server.GameObjects
                 visMask |= visibilityComponent.Layer;
 
             // Include parent vis masks
-            if (Resolve(uid, ref xform) && xform.ParentUid.IsValid())
+            if (Resolve(uid, ref xform) && IsValid(xform.ParentUid))
                 visMask |= GetVisibilityMask(xform.ParentUid);
 
             return visMask;

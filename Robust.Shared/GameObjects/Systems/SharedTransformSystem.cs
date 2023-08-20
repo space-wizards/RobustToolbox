@@ -154,7 +154,7 @@ namespace Robust.Shared.GameObjects
         public EntityCoordinates GetMoverCoordinates(EntityUid uid, TransformComponent xform)
         {
             // Nullspace (or map)
-            if (!xform.ParentUid.IsValid())
+            if (!IsValid(xform.ParentUid))
                 return xform.Coordinates;
 
             // GriddUid is only set after init.
@@ -188,7 +188,7 @@ namespace Robust.Shared.GameObjects
             var parentUid = coordinates.EntityId;
 
             // Nullspace coordinates?
-            if (!parentUid.IsValid())
+            if (!IsValid(parentUid))
                 return coordinates;
 
             var parentXform = _xformQuery.GetComponent(parentUid);
@@ -222,7 +222,7 @@ namespace Robust.Shared.GameObjects
         public (EntityCoordinates Coords, Angle worldRot) GetMoverCoordinateRotation(EntityUid uid, TransformComponent xform)
         {
             // Nullspace (or map)
-            if (!xform.ParentUid.IsValid())
+            if (!IsValid(xform.ParentUid))
                 return (xform.Coordinates, xform.LocalRotation);
 
             // GriddUid is only set after init.

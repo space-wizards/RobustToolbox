@@ -193,7 +193,7 @@ namespace Robust.Shared.Map
 
             var mapSystem = entityManager.System<SharedMapSystem>();
             var gridIdOpt = GetGridUid(entityManager);
-            if (gridIdOpt is { } gridId && gridId.IsValid())
+            if (gridIdOpt is { } gridId && entityManager.IsValid(gridId))
             {
                 var grid = mapManager.GetGrid(gridId);
                 return mapSystem.GetTileRef(gridId, grid, this).GridIndices;

@@ -994,7 +994,7 @@ namespace Robust.Client.GameStates
                     meta.LastStateApplied = lastStateApplied.Value;
 
                 var xform = xforms.GetComponent(ent);
-                if (xform.ParentUid.IsValid())
+                if (IsValid(xform.ParentUid))
                 {
                     lookupSys.RemoveFromEntityTree(ent, xform);
                     xform.Broadphase = BroadphaseData.Invalid;
@@ -1237,7 +1237,7 @@ namespace Robust.Client.GameStates
             var containerSys = _entities.EntitySysManager.GetEntitySystem<ContainerSystem>();
 
             var xform = _entities.GetComponent<TransformComponent>(uid);
-            if (xform.ParentUid.IsValid())
+            if (IsValid(xform.ParentUid))
             {
                 IContainer? container = null;
                 if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&

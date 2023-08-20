@@ -13,6 +13,20 @@ public partial class EntitySystem
 {
     #region Entity LifeStage
 
+    /// <inheritdoc cref="IEntityManager.IsValid(EntityUid)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool IsValid(EntityUid uid)
+    {
+        return EntityManager.IsValid(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.IsValid(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool IsValid(EntityUid? uid)
+    {
+        return EntityManager.IsValid(uid);
+    }
+
     /// <inheritdoc cref="IEntityManager.EntityExists(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool Exists(EntityUid uid)

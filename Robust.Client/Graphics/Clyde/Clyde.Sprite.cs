@@ -66,7 +66,7 @@ internal partial class Clyde
         {
             var treeXform = query.GetComponent(treeOwner);
             var bounds = xformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
-            DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
+            DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeIsValid(xform.ParentUid));
 
             treeData = treeData with
             {

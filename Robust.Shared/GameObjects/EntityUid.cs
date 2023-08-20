@@ -37,12 +37,10 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates an instance of this structure, with the given network ID.
         /// </summary>
-        public EntityUid(int uid)
+        internal EntityUid(int uid)
         {
             _uid = uid;
         }
-
-        public bool Valid => IsValid();
 
         /// <summary>
         ///     Creates an entity UID by parsing a string number.
@@ -71,16 +69,6 @@ namespace Robust.Shared.GameObjects
                 entityUid = Invalid;
                 return false;
             }
-        }
-
-        /// <summary>
-        ///     Checks if the ID value is valid. Does not check if it identifies
-        ///     a valid Entity.
-        /// </summary>
-        [Pure]
-        public bool IsValid()
-        {
-            return _uid > 0;
         }
 
         [Pure]

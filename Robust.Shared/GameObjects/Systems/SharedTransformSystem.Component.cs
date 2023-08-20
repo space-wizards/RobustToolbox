@@ -167,7 +167,7 @@ public abstract partial class SharedTransformSystem
     public bool ContainsEntity(TransformComponent xform, TransformComponent entityTransform, EntityQuery<TransformComponent> xformQuery)
     {
         // Is the entity the scene root
-        if (!entityTransform.ParentUid.IsValid())
+        if (!IsValid(entityTransform.ParentUid))
             return false;
 
         // Is this the direct parent of the entity
@@ -195,7 +195,7 @@ public abstract partial class SharedTransformSystem
 
             MapId value;
 
-            if (xform.ParentUid.IsValid())
+            if (entMan.IsValid(xform.ParentUid))
             {
                 value = FindMapIdAndSet(xform.ParentUid, xformQuery.GetComponent(xform.ParentUid), entMan, xformQuery, mapManager);
             }
@@ -226,7 +226,7 @@ public abstract partial class SharedTransformSystem
         }
 
         // Has to be done if _parent is set from ExposeData.
-        if (component.ParentUid.IsValid())
+        if (IsValid(component.ParentUid))
         {
             // Note that _children is a HashSet<EntityUid>,
             // so duplicate additions (which will happen) don't matter.
@@ -294,7 +294,7 @@ public abstract partial class SharedTransformSystem
             return;
         }
 
-        if (!xform._parent.IsValid())
+        if (!IsValid(xform._parent))
             return;
 
         var parentXform = _xformQuery.GetComponent(xform._parent);
@@ -311,7 +311,7 @@ public abstract partial class SharedTransformSystem
         // this event on every entity that gets created.
         if (xform.Anchored)
         {
-            DebugTools.Assert(xform.ParentUid == xform.GridUid && xform.ParentUid.IsValid());
+            DebugTools.Assert(xform.ParentUid == xform.GridUid && IsValid(xform.ParentUid));
             var anchorEv = new AnchorStateChangedEvent(xform);
             RaiseLocalEvent(uid, ref anchorEv, true);
         }
@@ -484,7 +484,7 @@ public abstract partial class SharedTransformSystem
                 throw new InvalidOperationException($"Attempted to parent an entity to itself: {ToPrettyString(uid)}");
             }
 
-            if (value.EntityId.IsValid())
+            if (IsValid(value.EntityId))
             {
                 if (!_xformQuery.Resolve(value.EntityId, ref newParent, false))
                 {
@@ -507,7 +507,7 @@ public abstract partial class SharedTransformSystem
                 {
                     var recursiveUid = value.EntityId;
                     var recursiveXform = newParent;
-                    while (recursiveXform.ParentUid.IsValid())
+                    while (recursiveIsValid(xform.ParentUid))
                     {
                         if (recursiveXform.ParentUid == uid)
                         {
@@ -529,7 +529,7 @@ public abstract partial class SharedTransformSystem
                 }
             }
 
-            if (xform._parent.IsValid())
+            if (IsValid(xform._parent))
                 _xformQuery.Resolve(xform._parent, ref oldParent);
 
             oldParent?._children.Remove(uid);
@@ -634,7 +634,7 @@ public abstract partial class SharedTransformSystem
 
     public TransformComponent? GetParent(TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
     {
-        if (!xform.ParentUid.IsValid()) return null;
+        if (!IsValid(xform.ParentUid)) return null;
         return xformQuery.GetComponent(xform.ParentUid);
     }
 
@@ -880,7 +880,7 @@ public abstract partial class SharedTransformSystem
         var xform = component;
         while (xform.ParentUid != relative)
         {
-            if (xform.ParentUid.IsValid() && query.TryGetComponent(xform.ParentUid, out xform))
+            if (IsValid(xform.ParentUid) && query.TryGetComponent(xform.ParentUid, out xform))
             {
                 rot += xform._localRotation;
                 pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
@@ -912,7 +912,7 @@ public abstract partial class SharedTransformSystem
         var xform = component;
         while (xform.ParentUid != relative)
         {
-            if (xform.ParentUid.IsValid() && query.TryGetComponent(xform.ParentUid, out xform))
+            if (IsValid(xform.ParentUid) && query.TryGetComponent(xform.ParentUid, out xform))
             {
                 pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
                 continue;
@@ -1241,7 +1241,7 @@ public abstract partial class SharedTransformSystem
 
     public void AttachToGridOrMap(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> query)
     {
-        if (!xform.ParentUid.IsValid() || xform.ParentUid == xform.GridUid)
+        if (!IsValid(xform.ParentUid) || xform.ParentUid == xform.GridUid)
             return;
 
         EntityUid newParent;
@@ -1279,7 +1279,7 @@ public abstract partial class SharedTransformSystem
         if (!_xformQuery.Resolve(uid, ref xform))
             return false;
 
-        if (!xform.ParentUid.IsValid())
+        if (!IsValid(xform.ParentUid))
             return false;
 
         EntityUid newParent;
@@ -1315,7 +1315,7 @@ public abstract partial class SharedTransformSystem
         DebugTools.Assert(uid == xform.Owner);
 
         var parent = xform._parent;
-        if (!parent.IsValid())
+        if (!IsValid(parent))
         {
             DebugTools.Assert(!xform.Anchored,
                 $"Entity is anchored but has no parent? Entity: {ToPrettyString(uid)}");

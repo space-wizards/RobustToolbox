@@ -56,7 +56,7 @@ public abstract partial class SharedPhysicsSystem
         var velocity = component.LinearVelocity;
         Vector2 angularComponent = Vector2.Zero;
 
-        while (parent != xform.MapUid && parent.IsValid())
+        while (parent != xform.MapUid && IsValid(parent))
         {
             xform = xformQuery.Value.GetComponent(parent);
 
@@ -102,7 +102,7 @@ public abstract partial class SharedPhysicsSystem
 
         var angularVelocity = component.AngularVelocity;
 
-        while (xform.ParentUid != xform.MapUid && xform.ParentUid.IsValid())
+        while (xform.ParentUid != xform.MapUid && IsValid(xform.ParentUid))
         {
             if (physicsQuery.Value.TryGetComponent(xform.ParentUid, out var body))
                 angularVelocity += body.AngularVelocity;
@@ -220,7 +220,7 @@ public abstract partial class SharedPhysicsSystem
             localPos = parentXform.LocalPosition + parentXform.LocalRotation.RotateVec(localPos);
             parent = parentXform.ParentUid;
 
-        } while (parent.IsValid() && xformQuery.TryGetComponent(parent, out parentXform));
+        } while (IsValid(parent) && xformQuery.TryGetComponent(parent, out parentXform));
 
         oldLinear += linearAngularContribution;
 

@@ -239,7 +239,7 @@ namespace Robust.Shared.GameObjects
             var newComponent = (T)_componentFactory.GetComponent(reg);
             newComponent.Owner = uid;
 
-            if (!uid.IsValid() || !EntityExists(uid))
+            if (!IsValid(uid) || !EntityExists(uid))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
             if (newComponent == null) throw new ArgumentNullException(nameof(newComponent));
@@ -254,7 +254,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
         {
-            if (!uid.IsValid() || !EntityExists(uid))
+            if (!IsValid(uid) || !EntityExists(uid))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
             if (component == null) throw new ArgumentNullException(nameof(component));

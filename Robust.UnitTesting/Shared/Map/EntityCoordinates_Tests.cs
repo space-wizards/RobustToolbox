@@ -95,12 +95,13 @@ namespace Robust.UnitTesting.Shared.Map
         public void EntityCoordinates_Map()
         {
             var mapManager = IoCManager.Resolve<IMapManager>();
+            var entManager = IoCManager.Resolve<IEntityManager>();
 
             var mapId = mapManager.CreateMap();
             var mapEntity = mapManager.CreateNewMapEntity(mapId);
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEntity).ParentUid.IsValid(), Is.False);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEntity).Coordinates.EntityId, Is.EqualTo(mapEntity));
+            Assert.That(entManager.IsValid(entManager.GetComponent<TransformComponent>(mapEntity).ParentUid), Is.False);
+            Assert.That(entManager.GetComponent<TransformComponent>(mapEntity).Coordinates.EntityId, Is.EqualTo(mapEntity));
         }
 
         /// <summary>

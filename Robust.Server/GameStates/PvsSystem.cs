@@ -666,7 +666,7 @@ internal sealed partial class PvsSystem : EntitySystem
         var xform = transform.GetComponent(uid);
 
         // is this a map or grid?
-        var isRoot = !xform.ParentUid.IsValid() || uid == xform.GridUid;
+        var isRoot = !IsValid(xform.ParentUid) || uid == xform.GridUid;
         if (isRoot)
         {
             DebugTools.Assert(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid));

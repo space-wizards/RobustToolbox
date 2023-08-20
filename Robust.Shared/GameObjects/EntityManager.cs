@@ -521,6 +521,20 @@ namespace Robust.Shared.GameObjects
             RecursiveDeleteEntity(e, meta, metaQuery, xformQuery, xformSys);
         }
 
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsValid(EntityUid uid)
+        {
+            return uid.GetHashCode() > 0;
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsValid(EntityUid? uid)
+        {
+            return uid != null && IsValid(uid.Value);
+        }
+
         private void RecursiveFlagEntityTermination(
             EntityUid uid,
             MetaDataComponent metadata,

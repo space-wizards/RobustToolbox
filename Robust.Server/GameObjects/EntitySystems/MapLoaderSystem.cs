@@ -655,7 +655,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                         var xform = xformQuery.GetComponent(ent);
 
-                        if (!xform.ParentUid.IsValid() || xform.ParentUid.Equals(oldRootUid))
+                        if (!IsValid(xform.ParentUid) || xform.ParentUid.Equals(oldRootUid))
                         {
                             _transform.SetParent(ent, xform, newRootUid);
                         }
@@ -704,7 +704,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 var xform = xformQuery.GetComponent(ent);
 
-                if (!xform.ParentUid.IsValid())
+                if (!IsValid(xform.ParentUid))
                 {
                     _transform.SetParent(ent, xform, mapNode);
                 }
@@ -843,7 +843,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
     private bool IsRoot(TransformComponent xform, EntityQuery<MapComponent> mapQuery)
     {
-        return !xform.ParentUid.IsValid() || mapQuery.HasComponent(xform.ParentUid);
+        return !IsValid(xform.ParentUid) || mapQuery.HasComponent(xform.ParentUid);
     }
 
     private void StartupEntity(EntityUid uid, MetaDataComponent metadata, MapData data)

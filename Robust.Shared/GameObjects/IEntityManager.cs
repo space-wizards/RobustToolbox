@@ -125,6 +125,16 @@ namespace Robust.Shared.GameObjects
         void DeleteEntity(EntityUid uid);
 
         /// <summary>
+        /// Returns whether a given <see cref="EntityUid"/> could point to an entity.
+        /// </summary>
+        bool IsValid(EntityUid uid);
+
+        /// <summary>
+        /// Returns whether a given <see cref="EntityUid"/> could point to an entity.
+        /// </summary>
+        bool IsValid(EntityUid? uid);
+
+        /// <summary>
         /// Checks whether an entity with the specified ID exists.
         /// </summary>
         bool EntityExists(EntityUid uid);

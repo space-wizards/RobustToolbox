@@ -91,10 +91,11 @@ public partial class EntityManager
         string? protoName,
         EntityUid target,
         [NotNullWhen(true)] out EntityUid? uid,
+        TransformComponent? xform = null,
         ComponentRegistry? overrides = null)
     {
         uid = null;
-        if (!_xformQuery.TryGetComponent(target, out var xform))
+        if (!_xformQuery.Resolve(target, ref xform))
             return false;
 
         if (!xform.ParentUid.IsValid())

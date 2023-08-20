@@ -71,6 +71,7 @@ public partial interface IEntityManager
         string? protoName,
         EntityUid target,
         [NotNullWhen(true)] out EntityUid? uid,
+        TransformComponent? xform = null,
         ComponentRegistry? overrides = null);
 
     /// <summary>

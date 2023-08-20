@@ -10,6 +10,9 @@ namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
+    public EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+        => SpawnAttachedTo(protoName, coordinates, overrides);
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params string?[] protoNames)
     {

@@ -20,7 +20,7 @@ public class Generator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
         Diagnostics.IdDataDefinitionPartial,
         "Type must be partial",
-        "Type {0} has a DataDefinition attribute but is not partial.",
+        "Type {0} is a DataDefinition but is not partial.",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -130,9 +130,9 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 {
     {{GetConstructor(definition)}}
 
-    {{GetCopyMethod(definition, sourceContext)}}
+    {{GetCopyMethods(definition, sourceContext)}}
 
-    {{GetInstantiator(definition)}}
+    {{GetInstantiators(definition)}}
 }
 """
                     );
@@ -197,6 +197,9 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
      private static string GetConstructor(DataDefinition definition)
      {
+         if (definition.Type.TypeKind == TypeKind.Interface)
+             return string.Empty;
+
          var builder = new StringBuilder();
 
          if (NeedsEmptyConstructor(definition.Type))
@@ -214,74 +217,137 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
          return builder.ToString();
      }
 
-    private static string GetCopyMethod(DataDefinition definition, SourceProductionContext context)
+    private static string GetCopyMethods(DataDefinition definition, SourceProductionContext context)
     {
-
         var builder = new StringBuilder();
 
+        var modifiers = IsVirtualClass(definition.Type) ? "virtual " : string.Empty;
+        var baseCall = string.Empty;
+        if (definition.Type.BaseType is { } baseType &&
+            IsImplicitDataDefinition(baseType))
+        {
+            var baseName = baseType.ToDisplayString();
+            baseCall = $"""
+                        var definitionCast = ({baseName}) target;
+                        base.InternalCopy(ref definitionCast, serialization, hookCtx, context);
+                        target = ({definition.GenericTypeName}) definitionCast;
+                        """;
+
+             builder.AppendLine($$"""
+                                   public override void Copy(ref {{baseName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                                  {
+                                      var cast = ({{definition.GenericTypeName}}) target;
+                                      ((ISerializationGenerated<{{definition.GenericTypeName}}>) this).Copy(ref cast, serialization, hookCtx, context);
+                                      target = cast!;
+                                  }
+                                  """);
+        }
+
         builder.AppendLine($$"""
-                             public void Copy(ref {{definition.GenericTypeName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                             public {{modifiers}}void InternalCopy(ref {{definition.GenericTypeName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
                              {
+                                {{baseCall}}
                                 {{CopyDataFields(definition, context)}}
                              }
                              """);
 
-        if (ImplementsInterface(definition.Type, ComponentInterfaceNamespace))
-        {
-            builder.AppendLine($$"""
-                                 public override void Copy(ref IComponent target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
-                                 {
-                                     base.Copy(ref target, serialization, hookCtx, context);
-                                     var comp = ({{definition.GenericTypeName}}) target;
-                                     Copy(ref comp, serialization, hookCtx, context);
-                                     target = comp;
-                                 }
-                                 """);
-        }
 
         builder.AppendLine($$"""
-                             public void Copy(ref object target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                             public {{modifiers}}void Copy(ref {{definition.GenericTypeName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                             {
+                                 InternalCopy(ref target, serialization, hookCtx, context);
+                             }
+                             """);
+
+        builder.AppendLine($$"""
+                             public {{modifiers}}void Copy(ref object target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
                              {
                                  var cast = ({{definition.GenericTypeName}}) target;
-                                 Copy(ref cast, serialization, hookCtx, context);
+                                 ((ISerializationGenerated<{{definition.GenericTypeName}}>) this).Copy(ref cast, serialization, hookCtx, context);
                                  target = cast!;
                              }
                              """);
 
+        foreach (var @interface in GetImplicitDataDefinitionInterfaces(definition.Type, true))
+        {
+            var interfaceName = @interface.ToDisplayString();
+
+            builder.AppendLine($$"""
+                                 public {{modifiers}}void InternalCopy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                                 {
+                                     var def = ({{definition.GenericTypeName}}) target;
+                                     ((ISerializationGenerated<{{definition.GenericTypeName}}>) this).Copy(ref def, serialization, hookCtx, context);
+                                     target = def;
+                                 }
+
+                                 public {{modifiers}}void Copy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                                 {
+                                     InternalCopy(ref target, serialization, hookCtx, context);
+                                 }
+                                 """);
+        }
+
         return builder.ToString();
     }
 
-    private static string GetInstantiator(DataDefinition definition)
+    private static string GetInstantiators(DataDefinition definition)
     {
         var builder = new StringBuilder();
         var modifiers = string.Empty;
 
-        if (definition.Type.IsAbstract)
-        {
-            modifiers += "abstract ";
-        }
-
-        if (definition.Type.BaseType is { } baseType)
-        {
-            if (IsDataDefinition(baseType) || baseType.ToDisplayString() == ComponentNamespace)
-            {
-                modifiers += "override ";
-            }
-        }
-
-        if (modifiers == string.Empty && definition.Type.IsReferenceType && !definition.Type.IsSealed)
+        if (definition.Type.BaseType is { } baseType && IsDataDefinition(baseType))
+            modifiers = "override ";
+        else if (!definition.Type.IsAbstract && IsVirtualClass(definition.Type))
             modifiers = "virtual ";
 
+        // TODO skip locals init
         if (definition.Type.IsAbstract)
         {
-            builder.AppendLine($"public {modifiers}{definition.GenericTypeName} Instantiate();");
+//             foreach (var @interface in interfaces)
+//             {
+//                 var interfaceName = @interface.ToDisplayString();
+//                 builder.AppendLine($"""
+//                                     public abstract {interfaceName} Instantiate();
+//                                     """);
+//             }
+
+            builder.AppendLine($"""
+                                public abstract {modifiers}{definition.GenericTypeName} Instantiate();
+                                """);
         }
         else
         {
+//             foreach (var @interface in interfaces)
+//             {
+//                 var interfaceName = @interface.ToDisplayString();
+//                 builder.AppendLine($$"""
+//                                     public {{overrideKeyword}}{{interfaceName}} Instantiate({{interfaceName}}? _ = default)
+//                                     {
+//                                         return new {{definition.GenericTypeName}}();
+//                                     }
+//                                     """);
+//             }
+
             builder.AppendLine($$"""
                                  public {{modifiers}}{{definition.GenericTypeName}} Instantiate()
                                  {
                                      return new {{definition.GenericTypeName}}();
+                                 }
+                                 """);
+        }
+
+        foreach (var @interface in GetImplicitDataDefinitionInterfaces(definition.Type, false))
+        {
+            var interfaceName = @interface.ToDisplayString();
+            builder.AppendLine($$"""
+                                 {{interfaceName}} {{interfaceName}}.Instantiate()
+                                 {
+                                     return Instantiate();
+                                 }
+
+                                 {{interfaceName}} ISerializationGenerated<{{interfaceName}}>.Instantiate()
+                                 {
+                                     return Instantiate();
                                  }
                                  """);
         }
@@ -301,7 +367,7 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, context))
         var structCopier = new StringBuilder();
         foreach (var field in definition.Fields)
         {
-            if (IsReadOnlyMember(field.Symbol))
+            if (IsReadOnlyMember(definition.Type, field.Symbol))
             {
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, field.Symbol.Locations.First(),
                     field.Symbol.Name, definition.Type.Name));
@@ -383,7 +449,7 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, context))
                     }
 
                     builder.AppendLine($$"""
-                                         {{name}}{{nullability}}.Copy(ref temp, serialization, hookCtx, context);
+                                         ((ISerializationGenerated<{{typeName}}>?) {{name}}){{nullability}}.Copy(ref temp, serialization, hookCtx, context);
                                          {{tempVarName}} = temp;
                                          """);
 

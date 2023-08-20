@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 
 namespace Robust.Serialization.Generator;
 
@@ -7,6 +8,11 @@ internal static class Types
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
+
+    internal static bool IsDataDefinition(ITypeSymbol type)
+    {
+        return HasAttribute(type, DataDefinitionNamespace) || IsImplicitDataDefinition(type);
+    }
 
     internal static bool IsDataField(ISymbol member, out ITypeSymbol type, out AttributeData attribute)
     {
@@ -41,27 +47,48 @@ internal static class Types
         return false;
     }
 
-    internal static bool IsDataDefinition(ITypeSymbol type)
+    internal static bool IsImplicitDataDefinition(ITypeSymbol type)
     {
-        foreach (var attribute in type.GetAttributes())
-        {
-            if (attribute.AttributeClass?.ToDisplayString() == DataDefinitionNamespace)
-                return true;
-        }
-
-        var baseType = type.BaseType;
+        var baseType = type;
         while (baseType != null)
         {
-            foreach (var attribute in baseType.GetAttributes())
-            {
-                if (attribute.AttributeClass?.ToDisplayString() == ImplicitDataDefinitionNamespace)
-                    return true;
-            }
+            if (HasAttribute(baseType, ImplicitDataDefinitionNamespace))
+                return true;
 
             baseType = baseType.BaseType;
         }
 
+        foreach (var @interface in type.AllInterfaces)
+        {
+            if (IsImplicitDataDefinitionInterface(@interface))
+                return true;
+        }
+
         return false;
+    }
+
+    internal static bool IsImplicitDataDefinitionInterface(ITypeSymbol @interface)
+    {
+        if (HasAttribute(@interface, ImplicitDataDefinitionNamespace))
+            return true;
+
+        foreach (var subInterface in @interface.AllInterfaces)
+        {
+            if (HasAttribute(subInterface, ImplicitDataDefinitionNamespace))
+                return true;
+        }
+
+        return false;
+    }
+
+    internal static IEnumerable<ITypeSymbol> GetImplicitDataDefinitionInterfaces(ITypeSymbol type, bool all)
+    {
+        var interfaces = all ? type.AllInterfaces : type.Interfaces;
+        foreach (var @interface in interfaces)
+        {
+            if (IsImplicitDataDefinitionInterface(@interface))
+                yield return @interface;
+        }
     }
 
     internal static bool IsNullableType(ITypeSymbol type)
@@ -77,6 +104,7 @@ internal static class Types
 
     internal static bool CanBeCopiedByValue(ITypeSymbol type)
     {
+        // TODO copybyref attribute
         if (type.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
             return CanBeCopiedByValue(((INamedTypeSymbol) type).TypeArguments[0]);
 
@@ -144,19 +172,30 @@ internal static class Types
             _ => "public"
         };
 
-        string typeKeyword;
-        if (symbol.IsRecord)
+        var typeKeyword = "partial ";
+        if (symbol.TypeKind == TypeKind.Interface)
         {
-            typeKeyword = symbol.IsValueType ? "record struct" : "record";
+            typeKeyword += "interface";
         }
         else
         {
-            typeKeyword = symbol.IsValueType ? "struct" : "class";
+            if (symbol.IsRecord)
+            {
+                typeKeyword += symbol.IsValueType ? "record struct" : "record";
+            }
+            else
+            {
+                typeKeyword += symbol.IsValueType ? "struct" : "class";
+            }
+
+            if (symbol.IsAbstract)
+            {
+                typeKeyword = $"abstract {typeKeyword}";
+            }
         }
 
-        var abstractKeyword = symbol.IsAbstract ? "abstract " : string.Empty;
         var typeName = GetGenericTypeName(symbol);
-        return $"{access} {abstractKeyword}partial {typeKeyword} {typeName}";
+        return $"{access} {typeKeyword} {typeName}";
     }
 
     internal static bool Inherits(ITypeSymbol type, string parent)
@@ -186,7 +225,7 @@ internal static class Types
         return false;
     }
 
-    internal static bool IsReadOnlyMember(ISymbol member)
+    internal static bool IsReadOnlyMember(ITypeSymbol type, ISymbol member)
     {
         if (member is IFieldSymbol field)
         {
@@ -194,7 +233,13 @@ internal static class Types
         }
         else if (member is IPropertySymbol property)
         {
-            return property.SetMethod == null;
+            if (property.SetMethod == null)
+                return true;
+
+            if (property.SetMethod.IsInitOnly)
+                return type.IsReferenceType;
+
+            return false;
         }
 
         return false;
@@ -215,5 +260,21 @@ internal static class Types
         }
 
         return true;
+    }
+
+    internal static bool IsVirtualClass(ITypeSymbol type)
+    {
+        return type.IsReferenceType && !type.IsSealed && type.TypeKind != TypeKind.Interface;
+    }
+
+    internal static bool HasAttribute(ITypeSymbol type, string attributeName)
+    {
+        foreach (var attribute in type.GetAttributes())
+        {
+            if (attribute.AttributeClass?.ToDisplayString() == ImplicitDataDefinitionNamespace)
+                return true;
+        }
+
+        return false;
     }
 }

@@ -12,12 +12,10 @@ public partial interface IEntityManager
         => SpawnEntitiesAttachedTo(coordinates, protoNames);
 
     // This method will soon be marked as obsolete.
-    EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        => SpawnAttachedTo(protoName, coordinates, overrides);
+    EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
 
     // This method will soon be marked as obsolete.
-    EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
-        => Spawn(protoName, coordinates, overrides);
+    EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
 
     EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames);
     EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames);

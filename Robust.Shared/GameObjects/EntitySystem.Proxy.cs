@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -675,9 +676,10 @@ public partial class EntitySystem
         EntityUid containerUid,
         string containerId,
         [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
-        return EntityManager.TrySpawnInContainer(protoName, containerUid, containerId, out uid, overrides);
+        return EntityManager.TrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
     }
 
     /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />
@@ -686,9 +688,34 @@ public partial class EntitySystem
         string? protoName,
         EntityUid target,
         [NotNullWhen(true)] out EntityUid? uid,
+        TransformComponent? xform = null,
         ComponentRegistry? overrides = null)
     {
-        return EntityManager.TrySpawnNextTo(protoName, target, out uid, overrides);
+        return EntityManager.TrySpawnNextTo(protoName, target, out uid, xform, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnNextToOrDrop" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid SpawnNextToOrDrop(
+        string? protoName, 
+        EntityUid target, 
+        TransformComponent? xform = null, 
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.SpawnNextToOrDrop(protoName, target, xform, overrides);
+    }
+    
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? container = null, 
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.SpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);
     }
 
     #endregion

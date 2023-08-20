@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
@@ -51,6 +52,7 @@ public partial interface IEntityManager
         EntityUid containerUid,
         string containerId,
         [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null, 
         ComponentRegistry? overrides = null);
 
     /// <summary>
@@ -61,6 +63,8 @@ public partial interface IEntityManager
         string? protoName,
         EntityUid containerUid,
         string containerId,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null, 
         ComponentRegistry? overrides = null);
 
     /// <summary>
@@ -79,5 +83,9 @@ public partial interface IEntityManager
     /// attempt to insert the new entity into the same container. If it fails to insert into the container, it will
     /// instead attempt to spawn the entity next to the target's parent.
     /// </summary>
-    EntityUid SpawnNextToOrDrop(string? protoName, EntityUid target, ComponentRegistry? overrides = null);
+    EntityUid SpawnNextToOrDrop(
+        string? protoName, 
+        EntityUid target, 
+        TransformComponent? xform = null, 
+        ComponentRegistry? overrides = null);
 }

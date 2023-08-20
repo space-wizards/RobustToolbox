@@ -19,6 +19,19 @@ public static class ZStd
         return (int)ZSTD_COMPRESSBOUND((nuint)length);
     }
 
+    public static bool IsSupported()
+    {
+        try
+        {
+            Marshal.PrelinkAll(typeof(Zstd));
+            return true;
+        }
+        catch (DllNotFoundException)
+        {
+            return false;
+        }
+    }
+
     public static unsafe int Compress(
         Span<byte> into,
         ReadOnlySpan<byte> data,

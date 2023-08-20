@@ -110,6 +110,13 @@ namespace Robust.Client
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
+
+            if (!ZStd.IsSupported())
+            {
+                _logger.Fatal("A required dll was not found. You need to install {DllName}.", "ZStd");
+                return false;
+            }
+
             _clyde.InitializePostWindowing();
             _clydeAudio.InitializePostWindowing();
             _clyde.SetWindowTitle(

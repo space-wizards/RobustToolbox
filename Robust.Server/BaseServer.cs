@@ -265,6 +265,12 @@ namespace Robust.Server
                 return true;
             }
 
+            if (!ZStd.IsSupported())
+            {
+                _logger.Fatal("A required dll was not found. You need to install {DllName}.", "ZStd");
+                return true;
+            }
+
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.
             _taskManager.Initialize();
 

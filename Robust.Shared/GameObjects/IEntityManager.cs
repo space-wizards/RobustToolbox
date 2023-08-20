@@ -109,6 +109,11 @@ namespace Robust.Shared.GameObjects
         bool EntityExists([NotNullWhen(true)] EntityUid? uid);
 
         /// <summary>
+        /// Returns true if entity is valid and paused.
+        /// </summary>
+        bool IsPaused([NotNullWhen(true)] EntityUid? uid, MetaDataComponent? metadata = null);
+
+        /// <summary>
         /// Checks whether an entity with the specified ID has been deleted or is nonexistent.
         /// </summary>
         bool Deleted(EntityUid uid);

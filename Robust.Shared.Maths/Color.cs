@@ -1914,7 +1914,7 @@ namespace Robust.Shared.Maths
             ["thistle"] = Thistle,
             ["tomato"] = Tomato,
             ["turquoise"] = Turquoise,
-            ["violet"] = Violet,
+            ["violet"] = LavenderMagenta,
             ["wheat"] = Wheat,
             ["white"] = White,
             ["whitesmoke"] = WhiteSmoke,

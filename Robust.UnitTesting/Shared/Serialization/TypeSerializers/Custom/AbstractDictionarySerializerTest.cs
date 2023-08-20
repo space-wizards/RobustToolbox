@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
@@ -15,8 +14,8 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom;
 
 [TestFixture]
-[TestOf(typeof(TypeDictionarySerializer))]
-public sealed class TypeDictionarySerializer : RobustUnitTest
+[TestOf(typeof(AbstractDictionarySerializer<>))]
+public sealed class AbstractDictionarySerializerTest : RobustUnitTest
 {
     private const string TestYaml = @"
 SealedTestTypeA:
@@ -39,13 +38,13 @@ SealedTestTypeB:
 
         var validation = seri.ValidateNode<Dictionary<Type, AbstractTestData>, 
             MappingDataNode, 
-            TypeDictionarySerializer<AbstractTestData>>
+            AbstractDictionarySerializer<AbstractTestData>>
             (node);
         Assert.That(validation.GetErrors().Count(), Is.EqualTo(0));
 
         var data = seri.Read<Dictionary<Type, AbstractTestData>, 
             MappingDataNode, 
-            TypeDictionarySerializer<AbstractTestData>>
+            AbstractDictionarySerializer<AbstractTestData>>
             (node, notNullableOverride:true);
         Assert.NotNull(data);
         Assert.That(data.Count, Is.EqualTo(2));
@@ -64,13 +63,13 @@ SealedTestTypeB:
         Assert.That(b.Z, Is.EqualTo(4));
 
         var newNode = (MappingDataNode)seri.WriteValue<Dictionary<Type, AbstractTestData>, 
-                TypeDictionarySerializer<AbstractTestData>>
+                AbstractDictionarySerializer<AbstractTestData>>
             (data, notNullableOverride:true);
         
         Assert.Null(node.Except(newNode));
         validation = seri.ValidateNode<Dictionary<Type, AbstractTestData>, 
             MappingDataNode, 
-            TypeDictionarySerializer<AbstractTestData>>
+            AbstractDictionarySerializer<AbstractTestData>>
             (newNode);
         Assert.That(validation.GetErrors().Count(), Is.EqualTo(0));
     }

@@ -10,7 +10,10 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
-public sealed class TypeDictionarySerializer<TValue> : ITypeSerializer<Dictionary<Type, TValue>, MappingDataNode> 
+/// <summary>
+/// A custom type serializer for reading a set of types that inherit from some base type. 
+/// </summary>
+public sealed class AbstractDictionarySerializer<TValue> : ITypeSerializer<Dictionary<Type, TValue>, MappingDataNode> 
     where TValue : notnull
 {
     public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,

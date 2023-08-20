@@ -283,6 +283,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
 
+        /// <summary>
+        /// When using Happy Eyeballs to try both IPv6 over IPv4, the delay that IPv4 gets to get less priority.
+        /// </summary>
+        public static readonly CVarDef<float> NetHappyEyeballsDelay =
+            CVarDef.Create("net.happy_eyeballs_delay", 0.025f, CVar.CLIENTONLY);
+
         /**
          * SUS
          */

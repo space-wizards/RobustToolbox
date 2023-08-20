@@ -12,10 +12,10 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Audio;
 
 [ImplicitDataDefinitionForInheritors, Serializable, NetSerializable]
-public abstract class SoundSpecifier
+public abstract partial class SoundSpecifier
 {
     [DataField("params")]
-    public AudioParams Params { get; init; } = AudioParams.Default;
+    public AudioParams Params { get; set; } = AudioParams.Default;
 
     [Obsolete("Use SharedAudioSystem.GetSound(), or just pass sound specifier directly into SharedAudioSystem.")]
     public abstract string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null);

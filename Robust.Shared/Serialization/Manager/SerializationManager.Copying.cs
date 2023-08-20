@@ -335,14 +335,24 @@ public sealed partial class SerializationManager
         if (source is DataNode node)
             return (T)(object)node.Copy();
 
-        var isRecord = definition?.IsRecord ?? false;
-        var target = GetOrCreateInstantiator<T>(isRecord)();
-
-        if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, hookCtx, context))
+        if (source is ISerializationGenerated<T> generated)
         {
-            throw new CopyToFailedException<T>();
+            var target = generated.Instantiate();
+            generated.Copy(ref target, this, hookCtx, context);
+            RunAfterHook(target, hookCtx);
+            return target;
         }
-        return target!;
+        else
+        {
+            var isRecord = definition?.IsRecord ?? false;
+            var target = GetOrCreateInstantiator<T>(isRecord)();
+
+            if (!GetOrCreateCopyToGenericDelegate<T>(source)(source, ref target, hookCtx, context))
+            {
+                throw new CopyToFailedException<T>();
+            }
+            return target!;
+        }
     }
 
     private void NotNullOverrideCheck(bool notNullableOverride, Type? type = null)

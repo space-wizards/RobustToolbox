@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects
     /// <inheritdoc />
     [Reflect(false)]
     [ImplicitDataDefinitionForInheritors]
-    public abstract class Component : IComponent, ISerializationGenerated<Component>
+    public abstract partial class Component : IComponent
     {
         [DataField("netsync")]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -189,13 +189,14 @@ namespace Robust.Shared.GameObjects
             CreationTick = GameTick.Zero;
         }
 
-        public void Copy(
-            ref Component target,
-            ISerializationManager serialization,
-            SerializationHookContext hookCtx,
+        public void InternalCopy(
+            ref IComponent target,
+            ISerializationManager serialization, SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
-            target._netSync = _netSync;
+            var comp = (Component) target;
+            ((ISerializationGenerated<Component>) this).Copy(ref comp, serialization, hookCtx, context);
+            target = comp;
         }
 
         public virtual void Copy(
@@ -204,23 +205,8 @@ namespace Robust.Shared.GameObjects
             SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {
-            var cast = (Component) target;
-            Copy(ref cast, serialization, hookCtx, context);
-            target = cast!;
+            InternalCopy(ref target, serialization, hookCtx, context);
         }
-
-        public void Copy(
-            ref object target,
-            ISerializationManager serialization,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
-        {
-            var cast = (Component) target;
-            Copy(ref cast, serialization, hookCtx, context);
-            target = cast!;
-        }
-
-        public abstract Component Instantiate();
 
         IComponent ISerializationGenerated<IComponent>.Instantiate()
         {

@@ -16,7 +16,7 @@ namespace Robust.Shared.Containers
     /// </summary>
     [UsedImplicitly]
     [SerializedType(ClassName)]
-    public sealed class Container : BaseContainer
+    public sealed partial class Container : BaseContainer
     {
         private const string ClassName = "Container";
 

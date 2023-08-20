@@ -12,6 +12,12 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         SerializationHookContext hookCtx,
         ISerializationContext? context = null);
 
+    void InternalCopy(
+        ref T target,
+        ISerializationManager serialization,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null);
+
     T Instantiate();
 }
 

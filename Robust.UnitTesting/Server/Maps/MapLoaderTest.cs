@@ -14,7 +14,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.UnitTesting.Server.Maps
 {
     [TestFixture]
-    public sealed class MapLoaderTest : RobustUnitTest
+    public sealed partial class MapLoaderTest : RobustUnitTest
     {
         private const string MapData = @"
 meta:

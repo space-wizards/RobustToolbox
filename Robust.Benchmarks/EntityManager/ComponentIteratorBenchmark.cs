@@ -6,7 +6,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.Benchmarks.EntityManager;
 
-public class ComponentIteratorBenchmark
+public partial class ComponentIteratorBenchmark
 {
     private ISimulation _simulation = default!;
     private IEntityManager _entityManager = default!;

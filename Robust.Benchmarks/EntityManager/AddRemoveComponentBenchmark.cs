@@ -8,7 +8,7 @@ using Robust.UnitTesting.Server;
 namespace Robust.Benchmarks.EntityManager;
 
 [Virtual]
-public class AddRemoveComponentBenchmark
+public partial class AddRemoveComponentBenchmark
 {
     private ISimulation _simulation = default!;
     private IEntityManager _entityManager = default!;

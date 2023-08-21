@@ -751,8 +751,17 @@ namespace Robust.Shared.GameObjects
             if (prototypeName == null)
                 return AllocEntity(out _, uid);
 
-            PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype);
+            if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
+                throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
+            return CreateEntity(prototype, uid, context);
+        }
+        
+        /// <summary>
+        ///     Allocates an entity and loads components but does not do initialization.
+        /// </summary>
+        private protected EntityUid CreateEntity(EntityPrototype prototype, EntityUid uid = default, IEntityLoadContext? context = null)
+        {
             var entity = AllocEntity(prototype, out var metadata, uid);
             try
             {
@@ -764,7 +773,7 @@ namespace Robust.Shared.GameObjects
                 // Exception during entity loading.
                 // Need to delete the entity to avoid corrupt state causing crashes later.
                 DeleteEntity(entity);
-                throw new EntityCreationException($"Exception inside CreateEntity with prototype {prototypeName}", e);
+                throw new EntityCreationException($"Exception inside CreateEntity with prototype {prototype.ID}", e);
             }
         }
 

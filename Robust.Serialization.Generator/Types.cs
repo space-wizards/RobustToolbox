@@ -9,9 +9,13 @@ internal static class Types
     private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
 
-    internal static bool IsDataDefinition(ITypeSymbol type)
+    internal static bool IsDataDefinition(ITypeSymbol? type)
     {
-        return HasAttribute(type, DataDefinitionNamespace) || IsImplicitDataDefinition(type);
+        if (type == null)
+            return false;
+
+        return HasAttribute(type, DataDefinitionNamespace) ||
+               IsImplicitDataDefinition(type);
     }
 
     internal static bool IsDataField(ISymbol member, out ITypeSymbol type, out AttributeData attribute)
@@ -105,6 +109,11 @@ internal static class Types
     internal static bool IsNullableValueType(ITypeSymbol type)
     {
         return type.IsValueType && IsNullableType(type);
+    }
+
+    internal static bool IsMultidimensionalArray(ITypeSymbol type)
+    {
+        return type is IArrayTypeSymbol { Rank: > 1 };
     }
 
     internal static bool CanBeCopiedByValue(ITypeSymbol type)

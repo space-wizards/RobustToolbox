@@ -324,7 +324,8 @@ namespace Robust.Shared.Network
             {
                 DebugTools.AssertNotNull(second);
                 // Connecting via second peer is delayed by 25ms to give an advantage to IPv6, if it works.
-                await Task.Delay(25, cancellationToken);
+                var delay = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetHappyEyeballsDelay));
+                await Task.Delay(delay, cancellationToken);
                 if (cancellationToken.IsCancellationRequested)
                 {
                     return;

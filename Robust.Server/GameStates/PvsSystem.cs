@@ -1034,26 +1034,20 @@ internal sealed partial class PvsSystem : EntitySystem
             while (query.MoveNext(out var uid, out var md))
             {
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
+                DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
                 if (md.EntityLastModifiedTick <= fromTick)
                     continue;
 
                 var state = GetEntityState(player, uid, fromTick, md);
 
-                // Temporary debugging code.
-                // TODO REMOVE TEMPORARY CODE
                 if (state.Empty)
                 {
-                    var msg = $"{nameof(GetEntityState)} returned an empty state while enumerating all. Entity {ToPrettyString(uid)}. Net component Data:";
-                    foreach (var (_, cmp) in EntityManager.GetNetComponents(uid))
-                    {
-                        msg += $"\nName: {_factory.GetComponentName(cmp.GetType())}" +
-                               $"Enabled: {cmp.NetSyncEnabled}, " +
-                               $"Lifestage: {cmp.LifeStage}, " +
-                               $"OwnerOnly: {cmp.SendOnlyToOwner}, " +
-                               $"SessionSpecific: {cmp.SessionSpecific}, " +
-                               $"LastModified: {cmp.LastModifiedTick}";
-                    }
-                    Log.Error(msg);
+                    Log.Error($@"{nameof(GetEntityState)} returned an empty state while enumerating entities. 
+Tick: {fromTick}--{_gameTiming.CurTick}
+Entity: {ToPrettyString(uid)}
+Last modified: {md.EntityLastModifiedTick}
+Metadata last modified: {md.LastModifiedTick}
+Transform last modified: {Transform(uid).LastModifiedTick}");
                 }
 
                 stateEntities.Add(state);
@@ -1077,26 +1071,21 @@ internal sealed partial class PvsSystem : EntitySystem
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick || md.EntityLastModifiedTick == GameTick.Zero);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick || md.EntityLastModifiedTick == GameTick.Zero);
+                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
 
                     var state = GetEntityState(player, uid, fromTick, md);
 
-                    // Temporary debugging code.
-                    // TODO REMOVE TEMPORARY CODE
                     if (state.Empty)
                     {
-                        var msg = $"{nameof(GetEntityState)} returned an empty state for new entity {ToPrettyString(uid)}. Net component Data:";
-                        foreach (var (_, cmp) in EntityManager.GetNetComponents(uid))
-                        {
-                            msg += $"\nName: {_factory.GetComponentName(cmp.GetType())}" +
-                                   $"Enabled: {cmp.NetSyncEnabled}, " +
-                                   $"Lifestage: {cmp.LifeStage}, " +
-                                   $"OwnerOnly: {cmp.SendOnlyToOwner}, " +
-                                   $"SessionSpecific: {cmp.SessionSpecific}, " +
-                                   $"LastModified: {cmp.LastModifiedTick}";
-                        }
-                        Log.Error(msg);
+                        Log.Error($@"{nameof(GetEntityState)} returned an empty state for a new entity.
+Tick: {fromTick}--{_gameTiming.CurTick}
+Entity: {ToPrettyString(uid)}
+Last modified: {md.EntityLastModifiedTick}
+Metadata last modified: {md.LastModifiedTick}
+Transform last modified: {Transform(uid).LastModifiedTick}");
+                        continue;
                     }
 
                     stateEntities.Add(state);
@@ -1109,8 +1098,9 @@ internal sealed partial class PvsSystem : EntitySystem
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick || md.EntityLastModifiedTick == GameTick.Zero);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick || md.EntityLastModifiedTick == GameTick.Zero);
+                    DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
 
                     var state = GetEntityState(player, uid, fromTick, md);
                     if (!state.Empty)

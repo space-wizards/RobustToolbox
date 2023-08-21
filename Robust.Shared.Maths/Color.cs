@@ -1,4 +1,4 @@
-﻿//
+//
 // The Open Toolkit Library License
 //
 // Copyright (c) 2006 - 2008 the Open Toolkit library, except where noted.
@@ -29,7 +29,6 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Xml.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 using SysVector3 = System.Numerics.Vector3;
@@ -1364,6 +1363,11 @@ namespace Robust.Shared.Maths
         public static Color LavenderBlush => new(255, 240, 245, 255);
 
         /// <summary>
+        ///     Gets the system color with (R, G, B, A) = (238, 130, 238, 255).
+        /// </summary>
+        public static Color LavenderMagenta => new(238, 130, 238, 255);
+
+        /// <summary>
         ///     Gets the system color with (R, G, B, A) = (124, 252, 0, 255).
         /// </summary>
         public static Color LawnGreen => new(124, 252, 0, 255);
@@ -1639,6 +1643,11 @@ namespace Robust.Shared.Maths
         public static Color RoyalBlue => new(65, 105, 225, 255);
 
         /// <summary>
+        ///     Gets the system color with (R, G, B, A) = (204, 71, 120, 255).
+        /// </summary>
+        public static Color Ruber => new(204, 71, 120, 255);
+
+        /// <summary>
         ///     Gets the system color with (R, G, B, A) = (139, 69, 19, 255).
         /// </summary>
         public static Color SaddleBrown => new(139, 69, 19, 255);
@@ -1652,6 +1661,11 @@ namespace Robust.Shared.Maths
         ///     Gets the system color with (R, G, B, A) = (244, 164, 96, 255).
         /// </summary>
         public static Color SandyBrown => new(244, 164, 96, 255);
+
+        /// <summary>
+        ///     Gets the system color with (R, G, B, A) = (0, 66, 153, 255).
+        /// </summary>
+        public static Color SeaBlue => new(0, 66, 153, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (46, 139, 87, 255).
@@ -1729,9 +1743,14 @@ namespace Robust.Shared.Maths
         public static Color Turquoise => new(64, 224, 208, 255);
 
         /// <summary>
-        ///     Gets the system color with (R, G, B, A) = (238, 130, 238, 255).
+        ///     Gets the system color with (R, G, B, A) = (126, 3, 168, 255).
         /// </summary>
-        public static Color Violet => new(238, 130, 238, 255);
+        public static Color Violet => new(126, 3, 168, 255);
+
+        /// <summary>
+        ///     Gets the system color with (R, G, B, A) = (255, 153, 0, 255).
+        /// </summary>
+        public static Color VividGamboge => new(255, 153, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (245, 222, 179, 255).
@@ -1895,7 +1914,7 @@ namespace Robust.Shared.Maths
             ["thistle"] = Thistle,
             ["tomato"] = Tomato,
             ["turquoise"] = Turquoise,
-            ["violet"] = Violet,
+            ["violet"] = LavenderMagenta,
             ["wheat"] = Wheat,
             ["white"] = White,
             ["whitesmoke"] = WhiteSmoke,

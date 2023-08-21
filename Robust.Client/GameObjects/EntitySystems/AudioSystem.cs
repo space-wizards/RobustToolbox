@@ -55,6 +55,7 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
         SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
+        SubscribeNetworkEvent<SetAudioParametersMessage>(SetAudioParamsHandler);
 
         _sawmill = _logManager.GetSawmill("audio");
 
@@ -112,6 +113,15 @@ public sealed class AudioSystem : SharedAudioSystem
         stream.Done = true;
         stream.Source.Dispose();
         _playingClydeStreams.Remove(stream);
+    }
+    
+    private void SetAudioParamsHandler(SetAudioParametersMessage ev)
+    {
+        PlayingStream? stream = _playingClydeStreams.Find(p => p.NetIdentifier == ev.Identifier);
+        if (stream == null)
+            return;
+        
+        SetAudioParams(stream, ev.AudioParams);
     }
     #endregion
 
@@ -320,7 +330,9 @@ public sealed class AudioSystem : SharedAudioSystem
         source.StartPlaying();
         var playing = new PlayingStream
         {
+            AudioSystem = this,
             Source = source,
+            Stream = stream,
             Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
             MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
             ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
@@ -518,7 +530,9 @@ public sealed class AudioSystem : SharedAudioSystem
 
     public sealed class PlayingStream : IPlayingAudioStream
     {
+        public AudioSystem AudioSystem = default!;
         public uint? NetIdentifier;
+        public AudioStream Stream = default!;
         public IClydeAudioSource Source = default!;
         public EntityUid? TrackingEntity;
         public EntityCoordinates? TrackingCoordinates;
@@ -561,6 +575,16 @@ public sealed class AudioSystem : SharedAudioSystem
         public void Stop()
         {
             Source.StopPlaying();
+        }
+        
+        public void SetAudioParams(AudioParams parameters)
+        {
+            AudioSystem.SetAudioParams(this, parameters);
+        }
+
+        public AudioParams GetAudioParams()
+        {
+            return AudioParams.Default;
         }
     }
 
@@ -621,12 +645,18 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override void SetAudioParams(IPlayingAudioStream stream, AudioParams parameters)
     {
-        throw new NotImplementedException();
+        if (!(stream is PlayingStream clientStream))
+            return;
+        
+        ApplyAudioParams(parameters, clientStream.Source, clientStream.Stream);
     }
 
     /// <inheritdoc />
     public override AudioParams GetAudioParams(IPlayingAudioStream stream)
     {
-        throw new NotImplementedException();
+        if (!(stream is PlayingStream clientStream))
+            return AudioParams.Default;
+
+        return clientStream.GetAudioParams();
     }
 }

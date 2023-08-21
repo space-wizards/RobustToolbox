@@ -12,7 +12,7 @@ namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(SharedPointLightComponent))]
-    public sealed class PointLightComponent : SharedPointLightComponent, IComponentTreeEntry<PointLightComponent>
+    public sealed partial class PointLightComponent : SharedPointLightComponent, IComponentTreeEntry<PointLightComponent>
     {
         public EntityUid? TreeUid { get; set; }
 

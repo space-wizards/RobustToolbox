@@ -38,7 +38,7 @@ namespace Robust.Shared.Physics.Dynamics
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class Fixture : IEquatable<Fixture>, ISerializationHooks
+    public sealed partial class Fixture : IEquatable<Fixture>, ISerializationHooks
     {
         /// <summary>
         /// Allows us to reference a specific fixture when we contain multiple

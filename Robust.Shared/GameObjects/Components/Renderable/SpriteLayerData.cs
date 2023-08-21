@@ -8,7 +8,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Shared.GameObjects;
 
 [Serializable, NetSerializable, DataDefinition]
-public sealed class PrototypeLayerData
+public sealed partial class PrototypeLayerData
 {
     /// <summary>
     /// The shader prototype to use for this layer.

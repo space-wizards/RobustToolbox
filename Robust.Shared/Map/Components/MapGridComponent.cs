@@ -18,7 +18,7 @@ namespace Robust.Shared.Map.Components
 {
     [RegisterComponent]
     [NetworkedComponent]
-    public sealed class MapGridComponent : Component
+    public sealed partial class MapGridComponent : Component
     {
         [Dependency] private readonly IEntityManager _entManager = default!;
         private SharedMapSystem MapSystem => _entManager.System<SharedMapSystem>();
@@ -61,7 +61,7 @@ namespace Robust.Shared.Map.Components
         ///     Grid chunks than make up this grid.
         /// </summary>
         [DataField("chunks")]
-        internal readonly Dictionary<Vector2i, MapChunk> Chunks = new();
+        internal Dictionary<Vector2i, MapChunk> Chunks = new();
 
         [ViewVariables]
         public Box2 LocalAABB { get; internal set; }

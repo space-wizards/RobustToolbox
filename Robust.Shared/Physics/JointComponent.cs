@@ -11,7 +11,7 @@ namespace Robust.Shared.Physics;
 
 [RegisterComponent]
 [NetworkedComponent]
-public sealed class JointComponent : Component
+public sealed partial class JointComponent : Component
 {
     /// <summary>
     /// Are we relaying our joints to a parent entity.

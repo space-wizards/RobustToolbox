@@ -7,7 +7,7 @@ namespace Robust.Shared.GameObjects
     /// A component that toggles collision on an entity being toggled.
     /// </summary>
     [RegisterComponent]
-    public sealed class CollideOnAnchorComponent : Component
+    public sealed partial class CollideOnAnchorComponent : Component
     {
         /// <summary>
         /// Whether we toggle collision on or off when anchoring (and vice versa when unanchoring).

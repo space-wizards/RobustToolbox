@@ -12,10 +12,9 @@ namespace Robust.Serialization.Generator;
 [Generator]
 public class Generator : IIncrementalGenerator
 {
-    private const string ComponentNamespace = "Robust.Shared.GameObjects.Component";
-    private const string ComponentInterfaceNamespace = "Robust.Shared.GameObjects.IComponent";
     private const string TypeCopierInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier";
     private const string TypeCopyCreatorInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator";
+    private const string SerializationHooksNamespace = "Robust.Shared.Serialization.ISerializationHooks";
 
     private static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
         Diagnostics.IdDataDefinitionPartial,
@@ -175,12 +174,12 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
             {
                 if (attribute.ConstructorArguments.FirstOrDefault(arg => arg.Kind == TypedConstantKind.Type).Value is INamedTypeSymbol customSerializer)
                 {
-                    if (ImplementsInterface(customSerializer, TypeCopierInterfaceNamespace))
+                    if (ImplementsInterface(customSerializer, TypeCopierInterfaceNamespace, out _))
                     {
                         fields.Add(new DataField(member, type, (customSerializer, Copier)));
                         continue;
                     }
-                    else if (ImplementsInterface(customSerializer, TypeCopyCreatorInterfaceNamespace))
+                    else if (ImplementsInterface(customSerializer, TypeCopyCreatorInterfaceNamespace, out _))
                     {
                         fields.Add(new DataField(member, type, (customSerializer, CopyCreator)));
                         continue;
@@ -192,7 +191,9 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
         }
 
         var typeName = GetGenericTypeName(definition);
-        return new DataDefinition(definition, typeName, fields);
+        var hasHooks = ImplementsInterface(definition, SerializationHooksNamespace, out _);
+
+        return new DataDefinition(definition, typeName, fields, hasHooks);
     }
 
      private static string GetConstructor(DataDefinition definition)
@@ -206,9 +207,9 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
          {
              builder.AppendLine($$"""
                                   // Implicit constructor
-                                  {{(definition.Type.IsValueType ? "#pragma warning disable CS8618" : string.Empty)}}
+                                  #pragma warning disable CS8618
                                   public {{definition.Type.Name}}()
-                                  {{(definition.Type.IsValueType ? "#pragma warning enable CS8618" : string.Empty)}}
+                                  #pragma warning enable CS8618
                                   {
                                   }
                                   """);
@@ -223,8 +224,8 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
         var modifiers = IsVirtualClass(definition.Type) ? "virtual " : string.Empty;
         var baseCall = string.Empty;
-        if (definition.Type.BaseType is { } baseType &&
-            IsImplicitDataDefinition(baseType))
+        var baseType = definition.Type.BaseType;
+        if (baseType != null && IsImplicitDataDefinition(baseType))
         {
             var baseName = baseType.ToDisplayString();
             baseCall = $"""
@@ -270,17 +271,20 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
         foreach (var @interface in GetImplicitDataDefinitionInterfaces(definition.Type, true))
         {
+            var interfaceModifiers = baseType != null && baseType.AllInterfaces.Contains(@interface, SymbolEqualityComparer.Default)
+                ? "override "
+                : modifiers;
             var interfaceName = @interface.ToDisplayString();
 
             builder.AppendLine($$"""
-                                 public {{modifiers}}void InternalCopy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                                 public {{interfaceModifiers}}void InternalCopy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
                                  {
                                      var def = ({{definition.GenericTypeName}}) target;
                                      ((ISerializationGenerated<{{definition.GenericTypeName}}>) this).Copy(ref def, serialization, hookCtx, context);
                                      target = def;
                                  }
 
-                                 public {{modifiers}}void Copy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                                 public {{interfaceModifiers}}void Copy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
                                  {
                                      InternalCopy(ref target, serialization, hookCtx, context);
                                  }
@@ -359,8 +363,8 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
     {
         var builder = new StringBuilder();
 
-        builder.AppendLine("""
-if (serialization.TryCustomCopy(this, ref target, hookCtx, context))
+        builder.AppendLine($"""
+if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.ToString().ToLower()}, context))
     return;
 """);
 
@@ -381,28 +385,59 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, context))
                 typeName = typeName.Replace("*", "");
             }
 
+            var isNullableValueType = IsNullableValueType(type);
+            var nonNullableTypeName = type.WithNullableAnnotation(NullableAnnotation.None).ToDisplayString();
+            if (isNullableValueType)
+            {
+                nonNullableTypeName = typeName.Substring(0, typeName.Length - 1);
+            }
+
             var isClass = type.IsReferenceType || type.SpecialType == SpecialType.System_String;
             var isNullable = type.NullableAnnotation == NullableAnnotation.Annotated;
             var nullableOverride = isClass && !isNullable ? ", true" : string.Empty;
             var name = field.Symbol.Name;
             var tempVarName = $"{name}Temp";
+            var nullableValue = isNullableValueType ? ".Value" : string.Empty;
+            var nullableInstantiator = isNullableValueType ? $" ?? default({nonNullableTypeName});" : string.Empty;
 
             if (field.CustomSerializer is { Serializer: var serializer, Type: var serializerType })
             {
+
+                if (isClass || isNullableValueType)
+                {
+                    builder.AppendLine($$"""
+                                         if ({{name}} != null)
+                                         {
+                                         """);
+                }
+
                 switch (serializerType)
                 {
                     case Copier:
+                        builder.AppendLine($"{nonNullableTypeName} {tempVarName} = default!; ");
+
+                        if (isNullable && isClass)
+                        {
+                            builder.AppendLine($"{tempVarName} ??= new();");
+                        }
+
+                        nullableOverride = isClass ? ", true" : string.Empty;
+
                         builder.AppendLine($$"""
-                                             var {{name}}Temp = target.{{name}};
-                                             serialization.CopyTo<{{typeName}}, {{serializer.ToDisplayString()}}>(this.{{name}}, ref {{name}}Temp, hookCtx, context{{nullableOverride}});
-                                             target.{{name}} = {{name}}Temp;
+                                             serialization.CopyTo<{{nonNullableTypeName}}, {{serializer.ToDisplayString()}}>(this.{{name}}{{nullableValue}}, ref {{tempVarName}}, hookCtx, context{{nullableOverride}});
+                                             target.{{name}} = {{tempVarName}};
                                              """);
                         break;
                     case CopyCreator:
                         builder.AppendLine($$"""
-                                             target.{{name}} = serialization.CreateCopy<{{typeName}}, {{serializer.ToDisplayString()}}>(this.{{name}}, hookCtx, context{{nullableOverride}});
+                                             target.{{name}} = serialization.CreateCopy<{{nonNullableTypeName}}, {{serializer.ToDisplayString()}}>(this.{{name}}{{nullableValue}}, hookCtx, context{{nullableOverride}});
                                              """);
                         break;
+                }
+
+                if (isClass || isNullableValueType)
+                {
+                    builder.AppendLine("}");
                 }
             }
             else
@@ -419,8 +454,18 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, context))
                                          """);
                 }
 
+                var instantiator = string.Empty;
+                if (!type.IsAbstract &&
+                    HasEmptyPublicConstructor(type) &&
+                    (type.IsReferenceType || IsNullableType(type)))
+                {
+                    instantiator = $"{tempVarName} = new();";
+                }
+
+                var hasHooks = ImplementsInterface(type, SerializationHooksNamespace, out _) || !type.IsSealed;
                 builder.AppendLine($$"""
-                                     if (!serialization.TryCustomCopy(this.{{name}}, ref {{tempVarName}}, hookCtx, context))
+                                     {{instantiator}}
+                                     if (!serialization.TryCustomCopy(this.{{name}}, ref {{tempVarName}}, hookCtx, {{hasHooks.ToString().ToLower()}}, context))
                                      {
                                      """);
 
@@ -449,7 +494,7 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, context))
                     }
 
                     builder.AppendLine($$"""
-                                         ((ISerializationGenerated<{{typeName}}>?) {{name}}){{nullability}}.Copy(ref temp, serialization, hookCtx, context);
+                                         {{name}}{{nullability}}.Copy(ref temp, serialization, hookCtx, context);
                                          {{tempVarName}} = temp;
                                          """);
 

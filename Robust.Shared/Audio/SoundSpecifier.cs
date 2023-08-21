@@ -29,11 +29,6 @@ public sealed partial class SoundPathSpecifier : SoundSpecifier
     [DataField(Node, customTypeSerializer: typeof(ResPathSerializer), required: true)]
     public ResPath Path { get; private set; }
 
-    [UsedImplicitly]
-    private SoundPathSpecifier()
-    {
-    }
-
     public SoundPathSpecifier(string path, AudioParams? @params = null) : this(new ResPath(path), @params)
     {
     }

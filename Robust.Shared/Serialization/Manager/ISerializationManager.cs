@@ -401,13 +401,7 @@ namespace Robust.Shared.Serialization.Manager
             T source,
             ref T target,
             SerializationHookContext hookCtx,
-            ISerializationContext? context = null);
-
-        [Obsolete]
-        void CustomCopy<T>(
-            T source,
-            ref T target,
-            SerializationHookContext hookCtx,
+            bool hasHooks,
             ISerializationContext? context = null);
 
         #endregion

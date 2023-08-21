@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
-    public sealed class PropertyAndFieldDefinitionTest : SerializationTest
+    public sealed partial class PropertyAndFieldDefinitionTest : SerializationTest
     {
         private const string GetOnlyPropertyName = "GetOnlyProperty";
         private const string GetOnlyPropertyFieldTargetedName = "GetOnlyPropertyFieldTargeted";
@@ -111,12 +111,12 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         [Robust.Shared.Serialization.Manager.Attributes.DataDefinition]
-        public sealed class PropertyAndFieldDefinitionTestDefinition
+        public sealed partial class PropertyAndFieldDefinitionTestDefinition
         {
             [DataField(GetOnlyPropertyName)]
             public int GetOnlyProperty { get; private set; }
 
-            [field: DataField(GetOnlyPropertyFieldTargetedName)]
+            [DataField(GetOnlyPropertyFieldTargetedName)]
             public int GetOnlyPropertyFieldTargeted { get; private set; }
 
             [DataField(GetAndSetPropertyName)]
@@ -127,12 +127,12 @@ namespace Robust.UnitTesting.Shared.Serialization
             public int Field;
 
             [DataField(GetOnlyPropertyWithOtherAttributeFieldTargetedName)]
-            [field: AlwaysPushInheritance]
-            public int GetOnlyPropertyWithOtherAttributeFieldTargeted { get; }
+            [AlwaysPushInheritance]
+            public int GetOnlyPropertyWithOtherAttributeFieldTargeted { get; private set; }
 
-            [field: DataField(GetOnlyPropertyFieldTargetedAndOtherAttributeName)]
+            [DataField(GetOnlyPropertyFieldTargetedAndOtherAttributeName)]
             [NeverPushInheritance]
-            public int GetOnlyPropertyFieldTargetedAndOtherAttribute { get; }
+            public int GetOnlyPropertyFieldTargetedAndOtherAttribute { get; private set; }
         }
     }
 }

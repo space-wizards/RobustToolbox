@@ -13,7 +13,6 @@ namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     [Reflect(false)]
-    [ImplicitDataDefinitionForInheritors]
     public abstract partial class Component : IComponent
     {
         [DataField("netsync")]
@@ -187,30 +186,6 @@ namespace Robust.Shared.GameObjects
         internal void ClearCreationTick()
         {
             CreationTick = GameTick.Zero;
-        }
-
-        public void InternalCopy(
-            ref IComponent target,
-            ISerializationManager serialization, SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
-        {
-            var comp = (Component) target;
-            ((ISerializationGenerated<Component>) this).Copy(ref comp, serialization, hookCtx, context);
-            target = comp;
-        }
-
-        public virtual void Copy(
-            ref IComponent target,
-            ISerializationManager serialization,
-            SerializationHookContext hookCtx,
-            ISerializationContext? context = null)
-        {
-            InternalCopy(ref target, serialization, hookCtx, context);
-        }
-
-        IComponent ISerializationGenerated<IComponent>.Instantiate()
-        {
-            return Instantiate();
         }
     }
 

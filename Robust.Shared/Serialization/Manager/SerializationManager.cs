@@ -275,19 +275,25 @@ namespace Robust.Shared.Serialization.Manager
             return type;
         }
 
+#pragma warning disable CS0618
         private static void RunAfterHook<TValue>(TValue instance, SerializationHookContext ctx)
         {
-#pragma warning disable CS0618
-            if (ctx.SkipHooks || instance is not ISerializationHooks hooks)
-#pragma warning restore CS0618
+            if (instance is ISerializationHooks hooks)
+                RunAfterHookGenerated(hooks, ctx);
+        }
+
+        private static void RunAfterHookGenerated<TValue>(TValue instance, SerializationHookContext ctx) where TValue : ISerializationHooks
+        {
+            if (ctx.SkipHooks)
                 return;
 
             DebugTools.Assert(!typeof(TValue).IsValueType, "ISerializationHooks must only be used on reference types");
 
             if (ctx.DeferQueue != null)
-                ctx.DeferQueue.TryWrite(hooks);
+                ctx.DeferQueue.TryWrite(instance);
             else
-                hooks.AfterDeserialization();
+                instance.AfterDeserialization();
         }
+#pragma warning restore CS0618
     }
 }

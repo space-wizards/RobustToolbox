@@ -617,4 +617,16 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
     }
+
+    /// <inheritdoc />
+    public override void SetAudioParams(IPlayingAudioStream stream, AudioParams parameters)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <inheritdoc />
+    public override AudioParams GetAudioParams(IPlayingAudioStream stream)
+    {
+        throw new NotImplementedException();
+    }
 }

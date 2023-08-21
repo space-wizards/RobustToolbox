@@ -17,21 +17,47 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private uint _streamIndex;
 
-    private sealed class AudioSourceServer : IPlayingAudioStream
+    public sealed class AudioSourceServer : IPlayingAudioStream
     {
-        private readonly uint _id;
+        public readonly uint Id;
+        public readonly IEnumerable<ICommonSession>? Sessions;
+        public readonly string Filename;
+        public AudioParams Parameters
+        {
+            get;
+            private set;
+        }
+        
         private readonly AudioSystem _audioSystem;
-        private readonly IEnumerable<ICommonSession>? _sessions;
 
-        internal AudioSourceServer(AudioSystem parent, uint identifier, IEnumerable<ICommonSession>? sessions = null)
+        internal AudioSourceServer(
+            AudioSystem parent, 
+            uint identifier, 
+            string filename,
+            AudioParams parameters,
+            IEnumerable<ICommonSession>? sessions = null)
         {
             _audioSystem = parent;
-            _id = identifier;
-            _sessions = sessions;
+            Id = identifier;
+            Filename = filename;
+            Parameters = parameters;
+            Sessions = sessions;
         }
+
+        public void SetAudioParams(AudioParams parameters)
+        {
+            _audioSystem.SetAudioParams(this, parameters);
+            Parameters = parameters;
+        }
+
+        public AudioParams GetAudioParams()
+        {
+            return Parameters;
+        }
+
         public void Stop()
         {
-            _audioSystem.InternalStop(_id, _sessions);
+            _audioSystem.InternalStop(Id, Sessions);
         }
     }
 
@@ -62,16 +88,19 @@ public sealed class AudioSystem : SharedAudioSystem
     public override IPlayingAudioStream? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
         var id = CacheIdentifier();
+        
+        AudioParams parameters = audioParams ?? AudioParams.Default;
+        
         var msg = new PlayAudioGlobalMessage
         {
             FileName = filename,
-            AudioParams = audioParams ?? AudioParams.Default,
+            AudioParams = parameters,
             Identifier = id
         };
 
         RaiseNetworkEvent(msg, playerFilter, recordReplay);
 
-        return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
+        return new AudioSourceServer(this, id, filename, parameters, playerFilter.Recipients.ToArray());
     }
 
     public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
@@ -83,6 +112,8 @@ public sealed class AudioSystem : SharedAudioSystem
 
         var fallbackCoordinates = GetFallbackCoordinates(transform.MapPosition);
 
+        AudioParams parameters = audioParams ?? AudioParams.Default;
+        
         var msg = new PlayAudioEntityMessage
         {
             FileName = filename,
@@ -95,7 +126,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
         RaiseNetworkEvent(msg, playerFilter, recordReplay);
 
-        return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
+        return new AudioSourceServer(this, id, filename, parameters, playerFilter.Recipients.ToArray());
     }
 
     /// <inheritdoc />
@@ -104,6 +135,8 @@ public sealed class AudioSystem : SharedAudioSystem
         var id = CacheIdentifier();
 
         var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(EntityManager, _transform));
+        
+        AudioParams parameters = audioParams ?? AudioParams.Default;
 
         var msg = new PlayAudioPositionalMessage
         {
@@ -116,7 +149,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
         RaiseNetworkEvent(msg, playerFilter, recordReplay);
 
-        return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
+        return new AudioSourceServer(this, id, filename, parameters, playerFilter.Recipients.ToArray());
     }
 
     /// <inheritdoc />
@@ -173,5 +206,30 @@ public sealed class AudioSystem : SharedAudioSystem
         if (TryComp(recipient, out ActorComponent? actor))
             return PlayStatic(filename, actor.PlayerSession, coordinates, audioParams);
         return null;
+    }
+
+    /// <inheritdoc />
+    public override void SetAudioParams(IPlayingAudioStream stream, AudioParams parameters)
+    {
+        if (!(stream is AudioSourceServer source) || source.Sessions == null)
+            return;
+
+        SetAudioParametersMessage msg = new SetAudioParametersMessage();
+        msg.Identifier = source.Id;
+        msg.AudioParams = parameters;
+        
+        Filter filter = Filter.Empty();
+        filter.AddPlayers(source.Sessions);
+        
+        RaiseNetworkEvent(msg, filter);
+    }
+
+    /// <inheritdoc />
+    public override AudioParams GetAudioParams(IPlayingAudioStream stream)
+    {
+        if (!(stream is AudioSourceServer source))
+            return AudioParams.Default;
+
+        return source.Parameters;
     }
 }

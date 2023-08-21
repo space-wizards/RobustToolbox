@@ -290,6 +290,19 @@ public abstract class SharedAudioSystem : EntitySystem
         return sound == null ? null : PlayStatic(GetSound(sound), recipient, coordinates, audioParams ?? sound.Params);
     }
 
+    /// <summary>
+    /// Modifies audio parameters for given stream.
+    /// </summary>
+    /// <param name="stream">Stream.</param>
+    /// <param name="parameters">New parameters.</param>
+    public abstract void SetAudioParams(IPlayingAudioStream stream, AudioParams parameters);
+    
+    /// <summary>
+    /// Returns audio parameters for given stream.
+    /// </summary>
+    /// <param name="stream">Stream.</param>
+    public abstract AudioParams GetAudioParams(IPlayingAudioStream stream);
+
     protected EntityCoordinates GetFallbackCoordinates(MapCoordinates mapCoordinates)
     {
         if (_mapManager.TryFindGridAt(mapCoordinates, out var gridUid, out var mapGrid))

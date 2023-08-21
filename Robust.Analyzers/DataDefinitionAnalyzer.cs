@@ -68,6 +68,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.StructDeclaration);
         context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordDeclaration);
         context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordStructDeclaration);
+        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.InterfaceDeclaration);
 
         context.RegisterSyntaxNodeAction(AnalyzeDataField, SyntaxKind.FieldDeclaration);
         context.RegisterSyntaxNodeAction(AnalyzeDataFieldProperty, SyntaxKind.PropertyDeclaration);
@@ -90,7 +91,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         var containingType = type.ContainingType;
         while (containingType != null)
         {
-            var containingTypeDeclaration = (ClassDeclarationSyntax) containingType.DeclaringSyntaxReferences[0].GetSyntax();
+            var containingTypeDeclaration = (TypeDeclarationSyntax) containingType.DeclaringSyntaxReferences[0].GetSyntax();
             if (!IsPartial(containingTypeDeclaration))
             {
                 context.ReportDiagnostic(Diagnostic.Create(NestedDataDefinitionPartialRule, containingTypeDeclaration.Keyword.GetLocation(), containingType.Name, type.Name));

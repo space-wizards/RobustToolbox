@@ -7,6 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
+using Robust.Shared.Maths;
 
 namespace Robust.UnitTesting.Shared.Toolshed;
 
@@ -91,7 +92,9 @@ public sealed class CommandRunTest : ToolshedTest
     {
         await Server.WaitAssertion(() =>
         {
-            // Integer types.
+            Assert.Multiple(() =>
+            {
+                // Integer types.
             AssertParseable<byte>();
             AssertParseable<sbyte>();
             AssertParseable<short>();
@@ -112,6 +115,41 @@ public sealed class CommandRunTest : ToolshedTest
             AssertParseable<EntityUid>();
             AssertParseable<ResPath>();
             AssertParseable<Type>();
+            AssertParseable<Enum>();
+            AssertParseable<TimeSpan>();
+            AssertParseable<DateTime>();
+            AssertParseable<Uri>();
+
+            // maff
+            AssertParseable<Vector2>();
+            AssertParseable<Vector2i>();
+            AssertParseable<Robust.Shared.Maths.Vector3>();
+            AssertParseable<Robust.Shared.Maths.Vector4>();
+            AssertParseable<Robust.Shared.Maths.Matrix22>();
+            AssertParseable<Robust.Shared.Maths.Matrix33>();
+            AssertParseable<Robust.Shared.Maths.Matrix3>();
+            AssertParseable<Robust.Shared.Maths.Matrix4>();
+            AssertParseable<Box2>();
+            AssertParseable<Box2Rotated>();
+            AssertParseable<Box2i>();
+            AssertParseable<Angle>();
+            AssertParseable<Circle>();
+            AssertParseable<Color>();
+            AssertParseable<Direction>();
+            AssertParseable<DirectionFlag>();
+            AssertParseable<UIBox2>();
+            AssertParseable<UIBox2i>();
+            AssertParseable<Thickness>();
+
+            // The tuples. *scream
+            AssertParseable<ValueTuple<object>>();
+            AssertParseable<ValueTuple<object, object>>();
+            AssertParseable<ValueTuple<object, object, object>>();
+            AssertParseable<ValueTuple<object, object, object, object>>();
+            AssertParseable<ValueTuple<object, object, object, object, object>>();
+            AssertParseable<ValueTuple<object, object, object, object, object, object>>();
+            AssertParseable<ValueTuple<object, object, object, object, object, object, object>>();
+            AssertParseable<ValueTuple<object, object, object, object, object, object, object, ValueTuple>>();
 
             // Toolshed special constructs.
             AssertParseable<ValueRef<object>>();
@@ -122,7 +160,24 @@ public sealed class CommandRunTest : ToolshedTest
             AssertParseable<Block>();
             AssertParseable<Block<object>>();
             AssertParseable<Block<object, object>>();
+
+            // The fallback.
+            AssertParseable<FallbackTest>();
+            });
         });
+    }
+
+    private sealed class FallbackTest : IParsable<FallbackTest>
+    {
+        public static FallbackTest Parse(string s, IFormatProvider? provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool TryParse(string? s, IFormatProvider? provider, out FallbackTest result)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Test]

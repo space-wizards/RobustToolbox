@@ -44,6 +44,13 @@ public sealed class RngCommand : ToolshedCommand
 
     [CommandImplementation("prob")]
     public bool Prob(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] float prob
+    )
+        => _random.Prob(prob);
+
+    [CommandImplementation("prob")]
+    public bool Prob(
             [CommandInvocationContext] IInvocationContext ctx,
             [CommandArgument] ValueRef<float> prob
         )

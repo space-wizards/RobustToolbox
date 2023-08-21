@@ -2,6 +2,8 @@
 
 public sealed partial class ToolshedManager
 {
+    private ToolshedEnvironment? _defaultEnvironment = default!;
+
     /// <summary>
     ///     The active permission controller, if any.
     /// </summary>
@@ -10,5 +12,15 @@ public sealed partial class ToolshedManager
     /// </remarks>
     public IPermissionController? ActivePermissionController { get; set; }
 
-    public ToolshedEnvironment DefaultEnvironment { get; private set; } = default!;
+    public ToolshedEnvironment DefaultEnvironment
+    {
+        get
+        {
+#if !CLIENT_SCRIPTING
+            throw new NotImplementedException("Toolshed is not yet ready for client-side use.");
+#endif
+           _defaultEnvironment ??= new();
+            return _defaultEnvironment;
+        }
+    }
 }

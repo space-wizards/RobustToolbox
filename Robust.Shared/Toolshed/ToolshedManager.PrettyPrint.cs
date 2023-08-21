@@ -27,6 +27,11 @@ public sealed partial class ToolshedManager
         if (value is null)
             return "";
 
+        if (value is IToolshedPrettyPrint p)
+        {
+            return p.PrettyPrint(this, out more, moreUsed, maxOutput);
+        }
+
         if (value is string str)
         {
             if (str.Length > 32768)

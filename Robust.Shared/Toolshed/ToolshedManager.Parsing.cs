@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Security;
 using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
@@ -51,12 +52,19 @@ public sealed partial class ToolshedManager
             if (!_genericTypeParsers.TryGetValue(t.GetGenericTypeDefinition(), out var genParser))
                 return null;
 
-            var concreteParser = genParser.MakeGenericType(t.GenericTypeArguments);
+            try
+            {
+                var concreteParser = genParser.MakeGenericType(t.GenericTypeArguments);
 
-            var builtParser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(concreteParser, true);
-            builtParser.PostInject();
-            _consoleTypeParsers.Add(builtParser.Parses, builtParser);
-            return builtParser;
+                var builtParser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(concreteParser, true);
+                builtParser.PostInject();
+                _consoleTypeParsers.Add(builtParser.Parses, builtParser);
+                return builtParser;
+            }
+            catch (SecurityException)
+            {
+                // Oops, try the other thing.
+            }
         }
 
         var baseTy = t.BaseType;

@@ -52,7 +52,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
         {nameof(Task), typeof(Task<>)},
         {nameof(ValueTask), typeof(ValueTask<>)},
         // C# doesn't let you do `typeof(Dictionary<>)`. Why is a mystery to me.
-        {"Dictionary", typeof(Dictionary<int, int>).GetGenericTypeDefinition()},
+        {"Dictionary", typeof(Dictionary<,>)},
     };
 
     private readonly HashSet<string> _ambiguousTypes = new();

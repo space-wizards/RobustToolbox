@@ -45,6 +45,15 @@ public sealed class ArithmeticTest : ToolshedTest
     }
 
     [Test]
+    public async Task NoOverflowException()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            InvokeCommand<byte, byte>("+ 1", byte.MaxValue);
+        });
+    }
+
+    [Test]
     public async Task Iterations()
     {
         await Server.WaitAssertion(() =>

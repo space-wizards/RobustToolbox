@@ -1,6 +1,4 @@
-﻿#pragma warning restore CS1591
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -41,14 +39,7 @@ public sealed partial class ToolshedManager
     /// </summary>
     public void Initialize()
     {
-#if !CLIENT_SCRIPTING
-        if (_net.IsClient)
-            throw new NotImplementedException("Toolshed is not yet ready for client-side use.");
-#endif
-
         _log = _logManager.GetSawmill("toolshed");
-
-        DefaultEnvironment = new();
 
         InitializeParser();
     }

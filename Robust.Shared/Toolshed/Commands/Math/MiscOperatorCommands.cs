@@ -48,7 +48,7 @@ public sealed class OrValueCommand : ToolshedCommand
         where T : unmanaged
     {
         if (value == null)
-            return alternate.Evaluate(ctx)!;
+            return alternate.Evaluate(ctx);
         return value.Value;
     }
 }

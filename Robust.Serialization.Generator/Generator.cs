@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -16,32 +17,12 @@ public class Generator : IIncrementalGenerator
     private const string TypeCopyCreatorInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator";
     private const string SerializationHooksNamespace = "Robust.Shared.Serialization.ISerializationHooks";
 
-    private static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
-        Diagnostics.IdDataDefinitionPartial,
-        "Type must be partial",
-        "Type {0} is a DataDefinition but is not partial.",
-        "Usage",
-        DiagnosticSeverity.Warning,
-        true,
-        "Make sure to mark any type that is a data definition as partial."
-    );
-
-    private static readonly DiagnosticDescriptor NestedDataDefinitionPartialRule = new(
-        Diagnostics.IdNestedDataDefinitionPartial,
-        "Type must be partial",
-        "Type {0} contains nested data definition {1} but is not partial.",
-        "Usage",
-        DiagnosticSeverity.Warning,
-        true,
-        "Make sure to mark any type containing a nested data definition as partial."
-    );
-
     private static readonly DiagnosticDescriptor DataFieldWritableRule = new(
         Diagnostics.IdDataFieldWritable,
         "Data field must not be readonly",
         "Field {0} in data definition {1} is marked as a DataField but is readonly.",
         "Usage",
-        DiagnosticSeverity.Warning,
+        DiagnosticSeverity.Error,
         true,
         "Make sure to add a setter or remove the readonly modifier."
     );
@@ -72,14 +53,9 @@ public class Generator : IIncrementalGenerator
                     builder.Clear();
                     containingTypes.Clear();
 
-                    var type = (ITypeSymbol) compilation.GetSemanticModel(declaration.SyntaxTree).GetDeclaredSymbol(declaration)!;
+                    var type = compilation.GetSemanticModel(declaration.SyntaxTree).GetDeclaredSymbol(declaration)!;
 
-                    var nonPartial = false;
-                    if (!IsPartial(declaration))
-                    {
-                        sourceContext.ReportDiagnostic(Diagnostic.Create(DataDefinitionPartialRule, declaration.Keyword.GetLocation(), type.Name));
-                        nonPartial = true;
-                    }
+                    var nonPartial = !IsPartial(declaration);
 
                     var namespaceString = type.ContainingNamespace.IsGlobalNamespace
                         ? string.Empty
@@ -99,7 +75,6 @@ public class Generator : IIncrementalGenerator
                         var syntax = (ClassDeclarationSyntax) parent.DeclaringSyntaxReferences[0].GetSyntax();
                         if (!IsPartial(syntax))
                         {
-                            sourceContext.ReportDiagnostic(Diagnostic.Create(NestedDataDefinitionPartialRule, syntax.Keyword.GetLocation(), parent.Name, type.Name));
                             nonPartial = true;
                             continue;
                         }

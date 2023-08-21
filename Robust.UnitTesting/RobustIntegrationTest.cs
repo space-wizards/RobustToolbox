@@ -285,11 +285,15 @@ namespace Robust.UnitTesting
                 return EntMan.System<T>();
             }
 
-            public TransformComponent Transform(EntityUid uid) => 
-                EntMan.GetComponent<TransformComponent>(uid);
+            public TransformComponent Transform(EntityUid uid)
+            {
+                return EntMan.GetComponent<TransformComponent>(uid);
+            }
 
-            public MetaDataComponent MetaData(EntityUid uid) => 
-                EntMan.GetComponent<MetaDataComponent>(uid);
+            public MetaDataComponent MetaData(EntityUid uid)
+            {
+                return EntMan.GetComponent<MetaDataComponent>(uid);
+            }
 
             /// <summary>
             ///     Whether the instance is still alive.

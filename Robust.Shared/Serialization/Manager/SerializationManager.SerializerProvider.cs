@@ -121,6 +121,7 @@ public sealed partial class SerializationManager
         private Dictionary<Type, Dictionary<(Type ObjectType, Type NodeType), object>> _typeNodeSerializers = new();
         private Dictionary<Type, Dictionary<Type, object>> _typeSerializers = new();
 
+        // TODO make this a 1d array containing the 6 interfaces
         /// <summary>
         ///     Type serializers indexed by their type serializer and type
         ///     that they serialize.

@@ -304,34 +304,14 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
         else if (!definition.Type.IsAbstract && IsVirtualClass(definition.Type))
             modifiers = "virtual ";
 
-        // TODO skip locals init
         if (definition.Type.IsAbstract)
         {
-//             foreach (var @interface in interfaces)
-//             {
-//                 var interfaceName = @interface.ToDisplayString();
-//                 builder.AppendLine($"""
-//                                     public abstract {interfaceName} Instantiate();
-//                                     """);
-//             }
-
             builder.AppendLine($"""
                                 public abstract {modifiers}{definition.GenericTypeName} Instantiate();
                                 """);
         }
         else
         {
-//             foreach (var @interface in interfaces)
-//             {
-//                 var interfaceName = @interface.ToDisplayString();
-//                 builder.AppendLine($$"""
-//                                     public {{overrideKeyword}}{{interfaceName}} Instantiate({{interfaceName}}? _ = default)
-//                                     {
-//                                         return new {{definition.GenericTypeName}}();
-//                                     }
-//                                     """);
-//             }
-
             builder.AppendLine($$"""
                                  public {{modifiers}}{{definition.GenericTypeName}} Instantiate()
                                  {
@@ -398,11 +378,9 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
             var name = field.Symbol.Name;
             var tempVarName = $"{name}Temp";
             var nullableValue = isNullableValueType ? ".Value" : string.Empty;
-            var nullableInstantiator = isNullableValueType ? $" ?? default({nonNullableTypeName});" : string.Empty;
 
             if (field.CustomSerializer is { Serializer: var serializer, Type: var serializerType })
             {
-
                 if (isClass || isNullableValueType)
                 {
                     builder.AppendLine($$"""

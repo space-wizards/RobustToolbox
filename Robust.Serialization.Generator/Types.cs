@@ -10,6 +10,7 @@ internal static class Types
     private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
+    private const string CopyByRefNamespace = "Robust.Shared.Serialization.Manager.Attributes.CopyByRefAttribute";
 
     internal static bool IsPartial(TypeDeclarationSyntax type)
     {
@@ -123,11 +124,10 @@ internal static class Types
         return type is IArrayTypeSymbol { Rank: > 1 };
     }
 
-    internal static bool CanBeCopiedByValue(ITypeSymbol type)
+    internal static bool CanBeCopiedByValue(ISymbol member, ITypeSymbol type)
     {
-        // TODO copybyref attribute
         if (type.OriginalDefinition.ToDisplayString() == "System.Nullable<T>")
-            return CanBeCopiedByValue(((INamedTypeSymbol) type).TypeArguments[0]);
+            return CanBeCopiedByValue(member, ((INamedTypeSymbol) type).TypeArguments[0]);
 
         if (type.TypeKind == TypeKind.Enum)
             return true;
@@ -151,9 +151,12 @@ internal static class Types
             case SpecialType.System_String:
             case SpecialType.System_DateTime:
                 return true;
-            default:
-                return false;
         }
+
+        if (HasAttribute(member, CopyByRefNamespace))
+            return true;
+
+        return false;
     }
 
     internal static string GetGenericTypeName(ITypeSymbol symbol)
@@ -305,9 +308,9 @@ internal static class Types
         return type.IsReferenceType && !type.IsSealed && type.TypeKind != TypeKind.Interface;
     }
 
-    internal static bool HasAttribute(ITypeSymbol type, string attributeName)
+    internal static bool HasAttribute(ISymbol symbol, string attributeName)
     {
-        foreach (var attribute in type.GetAttributes())
+        foreach (var attribute in symbol.GetAttributes())
         {
             if (attribute.AttributeClass?.ToDisplayString() == attributeName)
                 return true;

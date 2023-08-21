@@ -72,7 +72,7 @@ public class Generator : IIncrementalGenerator
                         containingTypesEnd.AppendLine("}");
                     }
 
-                    var definition = GetDataDefinition(type, sourceContext);
+                    var definition = GetDataDefinition(type);
                     if (nonPartial || definition.InvalidFields)
                         continue;
 
@@ -96,7 +96,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 {
     {{GetConstructor(definition)}}
 
-    {{GetCopyMethods(definition, sourceContext)}}
+    {{GetCopyMethods(definition)}}
 
     {{GetInstantiators(definition)}}
 }
@@ -121,7 +121,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
         );
     }
 
-    private static DataDefinition GetDataDefinition(ITypeSymbol definition, SourceProductionContext context)
+    private static DataDefinition GetDataDefinition(ITypeSymbol definition)
     {
         var fields = new List<DataField>();
         var invalidFields = false;
@@ -187,19 +187,17 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
          return builder.ToString();
      }
 
-    private static string GetCopyMethods(DataDefinition definition, SourceProductionContext context)
+    private static string GetCopyMethods(DataDefinition definition)
     {
         var builder = new StringBuilder();
 
         var modifiers = IsVirtualClass(definition.Type) ? "virtual " : string.Empty;
-        var overrideKeyword = string.Empty;
         var baseCall = string.Empty;
-        var baseCopy = string.Empty;
+        string baseCopy;
         var baseType = definition.Type.BaseType;
 
         if (baseType != null && IsDataDefinition(definition.Type.BaseType))
         {
-            overrideKeyword = "override ";
             var baseName = baseType.ToDisplayString();
             baseCall = $"""
                         var definitionCast = ({baseName}) target;
@@ -239,7 +237,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
                              public {{modifiers}} void InternalCopy(ref {{definition.GenericTypeName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
                              {
                                 {{baseCall}}
-                                {{CopyDataFields(definition, context)}}
+                                {{CopyDataFields(definition)}}
                              }
 
                              public {{modifiers}} void Copy(ref {{definition.GenericTypeName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
@@ -324,7 +322,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
         return builder.ToString();
     }
 
-    private static StringBuilder CopyDataFields(DataDefinition definition, SourceProductionContext context)
+    private static StringBuilder CopyDataFields(DataDefinition definition)
     {
         var builder = new StringBuilder();
 
@@ -428,7 +426,7 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                                      {
                                      """);
 
-                if (CanBeCopiedByValue(type))
+                if (CanBeCopiedByValue(field.Symbol, field.Type))
                 {
                     builder.AppendLine($"{tempVarName} = {name};");
                 }
@@ -438,7 +436,7 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                     var nullability = type.IsValueType ? string.Empty : "?";
                     var orNew = type.IsReferenceType
                         ? $" ?? {name}{nullability}.Instantiate()"
-                        : string.Empty; // TODO nullable structs
+                        : string.Empty;
                     var nullable = !type.IsValueType || IsNullableType(type);
 
 

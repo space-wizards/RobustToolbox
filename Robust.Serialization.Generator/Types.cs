@@ -7,9 +7,9 @@ namespace Robust.Serialization.Generator;
 
 internal static class Types
 {
-    private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
+    private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
 
     internal static bool IsPartial(TypeDeclarationSyntax type)
     {
@@ -230,18 +230,16 @@ internal static class Types
         return false;
     }
 
-    internal static bool ImplementsInterface(ITypeSymbol type, string interfaceName, out ITypeSymbol? @interface)
+    internal static bool ImplementsInterface(ITypeSymbol type, string interfaceName)
     {
         foreach (var interfaceType in type.AllInterfaces)
         {
             if (interfaceType.ToDisplayString().Contains(interfaceName))
             {
-                @interface = interfaceType;
                 return true;
             }
         }
 
-        @interface = null;
         return false;
     }
 

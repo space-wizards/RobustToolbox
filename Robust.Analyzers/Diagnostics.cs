@@ -24,6 +24,7 @@ public static class Diagnostics
     public const string IdDataDefinitionPartial = "RA0017";
     public const string IdNestedDataDefinitionPartial = "RA0018";
     public const string IdDataFieldWritable = "RA0019";
+    public const string IdDataFieldPropertyWritable = "RA0020";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

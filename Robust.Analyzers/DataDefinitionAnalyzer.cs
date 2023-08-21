@@ -13,6 +13,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 {
     private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
+    private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
 
     private static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
         Diagnostics.IdDataDefinitionPartial,
@@ -34,20 +35,45 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to mark any type containing a nested data definition as partial."
     );
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
-        ImmutableArray.Create(DataDefinitionPartialRule, NestedDataDefinitionPartialRule);
+    private static readonly DiagnosticDescriptor DataFieldWritableRule = new(
+        Diagnostics.IdDataFieldWritable,
+        "Data field must not be readonly",
+        "Data field {0} in data definition {1} is readonly.",
+        "Usage",
+        DiagnosticSeverity.Error,
+        true,
+        "Make sure to remove the readonly modifier."
+    );
+
+    private static readonly DiagnosticDescriptor DataFieldPropertyWritableRule = new(
+        Diagnostics.IdDataFieldPropertyWritable,
+        "Data field property must have a setter",
+        "Data field property {0} in data definition {1} does not have a setter.",
+        "Usage",
+        DiagnosticSeverity.Error,
+        true,
+        "Make sure to add a setter."
+    );
+
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
+        DataDefinitionPartialRule, NestedDataDefinitionPartialRule, DataFieldWritableRule, DataFieldPropertyWritableRule
+    );
 
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(AnalyzeType, SyntaxKind.ClassDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeType, SyntaxKind.StructDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeType, SyntaxKind.RecordDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeType, SyntaxKind.RecordStructDeclaration);
+
+        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.ClassDeclaration);
+        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.StructDeclaration);
+        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordDeclaration);
+        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordStructDeclaration);
+
+        context.RegisterSyntaxNodeAction(AnalyzeDataField, SyntaxKind.FieldDeclaration);
+        context.RegisterSyntaxNodeAction(AnalyzeDataFieldProperty, SyntaxKind.PropertyDeclaration);
     }
 
-    private void AnalyzeType(SyntaxNodeAnalysisContext context)
+    private void AnalyzeDataDefinition(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not TypeDeclarationSyntax declaration)
             return;
@@ -64,14 +90,71 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         var containingType = type.ContainingType;
         while (containingType != null)
         {
-            if (!IsPartial(declaration))
+            var containingTypeDeclaration = (ClassDeclarationSyntax) containingType.DeclaringSyntaxReferences[0].GetSyntax();
+            if (!IsPartial(containingTypeDeclaration))
             {
-                var syntax = (ClassDeclarationSyntax) containingType.DeclaringSyntaxReferences[0].GetSyntax();
-                context.ReportDiagnostic(Diagnostic.Create(NestedDataDefinitionPartialRule, syntax.Keyword.GetLocation(), containingType.Name, type.Name));
+                context.ReportDiagnostic(Diagnostic.Create(NestedDataDefinitionPartialRule, containingTypeDeclaration.Keyword.GetLocation(), containingType.Name, type.Name));
             }
 
             containingType = containingType.ContainingType;
         }
+    }
+
+    private void AnalyzeDataField(SyntaxNodeAnalysisContext context)
+    {
+        if (context.Node is not FieldDeclarationSyntax field)
+            return;
+
+        var typeDeclaration = field.FirstAncestorOrSelf<TypeDeclarationSyntax>();
+        if (typeDeclaration == null)
+            return;
+
+        var type = context.SemanticModel.GetDeclaredSymbol(typeDeclaration)!;
+        if (!IsDataDefinition(type))
+            return;
+
+        foreach (var variable in field.Declaration.Variables)
+        {
+            var fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable);
+            if (fieldSymbol == null)
+                continue;
+
+            if (IsReadOnlyDataField(type, fieldSymbol))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, context.Node.GetLocation(), fieldSymbol.Name, type.Name));
+            }
+        }
+    }
+
+    private void AnalyzeDataFieldProperty(SyntaxNodeAnalysisContext context)
+    {
+        if (context.Node is not PropertyDeclarationSyntax property)
+            return;
+
+        var typeDeclaration = property.FirstAncestorOrSelf<TypeDeclarationSyntax>();
+        if (typeDeclaration == null)
+            return;
+
+        var type = context.SemanticModel.GetDeclaredSymbol(typeDeclaration)!;
+        if (!IsDataDefinition(type))
+            return;
+
+        var propertySymbol = context.SemanticModel.GetDeclaredSymbol(property);
+        if (propertySymbol == null)
+            return;
+
+        if (IsReadOnlyDataField(type, propertySymbol))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DataFieldPropertyWritableRule, context.Node.GetLocation(), propertySymbol.Name, type.Name));
+        }
+    }
+
+    private static bool IsReadOnlyDataField(ITypeSymbol type, ISymbol field)
+    {
+        if (!IsDataField(field, out _, out _))
+            return false;
+
+        return IsReadOnlyMember(type, field);
     }
 
     private static bool IsPartial(TypeDeclarationSyntax type)
@@ -86,6 +169,70 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
         return HasAttribute(type, DataDefinitionNamespace) ||
                IsImplicitDataDefinition(type);
+    }
+
+    private static bool IsDataField(ISymbol member, out ITypeSymbol type, out AttributeData attribute)
+    {
+        // TODO data records
+        if (member is IFieldSymbol field)
+        {
+            foreach (var attr in field.GetAttributes())
+            {
+                if (attr.AttributeClass != null && Inherits(attr.AttributeClass, DataFieldBaseNamespace))
+                {
+                    type = field.Type;
+                    attribute = attr;
+                    return true;
+                }
+            }
+        }
+        else if (member is IPropertySymbol property)
+        {
+            foreach (var attr in property.GetAttributes())
+            {
+                if (attr.AttributeClass != null && Inherits(attr.AttributeClass, DataFieldBaseNamespace))
+                {
+                    type = property.Type;
+                    attribute = attr;
+                    return true;
+                }
+            }
+        }
+
+        type = null!;
+        attribute = null!;
+        return false;
+    }
+
+    private static bool Inherits(ITypeSymbol type, string parent)
+    {
+        foreach (var baseType in GetBaseTypes(type))
+        {
+            if (baseType.ToDisplayString() == parent)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsReadOnlyMember(ITypeSymbol type, ISymbol member)
+    {
+        if (member is IFieldSymbol field)
+        {
+            return field.IsReadOnly;
+        }
+        else if (member is IPropertySymbol property)
+        {
+            if (property.SetMethod == null)
+                return true;
+
+            if (property.SetMethod.IsInitOnly)
+                return type.IsReferenceType;
+
+            return false;
+        }
+
+        return false;
     }
 
     private static bool HasAttribute(ITypeSymbol type, string attributeName)

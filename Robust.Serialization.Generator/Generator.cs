@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -16,16 +15,6 @@ public class Generator : IIncrementalGenerator
     private const string TypeCopierInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier";
     private const string TypeCopyCreatorInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator";
     private const string SerializationHooksNamespace = "Robust.Shared.Serialization.ISerializationHooks";
-
-    private static readonly DiagnosticDescriptor DataFieldWritableRule = new(
-        Diagnostics.IdDataFieldWritable,
-        "Data field must not be readonly",
-        "Field {0} in data definition {1} is marked as a DataField but is readonly.",
-        "Usage",
-        DiagnosticSeverity.Error,
-        true,
-        "Make sure to add a setter or remove the readonly modifier."
-    );
 
     public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {
@@ -149,12 +138,12 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
             {
                 if (attribute.ConstructorArguments.FirstOrDefault(arg => arg.Kind == TypedConstantKind.Type).Value is INamedTypeSymbol customSerializer)
                 {
-                    if (ImplementsInterface(customSerializer, TypeCopierInterfaceNamespace, out _))
+                    if (ImplementsInterface(customSerializer, TypeCopierInterfaceNamespace))
                     {
                         fields.Add(new DataField(member, type, (customSerializer, Copier)));
                         continue;
                     }
-                    else if (ImplementsInterface(customSerializer, TypeCopyCreatorInterfaceNamespace, out _))
+                    else if (ImplementsInterface(customSerializer, TypeCopyCreatorInterfaceNamespace))
                     {
                         fields.Add(new DataField(member, type, (customSerializer, CopyCreator)));
                         continue;
@@ -165,14 +154,13 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
                 if (IsReadOnlyMember(definition, type))
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, member.Locations.First(), member.Name, definition.Name));
                     invalidFields = true;
                 }
             }
         }
 
         var typeName = GetGenericTypeName(definition);
-        var hasHooks = ImplementsInterface(definition, SerializationHooksNamespace, out _);
+        var hasHooks = ImplementsInterface(definition, SerializationHooksNamespace);
 
         return new DataDefinition(definition, typeName, fields, hasHooks, invalidFields);
     }
@@ -433,7 +421,7 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                     instantiator = $"{tempVarName} = new();";
                 }
 
-                var hasHooks = ImplementsInterface(type, SerializationHooksNamespace, out _) || !type.IsSealed;
+                var hasHooks = ImplementsInterface(type, SerializationHooksNamespace) || !type.IsSealed;
                 builder.AppendLine($$"""
                                      {{instantiator}}
                                      if (!serialization.TryCustomCopy(this.{{name}}, ref {{tempVarName}}, hookCtx, {{hasHooks.ToString().ToLower()}}, context))

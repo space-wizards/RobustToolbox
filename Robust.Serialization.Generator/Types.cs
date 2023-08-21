@@ -102,6 +102,11 @@ internal static class Types
         return false;
     }
 
+    internal static bool IsNullableValueType(ITypeSymbol type)
+    {
+        return type.IsValueType && IsNullableType(type);
+    }
+
     internal static bool CanBeCopiedByValue(ITypeSymbol type)
     {
         // TODO copybyref attribute
@@ -212,16 +217,18 @@ internal static class Types
         return false;
     }
 
-    internal static bool ImplementsInterface(ITypeSymbol type, string interfaceName)
+    internal static bool ImplementsInterface(ITypeSymbol type, string interfaceName, out ITypeSymbol? @interface)
     {
-        foreach (var @interface in type.AllInterfaces)
+        foreach (var interfaceType in type.AllInterfaces)
         {
-            if (@interface.ToDisplayString().Contains(interfaceName))
+            if (interfaceType.ToDisplayString().Contains(interfaceName))
             {
+                @interface = interfaceType;
                 return true;
             }
         }
 
+        @interface = null;
         return false;
     }
 
@@ -255,11 +262,31 @@ internal static class Types
 
         foreach (var constructor in named.InstanceConstructors)
         {
-            if (constructor.Parameters.Length == 0 && !constructor.IsImplicitlyDeclared)
+            if (constructor.Parameters.Length == 0 &&
+                !constructor.IsImplicitlyDeclared)
+            {
                 return false;
+            }
         }
 
         return true;
+    }
+
+    internal static bool HasEmptyPublicConstructor(ITypeSymbol type)
+    {
+        if (type is not INamedTypeSymbol named)
+            return false;
+
+        foreach (var constructor in named.InstanceConstructors)
+        {
+            if (constructor.DeclaredAccessibility == Accessibility.Public &&
+                constructor.Parameters.Length == 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     internal static bool IsVirtualClass(ITypeSymbol type)
@@ -271,7 +298,7 @@ internal static class Types
     {
         foreach (var attribute in type.GetAttributes())
         {
-            if (attribute.AttributeClass?.ToDisplayString() == ImplicitDataDefinitionNamespace)
+            if (attribute.AttributeClass?.ToDisplayString() == attributeName)
                 return true;
         }
 

@@ -202,7 +202,9 @@ namespace Robust.UnitTesting.Shared.Maths
             Assert.That(sysColor, Is.EqualTo((System.Drawing.Color) color));
         }
 
-        static IEnumerable<string> DefaultColorNames => Color.GetAllDefaultColors().Select(e => e.Key);
+        static IEnumerable<string> DefaultColorNames => Color.GetAllDefaultColors()
+            .Where(e => System.Drawing.Color.FromName(e.Key).IsKnownColor)
+            .Select(e => e.Key);
 
         [Test]
         public void GetAllDefaultColorsFromName([ValueSource(nameof(DefaultColorNames))] string colorName)

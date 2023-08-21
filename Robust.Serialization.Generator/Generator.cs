@@ -21,7 +21,7 @@ public class Generator : IIncrementalGenerator
         "Type must be partial",
         "Type {0} is a DataDefinition but is not partial.",
         "Usage",
-        DiagnosticSeverity.Error,
+        DiagnosticSeverity.Warning,
         true,
         "Make sure to mark any type that is a data definition as partial."
     );
@@ -31,7 +31,7 @@ public class Generator : IIncrementalGenerator
         "Type must be partial",
         "Type {0} contains nested data definition {1} but is not partial.",
         "Usage",
-        DiagnosticSeverity.Error,
+        DiagnosticSeverity.Warning,
         true,
         "Make sure to mark any type containing a nested data definition as partial."
     );
@@ -41,7 +41,7 @@ public class Generator : IIncrementalGenerator
         "Data field must not be readonly",
         "Field {0} in data definition {1} is marked as a DataField but is readonly.",
         "Usage",
-        DiagnosticSeverity.Error,
+        DiagnosticSeverity.Warning,
         true,
         "Make sure to add a setter or remove the readonly modifier."
     );
@@ -63,57 +63,58 @@ public class Generator : IIncrementalGenerator
             initContext.CompilationProvider.Combine(dataDefinitions.WithComparer(comparer).Collect()),
             static (sourceContext, source) =>
             {
-                var (compilation, types) = source;
+                var (compilation, declarations) = source;
                 var builder = new StringBuilder();
                 var containingTypes = new Stack<INamedTypeSymbol>();
 
-                foreach (var type in types)
+                foreach (var declaration in declarations)
                 {
                     builder.Clear();
                     containingTypes.Clear();
 
-                    var symbol = (ITypeSymbol) compilation.GetSemanticModel(type.SyntaxTree).GetDeclaredSymbol(type)!;
+                    var type = (ITypeSymbol) compilation.GetSemanticModel(declaration.SyntaxTree).GetDeclaredSymbol(declaration)!;
 
-                    if (type.Modifiers.IndexOf(SyntaxKind.PartialKeyword) == -1)
+                    var nonPartial = false;
+                    if (!IsPartial(declaration))
                     {
-                        sourceContext.ReportDiagnostic(Diagnostic.Create(DataDefinitionPartialRule, type.Keyword.GetLocation(), symbol.Name));
+                        sourceContext.ReportDiagnostic(Diagnostic.Create(DataDefinitionPartialRule, declaration.Keyword.GetLocation(), type.Name));
+                        nonPartial = true;
                     }
 
-                    var namespaceString = symbol.ContainingNamespace.IsGlobalNamespace
+                    var namespaceString = type.ContainingNamespace.IsGlobalNamespace
                         ? string.Empty
-                        : $"namespace {symbol.ContainingNamespace.ToDisplayString()};";
+                        : $"namespace {type.ContainingNamespace.ToDisplayString()};";
 
-                    var containingType = symbol.ContainingType;
+                    var containingType = type.ContainingType;
                     while (containingType != null)
                     {
                         containingTypes.Push(containingType);
                         containingType = containingType.ContainingType;
                     }
 
-                    var nonPartial = false;
-                    var containingTypesBuilder = new StringBuilder();
-                    var containingTypesClosing = new StringBuilder();
+                    var containingTypesStart = new StringBuilder();
+                    var containingTypesEnd = new StringBuilder();
                     foreach (var parent in containingTypes)
                     {
                         var syntax = (ClassDeclarationSyntax) parent.DeclaringSyntaxReferences[0].GetSyntax();
-                        if (syntax.Modifiers.IndexOf(SyntaxKind.PartialKeyword) == -1)
+                        if (!IsPartial(syntax))
                         {
-                            sourceContext.ReportDiagnostic(Diagnostic.Create(NestedDataDefinitionPartialRule, syntax.Keyword.GetLocation(), parent.Name, symbol.Name));
+                            sourceContext.ReportDiagnostic(Diagnostic.Create(NestedDataDefinitionPartialRule, syntax.Keyword.GetLocation(), parent.Name, type.Name));
                             nonPartial = true;
                             continue;
                         }
 
-                        containingTypesBuilder.AppendLine($"{GetPartialTypeDefinitionLine(parent)}\n{{");
-                        containingTypesClosing.AppendLine("}");
+                        containingTypesStart.AppendLine($"{GetPartialTypeDefinitionLine(parent)}\n{{");
+                        containingTypesEnd.AppendLine("}");
                     }
 
-                    if (nonPartial)
+                    var definition = GetDataDefinition(type, sourceContext);
+                    if (nonPartial || definition.InvalidFields)
                         continue;
-
-                    var definition = GetDataFields(symbol);
 
                     builder.AppendLine($$"""
 #nullable enable
+using System;
 using Robust.Shared.Analyzers;
 using Robust.Shared.IoC;
 using Robust.Shared.GameObjects;
@@ -124,10 +125,10 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 {{namespaceString}}
 
-{{containingTypesBuilder}}
+{{containingTypesStart}}
 
 [RobustAutoGenerated]
-{{GetPartialTypeDefinitionLine(symbol)}} : ISerializationGenerated<{{definition.GenericTypeName}}>
+{{GetPartialTypeDefinitionLine(type)}} : ISerializationGenerated<{{definition.GenericTypeName}}>
 {
     {{GetConstructor(definition)}}
 
@@ -136,10 +137,10 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
     {{GetInstantiators(definition)}}
 }
 
-{{containingTypesClosing}}
+{{containingTypesEnd}}
 """);
 
-                    var symbolName = symbol
+                    var symbolName = type
                         .ToDisplayString()
                         .Replace('<', '{')
                         .Replace('>', '}');
@@ -156,9 +157,10 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
         );
     }
 
-    private static DataDefinition GetDataFields(ITypeSymbol definition)
+    private static DataDefinition GetDataDefinition(ITypeSymbol definition, SourceProductionContext context)
     {
         var fields = new List<DataField>();
+        var invalidFields = false;
 
         foreach (var member in definition.GetMembers())
         {
@@ -185,13 +187,19 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
                 }
 
                 fields.Add(new DataField(member, type, null));
+
+                if (IsReadOnlyMember(definition, type))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, member.Locations.First(), member.Name, definition.Name));
+                    invalidFields = true;
+                }
             }
         }
 
         var typeName = GetGenericTypeName(definition);
         var hasHooks = ImplementsInterface(definition, SerializationHooksNamespace, out _);
 
-        return new DataDefinition(definition, typeName, fields, hasHooks);
+        return new DataDefinition(definition, typeName, fields, hasHooks, invalidFields);
     }
 
      private static string GetConstructor(DataDefinition definition)
@@ -311,14 +319,18 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
         if (definition.Type.BaseType is { } baseType && IsDataDefinition(baseType))
             modifiers = "override ";
-        else if (!definition.Type.IsAbstract && IsVirtualClass(definition.Type))
+        else if (IsVirtualClass(definition.Type))
             modifiers = "virtual ";
 
         if (definition.Type.IsAbstract)
         {
-            builder.AppendLine($"""
-                                public abstract {modifiers} {definition.GenericTypeName} Instantiate();
-                                """);
+            // TODO make abstract once data definitions are forced to be partial
+            builder.AppendLine($$"""
+                                 public {{modifiers}} {{definition.GenericTypeName}} Instantiate()
+                                 {
+                                     throw new NotImplementedException();
+                                 }
+                                 """);
         }
         else
         {
@@ -361,13 +373,6 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
         var structCopier = new StringBuilder();
         foreach (var field in definition.Fields)
         {
-            if (IsReadOnlyMember(definition.Type, field.Symbol))
-            {
-                context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, field.Symbol.Locations.First(),
-                    field.Symbol.Name, definition.Type.Name));
-                continue;
-            }
-
             var type = field.Type;
             var typeName = type.ToDisplayString();
             if (IsMultidimensionalArray(type))

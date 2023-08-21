@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Robust.Serialization.Generator;
 
@@ -8,6 +10,11 @@ internal static class Types
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string DataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataDefinitionAttribute";
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
+
+    internal static bool IsPartial(TypeDeclarationSyntax type)
+    {
+        return type.Modifiers.IndexOf(SyntaxKind.PartialKeyword) != -1;
+    }
 
     internal static bool IsDataDefinition(ITypeSymbol? type)
     {
@@ -53,13 +60,13 @@ internal static class Types
 
     internal static bool IsImplicitDataDefinition(ITypeSymbol type)
     {
-        var baseType = type;
-        while (baseType != null)
+        if (HasAttribute(type, ImplicitDataDefinitionNamespace))
+            return true;
+
+        foreach (var baseType in GetBaseTypes(type))
         {
             if (HasAttribute(baseType, ImplicitDataDefinitionNamespace))
                 return true;
-
-            baseType = baseType.BaseType;
         }
 
         foreach (var @interface in type.AllInterfaces)
@@ -214,13 +221,10 @@ internal static class Types
 
     internal static bool Inherits(ITypeSymbol type, string parent)
     {
-        var baseType = type.BaseType;
-        while (baseType != null)
+        foreach (var baseType in GetBaseTypes(type))
         {
             if (baseType.ToDisplayString() == parent)
                 return true;
-
-            baseType = baseType.BaseType;
         }
 
         return false;
@@ -312,5 +316,15 @@ internal static class Types
         }
 
         return false;
+    }
+
+    internal static IEnumerable<ITypeSymbol> GetBaseTypes(ITypeSymbol type)
+    {
+        var baseType = type.BaseType;
+        while (baseType != null)
+        {
+            yield return baseType;
+            baseType = baseType.BaseType;
+        }
     }
 }

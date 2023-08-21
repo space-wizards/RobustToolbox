@@ -1,12 +1,17 @@
 using System.Numerics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Players;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
     [RegisterComponent, ComponentReference(typeof(SharedEyeComponent))]
-    public sealed partial class EyeComponent : SharedEyeComponent
+    public sealed class EyeComponent : SharedEyeComponent
     {
         public const int DefaultVisibilityMask = 1;
 

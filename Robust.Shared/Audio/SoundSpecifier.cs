@@ -1,4 +1,3 @@
-using System;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -8,26 +7,33 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
+using System;
 
 namespace Robust.Shared.Audio;
 
 [ImplicitDataDefinitionForInheritors, Serializable, NetSerializable]
-public abstract partial class SoundSpecifier
+public abstract class SoundSpecifier
 {
     [DataField("params")]
-    public AudioParams Params { get; set; } = AudioParams.Default;
+    public AudioParams Params { get; init; } = AudioParams.Default;
 
     [Obsolete("Use SharedAudioSystem.GetSound(), or just pass sound specifier directly into SharedAudioSystem.")]
     public abstract string GetSound(IRobustRandom? rand = null, IPrototypeManager? proto = null);
 }
 
 [Serializable, NetSerializable]
-public sealed partial class SoundPathSpecifier : SoundSpecifier
+public sealed class SoundPathSpecifier : SoundSpecifier
 {
     public const string Node = "path";
 
     [DataField(Node, customTypeSerializer: typeof(ResPathSerializer), required: true)]
-    public ResPath Path { get; private set; }
+    public ResPath Path { get; }
+
+    [UsedImplicitly]
+    private SoundPathSpecifier()
+    {
+    }
 
     public SoundPathSpecifier(string path, AudioParams? @params = null) : this(new ResPath(path), @params)
     {
@@ -48,12 +54,12 @@ public sealed partial class SoundPathSpecifier : SoundSpecifier
 }
 
 [Serializable, NetSerializable]
-public sealed partial class SoundCollectionSpecifier : SoundSpecifier
+public sealed class SoundCollectionSpecifier : SoundSpecifier
 {
     public const string Node = "collection";
 
     [DataField(Node, customTypeSerializer: typeof(PrototypeIdSerializer<SoundCollectionPrototype>), required: true)]
-    public string? Collection { get; private set; }
+    public string? Collection { get; }
 
     [UsedImplicitly]
     public SoundCollectionSpecifier() { }

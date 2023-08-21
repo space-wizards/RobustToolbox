@@ -22,7 +22,9 @@
 
 using System;
 using System.Numerics;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -117,7 +119,7 @@ internal sealed class PrismaticJointState : JointState
 /// can violate the constraint slightly. The joint translation is zero
 /// when the local anchor points coincide in world space.
 /// </summary>
-public sealed partial class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
+public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
 {
     /// <summary>
     /// The local translation unit axis in bodyA.

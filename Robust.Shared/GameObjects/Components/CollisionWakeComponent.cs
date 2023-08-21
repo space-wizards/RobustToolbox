@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
@@ -10,7 +11,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     [RegisterComponent, NetworkedComponent()]
     [Access(typeof(CollisionWakeSystem))]
-    public sealed partial class CollisionWakeComponent : Component
+    public sealed class CollisionWakeComponent : Component
     {
         [DataField("enabled")]
         public bool Enabled = true;

@@ -26,7 +26,9 @@
 
 using System;
 using System.Numerics;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -71,7 +73,7 @@ internal sealed class DistanceJointState : JointState
 /// to remain at a fixed distance from each other. You can view
 /// this as a massless, rigid rod.
 /// </summary>
-public sealed partial class DistanceJoint : Joint, IEquatable<DistanceJoint>
+public sealed class DistanceJoint : Joint, IEquatable<DistanceJoint>
 {
     // Sloth note:
     // Box2D is replacing rope with distance hence this is also a partial port of Box2D

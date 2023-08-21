@@ -7,7 +7,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent, ComponentReference(typeof(SharedUserInterfaceComponent))]
-    public sealed partial class ClientUserInterfaceComponent : SharedUserInterfaceComponent
+    public sealed class ClientUserInterfaceComponent : SharedUserInterfaceComponent
     {
         [ViewVariables]
         internal readonly Dictionary<Enum, PrototypeData> _interfaces = new();

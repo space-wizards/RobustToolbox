@@ -23,7 +23,7 @@ internal sealed class WeldJointState : JointState
     }
 }
 
-public sealed partial class WeldJoint : Joint, IEquatable<WeldJoint>
+public sealed class WeldJoint : Joint, IEquatable<WeldJoint>
 {
     // Shared
     private float _gamma;

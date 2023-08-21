@@ -23,6 +23,7 @@
 using System;
 using System.Numerics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
@@ -46,7 +47,7 @@ internal sealed class MouseJointState : JointState
 }
 
 
-public sealed partial class MouseJoint : Joint, IEquatable<MouseJoint>
+public sealed class MouseJoint : Joint, IEquatable<MouseJoint>
 {
     public override JointType JointType => JointType.Mouse;
 

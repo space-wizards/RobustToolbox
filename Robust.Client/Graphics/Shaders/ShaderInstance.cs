@@ -225,7 +225,7 @@ namespace Robust.Client.Graphics
     }
 
     [DataDefinition]
-    public partial struct StencilParameters
+    public struct StencilParameters
     {
         public StencilParameters()
         {

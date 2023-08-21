@@ -20,7 +20,7 @@ namespace Robust.Shared.GameObjects
     ///     Stores the position and orientation of the entity.
     /// </summary>
     [RegisterComponent, NetworkedComponent]
-    public sealed partial class TransformComponent : Component, IComponentDebug
+    public sealed class TransformComponent : Component, IComponentDebug
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;

@@ -14,7 +14,7 @@ namespace Robust.Shared.Utility
     ///     Is a reference to EITHER an RSI + RSI State, OR a bare texture path.
     /// </summary>
     [Serializable, NetSerializable]
-    public abstract partial class SpriteSpecifier
+    public abstract class SpriteSpecifier
     {
         public static readonly SpriteSpecifier Invalid = new Texture(ResPath.Self);
 
@@ -33,13 +33,20 @@ namespace Robust.Shared.Utility
 
         [Serializable, NetSerializable]
         [DataDefinition] // uses custom serializer, but required for [IncludeDataField]
-        public sealed partial class Rsi : SpriteSpecifier
+        public sealed class Rsi : SpriteSpecifier
         {
             [DataField("sprite")]
             public ResPath RsiPath { get; internal set; }
 
             [DataField("state")]
             public string RsiState { get; internal set; }
+
+            // For serialization
+            private Rsi()
+            {
+                RsiPath = default!;
+                RsiState = default!;
+            }
 
             public Rsi(ResPath rsiPath, string rsiState)
             {

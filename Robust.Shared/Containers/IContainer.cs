@@ -30,7 +30,7 @@ namespace Robust.Shared.Containers
     /// <seealso cref="IContainerManager" />
     [PublicAPI]
     [ImplicitDataDefinitionForInheritors]
-    public partial interface IContainer
+    public interface IContainer
     {
         /// <summary>
         /// Readonly collection of all the entities contained within this specific container

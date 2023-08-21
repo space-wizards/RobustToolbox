@@ -16,8 +16,8 @@ namespace Robust.Client.GameObjects;
 /// updated.
 /// </remarks>
 [RegisterComponent]
-public sealed partial class IconComponent : Component
+public sealed class IconComponent : Component
 {
     [IncludeDataField]
-    public SpriteSpecifier.Rsi Icon { get; private set; } = default!;
+    public readonly SpriteSpecifier.Rsi Icon = default!;
 }

@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Robust.Shared.Serialization;
+using System;
 using System.Diagnostics.Contracts;
-using Robust.Shared.GameObjects;
-using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Audio
 {
@@ -28,7 +29,7 @@ namespace Robust.Shared.Audio
     /// </summary>
     [Serializable, NetSerializable]
     [DataDefinition]
-    public partial struct AudioParams
+    public struct AudioParams
     {
         /// <summary>
         ///     The DistanceModel to use for this specific source.

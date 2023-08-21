@@ -5,7 +5,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
-    public sealed partial class ActorComponent : Component
+    public sealed class ActorComponent : Component
     {
         [ViewVariables]
         public IPlayerSession PlayerSession { get; internal set; } = default!;

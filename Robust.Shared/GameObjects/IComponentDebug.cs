@@ -1,6 +1,6 @@
 namespace Robust.Shared.GameObjects
 {
-    public partial interface IComponentDebug : IComponent
+    public interface IComponentDebug : IComponent
     {
         string GetDebugString();
     }

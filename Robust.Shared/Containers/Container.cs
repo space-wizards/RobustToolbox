@@ -16,7 +16,7 @@ namespace Robust.Shared.Containers
     /// </summary>
     [UsedImplicitly]
     [SerializedType(ClassName)]
-    public sealed partial class Container : BaseContainer
+    public sealed class Container : BaseContainer
     {
         private const string ClassName = "Container";
 
@@ -24,7 +24,7 @@ namespace Robust.Shared.Containers
         /// The generic container class uses a list of entities
         /// </summary>
         [DataField("ents")]
-        private List<EntityUid> _containerList { get; set; } = new();
+        private readonly List<EntityUid> _containerList = new();
 
         private readonly List<EntityUid> _expectedEntities = new();
 

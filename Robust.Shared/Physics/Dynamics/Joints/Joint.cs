@@ -76,7 +76,7 @@ public abstract class JointState
 }
 
 [ImplicitDataDefinitionForInheritors]
-public abstract partial class Joint : IEquatable<Joint>
+public abstract class Joint : IEquatable<Joint>
 {
     /// <summary>
     /// Network identifier of this joint.

@@ -15,14 +15,14 @@ namespace Robust.Server.GameObjects
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
     [RegisterComponent, ComponentReference(typeof(SharedUserInterfaceComponent))]
-    public sealed partial class ServerUserInterfaceComponent : SharedUserInterfaceComponent
+    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
         [ViewVariables]
         public readonly Dictionary<Enum, BoundUserInterface> Interfaces = new();
     }
 
     [RegisterComponent]
-    public sealed partial class ActiveUserInterfaceComponent : Component
+    public sealed class ActiveUserInterfaceComponent : Component
     {
         public HashSet<BoundUserInterface> Interfaces = new();
     }

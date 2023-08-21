@@ -12,10 +12,10 @@ namespace Robust.Shared.GameObjects.Components.Localization
     /// </summary>
     [RegisterComponent]
     [NetworkedComponent()]
-    public sealed partial class GrammarComponent : Component
+    public sealed class GrammarComponent : Component
     {
         [DataField("attributes")]
-        public Dictionary<string, string> Attributes { get; private set; } = new();
+        public Dictionary<string, string> Attributes { get; } = new();
 
         [ViewVariables]
         public Gender? Gender

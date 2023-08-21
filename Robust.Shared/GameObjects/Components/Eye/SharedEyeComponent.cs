@@ -8,7 +8,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [NetworkedComponent()]
-    public abstract partial class SharedEyeComponent : Component
+    public abstract class SharedEyeComponent : Component
     {
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual bool DrawFov { get; set; }

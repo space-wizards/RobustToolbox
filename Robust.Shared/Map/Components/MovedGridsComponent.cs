@@ -9,7 +9,7 @@ namespace Robust.Shared.Map.Components;
 /// Stores what grids moved in a tick.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-public sealed partial class MovedGridsComponent : Component
+public sealed class MovedGridsComponent : Component
 {
     [ViewVariables]
     public HashSet<EntityUid> MovedGrids = new();

@@ -8,19 +8,19 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Shared.GameObjects
 {
     [NetworkedComponent]
-    public abstract partial class SharedUserInterfaceComponent : Component
+    public abstract class SharedUserInterfaceComponent : Component
     {
         [DataField("interfaces")]
         internal List<PrototypeData> _interfaceData = new();
 
         [DataDefinition]
-        public sealed partial class PrototypeData
+        public sealed class PrototypeData
         {
             [DataField("key", required: true)]
-            public Enum UiKey { get; private set; } = default!;
+            public Enum UiKey { get; } = default!;
 
             [DataField("type", required: true)]
-            public string ClientType { get; private set; } = default!;
+            public string ClientType { get; } = default!;
 
             /// <summary>
             ///     Maximum range before a BUI auto-closes. A non-positive number means there is no limit.

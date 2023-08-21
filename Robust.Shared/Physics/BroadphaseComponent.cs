@@ -6,7 +6,7 @@ namespace Robust.Shared.Physics
     /// Stores the broadphase structure for the relevant grid / map.
     /// </summary>
     [RegisterComponent]
-    public sealed partial class BroadphaseComponent : Component
+    public sealed class BroadphaseComponent : Component
     {
         /// <summary>
         /// Stores all non-static bodies.

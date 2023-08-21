@@ -2,6 +2,7 @@ using Robust.Client.Graphics;
 using Robust.Shared.Animations;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -11,7 +12,7 @@ namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(SharedPointLightComponent))]
-    public sealed partial class PointLightComponent : SharedPointLightComponent, IComponentTreeEntry<PointLightComponent>
+    public sealed class PointLightComponent : SharedPointLightComponent, IComponentTreeEntry<PointLightComponent>
     {
         public EntityUid? TreeUid { get; set; }
 

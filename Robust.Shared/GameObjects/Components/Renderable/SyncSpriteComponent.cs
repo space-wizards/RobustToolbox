@@ -7,7 +7,7 @@ namespace Robust.Shared.GameObjects;
 /// this is useful if you require multiple entities to have synchronised animations.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-public sealed partial class SyncSpriteComponent : Component
+public sealed class SyncSpriteComponent : Component
 {
 
 }

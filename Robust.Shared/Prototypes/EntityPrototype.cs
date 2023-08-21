@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -20,7 +21,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity", -1)]
-    public sealed partial class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
+    public sealed class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
     {
         private ILocalizationManager _loc = default!;
 
@@ -265,7 +266,7 @@ namespace Robust.Shared.Prototypes
         public record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
 
         [DataDefinition]
-        public sealed partial class EntityPlacementProperties
+        public sealed class EntityPlacementProperties
         {
             public bool PlacementOverriden { get; private set; }
             public bool SnapOverriden { get; private set; }

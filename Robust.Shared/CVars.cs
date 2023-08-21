@@ -1304,7 +1304,7 @@ namespace Robust.Shared
 
         /// <summary>
         /// URL of the master hub server to advertise to.
-        /// Depricated: overwrites the value of hub.hub_urls
+        /// Deprecated: overwrites the value of hub.hub_urls
         /// </summary>
         public static readonly CVarDef<string> HubMasterUrl =
             CVarDef.Create("hub.master_url", "https://central.spacestation14.io/hub/", CVar.SERVERONLY);

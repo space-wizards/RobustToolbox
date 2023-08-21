@@ -54,7 +54,7 @@ server_url = ""
 # Comma-separated list of URLs of hub servers to advertise to.
 hub_urls = "https://central.spacestation14.io/hub/"
 # URL of the master hub server to advertise to.
-# Depricated: overwrites the value of hub.hub_urls
+# Deprecated: overwrites the value of hub.hub_urls
 master_url = "https://central.spacestation14.io/hub/"
 
 [build]

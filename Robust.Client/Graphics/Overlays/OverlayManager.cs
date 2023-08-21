@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Graphics
 {
@@ -11,6 +12,7 @@ namespace Robust.Client.Graphics
     {
         [Dependency] private readonly ILogManager _logMan = default!;
 
+        [ViewVariables]
         private readonly Dictionary<Type, Overlay> _overlays = new Dictionary<Type, Overlay>();
         private ISawmill _logger = default!;
 

@@ -13,6 +13,7 @@ using Moq;
 using NUnit.Framework;
 using Robust.Client;
 using Robust.Client.GameStates;
+using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
 using Robust.Server;
@@ -26,7 +27,10 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Players;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using ServerProgram = Robust.Server.Program;
@@ -258,6 +262,38 @@ namespace Robust.UnitTesting
             public IDependencyCollection InstanceDependencyCollection => DependencyCollection;
 
             public virtual IntegrationOptions? Options { get; internal set; }
+
+            public IEntityManager EntMan { get; private set; } = default!;
+            public IPrototypeManager ProtoMan { get; private set; } = default!;
+            public IConfigurationManager CfgMan { get; private set; } = default!;
+            public ISharedPlayerManager PlayerMan { get; private set; } = default!;
+            public IGameTiming Timing { get; private set; } = default!;
+            public IMapManager MapMan { get; private set; } = default!;
+            
+            protected virtual void ResolveIoC(IDependencyCollection deps)
+            {
+                EntMan = deps.Resolve<IEntityManager>();
+                ProtoMan = deps.Resolve<IPrototypeManager>();
+                CfgMan = deps.Resolve<IConfigurationManager>();
+                PlayerMan = deps.Resolve<ISharedPlayerManager>();
+                Timing = deps.Resolve<IGameTiming>();
+                MapMan = deps.Resolve<IMapManager>();
+            }
+
+            public T System<T>() where T : IEntitySystem
+            {
+                return EntMan.System<T>();
+            }
+
+            public TransformComponent Transform(EntityUid uid)
+            {
+                return EntMan.GetComponent<TransformComponent>(uid);
+            }
+
+            public MetaDataComponent MetaData(EntityUid uid)
+            {
+                return EntMan.GetComponent<MetaDataComponent>(uid);
+            }
 
             /// <summary>
             ///     Whether the instance is still alive.
@@ -688,6 +724,7 @@ namespace Robust.UnitTesting
                 server.SetupMainLoop();
 
                 GameLoop.RunInit();
+                ResolveIoC(deps);
 
                 return server;
             }
@@ -695,6 +732,11 @@ namespace Robust.UnitTesting
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
+            public LocalPlayer? Player => ((IPlayerManager) PlayerMan).LocalPlayer;
+            public ICommonSession? Session => Player?.Session;
+            public NetUserId? User => Session?.UserId;
+            public EntityUid? AttachedEntity => Session?.AttachedEntity;
+
             public ClientIntegrationInstance(ClientIntegrationOptions? options) : base(options)
             {
                 ClientOptions = options;
@@ -859,6 +901,7 @@ namespace Robust.UnitTesting
                 client.StartupContinue(GameController.DisplayMode.Headless);
 
                 GameLoop.RunInit();
+                ResolveIoC(deps);
 
                 return client;
             }

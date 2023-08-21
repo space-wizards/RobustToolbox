@@ -101,9 +101,15 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         internal void LifeShutdown(IEntityManager entManager)
         {
-            // Starting allows a component to remove itself in it's own Startup function.
-            DebugTools.Assert(LifeStage == ComponentLifeStage.Starting || LifeStage == ComponentLifeStage.Running);
+            DebugTools.Assert(LifeStage is >= ComponentLifeStage.Initializing and < ComponentLifeStage.Stopping);
 
+            if (LifeStage <= ComponentLifeStage.Initialized)
+            {
+                // Component was never started, no shutdown logic necessary. Simply mark it as stopped.
+                LifeStage = ComponentLifeStage.Stopped;
+                return;
+            }
+            
             LifeStage = ComponentLifeStage.Stopping;
             entManager.EventBus.RaiseComponentEvent(this, CompShutdownInstance);
             LifeStage = ComponentLifeStage.Stopped;

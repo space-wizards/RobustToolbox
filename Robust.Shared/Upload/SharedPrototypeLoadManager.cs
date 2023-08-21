@@ -37,18 +37,22 @@ public abstract class SharedPrototypeLoadManager : IGamePrototypeLoadManager
     protected virtual void LoadPrototypeData(GamePrototypeLoadMessage message)
     {
         var data = message.PrototypeData;
-        LoadedPrototypes.Add(data);
-        _replay.RecordReplayMessage(new ReplayPrototypeUploadMsg { PrototypeData = data });
+
+        // TODO validate yaml before loading?
 
         var changed = new Dictionary<Type, HashSet<string>>();
         _prototypeManager.LoadString(data, true, changed);
         _prototypeManager.ResolveResults();
         _prototypeManager.ReloadPrototypes(changed);
         _localizationManager.ReloadLocalizations();
+
+        // Add to replay recording after we have loaded the file, in case it contains bad yaml that throws exceptions.
+        LoadedPrototypes.Add(data);
+        _replay.RecordReplayMessage(new ReplayPrototypeUploadMsg { PrototypeData = data });
         _sawmill.Info("Loaded adminbus prototype data.");
     }
 
-    private void OnStartReplayRecording(MappingDataNode metadat, List<object> events)
+    private void OnStartReplayRecording(MappingDataNode metadata, List<object> events)
     {
         foreach (var prototype in LoadedPrototypes)
         {

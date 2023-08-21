@@ -2,6 +2,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Player
 {
@@ -17,11 +18,14 @@ namespace Robust.Client.Player
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public EntityUid? AttachedEntity { get; set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public NetUserId UserId { get; }
 
+        [ViewVariables]
         internal string Name { get; set; } = "<Unknown>";
 
         /// <inheritdoc />
@@ -31,9 +35,11 @@ namespace Robust.Client.Player
             set => this.Name = value;
         }
 
+        [ViewVariables]
         internal short Ping { get; set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public INetChannel ConnectedClient { get; internal set; } = null!;
 
         /// <inheritdoc />

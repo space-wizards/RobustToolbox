@@ -132,7 +132,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var comp in comps)
             {
-                if (comp is { LifeStage: < ComponentLifeStage.Initialized })
+                if (comp is { LifeStage:  ComponentLifeStage.Added })
                     comp.LifeInitialize(this, CompIdx.Index(comp.GetType()));
             }
 
@@ -491,7 +491,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (component.Running)
+            if (component.LifeStage >= ComponentLifeStage.Initialized && component.LifeStage <= ComponentLifeStage.Running)
                 component.LifeShutdown(this);
 #if EXCEPTION_TOLERANCE
             }
@@ -1413,6 +1413,13 @@ namespace Robust.Shared.GameObjects
         public bool HasComponent(EntityUid uid)
         {
             return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public bool HasComponent(EntityUid? uid)
+        {
+            return uid != null && HasComponent(uid.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

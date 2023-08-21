@@ -182,11 +182,17 @@ public partial class EntitySystem
 
     #region Entity Metadata
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool IsPaused(EntityUid? uid, MetaDataComponent? metadata = null)
+    {
+        return EntityManager.IsPaused(uid, metadata);
+    }
+
     /// <summary>
     ///     Marks an entity as dirty.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty(EntityUid uid, MetaDataComponent? meta = null)
+    protected void DirtyEntity(EntityUid uid, MetaDataComponent? meta = null)
     {
         EntityManager.DirtyEntity(uid, meta);
     }
@@ -296,7 +302,7 @@ public partial class EntitySystem
         if (!Exists(uid))
             return false;
 
-        Dirty(uid);
+        DirtyEntity(uid);
         return true;
     }
 

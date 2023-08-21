@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.RichText;
@@ -21,18 +22,18 @@ namespace Robust.Client.UserInterface.Controls
             IoCManager.InjectDependencies(this);
         }
 
-        public void SetMessage(FormattedMessage message)
+        public void SetMessage(FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
             _message = message;
-            _entry = new RichTextEntry(_message, this, _tagManager);
+            _entry = new RichTextEntry(_message, this, _tagManager, tagsAllowed, defaultColor);
             InvalidateMeasure();
         }
 
-        public void SetMessage(string message)
+        public void SetMessage(string message, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
             var msg = new FormattedMessage();
             msg.AddText(message);
-            SetMessage(msg);
+            SetMessage(msg, tagsAllowed, defaultColor);
         }
 
         public string? GetMessage() => _message?.ToMarkup();

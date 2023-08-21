@@ -630,7 +630,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mousePos = _eye.ScreenToMap(_input.MouseScreenPosition);
+            var mousePos = _eye.PixelToMap(_input.MouseScreenPosition);
 
             if (!_map.TryFindGridAt(mousePos, out var gridUid, out var grid))
             {

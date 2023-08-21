@@ -328,6 +328,12 @@ namespace Robust.Shared.GameObjects
             return GetRegistration(componentType).Name;
         }
 
+        [Pure]
+        public string GetComponentName(ushort netID)
+        {
+            return GetRegistration(netID).Name;
+        }
+        
         public ComponentRegistration GetRegistration(ushort netID)
         {
             if (_networkedComponents is null)

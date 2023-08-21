@@ -29,7 +29,7 @@ internal partial class UserInterfaceManager
     public void SetActiveTheme(string themeName)
     {
         if (!_themes.TryGetValue(themeName, out var theme) || (theme == CurrentTheme)) return;
-        CurrentTheme = theme;
+        UpdateTheme(theme);
     }
 
     public void SetDefaultTheme(string themeId)

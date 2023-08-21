@@ -1072,8 +1072,8 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
                     DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick || md.EntityLastModifiedTick == GameTick.Zero);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick || md.EntityLastModifiedTick == GameTick.Zero);
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
 
                     var state = GetEntityState(player, uid, fromTick, md);
 
@@ -1099,8 +1099,8 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
                     DebugTools.Assert(md.EntityLifeStage < EntityLifeStage.Terminating);
-                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick || md.EntityLastModifiedTick == GameTick.Zero);
-                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick || md.EntityLastModifiedTick == GameTick.Zero);
+                    DebugTools.Assert(md.EntityLastModifiedTick >= md.CreationTick);
+                    DebugTools.Assert(md.EntityLastModifiedTick > fromTick);
 
                     var state = GetEntityState(player, uid, fromTick, md);
                     if (!state.Empty)

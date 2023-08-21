@@ -322,6 +322,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
         return builder.ToString();
     }
 
+    // TODO serveronly? do we care? who knows!!
     private static StringBuilder CopyDataFields(DataDefinition definition)
     {
         var builder = new StringBuilder();

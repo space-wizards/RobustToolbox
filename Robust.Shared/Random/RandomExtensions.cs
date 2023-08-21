@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.Collections;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Random
@@ -27,6 +28,12 @@ namespace Robust.Shared.Random
         {
             var index = random.Next(list.Count);
             return list[index];
+        }
+
+        public static ref T Pick<T>(this IRobustRandom random, ValueList<T> list)
+        {
+            var index = random.Next(list.Count);
+            return ref list[index];
         }
 
         /// <summary>Picks a random element from a collection.</summary>

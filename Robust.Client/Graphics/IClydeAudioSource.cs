@@ -1,7 +1,8 @@
 using System;
 using System.Numerics;
 using JetBrains.Annotations;
-using Robust.Shared.Maths;
+using Robust.Client.Audio;
+using Robust.Shared.Audio;
 
 namespace Robust.Client.Graphics
 {
@@ -11,9 +12,9 @@ namespace Robust.Client.Graphics
         void StopPlaying();
 
         bool IsPlaying { get; }
-
         bool IsLooping { get; set; }
         bool IsGlobal { get; }
+        AudioStream? SourceStream { get; }
 
         [MustUseReturnValue]
         bool SetPosition(Vector2 position);
@@ -27,5 +28,6 @@ namespace Robust.Client.Graphics
         void SetOcclusion(float blocks);
         void SetPlaybackPosition(float seconds);
         void SetVelocity(Vector2 velocity);
+        AudioParams GetParameters();
     }
 }

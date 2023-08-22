@@ -8,6 +8,7 @@ using Robust.Client.Audio;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Audio;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -315,6 +316,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public bool IsGlobal { get; }
+            public AudioStream? SourceStream => null;
 
             public bool SetPosition(Vector2 position)
             {
@@ -369,6 +371,11 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVelocity(Vector2 velocity)
             {
                 // Nada.
+            }
+
+            public AudioParams GetParameters()
+            {
+                return AudioParams.Default;
             }
         }
 

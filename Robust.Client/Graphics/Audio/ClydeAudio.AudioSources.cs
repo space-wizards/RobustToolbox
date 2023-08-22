@@ -1,19 +1,9 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
-using OpenTK.Mathematics;
 using Robust.Client.Audio;
-using Robust.Shared;
-using Robust.Shared.Configuration;
-using Robust.Shared.IoC;
 using Robust.Shared.Audio;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Vector2 = System.Numerics.Vector2;
 using Robust.Shared.Utility;
@@ -31,6 +21,7 @@ namespace Robust.Client.Graphics.Audio
 #if DEBUG
             private bool _didPositionWarning;
 #endif
+            public AudioStream SourceStream => _sourceStream;
 
             private float _gain;
 
@@ -249,6 +240,41 @@ namespace Robust.Client.Graphics.Audio
                 AL.Source(SourceHandle, ALSourcef.Pitch, pitch);
                 _master._checkAlError();
             }
+            
+            // This method does not capture all of the AudioParam's fields, like pitch scale, but realistically you won't need them after
+            // they were applied (and it appears that some of them don't have any real functionality rn)
+            public AudioParams GetParameters()
+            {
+                _checkDisposed();
+                
+                AudioParams parameters = AudioParams.Default;
+
+                parameters.Loop = IsLooping;
+
+                var priorOcclusion = 1f;
+                if (!IsEfxSupported)
+                {
+                    AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
+                    priorOcclusion = priorGain / _gain;
+                }
+                AL.GetSource(SourceHandle, ALSourcef.Gain, out float gain);
+                gain /= priorOcclusion;
+                parameters.Volume = MathF.Log10(gain) * 10;
+                
+                AL.GetSource(SourceHandle, ALSourcef.RolloffFactor, out float rolloff);
+                parameters.RolloffFactor = rolloff;
+                
+                AL.GetSource(SourceHandle, ALSourcef.MaxDistance, out float maxDist);
+                parameters.RolloffFactor = maxDist;
+
+                AL.GetSource(SourceHandle, ALSourcef.ReferenceDistance, out float refDist);
+                parameters.ReferenceDistance = refDist;
+
+                AL.GetSource(SourceHandle, ALSourcef.SecOffset, out float offset);
+                parameters.PlayOffsetSeconds = offset;
+
+                return parameters;
+            }
 
             ~AudioSource()
             {
@@ -295,17 +321,19 @@ namespace Robust.Client.Graphics.Audio
 
         private sealed class BufferedAudioSource : IClydeBufferedAudioSource
         {
-            private int? SourceHandle = null;
+            private int? SourceHandle;
             private int[] BufferHandles;
             private Dictionary<int, int> BufferMap = new();
             private readonly ClydeAudio _master;
             private bool _mono = true;
-            private bool _float = false;
+            private bool _float;
             private int FilterHandle;
 
             private float _gain;
 
             public int SampleRate { get; set; } = 44100;
+
+            public AudioStream? SourceStream => null;
 
             private bool IsEfxSupported => _master.IsEfxSupported;
 
@@ -523,6 +551,45 @@ namespace Robust.Client.Graphics.Audio
             ~BufferedAudioSource()
             {
                 Dispose(false);
+            }
+            
+            // This method does not capture all of the AudioParam's fields, like pitch scale, but realistically you won't need them after
+            // they were applied (and it appears that some of them don't have any real functionality rn)
+            public AudioParams GetParameters()
+            {
+                _checkDisposed();
+
+                if (SourceHandle == null)
+                    return AudioParams.Default;
+                int handle = SourceHandle.Value;
+                
+                AudioParams parameters = AudioParams.Default;
+
+                parameters.Loop = IsLooping;
+
+                var priorOcclusion = 1f;
+                if (!IsEfxSupported)
+                {
+                    AL.GetSource(handle, ALSourcef.Gain, out var priorGain);
+                    priorOcclusion = priorGain / _gain;
+                }
+                AL.GetSource(handle, ALSourcef.Gain, out float gain);
+                gain /= priorOcclusion;
+                parameters.Volume = MathF.Log10(gain) * 10;
+                
+                AL.GetSource(handle, ALSourcef.RolloffFactor, out float rolloff);
+                parameters.RolloffFactor = rolloff;
+                
+                AL.GetSource(handle, ALSourcef.MaxDistance, out float maxDist);
+                parameters.RolloffFactor = maxDist;
+
+                AL.GetSource(handle, ALSourcef.ReferenceDistance, out float refDist);
+                parameters.ReferenceDistance = refDist;
+
+                AL.GetSource(handle, ALSourcef.SecOffset, out float offset);
+                parameters.PlayOffsetSeconds = offset;
+
+                return parameters;
             }
 
             public void Dispose()

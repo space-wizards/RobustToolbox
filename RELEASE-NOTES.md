@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 148.4.0
+
+### New features
+
+* Add recursive PVS overrides and remove IsOverride()
+
+
 ## 148.3.0
 
 ### New features

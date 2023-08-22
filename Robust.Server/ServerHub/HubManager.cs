@@ -47,12 +47,6 @@ internal sealed class HubManager
             }
             _hubUrls = hubUrls;
         }, true);
-        _cfg.OnValueChanged(CVars.HubMasterUrl, s => {
-            if (!string.IsNullOrWhiteSpace(s))
-            {
-                _hubUrls = new string[] { s };
-            }
-        }, true);
 
         var url = _cfg.GetCVar(CVars.HubServerUrl);
         if (string.IsNullOrEmpty(url))

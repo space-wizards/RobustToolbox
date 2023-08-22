@@ -54,6 +54,24 @@ END TEMPLATE-->
 *None yet*
 
 
+## 148.3.0
+
+### New features
+
+* Happy eyeballs delay can be configured.
+* Added more colors.
+* Allow pre-startup components to be shut down.
+* Added tile texture reload command.
+* Add implementation of Random.Pick(ValueList<T> ..).
+* Add IntegrationInstance fields for common dependencies.
+
+### Bugfixes
+
+* Prevent invalid prototypes from being spawned.
+* Change default value of EntityLastModifiedTick from zero to one.
+* Make DiscordRichPresence icon CVars server-side with replication.
+
+
 ## 148.2.0
 
 ### New features

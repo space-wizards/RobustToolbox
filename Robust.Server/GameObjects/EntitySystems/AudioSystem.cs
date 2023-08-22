@@ -21,7 +21,6 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         public readonly uint Id;
         public readonly IEnumerable<ICommonSession>? Sessions;
-        public readonly string Filename;
         public AudioParams Parameters
         {
             get;
@@ -39,7 +38,6 @@ public sealed class AudioSystem : SharedAudioSystem
         {
             _audioSystem = parent;
             Id = identifier;
-            Filename = filename;
             Parameters = parameters;
             Sessions = sessions;
         }

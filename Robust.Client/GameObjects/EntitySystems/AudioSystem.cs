@@ -41,6 +41,8 @@ public sealed class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
 
+    internal IReadOnlyList<PlayingStream> PlayingStreams => _playingClydeStreams;
+
     private readonly List<PlayingStream> _playingClydeStreams = new();
 
     private ISawmill _sawmill = default!;

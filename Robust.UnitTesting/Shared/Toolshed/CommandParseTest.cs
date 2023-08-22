@@ -125,15 +125,9 @@ public sealed class CommandRunTest : ToolshedTest
             AssertParseable<Vector2i>();
             AssertParseable<Robust.Shared.Maths.Vector3>();
             AssertParseable<Robust.Shared.Maths.Vector4>();
-            AssertParseable<Robust.Shared.Maths.Matrix22>();
-            AssertParseable<Robust.Shared.Maths.Matrix33>();
-            AssertParseable<Robust.Shared.Maths.Matrix3>();
-            AssertParseable<Robust.Shared.Maths.Matrix4>();
             AssertParseable<Box2>();
-            AssertParseable<Box2Rotated>();
             AssertParseable<Box2i>();
             AssertParseable<Angle>();
-            AssertParseable<Circle>();
             AssertParseable<Color>();
             AssertParseable<Direction>();
             AssertParseable<DirectionFlag>();

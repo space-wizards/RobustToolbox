@@ -121,9 +121,14 @@ public sealed partial class ToolshedManager
     /// <param name="error">A console error, if any, that can be reported to explain the parsing failure.</param>
     /// <typeparam name="T">The type to parse from the input.</typeparam>
     /// <returns>Success.</returns>
-    public bool TryParse<T>(ParserContext parserContext, [NotNullWhen(true)] out object? parsed, out IConError? error)
+    public bool TryParse<T>(ParserContext parserContext, [NotNullWhen(true)] out T? parsed, out IConError? error)
     {
-        return TryParse(parserContext, typeof(T), out parsed, out error);
+        var res = TryParse(parserContext, typeof(T), out var p, out error);
+        if (p is not null)
+            parsed = (T?) p;
+        else
+            parsed = default(T);
+        return res;
     }
 
     /// <summary>

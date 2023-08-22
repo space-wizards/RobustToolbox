@@ -7,6 +7,7 @@ using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 // Avoid accidentally mixing up overloads.
 // ReSharper disable RedundantTypeArgumentsOfMethod

@@ -19,8 +19,11 @@ public sealed class ErrorHandlingTest : ToolshedTest
     public async Task NoDivideByZeroError()
     {
         // This shouldn't throw, because toolshed is nice :)
-        await Server.WaitAssertion(() => { InvokeCommand<float>("f 1 / 0"); });
-        await Server.WaitAssertion(() => { InvokeCommand<int>("i 1 / 0"); });
+        await Server.WaitAssertion(() =>
+        {
+            InvokeCommand<float>("f 1 / 0");
+            InvokeCommand<int>("i 1 / 0");
+        });
     }
 
     [Test]

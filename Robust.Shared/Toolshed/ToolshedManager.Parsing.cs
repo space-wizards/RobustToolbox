@@ -18,6 +18,7 @@ public sealed partial class ToolshedManager
 {
     private readonly Dictionary<Type, ITypeParser> _consoleTypeParsers = new();
     private readonly Dictionary<Type, Type> _genericTypeParsers = new();
+    private readonly List<(Type, Type)> _constrainedParsers = new();
 
     private void InitializeParser()
     {
@@ -28,14 +29,22 @@ public sealed partial class ToolshedManager
             if (parserType.IsGenericType)
             {
                 var t = parserType.BaseType!.GetGenericArguments().First();
-                _genericTypeParsers.Add(t.GetGenericTypeDefinition(), parserType);
-                _log.Debug($"Setting up {parserType.PrettyName()}, {t.GetGenericTypeDefinition().PrettyName()}");
+                if (t.IsGenericType)
+                {
+                    _genericTypeParsers.Add(t.GetGenericTypeDefinition(), parserType);
+                    _log.Info($"Setting up {parserType.PrettyName()}, {t.GetGenericTypeDefinition().PrettyName()}");
+                }
+                else if (t.IsGenericParameter)
+                {
+                    _constrainedParsers.Add((t, parserType));
+                    _log.Info($"Setting up {parserType.PrettyName()}, for T where T: {string.Join(", ", t.GetGenericParameterConstraints().Select(x => x.PrettyName()))}");
+                }
             }
             else
             {
                 var parser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(parserType);
                 parser.PostInject();
-                _log.Debug($"Setting up {parserType.PrettyName()}, {parser.Parses.PrettyName()}");
+                _log.Info($"Setting up {parserType.PrettyName()}, {parser.Parses.PrettyName()}");
                 _consoleTypeParsers.Add(parser.Parses, parser);
             }
         }
@@ -46,15 +55,33 @@ public sealed partial class ToolshedManager
         if (_consoleTypeParsers.TryGetValue(t, out var parser))
             return parser;
 
-
         if (t.IsConstructedGenericType)
         {
-            if (!_genericTypeParsers.TryGetValue(t.GetGenericTypeDefinition(), out var genParser))
-                return null;
+            if (_genericTypeParsers.TryGetValue(t.GetGenericTypeDefinition(), out var genParser))
+            {
+                try
+                {
+                    var concreteParser = genParser.MakeGenericType(t.GenericTypeArguments);
 
+                    var builtParser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(concreteParser, true);
+                    builtParser.PostInject();
+                    _consoleTypeParsers.Add(builtParser.Parses, builtParser);
+                    return builtParser;
+                }
+                catch (SecurityException)
+                {
+                    // Oops, try the other thing.
+                }
+            }
+        }
+
+        // augh, slow path!
+        foreach (var (param, genParser) in _constrainedParsers)
+        {
+            // no, IsAssignableTo isn't useful here. I tried. tfw.
             try
             {
-                var concreteParser = genParser.MakeGenericType(t.GenericTypeArguments);
+                var concreteParser = genParser.MakeGenericType(t);
 
                 var builtParser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(concreteParser, true);
                 builtParser.PostInject();
@@ -63,14 +90,25 @@ public sealed partial class ToolshedManager
             }
             catch (SecurityException)
             {
-                // Oops, try the other thing.
+                // Oops, try another.
+            }
+            catch (ArgumentException)
+            {
+                // oogh  C# why do i have to do this with exception handling.
             }
         }
 
+        // ough, slower path!
         var baseTy = t.BaseType;
 
-        if (baseTy is not null && baseTy != typeof(object) && baseTy != t.BaseType)
-            return GetParserForType(t);
+        if (baseTy is not null && baseTy != typeof(object) && baseTy != typeof(ValueType) && GetParserForType(baseTy) is {} retTy)
+            return retTy;
+
+        foreach (var i in t.GetInterfaces())
+        {
+            if (GetParserForType(i) is { } o)
+                return o;
+        }
 
         return null;
     }
@@ -130,7 +168,7 @@ public sealed partial class ToolshedManager
 ///     Error that's given if a type cannot be parsed due to lack of parser.
 /// </summary>
 /// <param name="T">The type being parsed.</param>
-public record struct UnparseableValueError(Type T) : IConError
+public record UnparseableValueError(Type T) : IConError
 {
     public FormattedMessage DescribeInner()
     {

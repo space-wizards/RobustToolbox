@@ -115,7 +115,7 @@ public sealed class CommandRunTest : ToolshedTest
             AssertParseable<EntityUid>();
             AssertParseable<ResPath>();
             AssertParseable<Type>();
-            AssertParseable<Enum>();
+            AssertParseable<TestEnum>();
             AssertParseable<TimeSpan>();
             AssertParseable<DateTime>();
             AssertParseable<Uri>();
@@ -165,6 +165,12 @@ public sealed class CommandRunTest : ToolshedTest
             AssertParseable<FallbackTest>();
             });
         });
+    }
+
+    private enum TestEnum
+    {
+        A = 0,
+        B = 1
     }
 
     private sealed class FallbackTest : IParsable<FallbackTest>

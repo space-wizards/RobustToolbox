@@ -90,6 +90,13 @@ namespace Robust.Client.GameObjects
                 base.Dirty(uid, component, meta);
         }
 
+        protected override void ComponentMapInit(IComponent component, MetaDataComponent metadata)
+        {
+            /*
+             * NOOP on client as client doesn't run MapInit; runs the component event on server for components added after MapInit.
+             */
+        }
+
         public override EntityStringRepresentation ToPrettyString(EntityUid uid)
         {
             if (_playerManager.LocalPlayer?.ControlledEntity == uid)

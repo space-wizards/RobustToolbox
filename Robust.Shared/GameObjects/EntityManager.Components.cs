@@ -335,6 +335,14 @@ namespace Robust.Shared.GameObjects
 
             if (metadata.EntityInitialized)
                 component.LifeStartup(this);
+
+            ComponentMapInit(component, metadata);
+        }
+
+        protected virtual void ComponentMapInit(IComponent component, MetaDataComponent metadata)
+        {
+            if (metadata.EntityLifeStage >= EntityLifeStage.MapInitialized)
+                EventBus.RaiseComponentEvent(component, MapInitEventInstance);
         }
 
         /// <inheritdoc />

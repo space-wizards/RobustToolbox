@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 {
     [TestFixture]
     [TestOf(typeof(DataDefinition))]
-    public sealed class InheritanceSerializationTest : RobustUnitTest
+    public sealed partial class InheritanceSerializationTest : RobustUnitTest
     {
         private const string BaseEntityId = "BaseEntity";
         private const string InheritorEntityId = "InheritorEntityId";

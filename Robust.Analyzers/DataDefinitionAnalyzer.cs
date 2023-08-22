@@ -137,7 +137,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             return;
 
         var type = context.SemanticModel.GetDeclaredSymbol(typeDeclaration)!;
-        if (!IsDataDefinition(type))
+        if (!IsDataDefinition(type) || type.IsRecord || type.IsValueType)
             return;
 
         var propertySymbol = context.SemanticModel.GetDeclaredSymbol(property);
@@ -174,7 +174,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
     private static bool IsDataField(ISymbol member, out ITypeSymbol type, out AttributeData attribute)
     {
-        // TODO data records
+        // TODO data records and other attributes
         if (member is IFieldSymbol field)
         {
             foreach (var attr in field.GetAttributes())

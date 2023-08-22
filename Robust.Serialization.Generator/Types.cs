@@ -28,7 +28,7 @@ internal static class Types
 
     internal static bool IsDataField(ISymbol member, out ITypeSymbol type, out AttributeData attribute)
     {
-        // TODO data records
+        // TODO data records and other attributes
         if (member is IFieldSymbol field)
         {
             foreach (var attr in field.GetAttributes())

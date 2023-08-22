@@ -95,9 +95,8 @@ public sealed class DefinitionFixer : CodeFixProvider
         var property = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<PropertyDeclarationSyntax>().FirstOrDefault();
 
         if (property == null)
-        {
             return;
-        }
+
         context.RegisterCodeFix(CodeAction.Create(
             "Make data field writable",
             c => MakePropertyWritable(context.Document, property, c),

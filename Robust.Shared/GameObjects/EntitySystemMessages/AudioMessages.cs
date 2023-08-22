@@ -42,11 +42,3 @@ public sealed class PlayAudioEntityMessage : AudioMessage
     public EntityCoordinates Coordinates { get; set; }
     public EntityCoordinates FallbackCoordinates { get; set; }
 }
-
-[Serializable, NetSerializable]
-public sealed class SetAudioParametersMessage : EntityEventArgs
-{
-    public uint Identifier { get; set; }
-    
-    public AudioParams AudioParams { get; set; }
-}

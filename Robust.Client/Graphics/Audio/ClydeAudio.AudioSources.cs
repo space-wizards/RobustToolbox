@@ -243,7 +243,7 @@ namespace Robust.Client.Graphics.Audio
             
             // This method does not capture all of the AudioParam's fields, like pitch scale, but realistically you won't need them after
             // they were applied (and it appears that some of them don't have any real functionality rn)
-            public AudioParams GetParameters()
+            public AudioParams GetAudioParams()
             {
                 _checkDisposed();
                 
@@ -555,7 +555,7 @@ namespace Robust.Client.Graphics.Audio
             
             // This method does not capture all of the AudioParam's fields, like pitch scale, but realistically you won't need them after
             // they were applied (and it appears that some of them don't have any real functionality rn)
-            public AudioParams GetParameters()
+            public AudioParams GetAudioParams()
             {
                 _checkDisposed();
 

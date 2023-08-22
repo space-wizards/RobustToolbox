@@ -55,7 +55,6 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
         SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
-        SubscribeNetworkEvent<SetAudioParametersMessage>(SetAudioParamsHandler);
 
         _sawmill = _logManager.GetSawmill("audio");
 
@@ -79,49 +78,85 @@ public sealed class AudioSystem : SharedAudioSystem
         _maxRayLength = value;
     }
 
+    private PlayingStream? ResolveStream(uint identifier)
+    {
+        foreach (PlayingStream stream in _playingClydeStreams)
+        {
+            if (stream.NetIdentifier == identifier)
+                return stream;
+        }
+
+        return null;
+    }
+
+    private bool ResolveStream(uint identifier, out PlayingStream stream)
+    {
+        stream = default!;
+        
+        PlayingStream? st = ResolveStream(identifier);
+        if (st == null)
+            return false;
+
+        stream = st;
+        return true;
+    }
+
     #region Event Handlers
     private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
     {
-        var stream = EntityManager.EntityExists(ev.EntityUid)
-            ? (PlayingStream?) Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams, false)
-            : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams, false);
+        if (ResolveStream(ev.Identifier, out var stream))
+        {
+            SetAudioParams(stream, ev.AudioParams);
+        }
+        else
+        {
+            stream = EntityManager.EntityExists(ev.EntityUid)
+                ? (PlayingStream?) Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams, false)
+                : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams, false);
 
-        if (stream != null)
-            stream.NetIdentifier = ev.Identifier;
+            if (stream != null)
+                stream.NetIdentifier = ev.Identifier;
+        }
     }
 
     private void PlayAudioGlobalHandler(PlayAudioGlobalMessage ev)
     {
-        var stream = (PlayingStream?) Play(ev.FileName, ev.AudioParams, false);
-        if (stream != null)
-            stream.NetIdentifier = ev.Identifier;
+        if (ResolveStream(ev.Identifier, out var stream))
+        {
+            SetAudioParams(stream, ev.AudioParams);
+        }
+        else
+        {
+            stream = (PlayingStream?) Play(ev.FileName, ev.AudioParams, false);
+            if (stream != null)
+                stream.NetIdentifier = ev.Identifier;
+        }
     }
 
     private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
     {
-        var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams, false);
-        if (stream != null)
-            stream.NetIdentifier = ev.Identifier;
+        if (ResolveStream(ev.Identifier, out var stream))
+        {
+            SetAudioParams(stream, ev.AudioParams);
+        }
+        else
+        {
+            stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams,
+                false);
+            if (stream != null)
+                stream.NetIdentifier = ev.Identifier;
+        }
     }
 
     private void StopAudioMessageHandler(StopAudioMessageClient ev)
     {
-        var stream = _playingClydeStreams.Find(p => p.NetIdentifier == ev.Identifier);
+        var stream = ResolveStream(ev.Identifier);
         if (stream == null)
             return;
 
         stream.Done = true;
         stream.Source.Dispose();
         _playingClydeStreams.Remove(stream);
-    }
-    
-    private void SetAudioParamsHandler(SetAudioParametersMessage ev)
-    {
-        PlayingStream? stream = _playingClydeStreams.Find(p => p.NetIdentifier == ev.Identifier);
-        if (stream == null)
-            return;
-        
-        SetAudioParams(stream, ev.AudioParams);
     }
     #endregion
 
@@ -330,9 +365,7 @@ public sealed class AudioSystem : SharedAudioSystem
         source.StartPlaying();
         var playing = new PlayingStream
         {
-            AudioSystem = this,
             Source = source,
-            Stream = stream,
             Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
             MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
             ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
@@ -530,9 +563,8 @@ public sealed class AudioSystem : SharedAudioSystem
 
     public sealed class PlayingStream : IPlayingAudioStream
     {
-        public AudioSystem AudioSystem = default!;
         public uint? NetIdentifier;
-        public AudioStream Stream = default!;
+        public AudioStream? SourceStream => Source.SourceStream;
         public IClydeAudioSource Source = default!;
         public EntityUid? TrackingEntity;
         public EntityCoordinates? TrackingCoordinates;
@@ -575,16 +607,6 @@ public sealed class AudioSystem : SharedAudioSystem
         public void Stop()
         {
             Source.StopPlaying();
-        }
-        
-        public void SetAudioParams(AudioParams parameters)
-        {
-            AudioSystem.SetAudioParams(this, parameters);
-        }
-
-        public AudioParams GetAudioParams()
-        {
-            return AudioParams.Default;
         }
     }
 
@@ -645,10 +667,10 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override void SetAudioParams(IPlayingAudioStream stream, AudioParams parameters)
     {
-        if (!(stream is PlayingStream clientStream))
+        if (!(stream is PlayingStream clientStream) || clientStream.SourceStream == null)
             return;
         
-        ApplyAudioParams(parameters, clientStream.Source, clientStream.Stream);
+        ApplyAudioParams(parameters, clientStream.Source, clientStream.SourceStream);
     }
 
     /// <inheritdoc />
@@ -657,6 +679,8 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!(stream is PlayingStream clientStream))
             return AudioParams.Default;
 
-        return clientStream.GetAudioParams();
+        return clientStream.Source.GetAudioParams();
     }
+    
+    
 }

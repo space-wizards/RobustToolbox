@@ -17,16 +17,12 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private uint _streamIndex;
 
-    public sealed class AudioSourceServer : IPlayingAudioStream
+    private sealed class AudioSourceServer : IPlayingAudioStream
     {
         public readonly uint Id;
         public readonly IEnumerable<ICommonSession>? Sessions;
-        public AudioParams Parameters
-        {
-            get;
-            private set;
-        }
-        
+        public AudioParams Parameters;
+
         private readonly AudioSystem _audioSystem;
 
         internal AudioSourceServer(
@@ -40,17 +36,6 @@ public sealed class AudioSystem : SharedAudioSystem
             Id = identifier;
             Parameters = parameters;
             Sessions = sessions;
-        }
-
-        public void SetAudioParams(AudioParams parameters)
-        {
-            _audioSystem.SetAudioParams(this, parameters);
-            Parameters = parameters;
-        }
-
-        public AudioParams GetAudioParams()
-        {
-            return Parameters;
         }
 
         public void Stop()
@@ -206,13 +191,15 @@ public sealed class AudioSystem : SharedAudioSystem
         return null;
     }
 
+    
     /// <inheritdoc />
     public override void SetAudioParams(IPlayingAudioStream stream, AudioParams parameters)
     {
         if (!(stream is AudioSourceServer source) || source.Sessions == null)
             return;
 
-        SetAudioParametersMessage msg = new SetAudioParametersMessage();
+        PlayAudioGlobalMessage msg = new PlayAudioGlobalMessage();
+
         msg.Identifier = source.Id;
         msg.AudioParams = parameters;
         

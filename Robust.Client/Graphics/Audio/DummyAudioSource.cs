@@ -102,7 +102,7 @@ namespace Robust.Client.Graphics.Audio
             // Nada.
         }
 
-        public AudioParams GetParameters()
+        public AudioParams GetAudioParams()
         {
             return AudioParams.Default;
         }

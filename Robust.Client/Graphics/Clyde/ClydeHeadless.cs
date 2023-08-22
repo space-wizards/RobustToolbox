@@ -373,7 +373,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public AudioParams GetParameters()
+            public AudioParams GetAudioParams()
             {
                 return AudioParams.Default;
             }

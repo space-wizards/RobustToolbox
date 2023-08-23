@@ -7,6 +7,7 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ internal sealed class HubManager
     private ISawmill _sawmill = default!;
 
     private string? _advertiseUrl;
-    private string[] _hubUrls = Array.Empty<string>();
+    private IReadOnlyList<string> _hubUrls = Array.Empty<string>();
     private TimeSpan _nextPing;
     private TimeSpan _interval;
 
@@ -39,14 +40,10 @@ internal sealed class HubManager
             return;
 
         _cfg.OnValueChanged(CVars.HubAdvertiseInterval, UpdateInterval, true);
-        _cfg.OnValueChanged(CVars.HubUrls, s => {
-            var hubUrls = s.Split(",", StringSplitOptions.RemoveEmptyEntries);
-            for (var i = 0; i < hubUrls.Length; i++)
-            {
-                hubUrls[i] = hubUrls[i].Trim();
-            }
-            _hubUrls = hubUrls;
-        }, true);
+        _cfg.OnValueChanged(CVars.HubUrls, s => _hubUrls = s.Split(",", StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .ToList()
+        , true);
 
         var url = _cfg.GetCVar(CVars.HubServerUrl);
         if (string.IsNullOrEmpty(url))
@@ -119,21 +116,25 @@ internal sealed class HubManager
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorText = await response.Content.ReadAsStringAsync();
-                    _sawmill.Log(
-                        LogLevel.Error,
-                        $"Error status while advertising server: [{response.StatusCode}] {errorText}, to hub: {hubUrl}");
+                    _sawmill.Error("Error status while advertising server: [{StatusCode}] {ErrorText}, to {HubUrl}",
+                        response.StatusCode,
+                        errorText,
+                        hubUrl);
                     return;
                 }
 
                 if (!_firstAdvertisementByHubUrl.ContainsKey(hubUrl))
                 {
-                    _sawmill.Info($"Successfully advertised to hub {hubUrl} with address {_advertiseUrl}");
+                    _sawmill.Info("Successfully advertised to {HubUrl} with address {AdvertiseUrl}",
+                        hubUrl,
+                        _advertiseUrl);
                     _firstAdvertisementByHubUrl.Add(hubUrl, true);
                 }
             }
             catch (Exception e)
             {
-                _sawmill.Log(LogLevel.Error, e, $"Exception while trying to advertise server to hub {hubUrl}");
+                _sawmill.Log(LogLevel.Error, e, "Exception while trying to advertise server to {HubUrl}",
+                    hubUrl);
             }
         }
     }

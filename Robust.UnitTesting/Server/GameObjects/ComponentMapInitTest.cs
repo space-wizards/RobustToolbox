@@ -6,7 +6,7 @@ using Robust.Shared.Map;
 namespace Robust.UnitTesting.Server.GameObjects;
 
 [TestFixture]
-public sealed class ComponentMapInitTest
+public sealed partial class ComponentMapInitTest
 {
     /// <summary>
     /// Asserts whether a component added after an entity has fully initialized has MapInit called.
@@ -52,7 +52,7 @@ public sealed class ComponentMapInitTest
         }
     }
 
-    private sealed class MapInitTestComponent : Component
+    private sealed partial class MapInitTestComponent : Component
     {
         public int Count = 0;
     }

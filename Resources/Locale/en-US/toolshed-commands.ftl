@@ -382,3 +382,37 @@ command-description-cbrt =
     Computes the cube root of its input.
 command-description-root =
     Computes the Nth root of its input.
+command-description-hypot =
+    Computes the hypotenuse of a triangle with the given sides A and B.
+command-description-sin =
+    Computes the sine of the input.
+command-description-sinpi =
+    Computes the sine of the input multiplied by pi.
+command-description-asin =
+    Computes the arcsine of the input.
+command-description-asinpi =
+    Computes the arcsine of the input multiplied by pi.
+command-description-cos =
+    Computes the cosine of the input.
+command-description-cospi =
+    Computes the cosine of the input multiplied by pi.
+command-description-acos =
+    Computes the arcosine of the input.
+command-description-acospi =
+    Computes the arcosine of the input multiplied by pi.
+command-description-tan =
+    Computes the tangent of the input.
+command-description-tanpi =
+    Computes the tangent of the input multiplied by pi.
+command-description-atan =
+    Computes the arctangent of the input.
+command-description-atanpi =
+    Computes the arctangent of the input multiplied by pi.
+command-description-iterate =
+    Iterates the given function over the input N times, returning a list of results.
+    Think of this like successively applying the function to a value, tracking all the intermediate values.
+command-description-pick =
+    Picks a random value from the input.
+command-description-tee =
+    Tees the input into the given block, ignoring the block's result.
+    This essentially lets you have a branch in your code to do multiple operations on one value.

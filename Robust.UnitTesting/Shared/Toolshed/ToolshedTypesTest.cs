@@ -7,8 +7,9 @@ using NUnit.Framework;
 namespace Robust.UnitTesting.Shared.Toolshed;
 
 [TestFixture]
-public sealed class ToolshedTypesTest : ToolshedTest
+public sealed partial class ToolshedTypesTest : ToolshedTest
 {
+    // Assert that T -> IEnumerable<T> holds.
     [Test]
     public async Task EnumerableAutoCast()
     {
@@ -18,9 +19,10 @@ public sealed class ToolshedTypesTest : ToolshedTest
                 Toolshed.GetTransformer(typeof(int), typeof(IEnumerable<int>), Expression.Constant(1))
             )
             .Compile();
-        Assert.That(l(), NUnit.Framework.Is.Not.Empty);
+        Assert.That(l(), Is.Not.Empty);
     }
 
+    // Assert that T -> IEnumerable<T'> where T: T' holds.
     [Test]
     public async Task EnumerableSubtypeAutocast()
     {
@@ -30,9 +32,10 @@ public sealed class ToolshedTypesTest : ToolshedTest
                     Toolshed.GetTransformer(typeof(int), typeof(IEnumerable<IComparable>), Expression.Constant(1))
                 )
             .Compile();
-        Assert.That(l(), NUnit.Framework.Is.Not.Empty);
+        Assert.That(l(), Is.Not.Empty);
     }
 
+    // Assert that T -> object.
     [Test]
     public async Task CastToObject()
     {
@@ -42,6 +45,6 @@ public sealed class ToolshedTypesTest : ToolshedTest
                 Toolshed.GetTransformer(typeof(int), typeof(object), Expression.Constant(1))
             )
             .Compile();
-        Assert.That(l(), NUnit.Framework.Is.TypeOf<int>());
+        Assert.That(l(), Is.TypeOf<int>());
     }
 }

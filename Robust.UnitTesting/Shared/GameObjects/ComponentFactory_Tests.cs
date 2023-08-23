@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture]
     [TestOf(typeof(ComponentFactory))]
-    public sealed class ComponentFactory_Tests : RobustUnitTest
+    public sealed partial class ComponentFactory_Tests : RobustUnitTest
     {
         private const string TestComponentName = "A";
         private const string LowercaseTestComponentName = "a";
@@ -109,7 +109,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [ComponentProtoName(TestComponentName)]
-        private sealed class TestComponent : Component
+        private sealed partial class TestComponent : Component
         {
         }
     }

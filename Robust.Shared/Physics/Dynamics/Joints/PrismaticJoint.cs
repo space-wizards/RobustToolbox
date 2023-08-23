@@ -119,7 +119,7 @@ internal sealed class PrismaticJointState : JointState
 /// can violate the constraint slightly. The joint translation is zero
 /// when the local anchor points coincide in world space.
 /// </summary>
-public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
+public sealed partial class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
 {
     /// <summary>
     /// The local translation unit axis in bodyA.

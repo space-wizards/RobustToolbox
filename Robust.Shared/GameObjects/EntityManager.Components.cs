@@ -131,7 +131,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var comp in comps)
             {
-                if (comp is { LifeStage: < ComponentLifeStage.Initialized })
+                if (comp is { LifeStage:  ComponentLifeStage.Added })
                     comp.LifeInitialize(this, CompIdx.Index(comp.GetType()));
             }
 
@@ -490,7 +490,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (component.Running)
+            if (component.LifeStage >= ComponentLifeStage.Initialized && component.LifeStage <= ComponentLifeStage.Running)
                 component.LifeShutdown(this);
 #if EXCEPTION_TOLERANCE
             }

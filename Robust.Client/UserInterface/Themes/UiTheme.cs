@@ -27,7 +27,7 @@ public sealed class UITheme : IPrototype
 
     [ViewVariables]
     [IdDataField]
-    public string ID { get; } = default!;
+    public string ID { get; private set; } = default!;
 
     [DataField("path")]
     private ResPath _path;
@@ -70,7 +70,7 @@ public sealed class UITheme : IPrototype
 
         if (!texturePath.EndsWith(".png"))
             texturePath = $"{texturePath}.png";
-        
+
         var resPath = new ResPath(texturePath);
         if (resPath.IsRelative)
         {

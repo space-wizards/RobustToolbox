@@ -79,28 +79,33 @@ namespace Robust.Server.GameObjects
 
         private protected override EntityUid CreateEntity(string? prototypeName, IEntityLoadContext? context = null)
         {
-            var entity = base.CreateEntity(prototypeName, context);
+            if (prototypeName == null)
+                return base.CreateEntity(prototypeName, uid, context);
 
-            if (!string.IsNullOrWhiteSpace(prototypeName))
-            {
-                var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
+            if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
+                throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-                // At this point in time, all data configure on the entity *should* be purely from the prototype.
-                // As such, we can reset the modified ticks to Zero,
-                // which indicates "not different from client's own deserialization".
-                // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var (netId, component) in GetNetComponents(entity))
-                {
-                    // Make sure to ONLY get components that are defined in the prototype.
-                    // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
-                    // And those aren't guaranteed to exist on the client, so don't clear them.
-                    var compName = ComponentFactory.GetComponentName(component.GetType());
-                    if (prototype.Components.ContainsKey(compName))
-                        component.ClearTicks();
-                }
-            }
+            var entity = base.CreateEntity(prototype, uid, context);
 
+            // At this point in time, all data configure on the entity *should* be purely from the prototype.
+            // As such, we can reset the modified ticks to Zero,
+            // which indicates "not different from client's own deserialization".
+            // So the initial data for the component or even the creation doesn't have to be sent over the wire.
+            ClearTicks(entity, prototype);
             return entity;
+        }
+
+        private void ClearTicks(EntityUid entity, EntityPrototype prototype)
+        {
+            foreach (var (netId, component) in GetNetComponents(entity))
+            {
+                // Make sure to ONLY get components that are defined in the prototype.
+                // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
+                // And those aren't guaranteed to exist on the client, so don't clear them.
+                var compName = ComponentFactory.GetComponentName(netId);
+                if (prototype.Components.ContainsKey(compName))
+                    component.ClearTicks();
+            }
         }
 
         public override EntityStringRepresentation ToPrettyString(EntityUid uid)

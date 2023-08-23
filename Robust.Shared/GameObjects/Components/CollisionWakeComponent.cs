@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     [RegisterComponent, NetworkedComponent()]
     [Access(typeof(CollisionWakeSystem))]
-    public sealed class CollisionWakeComponent : Component
+    public sealed partial class CollisionWakeComponent : Component
     {
         [DataField("enabled")]
         public bool Enabled = true;

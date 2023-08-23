@@ -558,3 +558,6 @@ cmd-vfs_ls-help = Usage: vfs_list <path>
 
 cmd-vfs_ls-err-args = Need exactly 1 argument.
 cmd-vfs_ls-hint-path = <path>
+
+cmd-reloadtiletextures-desc = Reloads the tile texture atlas to allow hot reloading tile sprites
+cmd-reloadtiletextures-help = Usage: reloadtiletextures

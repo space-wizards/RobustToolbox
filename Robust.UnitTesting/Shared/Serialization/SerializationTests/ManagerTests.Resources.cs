@@ -233,7 +233,7 @@ public sealed partial class ManagerTests : ISerializationContext
     private interface IDataDefBaseInterface{}
 
     [DataDefinition]
-    private struct DataDefStruct : IDataDefBaseInterface
+    private partial struct DataDefStruct : IDataDefBaseInterface
     {
         [DataField("one")] public string OneValue;
 
@@ -241,7 +241,7 @@ public sealed partial class ManagerTests : ISerializationContext
     }
 
     [DataDefinition]
-    private sealed class DataDefClass : IDataDefBaseInterface
+    private sealed partial class DataDefClass : IDataDefBaseInterface
     {
         [DataField("one")] public string OneValue = string.Empty;
 

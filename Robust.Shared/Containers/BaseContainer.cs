@@ -19,7 +19,7 @@ namespace Robust.Shared.Containers
     /// <summary>
     /// Base container class that all container inherit from.
     /// </summary>
-    public abstract class BaseContainer : IContainer
+    public abstract partial class BaseContainer : IContainer
     {
         /// <inheritdoc />
         [ViewVariables]

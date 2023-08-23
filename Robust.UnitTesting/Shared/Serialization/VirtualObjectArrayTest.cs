@@ -9,17 +9,17 @@ namespace Robust.UnitTesting.Shared.Serialization;
 /// <summary>
 /// Tests that arrays and lists of virtual/abstract objects can be properly serialized and deserialized.
 /// </summary>
-public sealed class VirtualObjectArrayTest : SerializationTest
+public sealed partial class VirtualObjectArrayTest : SerializationTest
 {
     [ImplicitDataDefinitionForInheritors]
-    private abstract class BaseTestDataDef { }
+    private abstract partial class BaseTestDataDef { }
 
-    private sealed class SealedTestDataDef : BaseTestDataDef { }
+    private sealed partial class SealedTestDataDef : BaseTestDataDef { }
 
     [Virtual]
-    private class VirtualTestDataDef : BaseTestDataDef { }
+    private partial class VirtualTestDataDef : BaseTestDataDef { }
 
-    private sealed class ChildTestDef : VirtualTestDataDef { }
+    private sealed partial class ChildTestDef : VirtualTestDataDef { }
 
     [Test]
     public void SerializeVirtualObjectArrayTest()

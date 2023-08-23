@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Player
 {
     public interface IPlayerManager : Shared.Players.ISharedPlayerManager
     {
         new IEnumerable<ICommonSession> Sessions { get; }
+
+        [ViewVariables]
         IReadOnlyDictionary<NetUserId, ICommonSession> SessionsDict { get; }
 
+        [ViewVariables]
         LocalPlayer? LocalPlayer { get; }
 
         /// <summary>

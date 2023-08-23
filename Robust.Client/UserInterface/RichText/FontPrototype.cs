@@ -8,8 +8,8 @@ namespace Robust.Client.UserInterface.RichText;
 public sealed class FontPrototype : IPrototype
 {
     [IdDataField]
-    public string ID { get; } = default!;
+    public string ID { get; private set; } = default!;
 
     [DataField("path", required: true)]
-    public ResPath Path { get; } = default!;
+    public ResPath Path { get; private set; } = default!;
 }

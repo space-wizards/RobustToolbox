@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 150.0.1
+
+### Bugfixes
+
+* Fix some partial datadefs.
+
+
 ## 150.0.0
 
 ### Breaking changes

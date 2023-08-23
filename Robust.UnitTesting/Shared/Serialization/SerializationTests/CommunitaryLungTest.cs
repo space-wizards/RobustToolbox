@@ -65,13 +65,13 @@ public sealed partial class CommunitaryLungTest : SerializationTest
     }
 
     [DataDefinition]
-    private partial class DataDefinition
+    private sealed partial class DataDefinition
     {
         [DataField("dict")] public Dictionary<int, string> Dict;
     }
 
     [DataDefinition]
-    private partial class NullableDataDefinition
+    private sealed partial class NullableDataDefinition
     {
         [DataField("dict")] public Dictionary<int, string>? Dict;
     }

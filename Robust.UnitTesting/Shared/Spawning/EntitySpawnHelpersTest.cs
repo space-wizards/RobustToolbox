@@ -409,10 +409,10 @@ public sealed partial class EntitySpawnHelpersTest : RobustIntegrationTest
     private sealed partial class TestContainer : BaseContainer
     {
         private readonly List<EntityUid> _ents = new();
-        private readonly List<EntityUid> _expected = new();
+        private readonly List<NetEntity> _expected = new();
         public override string ContainerType => nameof(TestContainer);
         public override IReadOnlyList<EntityUid> ContainedEntities => _ents;
-        public override List<EntityUid> ExpectedEntities => _expected;
+        public override List<NetEntity> ExpectedEntities => _expected;
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan) => _ents.Add(toInsert);
         protected override void InternalRemove(EntityUid toRemove, IEntityManager entMan) => _ents.Remove(toRemove);
         public override bool Contains(EntityUid contained) => _ents.Contains(contained);

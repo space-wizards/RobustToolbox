@@ -80,12 +80,12 @@ namespace Robust.Server.GameObjects
         private protected override EntityUid CreateEntity(string? prototypeName, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return base.CreateEntity(prototypeName, uid, context);
+                return base.CreateEntity(prototypeName, context);
 
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            var entity = base.CreateEntity(prototype, uid, context);
+            var entity = base.CreateEntity(prototype, context);
 
             // At this point in time, all data configure on the entity *should* be purely from the prototype.
             // As such, we can reset the modified ticks to Zero,

@@ -108,7 +108,6 @@ internal sealed partial class PvsSystem : EntitySystem
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
     private EntityQuery<TransformComponent> _xformQuery;
-    private EntityQuery<MetaDataComponent> _metaQuery;
 
     public override void Initialize()
     {
@@ -766,8 +765,9 @@ internal sealed partial class PvsSystem : EntitySystem
         var globalRecursiveEnumerator = _entityPvsCollection.GlobalRecursiveOverridesEnumerator;
         while (globalRecursiveEnumerator.MoveNext())
         {
-            var uid = globalRecursiveEnumerator.Current;
-            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, in mQuery, in tQuery, in fromTick,
+            var netEntity = globalRecursiveEnumerator.Current;
+            var uid = ToEntity(netEntity);
+            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
         }
         globalRecursiveEnumerator.Dispose();
@@ -798,7 +798,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var entityUid in expandEvent.RecursiveEntities)
         {
-            RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen, in mQuery, in tQuery, in fromTick,
+            RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen,in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
         }
 
@@ -954,7 +954,9 @@ internal sealed partial class PvsSystem : EntitySystem
         var xform = _xformQuery.GetComponent(uid);
         var parent = xform.ParentUid;
         if (parent.IsValid() && !RecursivelyAddOverride(in parent, lastAcked, lastSent, toSend, lastSeen, in fromTick,
-                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget))
+                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget,
+                in enteredEntityBudget))
+        {
             return false;
         }
 
@@ -966,14 +968,14 @@ internal sealed partial class PvsSystem : EntitySystem
         // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
         // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
         // send the new parents, which may otherwise be delayed because of the PVS budget..
-        if (!toSend.ContainsKey(uid))
+        if (!toSend.ContainsKey(netEntity))
         {
             // TODO PERFORMANCE.
             // ProcessEntry() unnecessarily checks lastSent.ContainsKey() and maybe lastSeen.Contains(). Given that at this
             // point the budgets are just ignored, this should just bypass those checks. But then again 99% of the time this
             // is just the player's own entity + maybe a singularity. So currently not all that performance intensive.
-            var (entered, _) = ProcessEntry(in uid, lastAcked, lastSent, lastSeen, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-            AddToSendSet(in uid, metaQuery.GetComponent(uid), toSend, fromTick, in entered, ref entStateCount);
+            var (entered, _) = ProcessEntry(in netEntity, lastAcked, lastSent, lastSeen, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
+            AddToSendSet(in netEntity, _metaQuery.GetComponent(uid), toSend, fromTick, in entered, ref entStateCount);
         }
 
         if (addChildren)
@@ -1002,12 +1004,14 @@ internal sealed partial class PvsSystem : EntitySystem
             if (!_xformQuery.TryGetComponent(child, out var childXform))
                 continue;
 
-            if (!toSend.ContainsKey(child))
+            var childNetEntity = ToNetEntity(child);
+
+            if (!toSend.ContainsKey(childNetEntity))
             {
-                var (entered, _) = ProcessEntry(in child, lastAcked, lastSent, lastSeen, ref newEntityCount,
+                var (entered, _) = ProcessEntry(in childNetEntity, lastAcked, lastSent, lastSeen, ref newEntityCount,
                     ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-                AddToSendSet(in child, _metaQuery.GetComponent(child), toSend, fromTick, in entered, ref entStateCount);
+                AddToSendSet(in childNetEntity, _metaQuery.GetComponent(child), toSend, fromTick, in entered, ref entStateCount);
             }
 
             RecursivelyAddChildren(childXform, lastAcked, lastSent, toSend, lastSeen, fromTick, ref newEntityCount,
@@ -1015,7 +1019,8 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private (bool Entered, bool ShouldAdd) ProcessEntry(in NetEntity uid,
+    private (bool Entered, bool ShouldAdd) ProcessEntry(
+        in NetEntity netEntity,
         Dictionary<NetEntity, PvsEntityVisibility>? lastAcked,
         Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
         Dictionary<NetEntity, GameTick> lastSeen,
@@ -1118,7 +1123,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
                 if (state.Empty)
                 {
-                    Log.Error($@"{nameof(GetEntityState)} returned an empty state while enumerating entities. 
+                    Log.Error($@"{nameof(GetEntityState)} returned an empty state while enumerating entities.
 Tick: {fromTick}--{_gameTiming.CurTick}
 Entity: {ToPrettyString(uid)}
 Last modified: {md.EntityLastModifiedTick}

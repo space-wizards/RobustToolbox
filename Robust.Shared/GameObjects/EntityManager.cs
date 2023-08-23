@@ -319,7 +319,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, default, overrides);
+            var newEntity = CreateEntity(prototypeName, overrides);
             _xforms.SetCoordinates(newEntity, _xformQuery.GetComponent(newEntity), coordinates, unanchor: false);
             return newEntity;
         }
@@ -586,7 +586,7 @@ namespace Robust.Shared.GameObjects
             if (uid == null)
                 return false;
 
-            return _metaQuery.Resolve(uid.Value, ref metadata) && metadata.EntityPaused;
+            return MetaQuery.Resolve(uid.Value, ref metadata) && metadata.EntityPaused;
         }
 
         public bool Deleted(EntityUid uid)
@@ -683,9 +683,9 @@ namespace Robust.Shared.GameObjects
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            return CreateEntity(prototype, uid, context);
+            return CreateEntity(prototype, context);
         }
-        
+
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>

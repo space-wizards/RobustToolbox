@@ -10,7 +10,9 @@ namespace Robust.Shared.Maths
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
     // ReSharper disable once InconsistentNaming
-    public struct Vector2i : IEquatable<Vector2i>, ISpanFormattable,
+    public struct Vector2i :
+        IEquatable<Vector2i>,
+        ISpanFormattable,
         IAdditionOperators<Vector2i, Vector2i, Vector2i>,
         ISubtractionOperators<Vector2i, Vector2i, Vector2i>,
         IMultiplyOperators<Vector2i, Vector2i, Vector2i>,

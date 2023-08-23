@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
@@ -10,9 +9,9 @@ using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Toolshed.TypeParsers;
+namespace Robust.Shared.Toolshed.TypeParsers.Math;
 
-public abstract class NumberBaseTypeParser<T> : TypeParser<T>
+internal sealed class NumberBaseTypeParser<T> : TypeParser<T>
     where T: INumberBase<T>
 {
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)

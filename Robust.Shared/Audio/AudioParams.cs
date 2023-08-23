@@ -35,48 +35,48 @@ namespace Robust.Shared.Audio
         ///     The DistanceModel to use for this specific source.
         /// </summary>
         [DataField("attenuation")]
-        public Attenuation Attenuation { get; set; } = Default.Attenuation;
+        public Attenuation? Attenuation { get; set; } = Default.Attenuation;
 
         /// <summary>
         ///     Base volume to play the audio at, in dB.
         /// </summary>
         [DataField("volume")]
-        public float Volume { get; set; } = Default.Volume;
+        public float? Volume { get; set; } = Default.Volume;
 
         /// <summary>
         ///     Scale for the audio pitch.
         /// </summary>
         [DataField("pitchscale")]
-        public float PitchScale { get; set; } = Default.PitchScale;
+        public float? PitchScale { get; set; } = Default.PitchScale;
 
         /// <summary>
         ///     Audio bus to play on.
         /// </summary>
         [DataField("busname")]
-        public string BusName { get; set; } = Default.BusName;
+        public string? BusName { get; set; } = Default.BusName;
 
         /// <summary>
         ///     Only applies to positional audio.
         ///     The maximum distance from which the audio is hearable.
         /// </summary>
         [DataField("maxdistance")]
-        public float MaxDistance { get; set; } = Default.MaxDistance;
+        public float? MaxDistance { get; set; } = Default.MaxDistance;
 
         /// <summary>
         ///     Used for distance attenuation calculations. Set to 0f to make a sound exempt from distance attenuation.
         /// </summary>
         [DataField("rolloffFactor")]
-        public float RolloffFactor { get; set; } = Default.RolloffFactor;
+        public float? RolloffFactor { get; set; } = Default.RolloffFactor;
 
         /// <summary>
         ///     Equivalent of the minimum distance to use for an audio source.
         /// </summary>
         [DataField("referenceDistance")]
-        public float ReferenceDistance { get; set; } = Default.ReferenceDistance;
+        public float? ReferenceDistance { get; set; } = Default.ReferenceDistance;
 
-        [DataField("loop")] public bool Loop { get; set; } = Default.Loop;
+        [DataField("loop")] public bool? Loop { get; set; } = Default.Loop;
 
-        [DataField("playoffset")] public float PlayOffsetSeconds { get; set; } = Default.PlayOffsetSeconds;
+        [DataField("playoffset")] public float? PlayOffsetSeconds { get; set; } = Default.PlayOffsetSeconds;
 
         /// <summary>
         ///     If not null, this will randomly modify the pitch scale by adding a number drawn from a normal distribution with this deviation.
@@ -91,23 +91,28 @@ namespace Robust.Shared.Audio
         /// </summary>
         public static readonly AudioParams Default = new(0, 1, "Master", SharedAudioSystem.DefaultSoundRange, 1, 1, false, 0f);
 
+        /// <summary>
+        ///     Audio parameters with all the fields set to null, useful if you want to change only few selected parameters with SetAudioParams()
+        /// </summary>
+        public static readonly AudioParams AllNull = new(null, null, null, null, null, null, null);
+
         // explicit parameterless constructor required so that default values get set properly.
         public AudioParams() { }
 
         public AudioParams(
-            float volume,
-            float pitchScale,
-            string busName,
-            float maxDistance,
-            float refDistance,
-            bool loop,
-            float playOffsetSeconds,
+            float? volume,
+            float? pitchScale,
+            string? busName,
+            float? maxDistance,
+            float? refDistance,
+            bool? loop,
+            float? playOffsetSeconds,
             float? variation = null)
             : this(volume, pitchScale, busName, maxDistance, 1, refDistance, loop, playOffsetSeconds, variation)
         {
         }
 
-        public AudioParams(float volume, float pitchScale, string busName, float maxDistance,float rolloffFactor, float refDistance, bool loop, float playOffsetSeconds, float? variation = null) : this()
+        public AudioParams(float? volume, float? pitchScale, string? busName, float? maxDistance,float? rolloffFactor, float? refDistance, bool? loop, float? playOffsetSeconds, float? variation = null) : this()
         {
             Volume = volume;
             PitchScale = pitchScale;

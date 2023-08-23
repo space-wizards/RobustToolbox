@@ -543,22 +543,28 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!audioParams.HasValue)
             return;
 
-        if (audioParams.Value.Variation.HasValue)
-            source.SetPitch(audioParams.Value.PitchScale
-                            * (float) RandMan.NextGaussian(1, audioParams.Value.Variation.Value));
-        else
-            source.SetPitch(audioParams.Value.PitchScale);
-
-        source.SetVolume(audioParams.Value.Volume);
-        source.SetRolloffFactor(audioParams.Value.RolloffFactor);
-        source.SetMaxDistance(audioParams.Value.MaxDistance);
-        source.SetReferenceDistance(audioParams.Value.ReferenceDistance);
-        source.IsLooping = audioParams.Value.Loop;
+        if (audioParams.Value.PitchScale.HasValue)
+        {
+            if (audioParams.Value.Variation.HasValue)
+                source.SetPitch(audioParams.Value.PitchScale.Value
+                                * (float) RandMan.NextGaussian(1, audioParams.Value.Variation.Value));
+            else
+                source.SetPitch(audioParams.Value.PitchScale.Value);
+        }
+        
+        if(audioParams.Value.Volume.HasValue) source.SetVolume(audioParams.Value.Volume.Value);
+        if(audioParams.Value.RolloffFactor.HasValue) source.SetRolloffFactor(audioParams.Value.RolloffFactor.Value);
+        if(audioParams.Value.MaxDistance.HasValue) source.SetMaxDistance(audioParams.Value.MaxDistance.Value);
+        if(audioParams.Value.ReferenceDistance.HasValue) source.SetReferenceDistance(audioParams.Value.ReferenceDistance.Value);
+        if(audioParams.Value.Loop.HasValue) source.IsLooping = audioParams.Value.Loop.Value;
 
         // TODO clamp the offset inside of SetPlaybackPosition() itself.
-        var offset = audioParams.Value.PlayOffsetSeconds;
-        offset = Math.Clamp(offset, 0f, (float) audio.Length.TotalSeconds);
-        source.SetPlaybackPosition(offset);
+        if (audioParams.Value.PlayOffsetSeconds.HasValue)
+        {
+            var offset = audioParams.Value.PlayOffsetSeconds;
+            offset = Math.Clamp(offset.Value, 0f, (float) audio.Length.TotalSeconds);
+            source.SetPlaybackPosition(offset.Value);
+        }
     }
 
     public sealed class PlayingStream : IPlayingAudioStream

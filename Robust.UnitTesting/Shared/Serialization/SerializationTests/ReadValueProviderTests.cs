@@ -9,7 +9,7 @@ using Robust.Shared.Serialization.Markdown.Value;
 
 namespace Robust.UnitTesting.Shared.Serialization.SerializationTests;
 
-public sealed class ReadValueProviderTests : SerializationTest
+public sealed partial class ReadValueProviderTests : SerializationTest
 {
     //test for: datadefinition (value, mapping), selfserialize
 
@@ -31,7 +31,7 @@ public sealed class ReadValueProviderTests : SerializationTest
     }
 
     [DataDefinition]
-    public sealed class DataDefinitionValueProviderTestDummy : IBaseInterface
+    public sealed partial class DataDefinitionValueProviderTestDummy : IBaseInterface
     {
         [DataField("data")] public string Data = string.Empty;
     }

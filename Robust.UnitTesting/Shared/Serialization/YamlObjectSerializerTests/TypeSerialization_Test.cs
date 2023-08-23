@@ -67,7 +67,7 @@ test:
 
     [SerializedType("testtype1")]
     [DataDefinition]
-    public sealed class TestTypeOne : ITestType
+    public sealed partial class TestTypeOne : ITestType
     {
     }
 }

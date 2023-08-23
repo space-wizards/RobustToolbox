@@ -73,7 +73,7 @@ internal sealed class DistanceJointState : JointState
 /// to remain at a fixed distance from each other. You can view
 /// this as a massless, rigid rod.
 /// </summary>
-public sealed class DistanceJoint : Joint, IEquatable<DistanceJoint>
+public sealed partial class DistanceJoint : Joint, IEquatable<DistanceJoint>
 {
     // Sloth note:
     // Box2D is replacing rope with distance hence this is also a partial port of Box2D

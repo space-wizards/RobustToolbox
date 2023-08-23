@@ -17,7 +17,7 @@ namespace Robust.Shared.Physics
     /// In its own component to decrease physics comp state size significantly.
     /// </remarks>
     [RegisterComponent, NetworkedComponent]
-    public sealed class FixturesComponent : Component
+    public sealed partial class FixturesComponent : Component
     {
         // This is a snowflake component whose main job is making physics states smaller for massive bodies
         // (e.g. grids)
@@ -29,6 +29,6 @@ namespace Robust.Shared.Physics
         [ViewVariables(VVAccess.ReadWrite), DataField("fixtures", customTypeSerializer:typeof(FixtureSerializer))]
         [NeverPushInheritance]
         [Access(typeof(FixtureSystem), Other = AccessPermissions.ReadExecute)] // FIXME Friends
-        public readonly Dictionary<string, Fixture> Fixtures = new();
+        public Dictionary<string, Fixture> Fixtures = new();
     }
 }

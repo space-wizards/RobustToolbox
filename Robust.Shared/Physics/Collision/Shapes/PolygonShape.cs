@@ -36,7 +36,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class PolygonShape : IPhysShape, ISerializationHooks, IEquatable<PolygonShape>, IApproxEquatable<PolygonShape>
+    public sealed partial class PolygonShape : IPhysShape, ISerializationHooks, IEquatable<PolygonShape>, IApproxEquatable<PolygonShape>
     {
         // TODO: Serialize this someday. This probably needs a dedicated shapeserializer that derives vertexcount
         // from the yml nodes just for convenience.

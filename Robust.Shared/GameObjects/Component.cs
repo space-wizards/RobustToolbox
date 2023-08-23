@@ -2,6 +2,8 @@ using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -11,8 +13,7 @@ namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     [Reflect(false)]
-    [ImplicitDataDefinitionForInheritors]
-    public abstract class Component : IComponent
+    public abstract partial class Component : IComponent
     {
         [DataField("netsync")]
         [ViewVariables(VVAccess.ReadWrite)]

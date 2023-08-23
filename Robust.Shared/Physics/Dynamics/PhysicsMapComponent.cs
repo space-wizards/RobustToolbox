@@ -31,7 +31,7 @@ using PhysicsComponent = Robust.Shared.Physics.Components.PhysicsComponent;
 namespace Robust.Shared.Physics.Dynamics;
 
 [RegisterComponent, NetworkedComponent]
-public sealed class PhysicsMapComponent : Component
+public sealed partial class PhysicsMapComponent : Component
 {
     public bool AutoClearForces;
 

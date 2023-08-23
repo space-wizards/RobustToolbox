@@ -4,7 +4,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Reflection;
-using Robust.Shared.Utility;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -177,7 +176,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             }
         }
 
-        private sealed class DummyTwoComponent : Component
+        private sealed partial class DummyTwoComponent : Component
         {
         }
 

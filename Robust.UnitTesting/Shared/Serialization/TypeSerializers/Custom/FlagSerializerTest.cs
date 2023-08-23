@@ -14,7 +14,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom
 {
     [TestFixture]
     [TestOf(typeof(FlagSerializer<>))]
-    public sealed class FlagSerializerTest : SerializationTest
+    public sealed partial class FlagSerializerTest : SerializationTest
     {
         [Test]
         public void SingleFlagTest()
@@ -82,7 +82,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom
         }
 
         [DataDefinition]
-        private sealed class TestDefinition
+        private sealed partial class TestDefinition
         {
             [DataField("flag", customTypeSerializer: typeof(FlagSerializer<TestFlags>))]
             public int Flag { get; set; }

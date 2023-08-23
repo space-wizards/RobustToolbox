@@ -35,7 +35,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Physics.Components;
 
 [RegisterComponent, NetworkedComponent]
-public sealed class PhysicsComponent : Component
+public sealed partial class PhysicsComponent : Component
 {
     /// <summary>
     ///     Has this body been added to an island previously in this tick.

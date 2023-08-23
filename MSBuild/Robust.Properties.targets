@@ -25,4 +25,7 @@
 
   <!-- analyzer -->
   <Import Project="Robust.Analyzers.targets" Condition="'$(SkipRobustAnalyzer)' != 'true'" />
+
+  <!-- serialization generator -->
+  <Import Project="Robust.Serialization.Generator.targets" />
 </Project>

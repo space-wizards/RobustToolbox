@@ -6,6 +6,6 @@ namespace Robust.Client.Physics;
 ///     Simple component used to tag entities that have physics prediction enabled.
 /// </summary>
 [RegisterComponent]
-public sealed class PredictedPhysicsComponent : Component
+public sealed partial class PredictedPhysicsComponent : Component
 {
 }

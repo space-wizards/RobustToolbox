@@ -62,7 +62,6 @@ public class ValueRef<T, TAuto>
 
     public bool LikelyConst => VarName is not null || HasValue;
 
-
     public T? Evaluate(IInvocationContext ctx)
     {
         if (Value is not null && HasValue)
@@ -71,7 +70,15 @@ public class ValueRef<T, TAuto>
         }
         else if (VarName is not null)
         {
-            return (T?)ctx.ReadVar(VarName);
+            var value = ctx.ReadVar(VarName);
+
+            if (value is not T v)
+            {
+                ctx.ReportError(new BadVarTypeError(value?.GetType() ?? typeof(void), typeof(T), VarName));
+                return default;
+            }
+
+            return v;
         }
         else if (InnerBlock is not null)
         {
@@ -92,7 +99,7 @@ public class ValueRef<T, TAuto>
     }
 }
 
-public record struct BadVarTypeError(Type Got, Type Expected, string VarName) : IConError
+public record BadVarTypeError(Type Got, Type Expected, string VarName) : IConError
 {
     public FormattedMessage DescribeInner()
     {

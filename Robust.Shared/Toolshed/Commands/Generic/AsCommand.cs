@@ -3,7 +3,7 @@
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
 [ToolshedCommand]
-internal sealed class AsCommand : ToolshedCommand
+public sealed class AsCommand : ToolshedCommand
 {
     public override Type[] TypeParameterParsers => new[] {typeof(Type)};
 

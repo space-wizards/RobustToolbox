@@ -1,6 +1,6 @@
 ﻿using Robust.Shared.GameObjects;
 
-namespace Robust.Shared.Toolshed.Commands.Entities;
+namespace Robust.Shared.Toolshed.Commands.Values;
 
 [ToolshedCommand]
 internal sealed class EntCommand : ToolshedCommand

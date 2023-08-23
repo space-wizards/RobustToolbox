@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Security;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -39,8 +40,7 @@ public abstract partial class ToolshedCommand
         }
 
         impl = GetConcreteImplementationsInternal(pipedType, typeArguments, subCommand);
-        if (impl.Count == 0 && pipedType is not null && pipedType != typeof(void))
-            impl = GetConcreteImplementationsInternal(typeof(IEnumerable<>).MakeGenericType(pipedType), typeArguments, subCommand);
+
         _concreteImplementations[idx] = impl;
         return impl;
     }
@@ -49,6 +49,7 @@ public abstract partial class ToolshedCommand
         string? subCommand)
     {
         var impls = GetGenericImplementations()
+            .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
             .Where(x =>
             {
                 if (x.ConsoleGetPipedArgument() is { } param)
@@ -62,12 +63,18 @@ public abstract partial class ToolshedCommand
             {
                 if (x.ConsoleGetPipedArgument() is { } param)
                 {
-                    return param.ParameterType.IsGenericType;
+                    if (pipedType!.IsAssignableTo(param.ParameterType))
+                        return 1000; // We want exact match to be preferred!
+
+                    if (param.ParameterType.GetMostGenericPossible() == pipedType!.GetMostGenericPossible())
+                        return 500; // If not, try to prefer the same base type.
+
+                    // Finally, prefer specialized (type exact) implementations.
+                    return param.ParameterType.IsGenericTypeParameter ? 0 : 100;
                 }
 
-                return false;
+                return 0;
             })
-            .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
             .Where(x =>
             {
                 if (x.IsGenericMethodDefinition)
@@ -83,22 +90,31 @@ public abstract partial class ToolshedCommand
             })
             .Select(x =>
             {
-                if (x.IsGenericMethodDefinition)
+                try
                 {
-                    if (x.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>())
+                    if (x.IsGenericMethodDefinition)
                     {
-                        var paramT = x.ConsoleGetPipedArgument()!.ParameterType;
-                        var t = pipedType!.Intersect(paramT);
-                        return x.MakeGenericMethod(typeArguments.Append(t).ToArray());
+                        if (x.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>())
+                        {
+                            var paramT = x.ConsoleGetPipedArgument()!.ParameterType;
+                            var t = pipedType!.Intersect(paramT);
+                            return x.MakeGenericMethod(typeArguments.Append(t).ToArray());
+                        }
+                        else
+                            return x.MakeGenericMethod(typeArguments);
                     }
-                    else
-                        return x.MakeGenericMethod(typeArguments);
+
+                    return x;
+                }
+                catch (ArgumentException)
+                {
+                    // oopsy, toolshed guessed wrong somewhere. Likely due to lack of constraint solver.
+                    return null;
                 }
 
-                return x;
-            }).ToList();
+            });
 
-        return impls;
+        return impls.Where(x => x is not null).Cast<MethodInfo>().ToList();
     }
 
     internal List<MethodInfo> GetGenericImplementations()

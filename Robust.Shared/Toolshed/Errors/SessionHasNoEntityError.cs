@@ -5,7 +5,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Errors;
 
-public record struct SessionHasNoEntityError(ICommonSession Session) : IConError
+public record SessionHasNoEntityError(ICommonSession Session) : IConError
 {
     public FormattedMessage DescribeInner()
     {

@@ -275,7 +275,7 @@ namespace Robust.Client.ViewVariables.Instances
                 removeButton.OnPressed += _ =>
                 {
                     // We send a command to remove the component.
-                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_entity} {componentType.ComponentName}");
+                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_netEntity} {componentType.ComponentName}");
                     PopulateServerComponents();
                 };
                 button.AddChild(removeButton);
@@ -419,7 +419,7 @@ namespace Robust.Client.ViewVariables.Instances
             if (_addComponentServer)
             {
                 // Attempted to add a component to the server entity... We send a command.
-                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_entity} {eventArgs.Entry}");
+                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_netEntity} {eventArgs.Entry}");
                 PopulateServerComponents();
                 _addComponentWindow?.Populate(await GetValidServerComponentsForAdding());
                 return;

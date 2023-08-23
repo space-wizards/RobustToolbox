@@ -54,6 +54,55 @@ END TEMPLATE-->
 *None yet*
 
 
+## 149.0.0
+
+### Breaking changes
+
+* Data definitions must now be partial, their data fields must not be readonly and their data field properties must have a setter.
+
+### Internal
+
+* Copying data definitions through the serialization manager is now faster and consumes less memory.
+
+
+## 148.4.0
+
+### New features
+
+* Add recursive PVS overrides and remove IsOverride()
+
+
+## 148.3.0
+
+### New features
+
+* Happy eyeballs delay can be configured.
+* Added more colors.
+* Allow pre-startup components to be shut down.
+* Added tile texture reload command.
+* Add implementation of Random.Pick(ValueList<T> ..).
+* Add IntegrationInstance fields for common dependencies.
+
+### Bugfixes
+
+* Prevent invalid prototypes from being spawned.
+* Change default value of EntityLastModifiedTick from zero to one.
+* Make DiscordRichPresence icon CVars server-side with replication.
+
+
+## 148.2.0
+
+### New features
+
+* `SpinBox.LineEditControl` exposes the underlying `LineEdit`.
+* Add VV attributes to various fields across overlay and sessions.
+* Add IsPaused to EntityManager to check if an entity is paused.
+
+### Bugfixes
+
+* Fix SetActiveTheme not updating the theme.
+
+
 ## 148.1.0
 
 ### New features

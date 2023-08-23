@@ -11,7 +11,7 @@ namespace Robust.Shared.Containers
     /// Manages containers on an entity.
     /// </summary>
     /// <seealso cref="IContainer" />
-    public interface IContainerManager : IComponent
+    public partial interface IContainerManager : IComponent
     {
         /// <summary>
         /// Makes a new container of the specified type.

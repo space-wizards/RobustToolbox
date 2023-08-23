@@ -16,7 +16,7 @@ namespace Robust.Shared.GameObjects;
 ///     Visualization works client side with derivatives of the <see cref="Robust.Client.GameObjects.VisualizerSystem">VisualizerSystem</see> class and corresponding components.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-public sealed class AppearanceComponent : Component
+public sealed partial class AppearanceComponent : Component
 {
     /// <summary>
     /// Whether or not the appearance needs to be updated.

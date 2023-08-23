@@ -57,7 +57,7 @@ namespace Robust.Shared.GameObjects
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
     [RegisterComponent, NetworkedComponent]
-    public sealed class MetaDataComponent : Component
+    public sealed partial class MetaDataComponent : Component
     {
         [DataField("name")] internal string? _entityName;
         [DataField("desc")] internal string? _entityDescription;
@@ -71,7 +71,7 @@ namespace Robust.Shared.GameObjects
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
-        public GameTick EntityLastModifiedTick { get; internal set; } = GameTick.Zero;
+        public GameTick EntityLastModifiedTick { get; internal set; } = GameTick.First;
 
         /// <summary>
         ///     This is the tick at which the client last applied state data received from the server.

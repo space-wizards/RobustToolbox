@@ -21,7 +21,7 @@ namespace Robust.Client.Graphics
     {
         [ViewVariables]
         [IdDataField]
-        public string ID { get; } = default!;
+        public string ID { get; private set; } = default!;
 
         [ViewVariables] private ShaderKind Kind;
         [ViewVariables] private Dictionary<string, object>? _params;
@@ -95,19 +95,19 @@ namespace Robust.Client.Graphics
         }
 
         [DataField("kind", required: true)]
-        private readonly string _rawKind = default!;
+        private string _rawKind = default!;
 
         [DataField("path")]
-        private readonly ResPath? _path;
+        private ResPath? _path;
 
         [DataField("params")]
-        private readonly Dictionary<string, string>? _paramMapping;
+        private Dictionary<string, string>? _paramMapping;
 
         [DataField("light_mode")]
-        private readonly string? _rawMode;
+        private string? _rawMode;
 
         [DataField("blend_mode")]
-        private readonly string? _rawBlendMode;
+        private string? _rawBlendMode;
 
         void ISerializationHooks.AfterDeserialization()
         {

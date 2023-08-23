@@ -37,7 +37,7 @@ namespace Robust.Shared.Physics.Dynamics
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class Fixture : IEquatable<Fixture>, ISerializationHooks
+    public sealed partial class Fixture : IEquatable<Fixture>, ISerializationHooks
     {
         [ViewVariables]
         [field: NonSerialized]

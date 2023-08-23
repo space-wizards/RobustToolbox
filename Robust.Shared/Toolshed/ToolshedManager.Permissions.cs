@@ -1,4 +1,8 @@
-﻿namespace Robust.Shared.Toolshed;
+﻿#if !CLIENT_SCRIPTING
+using System;
+#endif
+
+namespace Robust.Shared.Toolshed;
 
 public sealed partial class ToolshedManager
 {

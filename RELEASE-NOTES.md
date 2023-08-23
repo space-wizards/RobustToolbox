@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 149.0.1
+
+### Bugfixes
+
+* Fix serialization sharing instances when copying data definitions and not assigning null when the source is null.
+* Fixed resizing a window to be bigger than its set maxsize crashing the client.
+
+
 ## 149.0.0
 
 ### Breaking changes

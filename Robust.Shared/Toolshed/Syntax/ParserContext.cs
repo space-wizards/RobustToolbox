@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
+using Robust.Shared.Collections;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -169,6 +171,61 @@ public sealed partial class ParserContext
 
     public string? GetWord(Func<Rune, bool>? test = null) => MaybeGetWord(true, test);
 
+    public bool TryMatch(Regex match, int max = int.MaxValue)
+    {
+        ValueList<char> chars = new(8);
+        // Encoding buffer.
+        Span<char> encoded = stackalloc char[4];
+
+        do
+        {
+            if (PeekRune() is not { } r)
+                return false;
+            if (max == 0)
+                return false;
+            max--;
+            var len = r.EncodeToUtf16(encoded);
+            for (var i = 0; i < len; i++)
+            {
+                chars.Add(encoded[i]);
+            }
+        } while (!match.IsMatch(chars.Span));
+
+        return true;
+    }
+
+    public bool TryMatch(string match)
+    {
+        ValueList<char> chars = new(8);
+        // Encoding buffer.
+        Span<char> encoded = stackalloc char[4];
+        var index = Index;
+        var max = match.Length;
+        do
+        {
+            if (GetRune() is not { } r)
+            {
+                Index = index; // Restore our position.
+                return false;
+            }
+
+            if (max == 0)
+            {
+                Index = index;
+                return false;
+            }
+
+            max--;
+            var len = r.EncodeToUtf16(encoded);
+            for (var i = 0; i < len; i++)
+            {
+                chars.Add(encoded[i]);
+            }
+        } while (!chars.Span.SequenceEqual(match.AsSpan()));
+
+        return true;
+    }
+
     public ParserRestorePoint Save()
     {
         return new ParserRestorePoint(Index, new(_terminatorStack));
@@ -200,15 +257,19 @@ public sealed partial class ParserContext
             return false;
 
         ConsumeWhitespace();
-        var term = PeekWord(IsTerminator);
-        return term == _terminatorStack.Peek();
+        var save = Save();
+        var match = TryMatch(_terminatorStack.Peek());
+        Restore(save);
+        return match;
     }
 
     public bool EatTerminator()
     {
-        if (PeekTerminated())
+        if (_terminatorStack.Count == 0)
+            return false;
+
+        if (TryMatch(_terminatorStack.Peek()))
         {
-            GetWord(IsTerminator);
             _terminatorStack.Pop();
             return true;
         }

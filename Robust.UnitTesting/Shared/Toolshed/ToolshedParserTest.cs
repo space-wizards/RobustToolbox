@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
+using Robust.Shared.Toolshed.TypeParsers.Math;
 
 namespace Robust.UnitTesting.Shared.Toolshed;
 
@@ -104,6 +105,27 @@ public sealed partial class ToolshedParserTest : ToolshedTest
         {
             ParseCommand("val Angle 3.14159");
             ParseCommand("val Angle 180deg");
+        });
+    }
+
+    [Test]
+    public async Task Vector2ParseTest()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            ParseCommand("val Vector2 [1, 1]");
+            ParseCommand("val Vector2 [-1, 1]");
+            ParseCommand("val Vector2 [ 1  , 1    ]");
+            ParseCommand("val Vector2 [ -1, 1 ]");
+
+            ExpectError<ExpectedOpenBrace>();
+            ParseCommand("val Vector2 1, 1");
+
+            ExpectError<ExpectedCloseBrace>();
+            ParseCommand("val Vector2 [1, 1");
+
+            ExpectError<UnexpectedCloseBrace>();
+            ParseCommand("val Vector2 [1]");
         });
     }
 }

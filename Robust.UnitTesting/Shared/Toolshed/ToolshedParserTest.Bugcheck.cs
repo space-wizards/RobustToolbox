@@ -42,9 +42,31 @@ public sealed partial class ToolshedParserTest
             ParseCommand("val Color 180deg");
         });
     }
+
+    // Terminator parsing would try to eat an entire word instead of only the terminator.
+    // This was fixed with the introduction of TryMatch.
+    [Test, RelatesTo(nameof(ParserContext.EatTerminator)), RelatesTo(nameof(ParserContext.TryMatch))]
+    public async Task Bug_TerminatorSpacing_08_23_2023()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            ParseCommand("f 100 iota map {iota sum emplace {f 2 pow $value}}");
+        });
+    }
 }
 
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 internal sealed class RelatesToAttribute<_> : Attribute
 {
+}
 
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+internal sealed class RelatesToAttribute : Attribute
+{
+    public string FunctionName;
+
+    public RelatesToAttribute(string functionName)
+    {
+        FunctionName = functionName;
+    }
 }

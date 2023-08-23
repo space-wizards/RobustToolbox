@@ -10,7 +10,7 @@ using Timer = Robust.Shared.Timing.Timer;
 namespace Robust.Shared.GameObjects
 {
     [RegisterComponent, Obsolete("Use a system update loop instead")]
-    public sealed class TimerComponent : Component
+    public sealed partial class TimerComponent : Component
     {
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 

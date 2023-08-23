@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
-    public sealed class PropertyAndFieldDefinitionTest : SerializationTest
+    public sealed partial class PropertyAndFieldDefinitionTest : SerializationTest
     {
         private const string GetOnlyPropertyName = "GetOnlyProperty";
         private const string GetOnlyPropertyFieldTargetedName = "GetOnlyPropertyFieldTargeted";
@@ -65,7 +65,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var propertyInfo = new SpecificPropertyInfo(property!);
             Assert.NotNull(propertyInfo.GetAttribute<DataFieldAttribute>());
-            Assert.NotNull(propertyInfo.GetBackingField()!.GetAttribute<AlwaysPushInheritanceAttribute>());
+            Assert.NotNull(propertyInfo.GetAttribute<AlwaysPushInheritanceAttribute>());
 
             // We check for the property info properly finding field targeted attributes as
             // well, otherwise we run the risk of the data field being targeted to the
@@ -92,8 +92,8 @@ namespace Robust.UnitTesting.Shared.Serialization
             propertyInfo = new SpecificPropertyInfo(property!);
 
             // Data field is targeted to the backing field
-            Assert.NotNull(propertyInfo.GetBackingField()!.GetAttribute<DataFieldAttribute>());
-            Assert.Null(propertyInfo.GetAttribute<DataFieldAttribute>());
+            Assert.NotNull(propertyInfo.GetAttribute<DataFieldAttribute>());
+            Assert.Null(propertyInfo.GetBackingField()!.GetAttribute<DataFieldAttribute>());
             Assert.NotNull(propertyInfo.GetAttribute<DataFieldAttribute>(true));
 
             // NeverPushInheritanceAttribute is targeted to the property
@@ -101,7 +101,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.Null(propertyInfo.GetBackingField()!.GetAttribute<NeverPushInheritanceAttribute>());
             Assert.NotNull(propertyInfo.GetAttribute<NeverPushInheritanceAttribute>(true));
 
-            var neverPushDataField = propertyInfo.GetBackingField()!.GetAttribute<DataFieldAttribute>();
+            var neverPushDataField = propertyInfo.GetAttribute<DataFieldAttribute>();
             propertyDefinition =
                 dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(neverPushDataField));
             inheritanceBehaviour = propertyDefinition.InheritanceBehavior;
@@ -111,13 +111,13 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         [Robust.Shared.Serialization.Manager.Attributes.DataDefinition]
-        public sealed class PropertyAndFieldDefinitionTestDefinition
+        public sealed partial class PropertyAndFieldDefinitionTestDefinition
         {
             [DataField(GetOnlyPropertyName)]
-            public int GetOnlyProperty { get; }
+            public int GetOnlyProperty { get; private set; }
 
-            [field: DataField(GetOnlyPropertyFieldTargetedName)]
-            public int GetOnlyPropertyFieldTargeted { get; }
+            [DataField(GetOnlyPropertyFieldTargetedName)]
+            public int GetOnlyPropertyFieldTargeted { get; private set; }
 
             [DataField(GetAndSetPropertyName)]
             public int GetAndSetProperty { get; set; }
@@ -127,12 +127,12 @@ namespace Robust.UnitTesting.Shared.Serialization
             public int Field;
 
             [DataField(GetOnlyPropertyWithOtherAttributeFieldTargetedName)]
-            [field: AlwaysPushInheritance]
-            public int GetOnlyPropertyWithOtherAttributeFieldTargeted { get; }
+            [AlwaysPushInheritance]
+            public int GetOnlyPropertyWithOtherAttributeFieldTargeted { get; private set; }
 
-            [field: DataField(GetOnlyPropertyFieldTargetedAndOtherAttributeName)]
+            [DataField(GetOnlyPropertyFieldTargetedAndOtherAttributeName)]
             [NeverPushInheritance]
-            public int GetOnlyPropertyFieldTargetedAndOtherAttribute { get; }
+            public int GetOnlyPropertyFieldTargetedAndOtherAttribute { get; private set; }
         }
     }
 }

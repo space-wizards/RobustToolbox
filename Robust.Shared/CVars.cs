@@ -283,6 +283,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
 
+        /// <summary>
+        /// When using Happy Eyeballs to try both IPv6 over IPv4, the delay that IPv4 gets to get less priority.
+        /// </summary>
+        public static readonly CVarDef<float> NetHappyEyeballsDelay =
+            CVarDef.Create("net.happy_eyeballs_delay", 0.025f, CVar.CLIENTONLY);
+
         /**
          * SUS
          */
@@ -1189,10 +1195,10 @@ namespace Robust.Shared
             CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
 
         public static readonly CVarDef<string> DiscordRichPresenceMainIconId =
-            CVarDef.Create("discord.rich_main_icon_id", "devstation", CVar.CLIENTONLY);
+            CVarDef.Create("discord.rich_main_icon_id", "devstation", CVar.SERVER | CVar.REPLICATED);
 
         public static readonly CVarDef<string> DiscordRichPresenceSecondIconId =
-            CVarDef.Create("discord.rich_second_icon_id", "logo", CVar.CLIENTONLY);
+            CVarDef.Create("discord.rich_second_icon_id", "logo", CVar.SERVER | CVar.REPLICATED);
 
         /*
          * RES

@@ -156,6 +156,17 @@ namespace Robust.Shared.GameObjects
         /// </exception>
         [Pure]
         string GetComponentName(Type componentType);
+        
+        /// <summary>
+        ///     Gets the name of a component, throwing an exception if it does not exist.
+        /// </summary>
+        /// <param name="netID">The network ID corresponding to the component.</param>
+        /// <returns>The registered name of the component</returns>
+        /// <exception cref="UnknownComponentException">
+        ///     Thrown if no component with id <see cref="netID"/> exists.
+        /// </exception>
+        [Pure]
+        string GetComponentName(ushort netID);
 
         /// <summary>
         ///     Gets the registration belonging to a component, throwing an exception if it does not exist.

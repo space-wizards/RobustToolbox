@@ -318,12 +318,7 @@ namespace Robust.Shared.GameObjects
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
             var newEntity = CreateEntity(prototypeName, default, overrides);
-
-            if (coordinates.IsValid(this))
-            {
-                _xforms.SetCoordinates(newEntity, _xformQuery.GetComponent(newEntity), coordinates, unanchor: false);
-            }
-
+            _xforms.SetCoordinates(newEntity, _xformQuery.GetComponent(newEntity), coordinates, unanchor: false);
             return newEntity;
         }
 
@@ -358,77 +353,6 @@ namespace Robust.Shared.GameObjects
             }
 
             return newEntity;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public EntityUid[] SpawnEntities(EntityCoordinates coordinates, params string?[] protoNames)
-        {
-            var ents = new EntityUid[protoNames.Length];
-
-            for (var i = 0; i < protoNames.Length; i++)
-            {
-                ents[i] = SpawnEntity(protoNames[i], coordinates);
-            }
-
-            return ents;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames)
-        {
-            var ents = new EntityUid[protoNames.Length];
-
-            for (var i = 0; i < protoNames.Length; i++)
-            {
-                ents[i] = SpawnEntity(protoNames[i], coordinates);
-            }
-
-            return ents;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames)
-        {
-            var ents = new EntityUid[protoNames.Count];
-
-            for (var i = 0; i < protoNames.Count; i++)
-            {
-                ents[i] = SpawnEntity(protoNames[i], coordinates);
-            }
-
-            return ents;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames)
-        {
-            var ents = new EntityUid[protoNames.Count];
-
-            for (var i = 0; i < protoNames.Count; i++)
-            {
-                ents[i] = SpawnEntity(protoNames[i], coordinates);
-            }
-
-            return ents;
-        }
-
-        /// <inheritdoc />
-        public virtual EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        {
-            if (!coordinates.IsValid(this))
-                throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
-
-            var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
-            InitializeAndStartEntity(entity, coordinates.GetMapId(this));
-            return entity;
-        }
-
-        /// <inheritdoc />
-        public virtual EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
-        {
-            var entity = CreateEntityUninitialized(protoName, coordinates, overrides);
-            InitializeAndStartEntity(entity, coordinates.MapId);
-            return entity;
         }
 
         /// <inheritdoc />
@@ -661,6 +585,15 @@ namespace Robust.Shared.GameObjects
             return uid.HasValue && EntityExists(uid.Value);
         }
 
+        /// <inheritdoc />
+        public bool IsPaused(EntityUid? uid, MetaDataComponent? metadata = null)
+        {
+            if (uid == null)
+                return false;
+
+            return _metaQuery.Resolve(uid.Value, ref metadata) && metadata.EntityPaused;
+        }
+
         public bool Deleted(EntityUid uid)
         {
             return !_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
@@ -742,8 +675,17 @@ namespace Robust.Shared.GameObjects
             if (prototypeName == null)
                 return AllocEntity(out _, uid);
 
-            PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype);
+            if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
+                throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
+            return CreateEntity(prototype, uid, context);
+        }
+        
+        /// <summary>
+        ///     Allocates an entity and loads components but does not do initialization.
+        /// </summary>
+        private protected EntityUid CreateEntity(EntityPrototype prototype, EntityUid uid = default, IEntityLoadContext? context = null)
+        {
             var entity = AllocEntity(prototype, out var metadata, uid);
             try
             {
@@ -755,7 +697,7 @@ namespace Robust.Shared.GameObjects
                 // Exception during entity loading.
                 // Need to delete the entity to avoid corrupt state causing crashes later.
                 DeleteEntity(entity);
-                throw new EntityCreationException($"Exception inside CreateEntity with prototype {prototypeName}", e);
+                throw new EntityCreationException($"Exception inside CreateEntity with prototype {prototype.ID}", e);
             }
         }
 

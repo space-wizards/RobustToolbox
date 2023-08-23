@@ -12,20 +12,23 @@ public sealed class PvsOverrideSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly PvsSystem _pvs = default!;
 
     /// <summary>
-    ///     Used to ensure that an entity is always sent to every client. Overrides any client-specific overrides.
+    ///     Used to ensure that an entity is always sent to every client. By default this overrides any client-specific overrides.
     /// </summary>
-    public void AddGlobalOverride(EntityUid uid)
+    /// <param name="removeExistingOverride">Whether or not to supersede existing overrides.</param>
+    /// <param name="recursive">If true, this will also recursively send any children of the given index.</param>
+    public void AddGlobalOverride(EntityUid uid, bool removeExistingOverride = true, bool recursive = false)
     {
-        _pvs.EntityPVSCollection.UpdateIndex(uid, true);
+        _pvs.EntityPVSCollection.AddGlobalOverride(uid, removeExistingOverride, recursive);
     }
 
     /// <summary>
     ///     Used to ensure that an entity is always sent to a specific client. Overrides any global or pre-existing
     ///     client-specific overrides.
     /// </summary>
-    public void AddSessionOverride(EntityUid uid, ICommonSession session)
+    /// <param name="removeExistingOverride">Whether or not to supersede existing overrides.</param>
+    public void AddSessionOverride(EntityUid uid, ICommonSession session,bool removeExistingOverride = true)
     {
-        _pvs.EntityPVSCollection.UpdateIndex(uid, session, true);
+        _pvs.EntityPVSCollection.UpdateIndex(uid, session, removeExistingOverride);
     }
 
     /// <summary>

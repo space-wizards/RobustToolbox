@@ -29,13 +29,10 @@ public sealed class Fixtures_Test
         var ent = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
         var body = entManager.AddComponent<PhysicsComponent>(ent);
         physicsSystem.SetBodyType(ent, BodyType.Dynamic, body: body);
-        var fixture = new Fixture()
-        {
-            ID = "fix1"
-        };
-        fixturesSystem.CreateFixture(ent, fixture);
+        var fixture = new Fixture();
+        fixturesSystem.CreateFixture(ent, "fix1", fixture);
 
-        physicsSystem.SetDensity(ent, fixture, 10f);
+        physicsSystem.SetDensity(ent, "fix1", fixture, 10f);
         Assert.That(fixture.Density, Is.EqualTo(10f));
         Assert.That(body.Mass, Is.EqualTo(10f));
 

@@ -255,7 +255,7 @@ namespace Robust.Shared.Physics.Systems
                         _physicsSystem.WakeBody(other.Entity, force: true, body: otherBody);
                     }
 
-                    _physicsSystem.AddPair(proxyA, other);
+                    _physicsSystem.AddPair(proxyA.FixtureId, other.FixtureId, proxyA, other);
                 }
 
                 _bufferPool.Return(contactBuffer[i]);
@@ -330,13 +330,13 @@ namespace Robust.Shared.Physics.Systems
 
                             while (collidingChunks.MoveNext(out var collidingChunk))
                             {
-                                foreach (var fixture in ourChunk.Fixtures)
+                                foreach (var (ourId, fixture) in ourChunk.Fixtures)
                                 {
                                     for (var i = 0; i < fixture.Shape.ChildCount; i++)
                                     {
                                         var fixAABB = fixture.Shape.ComputeAABB(tuple.transform, i);
 
-                                        foreach (var otherFixture in collidingChunk.Fixtures)
+                                        foreach (var (otherId, otherFixture) in collidingChunk.Fixtures)
                                         {
                                             for (var j = 0; j < otherFixture.Shape.ChildCount; j++)
                                             {
@@ -344,6 +344,7 @@ namespace Robust.Shared.Physics.Systems
 
                                                 if (!fixAABB.Intersects(otherAABB)) continue;
                                                 tuple._physicsSystem.AddPair(tuple.gridUid, uid,
+                                                    ourId, otherId,
                                                     fixture, i,
                                                     otherFixture, j,
                                                     physicsA, physicsB,

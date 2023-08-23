@@ -92,10 +92,10 @@ namespace Robust.Client.GameObjects
                 (int)clientMsg.InputSequence,
                 clientMsg.InputFunctionId,
                 clientMsg.State,
-                ToNetCoordinates(clientMsg.Coordinates),
+                GetNetCoordinates(clientMsg.Coordinates),
                 clientMsg.ScreenCoordinates)
             {
-                Uid = ToNetEntity(clientMsg.Uid)
+                Uid = GetNetEntity(clientMsg.Uid)
             };
 
             DispatchInputCommand(clientMsg, fullMsg);
@@ -166,7 +166,7 @@ namespace Robust.Client.GameObjects
             var funcId = _inputManager.NetworkBindMap.KeyFunctionID(keyFunction);
 
             var message = new FullInputCmdMessage(_timing.CurTick, _timing.TickFraction, funcId, state,
-                ToNetCoordinates(coords), new ScreenCoordinates(0, 0, default), NetEntity.Invalid);
+                GetNetCoordinates(coords), new ScreenCoordinates(0, 0, default), NetEntity.Invalid);
 
             HandleInputCommand(localPlayer.Session, keyFunction, message);
         }

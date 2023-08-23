@@ -81,9 +81,9 @@ public sealed class AudioSystem : SharedAudioSystem
     #region Event Handlers
     private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
     {
-        var uid = ToEntity(ev.NetEntity);
-        var coords = ToCoordinates(ev.Coordinates);
-        var fallback = ToCoordinates(ev.FallbackCoordinates);
+        var uid = GetEntity(ev.NetEntity);
+        var coords = GetCoordinates(ev.Coordinates);
+        var fallback = GetCoordinates(ev.FallbackCoordinates);
 
         var stream = EntityManager.EntityExists(uid)
             ? (PlayingStream?) Play(ev.FileName, uid, fallback, ev.AudioParams, false)
@@ -102,8 +102,8 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
     {
-        var coords = ToCoordinates(ev.Coordinates);
-        var fallback = ToCoordinates(ev.FallbackCoordinates);
+        var coords = GetCoordinates(ev.Coordinates);
+        var fallback = GetCoordinates(ev.FallbackCoordinates);
 
         var stream = (PlayingStream?) Play(ev.FileName, coords, fallback, ev.AudioParams, false);
         if (stream != null)
@@ -390,8 +390,8 @@ public sealed class AudioSystem : SharedAudioSystem
             _replayRecording.RecordReplayMessage(new PlayAudioEntityMessage
             {
                 FileName = filename,
-                NetEntity = ToNetEntity(entity),
-                FallbackCoordinates = ToNetCoordinates(fallbackCoordinates) ?? default,
+                NetEntity = GetNetEntity(entity),
+                FallbackCoordinates = GetNetCoordinates(fallbackCoordinates) ?? default,
                 AudioParams = audioParams ?? AudioParams.Default
             });
         }
@@ -444,8 +444,8 @@ public sealed class AudioSystem : SharedAudioSystem
             _replayRecording.RecordReplayMessage(new PlayAudioPositionalMessage
             {
                 FileName = filename,
-                Coordinates = ToNetCoordinates(coordinates),
-                FallbackCoordinates = ToNetCoordinates(fallbackCoordinates),
+                Coordinates = GetNetCoordinates(coordinates),
+                FallbackCoordinates = GetNetCoordinates(fallbackCoordinates),
                 AudioParams = audioParams ?? AudioParams.Default
             });
         }

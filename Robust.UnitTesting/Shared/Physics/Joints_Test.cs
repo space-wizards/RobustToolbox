@@ -86,8 +86,8 @@ public sealed class Joints_Test
         physicsSystem.SetBodyType(ent1, BodyType.Dynamic, manager: manager1, body: body1);
         physicsSystem.SetBodyType(ent2, BodyType.Dynamic, manager: manager2, body: body2);
 
-        fixtureSystem.CreateFixture(ent1, new Fixture("fix1", new PhysShapeCircle(0.1f), 1, 1, false), manager: manager1, body: body1);
-        fixtureSystem.CreateFixture(ent2, new Fixture("fix1", new PhysShapeCircle(0.1f), 1, 1, false), manager: manager2, body: body2);
+        fixtureSystem.CreateFixture(ent1, "fix1", new Fixture(new PhysShapeCircle(0.1f), 1, 1, false), manager: manager1, body: body1);
+        fixtureSystem.CreateFixture(ent2, "fix1", new Fixture(new PhysShapeCircle(0.1f), 1, 1, false), manager: manager2, body: body2);
 
         var joint = jointSystem.CreateDistanceJoint(ent1, ent2);
         Assert.That(joint.CollideConnected, Is.EqualTo(true));

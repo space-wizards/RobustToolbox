@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using Robust.Shared.Map.Components;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Robust.Shared.Containers;
 
 namespace Robust.Shared.GameObjects;
 
@@ -619,23 +620,19 @@ public abstract partial class SharedTransformSystem
 
     public TransformComponent? GetParent(EntityUid uid)
     {
-        return GetParent(uid, _xformQuery);
-    }
-
-    public TransformComponent? GetParent(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
-    {
-        return GetParent(xformQuery.GetComponent(uid), xformQuery);
+        return GetParent(_xformQuery.GetComponent(uid));
     }
 
     public TransformComponent? GetParent(TransformComponent xform)
     {
-        return GetParent(xform, _xformQuery);
+        if (!xform.ParentUid.IsValid())
+            return null;
+        return _xformQuery.GetComponent(xform.ParentUid);
     }
 
-    public TransformComponent? GetParent(TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+    public EntityUid GetParentUid(EntityUid uid)
     {
-        if (!xform.ParentUid.IsValid()) return null;
-        return xformQuery.GetComponent(xform.ParentUid);
+        return _xformQuery.GetComponent(uid).ParentUid;
     }
 
     public void SetParent(EntityUid uid, EntityUid parent)
@@ -681,7 +678,7 @@ public abstract partial class SharedTransformSystem
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
         DebugTools.Assert(!component.ParentUid.IsValid() || (!Deleted(component.ParentUid) && !EntityManager.IsQueuedForDeletion(component.ParentUid)));
-        var parent = ToNetEntity(component.ParentUid);
+        var parent = GetNetEntity(component.ParentUid);
 
         args.State = new TransformComponentState(
             component.LocalPosition,
@@ -695,7 +692,7 @@ public abstract partial class SharedTransformSystem
     {
         if (args.Current is TransformComponentState newState)
         {
-            var parent = ToEntity(newState.ParentID);
+            var parent = GetEntity(newState.ParentID);
             var newParentId = newState.ParentID;
             var oldAnchored = xform.Anchored;
 
@@ -758,7 +755,7 @@ public abstract partial class SharedTransformSystem
         {
             xform.NextPosition = nextTransform.LocalPosition;
             xform.NextRotation = nextTransform.Rotation;
-            xform.LerpParent = ToEntity(nextTransform.ParentID);
+            xform.LerpParent = GetEntity(nextTransform.ParentID);
             ActivateLerp(xform);
         }
         else
@@ -1375,5 +1372,40 @@ public abstract partial class SharedTransformSystem
         }
         component._gridInitialized = true;
         component._gridUid = uid;
+    }
+
+    /// <summary>
+    /// Attempts to place one entity next to another entity. If the target entity is in a container, this will attempt
+    /// to insert that entity into the same container.
+    /// </summary>
+    public void PlaceNextToOrDrop(EntityUid uid, EntityUid target,
+        TransformComponent? xform = null, TransformComponent? targetXform = null)
+    {
+        if (!_xformQuery.Resolve(target, ref targetXform))
+            return;
+
+        if (!_xformQuery.Resolve(uid, ref xform))
+            return;
+
+        var meta = _metaQuery.GetComponent(target);
+
+        if ((meta.Flags & MetaDataFlags.InContainer) == 0)
+        {
+            if (targetXform.ParentUid.IsValid())
+                SetCoordinates(uid, xform, targetXform.Coordinates);
+            else
+                DetachParentToNull(uid, xform);
+            return;
+        }
+
+        var containerComp = Comp<ContainerManagerComponent>(targetXform.ParentUid);
+        foreach (var container in containerComp.Containers.Values)
+        {
+            if (!container.Contains(target))
+                continue;
+
+            if (!container.Insert(uid, EntityManager, xform))
+                PlaceNextToOrDrop(uid, targetXform.ParentUid, xform);
+        }
     }
 }

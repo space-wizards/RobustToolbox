@@ -36,7 +36,7 @@ public abstract partial class SharedJointSystem
 
     private void OnRelayGetState(EntityUid uid, JointRelayTargetComponent component, ref ComponentGetState args)
     {
-        args.State = new JointRelayComponentState(ToNetEntitySet(component.Relayed));
+        args.State = new JointRelayComponentState(GetNetEntitySet(component.Relayed));
     }
 
     private void OnRelayHandleState(EntityUid uid, JointRelayTargetComponent component, ref ComponentHandleState args)
@@ -45,7 +45,7 @@ public abstract partial class SharedJointSystem
             return;
 
         component.Relayed.Clear();
-        component.Relayed.UnionWith(ToEntitySet(state.Entities));
+        component.Relayed.UnionWith(GetEntitySet(state.Entities));
     }
 
     private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ComponentShutdown args)

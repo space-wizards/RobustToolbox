@@ -9,7 +9,7 @@ namespace Robust.Shared.Map.Components
 {
     [RegisterComponent]
     [NetworkedComponent]
-    public sealed class MapComponent : Component
+    public sealed partial class MapComponent : Component
     {
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("lightingEnabled")]

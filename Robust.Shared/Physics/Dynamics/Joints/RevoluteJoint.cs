@@ -49,7 +49,7 @@ internal sealed class RevoluteJointState : JointState
     }
 }
 
-public sealed class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
+public sealed partial class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
 {
     // Temporary
     private Vector2 _impulse;

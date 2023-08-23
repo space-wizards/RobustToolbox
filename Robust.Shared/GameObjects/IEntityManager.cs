@@ -71,32 +71,6 @@ namespace Robust.Shared.GameObjects
 
         void StartEntity(EntityUid entity);
 
-        EntityUid[] SpawnEntities(EntityCoordinates coordinates, params string?[] protoNames);
-
-        EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames);
-
-        EntityUid[] SpawnEntities(EntityCoordinates coordinates, List<string?> protoNames);
-
-        EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames);
-
-        /// <summary>
-        /// Spawns an initialized entity and sets its local coordinates to the given entity coordinates. Note that this
-        /// means that if you specify coordinates relative to some entity, the newly spawned entity will be a child of
-        /// that entity.
-        /// </summary>
-        /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
-        /// <param name="coordinates"></param>
-        /// <returns>Newly created entity.</returns>
-        EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null);
-
-        /// <summary>
-        /// Spawns an entity at a specific world position.
-        /// </summary>
-        /// <param name="protoName"></param>
-        /// <param name="coordinates"></param>
-        /// <returns></returns>
-        EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null);
-
         /// <summary>
         /// How many entities are currently active.
         /// </summary>
@@ -133,6 +107,11 @@ namespace Robust.Shared.GameObjects
         /// Checks whether an entity with the specified ID exists.
         /// </summary>
         bool EntityExists([NotNullWhen(true)] EntityUid? uid);
+
+        /// <summary>
+        /// Returns true if entity is valid and paused.
+        /// </summary>
+        bool IsPaused([NotNullWhen(true)] EntityUid? uid, MetaDataComponent? metadata = null);
 
         /// <summary>
         /// Checks whether an entity with the specified ID has been deleted or is nonexistent.

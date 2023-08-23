@@ -76,15 +76,15 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             var coords = new EntityCoordinates(grid1, new Vector2(0.5f, 0.5f));
-            player = sEntMan.SpawnEntity("", coords);
+            player = sEntMan.SpawnEntity(null, coords);
 
             // Enable physics
             var physics = sEntMan.AddComponent<PhysicsComponent>(player);
             var xform = sEntMan.GetComponent<TransformComponent>(player);
             var shape = new PolygonShape();
             shape.SetAsBox(0.5f, 0.5f);
-            var fixture = new Fixture("fix1", shape, 0, 0, true);
-            fixturesSystem.CreateFixture(player, fixture, body: physics, xform: xform);
+            var fixture = new Fixture(shape, 0, 0, true);
+            fixturesSystem.CreateFixture(player, "fix1", fixture, body: physics, xform: xform);
             physicsSystem.SetCanCollide(player, true, body: physics);
             physicsSystem.SetBodyType(player, BodyType.Dynamic);
             Assert.That(physics.CanCollide);

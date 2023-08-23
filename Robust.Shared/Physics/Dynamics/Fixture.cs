@@ -31,28 +31,14 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class Fixture : IEquatable<Fixture>, ISerializationHooks
+    public sealed partial class Fixture : IEquatable<Fixture>, ISerializationHooks
     {
-        /// <summary>
-        /// Allows us to reference a specific fixture when we contain multiple
-        /// This is useful for stuff like slippery objects that might have a non-hard layer for mob collisions and
-        /// a hard layer for wall collisions.
-        /// <remarks>
-        /// We can also use this for networking to make cross-referencing fixtures easier.
-        /// Won't call Dirty() by default
-        /// Not a DataField as the component already stores the key and we would have to double it in yaml.
-        /// </remarks>
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public string ID;
-
         [ViewVariables]
         [field: NonSerialized]
         public FixtureProxy[] Proxies { get; set; } = Array.Empty<FixtureProxy>();
@@ -142,7 +128,6 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         internal Fixture(
-            string id,
             IPhysShape shape,
             int collisionLayer,
             int collisionMask,
@@ -151,7 +136,6 @@ namespace Robust.Shared.Physics.Dynamics
             float friction = PhysicsConstants.DefaultContactFriction,
             float restitution = PhysicsConstants.DefaultRestitution)
         {
-            ID = id;
             Shape = shape;
             CollisionLayer = collisionLayer;
             CollisionMask = collisionMask;
@@ -163,7 +147,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         public Fixture()
         {
-            ID = string.Empty;
         }
 
         /// <summary>
@@ -172,7 +155,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// <param name="fixture"></param>
         internal void CopyTo(Fixture fixture)
         {
-            fixture.ID = ID;
             fixture.Shape = Shape;
             fixture.Friction = Friction;
             fixture.Restitution = Restitution;
@@ -187,8 +169,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public bool Equivalent(Fixture other)
         {
-            return ID.Equals(other.ID) &&
-                   Hard == other.Hard &&
+            return Hard == other.Hard &&
                    CollisionLayer == other.CollisionLayer &&
                    CollisionMask == other.CollisionMask &&
                    Shape.Equals(other.Shape) &&

@@ -13,6 +13,7 @@ public abstract partial class SharedPhysicsSystem
 {
     public void SetRadius(
         EntityUid uid,
+        string fixtureId,
         Fixture fixture,
         IPhysShape shape,
         float radius,
@@ -29,8 +30,8 @@ public abstract partial class SharedPhysicsSystem
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase) &&
             TryComp<PhysicsMapComponent>(xform.MapUid, out var physicsMap))
         {
-            _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
-            _lookup.CreateProxies(uid, xform, fixture, body);
+            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase, physicsMap);
+            _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
         _fixtures.FixtureUpdate(uid, manager: manager, body: body);
@@ -40,6 +41,7 @@ public abstract partial class SharedPhysicsSystem
 
     public void SetPositionRadius(
         EntityUid uid,
+        string fixtureId,
         Fixture fixture,
         PhysShapeCircle shape,
         Vector2 position,
@@ -59,8 +61,8 @@ public abstract partial class SharedPhysicsSystem
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase) &&
             TryComp<PhysicsMapComponent>(xform.MapUid, out var physicsMap))
         {
-            _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
-            _lookup.CreateProxies(uid, xform, fixture, body);
+            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase, physicsMap);
+            _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
         Dirty(manager);
@@ -68,6 +70,7 @@ public abstract partial class SharedPhysicsSystem
 
     public void SetPosition(
         EntityUid uid,
+        string fixtureId,
         Fixture fixture,
         PhysShapeCircle circle,
         Vector2 position,
@@ -84,8 +87,8 @@ public abstract partial class SharedPhysicsSystem
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase) &&
             TryComp<PhysicsMapComponent>(xform.MapUid, out var physicsMap))
         {
-            _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
-            _lookup.CreateProxies(uid, xform, fixture, body);
+            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase, physicsMap);
+            _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
         Dirty(manager);
@@ -97,6 +100,7 @@ public abstract partial class SharedPhysicsSystem
 
     public void SetVertices(
         EntityUid uid,
+        string fixtureId,
         Fixture fixture,
         EdgeShape edge,
         Vector2 vertex0,
@@ -119,8 +123,8 @@ public abstract partial class SharedPhysicsSystem
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase) &&
             TryComp<PhysicsMapComponent>(xform.MapUid, out var physicsMap))
         {
-            _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
-            _lookup.CreateProxies(uid, xform, fixture, body);
+            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase, physicsMap);
+            _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
         _fixtures.FixtureUpdate(uid, manager: manager, body: body);
@@ -132,6 +136,7 @@ public abstract partial class SharedPhysicsSystem
 
     public void SetVertices(
         EntityUid uid,
+        string fixtureId,
         Fixture fixture,
         PolygonShape poly,
         Vector2[] vertices,
@@ -148,8 +153,8 @@ public abstract partial class SharedPhysicsSystem
             TryComp<BroadphaseComponent>(xform.Broadphase?.Uid, out var broadphase) &&
             TryComp<PhysicsMapComponent>(xform.MapUid, out var physicsMap))
         {
-            _lookup.DestroyProxies(uid, fixture, xform, broadphase, physicsMap);
-            _lookup.CreateProxies(uid, xform, fixture, body);
+            _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase, physicsMap);
+            _lookup.CreateProxies(uid, fixtureId, fixture, xform, body);
         }
 
         _fixtures.FixtureUpdate(uid, manager: manager, body: body);

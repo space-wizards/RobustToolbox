@@ -3,7 +3,6 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.GameObjects;
 
@@ -36,7 +35,7 @@ public sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
         EntityUid uid1 = default, uid2 = default, uid3 = default;
         DeferredDeletionTestComponent comp1 = default!, comp2 = default!, comp3 = default!;
         IEntityManager entMan = default!;
-        
+
         await server.WaitAssertion(() =>
         {
             var mapMan = IoCManager.Resolve<IMapManager>();
@@ -83,7 +82,7 @@ public sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
             Assert.That(comp2.LifeStage == ComponentLifeStage.Deleted);
             Assert.That(comp3.LifeStage == ComponentLifeStage.Stopped);
         });
-        
+
         await server.WaitRunTicks(1);
         Assert.That(comp3.LifeStage == ComponentLifeStage.Deleted);
         Assert.That(entMan.Deleted(uid3));
@@ -118,11 +117,11 @@ public sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
     }
 
     [RegisterComponent]
-    private sealed class DeferredDeletionTestComponent : Component
+    private sealed partial class DeferredDeletionTestComponent : Component
     {
     }
 
-    private sealed class OtherDeferredDeletionTestComponent : Component
+    private sealed partial class OtherDeferredDeletionTestComponent : Component
     {
     }
 

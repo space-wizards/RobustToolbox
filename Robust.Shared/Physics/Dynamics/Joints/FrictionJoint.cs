@@ -61,7 +61,7 @@ public sealed class FrictionJointState : JointState
 /// Friction joint. This is used for top-down friction.
 /// It provides 2D translational friction and angular friction.
 /// </summary>
-public sealed class FrictionJoint : Joint, IEquatable<FrictionJoint>
+public sealed partial class FrictionJoint : Joint, IEquatable<FrictionJoint>
 {
     // Solver shared
     private Vector2 _linearImpulse;

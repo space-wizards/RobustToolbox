@@ -21,7 +21,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity", -1)]
-    public sealed class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
+    public sealed partial class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
     {
         private ILocalizationManager _loc = default!;
 
@@ -266,7 +266,7 @@ namespace Robust.Shared.Prototypes
         public record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
 
         [DataDefinition]
-        public sealed class EntityPlacementProperties
+        public sealed partial class EntityPlacementProperties
         {
             public bool PlacementOverriden { get; private set; }
             public bool SnapOverriden { get; private set; }

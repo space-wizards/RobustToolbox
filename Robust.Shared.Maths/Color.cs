@@ -1,4 +1,4 @@
-//
+﻿//
 // The Open Toolkit Library License
 //
 // Copyright (c) 2006 - 2008 the Open Toolkit library, except where noted.
@@ -1363,11 +1363,6 @@ namespace Robust.Shared.Maths
         public static Color LavenderBlush => new(255, 240, 245, 255);
 
         /// <summary>
-        ///     Gets the system color with (R, G, B, A) = (238, 130, 238, 255).
-        /// </summary>
-        public static Color LavenderMagenta => new(238, 130, 238, 255);
-
-        /// <summary>
         ///     Gets the system color with (R, G, B, A) = (124, 252, 0, 255).
         /// </summary>
         public static Color LawnGreen => new(124, 252, 0, 255);
@@ -1743,9 +1738,14 @@ namespace Robust.Shared.Maths
         public static Color Turquoise => new(64, 224, 208, 255);
 
         /// <summary>
+        ///     Gets the system color with (R, G, B, A) = (238, 130, 238, 255).
+        /// </summary>
+        public static Color Violet => new(238, 130, 238, 255);
+
+        /// <summary>
         ///     Gets the system color with (R, G, B, A) = (126, 3, 168, 255).
         /// </summary>
-        public static Color Violet => new(126, 3, 168, 255);
+        public static Color BetterViolet => new(126, 3, 168, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 153, 0, 255).
@@ -1786,6 +1786,7 @@ namespace Robust.Shared.Maths
             ["aquamarine"] = Aquamarine,
             ["azure"] = Azure,
             ["beige"] = Beige,
+            ["betterviolet"] = BetterViolet,
             ["bisque"] = Bisque,
             ["black"] = Black,
             ["blanchedalmond"] = BlanchedAlmond,
@@ -1896,9 +1897,11 @@ namespace Robust.Shared.Maths
             ["red"] = Red,
             ["rosybrown"] = RosyBrown,
             ["royalblue"] = RoyalBlue,
+            ["ruber"] = Ruber,
             ["saddlebrown"] = SaddleBrown,
             ["salmon"] = Salmon,
             ["sandybrown"] = SandyBrown,
+            ["seablue"] = SeaBlue,
             ["seagreen"] = SeaGreen,
             ["seashell"] = SeaShell,
             ["sienna"] = Sienna,
@@ -1914,7 +1917,8 @@ namespace Robust.Shared.Maths
             ["thistle"] = Thistle,
             ["tomato"] = Tomato,
             ["turquoise"] = Turquoise,
-            ["violet"] = LavenderMagenta,
+            ["violet"] = Violet,
+            ["vividgamboge"] = VividGamboge,
             ["wheat"] = Wheat,
             ["white"] = White,
             ["whitesmoke"] = WhiteSmoke,

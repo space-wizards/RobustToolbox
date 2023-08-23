@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.Configuration;
@@ -13,11 +12,9 @@ using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -107,6 +104,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<TransformComponent> _xformQuery;
+    private EntityQuery<MetaDataComponent> _metaQuery;
 
     public override void Initialize()
     {
@@ -114,6 +112,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         _eyeQuery = GetEntityQuery<EyeComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
+        _metaQuery = GetEntityQuery<MetaDataComponent>();
 
         _entityPvsCollection = RegisterPVSCollection<EntityUid>();
 
@@ -387,7 +386,7 @@ internal sealed partial class PvsSystem : EntitySystem
             pvsCollection.AddGrid(gridId);
         }
 
-        _entityPvsCollection.UpdateIndex(gridId);
+        _entityPvsCollection.AddGlobalOverride(gridId, true, false);
     }
 
     private void OnMapDestroyed(MapChangedEvent e)
@@ -407,7 +406,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         if(e.Map == MapId.Nullspace) return;
         var uid = _mapManager.GetMapEntityId(e.Map);
-        _entityPvsCollection.UpdateIndex(uid);
+        _entityPvsCollection.AddGlobalOverride(uid, true, false);
     }
 
     #endregion
@@ -749,6 +748,16 @@ internal sealed partial class PvsSystem : EntitySystem
         }
         globalEnumerator.Dispose();
 
+
+        var globalRecursiveEnumerator = _entityPvsCollection.GlobalRecursiveOverridesEnumerator;
+        while (globalRecursiveEnumerator.MoveNext())
+        {
+            var uid = globalRecursiveEnumerator.Current;
+            RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, in mQuery, in tQuery, in fromTick,
+                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
+        }
+        globalRecursiveEnumerator.Dispose();
+
         var localEnumerator = _entityPvsCollection.GetElementsForSession(session);
         while (localEnumerator.MoveNext())
         {
@@ -764,12 +773,18 @@ internal sealed partial class PvsSystem : EntitySystem
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
         }
 
-        var expandEvent = new ExpandPvsEvent(session, new List<EntityUid>());
+        var expandEvent = new ExpandPvsEvent(session);
         RaiseLocalEvent(ref expandEvent);
         foreach (var entityUid in expandEvent.Entities)
         {
             RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen, in mQuery, in tQuery, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+        }
+
+        foreach (var entityUid in expandEvent.RecursiveEntities)
+        {
+            RecursivelyAddOverride(in entityUid, lastAcked, lastSent, visibleEnts, lastSeen, in mQuery, in tQuery, in fromTick,
+                ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
         }
 
         var entityStates = new List<EntityState>(entStateCount);
@@ -898,8 +913,7 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    public bool RecursivelyAddOverride(
-        in EntityUid uid,
+    public bool RecursivelyAddOverride(in EntityUid uid,
         Dictionary<EntityUid, PvsEntityVisibility>? lastAcked,
         Dictionary<EntityUid, PvsEntityVisibility>? lastSent,
         Dictionary<EntityUid, PvsEntityVisibility> toSend,
@@ -911,32 +925,72 @@ internal sealed partial class PvsSystem : EntitySystem
         ref int enteredEntityCount,
         ref int entStateCount,
         in int newEntityBudget,
-        in int enteredEntityBudget)
+        in int enteredEntityBudget,
+        bool addChildren = false)
     {
         //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
-        if (!uid.IsValid()) return false;
+        if (!uid.IsValid())
+            return false;
 
-        var parent = transQuery.GetComponent(uid).ParentUid;
+        var xform = transQuery.GetComponent(uid);
+        var parent = xform.ParentUid;
         if (parent.IsValid() && !RecursivelyAddOverride(in parent, lastAcked, lastSent, toSend, lastSeen, in metaQuery, in transQuery, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget))
             return false;
 
         //did we already get added?
-        if (toSend.ContainsKey(uid)) return true;
         // Note that we check this AFTER adding parents. This is because while this entity may already have been added
         // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
         // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
         // send the new parents, which may otherwise be delayed because of the PVS budget..
+        if (!toSend.ContainsKey(uid))
+        {
+            // TODO PERFORMANCE.
+            // ProcessEntry() unnecessarily checks lastSent.ContainsKey() and maybe lastSeen.Contains(). Given that at this
+            // point the budgets are just ignored, this should just bypass those checks. But then again 99% of the time this
+            // is just the player's own entity + maybe a singularity. So currently not all that performance intensive.
+            var (entered, _) = ProcessEntry(in uid, lastAcked, lastSent, lastSeen, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
+            AddToSendSet(in uid, metaQuery.GetComponent(uid), toSend, fromTick, in entered, ref entStateCount);
+        }
 
-        // TODO PERFORMANCE.
-        // ProcessEntry() unnecessarily checks lastSent.ContainsKey() and maybe lastSeen.Contains(). Given that at this
-        // point the budgets are just ignored, this should just bypass those checks. But then again 99% of the time this
-        // is just the player's own entity + maybe a singularity. So currently not all that performance intensive.
-        var (entered, _) = ProcessEntry(in uid, lastAcked, lastSent, lastSeen, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
+        if (addChildren)
+        {
+            RecursivelyAddChildren(xform, lastAcked, lastSent, toSend, lastSeen, fromTick, ref newEntityCount,
+                ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+        }
 
-        AddToSendSet(in uid, metaQuery.GetComponent(uid), toSend, fromTick, in entered, ref entStateCount);
         return true;
+    }
+
+    private void RecursivelyAddChildren(TransformComponent xform,
+        Dictionary<EntityUid, PvsEntityVisibility>? lastAcked,
+        Dictionary<EntityUid, PvsEntityVisibility>? lastSent,
+        Dictionary<EntityUid, PvsEntityVisibility> toSend,
+        Dictionary<EntityUid, GameTick> lastSeen,
+        in GameTick fromTick,
+        ref int newEntityCount,
+        ref int enteredEntityCount,
+        ref int entStateCount,
+        in int newEntityBudget,
+        in int enteredEntityBudget)
+    {
+        foreach (var child in xform.ChildEntities)
+        {
+            if (!_xformQuery.TryGetComponent(child, out var childXform))
+                continue;
+
+            if (!toSend.ContainsKey(child))
+            {
+                var (entered, _) = ProcessEntry(in child, lastAcked, lastSent, lastSeen, ref newEntityCount,
+                    ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
+
+                AddToSendSet(in child, _metaQuery.GetComponent(child), toSend, fromTick, in entered, ref entStateCount);
+            }
+
+            RecursivelyAddChildren(childXform, lastAcked, lastSent, toSend, lastSeen, fromTick, ref newEntityCount,
+                ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
+        }
     }
 
     private (bool Entered, bool ShouldAdd) ProcessEntry(in EntityUid uid,
@@ -1320,11 +1374,20 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 public readonly struct ExpandPvsEvent
 {
     public readonly IPlayerSession Session;
-    public readonly List<EntityUid> Entities;
 
-    public ExpandPvsEvent(IPlayerSession session, List<EntityUid> entities)
+    /// <summary>
+    /// List of entities that will get added to this session's PVS set.
+    /// </summary>
+    public readonly List<EntityUid> Entities = new();
+
+    /// <summary>
+    /// List of entities that will get added to this session's PVS set. Unlike <see cref="Entities"/> this will also
+    /// recursively add all children of the given entity.
+    /// </summary>
+    public readonly List<EntityUid> RecursiveEntities = new();
+
+    public ExpandPvsEvent(IPlayerSession session)
     {
         Session = session;
-        Entities = entities;
     }
 }

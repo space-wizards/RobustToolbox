@@ -137,10 +137,10 @@ namespace Robust.Server.Console.Commands
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-            fixtures.CreateFixture(groundUid, new Fixture("fix1", horizontal, 2, 2, true), body: ground);
+            fixtures.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 2, 2, true), body: ground);
 
             var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
-            fixtures.CreateFixture(groundUid, new Fixture("fix2", vertical, 2, 2, true), body: ground);
+            fixtures.CreateFixture(groundUid, "fix2", new Fixture(vertical, 2, 2, true), body: ground);
 
             var xs = new[]
             {
@@ -166,7 +166,7 @@ namespace Robust.Server.Console.Commands
                     shape = new PolygonShape();
                     shape.SetAsBox(0.5f, 0.5f);
                     physics.SetFixedRotation(boxUid, false, body: box);
-                    fixtures.CreateFixture(boxUid, new Fixture("fix1", shape, 2, 2, true), body: box);
+                    fixtures.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true), body: box);
 
                     physics.WakeBody(boxUid, body: box);
                 }
@@ -184,10 +184,10 @@ namespace Robust.Server.Console.Commands
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-            fixtures.CreateFixture(groundUid, new Fixture("fix1", horizontal, 2, 2, true), body: ground);
+            fixtures.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 2, 2, true), body: ground);
 
             var vertical = new EdgeShape(new Vector2(20, 0), new Vector2(20, 20));
-            fixtures.CreateFixture(groundUid, new Fixture("fix2", vertical, 2, 2, true), body: ground);
+            fixtures.CreateFixture(groundUid, "fix2", new Fixture(vertical, 2, 2, true), body: ground);
 
             var xs = new[]
             {
@@ -213,7 +213,7 @@ namespace Robust.Server.Console.Commands
                     physics.SetFixedRotation(boxUid, false, body: box);
                     // TODO: Need to detect shape and work out if we need to use fixedrotation
 
-                    fixtures.CreateFixture(boxUid, new Fixture("fix1", shape, 2, 2, true, 5f));
+                    fixtures.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true, 5f));
                     physics.WakeBody(boxUid, body: box);
                 }
             }
@@ -232,7 +232,7 @@ namespace Robust.Server.Console.Commands
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(40, 0), new Vector2(-40, 0));
-            fixtures.CreateFixture(groundUid, new Fixture("fix1", horizontal, 2, 2, true), body: ground);
+            fixtures.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 2, 2, true), body: ground);
             physics.WakeBody(groundUid, body: ground);
 
             // Setup boxes
@@ -255,7 +255,7 @@ namespace Robust.Server.Console.Commands
                     var box = _ent.AddComponent<PhysicsComponent>(boxUid);
                     physics.SetBodyType(boxUid, BodyType.Dynamic, body: box);
 
-                    fixtures.CreateFixture(boxUid, new Fixture("fix1", shape, 2, 2, true, 5f), body: box);
+                    fixtures.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true, 5f), body: box);
                     y += deltaY;
 
                     physics.WakeBody(boxUid, body: box);
@@ -275,7 +275,7 @@ namespace Robust.Server.Console.Commands
             var ground = _ent.AddComponent<PhysicsComponent>(groundUid);
             // Due to lookup changes fixtureless bodies are invalid, so
             var cShape = new PhysShapeCircle(1f);
-            fixtures.CreateFixture(groundUid, new Fixture("fix1", cShape, 0, 0, false));
+            fixtures.CreateFixture(groundUid, "fix1", new Fixture(cShape, 0, 0, false));
 
             var bodyUid = _ent.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
             var body = _ent.AddComponent<PhysicsComponent>(bodyUid);
@@ -288,19 +288,19 @@ namespace Robust.Server.Console.Commands
             // TODO: Box2D just deref, bleh shape structs someday
             var shape1 = new PolygonShape();
             shape1.SetAsBox(0.5f, 10.0f, new Vector2(10.0f, 0.0f), 0.0f);
-            fixtures.CreateFixture(bodyUid, new Fixture("fix1", shape1, 2, 0, true, 20f));
+            fixtures.CreateFixture(bodyUid, "fix1", new Fixture(shape1, 2, 0, true, 20f));
 
             var shape2 = new PolygonShape();
             shape2.SetAsBox(0.5f, 10.0f, new Vector2(-10.0f, 0.0f), 0f);
-            fixtures.CreateFixture(bodyUid, new Fixture("fix2", shape2, 2, 0, true, 20f));
+            fixtures.CreateFixture(bodyUid, "fix2", new Fixture(shape2, 2, 0, true, 20f));
 
             var shape3 = new PolygonShape();
             shape3.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, 10.0f), 0f);
-            fixtures.CreateFixture(bodyUid, new Fixture("fix3", shape3, 2, 0, true, 20f));
+            fixtures.CreateFixture(bodyUid, "fix3", new Fixture(shape3, 2, 0, true, 20f));
 
             var shape4 = new PolygonShape();
             shape4.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, -10.0f), 0f);
-            fixtures.CreateFixture(bodyUid, new Fixture("fix4", shape4, 2, 0, true, 20f));
+            fixtures.CreateFixture(bodyUid, "fix4", new Fixture(shape4, 2, 0, true, 20f));
 
             physics.WakeBody(groundUid, body: ground);
             physics.WakeBody(bodyUid, body: body);
@@ -328,7 +328,7 @@ namespace Robust.Server.Console.Commands
                     physics.SetFixedRotation(boxUid, false, body: box);
                     var shape = new PolygonShape();
                     shape.SetAsBox(0.125f, 0.125f);
-                    fixtures.CreateFixture(boxUid, new Fixture("fix1", shape, 2, 2, true, 0.0625f), body: box);
+                    fixtures.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true, 0.0625f), body: box);
                     physics.WakeBody(boxUid, body: box);
                 });
             }

@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
 {
-    public interface IRenderableComponent : IComponent
+    public partial interface IRenderableComponent : IComponent
     {
         int DrawDepth { get; set; }
         float Bottom { get; }

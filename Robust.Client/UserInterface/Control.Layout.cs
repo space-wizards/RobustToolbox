@@ -715,7 +715,7 @@ namespace Robust.Client.UserInterface
             maxH = MathHelper.Clamp(maxConstraint, minH, maxH);
 
             minConstraint = float.IsNaN(setH) ? 0 : setH;
-            minH = MathHelper.Clamp(maxH, minConstraint, minH);
+            minH = MathHelper.Clamp(minConstraint, minH, maxH);
 
             return new Vector2(
                 Math.Clamp(avail.X, minW, maxW),

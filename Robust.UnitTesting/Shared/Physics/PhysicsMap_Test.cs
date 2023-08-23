@@ -43,7 +43,7 @@ public sealed class PhysicsMap_Test
 
         physSystem.SetBodyType(parent, BodyType.Dynamic);
         physSystem.SetSleepingAllowed(parent, parentBody, false);
-        fixtureSystem.CreateFixture(parent, new Fixture("fix1", new PhysShapeCircle(0.5f), 0, 0, false), body: parentBody);
+        fixtureSystem.CreateFixture(parent, "fix1", new Fixture(new PhysShapeCircle(0.5f), 0, 0, false), body: parentBody);
         physSystem.WakeBody(parent);
         Assert.That(physicsMap.AwakeBodies, Does.Contain(parentBody));
 
@@ -52,7 +52,7 @@ public sealed class PhysicsMap_Test
 
         physSystem.SetBodyType(child, BodyType.Dynamic);
         physSystem.SetSleepingAllowed(child, childBody, false);
-        fixtureSystem.CreateFixture(child, new Fixture("fix1", new PhysShapeCircle(0.5f), 0, 0, false), body: childBody);
+        fixtureSystem.CreateFixture(child, "fix1", new Fixture(new PhysShapeCircle(0.5f), 0, 0, false), body: childBody);
         physSystem.WakeBody(child, body: childBody);
 
         Assert.That(physicsMap.AwakeBodies, Does.Contain(childBody));

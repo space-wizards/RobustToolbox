@@ -222,7 +222,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
         SetValue(target, fieldName, altValue());
         Serialization.CopyTo(source, ref target, notNullableOverride: true);
         Assert.NotNull(target);
-        Assert.Null(GetValue(target!, fieldName));
+        Assert.NotNull(GetValue(target!, fieldName));
     }
 
     [TestCaseSource(nameof(NullableFieldsData))]

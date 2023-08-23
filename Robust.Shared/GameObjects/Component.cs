@@ -13,6 +13,7 @@ namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     [Reflect(false)]
+    [ImplicitDataDefinitionForInheritors]
     public abstract partial class Component : IComponent
     {
         [DataField("netsync")]
@@ -109,7 +110,7 @@ namespace Robust.Shared.GameObjects
                 LifeStage = ComponentLifeStage.Stopped;
                 return;
             }
-            
+
             LifeStage = ComponentLifeStage.Stopping;
             entManager.EventBus.RaiseComponentEvent(this, CompShutdownInstance);
             LifeStage = ComponentLifeStage.Stopped;

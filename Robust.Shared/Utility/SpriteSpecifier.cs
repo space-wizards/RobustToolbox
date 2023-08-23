@@ -41,13 +41,6 @@ namespace Robust.Shared.Utility
             [DataField("state")]
             public string RsiState { get; internal set; }
 
-            // For serialization
-            private Rsi()
-            {
-                RsiPath = default!;
-                RsiState = default!;
-            }
-
             public Rsi(ResPath rsiPath, string rsiState)
             {
                 RsiPath = rsiPath;

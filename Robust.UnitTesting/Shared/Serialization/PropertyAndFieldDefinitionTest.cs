@@ -65,7 +65,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var propertyInfo = new SpecificPropertyInfo(property!);
             Assert.NotNull(propertyInfo.GetAttribute<DataFieldAttribute>());
-            Assert.NotNull(propertyInfo.GetBackingField()!.GetAttribute<AlwaysPushInheritanceAttribute>());
+            Assert.NotNull(propertyInfo.GetAttribute<AlwaysPushInheritanceAttribute>());
 
             // We check for the property info properly finding field targeted attributes as
             // well, otherwise we run the risk of the data field being targeted to the
@@ -92,8 +92,8 @@ namespace Robust.UnitTesting.Shared.Serialization
             propertyInfo = new SpecificPropertyInfo(property!);
 
             // Data field is targeted to the backing field
-            Assert.NotNull(propertyInfo.GetBackingField()!.GetAttribute<DataFieldAttribute>());
-            Assert.Null(propertyInfo.GetAttribute<DataFieldAttribute>());
+            Assert.NotNull(propertyInfo.GetAttribute<DataFieldAttribute>());
+            Assert.Null(propertyInfo.GetBackingField()!.GetAttribute<DataFieldAttribute>());
             Assert.NotNull(propertyInfo.GetAttribute<DataFieldAttribute>(true));
 
             // NeverPushInheritanceAttribute is targeted to the property
@@ -101,7 +101,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.Null(propertyInfo.GetBackingField()!.GetAttribute<NeverPushInheritanceAttribute>());
             Assert.NotNull(propertyInfo.GetAttribute<NeverPushInheritanceAttribute>(true));
 
-            var neverPushDataField = propertyInfo.GetBackingField()!.GetAttribute<DataFieldAttribute>();
+            var neverPushDataField = propertyInfo.GetAttribute<DataFieldAttribute>();
             propertyDefinition =
                 dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(neverPushDataField));
             inheritanceBehaviour = propertyDefinition.InheritanceBehavior;

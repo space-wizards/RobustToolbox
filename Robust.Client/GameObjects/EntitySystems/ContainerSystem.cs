@@ -45,13 +45,13 @@ namespace Robust.Client.GameObjects
 
         protected override void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing)
         {
-            var netEntity = ToNetEntity(missing);
+            var netEntity = GetNetEntity(missing);
             DebugTools.Assert(ExpectedEntities.TryGetValue(netEntity, out var expectedContainer) && expectedContainer == cont && cont.ExpectedEntities.Contains(netEntity));
         }
 
         private void HandleEntityInitialized(EntityUid uid)
         {
-            if (!RemoveExpectedEntity(ToNetEntity(uid), out var container))
+            if (!RemoveExpectedEntity(GetNetEntity(uid), out var container))
                 return;
 
             if (container.Deleted)
@@ -113,7 +113,7 @@ namespace Robust.Client.GameObjects
 
                 // Remove gone entities.
                 var toRemove = new ValueList<EntityUid>();
-                var entityUids = ToEntityArray(nents);
+                var entityUids = GetEntityArray(nents);
 
                 foreach (var entity in container.ContainedEntities)
                 {
@@ -204,7 +204,7 @@ namespace Robust.Client.GameObjects
             if (message.OldParent != null && message.OldParent.Value.IsValid())
                 return;
 
-            if (!RemoveExpectedEntity(ToNetEntity(message.Entity), out var container))
+            if (!RemoveExpectedEntity(GetNetEntity(message.Entity), out var container))
                 return;
 
             if (xform.ParentUid != container.Owner)
@@ -234,7 +234,7 @@ namespace Robust.Client.GameObjects
         public void AddExpectedEntity(NetEntity entity, IContainer container)
         {
 #if DEBUG
-            var uid = ToEntity(entity);
+            var uid = GetEntity(entity);
 
             if (TryComp<MetaDataComponent>(uid, out var meta))
             {

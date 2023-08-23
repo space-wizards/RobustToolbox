@@ -38,7 +38,7 @@ namespace Robust.Shared.Containers
 
                 for (var index = 0; index < container.ContainedEntities.Count; index++)
                 {
-                    uidArr[index] = ToNetEntity(container.ContainedEntities[index]);
+                    uidArr[index] = GetNetEntity(container.ContainedEntities[index]);
                 }
 
                 var sContainer = new ContainerManagerComponent.ContainerManagerComponentState.ContainerData(container.ContainerType, container.ID, container.ShowContents, container.OccludesLight, uidArr);

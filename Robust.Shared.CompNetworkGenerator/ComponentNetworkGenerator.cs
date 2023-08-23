@@ -132,9 +132,9 @@ namespace Robust.Shared.CompNetworkGenerator
         public NetEntity{nullableAnnotation} {name} = default!;");
 
                         getStateInit.Append($@"
-                {name} = ToNetEntity(component.{name}),");
+                {name} = GetNetEntity(component.{name}),");
                         handleStateSetters.Append($@"
-            component.{name} = ToEntity(state.{name});");
+            component.{name} = GetEntity(state.{name});");
 
                         break;
                     case GlobalEntityCoordinatesName:
@@ -143,9 +143,9 @@ namespace Robust.Shared.CompNetworkGenerator
         public NetCoordinates{nullableAnnotation} {name} = default!;");
 
                         getStateInit.Append($@"
-                {name} = ToNetCoordinates(component.{name}),");
+                {name} = GetNetCoordinates(component.{name}),");
                         handleStateSetters.Append($@"
-            component.{name} = ToCoordinates(state.{name});");
+            component.{name} = GetCoordinates(state.{name});");
 
                         break;
                     default:

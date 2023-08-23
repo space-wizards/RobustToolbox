@@ -177,7 +177,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         if (missingEntity != null)
         {
-            var entity = ToEntity(missingEntity)!;
+            var entity = GetEntity(missingEntity)!;
             sb.Append($" Apparently they received an entity without metadata: {ToPrettyString(entity.Value)}.");
 
             if (sessionData.LastSeenAt.TryGetValue(missingEntity.Value, out var lastSeenTick))
@@ -615,7 +615,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             AddToChunkSetRecursively(in netEntity, visMask, tree, chunkSet);
 #if DEBUG
-            var uid = ToEntity(netEntity);
+            var uid = GetEntity(netEntity);
             var xform = _xformQuery.GetComponent(uid);
             if (chunkLocation is MapChunkLocation)
                 DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid);
@@ -653,7 +653,7 @@ internal sealed partial class PvsSystem : EntitySystem
         if (set.ContainsKey(netEntity))
             return true;
 
-        var uid = ToEntity(netEntity);
+        var uid = GetEntity(netEntity);
         var mComp = _metaQuery.GetComponent(uid);
 
         // TODO: Don't need to know about parents so no longer need to use bool for this method.
@@ -738,7 +738,7 @@ internal sealed partial class PvsSystem : EntitySystem
             DebugTools.Assert(cache.Value.tree.RootNodes.Count == 1,
                 $"Root node count is {cache.Value.tree.RootNodes.Count} instead of 1. Session: {session}");
             var nent = cache.Value.tree.RootNodes.FirstOrDefault();
-            var ent = ToEntity(nent);
+            var ent = GetEntity(nent);
             DebugTools.Assert(Exists(ent), $"Root node does not exist. Node {ent}. Session: {session}");
             DebugTools.Assert(HasComp<MapComponent>(ent) || HasComp<MapGridComponent>(ent));
 #endif
@@ -755,7 +755,7 @@ internal sealed partial class PvsSystem : EntitySystem
         while (globalEnumerator.MoveNext())
         {
             var netEntity = globalEnumerator.Current;
-            var uid = ToEntity(netEntity);
+            var uid = GetEntity(netEntity);
             RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
         }
@@ -766,7 +766,7 @@ internal sealed partial class PvsSystem : EntitySystem
         while (globalRecursiveEnumerator.MoveNext())
         {
             var netEntity = globalRecursiveEnumerator.Current;
-            var uid = ToEntity(netEntity);
+            var uid = GetEntity(netEntity);
             RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen, in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget, true);
         }
@@ -776,7 +776,7 @@ internal sealed partial class PvsSystem : EntitySystem
         while (localEnumerator.MoveNext())
         {
             var netEntity = localEnumerator.Current;
-            var uid = ToEntity(netEntity);
+            var uid = GetEntity(netEntity);
             RecursivelyAddOverride(in uid, lastAcked, lastSent, visibleEnts, lastSeen,in fromTick,
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
         }
@@ -806,7 +806,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var (netEntity, visiblity) in visibleEnts)
         {
-            var uid = ToEntity(netEntity);
+            var uid = GetEntity(netEntity);
 
 #if DEBUG
             // if an entity is visible, its parents should always be visible.
@@ -918,7 +918,7 @@ internal sealed partial class PvsSystem : EntitySystem
                 if (!shouldAdd)
                     continue;
 
-                var entity = ToEntity(currentNodeIndex);
+                var entity = GetEntity(currentNodeIndex);
                 AddToSendSet(in currentNodeIndex, _metaQuery.GetComponent(entity), toSend, fromTick, in entered, ref entStateCount);
             }
 
@@ -961,7 +961,7 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         var metadata = _metaQuery.GetComponent(uid);
-        var netEntity = ToNetEntity(uid, metadata);
+        var netEntity = GetNetEntity(uid, metadata);
 
         //did we already get added?
         // Note that we check this AFTER adding parents. This is because while this entity may already have been added
@@ -1004,7 +1004,7 @@ internal sealed partial class PvsSystem : EntitySystem
             if (!_xformQuery.TryGetComponent(child, out var childXform))
                 continue;
 
-            var childNetEntity = ToNetEntity(child);
+            var childNetEntity = GetNetEntity(child);
 
             if (!toSend.ContainsKey(childNetEntity))
             {
@@ -1058,7 +1058,7 @@ internal sealed partial class PvsSystem : EntitySystem
     {
         if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
         {
-            var rep = new EntityStringRepresentation(ToEntity(netEntity), metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
+            var rep = new EntityStringRepresentation(GetEntity(netEntity), metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
             Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Trace:\n{Environment.StackTrace}");
             return;
         }

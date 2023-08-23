@@ -62,7 +62,7 @@ namespace Robust.Client.Physics
             Log.Info($"Received grid fixture debug data");
             if (!_enableDebug) return;
 
-            var grid = ToEntity(ev.Grid);
+            var grid = GetEntity(ev.Grid);
             _nodes[grid] = ev.Nodes;
             _connections[grid] = ev.Connections;
         }

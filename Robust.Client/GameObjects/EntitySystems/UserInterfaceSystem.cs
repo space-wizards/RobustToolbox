@@ -43,7 +43,7 @@ namespace Robust.Client.GameObjects
 
         private void MessageReceived(BoundUIWrapMessage ev)
         {
-            var uid = ToEntity(ev.Entity);
+            var uid = GetEntity(ev.Entity);
 
             if (!TryComp<ClientUserInterfaceComponent>(uid, out var cmp))
                 return;
@@ -54,7 +54,7 @@ namespace Robust.Client.GameObjects
             if(_playerManager.LocalPlayer != null)
                 message.Session = _playerManager.LocalPlayer.Session;
 
-            message.Entity = ToNetEntity(uid);
+            message.Entity = GetNetEntity(uid);
             message.UiKey = uiKey;
 
             // Raise as object so the correct type is used.
@@ -98,7 +98,7 @@ namespace Robust.Client.GameObjects
 
             var playerSession = _playerManager.LocalPlayer?.Session;
             if(playerSession != null)
-                RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, ToNetEntity(uid), playerSession), true);
+                RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, GetNetEntity(uid), playerSession), true);
 
             return true;
         }
@@ -119,14 +119,14 @@ namespace Robust.Client.GameObjects
 
             var playerSession = _playerManager.LocalPlayer?.Session;
             if(playerSession != null)
-                RaiseLocalEvent(uid, new BoundUIClosedEvent(uiKey, ToNetEntity(uid), playerSession), true);
+                RaiseLocalEvent(uid, new BoundUIClosedEvent(uiKey, GetNetEntity(uid), playerSession), true);
 
             return true;
         }
 
         internal void SendUiMessage(BoundUserInterface bui, BoundUserInterfaceMessage msg)
         {
-            RaiseNetworkEvent(new BoundUIWrapMessage(ToNetEntity(bui.Owner), msg, bui.UiKey));
+            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), msg, bui.UiKey));
         }
     }
 }

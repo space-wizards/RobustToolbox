@@ -625,7 +625,7 @@ public abstract partial class SharedTransformSystem
 
     public TransformComponent? GetParent(TransformComponent xform)
     {
-        if (!xform.ParentUid.IsValid()) 
+        if (!xform.ParentUid.IsValid())
             return null;
         return _xformQuery.GetComponent(xform.ParentUid);
     }
@@ -678,7 +678,7 @@ public abstract partial class SharedTransformSystem
     internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
         DebugTools.Assert(!component.ParentUid.IsValid() || (!Deleted(component.ParentUid) && !EntityManager.IsQueuedForDeletion(component.ParentUid)));
-        var parent = ToNetEntity(component.ParentUid);
+        var parent = GetNetEntity(component.ParentUid);
 
         args.State = new TransformComponentState(
             component.LocalPosition,
@@ -692,7 +692,7 @@ public abstract partial class SharedTransformSystem
     {
         if (args.Current is TransformComponentState newState)
         {
-            var parent = ToEntity(newState.ParentID);
+            var parent = GetEntity(newState.ParentID);
             var newParentId = newState.ParentID;
             var oldAnchored = xform.Anchored;
 
@@ -755,7 +755,7 @@ public abstract partial class SharedTransformSystem
         {
             xform.NextPosition = nextTransform.LocalPosition;
             xform.NextRotation = nextTransform.Rotation;
-            xform.LerpParent = ToEntity(nextTransform.ParentID);
+            xform.LerpParent = GetEntity(nextTransform.ParentID);
             ActivateLerp(xform);
         }
         else
@@ -1378,12 +1378,12 @@ public abstract partial class SharedTransformSystem
     /// Attempts to place one entity next to another entity. If the target entity is in a container, this will attempt
     /// to insert that entity into the same container.
     /// </summary>
-    public void PlaceNextToOrDrop(EntityUid uid, EntityUid target, 
+    public void PlaceNextToOrDrop(EntityUid uid, EntityUid target,
         TransformComponent? xform = null, TransformComponent? targetXform = null)
     {
         if (!_xformQuery.Resolve(target, ref targetXform))
             return;
-        
+
         if (!_xformQuery.Resolve(uid, ref xform))
             return;
 

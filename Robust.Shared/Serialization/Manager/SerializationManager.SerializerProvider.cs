@@ -80,11 +80,6 @@ public sealed partial class SerializationManager
             if (copier != null)
             {
                 CopyTo(copier, source, ref target, hookCtx, context);
-
-                // copier.CopyTo(this, source, ref target, DependencyCollection, hookCtx, context);
-                //
-                // if (hasHooks)
-                //     RunAfterHook(target, hookCtx);
                 return true;
             }
 

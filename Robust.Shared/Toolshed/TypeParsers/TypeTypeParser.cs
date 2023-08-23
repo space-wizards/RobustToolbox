@@ -60,7 +60,7 @@ internal sealed class TypeTypeParser : TypeParser<Type>
     public override void PostInject()
     {
         // SANDBOXING: We assume all `public` types on loaded assemblies are safe to reference. INCLUDING ROBUST.SHARED.
-        foreach (var mod in _modLoader.LoadedModules.Append(Assembly.GetExecutingAssembly()))
+        foreach (var mod in _modLoader.LoadedModules.Append(Assembly.GetExecutingAssembly()).Append(Assembly.GetAssembly(typeof(Box2))!))
         {
             foreach (var exported in mod.ExportedTypes)
             {

@@ -70,6 +70,7 @@ public sealed partial class ToolshedManager
                 }
                 catch (SecurityException)
                 {
+                    _log.Info($"Couldn't use {genParser.PrettyName()} to parse {t.PrettyName()}");
                     // Oops, try the other thing.
                 }
             }

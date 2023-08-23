@@ -38,21 +38,6 @@ internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
         error = null;
         parserContext.ConsumeWhitespace();
 
-        var chkpoint = parserContext.Save();
-        var success = _toolshed.TryParse<T>(parserContext, out var value, out error);
-
-        if (error is UnparseableValueError)
-            error = null;
-
-        if (value is not null && success)
-        {
-            result = new ValueRef<T, TAuto>((T)value);
-            error = null;
-            return true;
-        }
-
-        parserContext.Restore(chkpoint);
-
         if (parserContext.EatMatch('$'))
         {
             // We're parsing a variable.
@@ -69,11 +54,26 @@ internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
         }
         else
         {
+            var chkpoint = parserContext.Save();
             if (Block<T>.TryParse(false, parserContext, null, out var block, out _, out error))
             {
                 result = new ValueRef<T, TAuto>(block);
                 return true;
             }
+            parserContext.Restore(chkpoint);
+
+            var success = _toolshed.TryParse<T>(parserContext, out var value, out error);
+
+            if (error is UnparseableValueError)
+                error = null;
+
+            if (value is not null && success)
+            {
+                result = new ValueRef<T, TAuto>((T)value);
+                error = null;
+                return true;
+            }
+
 
             result = null;
             return false;

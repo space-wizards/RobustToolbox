@@ -54,6 +54,44 @@ END TEMPLATE-->
 *None yet*
 
 
+## 150.0.1
+
+### Bugfixes
+
+* Fix some partial datadefs.
+
+
+## 150.0.0
+
+### Breaking changes
+
+* Remove the Id field from Fixtures as the Id is already stored on FixturesComponent.
+
+### New features
+
+* Add AbstractDictionarySerializer for abstract classes.
+* Add many new spawn functions for entities for common operations.
+
+
+## 149.0.1
+
+### Bugfixes
+
+* Fix serialization sharing instances when copying data definitions and not assigning null when the source is null.
+* Fixed resizing a window to be bigger than its set maxsize crashing the client.
+
+
+## 149.0.0
+
+### Breaking changes
+
+* Data definitions must now be partial, their data fields must not be readonly and their data field properties must have a setter.
+
+### Internal
+
+* Copying data definitions through the serialization manager is now faster and consumes less memory.
+
+
 ## 148.4.0
 
 ### New features

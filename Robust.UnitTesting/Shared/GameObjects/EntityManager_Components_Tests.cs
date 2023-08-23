@@ -11,7 +11,7 @@ using Robust.UnitTesting.Server;
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Parallelizable ,TestOf(typeof(EntityManager))]
-    public sealed class EntityManager_Components_Tests
+    public sealed partial class EntityManager_Components_Tests
     {
         private static readonly EntityCoordinates DefaultCoords = new(new EntityUid(1), Vector2.Zero);
 
@@ -293,7 +293,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [NetworkedComponent()]
-        private sealed class DummyComponent : Component, ICompType1, ICompType2
+        private sealed partial class DummyComponent : Component, ICompType1, ICompType2
         {
         }
 

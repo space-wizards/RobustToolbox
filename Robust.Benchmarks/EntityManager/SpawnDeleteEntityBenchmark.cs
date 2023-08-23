@@ -8,7 +8,7 @@ using Robust.UnitTesting.Server;
 namespace Robust.Benchmarks.EntityManager;
 
 [Virtual]
-public class SpawnDeleteEntityBenchmark
+public partial class SpawnDeleteEntityBenchmark
 {
     private ISimulation _simulation = default!;
     private IEntityManager _entityManager = default!;
@@ -56,7 +56,7 @@ public class SpawnDeleteEntityBenchmark
     }
 
     [ComponentProtoName("A")]
-    public sealed class A : Component
+    public sealed partial class A : Component
     {
     }
 }

@@ -125,7 +125,7 @@ internal partial class MapManager
 
             while (enumerator.MoveNext(out var chunk))
             {
-                foreach (var fixture in chunk.Fixtures)
+                foreach (var fixture in chunk.Fixtures.Values)
                 {
                     for (var j = 0; j < fixture.Shape.ChildCount; j++)
                     {

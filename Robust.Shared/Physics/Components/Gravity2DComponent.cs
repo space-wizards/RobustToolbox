@@ -8,7 +8,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Physics.Components;
 
 [RegisterComponent, NetworkedComponent]
-public sealed class Gravity2DComponent : Component
+public sealed partial class Gravity2DComponent : Component
 {
     /// <summary>
     /// Applies side-view gravity to the map.

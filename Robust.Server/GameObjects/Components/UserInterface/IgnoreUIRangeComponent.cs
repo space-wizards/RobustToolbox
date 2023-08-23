@@ -7,6 +7,6 @@ namespace Robust.Server.GameObjects;
 ///     close the UI automatically.
 /// </summary>
 [RegisterComponent]
-public sealed class IgnoreUIRangeComponent : Component
+public sealed partial class IgnoreUIRangeComponent : Component
 {
 }

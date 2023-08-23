@@ -19,6 +19,9 @@ public sealed class CmdCommand : ToolshedCommand
     [CommandImplementation("descloc")]
     public string GetLocStr([PipedArgument] CommandSpec cmd) => cmd.DescLocStr();
 
+    [CommandImplementation("info")]
+    public CommandSpec Info([CommandArgument] CommandSpec cmd) => cmd;
+
 #if CLIENT_SCRIPTING
     [CommandImplementation("getshim")]
     public MethodInfo GetShim([CommandArgument] Block block)

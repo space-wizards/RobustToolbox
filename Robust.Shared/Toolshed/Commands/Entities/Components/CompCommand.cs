@@ -39,6 +39,20 @@ internal sealed class CompCommand : ToolshedCommand
         where T : Component, new()
         => input.Select(Add<T>);
 
+
+    [CommandImplementation("rm")]
+    public EntityUid Rm<T>([PipedArgument] EntityUid input)
+        where T: Component, new()
+    {
+        RemComp<T>(input);
+        return input;
+    }
+
+    [CommandImplementation("rm")]
+    public IEnumerable<EntityUid> Rm<T>([PipedArgument] IEnumerable<EntityUid> input)
+        where T : Component, new()
+        => input.Select(Rm<T>);
+
     [CommandImplementation("ensure")]
     public EntityUid Ensure<T>([PipedArgument] EntityUid input)
         where T: Component, new()

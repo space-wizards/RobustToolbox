@@ -130,6 +130,14 @@ public abstract partial class ToolshedCommand
         => EntityManager.AddComponent<T>(entity);
 
     /// <summary>
+    ///     A shorthand for removing a component from the given entity.
+    /// </summary>
+    [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemComp<T>(EntityUid entity)
+        where T : IComponent
+        => EntityManager.RemoveComponent<T>(entity);
+
+    /// <summary>
     ///     A shorthand for ensuring an entity has the given component.
     /// </summary>
     [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]

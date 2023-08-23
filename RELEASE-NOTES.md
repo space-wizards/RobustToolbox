@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 149.0.0
+
+### Breaking changes
+
+* Data definitions must now be partial, their data fields must not be readonly and their data field properties must have a setter.
+
+### Internal
+
+* Copying data definitions through the serialization manager is now faster and consumes less memory.
+
+
 ## 148.4.0
 
 ### New features

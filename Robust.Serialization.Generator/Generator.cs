@@ -435,25 +435,18 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                          type is not INamedTypeSymbol { TypeKind: TypeKind.Interface })
                 {
                     var nullability = type.IsValueType ? string.Empty : "?";
-                    var orNew = type.IsReferenceType
-                        ? $" ?? {name}{nullability}.Instantiate()"
-                        : string.Empty;
                     var nullable = !type.IsValueType || IsNullableType(type);
-
-
-                    builder.AppendLine($"var temp = {name}{orNew};");
 
                     if (nullable)
                     {
-                        builder.AppendLine("""
-                                           if (temp != null)
+                        builder.AppendLine($$"""
+                                           if ({{tempVarName}} != null)
                                            {
                                            """);
                     }
 
                     builder.AppendLine($$"""
-                                         {{name}}{{nullability}}.Copy(ref temp, serialization, hookCtx, context);
-                                         {{tempVarName}} = temp;
+                                         {{name}}{{nullability}}.Copy(ref {{tempVarName}}, serialization, hookCtx, context);
                                          """);
 
                     if (nullable)
@@ -468,18 +461,18 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
 
                 builder.AppendLine("}");
 
-                if (isClass)
-                {
-                    builder.AppendLine("}");
-                }
-
                 if (definition.Type.IsValueType)
                 {
-                    structCopier.AppendLine($"{name} = {tempVarName},");
+                    structCopier.AppendLine($"{name} = {tempVarName}!,");
                 }
                 else
                 {
-                    builder.AppendLine($"target.{name} = {tempVarName};");
+                    builder.AppendLine($"target.{name} = {tempVarName}!;");
+                }
+
+                if (isClass)
+                {
+                    builder.AppendLine("}");
                 }
             }
         }

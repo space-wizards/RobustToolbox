@@ -13,7 +13,7 @@ namespace Robust.UnitTesting.Shared.Toolshed;
 public sealed partial class ToolshedParserTest
 {
     // Memorializing the fact I never fixed this shit in BQL reee
-    [Test, RelatesTo<Quantity>]
+    [Test, TestOf(typeof(Quantity))]
     public async Task Bug_QuantityPercentage_BeforeTime()
     {
         await Server.WaitAssertion(() =>
@@ -23,7 +23,7 @@ public sealed partial class ToolshedParserTest
     }
 
     // Weird parsing issue around overly deep nesting.
-    [Test, RelatesTo<Block>]
+    [Test, TestOf(typeof(Block))]
     public async Task Bug_DeepNest_08_21_2023()
     {
         await Server.WaitAssertion(() =>
@@ -33,7 +33,7 @@ public sealed partial class ToolshedParserTest
     }
 
     // Toolshed outputting the wrong error kind here, it should not be an unknown command error.
-    [Test, RelatesTo<ValueRef<Color>>]
+    [Test, TestOf(typeof(ValueRef<>))]
     public async Task Bug_ValueRefUnknownCommandError_08_22_2023()
     {
         await Server.WaitAssertion(() =>
@@ -45,28 +45,12 @@ public sealed partial class ToolshedParserTest
 
     // Terminator parsing would try to eat an entire word instead of only the terminator.
     // This was fixed with the introduction of TryMatch.
-    [Test, RelatesTo(nameof(ParserContext.EatTerminator)), RelatesTo(nameof(ParserContext.TryMatch))]
+    [Test, TestOf(nameof(ParserContext.EatTerminator)), TestOf(nameof(ParserContext.TryMatch))]
     public async Task Bug_TerminatorSpacing_08_23_2023()
     {
         await Server.WaitAssertion(() =>
         {
             ParseCommand("f 100 iota map {iota sum emplace {f 2 pow $value}}");
         });
-    }
-}
-
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-internal sealed class RelatesToAttribute<_> : Attribute
-{
-}
-
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-internal sealed class RelatesToAttribute : Attribute
-{
-    public string FunctionName;
-
-    public RelatesToAttribute(string functionName)
-    {
-        FunctionName = functionName;
     }
 }

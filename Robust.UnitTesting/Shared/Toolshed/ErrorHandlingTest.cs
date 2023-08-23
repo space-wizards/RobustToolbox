@@ -11,8 +11,11 @@ public sealed class ErrorHandlingTest : ToolshedTest
     [Test]
     public async Task ExceptionsAreErrors()
     {
-        ExpectError<UnhandledExceptionError>();
-        InvokeCommand("fuck", out _);
+        await Server.WaitAssertion(() =>
+        {
+            ExpectError<UnhandledExceptionError>();
+            InvokeCommand("fuck", out _);
+        });
     }
 
     [Test]
@@ -29,7 +32,10 @@ public sealed class ErrorHandlingTest : ToolshedTest
     [Test]
     public async Task SelfNotForServerConsole()
     {
-        ExpectError<NotForServerConsoleError>();
-        InvokeCommand("self", out _);
+        await Server.WaitAssertion(() =>
+        {
+            ExpectError<NotForServerConsoleError>();
+            InvokeCommand("self", out _);
+        });
     }
 }

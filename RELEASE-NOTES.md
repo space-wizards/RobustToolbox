@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 150.0.0
+
+### Breaking changes
+
+* Remove the Id field from Fixtures as the Id is already stored on FixturesComponent.
+
+### New features
+
+* Add AbstractDictionarySerializer for abstract classes.
+* Add many new spawn functions for entities for common operations.
+
+
 ## 149.0.1
 
 ### Bugfixes

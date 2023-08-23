@@ -28,7 +28,7 @@ internal sealed class HubManager
     private TimeSpan _interval;
 
     private bool _active;
-    private readonly Dictionary<string, bool> _firstAdvertisementByHubUrl = new Dictionary<string, bool>();
+    private readonly HashSet<string> _firstAdvertisementByHubUrl = new HashSet<string>();
     private HttpClient? _httpClient;
 
     public async void Start()
@@ -123,12 +123,12 @@ internal sealed class HubManager
                     return;
                 }
 
-                if (!_firstAdvertisementByHubUrl.ContainsKey(hubUrl))
+                if (!_firstAdvertisementByHubUrl.Contains(hubUrl))
                 {
                     _sawmill.Info("Successfully advertised to {HubUrl} with address {AdvertiseUrl}",
                         hubUrl,
                         _advertiseUrl);
-                    _firstAdvertisementByHubUrl.Add(hubUrl, true);
+                    _firstAdvertisementByHubUrl.Add(hubUrl);
                 }
             }
             catch (Exception e)

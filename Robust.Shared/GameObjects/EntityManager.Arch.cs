@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Arch.Core;
-using Arch.Core.Extensions.Dangerous;
 using Arch.Core.Utils;
-using Robust.Shared.Utility;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects;
 
@@ -42,8 +41,25 @@ public partial class EntityManager
         entity = new EntityUid(reference);
     }
 
-    private void CleanupArch()
+    internal void CleanupArch()
     {
         _world.TrimExcess();
+    }
+
+    internal ComponentType[] GetComponentType(EntityPrototype prototype, ICollection<Type>? missing = null)
+    {
+        var compTypes = new ComponentType[prototype.Components.Count - missing?.Count ?? 0];
+        var idx = 0;
+
+        foreach (var comp in prototype.Components.Values)
+        {
+            var componentType = comp.Component.GetType();
+            if (missing?.Contains(componentType) == true)
+                continue;
+
+            compTypes[idx++] = componentType;
+        }
+
+        return compTypes;
     }
 }

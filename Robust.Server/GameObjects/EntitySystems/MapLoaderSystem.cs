@@ -303,6 +303,8 @@ public sealed class MapLoaderSystem : EntitySystem
            data.Entities.Remove(uid);
         }
 
+        EntityManager.CleanupArch();
+
         return true;
     }
 

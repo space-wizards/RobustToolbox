@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using Arch.Core;
+using Arch.Core.Extensions.Dangerous;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -141,6 +142,16 @@ namespace Robust.Shared.GameObjects
         public static explicit operator int(EntityUid self)
         {
             return self._uid;
+        }
+
+        public static implicit operator Entity(EntityUid self)
+        {
+            return DangerousEntityExtensions.CreateEntityStruct(self._uid - ArchUidOffset, 0);
+        }
+
+        public static implicit operator EntityUid(EntityReference other)
+        {
+            return new EntityUid(other);
         }
 
         /// <inheritdoc />

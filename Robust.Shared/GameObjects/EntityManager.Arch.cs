@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Arch.Core;
+using Arch.Core.Extensions.Dangerous;
 using Arch.Core.Utils;
 using Robust.Shared.Utility;
 
@@ -23,8 +24,8 @@ public partial class EntityManager
 
     protected void DestroyArch(EntityUid uid)
     {
-        var archEnt = new Entity(uid.GetArchId());
-        var reference = _world.Reference(in archEnt);
+        var archEnt = (Entity) uid;
+        var reference = _world.Reference(archEnt);
 
         if (reference.Version != (uid.Version - EntityUid.ArchVersionOffset))
         {
@@ -34,10 +35,9 @@ public partial class EntityManager
         _world.Destroy(archEnt);
     }
 
-    private void SpawnEntityArch(out EntityUid entity, out MetaDataComponent metadata)
+    private void SpawnEntityArch(out EntityUid entity)
     {
-        metadata = new MetaDataComponent();
-        var archEnt = _world.Create(metadata);
+        var archEnt = _world.Create();
         var reference = _world.Reference(archEnt);
         entity = new EntityUid(reference);
     }

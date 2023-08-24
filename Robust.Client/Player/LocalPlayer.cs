@@ -74,7 +74,7 @@ namespace Robust.Client.Player
             InternalSession.AttachedEntity = entity;
 
 
-            if (!entMan.TryGetComponent<EyeComponent?>(entity, out var eye))
+            if (!entMan.TryGetComponent(entity, out EyeComponent? eye))
             {
                 eye = entMan.AddComponent<EyeComponent>(entity);
 

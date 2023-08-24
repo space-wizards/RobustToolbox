@@ -59,6 +59,13 @@ public sealed partial class FormattedMessage
         return msg;
     }
 
+    public static FormattedMessage FromUnformatted(string markup)
+    {
+        var msg = new FormattedMessage();
+        msg.AddText(markup);
+        return msg;
+    }
+
     public static FormattedMessage FromMarkupPermissive(string markup)
     {
         var msg = new FormattedMessage();

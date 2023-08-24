@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     ///     Instances are dynamically instantiated by a <c>ComponentFactory</c>, and will have their IoC Dependencies resolved.
     /// </remarks>
     [ImplicitDataDefinitionForInheritors]
-    public partial interface IComponent : ISerializationGenerated<IComponent>
+    public partial interface IComponent
     {
         /// <summary>
         ///     The current lifetime stage of this component. You can use this to check

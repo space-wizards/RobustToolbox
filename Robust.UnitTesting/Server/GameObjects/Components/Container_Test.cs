@@ -33,6 +33,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void TestCreation()
         {
             var sim = SimulationFactory();
+            var entManager = sim.Resolve<IEntityManager>();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
             var entity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
@@ -42,7 +43,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(container.ID, Is.EqualTo("dummy"));
             Assert.That(container.Owner, Is.EqualTo(entity));
 
-            var manager = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity);
+            var manager = entManager.GetComponent<ContainerManagerComponent>(entity);
 
             Assert.That(container.Manager, Is.EqualTo(manager));
             Assert.That(() => containerSys.MakeContainer<Container>(entity, "dummy"), Throws.ArgumentException);
@@ -62,7 +63,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(manager.GetContainer("dummy2"), Is.EqualTo(container2));
             Assert.That(() => manager.GetContainer("dummy3"), Throws.TypeOf<KeyNotFoundException>());
 
-            IoCManager.Resolve<IEntityManager>().DeleteEntity(entity);
+            entManager.DeleteEntity(entity);
 
             Assert.That(manager.Deleted, Is.True);
             Assert.That(container.Deleted, Is.True);
@@ -73,11 +74,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void TestInsertion()
         {
             var sim = SimulationFactory();
+            var entManager = sim.Resolve<IEntityManager>();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
             var owner = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
             var inserted = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(inserted);
+            var transform = entManager.GetComponent<TransformComponent>(inserted);
 
             var container = containerSys.MakeContainer<Container>(owner, "dummy");
             Assert.That(container.Insert(inserted), Is.True);
@@ -93,7 +95,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(success, Is.False);
 
             container.Insert(inserted);
-            IoCManager.Resolve<IEntityManager>().DeleteEntity(owner);
+            entManager.DeleteEntity(owner);
             // Make sure inserted was detached.
             Assert.That(transform.Deleted, Is.True);
         }
@@ -102,11 +104,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void TestNestedRemoval()
         {
             var sim = SimulationFactory();
+            var entManager = sim.Resolve<IEntityManager>();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
             var owner = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
             var inserted = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(inserted);
+            var transform = entManager.GetComponent<TransformComponent>(inserted);
             var entity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
 
             var container = containerSys.MakeContainer<Container>(owner, "dummy");
@@ -115,13 +118,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             var container2 = containerSys.MakeContainer<Container>(inserted, "dummy");
             Assert.That(container2.Insert(entity), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(inserted));
+            Assert.That(entManager.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(inserted));
 
             Assert.That(container2.Remove(entity), Is.True);
             Assert.That(container.Contains(entity), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(owner));
+            Assert.That(entManager.GetComponent<TransformComponent>(entity).ParentUid, Is.EqualTo(owner));
 
-            IoCManager.Resolve<IEntityManager>().DeleteEntity(owner);
+            entManager.DeleteEntity(owner);
             Assert.That(transform.Deleted, Is.True);
         }
 
@@ -129,6 +132,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void TestNestedRemovalWithDenial()
         {
             var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
             var coordinates = new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0));
@@ -140,8 +144,6 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var container = containerSys.MakeContainer<Container>(entityOne, "dummy");
             var container2 = containerSys.MakeContainer<ContainerOnlyContainer>(entityTwo, "dummy");
             var container3 = containerSys.MakeContainer<Container>(entityThree, "dummy");
-
-            var entMan = IoCManager.Resolve<IEntityManager>();
 
             Assert.That(container.Insert(entityTwo), Is.True);
             Assert.That(entMan.GetComponent<TransformComponent>(entityTwo).ParentUid, Is.EqualTo(entityOne));
@@ -205,6 +207,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void BaseContainer_Insert_True()
         {
             var sim = SimulationFactory();
+            var entManager = sim.Resolve<IEntityManager>();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
             var containerEntity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
@@ -216,8 +219,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(result, Is.True);
             Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(containerEntity).ChildCount, Is.EqualTo(1));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(containerEntity).ChildEntities.First(), Is.EqualTo(insertEntity));
+            Assert.That(entManager.GetComponent<TransformComponent>(containerEntity).ChildCount, Is.EqualTo(1));
+            Assert.That(entManager.GetComponent<TransformComponent>(containerEntity).ChildEntities.First(), Is.EqualTo(insertEntity));
 
             result = insertEntity.TryGetContainerMan(out var resultContainerMan);
             Assert.That(result, Is.True);
@@ -274,7 +277,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             container.ShowContents = true;
             container.Insert(childEnt);
 
-            var containerMan = entManager.GetComponent<IContainerManager>(entity);
+            var containerMan = entManager.GetComponent<ContainerManagerComponent>(entity);
             var getState = new ComponentGetState();
             entManager.EventBus.RaiseComponentEvent(containerMan, ref getState);
             var state = (ContainerManagerComponent.ContainerManagerComponentState)getState.State!;
@@ -341,7 +344,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             public override bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
             {
                 IoCManager.Resolve(ref entMan);
-                return entMan.TryGetComponent(toinsert, out IContainerManager? _);
+                return entMan.TryGetComponent(toinsert, out ContainerManagerComponent? _);
             }
         }
     }

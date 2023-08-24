@@ -19,13 +19,25 @@ public interface IInvocationContext
     /// <remarks>
     ///     THIS IS A SECURITY BOUNDARY.
     ///     If you want to avoid players being able to just reboot your server, you should probably implement this!
+    ///     The default implementation defers to the active permission controller.
     /// </remarks>
-    public bool CheckInvokable(CommandSpec command, out IConError? error);
+    public bool CheckInvokable(CommandSpec command, out IConError? error)
+    {
+        if (Toolshed.ActivePermissionController is { } controller)
+            return controller.CheckInvokable(command, Session, out error);
+
+        error = null;
+        return true;
+    }
+
+    ToolshedEnvironment Environment { get; }
 
     /// <summary>
     ///     The session this context is for, if any.
     /// </summary>
     ICommonSession? Session { get; }
+
+    ToolshedManager Toolshed { get; }
 
     /// <summary>
     ///     Writes a line to this context's output.
@@ -35,7 +47,6 @@ public interface IInvocationContext
     ///     This can be stubbed safely, there's no requirement that the side effects of this function be observable.
     /// </remarks>
     public void WriteLine(string line);
-
 
     /// <summary>
     ///     Writes a formatted message to this context's output.

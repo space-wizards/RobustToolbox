@@ -440,7 +440,7 @@ namespace Robust.Shared.Containers
             return false;
         }
 
-        internal bool TryGetManagerComp(EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager)
+        internal bool TryGetManagerComp(EntityUid entity, [NotNullWhen(true)] out ContainerManagerComponent? manager)
         {
             DebugTools.Assert(Exists(entity));
 

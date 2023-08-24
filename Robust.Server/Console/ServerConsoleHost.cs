@@ -142,7 +142,8 @@ namespace Robust.Server.Console
                         ctx.WriteLine(err.Describe());
                     }
 
-                    shell.WriteLine(_toolshed.PrettyPrintType(res));
+                    shell.WriteLine(FormattedMessage.FromMarkupPermissive(_toolshed.PrettyPrintType(res, out var more, moreUsed: true)));
+                    ctx.WriteVar("more", more);
                 }
             }
             catch (Exception e)
@@ -217,8 +218,8 @@ namespace Robust.Server.Console
 
             if ((result.Options.Length == 0 && result.Hint is null) || message.Args.Length <= 1)
             {
-                var parser = new ForwardParser(message.ArgString, _toolshed);
-                CommandRun.TryParse(false, true, parser, null, null, false, out _, out var completions, out _);
+                var parser = new ParserContext(message.ArgString, _toolshed);
+                CommandRun.TryParse(true, parser, null, null, false, out _, out var completions, out _);
                 if (completions == null)
                 {
                     goto done;

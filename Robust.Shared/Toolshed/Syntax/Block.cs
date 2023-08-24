@@ -15,28 +15,24 @@ public sealed class Block
 
     public static bool TryParse(
             bool doAutoComplete,
-            ForwardParser parser,
+            ParserContext parserContext,
             Type? pipedType,
             [NotNullWhen(true)] out Block? block,
             out ValueTask<(CompletionResult?, IConError?)>? autoComplete,
             out IConError? error
         )
     {
-        parser.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
-        var enclosed = parser.EatMatch('{');
+        var enclosed = parserContext.EatMatch('{');
 
-        CommandRun.TryParse(enclosed, doAutoComplete, parser, pipedType, null, !enclosed, out var expr, out autoComplete, out error);
+        if (enclosed)
+            parserContext.PushTerminator("}");
+
+        CommandRun.TryParse(doAutoComplete, parserContext, pipedType, null, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {
-            block = null;
-            return false;
-        }
-
-        if (enclosed && !parser.EatMatch('}'))
-        {
-            error = new MissingClosingBrace();
             block = null;
             return false;
         }
@@ -63,24 +59,20 @@ public sealed class Block<T>
 {
     internal CommandRun<T> CommandRun { get; set; }
 
-    public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType,
+    public static bool TryParse(bool doAutoComplete, ParserContext parserContext, Type? pipedType,
         [NotNullWhen(true)] out Block<T>? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
     {
-        parser.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
-        var enclosed = parser.EatMatch('{');
+        var enclosed = parserContext.EatMatch('{');
 
-        CommandRun<T>.TryParse(enclosed, doAutoComplete, parser, pipedType, !enclosed, out var expr, out autoComplete, out error);
+        if (enclosed)
+            parserContext.PushTerminator("}");
+
+        CommandRun<T>.TryParse(enclosed, doAutoComplete, parserContext, pipedType, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {
-            block = null;
-            return false;
-        }
-
-        if (enclosed && !parser.EatMatch('}'))
-        {
-            error = new MissingClosingBrace();
             block = null;
             return false;
         }
@@ -104,24 +96,20 @@ public sealed class Block<TIn, TOut>
 {
     internal CommandRun<TIn, TOut> CommandRun { get; set; }
 
-    public static bool TryParse(bool doAutoComplete, ForwardParser parser, Type? pipedType,
+    public static bool TryParse(bool doAutoComplete, ParserContext parserContext, Type? pipedType,
         [NotNullWhen(true)] out Block<TIn, TOut>? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
     {
-        parser.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
-        var enclosed = parser.EatMatch('{');
+        var enclosed = parserContext.EatMatch('{');
 
-        CommandRun<TIn, TOut>.TryParse(enclosed, doAutoComplete, parser, !enclosed, out var expr, out autoComplete, out error);
+        if (enclosed)
+            parserContext.PushTerminator("}");
+
+        CommandRun<TIn, TOut>.TryParse(enclosed, doAutoComplete, parserContext, !enclosed, out var expr, out autoComplete, out error);
 
         if (expr is null)
         {
-            block = null;
-            return false;
-        }
-
-        if (enclosed && !parser.EatMatch('}'))
-        {
-            error = new MissingClosingBrace();
             block = null;
             return false;
         }
@@ -135,7 +123,7 @@ public sealed class Block<TIn, TOut>
         CommandRun = expr;
     }
 
-    public TOut? Invoke(object? input, IInvocationContext ctx)
+    public TOut? Invoke(TIn? input, IInvocationContext ctx)
     {
         return CommandRun.Invoke(input, ctx);
     }

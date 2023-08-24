@@ -25,13 +25,13 @@ public readonly struct PlacementEntityEvent
 
 public readonly struct PlacementTileEvent
 {
-    public readonly ushort TileType;
+    public readonly int TileType;
 
     public readonly EntityCoordinates Coordinates;
 
     public readonly NetUserId? PlacerNetUserId;
 
-    public PlacementTileEvent(ushort tileType, EntityCoordinates coordinates, NetUserId? placerNetUserId)
+    public PlacementTileEvent(int tileType, EntityCoordinates coordinates, NetUserId? placerNetUserId)
     {
         TileType = tileType;
         Coordinates = coordinates;

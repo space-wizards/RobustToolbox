@@ -19,6 +19,7 @@ internal sealed class EntityTypeParser : TypeParser<EntityUid>
     {
         var start = parserContext.Index;
         var word = parserContext.GetWord(ParserContext.IsToken);
+        var wordTwo = parserContext.GetWord(ParserContext.IsToken);
         error = null;
 
         if (!EntityUid.TryParse(word, wordTwo, out var ent))

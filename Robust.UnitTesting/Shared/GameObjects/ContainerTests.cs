@@ -66,7 +66,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  containerSys.EnsureContainer<Container>(entityUid, "dummy");
 
                  // Setup PVS
-                 entMan.AddComponent<Robust.Server.GameObjects.EyeComponent>(entityUid);
+                 entMan.AddComponent<EyeComponent>(entityUid);
                  var player = playerMan.ServerSessions.First();
                  player.AttachToEntity(entityUid);
                  player.JoinGame();
@@ -188,7 +188,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  containerSys.EnsureContainer<Container>(entityUid, "dummy");
 
                  // Setup PVS
-                 entMan.AddComponent<Robust.Server.GameObjects.EyeComponent>(entityUid);
+                 entMan.AddComponent<EyeComponent>(entityUid);
                  var player = playerMan.ServerSessions.First();
                  player.AttachToEntity(entityUid);
                  player.JoinGame();

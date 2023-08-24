@@ -1,18 +1,6 @@
-using System;
 using JetBrains.Annotations;
-using Robust.Client.Graphics;
 using Robust.Client.Physics;
-using Robust.Client.Player;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Input;
-using Robust.Shared.Input.Binding;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Timing;
-
-#nullable enable
 
 namespace Robust.Client.GameObjects
 {
@@ -34,9 +22,20 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void FrameUpdate(float frameTime)
         {
-            foreach (var eyeComponent in EntityManager.EntityQuery<EyeComponent>(true))
+            var query = AllEntityQuery<EyeComponent>();
+
+            while (query.MoveNext(out var uid, out var eyeComponent))
             {
-                eyeComponent.UpdateEyePosition();
+                if (eyeComponent._eye == null)
+                    continue;
+
+                if (!TryComp<TransformComponent>(eyeComponent.Target, out var xform))
+                {
+                    xform = Transform(uid);
+                    eyeComponent.Target = null;
+                }
+
+                eyeComponent._eye.Position = xform.MapPosition;
             }
         }
     }

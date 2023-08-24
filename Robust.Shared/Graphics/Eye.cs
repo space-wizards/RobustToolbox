@@ -1,11 +1,11 @@
+#nullable enable
+
 using System.Numerics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
-#nullable enable
-
-namespace Robust.Client.Graphics
+namespace Robust.Shared.Graphics
 {
     /// <inheritdoc />
     [Virtual]

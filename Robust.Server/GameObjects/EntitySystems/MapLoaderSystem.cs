@@ -960,7 +960,7 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         // Although we could use tiledefmanager it might write tiledata we don't need so we'll compress it
         var gridQuery = GetEntityQuery<MapGridComponent>();
-        var tileDefs = new HashSet<ushort>();
+        var tileDefs = new HashSet<int>();
 
         foreach (var ent in entities)
         {
@@ -977,7 +977,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
         var tileMap = new MappingDataNode();
         rootNode.Add("tilemap", tileMap);
-        var ordered = new List<ushort>(tileDefs);
+        var ordered = new List<int>(tileDefs);
         ordered.Sort();
 
         foreach (var tyleId in ordered)

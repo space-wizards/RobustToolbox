@@ -13,7 +13,7 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// <summary>
     ///     Internal type ID of this tile.
     /// </summary>
-    public readonly ushort TypeId;
+    public readonly int TypeId;
 
     /// <summary>
     ///     Rendering flags.
@@ -41,35 +41,11 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// <param name="typeId">Internal type ID.</param>
     /// <param name="flags">Flags used by toolbox's rendering.</param>
     /// <param name="variant">The visual variant this tile is using.</param>
-    public Tile(ushort typeId, TileRenderFlag flags = 0, byte variant = 0)
+    public Tile(int typeId, TileRenderFlag flags = 0, byte variant = 0)
     {
         TypeId = typeId;
         Flags = flags;
         Variant = variant;
-    }
-
-    /// <summary>
-    ///     Explicit conversion of <c>Tile</c> to <c>uint</c> . This should only
-    ///     be used in special cases like serialization. Do NOT use this in
-    ///     content.
-    /// </summary>
-    public static explicit operator uint(Tile tile)
-    {
-        return ((uint)tile.TypeId << 16) | (uint)tile.Flags << 8 | tile.Variant;
-    }
-
-    /// <summary>
-    ///     Explicit conversion of <c>uint</c> to <c>Tile</c> . This should only
-    ///     be used in special cases like serialization. Do NOT use this in
-    ///     content.
-    /// </summary>
-    public static explicit operator Tile(uint tile)
-    {
-        return new(
-            (ushort)(tile >> 16),
-            (TileRenderFlag)(tile >> 8),
-            (byte)tile
-        );
     }
 
     /// <summary>

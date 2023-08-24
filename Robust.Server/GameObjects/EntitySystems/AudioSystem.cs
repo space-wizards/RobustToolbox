@@ -20,6 +20,7 @@ public sealed class AudioSystem : SharedAudioSystem
     private sealed class AudioSourceServer : IPlayingAudioStream
     {
         public readonly uint Id;
+        public uint Identifier => Id;
         public readonly IEnumerable<ICommonSession>? Sessions;
         public AudioParams Parameters;
 

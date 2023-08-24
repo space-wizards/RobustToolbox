@@ -570,6 +570,8 @@ public sealed class AudioSystem : SharedAudioSystem
     public sealed class PlayingStream : IPlayingAudioStream
     {
         public uint? NetIdentifier;
+        public uint Identifier => NetIdentifier ?? uint.MinValue;
+        
         public AudioStream? SourceStream => Source.SourceStream;
         public IClydeAudioSource Source = default!;
         public EntityUid? TrackingEntity;
@@ -677,6 +679,12 @@ public sealed class AudioSystem : SharedAudioSystem
             return;
         
         ApplyAudioParams(parameters, clientStream.Source, clientStream.SourceStream);
+    }
+
+    public void SetAudioParams(uint streamId, AudioParams parameters)
+    {
+        if (ResolveStream(streamId, out PlayingStream stream))
+            SetAudioParams(stream, parameters);
     }
 
     /// <inheritdoc />

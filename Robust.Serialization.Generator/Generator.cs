@@ -87,6 +87,8 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 #pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0612 // Type or member is obsolete
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
 
 {{namespaceString}}
 
@@ -179,7 +181,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
                                   // Implicit constructor
                                   #pragma warning disable CS8618
                                   public {{definition.Type.Name}}()
-                                  #pragma warning enable CS8618
+                                  #pragma warning restore CS8618
                                   {
                                   }
                                   """);

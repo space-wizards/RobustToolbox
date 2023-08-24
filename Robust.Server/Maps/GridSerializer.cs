@@ -48,7 +48,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
 
         var chunk = instantiationDelegate != null ? instantiationDelegate() : new MapChunk(ind.X, ind.Y, size);
 
-        IReadOnlyDictionary<ushort, string>? tileMap = null;
+        IReadOnlyDictionary<int, string>? tileMap = null;
 
         if (context is MapSerializationContext serContext)
         {
@@ -69,7 +69,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         {
             for (ushort x = 0; x < chunk.ChunkSize; x++)
             {
-                var id = reader.ReadUInt16();
+                var id = reader.ReadInt32();
                 var flags = (TileRenderFlag)reader.ReadByte();
                 var variant = reader.ReadByte();
 
@@ -106,7 +106,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
     private static string SerializeTiles(MapChunk chunk)
     {
         // number of bytes written per tile, because sizeof(Tile) is useless.
-        const int structSize = 4;
+        const int structSize = 6;
 
         var nTiles = chunk.ChunkSize * chunk.ChunkSize * structSize;
         var barr = new byte[nTiles];

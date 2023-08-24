@@ -13,27 +13,6 @@ namespace Robust.Shared.GameObjects
         ///     Always gives you back a component, and creates it if it does not exist yet.
         /// </summary>
         /// <param name="entity">The entity to fetch or create the component on.</param>
-        /// <param name="component">The existing component, or the new component if none existed yet.</param>
-        /// <typeparam name="T">The type of the component to fetch or create.</typeparam>
-        /// <returns>True if the component already existed, false if it had to be created.</returns>
-        public static bool EnsureComponent<T>(this EntityUid entity, out T component) where T : Component, new()
-        {
-            var entMan = IoCManager.Resolve<IEntityManager>();
-            if (entMan.TryGetComponent<T>(entity, out var comp))
-            {
-                component = comp;
-                return true;
-            }
-
-            component = entMan.AddComponent<T>(entity);
-            return false;
-        }
-
-        /// <summary>
-        ///     Convenience wrapper to implement "create component if it does not already exist".
-        ///     Always gives you back a component, and creates it if it does not exist yet.
-        /// </summary>
-        /// <param name="entity">The entity to fetch or create the component on.</param>
         /// <typeparam name="T">The type of the component to fetch or create.</typeparam>
         /// <returns>The existing component, or the new component if none existed yet.</returns>
         public static T EnsureComponent<T>(this EntityUid entity) where T : Component, new()
@@ -45,35 +24,6 @@ namespace Robust.Shared.GameObjects
             }
 
             return entMan.AddComponent<T>(entity);
-        }
-
-        /// <summary>
-        ///     Convenience wrapper to implement "create component if it does not already exist".
-        ///     Always gives you back a component, and creates it if it does not exist yet.
-        /// </summary>
-        /// <param name="entity">The entity to fetch or create the component on.</param>
-        /// <param name="component">The existing component, or the new component if none existed yet.</param>
-        /// <param name="warning">
-        ///     The custom warning message to log if the component did not exist already.
-        ///     Defaults to a predetermined warning if null.
-        /// </param>
-        /// <typeparam name="T">The type of the component to fetch or create.</typeparam>
-        /// <returns>True if the component already existed, false if it had to be created.</returns>
-        public static bool EnsureComponentWarn<T>(this EntityUid entity, out T component, string? warning = null) where T : Component, new()
-        {
-            var entMan = IoCManager.Resolve<IEntityManager>();
-            if (entMan.TryGetComponent<T>(entity, out var comp))
-            {
-                component = comp;
-                return true;
-            }
-
-            warning ??= $"Entity {entity} at {entMan.GetComponent<TransformComponent>(entity).MapPosition} did not have a {typeof(T)}";
-
-            Logger.Warning(warning);
-
-            component = entMan.AddComponent<T>(entity);
-            return false;
         }
 
         /// <summary>

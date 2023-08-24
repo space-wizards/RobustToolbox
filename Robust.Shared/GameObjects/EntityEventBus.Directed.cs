@@ -740,8 +740,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                component = _entityManager.GetComponent(_uid, compType);
-                return true;
+                return _entityManager.TryGetComponent(_uid, compType, out component);
             }
         }
 

@@ -121,6 +121,7 @@ namespace Robust.Shared.Containers
 
             // Avoid unnecessary broadphase updates while unanchoring, changing physics collision, and re-parenting.
             var old = transform.Broadphase;
+
             transform.Broadphase = BroadphaseData.Invalid;
 
             // Unanchor the entity (without changing physics body types).

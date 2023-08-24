@@ -62,7 +62,7 @@ namespace Robust.Client.ViewVariables.Editors
 
             void OnEntered(LineEdit.LineEditEventArgs e)
             {
-                var gridVal = EntityUid.Parse(gridId.Text);
+                var gridVal = EntityUid.Parse(gridId.Text, "-1");
                 var mapManager = IoCManager.Resolve<IMapManager>();
                 var xVal = float.Parse(x.Text, CultureInfo.InvariantCulture);
                 var yVal = float.Parse(y.Text, CultureInfo.InvariantCulture);

@@ -434,7 +434,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     {
         DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid));
         DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadUid, default, false, staticBody));
-        xform.Broadphase ??= new(broadUid, default, false, staticBody);
+        xform.Broadphase ??= new BroadphaseData(broadUid, EntityUid.Invalid, false, staticBody);
         (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).AddOrUpdate(uid, aabb);
     }
 

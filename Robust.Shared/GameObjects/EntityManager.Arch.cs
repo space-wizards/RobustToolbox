@@ -1,13 +1,15 @@
+using System;
 using System.Collections.Generic;
 using Arch.Core;
 using Arch.Core.Utils;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
     private World _world = default!;
-    protected ComponentType[] DefaultArchetype = new ComponentType[] { typeof(MetaDataComponent) };
+    protected ComponentType[] DefaultArchetype = { typeof(MetaDataComponent) };
 
     protected void InitializeArch()
     {
@@ -21,13 +23,23 @@ public partial class EntityManager
 
     protected void DestroyArch(EntityUid uid)
     {
-        _world.Destroy(uid.ToArch());
+        var archEnt = new Entity(uid.GetArchId());
+        var reference = _world.Reference(in archEnt);
+
+        if (reference.Version != (uid.Version - EntityUid.ArchVersionOffset))
+        {
+            throw new InvalidOperationException($"Tried to delete a different matching entity for Arch.");
+        }
+
+        _world.Destroy(archEnt);
     }
 
-    private EntityUid SpawnEntityArch()
+    private void SpawnEntityArch(out EntityUid entity, out MetaDataComponent metadata)
     {
-        var entity = _world.Create(DefaultArchetype);
-        return EntityUid.FromArch(entity);
+        metadata = new MetaDataComponent();
+        var archEnt = _world.Create(metadata);
+        var reference = _world.Reference(archEnt);
+        entity = new EntityUid(reference);
     }
 
     private void CleanupArch()

@@ -12,30 +12,48 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    ///     This type contains a network identification number of an entity.
+    ///     This type contains a local identification number of an entity.
     ///     This can be used by the EntityManager to access an entity
     /// </summary>
     [CopyByRef]
     public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>, ISpanFormattable
     {
-        private readonly int _uid;
+        internal readonly int _uid;
+
+        internal readonly int Version;
 
         /// <summary>
         ///     An Invalid entity UID you can compare against.
         /// </summary>
-        public static readonly EntityUid Invalid = new(0);
+        public static readonly EntityUid Invalid = new(-1 + ArchUidOffset, -1 + ArchVersionOffset);
 
         /// <summary>
         ///     The first entity UID the entityManager should use when the manager is initialized.
         /// </summary>
-        public static readonly EntityUid FirstUid = new(1);
+        public static readonly EntityUid FirstUid = new(0 + ArchUidOffset, 0 + ArchVersionOffset);
+
+        internal const int ArchUidOffset = 1;
+        internal const int ArchVersionOffset = 1;
+
+        public EntityUid()
+        {
+            _uid = Invalid._uid;
+            Version = -Invalid.Version;
+        }
+
+        internal EntityUid(EntityReference reference)
+        {
+            _uid = reference.Entity.Id + ArchUidOffset;
+            Version = reference.Version + ArchVersionOffset;
+        }
 
         /// <summary>
         ///     Creates an instance of this structure, with the given network ID.
         /// </summary>
-        public EntityUid(int uid)
+        public EntityUid(int uid, int version)
         {
             _uid = uid;
+            Version = version;
         }
 
         public bool Valid => IsValid();
@@ -43,16 +61,16 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates an entity UID by parsing a string number.
         /// </summary>
-        public static EntityUid Parse(ReadOnlySpan<char> uid)
+        public static EntityUid Parse(ReadOnlySpan<char> uid, ReadOnlySpan<char> version)
         {
-            return new EntityUid(int.Parse(uid));
+            return new EntityUid(int.Parse(uid), int.Parse(version));
         }
 
-        public static bool TryParse(ReadOnlySpan<char> uid, out EntityUid entityUid)
+        public static bool TryParse(ReadOnlySpan<char> uid, ReadOnlySpan<char> version, out EntityUid entityUid)
         {
             try
             {
-                entityUid = Parse(uid);
+                entityUid = Parse(uid, version);
                 return true;
             }
             catch (FormatException)
@@ -63,12 +81,9 @@ namespace Robust.Shared.GameObjects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static EntityUid FromArch(in Entity entity) => new(entity.Id + 1);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Entity ToArch()
+        public static EntityUid FromArch(in World world, in Entity entity)
         {
-            return new Entity(GetArchId());
+            return new EntityUid(entity.Id + ArchUidOffset, world.Reference(entity).Version + ArchVersionOffset);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,13 +96,13 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool IsValid()
         {
-            return _uid > 0;
+            return _uid > Invalid._uid;
         }
 
         /// <inheritdoc />
         public bool Equals(EntityUid other)
         {
-            return _uid == other._uid;
+            return _uid == other._uid && Version == other.Version;
         }
 
         /// <inheritdoc />
@@ -108,7 +123,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public static bool operator ==(EntityUid a, EntityUid b)
         {
-            return a._uid == b._uid;
+            return a._uid == b._uid && a.Version == b.Version;
         }
 
         /// <summary>

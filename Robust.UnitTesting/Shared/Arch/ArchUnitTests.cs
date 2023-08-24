@@ -13,10 +13,11 @@ public sealed class ArchUnitTests
     public void EntityTest()
     {
         var ent = _world.Create();
-        var uid = EntityUid.FromArch(ent);
-        Assert.That(uid.GetHashCode(), Is.EqualTo(ent.Id));
-
-        var andBackAgain = uid.ToArch();
-        Assert.That(andBackAgain, Is.EqualTo(ent));
+        var uid = EntityUid.FromArch(_world, ent);
+        Assert.Multiple(() =>
+        {
+            Assert.That(uid.GetArchId(), Is.EqualTo(ent.Id));
+            Assert.That(_world.IsAlive(new Entity(uid.GetArchId())));
+        });
     }
 }

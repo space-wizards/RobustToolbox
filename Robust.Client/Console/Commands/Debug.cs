@@ -263,7 +263,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var uid = EntityUid.Parse(args[0]);
+            var uid = EntityUid.Parse(args[0], "-1");
             var entmgr = _entityManager;
             if (!entmgr.EntityExists(uid))
             {

@@ -1214,7 +1214,7 @@ namespace Robust.Client.GameStates
                 return false;
             }
 
-            if (!EntityUid.TryParse(args[0], out uid))
+            if (!EntityUid.TryParse(args[0], "-1", out uid))
             {
                 shell.WriteError(Loc.GetString("cmd-parse-failure-uid", ("arg", args[0])));
                 meta = null;

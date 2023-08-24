@@ -366,7 +366,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var entity in ents)
             {
-                yield return EntityUid.FromArch(entity);
+                yield return EntityUid.FromArch(_world, entity);
             }
         }
 
@@ -579,7 +579,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].ContainsKey(uid);
+            return _world.IsAlive(new Entity(uid.GetArchId()));
         }
 
         public bool EntityExists(EntityUid? uid)
@@ -642,14 +642,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private EntityUid AllocEntity(out MetaDataComponent metadata)
         {
-            var uid = SpawnEntityArch();
-
-#if DEBUG
-            if (EntityExists(uid))
-            {
-                throw new InvalidOperationException($"UID already taken: {uid}");
-            }
-#endif
+            SpawnEntityArch(out var uid, out metadata);
 
             // we want this called before adding components
             EntityAdded?.Invoke(uid);
@@ -657,11 +650,8 @@ namespace Robust.Shared.GameObjects
             var netEntity = GenerateNetEntity();
 
 #pragma warning disable CS0618
-            metadata = new MetaDataComponent
-            {
-                Owner = uid,
-                NetEntity = netEntity,
-            };
+            metadata.Owner = uid;
+            metadata.NetEntity = netEntity;
 
             // TODO: Dump on server
             if (netEntity.IsValid())
@@ -673,8 +663,6 @@ namespace Robust.Shared.GameObjects
 
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid, metadata, false, false);
-
-            _world.Set(uid.ToArch(), metadata);
 
             // allocate the required TransformComponent
             AddComponent<TransformComponent>(uid);

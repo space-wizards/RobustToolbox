@@ -13,7 +13,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
     [TestFixture, Parallelizable ,TestOf(typeof(EntityManager))]
     public sealed partial class EntityManager_Components_Tests
     {
-        private static readonly EntityCoordinates DefaultCoords = new(new EntityUid(1), Vector2.Zero);
+        private static readonly EntityCoordinates DefaultCoords = new(EntityUid.FirstUid, Vector2.Zero);
 
         [Test]
         public void AddComponentTest()

@@ -157,6 +157,6 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         bool skipHook,
         ISerializationContext? context = null)
     {
-        return new((int)source);
+        return new EntityUid(source._uid, source.Version);
     }
 }

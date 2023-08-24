@@ -69,6 +69,10 @@ namespace Robust.Shared.ContentPack
             {
                 _sawmill.Debug("Robust directory not available");
             }
+            else
+            {
+                loadDirs.Add(Path.GetDirectoryName(ourPath)!);
+            }
 
             if (EngineModuleDirectories != null)
             {

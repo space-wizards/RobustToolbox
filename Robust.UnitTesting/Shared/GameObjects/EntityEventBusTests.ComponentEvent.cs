@@ -25,10 +25,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Setup(m => m.ComponentFactory).Returns(compFactory);
 
             IComponent? outIComponent = compInstance;
-            entManMock.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))
+            entManMock.Setup(m => m.TryGetComponent(entUid, CompIdx.Index<MetaDataComponent>(), out outIComponent))
                 .Returns(true);
 
-            entManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
+            entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<MetaDataComponent>()))
                 .Returns(compInstance);
 
             entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<MetaDataComponent>()))
@@ -185,8 +185,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     CompIdx.Index<T>());
 
                 compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<T>())).Returns(reg);
-                entManMock.Setup(m => m.TryGetComponent(entUid, typeof(T), out inst)).Returns(true);
-                entManMock.Setup(m => m.GetComponent(entUid, typeof(T))).Returns(inst);
+                entManMock.Setup(m => m.TryGetComponent(entUid, CompIdx.Index<T>(), out inst)).Returns(true);
+                entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<T>())).Returns(inst);
                 allRefTypes.Add(CompIdx.Index<T>());
             }
 

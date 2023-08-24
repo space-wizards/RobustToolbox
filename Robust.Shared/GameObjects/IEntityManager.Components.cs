@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Arch.Core.Utils;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
 
@@ -177,7 +178,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Component reference type to check for.</typeparam>
         /// <param name="uid">Entity UID to check.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
-        bool HasComponent<T>(EntityUid? uid);
+        bool HasComponent<T>(EntityUid? uid) where T : IComponent;
 
         /// <summary>
         ///     Checks if the entity has a component type.
@@ -270,7 +271,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component);
+        bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)  where T : IComponent;
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -404,40 +405,40 @@ namespace Robust.Shared.GameObjects
         List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : Component;
 
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
-            where TComp1 : Component;
+            where TComp1 : IComponent;
 
         AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQueryEnumerator<TComp1, TComp2>()
-            where TComp1 : Component
-            where TComp2 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent;
 
         AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQueryEnumerator<TComp1, TComp2, TComp3>()
-            where TComp1 : Component
-            where TComp2 : Component
-            where TComp3 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent;
 
         AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
-            where TComp1 : Component
-            where TComp2 : Component
-            where TComp3 : Component
-            where TComp4 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+            where TComp4 : IComponent;
 
         EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>()
-            where TComp1 : Component;
+            where TComp1 : IComponent;
 
         EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
-            where TComp1 : Component
-            where TComp2 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent;
 
         EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
-            where TComp1 : Component
-            where TComp2 : Component
-            where TComp3 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent;
 
         EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
-            where TComp1 : Component
-            where TComp2 : Component
-            where TComp3 : Component
-            where TComp4 : Component;
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+            where TComp4 : IComponent;
 
         /// <summary>
         ///     Returns ALL component instances of a specified type.

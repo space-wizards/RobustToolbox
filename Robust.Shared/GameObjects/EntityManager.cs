@@ -12,6 +12,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Arch.Core;
+using Arch.Core.Extensions;
 using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Shared.GameObjects
@@ -250,13 +251,12 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Cleanup()
         {
-            _componentFactory.ComponentAdded -= OnComponentAdded;
-            _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
             ShuttingDown = true;
             FlushEntities();
             _entitySystemManager.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
+            ShutdownArch();
             ClearComponents();
 
             ShuttingDown = false;
@@ -381,9 +381,8 @@ namespace Robust.Shared.GameObjects
             // We want to retrieve MetaDataComponent even if its Deleted flag is set.
             if (metadata == null)
             {
-                if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
+                if (!_world.TryGet(uid, out metadata!))
                     throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
-                metadata = (MetaDataComponent)component;
             }
             else
             {
@@ -579,7 +578,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return _world.IsAlive(new Entity(uid.GetArchId()));
+            return _world.IsAlive(uid);
         }
 
         public bool EntityExists(EntityUid? uid)
@@ -598,12 +597,12 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+            return !_world.TryGet(uid, out MetaDataComponent comp) || comp.EntityDeleted;
         }
 
         public bool Deleted([NotNullWhen(false)] EntityUid? uid)
         {
-            return !uid.HasValue || !_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+            return !uid.HasValue || Deleted(uid.Value);
         }
 
         /// <summary>
@@ -642,16 +641,13 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private EntityUid AllocEntity(out MetaDataComponent metadata)
         {
-            SpawnEntityArch(out var uid, out metadata);
+            SpawnEntityArch(out var uid);
 
             // we want this called before adding components
             EntityAdded?.Invoke(uid);
             _eventBus.OnEntityAdded(uid);
-            var netEntity = GenerateNetEntity();
 
-#pragma warning disable CS0618
-            metadata.Owner = uid;
-            metadata.NetEntity = netEntity;
+            var netEntity = GenerateNetEntity();
 
             // TODO: Dump on server
             if (netEntity.IsValid())
@@ -659,7 +655,11 @@ namespace Robust.Shared.GameObjects
                 NetEntityLookup[netEntity] = uid;
             }
 
-#pragma warning restore CS0618
+            metadata = new MetaDataComponent
+            {
+                Owner = uid,
+                NetEntity = netEntity
+            };
 
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid, metadata, false, false);
@@ -760,10 +760,8 @@ namespace Robust.Shared.GameObjects
         public virtual EntityStringRepresentation ToPrettyString(EntityUid uid)
         {
             // We want to retrieve the MetaData component even if it is deleted.
-            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
+            if (!_world.TryGet(uid, out MetaDataComponent metadata))
                 return new EntityStringRepresentation(uid, true);
-
-            var metadata = (MetaDataComponent) component;
 
             return ToPrettyString(uid, metadata);
         }

@@ -82,7 +82,7 @@ public abstract class SharedEyeSystem : EntitySystem
         }
     }
 
-    public void SetVisibilityMask(EntityUid uid, uint value, EyeComponent? eyeComponent = null)
+    public void SetVisibilityMask(EntityUid uid, int value, EyeComponent? eyeComponent = null)
     {
         if (!Resolve(uid, ref eyeComponent))
             return;

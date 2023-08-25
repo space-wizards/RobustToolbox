@@ -4,6 +4,7 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -52,7 +53,12 @@ namespace Robust.Shared.GameObjects
         ///     The visibility mask for this eye.
         ///     The player will be able to get updates for entities whose layers match the mask.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite), DataField("visMask"), AutoNetworkedField]
-        public uint VisibilityMask = DefaultVisibilityMask;
+        [ViewVariables(VVAccess.ReadWrite), DataField("visMask", customTypeSerializer:typeof(FlagSerializer<VisibilityMaskLayer>)), AutoNetworkedField]
+        public int VisibilityMask = DefaultVisibilityMask;
     }
+
+    /// <summary>
+    /// Single layer used for Eye visiblity. Controls what entities they are allowed to see.
+    /// </summary>
+    public sealed class VisibilityMaskLayer {}
 }

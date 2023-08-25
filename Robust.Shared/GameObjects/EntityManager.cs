@@ -75,7 +75,6 @@ namespace Robust.Shared.GameObjects
 
         public event Action<EntityUid>? EntityAdded;
         public event Action<EntityUid>? EntityInitialized;
-        public event Action<EntityUid>? EntityStarted;
         public event Action<EntityUid>? EntityDeleted;
 
         /// <summary>
@@ -680,7 +679,7 @@ namespace Robust.Shared.GameObjects
 
             return CreateEntity(prototype, uid, context);
         }
-        
+
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
@@ -739,7 +738,6 @@ namespace Robust.Shared.GameObjects
         public void StartEntity(EntityUid entity)
         {
             StartComponents(entity);
-            EntityStarted?.Invoke(entity);
         }
 
         public void RunMapInit(EntityUid entity, MetaDataComponent meta)

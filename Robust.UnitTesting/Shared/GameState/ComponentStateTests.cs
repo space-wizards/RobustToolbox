@@ -17,7 +17,8 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
 {
     /// <summary>
     /// This tests performs a basic check to ensure that there is no issue with entity states referencing other
-    /// entities that the client is not yet aware of.
+    /// entities that the client is not yet aware of. It does this by spawning two entities that reference each other,
+    /// and then ensuring that they get sent to the client one at a time.
     /// </summary>
     [Test]
     public async Task UnknownEntityTest()

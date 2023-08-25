@@ -24,7 +24,10 @@ namespace Robust.Client.GameObjects
 
         public void SetMask(string? maskPath, PointLightComponent component)
         {
-            component.Mask = maskPath == null ? null : _resourceCache.GetResource<TextureResource>(maskPath);
+            if (maskPath is not null)
+                component.Mask = _resourceCache.GetResource<TextureResource>(maskPath);
+            else
+                component.Mask = null;
         }
 
         #region Setters

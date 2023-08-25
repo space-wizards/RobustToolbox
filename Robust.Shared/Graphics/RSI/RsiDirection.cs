@@ -1,5 +1,3 @@
-using GameObjects;
-
 namespace Robust.Shared.Graphics.RSI;
 
 /// <summary>

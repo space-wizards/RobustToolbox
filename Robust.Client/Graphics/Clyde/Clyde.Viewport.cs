@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 

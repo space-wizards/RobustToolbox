@@ -1,10 +1,9 @@
 using System;
-using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace Robust.Client.Graphics
+namespace Robust.Shared.Graphics
 {
     /// <summary>
     ///     Represents a mutable texture that can be modified and deleted.

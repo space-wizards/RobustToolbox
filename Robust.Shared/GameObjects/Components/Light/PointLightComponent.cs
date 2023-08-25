@@ -95,10 +95,10 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         ///     Set a mask texture that will be applied to the light while rendering.
-        ///     The mask's red channel will be linearly multiplied.p
+        ///     The mask's red channel will be linearly multiplied.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public Texture? Mask { get; set; }
+        internal Texture? Mask;
     }
 
     public sealed class PointLightToggleEvent : EntityEventArgs

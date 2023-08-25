@@ -66,4 +66,46 @@ public abstract class Texture : IRsiStateLike
     }
 
     public abstract Color GetPixel(int x, int y);
+
+    public static Texture Transparent =>
+                IoCManager.Resolve<IClydeShared>().GetStockTexture(ClydeStockTexture.Transparent);
+
+    public static Texture White =>
+        IoCManager.Resolve<IClydeShared>().GetStockTexture(ClydeStockTexture.White);
+
+    public static Texture Black =>
+        IoCManager.Resolve<IClydeShared>().GetStockTexture(ClydeStockTexture.Black);
+
+    /// <summary>
+    ///     Loads a new texture an existing image.
+    /// </summary>
+    /// <param name="image">The image to load.</param>
+    /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
+    /// <param name="loadParameters">
+    ///     Parameters that influence the loading of textures.
+    ///     Defaults to <see cref="Robust.Client.Graphics.TextureLoadParameters.Default"/> if <c>null</c>.
+    /// </param>
+    /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
+    public static Texture LoadFromImage<T>(Image<T> image, string? name = null,
+        TextureLoadParameters? loadParameters = null) where T : unmanaged, IPixel<T>
+    {
+        var manager = IoCManager.Resolve<IClydeShared>();
+        return manager.LoadTextureFromImage(image, name, loadParameters);
+    }
+
+    /// <summary>
+    ///     Loads an image from a stream containing PNG data.
+    /// </summary>
+    /// <param name="stream">The stream to load the image from.</param>
+    /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
+    /// <param name="loadParameters">
+    ///     Parameters that influence the loading of textures.
+    ///     Defaults to <see cref="Robust.Client.Graphics.TextureLoadParameters.Default"/> if <c>null</c>.
+    /// </param>
+    public static Texture LoadFromPNGStream(Stream stream, string? name = null,
+        TextureLoadParameters? loadParameters = null)
+    {
+        var manager = IoCManager.Resolve<IClydeShared>();
+        return manager.LoadTextureFromPNGStream(stream, name, loadParameters);
+    }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -11,7 +12,7 @@ namespace Robust.Client.Graphics
 {
     public delegate void CopyPixelsDelegate<T>(Image<T> pixels) where T : unmanaged, IPixel<T>;
 
-    public interface IClyde
+    public interface IClyde : IClydeShared
     {
         IClydeWindow MainWindow { get; }
         IRenderTarget MainWindowRenderTarget => MainWindow.RenderTarget;
@@ -40,12 +41,6 @@ namespace Robust.Client.Graphics
         event Action<WindowFocusedEventArgs> OnWindowFocused;
 
         event Action<WindowContentScaleEventArgs> OnWindowScaleChanged;
-
-        OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
-            TextureLoadParameters? loadParams = null);
-
-        OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
-            TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>;
 
         /// <summary>
         ///     Creates a blank texture of the specified parameters.

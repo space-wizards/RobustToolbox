@@ -630,7 +630,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            return HasComponent(uid, type);
+            return HasComponent(uid.Value, type);
         }
 
         /// <inheritdoc />

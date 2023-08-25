@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Arch.Core;
 using Arch.Core.Utils;
 using Robust.Shared.Prototypes;
@@ -43,7 +44,11 @@ public partial class EntityManager
 
     internal void CleanupArch()
     {
+        var sw = new Stopwatch();
+        sw.Start();
         _world.TrimExcess();
+        sw.Stop();
+        _sawmill.Debug($"Trimming archetypes took {sw.Elapsed.TotalMilliseconds} milliseconds");
     }
 
     internal ComponentType[] GetComponentType(EntityPrototype prototype, ICollection<Type>? missing = null)

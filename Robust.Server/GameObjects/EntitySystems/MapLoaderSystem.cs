@@ -51,7 +51,7 @@ public sealed class MapLoaderSystem : EntitySystem
     private ISawmill _logWriter = default!;
 
     private static readonly MapLoadOptions DefaultLoadOptions = new();
-    private const int MapFormatVersion = 5;
+    private const int MapFormatVersion = 6;
     private const int BackwardsVersion = 2;
 
     private MapSerializationContext _context = default!;

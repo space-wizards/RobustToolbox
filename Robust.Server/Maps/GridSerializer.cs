@@ -64,12 +64,14 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         chunk.SuppressCollisionRegeneration = true;
 
         var tileDefinitionManager = dependencies.Resolve<ITileDefinitionManager>();
+        var meta = node.Get<MappingDataNode>("meta");
+        var version = meta.Get<ValueDataNode>("format").AsInt();
 
         for (ushort y = 0; y < chunk.ChunkSize; y++)
         {
             for (ushort x = 0; x < chunk.ChunkSize; x++)
             {
-                var id = reader.ReadInt32();
+                var id = version < 6 ? reader.ReadUInt16() : reader.ReadInt32();
                 var flags = (TileRenderFlag)reader.ReadByte();
                 var variant = reader.ReadByte();
 

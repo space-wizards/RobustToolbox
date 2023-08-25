@@ -32,12 +32,30 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
+    public void SetEnergy(EntityUid uid, float value, PointLightComponent? comp = null)
+    {
+        if (!Resolve(uid, ref comp) || MathHelper.CloseToPercent(comp.Energy, value))
+            return;
+
+        comp.Energy = value;
+        Dirty(uid, comp);
+    }
+
     public virtual void SetRadius(EntityUid uid, float radius, PointLightComponent? comp = null)
     {
         if (!Resolve(uid, ref comp) || MathHelper.CloseToPercent(comp.Radius, radius))
             return;
 
         comp.Radius = radius;
+        Dirty(uid, comp);
+    }
+
+    public void SetSoftness(EntityUid uid, float value, PointLightComponent? comp = null)
+    {
+        if (!Resolve(uid, ref comp) || MathHelper.CloseToPercent(comp.Softness, value))
+            return;
+
+        comp.Softness = value;
         Dirty(uid, comp);
     }
 }

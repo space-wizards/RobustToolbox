@@ -42,7 +42,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("offset")]
-        [Access(Other = AccessPermissions.Execute)]
+        [Access(Other = AccessPermissions.ReadExecute)]
         public Vector2 Offset = Vector2.Zero;
 
         [ViewVariables(VVAccess.ReadWrite)]

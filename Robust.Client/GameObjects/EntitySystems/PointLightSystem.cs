@@ -52,9 +52,8 @@ namespace Robust.Client.GameObjects
             RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
             Dirty(uid, comp);
 
-            var cast = (PointLightComponent)comp;
-            if (!cast.ContainerOccluded)
-                _lightTree.QueueTreeUpdate(uid, cast);
+            if (!comp.ContainerOccluded)
+                _lightTree.QueueTreeUpdate(uid, comp);
         }
 
         public override void SetRadius(EntityUid uid, float radius, PointLightComponent? comp = null)
@@ -65,9 +64,8 @@ namespace Robust.Client.GameObjects
             comp.Radius = radius;
             Dirty(uid, comp);
 
-            var cast = (PointLightComponent)comp;
-            if (cast.TreeUid != null)
-                _lightTree.QueueTreeUpdate(uid, cast);
+            if (comp.TreeUid != null)
+                _lightTree.QueueTreeUpdate(uid, comp);
         }
         #endregion
     }

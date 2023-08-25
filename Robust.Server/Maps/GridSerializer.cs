@@ -64,8 +64,9 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         chunk.SuppressCollisionRegeneration = true;
 
         var tileDefinitionManager = dependencies.Resolve<ITileDefinitionManager>();
-        var meta = node.Get<MappingDataNode>("meta");
-        var version = meta.Get<ValueDataNode>("format").AsInt();
+
+        node.TryGetValue(new ValueDataNode("version"), out var versionNode);
+        var version = ((ValueDataNode?) versionNode)?.AsInt() ?? 1;
 
         for (ushort y = 0; y < chunk.ChunkSize; y++)
         {

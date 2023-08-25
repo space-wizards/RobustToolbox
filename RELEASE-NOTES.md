@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `Robust.Server.GameObjects.BoundUserInterface.InteractionRangeSqrd` is now a get-only property. Modify `InteractionRange` instead if you want to change it on active UIs.
 
 ### New features
 
-*None yet*
+* `BoundUserInterfaceCheckRangeEvent` can be used to implement custom logic for BUI range checks.
 
 ### Bugfixes
 

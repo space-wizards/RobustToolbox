@@ -22,8 +22,6 @@ namespace Robust.Shared.GameObjects
 
         #endregion
 
-        public const int DefaultVisibilityMask = 1;
-
         /// <summary>
         ///     If not null, this entity is used to update the eye's position instead of just using the component's owner.
         /// </summary>
@@ -47,6 +45,8 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite), DataField("offset"), AutoNetworkedField]
         public Vector2 Offset;
+
+        public const int DefaultVisibilityMask = 1;
 
         /// <summary>
         ///     The visibility mask for this eye.

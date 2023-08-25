@@ -14,15 +14,15 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<PointLightComponent, ComponentInit>(HandleInit);
+            SubscribeLocalEvent<SharedPointLightComponent, ComponentInit>(HandleInit);
         }
 
-        private void HandleInit(EntityUid uid, PointLightComponent component, ComponentInit args)
+        private void HandleInit(EntityUid uid, SharedPointLightComponent component, ComponentInit args)
         {
             UpdateMask(component);
         }
 
-        internal void UpdateMask(PointLightComponent component)
+        internal void UpdateMask(SharedPointLightComponent component)
         {
             if (component._maskPath is not null)
                 component.Mask = _resourceCache.GetResource<TextureResource>(component._maskPath);
@@ -31,7 +31,7 @@ namespace Robust.Client.GameObjects
         }
 
         #region Setters
-        public void SetContainerOccluded(EntityUid uid, bool occluded, PointLightComponent? comp = null)
+        public void SetContainerOccluded(EntityUid uid, bool occluded, SharedPointLightComponent? comp = null)
         {
             if (!Resolve(uid, ref comp) || occluded == comp.ContainerOccluded)
                 return;
@@ -52,7 +52,7 @@ namespace Robust.Client.GameObjects
             RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
             Dirty(uid, comp);
 
-            var cast = (PointLightComponent)comp;
+            var cast = (SharedPointLightComponent)comp;
             if (!cast.ContainerOccluded)
                 _lightTree.QueueTreeUpdate(uid, cast);
         }
@@ -65,7 +65,7 @@ namespace Robust.Client.GameObjects
             comp._radius = radius;
             Dirty(uid, comp);
 
-            var cast = (PointLightComponent)comp;
+            var cast = (SharedPointLightComponent)comp;
             if (cast.TreeUid != null)
                 _lightTree.QueueTreeUpdate(uid, cast);
         }

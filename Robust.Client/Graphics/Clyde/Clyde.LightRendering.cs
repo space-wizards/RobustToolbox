@@ -93,7 +93,7 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
 
-        private (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
+        private (SharedPointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
 
         private unsafe void InitLighting()
         {
@@ -344,7 +344,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] lights;
+            (SharedPointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] lights;
             int count;
             Box2 expandedBounds;
             using (_prof.Group("LightsToRender"))
@@ -537,7 +537,7 @@ namespace Robust.Client.Graphics.Clyde
             TransformSystem xformSystem,
             EntityQuery<TransformComponent> xforms,
             Box2 worldAABB) state,
-            in ComponentTreeEntry<PointLightComponent> value)
+            in ComponentTreeEntry<SharedPointLightComponent> value)
         {
             ref var count = ref state.count;
             ref var shadowCount = ref state.shadowCastingCount;
@@ -592,7 +592,7 @@ namespace Robust.Client.Graphics.Clyde
                 // First, partition the array based on whether the lights are shadow casting or not
                 // (non shadow casting lights should be the first partition, shadow casting lights the second)
                 Array.Sort(_lightsToRenderList, 0, state.count,
-                    Comparer<(PointLightComponent light, Vector2 pos, float distanceSquared)>.Create((x, y) =>
+                    Comparer<(SharedPointLightComponent light, Vector2 pos, float distanceSquared)>.Create((x, y) =>
                     {
                         if (x.light.CastShadows && !y.light.CastShadows) return 1;
                         else if (!x.light.CastShadows && y.light.CastShadows) return -1;
@@ -601,7 +601,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Next, sort just the shadow casting lights by distance.
                 Array.Sort(_lightsToRenderList, state.count - state.shadowCastingCount, state.shadowCastingCount,
-                    Comparer<(PointLightComponent light, Vector2 pos, float distanceSquared)>.Create((x, y) =>
+                    Comparer<(SharedPointLightComponent light, Vector2 pos, float distanceSquared)>.Create((x, y) =>
                     {
                         return x.distanceSquared.CompareTo(y.distanceSquared);
                     }));
@@ -1221,7 +1221,7 @@ namespace Robust.Client.Graphics.Clyde
         private void MaxLightsChanged(int value)
         {
             _maxLights = value;
-            _lightsToRenderList = new (PointLightComponent, Vector2, float , Angle)[value];
+            _lightsToRenderList = new (SharedPointLightComponent, Vector2, float , Angle)[value];
             DebugTools.Assert(_maxLights >= _maxShadowcastingLights);
         }
     }

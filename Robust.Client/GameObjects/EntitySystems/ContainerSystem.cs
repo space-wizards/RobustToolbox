@@ -261,7 +261,7 @@ namespace Robust.Client.GameObjects
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
-            var pointQuery = EntityManager.GetEntityQuery<PointLightComponent>();
+            var pointQuery = EntityManager.GetEntityQuery<SharedPointLightComponent>();
             var spriteQuery = EntityManager.GetEntityQuery<SpriteComponent>();
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
@@ -279,7 +279,7 @@ namespace Robust.Client.GameObjects
         private void UpdateEntityRecursively(
             EntityUid entity,
             EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<PointLightComponent> pointQuery,
+            EntityQuery<SharedPointLightComponent> pointQuery,
             EntityQuery<SpriteComponent> spriteQuery)
         {
             // Recursively go up parents and containers to see whether both sprites and lights need to be occluded
@@ -315,7 +315,7 @@ namespace Robust.Client.GameObjects
             EntityUid entity,
             TransformComponent xform,
             EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<PointLightComponent> pointQuery,
+            EntityQuery<SharedPointLightComponent> pointQuery,
             EntityQuery<SpriteComponent> spriteQuery,
             bool spriteOccluded,
             bool lightOccluded)

@@ -15,10 +15,29 @@ public sealed class EyeSystem : SharedEyeSystem
     {
         base.Initialize();
         SubscribeLocalEvent<EyeComponent, ComponentInit>(OnInit);
+        SubscribeLocalEvent<EyeComponent, PlayerDetachedEvent>(OnEyeDetached);
+        SubscribeLocalEvent<EyeComponent, PlayerAttachedEvent>(OnEyeAttached);
 
         // Make sure this runs *after* entities have been moved by interpolation and movement.
         UpdatesAfter.Add(typeof(TransformSystem));
         UpdatesAfter.Add(typeof(PhysicsSystem));
+    }
+
+    private void OnEyeAttached(EntityUid uid, EyeComponent component, PlayerAttachedEvent args)
+    {
+        // TODO: This probably shouldn't be nullable bruv.
+        if (component._eye != null)
+        {
+            _eyeManager.CurrentEye = component._eye;
+        }
+
+        var ev = new EyeAttachedEvent(uid, component);
+        RaiseLocalEvent(uid, ref ev, true);
+    }
+
+    private void OnEyeDetached(EntityUid uid, EyeComponent component, PlayerDetachedEvent args)
+    {
+        _eyeManager.ClearCurrentEye();
     }
 
     private void OnInit(EntityUid uid, EyeComponent component, ComponentInit args)
@@ -27,12 +46,9 @@ public sealed class EyeSystem : SharedEyeSystem
         {
             Position = Transform(uid).MapPosition,
             Zoom = component.Zoom,
-            DrawFov = component.DrawFov
+            DrawFov = component.DrawFov,
+            Rotation = component.Rotation,
         };
-
-        // Who even knows if this is needed anymore.
-        _eyeManager.ClearCurrentEye();
-        _eyeManager.CurrentEye = component._eye;
     }
 
     /// <inheritdoc />
@@ -55,3 +71,9 @@ public sealed class EyeSystem : SharedEyeSystem
         }
     }
 }
+
+/// <summary>
+/// Raised on an entity when it is attached to one with an <see cref="EyeComponent"/>
+/// </summary>
+[ByRefEvent]
+public readonly record struct EyeAttachedEvent(EntityUid Entity, EyeComponent Component);

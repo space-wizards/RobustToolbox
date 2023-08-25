@@ -36,16 +36,17 @@ namespace Robust.Shared.GameObjects
         public EntityUid? Target;
 
         [ViewVariables(VVAccess.ReadWrite), DataField("drawFov"), AutoNetworkedField]
-        public bool DrawFov;
+        public bool DrawFov = true;
 
-        [ViewVariables(VVAccess.ReadWrite), DataField("zoom"), AutoNetworkedField]
-        public Vector2 Zoom;
+        // yes it's not networked, don't ask.
+        [ViewVariables(VVAccess.ReadWrite), DataField("rotation")]
+        public Angle Rotation;
+
+        [ViewVariables(VVAccess.ReadWrite), DataField("zoom")]
+        public Vector2 Zoom = Vector2.One;
 
         [ViewVariables(VVAccess.ReadWrite), DataField("offset"), AutoNetworkedField]
         public Vector2 Offset;
-
-        [ViewVariables(VVAccess.ReadWrite), DataField("rotation"), AutoNetworkedField]
-        public Angle Rotation;
 
         /// <summary>
         ///     The visibility mask for this eye.

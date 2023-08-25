@@ -11,7 +11,7 @@ namespace Robust.Shared.Graphics
     [Virtual]
     public class Eye : IEye
     {
-        private Vector2 _scale = Vector2.One/2f;
+        private Vector2 _scale = Vector2.One / 2f;
         private Angle _rotation = Angle.Zero;
         private MapCoordinates _coords;
 

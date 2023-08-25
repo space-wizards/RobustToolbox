@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Text;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -154,7 +155,7 @@ namespace Robust.Client.Graphics
             Vector2 scale,
             Angle? worldRot,
             Angle eyeRotation = default,
-            Direction? overrideDirection = null,
+            Shared.Maths.Direction? overrideDirection = null,
             SpriteComponent? sprite = null,
             TransformComponent? xform = null,
             SharedTransformSystem? xformSystem = null);

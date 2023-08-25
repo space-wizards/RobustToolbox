@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using Robust.Shared.Timing;
 using Robust.Shared.Enums;
 using System;
+using Robust.Shared.Graphics;
 
 namespace Robust.Client.Graphics
 {

@@ -8,6 +8,7 @@ using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
@@ -20,6 +21,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.Log;
+using Direction = Robust.Shared.Maths.Direction;
 
 namespace Robust.Client.Placement
 {

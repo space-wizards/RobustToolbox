@@ -1,3 +1,5 @@
+using Robust.Shared.Graphics;
+
 namespace Robust.Client.Graphics
 {
     /// <summary>

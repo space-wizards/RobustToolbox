@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using Direction = Robust.Shared.Maths.Direction;
 
 namespace Robust.Client.UserInterface.Controls
 {

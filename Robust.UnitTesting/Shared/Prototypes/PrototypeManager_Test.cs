@@ -25,7 +25,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         {
             var factory = IoCManager.Resolve<IComponentFactory>();
             factory.RegisterClass<TestBasicPrototypeComponent>();
-            factory.RegisterClass<SharedPointLightComponent>();
+            factory.RegisterClass<PointLightComponent>();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
@@ -57,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
-            var componentData = prototype.Components["PointLight"].Component as SharedPointLightComponent;
+            var componentData = prototype.Components["PointLight"].Component as PointLightComponent;
 
             Assert.That(componentData!.NetSyncEnabled, Is.EqualTo(false));
         }

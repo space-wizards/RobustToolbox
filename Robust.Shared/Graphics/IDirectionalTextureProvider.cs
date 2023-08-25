@@ -1,6 +1,6 @@
-﻿using Robust.Shared.Maths;
+using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics
+namespace Robust.Shared.Graphics
 {
     public interface IDirectionalTextureProvider
     {

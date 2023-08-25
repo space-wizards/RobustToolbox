@@ -14,24 +14,21 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<SharedPointLightComponent, ComponentInit>(HandleInit);
+            SubscribeLocalEvent<PointLightComponent, ComponentInit>(HandleInit);
         }
 
-        private void HandleInit(EntityUid uid, SharedPointLightComponent component, ComponentInit args)
+        private void HandleInit(EntityUid uid, PointLightComponent component, ComponentInit args)
         {
-            UpdateMask(component);
+            SetMask(component.MaskPath, component);
         }
 
-        internal void UpdateMask(SharedPointLightComponent component)
+        public void SetMask(string? maskPath, PointLightComponent component)
         {
-            if (component._maskPath is not null)
-                component.Mask = _resourceCache.GetResource<TextureResource>(component._maskPath);
-            else
-                component.Mask = null;
+            component.Mask = maskPath == null ? null : _resourceCache.GetResource<TextureResource>(maskPath);
         }
 
         #region Setters
-        public void SetContainerOccluded(EntityUid uid, bool occluded, SharedPointLightComponent? comp = null)
+        public void SetContainerOccluded(EntityUid uid, bool occluded, PointLightComponent? comp = null)
         {
             if (!Resolve(uid, ref comp) || occluded == comp.ContainerOccluded)
                 return;
@@ -43,29 +40,29 @@ namespace Robust.Client.GameObjects
                 _lightTree.QueueTreeUpdate(uid, comp);
         }
 
-        public override void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null)
+        public override void SetEnabled(EntityUid uid, bool enabled, PointLightComponent? comp = null)
         {
             if (!Resolve(uid, ref comp) || enabled == comp.Enabled)
                 return;
 
-            comp._enabled = enabled;
+            comp.Enabled = enabled;
             RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
             Dirty(uid, comp);
 
-            var cast = (SharedPointLightComponent)comp;
+            var cast = (PointLightComponent)comp;
             if (!cast.ContainerOccluded)
                 _lightTree.QueueTreeUpdate(uid, cast);
         }
 
-        public override void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null)
+        public override void SetRadius(EntityUid uid, float radius, PointLightComponent? comp = null)
         {
             if (!Resolve(uid, ref comp) || MathHelper.CloseToPercent(radius, comp.Radius))
                 return;
 
-            comp._radius = radius;
+            comp.Radius = radius;
             Dirty(uid, comp);
 
-            var cast = (SharedPointLightComponent)comp;
+            var cast = (PointLightComponent)comp;
             if (cast.TreeUid != null)
                 _lightTree.QueueTreeUpdate(uid, cast);
         }

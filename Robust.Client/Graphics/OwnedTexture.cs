@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;

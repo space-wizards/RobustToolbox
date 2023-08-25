@@ -6,7 +6,7 @@ using Robust.Shared.Physics;
 
 namespace Robust.Client.ComponentTrees;
 
-public sealed class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, SharedPointLightComponent>
+public sealed class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, PointLightComponent>
 {
     #region Component Tree Overrides
     protected override bool DoFrameUpdate => true;
@@ -14,7 +14,7 @@ public sealed class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, Sh
     protected override bool Recursive => true;
     protected override int InitialCapacity => 128;
 
-    protected override Box2 ExtractAabb(in ComponentTreeEntry<SharedPointLightComponent> entry, Vector2 pos, Angle rot)
+    protected override Box2 ExtractAabb(in ComponentTreeEntry<PointLightComponent> entry, Vector2 pos, Angle rot)
     {
         // Really we should be rotating the light offset by the relative rotation. But I assume the light offset will
         // always be relatively small, so fuck it, this is probably faster than having to compute the angle every time.
@@ -23,7 +23,7 @@ public sealed class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, Sh
         return new Box2(pos - radiusVec, pos + radiusVec);
     }
 
-    protected override Box2 ExtractAabb(in ComponentTreeEntry<SharedPointLightComponent> entry)
+    protected override Box2 ExtractAabb(in ComponentTreeEntry<PointLightComponent> entry)
     {
         if (entry.Component.TreeUid == null)
             return default;

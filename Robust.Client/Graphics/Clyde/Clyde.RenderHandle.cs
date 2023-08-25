@@ -5,6 +5,7 @@ using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared.Graphics;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -149,7 +150,7 @@ namespace Robust.Client.Graphics.Clyde
                 Vector2 scale,
                 Angle? worldRot,
                 Angle eyeRot = default,
-                Direction? overrideDirection = null,
+                Shared.Maths.Direction? overrideDirection = null,
                 SpriteComponent? sprite = null,
                 TransformComponent? xform = null,
                 SharedTransformSystem? xformSystem = null)
@@ -356,7 +357,7 @@ namespace Robust.Client.Graphics.Clyde
                     Vector2 scale,
                     Angle? worldRot,
                     Angle eyeRot = default,
-                    Direction? overrideDirection = null,
+                    Shared.Maths.Direction? overrideDirection = null,
                     SpriteComponent? sprite = null,
                     TransformComponent? xform = null,
                     SharedTransformSystem? xformSystem = null)

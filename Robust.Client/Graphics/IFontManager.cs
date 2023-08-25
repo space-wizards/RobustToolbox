@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using Robust.Shared.Graphics;
 
 namespace Robust.Client.Graphics
 {

@@ -8,6 +8,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Utility;
+using Robust.Shared.Graphics;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -463,15 +465,15 @@ namespace Robust.Client.Graphics.Clyde
         {
             var white = new Image<Rgba32>(1, 1);
             white[0, 0] = new Rgba32(255, 255, 255, 255);
-            _stockTextureWhite = (ClydeTexture) Texture.LoadFromImage(white);
+            _stockTextureWhite = (ClydeTexture) ClydeTexture.LoadFromImage(white);
 
             var black = new Image<Rgba32>(1, 1);
             black[0, 0] = new Rgba32(0, 0, 0, 255);
-            _stockTextureBlack = (ClydeTexture) Texture.LoadFromImage(black);
+            _stockTextureBlack = (ClydeTexture) ClydeTexture.LoadFromImage(black);
 
             var blank = new Image<Rgba32>(1, 1);
             blank[0, 0] = new Rgba32(0, 0, 0, 0);
-            _stockTextureTransparent = (ClydeTexture) Texture.LoadFromImage(blank);
+            _stockTextureTransparent = (ClydeTexture) ClydeTexture.LoadFromImage(blank);
         }
 
         /// <summary>
@@ -600,6 +602,48 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class ClydeTexture : OwnedTexture
         {
+            public static Texture Transparent =>
+                IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Transparent);
+
+            public static Texture White =>
+                IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.White);
+
+            public static Texture Black =>
+                IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Black);
+
+            /// <summary>
+            ///     Loads a new texture an existing image.
+            /// </summary>
+            /// <param name="image">The image to load.</param>
+            /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
+            /// <param name="loadParameters">
+            ///     Parameters that influence the loading of textures.
+            ///     Defaults to <see cref="Robust.Client.Graphics.TextureLoadParameters.Default"/> if <c>null</c>.
+            /// </param>
+            /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
+            public static Texture LoadFromImage<T>(Image<T> image, string? name = null,
+                TextureLoadParameters? loadParameters = null) where T : unmanaged, IPixel<T>
+            {
+                var manager = IoCManager.Resolve<IClyde>();
+                return manager.LoadTextureFromImage(image, name, loadParameters);
+            }
+
+            /// <summary>
+            ///     Loads an image from a stream containing PNG data.
+            /// </summary>
+            /// <param name="stream">The stream to load the image from.</param>
+            /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
+            /// <param name="loadParameters">
+            ///     Parameters that influence the loading of textures.
+            ///     Defaults to <see cref="Robust.Client.Graphics.TextureLoadParameters.Default"/> if <c>null</c>.
+            /// </param>
+            public static Texture LoadFromPNGStream(Stream stream, string? name = null,
+                TextureLoadParameters? loadParameters = null)
+            {
+                var manager = IoCManager.Resolve<IClyde>();
+                return manager.LoadTextureFromPNGStream(stream, name, loadParameters);
+            }
+
             private readonly Clyde _clyde;
             public readonly bool IsSrgb;
 

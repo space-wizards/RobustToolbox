@@ -1,6 +1,6 @@
 using Robust.Shared.Graphics.RSI;
 
-namespace Robust.Shared.Graphics
+namespace Robust.Client.Graphics
 {
     public interface IRsiStateLike : IDirectionalTextureProvider
     {

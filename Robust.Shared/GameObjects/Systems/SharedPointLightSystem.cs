@@ -1,30 +1,39 @@
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract class SharedPointLightSystem : EntitySystem
 {
-    public void SetCastShadows(EntityUid uid, bool value, PointLightComponent? comp = null)
+    public abstract SharedPointLightComponent EnsureLight(EntityUid uid);
+
+    public abstract bool ResolveLight(EntityUid uid, [NotNullWhen(true)] ref SharedPointLightComponent? component);
+
+    public abstract bool TryGetLight(EntityUid uid, [NotNullWhen(true)] out SharedPointLightComponent? component);
+
+    public abstract bool RemoveLightDeferred(EntityUid uid);
+
+    public void SetCastShadows(EntityUid uid, bool value, SharedPointLightComponent? comp = null)
     {
-        if (!Resolve(uid, ref comp) || value == comp.CastShadows)
+        if (!ResolveLight(uid, ref comp) || value == comp.CastShadows)
             return;
 
         comp.CastShadows = value;
         Dirty(uid, comp);
     }
 
-    public void SetColor(EntityUid uid, Color value, PointLightComponent? comp = null)
+    public void SetColor(EntityUid uid, Color value, SharedPointLightComponent? comp = null)
     {
-        if (!Resolve(uid, ref comp) || value == comp.Color)
+        if (!ResolveLight(uid, ref comp) || value == comp.Color)
             return;
 
         comp.Color = value;
         Dirty(uid, comp);
     }
 
-    public virtual void SetEnabled(EntityUid uid, bool enabled, PointLightComponent? comp = null)
+    public virtual void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null)
     {
-        if (!Resolve(uid, ref comp) || enabled == comp.Enabled)
+        if (!ResolveLight(uid, ref comp) || enabled == comp.Enabled)
             return;
 
         comp.Enabled = enabled;
@@ -32,27 +41,27 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
-    public void SetEnergy(EntityUid uid, float value, PointLightComponent? comp = null)
+    public void SetEnergy(EntityUid uid, float value, SharedPointLightComponent? comp = null)
     {
-        if (!Resolve(uid, ref comp) || MathHelper.CloseToPercent(comp.Energy, value))
+        if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.Energy, value))
             return;
 
         comp.Energy = value;
         Dirty(uid, comp);
     }
 
-    public virtual void SetRadius(EntityUid uid, float radius, PointLightComponent? comp = null)
+    public virtual void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null)
     {
-        if (!Resolve(uid, ref comp) || MathHelper.CloseToPercent(comp.Radius, radius))
+        if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.Radius, radius))
             return;
 
         comp.Radius = radius;
         Dirty(uid, comp);
     }
 
-    public void SetSoftness(EntityUid uid, float value, PointLightComponent? comp = null)
+    public void SetSoftness(EntityUid uid, float value, SharedPointLightComponent? comp = null)
     {
-        if (!Resolve(uid, ref comp) || MathHelper.CloseToPercent(comp.Softness, value))
+        if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.Softness, value))
             return;
 
         comp.Softness = value;

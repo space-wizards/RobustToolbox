@@ -4,35 +4,12 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 using System.Numerics;
-using Robust.Shared.ComponentTrees;
-using Robust.Shared.Graphics;
-using Robust.Shared.Physics;
 
 namespace Robust.Shared.GameObjects
 {
-    [RegisterComponent, NetworkedComponent, AutoGenerateComponentState, Access(typeof(SharedPointLightSystem))]
-    public sealed partial class PointLightComponent : Component, IComponentTreeEntry<PointLightComponent>
+    [NetworkedComponent, Access(typeof(SharedPointLightSystem))]
+    public abstract partial class SharedPointLightComponent : Component
     {
-        #region Component Tree
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public EntityUid? TreeUid { get; set; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public DynamicTree<ComponentTreeEntry<PointLightComponent>>? Tree { get; set; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public bool AddToTree { get; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public bool TreeUpdateQueued { get; set; }
-
-        #endregion
-
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("color"), AutoNetworkedField]
         public Color Color = Color.White;
@@ -42,7 +19,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("offset")]
-        [Access(Other = AccessPermissions.ReadExecute)]
+        [Access(Other = AccessPermissions.ReadWriteExecute)]
         public Vector2 Offset = Vector2.Zero;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -93,13 +70,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("mask")]
         public string? MaskPath;
-
-        /// <summary>
-        ///     Set a mask texture that will be applied to the light while rendering.
-        ///     The mask's red channel will be linearly multiplied.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        internal Texture? Mask;
     }
 
     public sealed class PointLightToggleEvent : EntityEventArgs

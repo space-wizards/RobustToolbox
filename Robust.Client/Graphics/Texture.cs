@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using JetBrains.Annotations;
+using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -8,7 +9,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
 
-namespace Robust.Shared.Graphics;
+namespace Robust.Client.Graphics;
 
 /// <summary>
 ///     Contains a texture used for drawing things.
@@ -68,13 +69,13 @@ public abstract class Texture : IRsiStateLike
     public abstract Color GetPixel(int x, int y);
 
     public static Texture Transparent =>
-                IoCManager.Resolve<IClydeShared>().GetStockTexture(ClydeStockTexture.Transparent);
+                IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Transparent);
 
     public static Texture White =>
-        IoCManager.Resolve<IClydeShared>().GetStockTexture(ClydeStockTexture.White);
+        IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.White);
 
     public static Texture Black =>
-        IoCManager.Resolve<IClydeShared>().GetStockTexture(ClydeStockTexture.Black);
+        IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Black);
 
     /// <summary>
     ///     Loads a new texture an existing image.
@@ -89,7 +90,7 @@ public abstract class Texture : IRsiStateLike
     public static Texture LoadFromImage<T>(Image<T> image, string? name = null,
         TextureLoadParameters? loadParameters = null) where T : unmanaged, IPixel<T>
     {
-        var manager = IoCManager.Resolve<IClydeShared>();
+        var manager = IoCManager.Resolve<IClyde>();
         return manager.LoadTextureFromImage(image, name, loadParameters);
     }
 
@@ -105,7 +106,7 @@ public abstract class Texture : IRsiStateLike
     public static Texture LoadFromPNGStream(Stream stream, string? name = null,
         TextureLoadParameters? loadParameters = null)
     {
-        var manager = IoCManager.Resolve<IClydeShared>();
+        var manager = IoCManager.Resolve<IClyde>();
         return manager.LoadTextureFromPNGStream(stream, name, loadParameters);
     }
 }

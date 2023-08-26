@@ -1,65 +1,51 @@
 ﻿using Arch.Core;
-using Collections.Pooled;
 
 namespace Robust.Shared.GameObjects;
 
 internal struct ArchChunkIterator
 {
-    private readonly Query _query;
-    private readonly PooledList<Archetype> _archetypes;
+    private readonly ArchetypeEnumerator _archetypes;
 
-    internal ArchChunkIterator(in Query query, PooledList<Archetype> archetypes)
+    internal ArchChunkIterator(in ArchetypeEnumerator archetypes)
     {
-        _query = query;
         _archetypes = archetypes;
     }
 
     public ArchChunkEnumerator GetEnumerator()
     {
-        return new ArchChunkEnumerator(_query, _archetypes);
+        return new ArchChunkEnumerator(_archetypes);
     }
 }
 
 internal struct ArchChunkEnumerator
 {
-    private readonly Query _query;
-    private PooledList<Archetype>.Enumerator _archetypes;
+    private ArchetypeEnumerator _archetypes;
     private int _chunkIndex;
-    public Chunk Current { get; private set; }
+    public Chunk Current => _archetypes.Current.GetChunk(_chunkIndex);
 
-    internal ArchChunkEnumerator(in Query query, PooledList<Archetype> archetypes)
+    internal ArchChunkEnumerator(in ArchetypeEnumerator archetypes)
     {
-        _query = query;
-        _archetypes = archetypes.GetEnumerator();
-    }
+        _archetypes = archetypes;
 
-    private bool NextArchetype()
-    {
-        while (_archetypes.MoveNext())
+        if (_archetypes.MoveNext())
         {
-            var archetype = _archetypes.Current;
-            if (archetype.Size > 0 && _query.Valid(archetype.BitSet))
-                return true;
+            _chunkIndex = _archetypes.Current.Size;
         }
-
-        return false;
     }
 
     public bool MoveNext()
     {
-        if (_archetypes.Current == null! || _chunkIndex >= _archetypes.Current.Size)
+        if (--_chunkIndex >= 0 && Current.Size > 0)
         {
-            while (_archetypes.Current == null || _chunkIndex >= _archetypes.Current.Size)
-            {
-                if (!NextArchetype())
-                    return false;
-            }
-
-            _chunkIndex = 0;
+            return true;
         }
 
-        Current = _archetypes.Current.Chunks[_chunkIndex];
-        _chunkIndex++;
+        if (!_archetypes.MoveNext())
+        {
+            return false;
+        }
+
+        _chunkIndex = _archetypes.Current.Size - 1;
         return true;
     }
 }
@@ -68,6 +54,7 @@ internal static partial class QueryExtensions
 {
     internal static ArchChunkIterator ChunkIterator(this in Query query, World world)
     {
-        return new ArchChunkIterator(query, world.Archetypes!);
+        var archetypeEnumerator = new ArchetypeEnumerator(in query, world.Archetypes);
+        return new ArchChunkIterator(in archetypeEnumerator);
     }
 }

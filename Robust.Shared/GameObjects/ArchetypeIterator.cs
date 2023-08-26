@@ -6,9 +6,9 @@ namespace Robust.Shared.GameObjects;
 internal struct ArchetypeIterator
 {
     private readonly Query _query;
-    private readonly PooledList<Archetype>.Enumerator _archetypes;
+    private readonly PooledList<Archetype> _archetypes;
 
-    internal ArchetypeIterator(in Query query, PooledList<Archetype>.Enumerator archetypes)
+    internal ArchetypeIterator(in Query query, PooledList<Archetype> archetypes)
     {
         _query = query;
         _archetypes = archetypes;
@@ -23,10 +23,10 @@ internal struct ArchetypeIterator
 internal struct ArchetypeEnumerator
 {
     private readonly Query _query;
-    private PooledList<Archetype>.Enumerator _archetypes;
-    public Archetype Current { get; private set; } = default!;
+    private readonly PooledList<Archetype> _archetypes;
+    private int _index;
 
-    public ArchetypeEnumerator(in Query query, PooledList<Archetype>.Enumerator archetypes)
+    public ArchetypeEnumerator(in Query query, PooledList<Archetype> archetypes)
     {
         _query = query;
         _archetypes = archetypes;
@@ -34,13 +34,17 @@ internal struct ArchetypeEnumerator
 
     public bool MoveNext()
     {
-        while (_archetypes.MoveNext())
+        while (++_index < _archetypes.Count)
         {
-            var archetype = _archetypes.Current;
-            if (archetype.Size > 0 && _query.Valid(archetype.BitSet))
+            var archetype = Current;
+            if (archetype.Entities > 0 && _query.Valid(archetype.BitSet))
+            {
                 return true;
+            }
         }
 
         return false;
     }
+
+    public Archetype Current => _archetypes[_index];
 }

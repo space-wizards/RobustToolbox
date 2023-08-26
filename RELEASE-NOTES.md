@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `Robust.Server.GameObjects.BoundUserInterface.InteractionRangeSqrd` is now a get-only property. Modify `InteractionRange` instead if you want to change it on active UIs.
+*None yet*
 
 ### New features
 
-* `BoundUserInterfaceCheckRangeEvent` can be used to implement custom logic for BUI range checks.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,43 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 152.0.0
+
+### Breaking changes
+
+* `Robust.Server.GameObjects.BoundUserInterface.InteractionRangeSqrd` is now a get-only property. Modify `InteractionRange` instead if you want to change it on active UIs.
+* Remove IContainerManager.
+* Remove and obsolete ComponentExt methods.
+* Remove EntityStarted and ComponentDeleted C# events.
+* Convert Tile.TypeId to an int. Old maps that were saved with TypeId being an ushort will still be properly deserialized.
+
+### New features
+
+* `BoundUserInterfaceCheckRangeEvent` can be used to implement custom logic for BUI range checks.
+* Add support for long values in CVars.
+* Allow user code to implement own logic for bound user interface range checks.
+
+### Bugfixes
+
+* Fix timers counting down slower than real time and drifting.
+* Add missing System using statement to generated component states.
+* Fix build with USE_SYSTEM_SQLITE.
+* Fix prototype manager not being initialized in robust server simulation tests.
+* Fix not running serialization hooks when copying non-byref data definition fields without a custom type serializer.
+
+### Other
+
+* Remove warning for glibc 2.37.
+* Remove personally-identifiable file paths from client logs.
+
+### Internal
+
+* Disable obsoletion and inherited member hidden warnings in serialization source generated code.
+* Update CI workflows to use setup-dotnet 3.2.0 and checkout 3.6.0.
+* Fix entity spawn tests having instance per test lifecycle with a non static OneTimeTearDown method.
+* Add new PVS test to check that there is no issue with entity states referencing other entities that the client is not yet aware of.
 
 
 ## 151.0.0

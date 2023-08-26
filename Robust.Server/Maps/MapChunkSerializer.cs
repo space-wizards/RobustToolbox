@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Robust.Server.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -48,7 +47,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
 
         var chunk = instantiationDelegate != null ? instantiationDelegate() : new MapChunk(ind.X, ind.Y, size);
 
-        IReadOnlyDictionary<ushort, string>? tileMap = null;
+        IReadOnlyDictionary<int, string>? tileMap = null;
 
         if (context is MapSerializationContext serContext)
         {
@@ -65,11 +64,14 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
 
         var tileDefinitionManager = dependencies.Resolve<ITileDefinitionManager>();
 
+        node.TryGetValue(new ValueDataNode("version"), out var versionNode);
+        var version = ((ValueDataNode?) versionNode)?.AsInt() ?? 1;
+
         for (ushort y = 0; y < chunk.ChunkSize; y++)
         {
             for (ushort x = 0; x < chunk.ChunkSize; x++)
             {
-                var id = reader.ReadUInt16();
+                var id = version < 6 ? reader.ReadUInt16() : reader.ReadInt32();
                 var flags = (TileRenderFlag)reader.ReadByte();
                 var variant = reader.ReadByte();
 
@@ -98,6 +100,8 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         var gridNode = new ValueDataNode();
         root.Add("tiles", gridNode);
 
+        root.Add("version", new ValueDataNode("6"));
+
         gridNode.Value = SerializeTiles(value);
 
         return root;
@@ -106,7 +110,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
     private static string SerializeTiles(MapChunk chunk)
     {
         // number of bytes written per tile, because sizeof(Tile) is useless.
-        const int structSize = 4;
+        const int structSize = 6;
 
         var nTiles = chunk.ChunkSize * chunk.ChunkSize * structSize;
         var barr = new byte[nTiles];

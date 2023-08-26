@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -24,7 +25,6 @@ using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Replays;
 using Robust.Shared.Players;
-using Robust.Shared.Map.Components;
 
 namespace Robust.Server.GameStates
 {
@@ -219,10 +219,16 @@ namespace Robust.Server.GameStates
             {
                 try
                 {
+                    var guid = i >= 0 ? players[i].UserId.UserId : default;
+
+                    PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
+
                     if (i >= 0)
                         SendStateUpdate(i, resource, inputSystem, players[i], pvsData, mQuery, tQuery, ref oldestAckValue);
                     else
                         _replay.Update();
+
+                    PvsEventSource.Log.WorkStop(_gameTiming.CurTick.Value, i, guid);
                 }
                 catch (Exception e) // Catch EVERY exception
                 {
@@ -371,6 +377,36 @@ namespace Robust.Server.GameStates
             {
                 var pvsMessage = new MsgStateLeavePvs {Entities = leftPvs, Tick = _gameTiming.CurTick};
                 _networkManager.ServerSendMessage(pvsMessage, channel);
+            }
+        }
+
+        [EventSource(Name = "Robust.Pvs")]
+        public sealed class PvsEventSource : System.Diagnostics.Tracing.EventSource
+        {
+            public static PvsEventSource Log { get; } = new();
+
+            [Event(1)]
+            public void WorkStart(uint tick, int playerIdx, Guid playerGuid) => WriteEvent(1, tick, playerIdx, playerGuid);
+
+            [Event(2)]
+            public void WorkStop(uint tick, int playerIdx, Guid playerGuid) => WriteEvent(2, tick, playerIdx, playerGuid);
+
+            [NonEvent]
+            private unsafe void WriteEvent(int eventId, uint arg1, int arg2, Guid arg3)
+            {
+                if (IsEnabled())
+                {
+                    var descrs = stackalloc EventData[3];
+
+                    descrs[0].DataPointer = (IntPtr)(&arg1);
+                    descrs[0].Size = 4;
+                    descrs[1].DataPointer = (IntPtr)(&arg2);
+                    descrs[1].Size = 4;
+                    descrs[2].DataPointer = (IntPtr)(&arg3);
+                    descrs[2].Size = 16;
+
+                    WriteEventCore(eventId, 3, descrs);
+                }
             }
         }
     }

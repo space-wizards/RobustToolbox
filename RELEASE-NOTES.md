@@ -47,11 +47,11 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Performance improvements for replay recording.
 
 ### Internal
 
-*None yet*
+* Added some `EventSource` providers for PVS and replay recording: `Robust.Pvs` and `Robust.ReplayRecording`.
 
 
 ## 152.0.0

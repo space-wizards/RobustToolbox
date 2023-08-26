@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Robust.Server.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -100,6 +99,8 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
 
         var gridNode = new ValueDataNode();
         root.Add("tiles", gridNode);
+
+        root.Add("version", new ValueDataNode("6"));
 
         gridNode.Value = SerializeTiles(value);
 

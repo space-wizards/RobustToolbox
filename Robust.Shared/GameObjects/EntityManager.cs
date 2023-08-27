@@ -793,12 +793,13 @@ namespace Robust.Shared.GameObjects
 #endif
 
             _world.AddRange(entity, types.Span);
+            var metadata = GetComponent<MetaDataComponent>(entity);
 
             for (var i = 0; i < adds.Count; i++)
             {
                 if (adds[i])
                 {
-                    AddComponent(entity, (Component) comps[i]);
+                    AddComponent(entity, (Component) comps[i], metadata: metadata);
                 }
             }
         }

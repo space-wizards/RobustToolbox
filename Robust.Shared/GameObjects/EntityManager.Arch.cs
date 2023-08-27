@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Arch.Core;
+using Arch.Core.Extensions;
 using Arch.Core.Utils;
+using Collections.Pooled;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects;
@@ -65,5 +67,14 @@ public partial class EntityManager
         }
 
         return compTypes;
+    }
+
+    /// <summary>
+    /// WARNING: DO NOT CALL THIS UNLESS YOU KNOW WHAT YOU ARE DOING.
+    /// Adds the component types to the entity, shuffling its archetype.
+    /// </summary>
+    internal void AddComponentRange(EntityUid uid, PooledList<ComponentType> compTypes)
+    {
+        _world.AddRange(uid, compTypes.Span);
     }
 }

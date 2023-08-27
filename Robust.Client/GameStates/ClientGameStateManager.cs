@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Arch.Core;
+using Collections.Pooled;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
@@ -30,7 +31,9 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Profiling;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
+using ComponentType = Arch.Core.Utils.ComponentType;
 
 namespace Robust.Client.GameStates
 {
@@ -1145,19 +1148,35 @@ namespace Robust.Client.GameStates
             }
             else if (curState != null)
             {
+                using var addedComps = new PooledList<Component>();
+                using var addedCompTypes = new PooledList<ComponentType>();
+
                 foreach (var compChange in curState.ComponentChanges.Span)
                 {
                     if (!_entityManager.TryGetComponent(uid, compChange.NetID, out var comp))
                     {
                         comp = _compFactory.GetComponent(compChange.NetID);
                         var newComp = (Component)comp;
-                        newComp.Owner = uid;
-                        _entityManager.AddComponent(uid, newComp, true);
+                        addedComps.Add(newComp);
+                        addedCompTypes.Add(newComp.GetType());
                     }
                     else if (compChange.LastModifiedTick <= lastApplied && lastApplied != GameTick.Zero)
                         continue;
 
                     compStateWork[compChange.NetID] = (comp, compChange.State, null);
+                }
+
+                // To avoid shuffling the archetype we'll set the component range up-front.
+                if (addedComps.Count > 0)
+                {
+                    var metadata = _entityManager.GetComponent<MetaDataComponent>(uid);
+                    _entityManager.AddComponentRange(uid, addedCompTypes);
+
+                    foreach (var comp in addedComps)
+                    {
+                        comp.Owner = uid;
+                        _entityManager.AddComponent(uid, comp, true, metadata);
+                    }
                 }
             }
 

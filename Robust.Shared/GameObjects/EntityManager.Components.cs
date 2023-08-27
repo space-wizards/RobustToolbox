@@ -207,7 +207,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
+        public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : Component
         {
             if (!uid.IsValid() || !EntityExists(uid))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
@@ -216,10 +216,10 @@ namespace Robust.Shared.GameObjects
 
             if (component.Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
 
-            AddComponentInternal(uid, component, false);
+            AddComponentInternal(uid, component, false, metadata);
         }
 
-        private void AddComponentInternal<T>(EntityUid uid, T component, bool skipInit) where T : Component
+        private void AddComponentInternal<T>(EntityUid uid, T component, bool skipInit, MetaDataComponent? metadata = null) where T : Component
         {
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
@@ -268,7 +268,7 @@ namespace Robust.Shared.GameObjects
             if (skipInit)
                 return;
 
-            var metadata = GetComponent<MetaDataComponent>(uid);
+            metadata ??= GetComponent<MetaDataComponent>(uid);
 
             if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                 return;

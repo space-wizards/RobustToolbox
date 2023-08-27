@@ -10,7 +10,6 @@ namespace Robust.Shared.GameObjects;
 public partial class EntityManager
 {
     private World _world = default!;
-    protected ComponentType[] DefaultArchetype = { typeof(MetaDataComponent) };
 
     protected void InitializeArch()
     {

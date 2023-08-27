@@ -156,10 +156,11 @@ public sealed class MapLoaderSystem : EntitySystem
             var sw = new Stopwatch();
             sw.Start();
             result = Deserialize(data);
-            _logLoader.Debug($"Loaded map in {sw.Elapsed}");
 
-            var mapEnt = _mapManager.GetMapEntityId(mapId);
+            _logLoader.Debug($"Loaded map in {sw.Elapsed}");
             var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
+            var mapEnt = _mapManager.GetMapEntityId(mapId);
+
             var rootEnts = new List<EntityUid>();
             // aeoeoeieioe content
 
@@ -555,6 +556,7 @@ public sealed class MapLoaderSystem : EntitySystem
             _context.CurrentlyIgnoredComponents = missingComponentList.Cast<ValueDataNode>().Select(x => x.Value).ToHashSet();
 
         _serverEntityManager.FinishEntityLoad(uid, meta.EntityPrototype, _context);
+
         if (_context.CurrentlyIgnoredComponents.Count > 0)
             meta.LastComponentRemoved = _timing.CurTick;
     }

@@ -39,7 +39,7 @@ namespace Robust.Shared.GameObjects
         public EntityUid()
         {
             _uid = Invalid._uid;
-            Version = -Invalid.Version;
+            Version = Invalid.Version;
         }
 
         internal EntityUid(EntityReference reference)

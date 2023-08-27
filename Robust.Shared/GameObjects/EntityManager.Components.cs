@@ -201,7 +201,7 @@ namespace Robust.Shared.GameObjects
 
             if (newComponent.Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
 
-            AddComponentInternal(uid, newComponent, false, true);
+            AddComponentInternal(uid, newComponent, true);
 
             return new CompInitializeHandle<T>(this, newComponent, reg.Idx);
         }
@@ -216,10 +216,10 @@ namespace Robust.Shared.GameObjects
 
             if (component.Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
 
-            AddComponentInternal(uid, component, overwrite, false);
+            AddComponentInternal(uid, component, false);
         }
 
-        private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit) where T : Component
+        private void AddComponentInternal<T>(EntityUid uid, T component, bool skipInit) where T : Component
         {
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
@@ -229,29 +229,14 @@ namespace Robust.Shared.GameObjects
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
 
-            // Check that there are no overlapping references.
-            foreach (var type in reg.References)
-            {
-                // TODO arch don't use CompIdx
-                var compType = _componentFactory.IdxToType(type);
-                if (!_world.IsAlive(uid) || !_world.TryGet(uid, compType, out var comp) || comp == null!)
-                    continue;
-
-                var duplicate = (Component) comp;
-
-                if (!overwrite && !duplicate.Deleted)
-                    throw new InvalidOperationException(
-                        $"Component reference type {component.GetType().Name} already occupied by {duplicate}");
-
-                RemoveComponentImmediate(duplicate!, uid, false);
-            }
-
             // TODO optimize this
             // We can't use typeof(T) here in case T is just Component
-            if (!_world.TryGet(uid, component.GetType(), out var existingComponent))
+            if (!_world.Has(uid, component.GetType()))
                 _world.Add(uid, (object) component);
             else
             {
+                // Okay so technically it may have an existing one not null but pointing to a stale component
+                // hence just set it and act casual.
                 _world.Set(uid, (object) component);
             }
 
@@ -531,7 +516,8 @@ namespace Robust.Shared.GameObjects
 
         private void DeleteComponent(EntityUid entityUid, Component component, bool terminating)
         {
-            var reg = _componentFactory.GetRegistration(component.GetType());
+            var compType = component.GetType();
+            var reg = _componentFactory.GetRegistration(compType);
 
             if (!terminating && reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
             {
@@ -544,12 +530,11 @@ namespace Robust.Shared.GameObjects
                     DirtyEntity(entityUid);
             }
 
-            foreach (var refType in reg.References)
+            // Don't bother with archetype shuffles if we're terminating.
+            if (!terminating)
             {
-                // TODO arch don't use CompIdx
-                var type = _componentFactory.IdxToType(refType);
-                if (_world.Has(entityUid, type))
-                    _world.Remove(entityUid, type);
+                if (_world.Has(entityUid, compType))
+                    _world.Remove(entityUid, compType);
             }
         }
 
@@ -656,6 +641,7 @@ namespace Robust.Shared.GameObjects
             if (_world.IsAlive(uid) && _world.TryGet(uid, out T comp))
                 return comp;
 
+            var arc = _world.GetArchetype(uid);
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
         }
 

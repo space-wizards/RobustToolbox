@@ -570,7 +570,7 @@ namespace Robust.Shared.GameObjects
 
         public virtual void QueueDeleteEntity(EntityUid uid)
         {
-            if (!QueuedDeletionsSet.Add(uid))
+            if (Deleted(uid) || !QueuedDeletionsSet.Add(uid))
                 return;
 
             QueuedDeletions.Enqueue(uid);
@@ -600,7 +600,7 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !_world.TryGet(uid, out MetaDataComponent comp) || comp.EntityDeleted;
+            return !_world.IsAlive(uid) || !_world.TryGet(uid, out MetaDataComponent comp) || comp.EntityLifeStage >= EntityLifeStage.Terminating;
         }
 
         public bool Deleted([NotNullWhen(false)] EntityUid? uid)
@@ -665,7 +665,7 @@ namespace Robust.Shared.GameObjects
             };
 
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata, false, false);
+            AddComponentInternal(uid, metadata, false);
 
             // allocate the required TransformComponent
             AddComponent<TransformComponent>(uid);
@@ -724,6 +724,10 @@ namespace Robust.Shared.GameObjects
             using var comps = new PooledList<object>(count);
             using var adds = new PooledList<bool>(count);
 
+#if DEBUG
+            var arc = _world.GetArchetype(entity);
+#endif
+
             if (prototype != null)
             {
                 foreach (var (name, entry) in prototype.Components)
@@ -735,6 +739,13 @@ namespace Robust.Shared.GameObjects
 
                     var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, fullData, context as ISerializationContext);
                     comp.Comp.Owner = entity;
+
+                    // Don't double add an existing component.
+                    if (_world.TryGet(entity, comp.Type, out var existing))
+                    {
+                        DebugTools.Assert(existing != null);
+                        continue;
+                    }
 
                     types.Add(comp.Type);
                     comps.Add(comp.Comp);
@@ -763,11 +774,23 @@ namespace Robust.Shared.GameObjects
                     var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, data, context as ISerializationContext);
                     comp.Comp.Owner = entity;
 
+                    // Don't double add an existing component.
+                    if (_world.TryGet(entity, comp.Type, out var existing))
+                    {
+                        DebugTools.Assert(existing != null);
+                        continue;
+                    }
+
                     types.Add(comp.Type);
                     comps.Add(comp.Comp);
                     adds.Add(comp.Add);
                 }
             }
+
+#if DEBUG
+            // Shouldn't be changing archetype above or we're having a bad time.
+            DebugTools.Assert(_world.GetArchetype(entity).Equals(arc));
+#endif
 
             _world.AddRange(entity, types.Span);
 

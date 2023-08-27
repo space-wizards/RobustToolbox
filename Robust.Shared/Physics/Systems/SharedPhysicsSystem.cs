@@ -74,7 +74,7 @@ namespace Robust.Shared.Physics.Systems
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
 
-            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
+            SubscribeLocalEvent<GridStartupEvent>(OnGridStartup);
             SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
             SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
@@ -230,7 +230,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void OnGridAdd(GridAddEvent ev)
+        private void OnGridStartup(GridStartupEvent ev)
         {
             var guid = ev.EntityUid;
 

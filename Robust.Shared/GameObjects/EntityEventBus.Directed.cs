@@ -551,6 +551,11 @@ namespace Robust.Shared.GameObjects
                 if (reg.ReferenceEvent != dispatchByReference)
                     ThrowByRefMisMatch();
 
+                if (component == null
+                    || component.Deleted)
+                {
+                    continue;
+                }
                 reg.Handler(euid, component, ref args);
             }
         }
@@ -717,8 +722,7 @@ namespace Robust.Shared.GameObjects
                 _uid = uid;
             }
 
-            public bool MoveNext(
-                [NotNullWhen(true)] out IComponent? component,
+            public bool MoveNext(out IComponent? component,
                 [NotNullWhen(true)] out DirectedRegistration? registration)
             {
                 if (_idx == -1)
@@ -740,7 +744,8 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                return _entityManager.TryGetComponent(_uid, compType, out component);
+                _entityManager.TryGetComponent(_uid, compType, out component);
+                return true;
             }
         }
 

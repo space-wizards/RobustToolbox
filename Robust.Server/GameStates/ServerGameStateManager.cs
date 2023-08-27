@@ -24,6 +24,7 @@ using SharpZstd.Interop;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Replays;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Players;
 
 namespace Robust.Server.GameStates

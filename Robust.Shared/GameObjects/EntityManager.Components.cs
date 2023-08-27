@@ -104,18 +104,6 @@ namespace Robust.Shared.GameObjects
                     comp.LifeInitialize(this, CompIdx.Index(comp.GetType()));
             }
 
-#if DEBUG
-            // Second integrity check in case of.
-            foreach (var t in _entCompIndex[uid])
-            {
-                if (!t.Deleted && !t.Initialized)
-                {
-                    DebugTools.Assert(
-                        $"Component {t.GetType()} was not initialized at the end of {nameof(InitializeComponents)}.");
-                }
-            }
-
-#endif
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
             metadata.EntityLifeStage = EntityLifeStage.Initialized;
         }

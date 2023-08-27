@@ -269,7 +269,7 @@ namespace Robust.Shared.GameObjects
             }
             else if (component.Owner != uid)
             {
-                throw new InvalidOperationException("Component is not owned by entity.")
+                throw new InvalidOperationException("Component is not owned by entity.");
             }
 #pragma warning restore CS0618 // Type or member is obsolete
 

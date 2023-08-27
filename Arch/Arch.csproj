@@ -8,7 +8,6 @@
     <DefaultItemExcludes>src/Arch/**/*</DefaultItemExcludes>
     <DefineConstants>PURE_ECS;CONTRACTS_FULL</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

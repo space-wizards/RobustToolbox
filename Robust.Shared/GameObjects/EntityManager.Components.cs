@@ -1,6 +1,4 @@
 using System;
-using System.Buffers;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -236,7 +234,7 @@ namespace Robust.Shared.GameObjects
             {
                 // TODO arch don't use CompIdx
                 var compType = _componentFactory.IdxToType(type);
-                if (!_world.IsAlive(uid) || !_world.TryGet(uid, compType, out var comp))
+                if (!_world.IsAlive(uid) || !_world.TryGet(uid, compType, out var comp) || comp == null!)
                     continue;
 
                 var duplicate = (Component) comp;
@@ -245,16 +243,16 @@ namespace Robust.Shared.GameObjects
                     throw new InvalidOperationException(
                         $"Component reference type {component.GetType().Name} already occupied by {duplicate}");
 
-                RemoveComponentImmediate(duplicate, uid, false);
+                RemoveComponentImmediate(duplicate!, uid, false);
             }
 
-            // add the component to the grid
-            foreach (var type in reg.References)
+            // TODO optimize this
+            // We can't use typeof(T) here in case T is just Component
+            if (!_world.TryGet(uid, component.GetType(), out var existingComponent))
+                _world.Add(uid, (object) component);
+            else
             {
-                // We can't use typeof(T) here in case T is just Component
-                // TODO arch please fix this god
-                if (!_world.Has(uid, component.GetType()))
-                    _world.Add(uid, (object) component);
+                _world.Set(uid, (object) component);
             }
 
             // add the component to the netId grid
@@ -776,7 +774,7 @@ namespace Robust.Shared.GameObjects
             if (_world.IsAlive(uid) && _world.TryGet(uid, compType, out var comp))
             {
                 component = (IComponent) comp;
-                if (!component.Deleted)
+                if (component != null! && !component.Deleted)
                     return true;
             }
 

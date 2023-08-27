@@ -1,20 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using Arch.Core;
+using Arch.Core.Extensions;
+using Arch.Core.Utils;
+using Collections.Pooled;
 using Prometheus;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Arch.Core;
-using Arch.Core.Extensions;
-using Robust.Shared.Serialization.Markdown.Mapping;
+using ComponentRegistry = Robust.Shared.Prototypes.ComponentRegistry;
 
 namespace Robust.Shared.GameObjects
 {
@@ -700,7 +701,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototype, out var metadata);
             try
             {
-                EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+                LoadEntity(metadata.EntityPrototype, entity, context);
                 return entity;
             }
             catch (Exception e)
@@ -714,12 +715,75 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(MetaQuery.GetComponent(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+            LoadEntity(MetaQuery.GetComponent(entity).EntityPrototype, entity, context);
         }
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
         {
-            EntityPrototype.LoadEntity(prototype, entity, ComponentFactory, this, _serManager, context);
+            LoadEntity(prototype, entity, context);
+        }
+
+        internal void LoadEntity(EntityPrototype? prototype, EntityUid entity, IEntityLoadContext? context)
+        {
+            var count = prototype?.Components.Count ?? 2;
+            using var types = new PooledList<ComponentType>(count);
+            using var comps = new PooledList<object>(count);
+            using var adds = new PooledList<bool>(count);
+
+            if (prototype != null)
+            {
+                foreach (var (name, entry) in prototype.Components)
+                {
+                    if (context != null && context.ShouldSkipComponent(name))
+                        continue;
+
+                    var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
+
+                    var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, fullData, context as ISerializationContext);
+                    comp.Comp.Owner = entity;
+
+                    types.Add(comp.Type);
+                    comps.Add(comp.Comp);
+                    adds.Add(comp.Add);
+                }
+            }
+
+            if (context != null)
+            {
+                foreach (var name in context.GetExtraComponentTypes())
+                {
+                    if (prototype != null && prototype.Components.ContainsKey(name))
+                    {
+                        // This component also exists in the prototype.
+                        // This means that the previous step already caught both the prototype data AND map data.
+                        // Meaning that re-running EnsureCompExistsAndDeserialize would wipe prototype data.
+                        continue;
+                    }
+
+                    if (!context.TryGetComponent(name, out var data))
+                    {
+                        throw new InvalidOperationException(
+                            $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
+                    }
+
+                    var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, data, context as ISerializationContext);
+                    comp.Comp.Owner = entity;
+
+                    types.Add(comp.Type);
+                    comps.Add(comp.Comp);
+                    adds.Add(comp.Add);
+                }
+            }
+
+            _world.AddRange(entity, types.Span);
+
+            for (var i = 0; i < adds.Count; i++)
+            {
+                if (adds[i])
+                {
+                    AddComponent(entity, (Component) comps[i]);
+                }
+            }
         }
 
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)

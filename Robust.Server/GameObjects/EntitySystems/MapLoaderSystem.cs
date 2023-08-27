@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using Arch.Core;
 using Robust.Server.Maps;
 using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
@@ -303,8 +304,6 @@ public sealed class MapLoaderSystem : EntitySystem
            data.Entities.Remove(uid);
         }
 
-        EntityManager.CleanupArch();
-
         return true;
     }
 
@@ -431,6 +430,9 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 if (type != null)
                     _prototypeManager.TryIndex(type, out proto);
+
+                // TODO: Reserve prototype archetypes here
+                // Just assume it has no missing comps
 
                 foreach (var entityDef in entities.Cast<MappingDataNode>())
                 {

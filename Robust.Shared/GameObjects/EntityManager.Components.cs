@@ -1,4 +1,6 @@
 using System;
+using System.Buffers;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -42,9 +44,6 @@ namespace Robust.Shared.GameObjects
 
         private readonly HashSet<Component> _deleteSet = new(TypeCapacity);
 
-        private UniqueIndexHkm<EntityUid, Component> _entCompIndex =
-            new(ComponentCollectionCapacity);
-
         /// <inheritdoc />
         public event Action<AddedComponentEventArgs>? ComponentAdded;
 
@@ -67,7 +66,6 @@ namespace Robust.Shared.GameObjects
         public void ClearComponents()
         {
             _netComponents.Clear();
-            _entCompIndex.Clear();
             _deleteSet.Clear();
         }
 
@@ -272,8 +270,6 @@ namespace Robust.Shared.GameObjects
                 // TODO arch please fix this god
                 if (!_world.Has(uid, component.GetType()))
                     _world.Add(uid, (object) component);
-
-                _entCompIndex.Add(uid, component);
             }
 
             // add the component to the netId grid
@@ -403,6 +399,7 @@ namespace Robust.Shared.GameObjects
 
         private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
         {
+            // TODO: Look at dumping this
             static int Sequence(IComponent x)
                 => x switch
                 {
@@ -420,7 +417,16 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void RemoveComponents(EntityUid uid)
         {
-            foreach (var comp in InSafeOrder(_entCompIndex[uid]))
+            var objComps = _world.GetAllComponents(uid);
+            // Something something exact length.
+            var comps = new Component[objComps.Length];
+
+            for (var i = 0; i < objComps.Length; i++)
+            {
+                comps[i] = (Component) objComps[i];
+            }
+
+            foreach (var comp in InSafeOrder(comps))
             {
                 RemoveComponentImmediate(comp, uid, false);
             }
@@ -429,7 +435,15 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void DisposeComponents(EntityUid uid)
         {
-            foreach (var comp in InSafeOrder(_entCompIndex[uid]))
+            var objComps = _world.GetAllComponents(uid);
+            var comps = new Component[objComps.Length];
+
+            for (var i = 0; i < objComps.Length; i++)
+            {
+                comps[i] = (Component)objComps[i];
+            }
+
+            foreach (var comp in InSafeOrder(comps))
             {
                 try
                 {
@@ -441,7 +455,6 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            _entCompIndex.Remove(uid);
             _netComponents.Remove(uid);
         }
 
@@ -589,7 +602,6 @@ namespace Robust.Shared.GameObjects
 
             // TODO if terminating the entity, maybe defer this?
             // _entCompIndex.Remove(uid) gets called later on anyways.
-            _entCompIndex.Remove(entityUid, component);
 
             ComponentDeleted?.Invoke(new DeletedComponentEventArgs(new ComponentEventArgs(component, entityUid), terminating));
         }
@@ -853,7 +865,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
-            foreach (Component comp in _entCompIndex[uid].ToArray())
+            foreach (Component comp in _world.GetAllComponents(uid))
             {
                 if (comp.Deleted) continue;
 
@@ -864,8 +876,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public int ComponentCount(EntityUid uid)
         {
-            var comps = _entCompIndex[uid];
-            return comps.Count;
+            return _world.GetArchetype(uid).Types.Length;
         }
 
         /// <summary>
@@ -874,24 +885,26 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private void CopyComponentsInto(ref Span<Component?> comps, EntityUid uid)
         {
-            var set = _entCompIndex[uid];
-            if (set.Count > comps.Length)
+            var set = _world.GetAllComponents(uid);
+
+            if (set.Length > comps.Length)
             {
-                comps = new Component[set.Count];
+                comps = new Component[set.Length];
             }
 
             var i = 0;
             foreach (var c in set)
             {
-                comps[i++] = c;
+                comps[i++] = (Component) c;
             }
         }
 
         /// <inheritdoc />
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
-            var comps = _entCompIndex[uid].ToArray();
-            foreach (var comp in comps)
+            var comps = _world.GetAllComponents(uid);
+
+            foreach (Component comp in comps)
             {
                 if (comp.Deleted || comp is not T tComp) continue;
 

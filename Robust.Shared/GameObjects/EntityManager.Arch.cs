@@ -42,7 +42,7 @@ public partial class EntityManager
         entity = new EntityUid(reference);
     }
 
-    internal void CleanupArch()
+    public void CleanupArch()
     {
         var sw = new Stopwatch();
         sw.Start();

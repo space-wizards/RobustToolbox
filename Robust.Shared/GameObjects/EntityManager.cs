@@ -7,6 +7,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -517,7 +518,15 @@ namespace Robust.Shared.GameObjects
                 _sawmill.Error($"Failed to delete all children of entity: {ToPrettyString(uid)}");
 
             // Shut down all components.
-            foreach (var component in InSafeOrder(_entCompIndex[uid]))
+            var objComps = _world.GetAllComponents(uid);
+            var comps = new Component[objComps.Length];
+
+            for (var i = 0; i < objComps.Length; i++)
+            {
+                comps[i] = (Component) objComps[i];
+            }
+
+            foreach (var component in InSafeOrder(comps))
             {
                 if (component.Running)
                 {

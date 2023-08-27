@@ -596,10 +596,6 @@ namespace Robust.Shared.GameObjects
                 if (_world.Has(entityUid, type))
                     _world.Remove(entityUid, type);
             }
-
-            // TODO if terminating the entity, maybe defer this?
-
-            ComponentDeleted?.Invoke(new DeletedComponentEventArgs(new ComponentEventArgs(component, entityUid), terminating));
         }
 
         /// <inheritdoc />

@@ -369,7 +369,6 @@ namespace Robust.Server
             // otherwise the prototypes will be cleared
             _prototype.Initialize();
             _prototype.LoadDefaultPrototypes();
-            _prototype.ResolveResults();
             _refMan.Initialize();
 
             IoCManager.Resolve<ToolshedManager>().Initialize();

@@ -1129,7 +1129,8 @@ namespace Robust.Client.GameStates
                     _entityManager.RemoveComponentInternal(uid, comp, terminating: false, archetypeChange: false);
                 }
 
-                _entityManager.RemoveComponentRange(uid, compTypes);
+                if (compTypes.Count > 0)
+                    _entityManager.RemoveComponentRange(uid, compTypes);
             }
 
             if (enteringPvs)

@@ -48,6 +48,7 @@ END TEMPLATE-->
 ### Other
 
 * Performance improvements for replay recording.
+* Lidgren has been updated to [v0.2.6](https://github.com/space-wizards/SpaceWizards.Lidgren.Network/blob/v0.2.6/RELEASE-NOTES.md).
 
 ### Internal
 

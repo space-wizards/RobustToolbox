@@ -548,14 +548,14 @@ namespace Robust.Shared.GameObjects
 
             while (enumerator.MoveNext(out var component, out var reg))
             {
-                if (reg.ReferenceEvent != dispatchByReference)
-                    ThrowByRefMisMatch();
-
-                if (component == null
-                    || component.Deleted)
+                if (component?.Deleted ?? true)
                 {
                     continue;
                 }
+
+                if (reg.ReferenceEvent != dispatchByReference)
+                    ThrowByRefMisMatch();
+
                 reg.Handler(euid, component, ref args);
             }
         }
@@ -571,6 +571,11 @@ namespace Robust.Shared.GameObjects
 
             while (enumerator.MoveNext(out var component, out var reg))
             {
+                if (component?.Deleted ?? true)
+                {
+                    continue;
+                }
+
                 if (reg.ReferenceEvent != byRef)
                     ThrowByRefMisMatch();
 

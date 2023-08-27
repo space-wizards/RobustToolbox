@@ -380,36 +380,11 @@ namespace Robust.Shared.GameObjects
             RemoveComponentDeferred(component, owner, false);
         }
 
-        private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
-        {
-            // TODO: Look at dumping this
-            static int Sequence(IComponent x)
-                => x switch
-                {
-                    MetaDataComponent _ => 0,
-                    TransformComponent _ => 1,
-                    PhysicsComponent _ => 2,
-                    _ => int.MaxValue
-                };
-
-            return forCreation
-                ? comps.OrderBy(Sequence)
-                : comps.OrderByDescending(Sequence);
-        }
-
         /// <inheritdoc />
         public void RemoveComponents(EntityUid uid)
         {
             var objComps = _world.GetAllComponents(uid);
-            // Something something exact length.
-            var comps = new Component[objComps.Length];
-
-            for (var i = 0; i < objComps.Length; i++)
-            {
-                comps[i] = (Component) objComps[i];
-            }
-
-            foreach (var comp in InSafeOrder(comps))
+            foreach (Component comp in objComps)
             {
                 RemoveComponentImmediate(comp, uid, false);
             }
@@ -419,22 +394,16 @@ namespace Robust.Shared.GameObjects
         public void DisposeComponents(EntityUid uid)
         {
             var objComps = _world.GetAllComponents(uid);
-            var comps = new Component[objComps.Length];
 
-            for (var i = 0; i < objComps.Length; i++)
-            {
-                comps[i] = (Component)objComps[i];
-            }
-
-            foreach (var comp in InSafeOrder(comps))
+            foreach (Component comp in objComps)
             {
                 try
                 {
                     RemoveComponentImmediate(comp, uid, true);
                 }
-                catch (Exception)
+                catch (Exception exc)
                 {
-                    _sawmill.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
+                    _sawmill.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'\n{exc.StackTrace}");
                 }
             }
 
@@ -521,7 +490,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void CullRemovedComponents()
         {
-            foreach (var component in InSafeOrder(_deleteSet))
+            foreach (var component in _deleteSet)
             {
                 if (component.Deleted)
                     continue;

@@ -519,14 +519,8 @@ namespace Robust.Shared.GameObjects
 
             // Shut down all components.
             var objComps = _world.GetAllComponents(uid);
-            var comps = new Component[objComps.Length];
 
-            for (var i = 0; i < objComps.Length; i++)
-            {
-                comps[i] = (Component) objComps[i];
-            }
-
-            foreach (var component in InSafeOrder(comps))
+            foreach (Component component in objComps)
             {
                 if (component.Running)
                 {

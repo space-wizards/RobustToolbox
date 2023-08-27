@@ -296,7 +296,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false);
+            RemoveComponentImmediate((Component)comp, uid, false, true);
             return true;
         }
 
@@ -307,7 +307,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false);
+            RemoveComponentImmediate((Component)comp, uid, false, true);
             return true;
         }
 
@@ -322,7 +322,17 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, Component component)
         {
-            RemoveComponentImmediate(component, uid, false);
+            RemoveComponentImmediate(component, uid, false, true);
+        }
+
+        /// <summary>
+        /// WARNING: Do not call this unless you're sure of what you're doing!
+        /// </summary>
+        internal void RemoveComponentInternal(EntityUid uid, Component component, bool terminating, bool archetypeChange)
+        {
+            // I hate this but also didn't want the GetComponent<MetaDataComponent> overhead.
+            // and with archetypes we want to avoid moves at all costs.
+            RemoveComponentImmediate(component, uid, terminating, archetypeChange);
         }
 
         /// <inheritdoc />
@@ -371,7 +381,7 @@ namespace Robust.Shared.GameObjects
             var objComps = _world.GetAllComponents(uid);
             foreach (Component comp in objComps)
             {
-                RemoveComponentImmediate(comp, uid, false);
+                RemoveComponentImmediate(comp, uid, false, true);
             }
         }
 
@@ -384,7 +394,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    RemoveComponentImmediate(comp, uid, true);
+                    RemoveComponentImmediate(comp, uid, true, true);
                 }
                 catch (Exception exc)
                 {
@@ -433,7 +443,12 @@ namespace Robust.Shared.GameObjects
 #endif
         }
 
-        private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating)
+        /// <summary>
+        /// Removes a component.
+        /// </summary>
+        /// <param name="terminating">Is the entity terminating.</param>
+        /// <param name="archetypeChange">Should we handle the archetype change or is it being handled externally.</param>
+        private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating, bool archetypeChange)
         {
             if (component.Deleted)
             {
@@ -469,7 +484,7 @@ namespace Robust.Shared.GameObjects
             var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), terminating);
             ComponentRemoved?.Invoke(eventArgs);
             _eventBus.OnComponentRemoved(eventArgs);
-            DeleteComponent(uid, component, terminating);
+            DeleteComponent(uid, component, terminating, archetypeChange);
         }
 
         /// <inheritdoc />
@@ -508,13 +523,18 @@ namespace Robust.Shared.GameObjects
                 ComponentRemoved?.Invoke(eventArgs);
                 _eventBus.OnComponentRemoved(eventArgs);
 
-                DeleteComponent(uid, component, false);
+                DeleteComponent(uid, component, false, true);
             }
 
             _deleteSet.Clear();
         }
 
-        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating)
+        /// <summary>
+        /// Deletes the component
+        /// </summary>
+        /// <param name="terminating">Is the entity terminating.</param>
+        /// <param name="archetypeChange">Should the archetype change be handled (where the entity is not terminating).</param>
+        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating, bool archetypeChange)
         {
             var compType = component.GetType();
             var reg = _componentFactory.GetRegistration(compType);
@@ -531,7 +551,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Don't bother with archetype shuffles if we're terminating.
-            if (!terminating)
+            if (!terminating && archetypeChange)
             {
                 if (_world.Has(entityUid, compType))
                     _world.Remove(entityUid, compType);

@@ -1112,16 +1112,24 @@ namespace Robust.Client.GameStates
             if (curState?.NetComponents != null)
             {
                 RemQueue<Component> toRemove = new();
+                using var compTypes = new PooledList<ComponentType>();
+
                 foreach (var (id, comp) in _entities.GetNetComponents(uid))
                 {
                     if (comp.NetSyncEnabled && !curState.NetComponents.Contains(id))
+                    {
                         toRemove.Add(comp);
+                        compTypes.Add(comp.GetType());
+                    }
                 }
 
+                // TODO: Don't do thearchetype move here, just defer it with compTypes.
                 foreach (var comp in toRemove)
                 {
-                    _entities.RemoveComponent(uid, comp);
+                    _entityManager.RemoveComponentInternal(uid, comp, terminating: false, archetypeChange: false);
                 }
+
+                _entityManager.RemoveComponentRange(uid, compTypes);
             }
 
             if (enteringPvs)

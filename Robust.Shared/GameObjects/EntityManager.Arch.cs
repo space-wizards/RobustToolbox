@@ -6,12 +6,19 @@ using Arch.Core.Extensions;
 using Arch.Core.Utils;
 using Collections.Pooled;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
     private World _world = default!;
+
+    private static readonly ComponentType[] DefaultArchetype = new ComponentType[]
+    {
+        typeof(MetaDataComponent),
+        typeof(TransformComponent),
+    };
 
     protected void InitializeArch()
     {
@@ -38,7 +45,7 @@ public partial class EntityManager
 
     private void SpawnEntityArch(out EntityUid entity)
     {
-        var archEnt = _world.Create();
+        var archEnt = _world.Create(DefaultArchetype);
         var reference = _world.Reference(archEnt);
         entity = new EntityUid(reference);
     }
@@ -75,6 +82,13 @@ public partial class EntityManager
     /// </summary>
     internal void AddComponentRange(EntityUid uid, PooledList<ComponentType> compTypes)
     {
+        DebugTools.Assert(compTypes.Count > 0);
         _world.AddRange(uid, compTypes.Span);
+    }
+
+    internal void RemoveComponentRange(EntityUid uid, PooledList<ComponentType> compTypes)
+    {
+        DebugTools.Assert(compTypes.Count > 0);
+        _world.RemoveRange(uid, compTypes.Span);
     }
 }

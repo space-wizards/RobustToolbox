@@ -668,8 +668,10 @@ namespace Robust.Shared.GameObjects
             AddComponentInternal(uid, metadata, false);
 
             // allocate the required TransformComponent
-            AddComponent<TransformComponent>(uid);
+            var xform = _componentFactory.GetComponent<TransformComponent>();
+            xform.Owner = uid;
 
+            AddComponentInternal(uid, xform, false, metadata);
             return uid;
         }
 

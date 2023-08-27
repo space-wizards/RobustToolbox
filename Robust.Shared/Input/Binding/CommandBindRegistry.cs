@@ -9,6 +9,8 @@ namespace Robust.Shared.Input.Binding
     /// <inheritdoc cref="ICommandBindRegistry"/>
     public sealed class CommandBindRegistry : ICommandBindRegistry
     {
+        private readonly ISawmill _sawmill;
+
         // all registered bindings
         private List<TypedCommandBind> _bindings = new();
         // handlers in the order they should be resolved for the given key function.
@@ -16,6 +18,11 @@ namespace Robust.Shared.Input.Binding
         // list so we don't need to do any graph traversal at query time
         private Dictionary<BoundKeyFunction, List<InputCmdHandler>> _bindingsForKey = new();
         private bool _graphDirty = false;
+
+        public CommandBindRegistry(ISawmill sawmill)
+        {
+            _sawmill = sawmill;
+        }
 
         /// <inheritdoc />
         public void Register<TOwner>(CommandBinds commandBinds)
@@ -30,11 +37,11 @@ namespace Robust.Shared.Input.Binding
             {
                 // feel free to delete this if there's an actual need for registering multiple
                 // bindings for a given type in separate calls to Register()
-                Logger.Warning("Command binds already registered for type {0}, but you are trying" +
-                               " to register more. This may " +
-                               "be a programming error. Did you register these under the wrong type, or " +
-                               "did you forget to unregister these bindings when" +
-                               " your system / manager is shutdown?", owner.Name);
+                _sawmill.Warning("Command binds already registered for type {0}, but you are trying" +
+                                 " to register more. This may " +
+                                 "be a programming error. Did you register these under the wrong type, or " +
+                                 "did you forget to unregister these bindings when" +
+                                 " your system / manager is shutdown?", owner.Name);
             }
 
             foreach (var binding in commandBinds.Bindings)

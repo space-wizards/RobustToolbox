@@ -20,16 +20,19 @@ using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.GameObjects
 {
-    public sealed class EntitySystemManager : IEntitySystemManager
+    public sealed class EntitySystemManager : IEntitySystemManager, IPostInjectInit
     {
         [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
         [IoC.Dependency] private readonly ProfManager _profManager = default!;
         [IoC.Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [IoC.Dependency] private readonly ILogManager _logManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
+
+        private ISawmill _sawmill = default!;
 
         internal DependencyCollection SystemDependencyCollection = default!;
         private readonly List<Type> _systemTypes = new();
@@ -138,7 +141,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var type in systems)
             {
-                Logger.DebugS("go.sys", "Initializing entity system {0}", type);
+                _sawmill.Debug("Initializing entity system {0}", type);
 
                 SystemDependencyCollection.Register(type);
                 _systemTypes.Add(type);
@@ -405,6 +408,11 @@ namespace Robust.Shared.GameObjects
             {
                 return System.ToString();
             }
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _sawmill = _logManager.GetSawmill("go.sys");
         }
     }
 

@@ -24,6 +24,7 @@ using SharpZstd.Interop;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Replays;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Players;
 
 namespace Robust.Server.GameStates
@@ -37,7 +38,7 @@ namespace Robust.Server.GameStates
 
         private PvsSystem _pvs = default!;
 
-        [Dependency] private readonly IServerEntityManager _entityManager = default!;
+        [Dependency] private readonly EntityManager _entityManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;

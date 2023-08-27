@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -756,6 +757,18 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public IComponent GetComponentInternal(EntityUid uid, CompIdx type)
+        {
+            var dict = _entTraitArray[type.Value];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                    return comp;
+            }
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
+        }
+
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
         {
@@ -1455,7 +1468,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        internal TComp1 GetComponentInternal(EntityUid uid)
+        public TComp1 GetComponentInternal(EntityUid uid)
         {
             if (_traitDict.TryGetValue(uid, out var comp))
                 return (TComp1) comp;

@@ -31,7 +31,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<MetaDataComponent>()))
                 .Returns(compInstance);
 
-            entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<MetaDataComponent>()))
+            entManMock.Setup(m => m.GetComponentInternal(entUid, CompIdx.Index<MetaDataComponent>()))
                 .Returns(compInstance);
 
             var bus = new EntityEventBus(entManMock.Object);
@@ -187,6 +187,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<T>())).Returns(reg);
                 entManMock.Setup(m => m.TryGetComponent(entUid, CompIdx.Index<T>(), out inst)).Returns(true);
                 entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<T>())).Returns(inst);
+                entManMock.Setup(m => m.GetComponentInternal(entUid, CompIdx.Index<T>())).Returns(inst);
                 allRefTypes.Add(CompIdx.Index<T>());
             }
 

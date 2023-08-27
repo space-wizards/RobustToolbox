@@ -792,6 +792,10 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(_world.GetArchetype(entity).Equals(arc));
 #endif
 
+            // Yeah it can happen.
+            if (types.Count == 0)
+                return;
+
             _world.AddRange(entity, types.Span);
             var metadata = GetComponent<MetaDataComponent>(entity);
 

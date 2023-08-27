@@ -157,7 +157,7 @@ public sealed class MapLoaderSystem : EntitySystem
             sw.Start();
             result = Deserialize(data);
 
-            _logLoader.Debug($"Loaded map in {sw.Elapsed}");
+            _logLoader.Info($"Loaded map {resPath} in {sw.Elapsed}");
             var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
             var mapEnt = _mapManager.GetMapEntityId(mapId);
 

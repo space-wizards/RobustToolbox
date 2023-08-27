@@ -50,9 +50,6 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public event Action<RemovedComponentEventArgs>? ComponentRemoved;
 
-        /// <inheritdoc />
-        public event Action<DeletedComponentEventArgs>? ComponentDeleted;
-
         public void InitializeComponents()
         {
             if (Initialized)
@@ -601,7 +598,6 @@ namespace Robust.Shared.GameObjects
             }
 
             // TODO if terminating the entity, maybe defer this?
-            // _entCompIndex.Remove(uid) gets called later on anyways.
 
             ComponentDeleted?.Invoke(new DeletedComponentEventArgs(new ComponentEventArgs(component, entityUid), terminating));
         }

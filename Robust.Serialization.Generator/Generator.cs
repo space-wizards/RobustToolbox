@@ -446,18 +446,6 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                                          """);
                 }
 
-                var instantiator = string.Empty;
-                if (IsDataDefinition(type))
-                {
-                    instantiator = $"{tempVarName} = {name}.Instantiate();";
-                }
-                else if (!type.IsAbstract &&
-                         HasEmptyPublicConstructor(type) &&
-                         (type.IsReferenceType || IsNullableType(type)))
-                {
-                    instantiator = $"{tempVarName} = new();";
-                }
-
                 var hasHooks = ImplementsInterface(type, SerializationHooksNamespace) || !type.IsSealed;
                 builder.AppendLine($$"""
                                      if (!serialization.TryCustomCopy(this.{{name}}, ref {{tempVarName}}, hookCtx, {{hasHooks.ToString().ToLower()}}, context))
@@ -471,7 +459,6 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                 else if (IsDataDefinition(type) && !type.IsAbstract &&
                          type is not INamedTypeSymbol { TypeKind: TypeKind.Interface })
                 {
-                    var nullability = type.IsValueType ? string.Empty : "?";
                     var nullable = !type.IsValueType || IsNullableType(type);
 
                     if (nullable)
@@ -487,8 +474,7 @@ if (serialization.TryCustomCopy(this, ref target, hookCtx, {definition.HasHooks.
                     }
 
                     builder.AppendLine($$"""
-                                         {{instantiator}}
-                                         {{name}}{{nullability}}.Copy(ref {{tempVarName}}, serialization, hookCtx, context);
+                                         serialization.CopyTo({{name}}, ref {{tempVarName}}, hookCtx, context{{nullableOverride}});
                                          """);
 
                     if (nullable)

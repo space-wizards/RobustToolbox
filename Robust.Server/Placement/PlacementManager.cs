@@ -82,7 +82,7 @@ namespace Robust.Server.Placement
             var alignRcv = msg.Align;
             var isTile = msg.IsTile;
 
-            ushort tileType = 0;
+            int tileType = 0;
             var entityTemplateName = "";
 
             if (isTile) tileType = msg.TileType;
@@ -179,7 +179,7 @@ namespace Robust.Server.Placement
             }
         }
 
-        private void PlaceNewTile(ushort tileType, EntityCoordinates coordinates, NetUserId placingUserId)
+        private void PlaceNewTile(int tileType, EntityCoordinates coordinates, NetUserId placingUserId)
         {
             if (!coordinates.IsValid(_entityManager)) return;
 

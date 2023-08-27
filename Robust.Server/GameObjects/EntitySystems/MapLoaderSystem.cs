@@ -52,7 +52,7 @@ public sealed class MapLoaderSystem : EntitySystem
     private ISawmill _logWriter = default!;
 
     private static readonly MapLoadOptions DefaultLoadOptions = new();
-    private const int MapFormatVersion = 5;
+    private const int MapFormatVersion = 6;
     private const int BackwardsVersion = 2;
 
     private MapSerializationContext _context = default!;
@@ -385,11 +385,11 @@ public sealed class MapLoaderSystem : EntitySystem
 
         // Load tile mapping so that we can map the stored tile IDs into the ones actually used at runtime.
         var tileMap = data.RootMappingNode.Get<MappingDataNode>("tilemap");
-        _context.TileMap = new Dictionary<ushort, string>(tileMap.Count);
+        _context.TileMap = new Dictionary<int, string>(tileMap.Count);
 
         foreach (var (key, value) in tileMap.Children)
         {
-            var tileId = (ushort) ((ValueDataNode)key).AsInt();
+            var tileId = ((ValueDataNode)key).AsInt();
             var tileDefName = ((ValueDataNode)value).Value;
             _context.TileMap.Add(tileId, tileDefName);
         }
@@ -964,7 +964,7 @@ public sealed class MapLoaderSystem : EntitySystem
     {
         // Although we could use tiledefmanager it might write tiledata we don't need so we'll compress it
         var gridQuery = GetEntityQuery<MapGridComponent>();
-        var tileDefs = new HashSet<ushort>();
+        var tileDefs = new HashSet<int>();
 
         foreach (var ent in entities)
         {
@@ -981,7 +981,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
         var tileMap = new MappingDataNode();
         rootNode.Add("tilemap", tileMap);
-        var ordered = new List<ushort>(tileDefs);
+        var ordered = new List<int>(tileDefs);
         ordered.Sort();
 
         foreach (var tyleId in ordered)

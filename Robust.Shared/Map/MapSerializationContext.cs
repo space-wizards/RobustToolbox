@@ -22,7 +22,7 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
 
     // Run-specific data
-    public Dictionary<ushort, string>? TileMap;
+    public Dictionary<int, string>? TileMap;
     public readonly Dictionary<string, IComponent> CurrentReadingEntityComponents = new();
     public HashSet<string> CurrentlyIgnoredComponents = new();
     public string? CurrentComponent;

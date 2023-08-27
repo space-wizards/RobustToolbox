@@ -128,12 +128,13 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            var query = GetEntityQuery<TransformComponent>();
-            foreach (var (activeUis, xform) in EntityQuery<ActiveUserInterfaceComponent, TransformComponent>(true))
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var query = AllEntityQuery<ActiveUserInterfaceComponent, TransformComponent>();
+            while (query.MoveNext(out var uid, out var activeUis, out var xform))
             {
                 foreach (var ui in activeUis.Interfaces)
                 {
-                    CheckRange(activeUis, ui, xform, query);
+                    CheckRange(uid, activeUis, ui, xform, xformQuery);
 
                     if (!ui.StateDirty)
                         continue;
@@ -160,9 +161,9 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Verify that the subscribed clients are still in range of the interface.
         /// </summary>
-        private void CheckRange(ActiveUserInterfaceComponent activeUis, BoundUserInterface ui, TransformComponent transform, EntityQuery<TransformComponent> query)
+        private void CheckRange(EntityUid uid, ActiveUserInterfaceComponent activeUis, BoundUserInterface ui, TransformComponent transform, EntityQuery<TransformComponent> query)
         {
-            if (ui.InteractionRangeSqrd <= 0)
+            if (ui.InteractionRange <= 0)
                 return;
 
             // We have to cache the set of sessions because Unsubscribe modifies the original.
@@ -180,6 +181,20 @@ namespace Robust.Server.GameObjects
 
                 if (_ignoreUIRangeQuery.HasComponent(session.AttachedEntity))
                     continue;
+
+                // Handle pluggable BoundUserInterfaceCheckRangeEvent
+                var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, ui, session);
+                RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
+                if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
+                    continue;
+
+                if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Fail)
+                {
+                    CloseUi(ui, session, activeUis);
+                    continue;
+                }
+
+                DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
 
                 if (uiMap != xform.MapID)
                 {
@@ -508,5 +523,65 @@ namespace Robust.Server.GameObjects
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Raised by <see cref="UserInterfaceSystem"/> to check whether an interface is still accessible by its user.
+    /// </summary>
+    [ByRefEvent]
+    [PublicAPI]
+    public struct BoundUserInterfaceCheckRangeEvent
+    {
+        /// <summary>
+        /// The entity owning the UI being checked for.
+        /// </summary>
+        public readonly EntityUid Target;
+
+        /// <summary>
+        /// The UI itself.
+        /// </summary>
+        /// <returns></returns>
+        public readonly BoundUserInterface UserInterface;
+
+        /// <summary>
+        /// The player for which the UI is being checked.
+        /// </summary>
+        public readonly IPlayerSession Player;
+
+        /// <summary>
+        /// The result of the range check.
+        /// </summary>
+        public BoundUserInterfaceRangeResult Result;
+
+        public BoundUserInterfaceCheckRangeEvent(
+            EntityUid target,
+            BoundUserInterface userInterface,
+            IPlayerSession player)
+        {
+            Target = target;
+            UserInterface = userInterface;
+            Player = player;
+        }
+    }
+
+    /// <summary>
+    /// Possible results for a <see cref="BoundUserInterfaceCheckRangeEvent"/>.
+    /// </summary>
+    public enum BoundUserInterfaceRangeResult : byte
+    {
+        /// <summary>
+        /// Run built-in range check.
+        /// </summary>
+        Default,
+
+        /// <summary>
+        /// Range check passed, UI is accessible.
+        /// </summary>
+        Pass,
+
+        /// <summary>
+        /// Range check failed, UI is inaccessible.
+        /// </summary>
+        Fail
     }
 }

@@ -47,9 +47,7 @@ namespace Robust.Shared.Prototypes
         public virtual void Initialize()
         {
             if (_initialized)
-            {
-                throw new InvalidOperationException($"{nameof(PrototypeManager)} has already been initialized.");
-            }
+                return;
 
             Sawmill = _logManager.GetSawmill("proto");
 

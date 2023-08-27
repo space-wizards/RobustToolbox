@@ -20,12 +20,6 @@ namespace Robust.Shared.GameObjects
         event Action<RemovedComponentEventArgs>? ComponentRemoved;
 
         /// <summary>
-        ///     A component was deleted. This is usually deferred until some time after it was removed.
-        ///     Usually you will want to subscribe to <see cref="ComponentRemoved"/>.
-        /// </summary>
-        event Action<DeletedComponentEventArgs>? ComponentDeleted;
-
-        /// <summary>
         ///     Calls Initialize() on all registered components of the entity.
         /// </summary>
         void InitializeComponents(EntityUid uid, MetaDataComponent? meta = null);

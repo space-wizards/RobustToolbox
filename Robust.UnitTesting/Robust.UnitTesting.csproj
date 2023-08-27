@@ -33,4 +33,5 @@
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.CompNetworkGenerator.targets" />
 </Project>

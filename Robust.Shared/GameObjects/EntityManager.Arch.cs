@@ -83,7 +83,7 @@ public partial class EntityManager
     internal void AddComponentRange(EntityUid uid, PooledList<ComponentType> compTypes)
     {
         DebugTools.Assert(compTypes.Count > 0);
-        _world.AddRange(uid, compTypes.Span);
+        _world.AddRange(uid, compTypes);
     }
 
     internal void RemoveComponentRange(EntityUid uid, PooledList<ComponentType> compTypes)

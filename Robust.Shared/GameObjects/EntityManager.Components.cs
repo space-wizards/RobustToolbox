@@ -263,7 +263,14 @@ namespace Robust.Shared.GameObjects
             if (component == null) throw new ArgumentNullException(nameof(component));
 
 #pragma warning disable CS0618 // Type or member is obsolete
-            if (component.Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
+            if (component.Owner == default)
+            {
+                component.Owner = uid;
+            }
+            else if (component.Owner != uid)
+            {
+                throw new InvalidOperationException("Component is not owned by entity.");
+            }
 #pragma warning restore CS0618 // Type or member is obsolete
 
             AddComponentInternal(uid, component, overwrite, false);

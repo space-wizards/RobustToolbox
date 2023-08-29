@@ -546,20 +546,6 @@ namespace Robust.Shared.GameObjects
             }
 
             _eventBus.OnEntityDeleted(uid);
-
-            // Another try-catch, so quickly after the other one?!
-            // Yes. Both of these are try-catch blocks for *events*, which take our precious execution flow away from
-            // us and into whatever spooky code subscribed to this. We don't want an exception in user code suddenly
-            // fucking up entity deletion and leaving us with a frankesteintity, now do we?
-            try
-            {
-                EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(uid));
-            }
-            catch (Exception e)
-            {
-                _sawmill.Error($"Caught exception while raising {nameof(EntityDeletedMessage)} on '{ToPrettyString(uid, metadata)}'\n{e}");
-            }
-
             Entities.Remove(uid);
         }
 

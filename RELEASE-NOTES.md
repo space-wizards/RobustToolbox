@@ -47,12 +47,33 @@ END TEMPLATE-->
 
 ### Other
 
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 153.0.0
+
+### Breaking changes
+
+* Removed SharedUserInterfaceComponent component references.
+* Removed EntityDeletedMessage.
+
+### Other
+
 * Performance improvements for replay recording.
 * Lidgren has been updated to [v0.2.6](https://github.com/space-wizards/SpaceWizards.Lidgren.Network/blob/v0.2.6/RELEASE-NOTES.md).
+* Make EntityManager.AddComponent with a component instance set the owner if its default, add system proxy for it.
 
 ### Internal
 
 * Added some `EventSource` providers for PVS and replay recording: `Robust.Pvs` and `Robust.ReplayRecording`.
+* Added RecursiveMoveBenchmark.
+* Removed redundant prototype resolving.
+* Removed CollisionWake component removal subscription.
+* Removed redundant DebugTools.AssertNotNull(netId) in ClientGameStateManager
 
 
 ## 152.0.0

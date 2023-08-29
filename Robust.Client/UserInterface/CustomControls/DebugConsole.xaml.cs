@@ -216,8 +216,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 if (stream == null)
                 {
-					if(_logger != null)
-						_logger.Warning("Failed to load debug console history!");
+                    if(_logger != null)
+                        _logger.Warning("Failed to load debug console history!");
                     return null;
                 }
 
@@ -227,8 +227,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 }
                 catch (Exception e)
                 {
-					if(_logger != null)
-						_logger.Warning($"Failed to load debug console history due to exception!\n{e}");
+                    if(_logger != null)
+                        _logger.Warning($"Failed to load debug console history due to exception!\n{e}");
                     return null;
                 }
                 finally
@@ -272,8 +272,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 if (writer == null)
                 {
-					if(_logger != null)
-						_logger.Warning("Failed to save debug console history!");
+                    if(_logger != null)
+                        _logger.Warning("Failed to save debug console history!");
                     return;
                 }
 

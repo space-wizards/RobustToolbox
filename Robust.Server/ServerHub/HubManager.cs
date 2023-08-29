@@ -120,7 +120,7 @@ internal sealed class HubManager
                         response.StatusCode,
                         errorText,
                         hubUrl);
-                    return;
+                    continue;
                 }
 
                 if (!_hubUrlsAdvertisedTo.Contains(hubUrl))

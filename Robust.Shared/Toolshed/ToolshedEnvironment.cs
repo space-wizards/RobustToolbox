@@ -77,7 +77,7 @@ public sealed class ToolshedEnvironment
             }
 
             var command = (ToolshedCommand)Activator.CreateInstance(ty)!;
-            IoCManager.InjectDependencies(command);
+            IoCManager.Resolve<IDependencyCollection>().InjectDependencies(command, oneOff: true);
 
             _commands.Add(command.Name, command);
         }
@@ -106,7 +106,7 @@ public sealed class ToolshedEnvironment
             }
 
             var command = (ToolshedCommand)Activator.CreateInstance(ty)!;
-            IoCManager.InjectDependencies(command);
+            IoCManager.Resolve<IDependencyCollection>().InjectDependencies(command, oneOff: true);
 
             _commands.Add(command.Name, command);
         }

@@ -279,6 +279,8 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             poolData,
             uncompressed.Length);
 
+        RecordingEventSource.Log.WriteBatchStop(batchIndex);
+
         // Note: these values are ASYNCHRONOUSLY updated from the replay write thread.
         // This means reading them here won't get the most up-to-date values,
         // and we'll probably always be off-by-one.

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.Tracing;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using EventSource = System.Diagnostics.Tracing.EventSource;
 
 #nullable enable
 
@@ -167,6 +169,24 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
         }
 
         return builder;
+    }
+
+    [EventSource(Name = "Robust.MetricsManager")]
+    private sealed class MetricsEvents : EventSource
+    {
+        public static MetricsEvents Log { get; } = new();
+
+        [Event(1)]
+        public void ScrapeStart() => WriteEvent(1);
+
+        [Event(2)]
+        public void ScrapeStop() => WriteEvent(2);
+
+        [Event(3)]
+        public void RequestStart() => WriteEvent(3);
+
+        [Event(4)]
+        public void RequestStop() => WriteEvent(4);
     }
 }
 

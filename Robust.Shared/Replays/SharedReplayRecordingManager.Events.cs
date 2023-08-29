@@ -19,8 +19,7 @@ internal abstract partial class SharedReplayRecordingManager
         public void WriteBatchStart(int index) => WriteEvent(3, index);
 
         [Event(4)]
-        public void WriteBatchStop(int index, int uncompressed, int compressed) =>
-            WriteEvent(4, index, uncompressed, compressed);
+        public void WriteBatchStop(int index) => WriteEvent(4, index);
 
         [Event(5)]
         public void WriteQueueBlocked() => WriteEvent(5);

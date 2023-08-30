@@ -221,6 +221,83 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
+        ///     Finds the first instance of a component on the recursive parented containers that hold an entity  
+        /// </summary>
+        public bool TryFindComponentOnEntityContainerOrParent<T>(
+            EntityUid uid,
+            out T? foundComponent,
+            MetaDataComponent? meta = null,
+            TransformComponent? xform = null,
+            EntityQuery<MetaDataComponent>? metas = null,
+            EntityQuery<TransformComponent>? xforms = null) where T : Component
+        {
+            foundComponent = null;
+
+            if (meta == null)
+            {
+                metas ??= EntityManager.GetEntityQuery<MetaDataComponent>();
+                meta = metas.Value.GetComponent(uid);
+            }
+
+            if ((meta.Flags & MetaDataFlags.InContainer) != MetaDataFlags.InContainer)
+                return false;
+
+            if (xform == null)
+            {
+                xforms ??= EntityManager.GetEntityQuery<TransformComponent>();
+                xform = xforms.Value.GetComponent(uid);
+            }
+
+            if (!xform.ParentUid.Valid)
+                return false;
+
+            if (TryComp(xform.ParentUid, out foundComponent))
+                return true;
+
+            return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, out foundComponent, metas: metas, xforms: xforms);
+        }
+
+        /// <summary>
+        ///     Finds all instances of a component on the recursive parented containers that hold an entity  
+        /// </summary>
+        public bool TryFindComponentsOnEntityContainerOrParent<T>(
+            EntityUid uid,
+            out List<T> foundComponents,
+            MetaDataComponent? meta = null,
+            TransformComponent? xform = null,
+            EntityQuery<MetaDataComponent>? metas = null,
+            EntityQuery<TransformComponent>? xforms = null) where T : Component
+        {
+            foundComponents = new List<T>();
+
+            if (meta == null)
+            {
+                metas ??= EntityManager.GetEntityQuery<MetaDataComponent>();
+                meta = metas.Value.GetComponent(uid);
+            }
+
+            if ((meta.Flags & MetaDataFlags.InContainer) != MetaDataFlags.InContainer)
+                return foundComponents.Any();
+
+            if (xform == null)
+            {
+                xforms ??= EntityManager.GetEntityQuery<TransformComponent>();
+                xform = xforms.Value.GetComponent(uid);
+            }
+
+            if (!xform.ParentUid.Valid)
+                return foundComponents.Any();
+
+            if (TryComp<T>(xform.ParentUid, out var foundComponent) && foundComponent != null)
+                foundComponents.Add(foundComponent);
+
+            if (TryFindComponentsOnEntityContainerOrParent<T>(xform.ParentUid, out var extraComponents, metas: metas, xforms: xforms))
+                foundComponents = foundComponents.Concat(extraComponents).ToList();
+
+            return foundComponents.Any();
+        }
+
+        /// <summary>
         ///     Returns true if the two entities are not contained, or are contained in the same container.
         /// </summary>
         public bool IsInSameOrNoContainer(EntityUid user, EntityUid other)

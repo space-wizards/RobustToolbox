@@ -41,15 +41,6 @@ namespace Robust.Shared.Localization
             return data.Attributes.TryGetValue(attribute, out value);
         }
 
-        // Flush caches conservatively on prototype/localization changes.
-        private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
-        {
-            if (!args.ByType.ContainsKey(typeof(EntityPrototype)))
-                return;
-
-            FlushEntityCache();
-        }
-
         private EntityLocData CalcEntityLoc(string prototypeId)
         {
             string? name = null;

@@ -2,7 +2,10 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
+using Linguini.Bundle;
+using Linguini.Syntax.Ast;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Localization
@@ -88,6 +91,16 @@ namespace Robust.Shared.Localization
         ///     Gets localization data for an entity prototype.
         /// </summary>
         EntityLocData GetEntityData(string prototypeId);
+
+        /// <summary>
+        ///     Gets localization data for a prototype.
+        /// </summary>
+        PrototypeLocData GetPrototypeData(Type kind, string prototypeId);
+
+        /// <summary>
+        ///     Gets localization data for a prototype.
+        /// </summary>
+        PrototypeLocData GetPrototypeData<T>(string prototypeId) where T : class, IPrototype, ILocalizedPrototype;
     }
 
     internal interface ILocalizationManagerInternal : ILocalizationManager

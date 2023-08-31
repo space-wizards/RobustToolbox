@@ -6,6 +6,8 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
+using Robust.Shared.Players;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.Player
@@ -13,7 +15,7 @@ namespace Robust.Server.Player
     /// <summary>
     ///     Manages each players session when connected to the server.
     /// </summary>
-    public interface IPlayerManager : Shared.Players.ISharedPlayerManager
+    public interface IPlayerManager : ISharedPlayerManager
     {
         BoundKeyMap KeyMap { get; }
 

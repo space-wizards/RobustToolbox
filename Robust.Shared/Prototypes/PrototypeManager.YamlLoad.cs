@@ -7,10 +7,8 @@ using Robust.Shared.Random;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
-using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
 
@@ -155,11 +153,11 @@ public partial class PrototypeManager
     private ExtractedMappingData? ExtractMapping(MappingDataNode dataNode)
     {
         var type = dataNode.Get<ValueDataNode>("type").Value;
+        if (_ignoredPrototypeTypes.Contains(type))
+            return null;
+
         if (!_kindNames.TryGetValue(type, out var kind))
         {
-            if (_ignoredPrototypeTypes.Contains(type))
-                return null;
-
             throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
         }
 

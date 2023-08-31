@@ -1,6 +1,6 @@
 ﻿using Robust.Shared.Network;
 
-namespace Robust.Server.Player
+namespace Robust.Shared.Player
 {
     /// <summary>
     ///     Stores player-specific data that is not lost upon reconnect.

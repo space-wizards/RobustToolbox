@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
-using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
@@ -46,11 +42,11 @@ public partial class PrototypeManager
                 foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
                 {
                     var typeId = node.GetNode("type").AsString();
+                    if (_ignoredPrototypeTypes.Contains(typeId))
+                        continue;
+
                     if (!_kindNames.TryGetValue(typeId, out var type))
                     {
-                        if (_ignoredPrototypeTypes.Contains(typeId))
-                            continue;
-
                         throw new PrototypeLoadException($"Unknown prototype type: '{typeId}'");
                     }
 

@@ -7,6 +7,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
 

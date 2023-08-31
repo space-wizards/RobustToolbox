@@ -17,6 +17,9 @@ namespace Robust.Shared.Containers
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
 
+        private EntityQuery<MetaDataComponent> _metas;
+        private EntityQuery<TransformComponent> _xforms;
+
         /// <inheritdoc />
         public override void Initialize()
         {
@@ -25,6 +28,9 @@ namespace Robust.Shared.Containers
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentGetState>(OnContainerGetState);
+
+            _metas = EntityManager.GetEntityQuery<MetaDataComponent>();
+            _xforms = EntityManager.GetEntityQuery<TransformComponent>();
         }
 
         private void OnContainerGetState(EntityUid uid, ContainerManagerComponent component, ref ComponentGetState args)
@@ -225,24 +231,29 @@ namespace Robust.Shared.Containers
         /// </summary>
         public bool TryFindComponentOnEntityContainerOrParent<T>(
             EntityUid uid,
-            out T? foundComponent,
-            EntityQuery<MetaDataComponent> metas,
-            EntityQuery<TransformComponent> xforms) where T : Component
+            EntityQuery<T> entityQuery,
+            [NotNullWhen(true)] out T? foundComponent,
+            MetaDataComponent? meta = null,
+            TransformComponent? xform = null) where T : Component
         {
             foundComponent = null;
 
-            var meta = metas.GetComponent(uid);
+            if (!_metas.Resolve(uid, ref meta))
+                return false;
+
             if ((meta.Flags & MetaDataFlags.InContainer) != MetaDataFlags.InContainer)
                 return false;
 
-            var xform = xforms.GetComponent(uid);
+            if (!_xforms.Resolve(uid, ref xform))
+                return false;
+
             if (!xform.ParentUid.Valid)
                 return false;
 
-            if (TryComp(xform.ParentUid, out foundComponent))
+            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent))
                 return true;
 
-            return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, out foundComponent, metas: metas, xforms: xforms);
+            return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, entityQuery, out foundComponent);
         }
 
         /// <summary>
@@ -250,24 +261,30 @@ namespace Robust.Shared.Containers
         /// </summary>
         public bool TryFindComponentsOnEntityContainerOrParent<T>(
             EntityUid uid,
+            EntityQuery<T> entityQuery,
             out List<T> foundComponents,
-            EntityQuery<MetaDataComponent> metas,
-            EntityQuery<TransformComponent> xforms) where T : Component
+            MetaDataComponent? meta = null,
+            TransformComponent? xform = null) where T : Component
         {
+            T? foundComponent = null;
             foundComponents = new List<T>();
 
-            var meta = metas.GetComponent(uid);
+            if (!_metas.Resolve(uid, ref meta))
+                return foundComponents.Any();
+
             if ((meta.Flags & MetaDataFlags.InContainer) != MetaDataFlags.InContainer)
                 return foundComponents.Any();
 
-            var xform = xforms.GetComponent(uid);
+            if (!_xforms.Resolve(uid, ref xform))
+                return foundComponents.Any();
+
             if (!xform.ParentUid.Valid)
                 return foundComponents.Any();
 
-            if (TryComp<T>(xform.ParentUid, out var foundComponent) && foundComponent != null)
+            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent) && foundComponent != null)
                 foundComponents.Add(foundComponent);
 
-            if (TryFindComponentsOnEntityContainerOrParent<T>(xform.ParentUid, out var extraComponents, metas, xforms))
+            if (TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, out var extraComponents))
                 foundComponents = foundComponents.Concat(extraComponents).ToList();
 
             return foundComponents.Any();

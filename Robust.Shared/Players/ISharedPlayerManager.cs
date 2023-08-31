@@ -2,27 +2,28 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 
-namespace Robust.Shared.Players
+namespace Robust.Shared.Players;
+
+public interface ISharedPlayerManager
 {
-    public interface ISharedPlayerManager
-    {
-        /// <summary>
-        /// Player sessions with a remote endpoint.
-        /// </summary>
-        IEnumerable<ICommonSession> NetworkedSessions { get; }
+    /// <summary>
+    /// Player sessions with a remote endpoint.
+    /// </summary>
+    IEnumerable<ICommonSession> NetworkedSessions { get; }
 
-        IEnumerable<ICommonSession> Sessions { get; }
+    IEnumerable<ICommonSession> Sessions { get; }
 
-        bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session);
+    bool TryGetSessionByEntity(EntityUid uid, [NotNullWhen(true)] out ICommonSession? session);
 
-        /// <summary>
-        ///     Number of players currently connected to this server.
-        /// </summary>
-        int PlayerCount { get; }
+    /// <summary>
+    ///     Number of players currently connected to this server.
+    /// </summary>
+    int PlayerCount { get; }
 
-        /// <summary>
-        ///     Maximum number of players that can connect to this server at one time.
-        /// </summary>
-        int MaxPlayers { get; }
-    }
+    /// <summary>
+    ///     Maximum number of players that can connect to this server at one time.
+    /// </summary>
+    int MaxPlayers { get; }
+
+    ICommonSession? LocalSession { get; }
 }

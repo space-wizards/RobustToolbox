@@ -51,6 +51,8 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public int MaxPlayers => _client.GameInfo?.ServerMaxPlayers ?? 0;
 
+        public ICommonSession? LocalSession => LocalPlayer?.Session;
+
         /// <inheritdoc />
         [ViewVariables]
         public LocalPlayer? LocalPlayer

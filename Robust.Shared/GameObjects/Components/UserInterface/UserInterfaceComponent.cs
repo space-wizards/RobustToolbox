@@ -120,6 +120,7 @@ namespace Robust.Shared.GameObjects
     {
     }
 
+    [Serializable, NetSerializable]
     internal abstract class BaseBoundUIWrapMessage : EntityEventArgs
     {
         public readonly EntityUid Entity;

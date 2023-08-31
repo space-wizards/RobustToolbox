@@ -75,8 +75,11 @@ namespace Robust.Client.GameObjects
             uiComp.OpenInterfaces[uiKey] = boundInterface;
 
             var playerSession = _playerManager.LocalPlayer?.Session;
-            if(playerSession != null)
+            if (playerSession != null)
+            {
+                uiComp.Interfaces[uiKey]._subscribedSessions.Add(playerSession);
                 RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, uid, playerSession), true);
+            }
 
             return true;
         }

@@ -145,6 +145,7 @@ namespace Robust.Server.GameObjects
         }
 
         #region Get BUI
+
         public bool HasUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? ui = null)
         {
             if (!Resolve(uid, ref ui))
@@ -339,7 +340,7 @@ namespace Robust.Server.GameObjects
             return true;
         }
 
-        private void CloseShared(PlayerBoundUserInterface bui, IPlayerSession session, Shared.GameObjects.ActiveUserInterfaceComponent? activeUis = null)
+        private void CloseShared(PlayerBoundUserInterface bui, IPlayerSession session, ActiveUserInterfaceComponent? activeUis = null)
         {
             var owner = bui.Owner;
             bui._subscribedSessions.Remove(session);

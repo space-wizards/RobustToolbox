@@ -250,7 +250,7 @@ namespace Robust.Shared.Containers
             if (!xform.ParentUid.Valid)
                 return false;
 
-            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent))
+            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent, false))
                 return true;
 
             return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, entityQuery, out foundComponent);
@@ -281,7 +281,7 @@ namespace Robust.Shared.Containers
             if (!xform.ParentUid.Valid)
                 return foundComponents.Any();
 
-            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent) && foundComponent != null)
+            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent, false) && foundComponent != null)
                 foundComponents.Add(foundComponent);
 
             if (TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, out var extraComponents))

@@ -232,12 +232,10 @@ namespace Robust.Shared.Containers
         public bool TryFindComponentOnEntityContainerOrParent<T>(
             EntityUid uid,
             EntityQuery<T> entityQuery,
-            [NotNullWhen(true)] out T? foundComponent,
+            [NotNullWhen(true)] ref T? foundComponent,
             MetaDataComponent? meta = null,
             TransformComponent? xform = null) where T : Component
         {
-            foundComponent = null;
-
             if (!_metas.Resolve(uid, ref meta))
                 return false;
 
@@ -253,7 +251,7 @@ namespace Robust.Shared.Containers
             if (entityQuery.Resolve(xform.ParentUid, ref foundComponent, false))
                 return true;
 
-            return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, entityQuery, out foundComponent);
+            return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, entityQuery, ref foundComponent);
         }
 
         /// <summary>
@@ -262,12 +260,11 @@ namespace Robust.Shared.Containers
         public bool TryFindComponentsOnEntityContainerOrParent<T>(
             EntityUid uid,
             EntityQuery<T> entityQuery,
-            out List<T> foundComponents,
+            ref List<T> foundComponents,
             MetaDataComponent? meta = null,
             TransformComponent? xform = null) where T : Component
         {
             T? foundComponent = null;
-            foundComponents = new List<T>();
 
             if (!_metas.Resolve(uid, ref meta))
                 return foundComponents.Any();
@@ -284,10 +281,7 @@ namespace Robust.Shared.Containers
             if (entityQuery.Resolve(xform.ParentUid, ref foundComponent, false) && foundComponent != null)
                 foundComponents.Add(foundComponent);
 
-            if (TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, out var extraComponents))
-                foundComponents = foundComponents.Concat(extraComponents).ToList();
-
-            return foundComponents.Any();
+            return TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, ref foundComponents);
         }
 
         /// <summary>

@@ -30,22 +30,19 @@ namespace Robust.Client.GameObjects;
 public sealed class AudioSystem : SharedAudioSystem
 {
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
-    [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
     [Dependency] private readonly IClydeAudio _clyde = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
-    [Dependency] private readonly SharedTransformSystem _xformSys = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
+    [Dependency] private readonly SharedTransformSystem _xformSys = default!;
+    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     internal IReadOnlyList<PlayingStream> PlayingStreams => _playingClydeStreams;
 
     private readonly List<PlayingStream> _playingClydeStreams = new();
-
-    private ISawmill _sawmill = default!;
 
     private float _maxRayLength;
 
@@ -57,8 +54,6 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
         SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
-
-        _sawmill = _logManager.GetSawmill("audio");
 
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
     }
@@ -130,7 +125,7 @@ public sealed class AudioSystem : SharedAudioSystem
         }
         catch (Exception e)
         {
-            _sawmill.Error($"Caught exception while processing entity streams.");
+            Log.Error($"Caught exception while processing entity streams.");
             _runtimeLog.LogException(e, $"{nameof(AudioSystem)}.{nameof(FrameUpdate)}");
         }
         finally
@@ -196,7 +191,7 @@ public sealed class AudioSystem : SharedAudioSystem
         {
             var rayLength = MathF.Min(distance, _maxRayLength);
             var ray = new CollisionRay(listener.Position, delta/distance, OcclusionCollisionMask);
-            occlusion = _broadPhaseSystem.IntersectRayPenetration(listener.MapId, ray, rayLength, stream.TrackingEntity);
+            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, rayLength, stream.TrackingEntity);
         }
         stream.Source.SetOcclusion(occlusion);
 
@@ -207,7 +202,7 @@ public sealed class AudioSystem : SharedAudioSystem
         var audioPos = stream.Attenuation != Attenuation.NoAttenuation ? mapPos.Value : listener;
         if (!stream.Source.SetPosition(audioPos.Position))
         {
-            _sawmill.Warning("Interrupting positional audio, can't set position.");
+            Log.Warning("Interrupting positional audio, can't set position.");
             stream.Source.StopPlaying();
             return;
         }
@@ -298,7 +293,7 @@ public sealed class AudioSystem : SharedAudioSystem
         if (_resourceCache.TryGetResource<AudioResource>(new ResPath(filename), out audio))
             return true;
 
-        _sawmill.Error($"Server tried to play audio file {filename} which does not exist.");
+        Log.Error($"Server tried to play audio file {filename} which does not exist.");
         return false;
     }
 
@@ -307,7 +302,7 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!_timing.IsFirstTimePredicted)
         {
             source = null;
-            _sawmill.Error($"Tried to create audio source outside of prediction!");
+            Log.Error($"Tried to create audio source outside of prediction!");
             DebugTools.Assert(false);
             return false;
         }
@@ -361,7 +356,7 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         if (!TryCreateAudioSource(stream, out var source))
         {
-            _sawmill.Error($"Error setting up global audio for {stream.Name}: {0}", Environment.StackTrace);
+            Log.Error($"Error setting up global audio for {stream.Name}: {0}", Environment.StackTrace);
             return null;
         }
 
@@ -406,7 +401,7 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         if (!TryCreateAudioSource(stream, out var source))
         {
-            _sawmill.Error($"Error setting up entity audio for {stream.Name} / {ToPrettyString(entity)}: {0}", Environment.StackTrace);
+            Log.Error($"Error setting up entity audio for {stream.Name} / {ToPrettyString(entity)}: {0}", Environment.StackTrace);
             return null;
         }
 
@@ -460,14 +455,14 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         if (!TryCreateAudioSource(stream, out var source))
         {
-            _sawmill.Error($"Error setting up coordinates audio for {stream.Name} / {coordinates}: {0}", Environment.StackTrace);
+            Log.Error($"Error setting up coordinates audio for {stream.Name} / {coordinates}: {0}", Environment.StackTrace);
             return null;
         }
 
         if (!source.SetPosition(fallbackCoordinates.Position))
         {
             source.Dispose();
-            _sawmill.Warning($"Can't play positional audio \"{stream.Name}\", can't set position.");
+            Log.Warning($"Can't play positional audio \"{stream.Name}\", can't set position.");
             return null;
         }
 

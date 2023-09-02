@@ -143,7 +143,7 @@ entitiesImmutableList:
     }
 
     [DataDefinition]
-    public sealed class PrototypeIdListSerializerTestDataDefinition
+    public sealed partial class PrototypeIdListSerializerTestDataDefinition
     {
         [DataField("entitiesList", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
         public List<string> EntitiesList = new();

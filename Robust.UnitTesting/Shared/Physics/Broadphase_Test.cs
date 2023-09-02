@@ -66,23 +66,24 @@ public sealed class Broadphase_Test
         var mapId = mapManager.CreateMap();
         var mapEnt = mapManager.GetMapEntityId(mapId);
         var grid = mapManager.CreateGrid(mapId);
+        var gridUid = grid.Owner;
 
         grid.SetTile(Vector2i.Zero, new Tile(1));
-        Assert.That(entManager.HasComponent<BroadphaseComponent>(grid.Owner));
-        var broadphase = entManager.GetComponent<BroadphaseComponent>(grid.Owner);
+        Assert.That(entManager.HasComponent<BroadphaseComponent>(gridUid));
+        var broadphase = entManager.GetComponent<BroadphaseComponent>(gridUid);
 
-        var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, new Vector2(0.5f, 0.5f)));
+        var ent = entManager.SpawnEntity(null, new EntityCoordinates(gridUid, new Vector2(0.5f, 0.5f)));
         var physics = entManager.AddComponent<PhysicsComponent>(ent);
         var xform = entManager.GetComponent<TransformComponent>(ent);
 
         // If we're not collidable we're still on the sundries tree.
         Assert.That(broadphase.StaticSundriesTree, Does.Contain(ent));
-        Assert.That(xform.Broadphase!.Value.Uid, Is.EqualTo(grid.Owner));
+        Assert.That(xform.Broadphase!.Value.Uid, Is.EqualTo(gridUid));
 
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        var fixture = new Fixture("fix1", shape, 0, 0, true);
-        fixturesSystem.CreateFixture(ent, fixture, body: physics, xform: xform);
+        var fixture = new Fixture(shape, 0, 0, true);
+        fixturesSystem.CreateFixture(ent, "fix1", fixture, body: physics, xform: xform);
         physicsSystem.SetCanCollide(ent, true, body: physics);
         Assert.That(physics.CanCollide);
 
@@ -224,7 +225,7 @@ public sealed class Broadphase_Test
         // enable collision for the child
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        fixtures.CreateFixture(child, new Fixture("fix1", shape, 0, 0, false), body: childBody, xform: childXform);
+        fixtures.CreateFixture(child, "fix1", new Fixture(shape, 0, 0, false), body: childBody, xform: childXform);
         physSystem.SetCanCollide(child, true, body: childBody);
         Assert.That(childBody.CanCollide);
 
@@ -342,7 +343,7 @@ public sealed class Broadphase_Test
 
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        fixtures.CreateFixture(child1, new Fixture("fix1", shape, 0, 0, false), body: child1Body, xform: child1Xform);
+        fixtures.CreateFixture(child1, "fix1", new Fixture(shape, 0, 0, false), body: child1Body, xform: child1Xform);
         physSystem.SetCanCollide(child1, true, body: child1Body);
         Assert.That(child1Body.CanCollide);
 

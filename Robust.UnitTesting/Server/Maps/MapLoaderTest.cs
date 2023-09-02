@@ -14,7 +14,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.UnitTesting.Server.Maps
 {
     [TestFixture]
-    public sealed class MapLoaderTest : RobustUnitTest
+    public sealed partial class MapLoaderTest : RobustUnitTest
     {
         private const string MapData = @"
 meta:
@@ -115,7 +115,7 @@ entities:
         }
 
         [DataDefinition]
-        private sealed class MapDeserializeTestComponent : Component
+        private sealed partial class MapDeserializeTestComponent : Component
         {
             [DataField("foo")] public int Foo { get; set; } = -1;
             [DataField("bar")] public int Bar { get; set; } = -1;

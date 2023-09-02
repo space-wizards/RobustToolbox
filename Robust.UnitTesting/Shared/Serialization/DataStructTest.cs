@@ -4,10 +4,10 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.UnitTesting.Shared.Serialization;
 
-public sealed class DataStructTest : SerializationTest
+public sealed partial class DataStructTest : SerializationTest
 {
     [DataDefinition]
-    public struct DefaultIntDataStruct
+    public partial struct DefaultIntDataStruct
     {
         public int A = 5;
 

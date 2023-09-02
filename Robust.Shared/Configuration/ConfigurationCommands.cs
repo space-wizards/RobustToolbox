@@ -127,6 +127,11 @@ namespace Robust.Shared.Configuration
                 return Parse.Float(input);
             }
 
+            if (type == typeof(long))
+            {
+                return long.Parse(input);
+            }
+
             throw new NotSupportedException();
         }
     }

@@ -10,7 +10,7 @@ public abstract partial class SharedPhysicsSystem
 {
     [Dependency] private readonly FixtureSystem _fixtures = default!;
 
-    public void SetDensity(EntityUid uid, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
+    public void SetDensity(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
     {
         DebugTools.Assert(value >= 0f);
 
@@ -26,7 +26,7 @@ public abstract partial class SharedPhysicsSystem
             _fixtures.FixtureUpdate(uid, manager: manager);
     }
 
-    public void SetFriction(EntityUid uid, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
+    public void SetFriction(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
     {
         DebugTools.Assert(value >= 0f);
 
@@ -73,14 +73,14 @@ public abstract partial class SharedPhysicsSystem
 
     #region Collision Masks & Layers
 
-    public void AddCollisionMask(EntityUid uid, Fixture fixture, int mask, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public void AddCollisionMask(EntityUid uid, string fixtureId, Fixture fixture, int mask, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if ((fixture.CollisionMask & mask) == mask) return;
 
         if (!Resolve(uid, ref manager))
             return;
 
-        DebugTools.Assert(manager.Fixtures.ContainsKey(fixture.ID));
+        DebugTools.Assert(manager.Fixtures.ContainsKey(fixtureId));
         fixture.CollisionMask |= mask;
 
         if (body != null || TryComp(uid, out body))
@@ -91,14 +91,14 @@ public abstract partial class SharedPhysicsSystem
         _broadphase.Refilter(uid, fixture);
     }
 
-    public void SetCollisionMask(EntityUid uid, Fixture fixture, int mask, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public void SetCollisionMask(EntityUid uid, string fixtureId, Fixture fixture, int mask, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if (fixture.CollisionMask == mask) return;
 
         if (!Resolve(uid, ref manager))
             return;
 
-        DebugTools.Assert(manager.Fixtures.ContainsKey(fixture.ID));
+        DebugTools.Assert(manager.Fixtures.ContainsKey(fixtureId));
         fixture.CollisionMask = mask;
 
         if (body != null || TryComp(uid, out body))
@@ -109,14 +109,14 @@ public abstract partial class SharedPhysicsSystem
         _broadphase.Refilter(uid, fixture);
     }
 
-    public void RemoveCollisionMask(EntityUid uid, Fixture fixture, int mask, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public void RemoveCollisionMask(EntityUid uid, string fixtureId, Fixture fixture, int mask, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if ((fixture.CollisionMask & mask) == 0x0) return;
 
         if (!Resolve(uid, ref manager))
             return;
 
-        DebugTools.Assert(manager.Fixtures.ContainsKey(fixture.ID));
+        DebugTools.Assert(manager.Fixtures.ContainsKey(fixtureId));
         fixture.CollisionMask &= ~mask;
 
         if (body != null || TryComp(uid, out body))
@@ -127,14 +127,14 @@ public abstract partial class SharedPhysicsSystem
         _broadphase.Refilter(uid, fixture);
     }
 
-    public void AddCollisionLayer(EntityUid uid, Fixture fixture, int layer, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public void AddCollisionLayer(EntityUid uid, string fixtureId, Fixture fixture, int layer, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if ((fixture.CollisionLayer & layer) == layer) return;
 
         if (!Resolve(uid, ref manager))
             return;
 
-        DebugTools.Assert(manager.Fixtures.ContainsKey(fixture.ID));
+        DebugTools.Assert(manager.Fixtures.ContainsKey(fixtureId));
         fixture.CollisionLayer |= layer;
 
         if (body != null || TryComp(uid, out body))
@@ -145,7 +145,7 @@ public abstract partial class SharedPhysicsSystem
         _broadphase.Refilter(uid, fixture);
     }
 
-    public void SetCollisionLayer(EntityUid uid, Fixture fixture, int layer, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public void SetCollisionLayer(EntityUid uid, string fixtureId, Fixture fixture, int layer, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if (fixture.CollisionLayer.Equals(layer))
             return;
@@ -163,11 +163,11 @@ public abstract partial class SharedPhysicsSystem
         _broadphase.Refilter(uid, fixture);
     }
 
-    public void RemoveCollisionLayer(EntityUid uid, Fixture fixture, int layer, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public void RemoveCollisionLayer(EntityUid uid, string fixtureId, Fixture fixture, int layer, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if ((fixture.CollisionLayer & layer) == 0x0 || !Resolve(uid, ref manager)) return;
 
-        DebugTools.Assert(manager.Fixtures.ContainsKey(fixture.ID));
+        DebugTools.Assert(manager.Fixtures.ContainsKey(fixtureId));
         fixture.CollisionLayer &= ~layer;
 
         if (body != null || TryComp(uid, out body))

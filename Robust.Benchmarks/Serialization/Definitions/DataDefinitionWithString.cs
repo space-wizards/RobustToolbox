@@ -5,9 +5,9 @@ namespace Robust.Benchmarks.Serialization.Definitions
 {
     [DataDefinition]
     [Virtual]
-    public class DataDefinitionWithString
+    public partial class DataDefinitionWithString
     {
         [DataField("string")]
-        public string StringField { get; init; } = default!;
+        public string StringField { get; set; } = default!;
     }
 }

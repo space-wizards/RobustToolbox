@@ -8,10 +8,10 @@ using Robust.Shared.Serialization.Markdown.Value;
 namespace Robust.UnitTesting.Shared.Serialization;
 
 [TestFixture]
-public sealed class IncludeTest : RobustUnitTest
+public sealed partial class IncludeTest : RobustUnitTest
 {
     [DataDefinition]
-    private sealed class ReadWriteTestDataDefinition
+    private sealed partial class ReadWriteTestDataDefinition
     {
         [DataField("f1")] public int F1;
 
@@ -19,7 +19,7 @@ public sealed class IncludeTest : RobustUnitTest
     }
 
     [DataDefinition]
-    private sealed class ReadWriteTestNestedDataDefinition
+    private sealed partial class ReadWriteTestNestedDataDefinition
     {
         [DataField("f1")] public int F1;
 

@@ -14,15 +14,15 @@ namespace Robust.Server.GameObjects
     /// </summary>
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
-    [RegisterComponent, ComponentReference(typeof(SharedUserInterfaceComponent))]
-    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
+    [RegisterComponent]
+    public sealed partial class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
         [ViewVariables]
         public readonly Dictionary<Enum, BoundUserInterface> Interfaces = new();
     }
 
     [RegisterComponent]
-    public sealed class ActiveUserInterfaceComponent : Component
+    public sealed partial class ActiveUserInterfaceComponent : Component
     {
         public HashSet<BoundUserInterface> Interfaces = new();
     }
@@ -33,7 +33,9 @@ namespace Robust.Server.GameObjects
     [PublicAPI]
     public sealed class BoundUserInterface
     {
-        public float InteractionRangeSqrd;
+        public float InteractionRange;
+
+        public float InteractionRangeSqrd => InteractionRange * InteractionRange;
 
         public Enum UiKey { get; }
         public EntityUid Owner { get; }
@@ -58,8 +60,7 @@ namespace Robust.Server.GameObjects
             UiKey = data.UiKey;
             Owner = owner;
 
-            // One Abs(), because negative values imply no limit
-            InteractionRangeSqrd = data.InteractionRange * MathF.Abs(data.InteractionRange);
+            InteractionRange = data.InteractionRange;
         }
     }
 

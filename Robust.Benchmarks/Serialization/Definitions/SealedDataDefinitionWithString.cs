@@ -3,9 +3,9 @@
 namespace Robust.Benchmarks.Serialization.Definitions
 {
     [DataDefinition]
-    public sealed class SealedDataDefinitionWithString
+    public sealed partial class SealedDataDefinitionWithString
     {
         [DataField("string")]
-        public string StringField { get; init; } = default!;
+        public string StringField { get; private set; } = default!;
     }
 }

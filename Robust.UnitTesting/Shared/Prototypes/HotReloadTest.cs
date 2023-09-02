@@ -1,3 +1,4 @@
+#if TOOLS
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -104,13 +105,14 @@ namespace Robust.UnitTesting.Shared.Prototypes
         }
     }
 
-    public sealed class HotReloadTestOneComponent : Component
+    public sealed partial class HotReloadTestOneComponent : Component
     {
         [DataField("value")]
-        public int Value { get; }
+        public int Value { get; private set; }
     }
 
-    public sealed class HotReloadTestTwoComponent : Component
+    public sealed partial class HotReloadTestTwoComponent : Component
     {
     }
 }
+#endif

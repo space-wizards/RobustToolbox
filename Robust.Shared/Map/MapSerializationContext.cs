@@ -22,7 +22,7 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
 
     // Run-specific data
-    public Dictionary<ushort, string>? TileMap;
+    public Dictionary<int, string>? TileMap;
     public readonly Dictionary<string, IComponent> CurrentReadingEntityComponents = new();
     public HashSet<string> CurrentlyIgnoredComponents = new();
     public string? CurrentComponent;
@@ -128,7 +128,11 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
                     return new ValueDataNode("invalid");
             }
 
-            Logger.ErrorS("map", "Encountered an invalid entityUid '{0}' while serializing a map.", value);
+            dependencies
+                .Resolve<ILogManager>()
+                .GetSawmill("map")
+                .Error("Encountered an invalid entityUid '{0}' while serializing a map.", value);
+
             return new ValueDataNode("invalid");
         }
 
@@ -147,7 +151,11 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         if (int.TryParse(node.Value, out var val) && _uidEntityMap.TryGetValue(val, out var entity))
             return entity;
 
-        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
+        dependencies
+            .Resolve<ILogManager>()
+            .GetSawmill("map")
+            .Error("Error in map file: found local entity UID '{0}' which does not exist.", val);
+
         return EntityUid.Invalid;
 
     }

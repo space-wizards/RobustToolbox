@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
@@ -14,10 +15,10 @@ internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
 {
     [Dependency] private readonly IEntityManager _entity = default!;
 
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var start = parser.Index;
-        var word = parser.GetWord();
+        var start = parserContext.Index;
+        var word = parserContext.GetWord(ParserContext.IsToken);
         error = null;
 
         if (!EntityUid.TryParse(word, out var ent))
@@ -29,7 +30,7 @@ internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
             else
                 error = new OutOfInputError();
 
-            error.Contextualize(parser.Input, (start, parser.Index));
+            error.Contextualize(parserContext.Input, (start, parserContext.Index));
             return false;
         }
 
@@ -37,14 +38,14 @@ internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
         return true;
     }
 
-    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
         return (CompletionResult.FromHint("<entity id>"), null);
     }
 }
 
-public record struct InvalidEntityUid(string Value) : IConError
+public record InvalidEntityUid(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {
@@ -56,7 +57,7 @@ public record struct InvalidEntityUid(string Value) : IConError
     public StackTrace? Trace { get; set; }
 }
 
-public record struct DeadEntity(EntityUid Entity) : IConError
+public record DeadEntity(EntityUid Entity) : IConError
 {
     public FormattedMessage DescribeInner()
     {

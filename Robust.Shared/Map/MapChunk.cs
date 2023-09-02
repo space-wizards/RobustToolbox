@@ -42,7 +42,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Physics fixtures that make up this grid chunk.
         /// </summary>
-        public List<Fixture> Fixtures { get; } = new();
+        public Dictionary<string, Fixture> Fixtures { get; } = new();
 
         /// <summary>
         /// The last game simulation tick that a tile on this chunk was modified.

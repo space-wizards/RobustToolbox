@@ -81,7 +81,7 @@ namespace Robust.Client.GameObjects
 
                 while (chunkEnumerator.MoveNext(out var chunk))
                 {
-                    foreach (var fixture in chunk.Fixtures)
+                    foreach (var fixture in chunk.Fixtures.Values)
                     {
                         var poly = (PolygonShape) fixture.Shape;
 

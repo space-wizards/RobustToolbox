@@ -193,8 +193,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)
     {
-        component.DynamicTree = new DynamicTreeBroadPhase();
-        component.StaticTree = new DynamicTreeBroadPhase();
         component.StaticSundriesTree = new DynamicTree<EntityUid>(
             (in EntityUid value) => GetTreeAABB(value, uid));
         component.SundriesTree = new DynamicTree<EntityUid>(
@@ -221,7 +219,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
         return _transform.GetInvWorldMatrix(treeXform).TransformBox(GetWorldAABB(entity, xform));
     }
 
-    internal void CreateProxies(EntityUid uid, TransformComponent xform, Fixture fixture, PhysicsComponent body)
+    internal void CreateProxies(EntityUid uid, string fixtureId, Fixture fixture, TransformComponent xform,
+        PhysicsComponent body)
     {
         if (!TryGetCurrentBroadphase(xform, out var broadphase))
             return;
@@ -237,10 +236,10 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var tree = body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
         DebugTools.Assert(fixture.ProxyCount == 0);
 
-        AddOrMoveProxies(uid, fixture, body, tree, broadphaseTransform, mapTransform, physMap.MoveBuffer);
+        AddOrMoveProxies(uid, fixtureId, fixture, body, tree, broadphaseTransform, mapTransform, physMap.MoveBuffer);
     }
 
-    internal void DestroyProxies(EntityUid uid, Fixture fixture, TransformComponent xform, BroadphaseComponent broadphase, PhysicsMapComponent? physicsMap)
+    internal void DestroyProxies(EntityUid uid, string fixtureId, Fixture fixture, TransformComponent xform, BroadphaseComponent broadphase, PhysicsMapComponent? physicsMap)
     {
         DebugTools.AssertNotNull(xform.Broadphase);
         DebugTools.Assert(xform.Broadphase!.Value.Uid == broadphase.Owner);
@@ -250,7 +249,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         if (fixture.ProxyCount == 0)
         {
-            Log.Warning($"Tried to destroy fixture {fixture.ID} on {ToPrettyString(uid)} that already has no proxies?");
+            Log.Warning($"Tried to destroy fixture {fixtureId} on {ToPrettyString(uid)} that already has no proxies?");
             return;
         }
 
@@ -381,14 +380,15 @@ public sealed partial class EntityLookupSystem : EntitySystem
         // TODO BROADPHASE PARENTING this just assumes local = world
         var broadphaseTransform = new Transform(broadphaseXform.InvLocalMatrix.Transform(mapTransform.Position), mapTransform.Quaternion2D.Angle - broadphaseXform.LocalRotation);
 
-        foreach (var fixture in manager.Fixtures.Values)
+        foreach (var (id, fixture) in manager.Fixtures)
         {
-            AddOrMoveProxies(uid, fixture, body, tree, broadphaseTransform, mapTransform, physicsMap.MoveBuffer);
+            AddOrMoveProxies(uid, id, fixture, body, tree, broadphaseTransform, mapTransform, physicsMap.MoveBuffer);
         }
     }
 
     private void AddOrMoveProxies(
         EntityUid uid,
+        string fixtureId,
         Fixture fixture,
         PhysicsComponent body,
         IBroadPhase tree,
@@ -417,7 +417,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         for (var i = 0; i < count; i++)
         {
             var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
-            var proxy = new FixtureProxy(uid, body, bounds, fixture, i);
+            var proxy = new FixtureProxy(uid, body, bounds, fixtureId, fixture, i);
             proxy.ProxyId = tree.AddProxy(ref proxy);
             proxy.AABB = bounds;
             proxies[i] = proxy;

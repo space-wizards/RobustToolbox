@@ -2,6 +2,8 @@ using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -12,7 +14,7 @@ namespace Robust.Shared.GameObjects
     /// <inheritdoc />
     [Reflect(false)]
     [ImplicitDataDefinitionForInheritors]
-    public abstract class Component : IComponent
+    public abstract partial class Component : IComponent
     {
         [DataField("netsync")]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -108,7 +110,7 @@ namespace Robust.Shared.GameObjects
                 LifeStage = ComponentLifeStage.Stopped;
                 return;
             }
-            
+
             LifeStage = ComponentLifeStage.Stopping;
             entManager.EventBus.RaiseComponentEvent(this, CompShutdownInstance);
             LifeStage = ComponentLifeStage.Stopped;
@@ -256,11 +258,12 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
+    /// WARNING: Do not subscribe to this unless you know what you are doing!
     /// The component has been added to the entity. This is the first function
     /// to be called after the component has been allocated and (optionally) deserialized.
     /// </summary>
     [ComponentEvent]
-    public sealed class ComponentAdd : EntityEventArgs { }
+    public readonly record struct ComponentAdd;
 
     /// <summary>
     /// Raised when all of the entity's other components have been added and are available,

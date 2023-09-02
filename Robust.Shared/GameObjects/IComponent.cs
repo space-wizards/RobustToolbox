@@ -1,4 +1,6 @@
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -8,7 +10,8 @@ namespace Robust.Shared.GameObjects
     ///     All discoverable implementations of IComponent must override the <see cref="Name" />.
     ///     Instances are dynamically instantiated by a <c>ComponentFactory</c>, and will have their IoC Dependencies resolved.
     /// </remarks>
-    public interface IComponent
+    [ImplicitDataDefinitionForInheritors]
+    public partial interface IComponent
     {
         /// <summary>
         ///     The current lifetime stage of this component. You can use this to check

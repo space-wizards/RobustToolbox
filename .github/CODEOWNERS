@@ -16,3 +16,8 @@
 
 # Be they Fluent translations or Freemarker templates, I know them both!
 *.ftl @RemieRichards
+
+# commands commands commands commands
+**/Toolshed/** @moonheart08
+*Command.cs @moonheart08
+*Commands.cs @moonheart08

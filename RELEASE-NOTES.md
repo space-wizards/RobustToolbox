@@ -54,6 +54,27 @@ END TEMPLATE-->
 *None yet*
 
 
+## 154.0.0
+
+### Breaking changes
+
+* Change ignored prototypes to skip prototypes even if the prototype type is found.
+* Moved IPlayerData interface to shared.
+
+### New features
+
+* Added a multiline text submit keybind function.
+
+### Bugfixes
+
+* Fixed multiline edits scrollbar margins.
+
+### Internal
+
+* Added more event sources.
+* Made Toolshed types oneOff IoC injections.
+
+
 ## 153.0.0
 
 ### Breaking changes

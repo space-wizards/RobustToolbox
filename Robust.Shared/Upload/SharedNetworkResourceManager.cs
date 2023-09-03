@@ -14,11 +14,11 @@ namespace Robust.Shared.Upload;
 ///     Manager that allows resources to be added at runtime by admins.
 ///     They will be sent to all clients automatically.
 /// </summary>
-public abstract class SharedNetworkResourceManager : IDisposable
+public abstract partial class SharedNetworkResourceManager : IDisposable
 {
-    [Dependency] private readonly INetManager _netManager = default!;
-    [Dependency] private readonly IReplayRecordingManager _replay = default!;
-    [Dependency] protected readonly IResourceManager ResourceManager = default!;
+    [Dependency] private INetManager _netManager = default!;
+    [Dependency] private IReplayRecordingManager _replay = default!;
+    [Dependency] protected IResourceManager ResourceManager = default!;
 
     public const double BytesToMegabytes = 0.000001d;
 

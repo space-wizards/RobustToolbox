@@ -21,9 +21,9 @@ namespace Robust.Client.Graphics.Audio
 {
     internal partial class ClydeAudio
     {
-        [Robust.Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Robust.Shared.IoC.Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Robust.Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
+        [Robust.Shared.IoC.Dependency] private IConfigurationManager _cfg = default!;
+        [Robust.Shared.IoC.Dependency] private IEyeManager _eyeManager = default!;
+        [Robust.Shared.IoC.Dependency] private ILogManager _logMan = default!;
 
         private Thread? _gameThread;
 

@@ -14,9 +14,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed;
 
-internal sealed class ToolshedCommandImplementor
+internal sealed partial class ToolshedCommandImplementor
 {
-    [Dependency] private readonly ToolshedManager _toolshedManager = default!;
+    [Dependency] private ToolshedManager _toolshedManager = default!;
     public required ToolshedCommand Owner;
 
     public required string? SubCommand;

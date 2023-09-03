@@ -13,10 +13,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
+internal sealed partial class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
     where T : class, IPrototype
 {
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {

@@ -12,11 +12,11 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
-    internal sealed class NetInterpOverlay : Overlay
+    internal sealed partial class NetInterpOverlay : Overlay
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IPrototypeManager _prototypeManager = default!;
         private readonly EntityLookupSystem _lookup;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
@@ -82,10 +82,10 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private sealed class NetShowInterpCommand : LocalizedCommands
+        private sealed partial class NetShowInterpCommand : LocalizedCommands
         {
-            [Dependency] private readonly IEntityManager _entManager = default!;
-            [Dependency] private readonly IOverlayManager _overlay = default!;
+            [Dependency] private IEntityManager _entManager = default!;
+            [Dependency] private IOverlayManager _overlay = default!;
 
             public override string Command => "net_draw_interp";
 

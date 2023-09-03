@@ -18,10 +18,10 @@ namespace Robust.Shared.Configuration
     ///     Stores and manages global configuration variables.
     /// </summary>
     [Virtual]
-    internal class ConfigurationManager : IConfigurationManagerInternal
+    internal partial class ConfigurationManager : IConfigurationManagerInternal
     {
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private const char TABLE_DELIMITER = '.';
         protected readonly Dictionary<string, ConfigVar> _configVars = new();

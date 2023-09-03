@@ -24,10 +24,10 @@ namespace Robust.Client.ViewVariables
 {
     internal sealed partial class ClientViewVariablesManager : ViewVariablesManager, IClientViewVariablesManagerInternal
     {
-        [Dependency] private readonly IUserInterfaceManager _userInterfaceManager = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
-        [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private IUserInterfaceManager _userInterfaceManager = default!;
+        [Dependency] private IClientNetManager _netManager = default!;
+        [Dependency] private IRobustSerializer _robustSerializer = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
 
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);

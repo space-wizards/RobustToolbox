@@ -20,9 +20,9 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 
 
 // TODO: This should be able to parse more types, currently it only knows the ones in SimpleTypes.
-internal sealed class TypeTypeParser : TypeParser<Type>
+internal sealed partial class TypeTypeParser : TypeParser<Type>
 {
-    [Dependency] private readonly IModLoader _modLoader = default!;
+    [Dependency] private IModLoader _modLoader = default!;
 
     public Dictionary<string, Type> Types = new()
     {

@@ -20,7 +20,7 @@ namespace Robust.Client.Graphics.Clyde;
 // this partial class contains code specific to querying, processing & sorting sprites.
 internal partial class Clyde
 {
-    [Shared.IoC.Dependency] private readonly IParallelManager _parMan = default!;
+    [Shared.IoC.Dependency] private IParallelManager _parMan = default!;
     private readonly RefList<SpriteData> _drawingSpriteList = new();
     private const int _spriteProcessingBatchSize = 25;
 

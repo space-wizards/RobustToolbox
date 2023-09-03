@@ -16,11 +16,11 @@ using static Robust.Client.UserInterface.Controls.LineEdit;
 
 namespace Robust.Client.UserInterface.Controllers.Implementations;
 
-public sealed class EntitySpawningUIController : UIController
+public sealed partial class EntitySpawningUIController : UIController
 {
-    [Dependency] private readonly IPlacementManager _placement = default!;
-    [Dependency] private readonly IPrototypeManager _prototypes = default!;
-    [Dependency] private readonly IResourceCache _resources = default!;
+    [Dependency] private IPlacementManager _placement = default!;
+    [Dependency] private IPrototypeManager _prototypes = default!;
+    [Dependency] private IResourceCache _resources = default!;
 
     private EntitySpawnWindow? _window;
     private readonly List<EntityPrototype> _shownEntities = new();

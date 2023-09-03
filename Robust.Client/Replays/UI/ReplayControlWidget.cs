@@ -18,8 +18,8 @@ namespace Robust.Client.Replays.UI;
 [GenerateTypedNameReferences]
 public sealed partial class ReplayControlWidget : UIWidget // AKA Tardis - The funny time control box.
 {
-    [Dependency] private readonly IReplayPlaybackManager _playback = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IReplayPlaybackManager _playback = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     public const string TimeFormat = @"hh\:mm\:ss";
 

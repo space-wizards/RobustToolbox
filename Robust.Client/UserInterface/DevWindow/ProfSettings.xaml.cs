@@ -11,7 +11,7 @@ namespace Robust.Client.UserInterface;
 [GenerateTypedNameReferences]
 internal sealed partial class ProfSettings : Control
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     public ProfSettings()
     {

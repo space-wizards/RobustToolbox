@@ -30,7 +30,7 @@ namespace Robust.Client.GameObjects
         // 45 degrees.
         private const double MaxInterpolationAngle = Math.PI / 4;
 
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
 
         // Only keep track of transforms actively lerping.
         // Much faster than iterating 3000+ transforms every frame.

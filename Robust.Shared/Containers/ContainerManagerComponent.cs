@@ -20,9 +20,9 @@ namespace Robust.Shared.Containers
     [RegisterComponent, ComponentProtoName("ContainerContainer")]
     public sealed partial class ContainerManagerComponent : Component, ISerializationHooks
     {
-        [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
-        [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly INetManager _netMan = default!;
+        [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
+        [Dependency] private IEntityManager _entMan = default!;
+        [Dependency] private INetManager _netMan = default!;
 
         [DataField("containers")]
         public Dictionary<string, IContainer> Containers = new();

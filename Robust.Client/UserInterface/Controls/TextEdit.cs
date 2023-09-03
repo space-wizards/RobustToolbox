@@ -34,10 +34,10 @@ namespace Robust.Client.UserInterface.Controls;
 /// Cursor positions and such should never be inside a surrogate pair, however.
 /// </para>
 /// </remarks>
-public sealed class TextEdit : Control
+public sealed partial class TextEdit : Control
 {
-    [Dependency] private readonly IClipboardManager _clipboard = null!;
-    [Dependency] private readonly IClyde _clyde = null!;
+    [Dependency] private IClipboardManager _clipboard = null!;
+    [Dependency] private IClyde _clyde = null!;
 
     // @formatter:off
     public const string StylePropertyCursorColor    = "cursor-color";
@@ -1543,9 +1543,9 @@ public sealed class TextEdit : Control
 //
 
 // bind F12 Command textedit_ropeviz
-internal sealed class TextEditRopeVizCommand : IConsoleCommand
+internal sealed partial class TextEditRopeVizCommand : IConsoleCommand
 {
-    [Dependency] private readonly IUserInterfaceManager _ui = default!;
+    [Dependency] private IUserInterfaceManager _ui = default!;
 
     public string Command => "textedit_ropeviz";
     public string Description => "";
@@ -1561,9 +1561,9 @@ internal sealed class TextEditRopeVizCommand : IConsoleCommand
 }
 
 // bind F11 Command textedit_rebalance
-internal sealed class TextEditRebalanceCommand : IConsoleCommand
+internal sealed partial class TextEditRebalanceCommand : IConsoleCommand
 {
-    [Dependency] private readonly IUserInterfaceManager _ui = default!;
+    [Dependency] private IUserInterfaceManager _ui = default!;
 
     public string Command => "textedit_rebalance";
     public string Description => "";
@@ -1579,9 +1579,9 @@ internal sealed class TextEditRebalanceCommand : IConsoleCommand
 }
 
 // bind F10 Command textedit_debugoverlay
-internal sealed class TextEditDebugOverlayCommand : IConsoleCommand
+internal sealed partial class TextEditDebugOverlayCommand : IConsoleCommand
 {
-    [Dependency] private readonly IUserInterfaceManager _ui = default!;
+    [Dependency] private IUserInterfaceManager _ui = default!;
 
     public string Command => "textedit_debugoverlay";
     public string Description => "";
@@ -1597,9 +1597,9 @@ internal sealed class TextEditDebugOverlayCommand : IConsoleCommand
 }
 
 // bind F9 Command textedit_queuelinebreak
-internal sealed class TextEditQueueLineBreakCommand : IConsoleCommand
+internal sealed partial class TextEditQueueLineBreakCommand : IConsoleCommand
 {
-    [Dependency] private readonly IUserInterfaceManager _ui = default!;
+    [Dependency] private IUserInterfaceManager _ui = default!;
 
     public string Command => "textedit_queuelinebreak";
     public string Description => "";

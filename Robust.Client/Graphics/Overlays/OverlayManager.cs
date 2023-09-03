@@ -8,9 +8,9 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Graphics
 {
-    internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
+    internal sealed partial class OverlayManager : IOverlayManagerInternal, IPostInjectInit
     {
-        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private ILogManager _logMan = default!;
 
         [ViewVariables]
         private readonly Dictionary<Type, Overlay> _overlays = new Dictionary<Type, Overlay>();

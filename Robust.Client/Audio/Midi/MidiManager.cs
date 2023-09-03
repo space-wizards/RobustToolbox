@@ -40,16 +40,16 @@ internal sealed partial class MidiManager : IMidiManager
     [ViewVariables] private TimeSpan _nextOcclusionUpdate = TimeSpan.Zero;
     [ViewVariables] private TimeSpan _nextPositionUpdate = TimeSpan.Zero;
 
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IResourceCacheInternal _resourceManager = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IConfigurationManager _cfgMan = default!;
-    [Dependency] private readonly IClydeAudio _clydeAudio = default!;
-    [Dependency] private readonly ITaskManager _taskManager = default!;
-    [Dependency] private readonly ILogManager _logger = default!;
-    [Dependency] private readonly IParallelManager _parallel = default!;
-    [Dependency] private readonly IRuntimeLog _runtime = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private IResourceCacheInternal _resourceManager = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private IConfigurationManager _cfgMan = default!;
+    [Dependency] private IClydeAudio _clydeAudio = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
+    [Dependency] private ILogManager _logger = default!;
+    [Dependency] private IParallelManager _parallel = default!;
+    [Dependency] private IRuntimeLog _runtime = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private SharedPhysicsSystem _broadPhaseSystem = default!;
 

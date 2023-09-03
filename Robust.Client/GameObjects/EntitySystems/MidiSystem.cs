@@ -4,9 +4,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class MidiSystem : EntitySystem
+    public sealed partial class MidiSystem : EntitySystem
     {
-        [Dependency] private readonly IMidiManager _midiManager = default!;
+        [Dependency] private IMidiManager _midiManager = default!;
 
         public override void FrameUpdate(float frameTime)
         {

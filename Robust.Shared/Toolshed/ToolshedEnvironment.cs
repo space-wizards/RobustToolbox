@@ -10,12 +10,12 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Toolshed;
 
-public sealed class ToolshedEnvironment
+public sealed partial class ToolshedEnvironment
 {
-    [Dependency] private readonly IReflectionManager _reflection = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly INetManager _net = default!;
-    [Dependency] private readonly ToolshedManager _toolshedManager = default!;
+    [Dependency] private IReflectionManager _reflection = default!;
+    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private ToolshedManager _toolshedManager = default!;
     private readonly Dictionary<string, ToolshedCommand> _commands = new();
     private readonly Dictionary<Type, List<CommandSpec>> _commandPipeValueMap = new();
     private readonly Dictionary<CommandSpec, HashSet<Type>> _commandReturnValueMap = new();

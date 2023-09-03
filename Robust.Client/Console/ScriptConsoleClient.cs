@@ -23,11 +23,11 @@ using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.Console
 {
-    internal sealed class ScriptConsoleClient : ScriptConsole
+    internal sealed partial class ScriptConsoleClient : ScriptConsole
     {
 #pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependency = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IDependencyCollection _dependency = default!;
 #pragma warning restore 649
 
         private readonly StringBuilder _inputBuffer = new();
@@ -192,7 +192,7 @@ namespace Robust.Client.Console
             _autoImportRepeatBuffer = (found.ToArray(), code);
         }
 
-        private sealed class ScriptGlobalsImpl : ScriptGlobals
+        private sealed partial class ScriptGlobalsImpl : ScriptGlobals
         {
             private readonly ScriptConsoleClient _owner;
 

@@ -23,12 +23,12 @@ namespace Robust.Shared.Prototypes
 {
     public abstract partial class PrototypeManager : IPrototypeManagerInternal
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] protected readonly IResourceManager Resources = default!;
-        [Dependency] protected readonly ITaskManager TaskManager = default!;
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly ILocalizationManager _locMan = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] protected IResourceManager Resources = default!;
+        [Dependency] protected ITaskManager TaskManager = default!;
+        [Dependency] private ISerializationManager _serializationManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private ILocalizationManager _locMan = default!;
 
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _kindPriorities = new();
@@ -175,7 +175,7 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             return _kinds.Keys;
         }
-        
+
         /// <inheritdoc />
         public T Index<T>(string id) where T : class, IPrototype
         {

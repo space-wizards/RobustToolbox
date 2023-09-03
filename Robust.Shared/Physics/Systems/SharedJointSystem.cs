@@ -18,9 +18,9 @@ namespace Robust.Shared.Physics.Systems;
 
 public abstract partial class SharedJointSystem : EntitySystem
 {
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
     private EntityQuery<JointComponent> _jointsQuery;
     private EntityQuery<JointRelayTargetComponent> _relayQuery;

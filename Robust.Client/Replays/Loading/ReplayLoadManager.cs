@@ -17,19 +17,19 @@ namespace Robust.Client.Replays.Loading;
 
 public sealed partial class ReplayLoadManager : IReplayLoadManager
 {
-    [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly IBaseClient _client = default!;
-    [Dependency] private readonly IEntityManager _entMan = default!;
-    [Dependency] private readonly IClientGameTiming _timing = default!;
-    [Dependency] private readonly IClientNetManager _netMan = default!;
-    [Dependency] private readonly IComponentFactory _factory = default!;
-    [Dependency] private readonly IPrototypeManager _protoMan = default!;
-    [Dependency] private readonly ILocalizationManager _locMan = default!;
-    [Dependency] private readonly IConfigurationManager _confMan = default!;
-    [Dependency] private readonly NetworkResourceManager _netResMan = default!;
-    [Dependency] private readonly IClientGameStateManager _gameState = default!;
-    [Dependency] private readonly IClientRobustSerializer _serializer = default!;
-    [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
+    [Dependency] private ILogManager _logMan = default!;
+    [Dependency] private IBaseClient _client = default!;
+    [Dependency] private IEntityManager _entMan = default!;
+    [Dependency] private IClientGameTiming _timing = default!;
+    [Dependency] private IClientNetManager _netMan = default!;
+    [Dependency] private IComponentFactory _factory = default!;
+    [Dependency] private IPrototypeManager _protoMan = default!;
+    [Dependency] private ILocalizationManager _locMan = default!;
+    [Dependency] private IConfigurationManager _confMan = default!;
+    [Dependency] private NetworkResourceManager _netResMan = default!;
+    [Dependency] private IClientGameStateManager _gameState = default!;
+    [Dependency] private IClientRobustSerializer _serializer = default!;
+    [Dependency] private IReplayPlaybackManager _replayPlayback = default!;
 
     private ushort _metaId;
     private bool _initialized;

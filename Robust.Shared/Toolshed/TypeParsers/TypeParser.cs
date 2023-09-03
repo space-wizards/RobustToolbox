@@ -22,10 +22,10 @@ public interface ITypeParser : IPostInjectInit
 }
 
 [PublicAPI]
-public abstract class TypeParser<T> : ITypeParser
+public abstract partial class TypeParser<T> : ITypeParser
     where T: notnull
 {
-    [Dependency] private readonly ILogManager _log = default!;
+    [Dependency] private ILogManager _log = default!;
 
     protected ISawmill _sawmill = default!;
 

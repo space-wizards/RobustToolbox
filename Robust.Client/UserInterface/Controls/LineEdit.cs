@@ -17,9 +17,9 @@ namespace Robust.Client.UserInterface.Controls
     ///     Allows the user to input and modify a line of text.
     /// </summary>
     [Virtual]
-    public class LineEdit : Control
+    public partial class LineEdit : Control
     {
-        [Dependency] private readonly IClyde _clyde = default!;
+        [Dependency] private IClyde _clyde = default!;
 
         private const float MouseScrollDelay = 0.001f;
 

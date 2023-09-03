@@ -20,7 +20,7 @@ namespace Robust.Shared.Map.Components
     [NetworkedComponent]
     public sealed partial class MapGridComponent : Component
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
+        [Dependency] private IEntityManager _entManager = default!;
         private SharedMapSystem MapSystem => _entManager.System<SharedMapSystem>();
 
         // This field is used for deserialization internally in the map loader.

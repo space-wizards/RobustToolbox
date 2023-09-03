@@ -7,9 +7,9 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public sealed class VVPropEditorKeyValuePair : VVPropEditor
+    public sealed partial class VVPropEditorKeyValuePair : VVPropEditor
     {
-        [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariables = default!;
+        [Dependency] private IClientViewVariablesManagerInternal _viewVariables = default!;
 
         private VVPropEditor? _propertyEditorK;
         private VVPropEditor? _propertyEditorV;

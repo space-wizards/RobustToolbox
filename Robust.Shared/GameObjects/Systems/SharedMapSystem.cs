@@ -14,13 +14,13 @@ namespace Robust.Shared.GameObjects
 {
     public abstract partial class SharedMapSystem : EntitySystem
     {
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] protected readonly IMapManager MapManager = default!;
-        [Dependency] private readonly IMapManagerInternal _mapInternal = default!;
-        [Dependency] private readonly INetManager _netManager = default!;
-        [Dependency] private readonly FixtureSystem _fixtures = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] protected IMapManager MapManager = default!;
+        [Dependency] private IMapManagerInternal _mapInternal = default!;
+        [Dependency] private INetManager _netManager = default!;
+        [Dependency] private FixtureSystem _fixtures = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
 
         private EntityQuery<TransformComponent> _xformQuery;
 

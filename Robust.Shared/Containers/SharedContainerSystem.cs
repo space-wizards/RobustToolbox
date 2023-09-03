@@ -14,8 +14,8 @@ namespace Robust.Shared.Containers
 {
     public abstract partial class SharedContainerSystem
     {
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
 
         /// <inheritdoc />
         public override void Initialize()

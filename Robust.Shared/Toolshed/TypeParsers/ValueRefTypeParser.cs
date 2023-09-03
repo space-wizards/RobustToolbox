@@ -10,9 +10,9 @@ using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
+internal sealed partial class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
 {
-    [Dependency] private readonly ToolshedManager _toolshed = default!;
+    [Dependency] private ToolshedManager _toolshed = default!;
 
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
@@ -29,9 +29,9 @@ internal sealed class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
     }
 }
 
-internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
+internal sealed partial class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
 {
-    [Dependency] private readonly ToolshedManager _toolshed = default!;
+    [Dependency] private ToolshedManager _toolshed = default!;
 
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {

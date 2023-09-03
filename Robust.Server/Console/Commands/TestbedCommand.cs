@@ -48,10 +48,10 @@ namespace Robust.Server.Console.Commands
     /// <summary>
     ///     Copies of Box2D's physics testbed for debugging.
     /// </summary>
-    public sealed class TestbedCommand : LocalizedCommands
+    public sealed partial class TestbedCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _ent = default!;
-        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private IEntityManager _ent = default!;
+        [Dependency] private IMapManager _map = default!;
 
         public override string Command => "testbed";
 

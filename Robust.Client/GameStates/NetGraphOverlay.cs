@@ -20,12 +20,12 @@ namespace Robust.Client.GameStates
     /// <summary>
     ///     Visual debug overlay for the network diagnostic graph.
     /// </summary>
-    internal sealed class NetGraphOverlay : Overlay
+    internal sealed partial class NetGraphOverlay : Overlay
     {
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
-        [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private IClientNetManager _netManager = default!;
+        [Dependency] private IClientGameStateManager _gameStateManager = default!;
+        [Dependency] private IComponentFactory _componentFactory = default!;
 
         private const int HistorySize = 60 * 5; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?

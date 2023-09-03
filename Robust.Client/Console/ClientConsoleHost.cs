@@ -49,11 +49,11 @@ namespace Robust.Client.Console
     /// <inheritdoc cref="IClientConsoleHost" />
     internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal, IPostInjectInit
     {
-        [Dependency] private readonly IClientConGroupController _conGroup = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IPlayerManager _player = default!;
-        [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private IClientConGroupController _conGroup = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IPlayerManager _player = default!;
+        [Dependency] private IBaseClient _client = default!;
+        [Dependency] private ILogManager _logMan = default!;
 
         [ViewVariables] private readonly Dictionary<string, IConsoleCommand> _availableServerCommands = new();
 

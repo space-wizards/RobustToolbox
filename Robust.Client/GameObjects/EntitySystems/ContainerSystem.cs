@@ -16,12 +16,12 @@ using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class ContainerSystem : SharedContainerSystem
+    public sealed partial class ContainerSystem : SharedContainerSystem
     {
-        [Dependency] private readonly INetManager _netMan = default!;
-        [Dependency] private readonly IRobustSerializer _serializer = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
-        [Dependency] private readonly PointLightSystem _lightSys = default!;
+        [Dependency] private INetManager _netMan = default!;
+        [Dependency] private IRobustSerializer _serializer = default!;
+        [Dependency] private IDynamicTypeFactoryInternal _dynFactory = default!;
+        [Dependency] private PointLightSystem _lightSys = default!;
 
         private readonly HashSet<EntityUid> _updateQueue = new();
 

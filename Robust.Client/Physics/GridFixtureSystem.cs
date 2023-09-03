@@ -10,11 +10,11 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Physics
 {
-    internal sealed class GridFixtureSystem : SharedGridFixtureSystem
+    internal sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
-        [Dependency] private readonly IOverlayManager _overlay = default!;
-        [Dependency] private readonly IMapManager _map = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private IOverlayManager _overlay = default!;
+        [Dependency] private IMapManager _map = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
 
         public bool EnableDebug
         {

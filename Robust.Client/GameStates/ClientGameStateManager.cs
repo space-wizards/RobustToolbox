@@ -35,7 +35,7 @@ namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
     [UsedImplicitly]
-    public sealed class ClientGameStateManager : IClientGameStateManager, IPostInjectInit
+    public sealed partial class ClientGameStateManager : IClientGameStateManager, IPostInjectInit
     {
         private GameStateProcessor _processor = default!;
 
@@ -52,21 +52,21 @@ namespace Robust.Client.GameStates
 
         private uint _metaCompNetId;
 
-        [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
-        [Dependency] private readonly IComponentFactory _compFactory = default!;
-        [Dependency] private readonly IClientEntityManagerInternal _entities = default!;
-        [Dependency] private readonly IPlayerManager _players = default!;
-        [Dependency] private readonly IClientNetManager _network = default!;
-        [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IClientGameTiming _timing = default!;
-        [Dependency] private readonly INetConfigurationManager _config = default!;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IConsoleHost _conHost = default!;
-        [Dependency] private readonly ClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private IReplayRecordingManager _replayRecording = default!;
+        [Dependency] private IComponentFactory _compFactory = default!;
+        [Dependency] private IClientEntityManagerInternal _entities = default!;
+        [Dependency] private IPlayerManager _players = default!;
+        [Dependency] private IClientNetManager _network = default!;
+        [Dependency] private IBaseClient _client = default!;
+        [Dependency] private IClientGameTiming _timing = default!;
+        [Dependency] private INetConfigurationManager _config = default!;
+        [Dependency] private IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private IConsoleHost _conHost = default!;
+        [Dependency] private ClientEntityManager _entityManager = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private ProfManager _prof = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
+        [Dependency] private ILogManager _logMan = default!;
 
         private ISawmill _sawmill = default!;
 

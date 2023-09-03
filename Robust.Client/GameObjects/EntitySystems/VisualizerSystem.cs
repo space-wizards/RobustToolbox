@@ -6,11 +6,11 @@ namespace Robust.Client.GameObjects;
 /// <summary>
 ///     An abstract entity system inheritor for systems that deal with appearance data.
 /// </summary>
-public abstract class VisualizerSystem<T> : EntitySystem
+public abstract partial class VisualizerSystem<T> : EntitySystem
     where T: Component
 {
-    [Dependency] protected readonly AppearanceSystem AppearanceSystem = default!;
-    [Dependency] protected readonly AnimationPlayerSystem AnimationSystem = default!;
+    [Dependency] protected AppearanceSystem AppearanceSystem = default!;
+    [Dependency] protected AnimationPlayerSystem AnimationSystem = default!;
 
     public override void Initialize()
     {

@@ -19,9 +19,9 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     An abstract class to override to implement bound user interfaces.
     /// </summary>
-    public abstract class BoundUserInterface : IDisposable
+    public abstract partial class BoundUserInterface : IDisposable
     {
-        [Dependency] protected readonly IEntityManager EntMan = default!;
+        [Dependency] protected IEntityManager EntMan = default!;
         protected readonly UserInterfaceSystem UiSystem = default!;
 
         public readonly Enum UiKey;

@@ -244,10 +244,10 @@ internal sealed class UITestCommand : LocalizedCommands
     }
 }
 
-internal sealed class UITest2Command : LocalizedCommands
+internal sealed partial class UITest2Command : LocalizedCommands
 {
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IUserInterfaceManager _uiMgr = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IUserInterfaceManager _uiMgr = default!;
 
     public override string Command => "uitest2";
 

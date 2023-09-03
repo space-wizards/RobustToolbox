@@ -12,12 +12,12 @@ using Robust.Shared.Profiling;
 
 namespace Robust.Client.UserInterface;
 
-internal sealed class ProfGraphView : Control
+internal sealed partial class ProfGraphView : Control
 {
     private const int HeightFps = 15;
     private const float MaxHeightMs = 1 / (float) HeightFps;
 
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     private ProfViewManager.Snapshot? _snapshot;
 

@@ -11,10 +11,10 @@ using Robust.Shared.Timing;
 namespace Robust.Shared.Physics.Controllers
 {
     [MeansImplicitUse]
-    public abstract class VirtualController : EntitySystem
+    public abstract partial class VirtualController : EntitySystem
     {
-        [Dependency] protected readonly SharedPhysicsSystem PhysicsSystem = default!;
-        [Dependency] protected readonly SharedTransformSystem TransformSystem = default!;
+        [Dependency] protected SharedPhysicsSystem PhysicsSystem = default!;
+        [Dependency] protected SharedTransformSystem TransformSystem = default!;
 
         private static readonly Stopwatch Stopwatch = new();
 

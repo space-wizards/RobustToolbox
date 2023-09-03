@@ -10,12 +10,12 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.Upload;
 
-public sealed class NetworkResourceManager : SharedNetworkResourceManager
+public sealed partial class NetworkResourceManager : SharedNetworkResourceManager
 {
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IServerNetManager _serverNetManager = default!;
-    [Dependency] private readonly IConfigurationManager _cfgManager = default!;
-    [Dependency] private readonly IConGroupController _controller = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IServerNetManager _serverNetManager = default!;
+    [Dependency] private IConfigurationManager _cfgManager = default!;
+    [Dependency] private IConGroupController _controller = default!;
 
     public event Action<IPlayerSession, NetworkResourceUploadMessage>? OnResourceUploaded;
 

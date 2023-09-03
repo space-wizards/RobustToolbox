@@ -19,7 +19,7 @@ namespace Robust.Shared.IoC
     /// If you would like to run code after the dependencies have been injected, use <see cref="IPostInjectInit" />
     /// </para>
     /// </remarks>
-    [AttributeUsage(AttributeTargets.Field)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public sealed class DependencyAttribute : Attribute
     {
     }

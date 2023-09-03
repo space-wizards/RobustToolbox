@@ -12,8 +12,8 @@ namespace Robust.Client.GameObjects
     [RegisterComponent, ComponentReference(typeof(SharedEyeComponent))]
     public sealed partial class EyeComponent : SharedEyeComponent
     {
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
 
         [ViewVariables] internal Eye? _eye = default!;
 

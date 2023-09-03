@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.Console.Commands
 {
-    public sealed class DeleteCommand : LocalizedCommands
+    public sealed partial class DeleteCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
 
         public override string Command => "delete";
 

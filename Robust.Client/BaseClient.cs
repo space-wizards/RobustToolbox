@@ -23,17 +23,17 @@ using Robust.Shared.Utility;
 namespace Robust.Client
 {
     /// <inheritdoc />
-    public sealed class BaseClient : IBaseClient, IPostInjectInit
+    public sealed partial class BaseClient : IBaseClient, IPostInjectInit
     {
-        [Dependency] private readonly IClientNetManager _net = default!;
-        [Dependency] private readonly IPlayerManager _playMan = default!;
-        [Dependency] private readonly IClientNetConfigurationManager _configManager = default!;
-        [Dependency] private readonly IClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IDiscordRichPresence _discord = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IClientGameStateManager _gameStates = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private IClientNetManager _net = default!;
+        [Dependency] private IPlayerManager _playMan = default!;
+        [Dependency] private IClientNetConfigurationManager _configManager = default!;
+        [Dependency] private IClientEntityManager _entityManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private IDiscordRichPresence _discord = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IClientGameStateManager _gameStates = default!;
+        [Dependency] private ILogManager _logMan = default!;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;

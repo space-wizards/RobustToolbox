@@ -20,8 +20,8 @@ namespace Robust.Shared.Physics.Systems
     /// </summary>
     public sealed partial class FixtureSystem : EntitySystem
     {
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
 
         public override void Initialize()
         {

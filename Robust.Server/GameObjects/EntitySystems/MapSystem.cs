@@ -10,9 +10,9 @@ using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Server.GameObjects
 {
-    public sealed class MapSystem : SharedMapSystem
+    public sealed partial class MapSystem : SharedMapSystem
     {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
 
         private bool _deleteEmptyGrids;
 

@@ -17,8 +17,8 @@ namespace Robust.Shared.ContentPack
     /// </summary>
     internal partial class ResourceManager : IResourceManagerInternal
     {
-        [Dependency] private readonly IConfigurationManager _config = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IConfigurationManager _config = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private (ResPath prefix, IContentRoot root)[] _contentRoots =
             new (ResPath prefix, IContentRoot root)[0];

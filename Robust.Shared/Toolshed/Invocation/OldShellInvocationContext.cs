@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.Invocation;
 
 /// <inheritdoc />
-internal sealed class OldShellInvocationContext : IInvocationContext
+internal sealed partial class OldShellInvocationContext : IInvocationContext
 {
     [field: Dependency]
     public ToolshedManager Toolshed { get; } = default!;

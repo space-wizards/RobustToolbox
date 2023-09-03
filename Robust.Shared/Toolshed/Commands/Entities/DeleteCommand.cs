@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
 [ToolshedCommand]
-internal sealed class DeleteCommand : ToolshedCommand
+internal sealed partial class DeleteCommand : ToolshedCommand
 {
-    [Dependency] private readonly IEntityManager _entity = default!;
+    [Dependency] private IEntityManager _entity = default!;
 
     [CommandImplementation]
     public void Delete([PipedArgument] IEnumerable<EntityUid> entities)

@@ -13,9 +13,9 @@ namespace Robust.Client.Graphics.Clyde
     {
         private sealed partial class GlfwWindowingImpl : IWindowingImpl
         {
-            [Dependency] private readonly ILogManager _logManager = default!;
-            [Dependency] private readonly IConfigurationManager _cfg = default!;
-            [Dependency] private readonly IInputManager _inputManager = default!;
+            [Dependency] private ILogManager _logManager = default!;
+            [Dependency] private IConfigurationManager _cfg = default!;
+            [Dependency] private IInputManager _inputManager = default!;
 
             private readonly Clyde _clyde;
 

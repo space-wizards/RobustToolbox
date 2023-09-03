@@ -18,7 +18,7 @@ namespace Robust.Shared.Physics.Systems
      */
     public partial class SharedPhysicsSystem
     {
-        [Dependency] private readonly SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
+        [Dependency] private SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
 
         /// <summary>
         /// Checks to see if the specified collision rectangle collides with any of the physBodies under management.

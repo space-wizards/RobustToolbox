@@ -12,9 +12,9 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
 {
-    public abstract class ReflectionManager : IReflectionManager
+    public abstract partial class ReflectionManager : IReflectionManager
     {
-        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private ILogManager _logMan = default!;
 
         /// <summary>
         /// Enumerable over prefixes that are added to the type provided to <see cref="GetType(string)"/>

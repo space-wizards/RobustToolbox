@@ -10,12 +10,12 @@ namespace Robust.Server.Upload;
 /// <summary>
 ///     Manages sending runtime-loaded prototypes from game staff to clients.
 /// </summary>
-public sealed class GamePrototypeLoadManager : SharedPrototypeLoadManager
+public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManager
 {
-    [Dependency] private readonly IServerNetManager _netManager = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IConGroupController _controller = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
+    [Dependency] private IServerNetManager _netManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IConGroupController _controller = default!;
+    [Dependency] private ILogManager _logManager = default!;
 
     private ISawmill _sawmill = default!;
 

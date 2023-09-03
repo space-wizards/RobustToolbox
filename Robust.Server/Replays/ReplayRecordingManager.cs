@@ -10,10 +10,10 @@ using Robust.Shared.Timing;
 
 namespace Robust.Server.Replays;
 
-internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, IServerReplayRecordingManager
+internal sealed partial class ReplayRecordingManager : SharedReplayRecordingManager, IServerReplayRecordingManager
 {
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IEntitySystemManager _sysMan = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IEntitySystemManager _sysMan = default!;
     private GameTick _fromTick = GameTick.Zero;
 
     private PvsSystem _pvs = default!;

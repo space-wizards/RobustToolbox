@@ -158,7 +158,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         return IsReadOnlyMember(type, field);
     }
 
-    private static bool IsPartial(TypeDeclarationSyntax type)
+    internal static bool IsPartial(TypeDeclarationSyntax type)
     {
         return type.Modifiers.IndexOf(SyntaxKind.PartialKeyword) != -1;
     }

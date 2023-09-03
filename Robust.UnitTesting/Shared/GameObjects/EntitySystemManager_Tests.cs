@@ -10,7 +10,7 @@ using Robust.Shared.IoC.Exceptions;
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, TestOf(typeof(EntitySystemManager))]
-    public sealed class EntitySystemManager_Tests: RobustUnitTest
+    public sealed partial class EntitySystemManager_Tests: RobustUnitTest
     {
 
         public abstract class ESystemBase : IEntitySystem
@@ -29,14 +29,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public abstract class ESystemBase2 : ESystemBase { }
         public sealed class ESystemB : ESystemBase2 { }
 
-        public sealed class ESystemDepA : ESystemBase
+        public sealed partial class ESystemDepA : ESystemBase
         {
-            [Dependency] public readonly ESystemDepB ESystemDepB = default!;
+            [Dependency] public ESystemDepB ESystemDepB = default!;
         }
 
-        public sealed class ESystemDepB : ESystemBase
+        public sealed partial class ESystemDepB : ESystemBase
         {
-            [Dependency] public readonly ESystemDepA ESystemDepA = default!;
+            [Dependency] public ESystemDepA ESystemDepA = default!;
         }
 
         /*

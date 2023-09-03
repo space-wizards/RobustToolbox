@@ -16,12 +16,12 @@ using Robust.Shared.Utility;
 namespace Robust.Server.Console
 {
     /// <inheritdoc cref="IServerConsoleHost" />
-    internal sealed class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
+    internal sealed partial class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
     {
-        [Dependency] private readonly IConGroupController _groupController = default!;
-        [Dependency] private readonly IPlayerManager _players = default!;
-        [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
-        [Dependency] private readonly ToolshedManager _toolshed = default!;
+        [Dependency] private IConGroupController _groupController = default!;
+        [Dependency] private IPlayerManager _players = default!;
+        [Dependency] private ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private ToolshedManager _toolshed = default!;
 
         public ServerConsoleHost() : base(isServer: true) {}
 

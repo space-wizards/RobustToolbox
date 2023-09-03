@@ -12,14 +12,14 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
-    internal sealed class DebugCoordsPanel : PanelContainer
+    internal sealed partial class DebugCoordsPanel : PanelContainer
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IClyde _displayManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IClyde _displayManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
 
         private readonly StringBuilder _textBuilder = new();
         private readonly char[] _textBuffer = new char[1024];

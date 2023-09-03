@@ -12,11 +12,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class GridChunkBoundsDebugSystem : EntitySystem
+    public sealed partial class GridChunkBoundsDebugSystem : EntitySystem
     {
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private IOverlayManager _overlayManager = default!;
 
         private GridChunkBoundsOverlay? _overlay;
 

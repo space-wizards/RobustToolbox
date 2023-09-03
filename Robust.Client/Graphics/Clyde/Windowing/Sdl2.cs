@@ -14,8 +14,8 @@ internal partial class Clyde
 {
     private sealed partial class Sdl2WindowingImpl : IWindowingImpl
     {
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
 
         private readonly Clyde _clyde;
         private GCHandle _selfGCHandle;
@@ -164,7 +164,7 @@ internal partial class Clyde
             {
                 obj._sawmillSdl2.Info(Environment.StackTrace);
             }
-            
+
             var categoryName = SdlLogCategoryName(category);
             obj._sawmillSdl2.Log(level, $"[{categoryName}] {msg}");
         }

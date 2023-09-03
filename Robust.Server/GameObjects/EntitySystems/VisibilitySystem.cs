@@ -4,9 +4,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.GameObjects
 {
-    public sealed class VisibilitySystem : EntitySystem
+    public sealed partial class VisibilitySystem : EntitySystem
     {
-        [Dependency] private readonly MetaDataSystem _metaSys = default!;
+        [Dependency] private MetaDataSystem _metaSys = default!;
 
         public override void Initialize()
         {

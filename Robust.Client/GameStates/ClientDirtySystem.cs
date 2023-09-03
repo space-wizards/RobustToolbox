@@ -11,11 +11,11 @@ namespace Robust.Client.GameStates;
 /// <summary>
 /// Tracks dirty entities on the client for the purposes of gamestatemanager.
 /// </summary>
-public sealed class ClientDirtySystem : EntitySystem
+public sealed partial class ClientDirtySystem : EntitySystem
 {
-    [Dependency] private readonly IClientGameTiming _timing = default!;
-    [Dependency] private readonly IComponentFactory _compFact = default!;
-    
+    [Dependency] private IClientGameTiming _timing = default!;
+    [Dependency] private IComponentFactory _compFact = default!;
+
     // Entities that have removed networked components
     // could pool the ushort sets, but predicted component changes are rare... soo...
     internal readonly Dictionary<EntityUid, HashSet<ushort>> RemovedComponents = new();

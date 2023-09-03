@@ -33,27 +33,27 @@ namespace Robust.Client.UserInterface
 {
     internal sealed partial class UserInterfaceManager : IUserInterfaceManagerInternal
     {
-        [Dependency] private readonly IDependencyCollection _rootDependencies = default!;
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IFontManager _fontManager = default!;
-        [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IStateManager _stateManager = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IPrototypeManager _protoManager = default!;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
-        [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-        [Dependency] private readonly ProfManager _prof = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IEntitySystemManager _systemManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IRuntimeLog _runtime = default!;
+        [Dependency] private IDependencyCollection _rootDependencies = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private IFontManager _fontManager = default!;
+        [Dependency] private IClydeInternal _clyde = default!;
+        [Dependency] private IClientGameTiming _gameTiming = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IStateManager _stateManager = default!;
+        [Dependency] private IClientNetManager _netManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private IPrototypeManager _protoManager = default!;
+        [Dependency] private IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        [Dependency] private IDynamicTypeFactoryInternal _typeFactory = default!;
+        [Dependency] private IUserInterfaceManager _uiManager = default!;
+        [Dependency] private IConfigurationManager _configurationManager = default!;
+        [Dependency] private ProfManager _prof = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IEntitySystemManager _systemManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IRuntimeLog _runtime = default!;
 
         /// <summary>
         /// Upper limit on the number of times that controls can be measured / arranged each tick before being deferred

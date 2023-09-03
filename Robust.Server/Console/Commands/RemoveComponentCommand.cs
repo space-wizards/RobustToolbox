@@ -7,10 +7,10 @@ using Robust.Shared.IoC;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class RemoveComponentCommand : LocalizedCommands
+    internal sealed partial class RemoveComponentCommand : LocalizedCommands
     {
-        [Dependency] private readonly IComponentFactory _compFactory = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private IComponentFactory _compFactory = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
 
         public override string Command => "rmcomp";
 

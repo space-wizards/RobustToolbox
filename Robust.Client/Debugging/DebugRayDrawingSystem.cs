@@ -14,10 +14,10 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Debugging
 {
-    internal sealed class DebugRayDrawingSystem : SharedDebugRayDrawingSystem
+    internal sealed partial class DebugRayDrawingSystem : SharedDebugRayDrawingSystem
     {
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly IGameTiming _gameTimer = default!;
+        [Dependency] private IOverlayManager _overlayManager = default!;
+        [Dependency] private IGameTiming _gameTimer = default!;
 
         private readonly List<RayWithLifetime> _raysWithLifeTime = new();
         private bool _debugDrawRays;

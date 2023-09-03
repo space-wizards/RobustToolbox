@@ -34,7 +34,7 @@ using static Robust.Client.Input.Keyboard;
 namespace Robust.Client.Input
 {
     [Virtual]
-    internal class InputManager : IInputManager
+    internal partial class InputManager : IInputManager
     {
         // This is for both userdata and resources.
         private const string KeybindsPath = "/keybinds.yml";
@@ -43,11 +43,11 @@ namespace Robust.Client.Input
 
         [ViewVariables] public virtual ScreenCoordinates MouseScreenPosition => default;
 
-        [Dependency] private readonly IResourceManager _resourceMan = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IUserInterfaceManagerInternal _uiMgr = default!;
-        [Dependency] private readonly IConsoleHost _console = default!;
-        [Dependency] private readonly ISerializationManager _serialization = default!;
+        [Dependency] private IResourceManager _resourceMan = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IUserInterfaceManagerInternal _uiMgr = default!;
+        [Dependency] private IConsoleHost _console = default!;
+        [Dependency] private ISerializationManager _serialization = default!;
 
         private bool _currentlyFindingViewport;
 
@@ -918,9 +918,9 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal sealed class BindCommand : LocalizedCommands
+    internal sealed partial class BindCommand : LocalizedCommands
     {
-        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private IInputManager _inputManager = default!;
 
         public override string Command => "bind";
 
@@ -992,9 +992,9 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal sealed class SaveBindCommand : LocalizedCommands
+    internal sealed partial class SaveBindCommand : LocalizedCommands
     {
-        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private IInputManager _inputManager = default!;
 
         public override string Command => "svbind";
 

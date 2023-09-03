@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent, Obsolete("Use a system update loop instead")]
     public sealed partial class TimerComponent : Component
     {
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
 
         private readonly List<(Timer timer, CancellationToken source)>
             _timers = new();

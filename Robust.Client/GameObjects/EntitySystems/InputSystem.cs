@@ -21,14 +21,14 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    public sealed class InputSystem : SharedInputSystem, IPostInjectInit
+    public sealed partial class InputSystem : SharedInputSystem, IPostInjectInit
     {
-        [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IClientGameStateManager _stateManager = default!;
-        [Dependency] private readonly IConsoleHost _conHost = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IInputManager _inputManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IClientGameStateManager _stateManager = default!;
+        [Dependency] private IConsoleHost _conHost = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private ISawmill _sawmillInputContext = default!;
 

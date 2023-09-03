@@ -15,8 +15,8 @@ namespace Robust.Client.UserInterface
     [GenerateTypedNameReferences]
     public sealed partial class DevWindowTabUI : Control
     {
-        [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IInputManager _input = default!;
+        [Dependency] private IClydeInternal _clyde = default!;
+        [Dependency] private IInputManager _input = default!;
 
         public Control? SelectedControl { get; private set; }
         private Dictionary<Control, DevWindowUITreeEntry> ControlMap { get; } = new();

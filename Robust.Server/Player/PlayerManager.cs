@@ -27,17 +27,17 @@ namespace Robust.Server.Player
     /// <summary>
     ///     This class will manage connected player sessions.
     /// </summary>
-    public sealed class PlayerManager : IPlayerManager
+    public sealed partial class PlayerManager : IPlayerManager
     {
         private static readonly Gauge PlayerCountMetric = Metrics
             .CreateGauge("robust_player_count", "Number of players on the server.");
 
-        [Dependency] private readonly IBaseServer _baseServer = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IServerNetManager _network = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IServerNetConfigurationManager _cfg = default!;
+        [Dependency] private IBaseServer _baseServer = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IServerNetManager _network = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IServerNetConfigurationManager _cfg = default!;
 
         public BoundKeyMap KeyMap { get; private set; } = default!;
 

@@ -12,7 +12,7 @@ using Robust.Shared.Maths;
 namespace Robust.Client.Graphics
 {
     /// <inheritdoc />
-    public sealed class EyeManager : IEyeManager
+    public sealed partial class EyeManager : IEyeManager
     {
         // If you modify this make sure to edit the value in the Robust.Shared.Audio.AudioParams struct default too!
         // No I can't be bothered to make this a shared constant.
@@ -21,9 +21,9 @@ namespace Robust.Client.Graphics
         /// </summary>
         public const int PixelsPerMeter = 32;
 
-        [Dependency] private readonly IClyde _displayManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
+        [Dependency] private IClyde _displayManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IUserInterfaceManager _uiManager = default!;
         private ISawmill _logMill = default!;
 
         // We default to this when we get set to a null eye.

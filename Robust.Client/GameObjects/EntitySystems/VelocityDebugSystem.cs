@@ -10,10 +10,10 @@ using Robust.Shared.Physics.Components;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class VelocityDebugSystem : EntitySystem
+    public sealed partial class VelocityDebugSystem : EntitySystem
     {
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private IEyeManager _eyeManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
 
         internal bool Enabled { get; set; }
 

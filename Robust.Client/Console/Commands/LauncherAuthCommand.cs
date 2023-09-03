@@ -9,10 +9,10 @@ using Robust.Shared.Network;
 
 namespace Robust.Client.Console.Commands
 {
-    internal sealed class LauncherAuthCommand : LocalizedCommands
+    internal sealed partial class LauncherAuthCommand : LocalizedCommands
     {
-        [Dependency] private readonly IAuthManager _auth = default!;
-        [Dependency] private readonly IGameControllerInternal _gameController = default!;
+        [Dependency] private IAuthManager _auth = default!;
+        [Dependency] private IGameControllerInternal _gameController = default!;
 
         public override string Command => "launchauth";
 

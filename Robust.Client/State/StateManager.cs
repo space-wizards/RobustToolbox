@@ -6,10 +6,10 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.State
 {
-    internal sealed class StateManager : IStateManager
+    internal sealed partial class StateManager : IStateManager
     {
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
-        [Dependency] private readonly IUserInterfaceManager _interfaceManager = default!;
+        [Dependency] private IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private IUserInterfaceManager _interfaceManager = default!;
         public event Action<StateChangedEventArgs>? OnStateChanged;
         public State CurrentState { get; private set; }
 

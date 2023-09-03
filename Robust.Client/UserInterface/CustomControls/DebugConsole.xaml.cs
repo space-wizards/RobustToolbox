@@ -41,10 +41,10 @@ namespace Robust.Client.UserInterface.CustomControls
     [GenerateTypedNameReferences]
     public sealed partial class DebugConsole : Control, IDebugConsoleView, IPostInjectInit
     {
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private IClientConsoleHost _consoleHost = default!;
+        [Dependency] private IResourceManager _resourceManager = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private ILogManager _logMan = default!;
 
         private static readonly ResPath HistoryPath = new("/debug_console_history.json");
 

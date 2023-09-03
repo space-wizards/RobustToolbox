@@ -13,7 +13,7 @@ namespace Robust.Server.GameStates
     /// </summary>
     internal sealed partial class PvsSystem
     {
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
 
         /// <summary>
         /// if it's a new entity we need to GetEntityState from tick 0.

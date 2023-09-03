@@ -23,11 +23,11 @@ namespace Robust.Shared.GameObjects
     [Reflect(false), PublicAPI]
     public abstract partial class EntitySystem : IEntitySystem, IPostInjectInit
     {
-        [Dependency] protected readonly EntityManager EntityManager;
-        [Dependency] protected readonly ILogManager LogManager = default!;
-        [Dependency] private readonly ISharedPlayerManager _playerMan = default!;
-        [Dependency] private readonly IReplayRecordingManager _replayMan = default!;
-        [Dependency] protected readonly ILocalizationManager Loc = default!;
+        [Dependency] protected EntityManager EntityManager;
+        [Dependency] protected ILogManager LogManager = default!;
+        [Dependency] private ISharedPlayerManager _playerMan = default!;
+        [Dependency] private IReplayRecordingManager _replayMan = default!;
+        [Dependency] protected ILocalizationManager Loc = default!;
 
         public ISawmill Log { get; private set; } = default!;
 

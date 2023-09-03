@@ -17,16 +17,16 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Console
 {
     /// <inheritdoc />
-    public abstract class ConsoleHost : IConsoleHost
+    public abstract partial class ConsoleHost : IConsoleHost
     {
         protected const string SawmillName = "con";
 
-        [Dependency] protected readonly ILogManager LogManager = default!;
-        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
-        [Dependency] protected readonly INetManager NetManager = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
+        [Dependency] protected ILogManager LogManager = default!;
+        [Dependency] private IReflectionManager ReflectionManager = default!;
+        [Dependency] protected INetManager NetManager = default!;
+        [Dependency] private IDynamicTypeFactoryInternal _typeFactory = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] protected ILocalizationManager LocalizationManager = default!;
 
         [ViewVariables] protected readonly Dictionary<string, IConsoleCommand> RegisteredCommands = new();
 

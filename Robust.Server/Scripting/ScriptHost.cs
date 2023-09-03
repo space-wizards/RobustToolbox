@@ -29,14 +29,14 @@ using static Robust.Shared.Network.Messages.MsgScriptCompletionResponse;
 
 namespace Robust.Server.Scripting
 {
-    internal sealed class ScriptHost : IScriptHost
+    internal sealed partial class ScriptHost : IScriptHost
     {
-        [Dependency] private readonly IServerNetManager _netManager = default!;
-        [Dependency] private readonly IConGroupController _conGroupController = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IServerNetManager _netManager = default!;
+        [Dependency] private IConGroupController _conGroupController = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         readonly Dictionary<IPlayerSession, Dictionary<int, ScriptInstance>> _instances =
             new();

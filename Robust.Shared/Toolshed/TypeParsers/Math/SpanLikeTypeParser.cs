@@ -11,11 +11,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers.Math;
 
-public abstract class SpanLikeTypeParser<T, TElem> : TypeParser<T>
+public abstract partial class SpanLikeTypeParser<T, TElem> : TypeParser<T>
     where T : notnull
     where TElem : unmanaged
 {
-    [Dependency] private readonly ToolshedManager _toolshed = default!;
+    [Dependency] private ToolshedManager _toolshed = default!;
 
     public abstract int Elements { get; }
     public abstract T Create(Span<TElem> elements);

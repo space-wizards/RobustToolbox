@@ -8,7 +8,7 @@ namespace Robust.Shared.Physics.Systems;
 
 public abstract partial class SharedPhysicsSystem
 {
-    [Dependency] private readonly FixtureSystem _fixtures = default!;
+    [Dependency] private FixtureSystem _fixtures = default!;
 
     public void SetDensity(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
     {

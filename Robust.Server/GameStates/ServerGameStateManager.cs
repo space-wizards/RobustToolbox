@@ -31,23 +31,23 @@ namespace Robust.Server.GameStates
 {
     /// <inheritdoc cref="IServerGameStateManager"/>
     [UsedImplicitly]
-    public sealed class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
+    public sealed partial class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
         // Mapping of net UID of clients -> last known acked state.
         private GameTick _lastOldestAck = GameTick.Zero;
 
         private PvsSystem _pvs = default!;
 
-        [Dependency] private readonly EntityManager _entityManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IServerNetManager _networkManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly INetworkedMapManager _mapManager = default!;
-        [Dependency] private readonly IEntitySystemManager _systemManager = default!;
-        [Dependency] private readonly IServerReplayRecordingManager _replay = default!;
-        [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IParallelManager _parallelMgr = default!;
+        [Dependency] private EntityManager _entityManager = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private IServerNetManager _networkManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private INetworkedMapManager _mapManager = default!;
+        [Dependency] private IEntitySystemManager _systemManager = default!;
+        [Dependency] private IServerReplayRecordingManager _replay = default!;
+        [Dependency] private IServerEntityNetworkManager _entityNetworkManager = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IParallelManager _parallelMgr = default!;
 
         private static readonly Histogram _usageHistogram = Metrics.CreateHistogram("robust_game_state_update_usage",
             "Amount of time spent processing different parts of the game state update", new HistogramConfiguration

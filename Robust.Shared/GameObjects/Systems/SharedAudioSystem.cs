@@ -8,14 +8,14 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Robust.Shared.GameObjects;
-public abstract class SharedAudioSystem : EntitySystem
+public abstract partial class SharedAudioSystem : EntitySystem
 {
-    [Dependency] protected readonly IConfigurationManager CfgManager = default!;
-    [Dependency] private   readonly IMapManager _mapManager = default!;
-    [Dependency] private   readonly IPrototypeManager _protoMan = default!;
-    [Dependency] protected readonly IRobustRandom RandMan = default!;
-    [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
-    [Dependency] private   readonly SharedMapSystem _map = default!;
+    [Dependency] protected IConfigurationManager CfgManager = default!;
+    [Dependency] private   IMapManager _mapManager = default!;
+    [Dependency] private   IPrototypeManager _protoMan = default!;
+    [Dependency] protected IRobustRandom RandMan = default!;
+    [Dependency] protected ISharedPlayerManager PlayerManager = default!;
+    [Dependency] private   SharedMapSystem _map = default!;
 
     /// <summary>
     /// Default max range at which the sound can be heard.

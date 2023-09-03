@@ -20,12 +20,12 @@ namespace Robust.Client.UserInterface
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     [SuppressMessage("ReSharper", "CommentTypo")]
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
-    internal sealed class FileDialogManager : IFileDialogManager
+    internal sealed partial class FileDialogManager : IFileDialogManager
     {
         // Uses nativefiledialog to open the file dialogs cross platform.
         // On Linux, if the kdialog command is found, it will be used instead.
         // TODO: Should we maybe try to avoid running kdialog if the DE isn't KDE?
-        [Dependency] private readonly IClydeInternal _clyde = default!;
+        [Dependency] private IClydeInternal _clyde = default!;
 
         private bool _kDialogAvailable;
         private bool _checkedKDialogAvailable;

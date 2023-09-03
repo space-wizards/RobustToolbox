@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
-    public sealed class VelocitiesCommand : LocalizedCommands
+    public sealed partial class VelocitiesCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+        [Dependency] private IEntitySystemManager _entitySystems = default!;
 
         public override string Command => "showvelocities";
 

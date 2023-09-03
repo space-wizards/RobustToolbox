@@ -22,8 +22,8 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent, NetworkedComponent]
     public sealed partial class TransformComponent : Component, IComponentDebug
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private IEntityManager _entMan = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
 
         [DataField("parent")] internal EntityUid _parent;
         [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
@@ -86,7 +86,7 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
 
         /// <summary>
         ///     Returns the index of the map which this object is on

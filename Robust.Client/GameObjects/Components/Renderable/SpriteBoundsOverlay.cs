@@ -20,11 +20,11 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    public sealed class SpriteBoundsSystem : EntitySystem
+    public sealed partial class SpriteBoundsSystem : EntitySystem
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly SpriteTreeSystem _spriteTree = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IOverlayManager _overlayManager = default!;
+        [Dependency] private SpriteTreeSystem _spriteTree = default!;
 
         private SpriteBoundsOverlay? _overlay;
 

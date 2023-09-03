@@ -19,9 +19,9 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Robust.Client.Map
 {
-    internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
+    internal sealed partial class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
     {
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
 
         private Texture? _tileTextureAtlas;
 
@@ -151,9 +151,9 @@ namespace Robust.Client.Map
         }
     }
 
-    public sealed class ReloadTileTexturesCommand : LocalizedCommands
+    public sealed partial class ReloadTileTexturesCommand : LocalizedCommands
     {
-        [Dependency] private readonly ClydeTileDefinitionManager _tile = default!;
+        [Dependency] private ClydeTileDefinitionManager _tile = default!;
 
         public override string Command => "reloadtiletextures";
 

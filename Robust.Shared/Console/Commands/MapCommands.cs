@@ -8,9 +8,9 @@ using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Console.Commands;
 
-sealed class AddMapCommand : LocalizedCommands
+sealed partial class AddMapCommand : LocalizedCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private IMapManager _map = default!;
 
     public override string Command => "addmap";
     public override bool RequireServerOrSingleplayer => true;
@@ -38,9 +38,9 @@ sealed class AddMapCommand : LocalizedCommands
     }
 }
 
-sealed class RemoveMapCommand : LocalizedCommands
+sealed partial class RemoveMapCommand : LocalizedCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private IMapManager _map = default!;
 
     public override string Command => "rmmap";
     public override bool RequireServerOrSingleplayer => true;
@@ -66,9 +66,9 @@ sealed class RemoveMapCommand : LocalizedCommands
     }
 }
 
-sealed class RemoveGridCommand : LocalizedCommands
+sealed partial class RemoveGridCommand : LocalizedCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private IMapManager _map = default!;
 
     public override string Command => "rmgrid";
     public override bool RequireServerOrSingleplayer => true;
@@ -94,9 +94,9 @@ sealed class RemoveGridCommand : LocalizedCommands
     }
 }
 
-internal sealed class RunMapInitCommand : LocalizedCommands
+internal sealed partial class RunMapInitCommand : LocalizedCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private IMapManager _map = default!;
 
     public override string Command => "mapinit";
     public override bool RequireServerOrSingleplayer => true;
@@ -128,9 +128,9 @@ internal sealed class RunMapInitCommand : LocalizedCommands
     }
 }
 
-internal sealed class ListMapsCommand : LocalizedCommands
+internal sealed partial class ListMapsCommand : LocalizedCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private IMapManager _map = default!;
 
     public override string Command => "lsmap";
 
@@ -154,9 +154,9 @@ internal sealed class ListMapsCommand : LocalizedCommands
     }
 }
 
-internal sealed class ListGridsCommand : LocalizedCommands
+internal sealed partial class ListGridsCommand : LocalizedCommands
 {
-    [Dependency] private readonly IEntityManager _ent = default!;
+    [Dependency] private IEntityManager _ent = default!;
 
     public override string Command => "lsgrid";
 

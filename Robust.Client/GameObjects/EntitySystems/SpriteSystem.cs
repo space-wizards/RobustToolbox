@@ -25,11 +25,11 @@ namespace Robust.Client.GameObjects
     [UsedImplicitly]
     public sealed partial class SpriteSystem : EntitySystem
     {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IPrototypeManager _proto = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IPrototypeManager _proto = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
 

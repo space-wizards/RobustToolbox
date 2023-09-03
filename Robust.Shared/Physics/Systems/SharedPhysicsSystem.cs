@@ -43,20 +43,20 @@ namespace Robust.Shared.Physics.Systems
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
-        [Dependency] private readonly IManifoldManager _manifoldManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IParallelManager _parallel = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IDependencyCollection _deps = default!;
-        [Dependency] private readonly Gravity2DController _gravity = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
-        [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-        [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
-        [Dependency] private readonly SharedJointSystem _joints = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private IConfigurationManager _configManager = default!;
+        [Dependency] private IManifoldManager _manifoldManager = default!;
+        [Dependency] private IMapManager _mapManager = default!;
+        [Dependency] private IParallelManager _parallel = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IDependencyCollection _deps = default!;
+        [Dependency] private Gravity2DController _gravity = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private SharedContainerSystem _containerSystem = default!;
+        [Dependency] private SharedDebugPhysicsSystem _debugPhysics = default!;
+        [Dependency] private SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private SharedJointSystem _joints = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
 
         private int _substeps;
 

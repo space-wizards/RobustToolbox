@@ -33,7 +33,7 @@ public sealed partial class AppearanceComponent : Component
 
     [ViewVariables] internal Dictionary<Enum, object> AppearanceData = new();
 
-    [Dependency] private readonly IEntitySystemManager _sysMan = default!;
+    [Dependency] private IEntitySystemManager _sysMan = default!;
 
     [Obsolete("Use SharedAppearanceSystem instead")]
     public void SetData(Enum key, object value)

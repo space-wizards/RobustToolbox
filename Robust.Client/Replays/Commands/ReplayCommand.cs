@@ -8,9 +8,9 @@ using Robust.Shared.Replays;
 
 namespace Robust.Client.Replays.Commands;
 
-public abstract class BaseReplayCommand : LocalizedCommands
+public abstract partial class BaseReplayCommand : LocalizedCommands
 {
-    [Dependency] protected readonly IReplayPlaybackManager PlaybackManager = default!;
+    [Dependency] protected IReplayPlaybackManager PlaybackManager = default!;
     protected ILocalizationManager Loc => LocalizationManager;
 
     public override string Description => Loc.GetString($"cmd-{Command.Replace('_','-')}-desc");

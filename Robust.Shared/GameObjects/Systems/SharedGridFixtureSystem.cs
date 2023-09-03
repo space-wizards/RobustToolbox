@@ -20,11 +20,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
-    public abstract class SharedGridFixtureSystem : EntitySystem
+    public abstract partial class SharedGridFixtureSystem : EntitySystem
     {
-        [Dependency] private readonly FixtureSystem _fixtures = default!;
-        [Dependency] private readonly SharedMapSystem _map = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private FixtureSystem _fixtures = default!;
+        [Dependency] private SharedMapSystem _map = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
 
         private bool _enabled;
         private float _fixtureEnlargement;

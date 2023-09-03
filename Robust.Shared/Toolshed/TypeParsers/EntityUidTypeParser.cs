@@ -11,9 +11,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
+internal sealed partial class EntityUidTypeParser : TypeParser<EntityUid>
 {
-    [Dependency] private readonly IEntityManager _entity = default!;
+    [Dependency] private IEntityManager _entity = default!;
 
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {

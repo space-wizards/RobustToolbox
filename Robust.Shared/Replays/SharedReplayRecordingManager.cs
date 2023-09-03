@@ -34,13 +34,13 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     // date format for default replay names. Like the sortable template, but without colons.
     public const string DefaultReplayNameFormat = "yyyy-MM-dd_HH-mm-ss";
 
-    [Dependency] protected readonly IGameTiming Timing = default!;
-    [Dependency] protected readonly INetConfigurationManager NetConf = default!;
-    [Dependency] private readonly IComponentFactory _factory = default!;
-    [Dependency] private readonly IRobustSerializer _serializer = default!;
-    [Dependency] private readonly INetManager _netMan = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly ITaskManager _taskManager = default!;
+    [Dependency] protected IGameTiming Timing = default!;
+    [Dependency] protected INetConfigurationManager NetConf = default!;
+    [Dependency] private IComponentFactory _factory = default!;
+    [Dependency] private IRobustSerializer _serializer = default!;
+    [Dependency] private INetManager _netMan = default!;
+    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private ITaskManager _taskManager = default!;
 
     public event Action<MappingDataNode, List<object>>? RecordingStarted;
     public event Action<MappingDataNode>? RecordingStopped;

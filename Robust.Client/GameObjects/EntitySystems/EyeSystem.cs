@@ -5,9 +5,9 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.GameObjects;
 
-public sealed class EyeSystem : SharedEyeSystem
+public sealed partial class EyeSystem : SharedEyeSystem
 {
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
 
     public override void Initialize()
     {

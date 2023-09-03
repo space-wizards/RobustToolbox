@@ -35,6 +35,14 @@ namespace Robust.Shared.IoC.Exceptions
             FieldName = fieldName;
         }
 
+        public UnregisteredDependencyException(Type owner, Type target)
+            : base(string.Format("{0} requested unregistered type: {1}",
+                owner, target))
+        {
+            OwnerType = owner.AssemblyQualifiedName;
+            TargetType = target.AssemblyQualifiedName;
+        }
+
         protected UnregisteredDependencyException(
           SerializationInfo info,
           StreamingContext context) : base(info, context)

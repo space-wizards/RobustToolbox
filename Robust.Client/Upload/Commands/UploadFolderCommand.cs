@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Upload.Commands;
 
-public sealed class UploadFolderCommand : IConsoleCommand
+public sealed partial class UploadFolderCommand : IConsoleCommand
 {
     public string Command => "uploadfolder";
     public string Description => Loc.GetString("uploadfolder-command-description");

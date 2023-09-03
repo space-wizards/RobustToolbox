@@ -6,10 +6,10 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class PointLightSystem : SharedPointLightSystem
+    public sealed partial class PointLightSystem : SharedPointLightSystem
     {
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly LightTreeSystem _lightTree = default!;
+        [Dependency] private IResourceCache _resourceCache = default!;
+        [Dependency] private LightTreeSystem _lightTree = default!;
 
         public override void Initialize()
         {

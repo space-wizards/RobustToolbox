@@ -18,13 +18,13 @@ using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.Prototypes
 {
-    public sealed class ClientPrototypeManager : PrototypeManager
+    public sealed partial class ClientPrototypeManager : PrototypeManager
     {
-        [Dependency] private readonly IClyde _clyde = default!;
-        [Dependency] private readonly INetManager _netManager = default!;
-        [Dependency] private readonly IClientGameTiming _timing = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IGameControllerInternal _controller = default!;
+        [Dependency] private IClyde _clyde = default!;
+        [Dependency] private INetManager _netManager = default!;
+        [Dependency] private IClientGameTiming _timing = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IGameControllerInternal _controller = default!;
 
         private readonly List<FileSystemWatcher> _watchers = new();
         private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);

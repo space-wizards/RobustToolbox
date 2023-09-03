@@ -18,7 +18,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public sealed partial class SerializationManager : ISerializationManager
     {
-        [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [IoC.Dependency] private IReflectionManager _reflectionManager = default!;
 
         public IReflectionManager ReflectionManager => _reflectionManager;
 
@@ -32,8 +32,8 @@ namespace Robust.Shared.Serialization.Manager
         // Always has a dummy value of 0 for any types that should be copied by ref
         private readonly ConcurrentDictionary<Type, byte> _copyByRefRegistrations = new();
 
-        [field: IoC.Dependency]
-        public IDependencyCollection DependencyCollection { get; } = default!;
+        [Dependency] public IDependencyCollection _dependencyCollection = default!;
+        public IDependencyCollection DependencyCollection => _dependencyCollection;
 
         public void Initialize()
         {

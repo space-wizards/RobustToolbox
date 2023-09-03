@@ -7,10 +7,10 @@ using Robust.Shared.IoC;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class AddComponentCommand : LocalizedCommands
+    internal sealed partial class AddComponentCommand : LocalizedCommands
     {
-        [Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private IComponentFactory _componentFactory = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
 
         public override string Command => "addcomp";
 

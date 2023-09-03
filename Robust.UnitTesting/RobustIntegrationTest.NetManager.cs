@@ -16,10 +16,10 @@ namespace Robust.UnitTesting
 {
     public partial class RobustIntegrationTest
     {
-        internal sealed class IntegrationNetManager : IClientNetManager, IServerNetManager
+        internal sealed partial class IntegrationNetManager : IClientNetManager, IServerNetManager
         {
-            [Dependency] private readonly IGameTiming _gameTiming = default!;
-            [Dependency] private readonly ITaskManager _taskManager = default!;
+            [Dependency] private IGameTiming _gameTiming = default!;
+            [Dependency] private ITaskManager _taskManager = default!;
             public bool IsServer { get; private set; }
             public bool IsClient => !IsServer;
             public bool IsRunning { get; private set; }

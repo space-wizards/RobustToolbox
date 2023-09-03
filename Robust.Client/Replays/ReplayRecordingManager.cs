@@ -18,13 +18,13 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Replays;
 
-internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
+internal sealed partial class ReplayRecordingManager : SharedReplayRecordingManager
 {
-    [Dependency] private readonly IBaseClient _client = default!;
-    [Dependency] private readonly IEntityManager _entMan = default!;
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IClientGameStateManager _state = default!;
-    [Dependency] private readonly IClientGameTiming _timing = default!;
+    [Dependency] private IBaseClient _client = default!;
+    [Dependency] private IEntityManager _entMan = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IClientGameStateManager _state = default!;
+    [Dependency] private IClientGameTiming _timing = default!;
 
     public override void Initialize()
     {

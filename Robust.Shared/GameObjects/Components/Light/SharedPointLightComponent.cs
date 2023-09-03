@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public abstract partial class SharedPointLightComponent : Component
     {
-        [Dependency] private readonly IEntitySystemManager _sysMan = default!;
+        [Dependency] private IEntitySystemManager _sysMan = default!;
 
         [DataField("color")]
         protected Color _color = Color.White;

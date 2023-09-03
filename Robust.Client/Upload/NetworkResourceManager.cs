@@ -3,9 +3,9 @@ using Robust.Shared.Upload;
 
 namespace Robust.Client.Upload;
 
-public sealed class NetworkResourceManager : SharedNetworkResourceManager
+public sealed partial class NetworkResourceManager : SharedNetworkResourceManager
 {
-    [Dependency] private readonly IBaseClient _client = default!;
+    [Dependency] private IBaseClient _client = default!;
 
     public override void Initialize()
     {

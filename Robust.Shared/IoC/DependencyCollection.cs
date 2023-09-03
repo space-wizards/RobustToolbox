@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using JetBrains.Annotations;
@@ -52,12 +51,9 @@ namespace Robust.Shared.IoC
 
         // End fields for building new services.
 
-        // To do injection of common types like components, we make DynamicMethods to do the actual injecting.
-        // This is way faster than reflection and should be allocation free outside setup.
-        private readonly Dictionary<Type, CachedInjector> _injectorCache =
-            new();
+        private readonly Dictionary<Type, object[]> _injectCache = new();
 
-        private readonly ReaderWriterLockSlim _injectorCacheLock = new();
+        private readonly ReaderWriterLockSlim _injectCacheLock = new();
 
         private readonly IDependencyCollection? _parentCollection;
 
@@ -85,8 +81,8 @@ namespace Robust.Shared.IoC
 
         public Type[] GetCachedInjectorTypes()
         {
-            using var _ = _injectorCacheLock.ReadGuard();
-            return _injectorCache.Where(kv => kv.Value.Delegate != null).Select(kv => kv.Key).ToArray();
+            using var _ = _injectCacheLock.ReadGuard();
+            return _injectCache.Keys.ToArray();
         }
 
         /// <inheritdoc />
@@ -319,9 +315,9 @@ namespace Robust.Shared.IoC
                 _pendingResolves.Clear();
             }
 
-            using (_injectorCacheLock.WriteGuard())
+            using (_injectCacheLock.WriteGuard())
             {
-                _injectorCache.Clear();
+                _injectCache.Clear();
             }
         }
 
@@ -438,7 +434,15 @@ namespace Robust.Shared.IoC
                 // Graph built, go over ones that need injection.
                 foreach (var implementation in injectList)
                 {
-                    InjectDependenciesReflection(implementation, newDeps);
+                    if (implementation is not IDependencyInjector injector)
+                        continue;
+
+                    var dependencies = MakeInjectDependencies(
+                        implementation.GetType(),
+                        injector.ReportDependencies(),
+                        newDeps);
+
+                    injector.InjectDependencies(dependencies);
                 }
 
                 // Atomically set the new dict of services.
@@ -451,148 +455,65 @@ namespace Robust.Shared.IoC
             }
         }
 
+        private object[] MakeInjectDependencies(
+            Type sourceType,
+            Type[] types,
+            IReadOnlyDictionary<Type, object> services)
+        {
+            var dependencies = new object[types.Length];
+
+            for (var i = 0; i < types.Length; i++)
+            {
+                var type = types[i];
+                object dependency;
+                if (TryResolveType(type, services, out var instance))
+                {
+                    dependency = instance;
+                }
+                else if (type == typeof(IDependencyCollection))
+                {
+                    dependency = this;
+                }
+                else
+                {
+                    throw new UnregisteredDependencyException(sourceType, type);
+                }
+
+                dependencies[i] = dependency;
+            }
+
+            return dependencies;
+        }
+
         /// <inheritdoc />
         public void InjectDependencies(object obj, bool oneOff = false)
         {
+            if (obj is not IDependencyInjector injector)
+                return;
+
             var type = obj.GetType();
 
             bool found;
-            CachedInjector injector;
-            using (_injectorCacheLock.ReadGuard())
+            object[]? injectData = null;
+            using (_injectCacheLock.ReadGuard())
             {
-                found = _injectorCache.TryGetValue(type, out injector);
+                found = _injectCache.TryGetValue(type, out injectData);
             }
 
             if (!found)
             {
-                if (oneOff)
+                injectData = MakeInjectDependencies(type, injector.ReportDependencies(), _services);
+
+                if (!oneOff)
                 {
-                    // If this is a one-off injection then use the old reflection method.
-                    // Won't cache a bunch of later-unused stuff.
-                    InjectDependenciesReflection(obj);
-                    return;
-                }
-
-                injector = CacheInjector(type);
-            }
-
-            var (@delegate, services) = injector;
-
-            // If @delegate is null then the type has no dependencies.
-            // So running an initializer would be quite wasteful.
-            @delegate?.Invoke(obj, services!);
-        }
-
-        private void InjectDependenciesReflection(object obj)
-        {
-            InjectDependenciesReflection(obj, _services);
-        }
-
-        private void InjectDependenciesReflection(object obj, IReadOnlyDictionary<Type, object> services)
-        {
-            var type = obj.GetType();
-            foreach (var field in type.GetAllFields())
-            {
-                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
-                {
-                    continue;
-                }
-
-                // Not using Resolve<T>() because we're literally building it right now.
-                if (TryResolveType(field.FieldType, services, out var dep))
-                {
-                    // Quick note: this DOES work with read only fields, though it may be a CLR implementation detail.
-                    field.SetValue(obj, dep);
-                    continue;
-                }
-
-                // A hard-coded special case so the DependencyCollection can inject itself.
-                // This is not put into the services so it can be overridden if needed.
-                if (field.FieldType == typeof(IDependencyCollection))
-                {
-                    field.SetValue(obj, this);
-                    continue;
-                }
-
-                throw new UnregisteredDependencyException(type, field.FieldType, field.Name);
-            }
-        }
-
-        private CachedInjector CacheInjector(Type type)
-        {
-            using var _ = _injectorCacheLock.WriteGuard();
-            // Check in case value got filled in right before we acquired the lock.
-            if (_injectorCache.TryGetValue(type, out var cached))
-                return cached;
-
-            var fields = new List<FieldInfo>();
-
-            foreach (var field in type.GetAllFields())
-            {
-                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
-                {
-                    continue;
-                }
-
-                fields.Add(field);
-            }
-
-            // No dependency fields, nothing to inject so no point setting this all up.
-            if (fields.Count == 0)
-            {
-                _injectorCache.Add(type, default);
-                return default;
-            }
-
-            var dynamicMethod = new DynamicMethod($"_injector<>{type}", null, InjectorParameters, type, true);
-
-            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "target");
-            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "services");
-
-            var i = 0;
-            var services = new List<object>();
-
-            var generator = dynamicMethod.GetILGenerator();
-
-            foreach (var field in fields)
-            {
-                // Load object to inject into.
-                generator.Emit(OpCodes.Ldarg_0);
-
-                // Not using Resolve<T>() because we're literally building it right now.
-                if (!TryResolveType(field.FieldType, out var service))
-                {
-                    // A hard-coded special case so the DependencyCollection can inject itself.
-                    // This is not put into the services so it can be overridden if needed.
-                    if (field.FieldType == typeof(IDependencyCollection))
+                    using (_injectCacheLock.WriteGuard())
                     {
-                        service = this;
-                    }
-                    else
-                    {
-                        throw new UnregisteredDependencyException(type, field.FieldType, field.Name);
+                        _injectCache[type] = injectData;
                     }
                 }
-
-                services.Add(service);
-
-                // Load services array.
-                generator.Emit(OpCodes.Ldarg_1);
-                // Load service from array.
-                generator.Emit(OpCodes.Ldc_I4, i++);
-                generator.Emit(OpCodes.Ldelem_Ref);
-
-                // Set service into field.
-                generator.Emit(OpCodes.Stfld, field);
             }
 
-            generator.Emit(OpCodes.Ret);
-
-            var @delegate = (InjectorDelegate)dynamicMethod.CreateDelegate(typeof(InjectorDelegate));
-            cached = new CachedInjector(@delegate, services.ToArray());
-            _injectorCache.Add(type, cached);
-
-            return cached;
+            injector.InjectDependencies(injectData);
         }
 
         [return: NotNullIfNotNull("factory")]
@@ -605,7 +526,5 @@ namespace Robust.Shared.IoC
 
             return _ => factory();
         }
-
-        private record struct CachedInjector(InjectorDelegate? Delegate, object[]? Services);
     }
 }

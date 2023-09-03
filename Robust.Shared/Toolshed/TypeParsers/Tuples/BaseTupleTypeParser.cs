@@ -11,10 +11,10 @@ using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.TypeParsers.Tuples;
 
-public abstract class BaseTupleTypeParser<TParses> : TypeParser<TParses>
+public abstract partial class BaseTupleTypeParser<TParses> : TypeParser<TParses>
     where TParses: ITuple
 {
-    [IoC.Dependency] private readonly ToolshedManager _toolshed = default!;
+    [IoC.Dependency] private ToolshedManager _toolshed = default!;
 
     public abstract IEnumerable<Type> Fields { get; }
 

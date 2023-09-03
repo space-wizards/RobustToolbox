@@ -12,10 +12,10 @@ using Robust.Shared.Maths;
 
 namespace Robust.Server.Console.Commands
 {
-    public sealed class SaveGridCommand : LocalizedCommands
+    public sealed partial class SaveGridCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntityManager _ent = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntityManager _ent = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "savegrid";
 
@@ -58,11 +58,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class LoadGridCommand : LocalizedCommands
+    public sealed partial class LoadGridCommand : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IMapManager _map = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IMapManager _map = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "loadgrid";
 
@@ -144,11 +144,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class SaveMap : LocalizedCommands
+    public sealed partial class SaveMap : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IMapManager _map = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IMapManager _map = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "savemap";
 
@@ -206,11 +206,11 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public sealed class LoadMap : LocalizedCommands
+    public sealed partial class LoadMap : LocalizedCommands
     {
-        [Dependency] private readonly IEntitySystemManager _system = default!;
-        [Dependency] private readonly IMapManager _map = default!;
-        [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private IEntitySystemManager _system = default!;
+        [Dependency] private IMapManager _map = default!;
+        [Dependency] private IResourceManager _resource = default!;
 
         public override string Command => "loadmap";
 

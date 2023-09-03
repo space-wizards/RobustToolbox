@@ -27,19 +27,19 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameObjects;
 
 [UsedImplicitly]
-public sealed class AudioSystem : SharedAudioSystem
+public sealed partial class AudioSystem : SharedAudioSystem
 {
-    [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
-    [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
-    [Dependency] private readonly IClydeAudio _clyde = default!;
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IParallelManager _parMan = default!;
-    [Dependency] private readonly SharedTransformSystem _xformSys = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
+    [Dependency] private IReplayRecordingManager _replayRecording = default!;
+    [Dependency] private SharedPhysicsSystem _broadPhaseSystem = default!;
+    [Dependency] private IClydeAudio _clyde = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IParallelManager _parMan = default!;
+    [Dependency] private SharedTransformSystem _xformSys = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private IRuntimeLog _runtimeLog = default!;
+    [Dependency] private ILogManager _logManager = default!;
 
     private readonly List<PlayingStream> _playingClydeStreams = new();
 

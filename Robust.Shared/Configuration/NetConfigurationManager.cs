@@ -65,10 +65,10 @@ namespace Robust.Shared.Configuration
     }
 
     /// <inheritdoc cref="INetConfigurationManager"/>
-    internal abstract class NetConfigurationManager : ConfigurationManager, INetConfigurationManagerInternal
+    internal abstract partial class NetConfigurationManager : ConfigurationManager, INetConfigurationManagerInternal
     {
-        [Dependency] protected readonly INetManager NetManager = null!;
-        [Dependency] protected readonly IGameTiming Timing = null!;
+        [Dependency] protected INetManager NetManager = null!;
+        [Dependency] protected IGameTiming Timing = null!;
 
         private readonly List<MsgConVars> _netVarsMessages = new();
 

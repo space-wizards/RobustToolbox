@@ -14,8 +14,8 @@ namespace Robust.Client
     {
         private IGameLoop? _mainLoop;
 
-        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
-        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private IClientGameTiming _gameTiming = default!;
+        [Dependency] private IDependencyCollection _dependencyCollection = default!;
 
         private static bool _hasStarted;
 

@@ -14,10 +14,10 @@ namespace Robust.Client.Physics
     [UsedImplicitly]
     public sealed partial class PhysicsSystem : SharedPhysicsSystem
     {
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly IPlayerManager _player = default!;
-        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
+        [Dependency] private IPlayerManager _player = default!;
+        [Dependency] private SharedBroadphaseSystem _broadphase = default!;
 
         public override void Update(float frameTime)
         {

@@ -11,13 +11,13 @@ namespace Robust.Client.UserInterface.RichText;
 /// Applies the font provided as the tags parameter to the markup drawing context.
 /// Definitely not save for user supplied markup
 /// </summary>
-public sealed class FontTag : IMarkupTag
+public sealed partial class FontTag : IMarkupTag
 {
     public const string DefaultFont = "Default";
     public const int DefaultSize = 12;
 
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
 
     public string Name => "font";
 

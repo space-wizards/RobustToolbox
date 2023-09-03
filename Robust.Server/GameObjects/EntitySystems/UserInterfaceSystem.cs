@@ -12,10 +12,10 @@ using Robust.Shared.Utility;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
+    public sealed partial class UserInterfaceSystem : SharedUserInterfaceSystem
     {
-        [Dependency] private readonly IPlayerManager _playerMan = default!;
-        [Dependency] private readonly TransformSystem _xformSys = default!;
+        [Dependency] private IPlayerManager _playerMan = default!;
+        [Dependency] private TransformSystem _xformSys = default!;
 
         private EntityQuery<IgnoreUIRangeComponent> _ignoreUIRangeQuery;
 

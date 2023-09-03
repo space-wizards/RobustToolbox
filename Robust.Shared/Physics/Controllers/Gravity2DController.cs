@@ -15,10 +15,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Controllers;
 
-public sealed class Gravity2DController : VirtualController
+public sealed partial class Gravity2DController : VirtualController
 {
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
 
     private ISawmill _sawmill = default!;
 

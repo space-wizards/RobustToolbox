@@ -8,9 +8,9 @@ using Robust.Shared.Toolshed.TypeParsers;
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
 [ToolshedCommand]
-internal sealed class WithCommand : ToolshedCommand
+internal sealed partial class WithCommand : ToolshedCommand
 {
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
 
     [CommandImplementation]
     public IEnumerable<EntityUid> With(

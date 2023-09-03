@@ -25,19 +25,19 @@ namespace Robust.Server.GameObjects
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
     [UsedImplicitly] // DI Container
-    public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal
+    public sealed partial class ServerEntityManager : EntityManager, IServerEntityManagerInternal
     {
         private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
             "robust_entities_count",
             "Amount of alive entities.");
 
-        [Dependency] private readonly IReplayRecordingManager _replay = default!;
-        [Dependency] private readonly IServerNetManager _networkManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private IReplayRecordingManager _replay = default!;
+        [Dependency] private IServerNetManager _networkManager = default!;
+        [Dependency] private IGameTiming _gameTiming = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IConfigurationManager _configurationManager = default!;
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [Dependency] private IRuntimeLog _runtimeLog = default!;
 #endif
 
         private ISawmill _netEntSawmill = default!;

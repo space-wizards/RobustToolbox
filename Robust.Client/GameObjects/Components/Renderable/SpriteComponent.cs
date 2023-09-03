@@ -34,12 +34,12 @@ namespace Robust.Client.GameObjects
     [RegisterComponent]
     public sealed partial class SpriteComponent : Component, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
-        [Dependency] private readonly IResourceCache resourceCache = default!;
-        [Dependency] private readonly IPrototypeManager prototypes = default!;
-        [Dependency] private readonly IEntityManager entities = default!;
-        [Dependency] private readonly IReflectionManager reflection = default!;
-        [Dependency] private readonly IEyeManager eyeManager = default!;
-        [Dependency] private readonly IComponentFactory factory = default!;
+        [Dependency] private IResourceCache resourceCache = default!;
+        [Dependency] private IPrototypeManager prototypes = default!;
+        [Dependency] private IEntityManager entities = default!;
+        [Dependency] private IReflectionManager reflection = default!;
+        [Dependency] private IEyeManager eyeManager = default!;
+        [Dependency] private IComponentFactory factory = default!;
 
         /// <summary>
         ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.

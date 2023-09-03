@@ -12,11 +12,6 @@ internal static class Types
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string CopyByRefNamespace = "Robust.Shared.Serialization.Manager.Attributes.CopyByRefAttribute";
 
-    internal static bool IsPartial(TypeDeclarationSyntax type)
-    {
-        return type.Modifiers.IndexOf(SyntaxKind.PartialKeyword) != -1;
-    }
-
     internal static bool IsDataDefinition(ITypeSymbol? type)
     {
         if (type == null)
@@ -182,44 +177,6 @@ internal static class Types
         }
 
         return name;
-    }
-
-    internal static string GetPartialTypeDefinitionLine(ITypeSymbol symbol)
-    {
-        var access = symbol.DeclaredAccessibility switch
-        {
-            Accessibility.Private => "private",
-            Accessibility.ProtectedAndInternal => "protected internal",
-            Accessibility.Protected => "protected",
-            Accessibility.Internal => "internal",
-            Accessibility.Public => "public",
-            _ => "public"
-        };
-
-        var typeKeyword = "partial ";
-        if (symbol.TypeKind == TypeKind.Interface)
-        {
-            typeKeyword += "interface";
-        }
-        else
-        {
-            if (symbol.IsRecord)
-            {
-                typeKeyword += symbol.IsValueType ? "record struct" : "record";
-            }
-            else
-            {
-                typeKeyword += symbol.IsValueType ? "struct" : "class";
-            }
-
-            if (symbol.IsAbstract)
-            {
-                typeKeyword = $"abstract {typeKeyword}";
-            }
-        }
-
-        var typeName = GetGenericTypeName(symbol);
-        return $"{access} {typeKeyword} {typeName}";
     }
 
     internal static bool Inherits(ITypeSymbol type, string parent)

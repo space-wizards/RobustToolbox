@@ -25,9 +25,9 @@ internal interface IParallelManagerInternal : IParallelManager
     void Initialize();
 }
 
-internal sealed class ParallelManager : IParallelManagerInternal
+internal sealed partial class ParallelManager : IParallelManagerInternal
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     public event Action? ParallelCountChanged;
     public int ParallelProcessCount { get; private set; }

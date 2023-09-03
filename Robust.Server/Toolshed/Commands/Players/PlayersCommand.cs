@@ -15,9 +15,9 @@ using Robust.Shared.Utility;
 namespace Robust.Server.Toolshed.Commands.Players;
 
 [ToolshedCommand]
-public sealed class PlayerCommand : ToolshedCommand
+public sealed partial class PlayerCommand : ToolshedCommand
 {
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
 
     [CommandImplementation("list")]
     public IEnumerable<IPlayerSession> Players()

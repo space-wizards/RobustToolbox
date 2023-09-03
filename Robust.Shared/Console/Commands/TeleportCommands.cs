@@ -14,11 +14,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands;
 
-internal sealed class TeleportCommand : LocalizedCommands
+internal sealed partial class TeleportCommand : LocalizedCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
-    [Dependency] private readonly IEntitySystemManager _entitySystem = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private IMapManager _map = default!;
+    [Dependency] private IEntitySystemManager _entitySystem = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
 
     public override string Command => "tp";
     public override bool RequireServerOrSingleplayer => true;
@@ -69,10 +69,10 @@ internal sealed class TeleportCommand : LocalizedCommands
     }
 }
 
-public sealed class TeleportToCommand : LocalizedCommands
+public sealed partial class TeleportToCommand : LocalizedCommands
 {
-    [Dependency] private readonly ISharedPlayerManager _players = default!;
-    [Dependency] private readonly IEntityManager _entities = default!;
+    [Dependency] private ISharedPlayerManager _players = default!;
+    [Dependency] private IEntityManager _entities = default!;
 
     public override string Command => "tpto";
     public override bool RequireServerOrSingleplayer => true;
@@ -167,9 +167,9 @@ public sealed class TeleportToCommand : LocalizedCommands
     }
 }
 
-sealed class LocationCommand : LocalizedCommands
+sealed partial class LocationCommand : LocalizedCommands
 {
-    [Dependency] private readonly IEntityManager _ent = default!;
+    [Dependency] private IEntityManager _ent = default!;
 
     public override string Command => "loc";
 
@@ -185,10 +185,10 @@ sealed class LocationCommand : LocalizedCommands
     }
 }
 
-sealed class TpGridCommand : LocalizedCommands
+sealed partial class TpGridCommand : LocalizedCommands
 {
-    [Dependency] private readonly IEntityManager _ent = default!;
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private IEntityManager _ent = default!;
+    [Dependency] private IMapManager _map = default!;
 
     public override string Command => "tpgrid";
     public override bool RequireServerOrSingleplayer => true;

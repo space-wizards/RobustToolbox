@@ -12,9 +12,9 @@ namespace Robust.Server.GameObjects
     ///     System that handles players being attached/detached from entities.
     /// </summary>
     [UsedImplicitly]
-    public sealed class ActorSystem : EntitySystem
+    public sealed partial class ActorSystem : EntitySystem
     {
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
 
         public override void Initialize()
         {

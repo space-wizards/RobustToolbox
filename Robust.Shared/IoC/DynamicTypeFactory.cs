@@ -160,12 +160,12 @@ namespace Robust.Shared.IoC
     }
 
     /// <inheritdoc />
-    internal sealed class DynamicTypeFactory : IDynamicTypeFactoryInternal
+    internal sealed partial class DynamicTypeFactory : IDynamicTypeFactoryInternal
     {
         // https://blog.ploeh.dk/2012/03/15/ImplementinganAbstractFactory/
 
-        [Dependency] private readonly IDependencyCollection _dependencies = default!;
-        [Dependency] private readonly IModLoader _modLoader = default!;
+        [Dependency] private IDependencyCollection _dependencies = default!;
+        [Dependency] private IModLoader _modLoader = default!;
 
         /// <inheritdoc />
         public object CreateInstance(Type type, bool oneOff = false, bool inject = true)

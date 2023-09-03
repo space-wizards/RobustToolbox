@@ -69,7 +69,7 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Client.Debugging
 {
-    public sealed class DebugPhysicsSystem : SharedDebugPhysicsSystem
+    public sealed partial class DebugPhysicsSystem : SharedDebugPhysicsSystem
     {
         /*
          * Used for debugging shapes, controllers, joints, contacts
@@ -78,7 +78,7 @@ namespace Robust.Client.Debugging
         private const int MaxContactPoints = 2048;
         internal int PointCount;
 
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
 
         internal ContactPoint[] Points = new ContactPoint[MaxContactPoints];
 

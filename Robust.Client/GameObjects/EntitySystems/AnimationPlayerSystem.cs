@@ -8,14 +8,14 @@ using TerraFX.Interop.Windows;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class AnimationPlayerSystem : EntitySystem, IPostInjectInit
+    public sealed partial class AnimationPlayerSystem : EntitySystem, IPostInjectInit
     {
         private readonly List<AnimationPlayerComponent> _activeAnimations = new();
 
         private EntityQuery<MetaDataComponent> _metaQuery;
 
-        [Dependency] private readonly IComponentFactory _compFact = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private IComponentFactory _compFact = default!;
+        [Dependency] private ILogManager _logManager = default!;
 
         private ISawmill _sawmill = default!;
 

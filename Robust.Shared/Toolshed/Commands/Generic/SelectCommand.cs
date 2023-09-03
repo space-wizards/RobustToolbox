@@ -7,9 +7,9 @@ using Robust.Shared.Toolshed.TypeParsers;
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
 [ToolshedCommand]
-public sealed class SelectCommand : ToolshedCommand
+public sealed partial class SelectCommand : ToolshedCommand
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<TR> Select<TR>([PipedArgument] IEnumerable<TR> enumerable, [CommandArgument] Quantity quantity, [CommandInverted] bool inverted)

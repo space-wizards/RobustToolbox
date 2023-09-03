@@ -10,10 +10,10 @@ namespace Robust.Client.Debugging
     /// <summary>
     /// A collection of visual debug overlays for the client game.
     /// </summary>
-    public sealed class DebugDrawingSystem : EntitySystem
+    public sealed partial class DebugDrawingSystem : EntitySystem
     {
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private IOverlayManager _overlayManager = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
 
         private bool _debugPositions;
         private bool _debugRotations;

@@ -20,12 +20,12 @@ namespace Robust.Client.GameStates
     /// A network entity report that lists all entities as they are updated through game states.
     /// https://developer.valvesoftware.com/wiki/Networking_Entities#cl_entityreport
     /// </summary>
-    sealed class NetEntityOverlay : Overlay
+    sealed partial class NetEntityOverlay : Overlay
     {
-        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private IClientGameTiming _gameTiming = default!;
+        [Dependency] private IClientNetManager _netManager = default!;
+        [Dependency] private IClientGameStateManager _gameStateManager = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
 
         private const uint TrafficHistorySize = 64; // Size of the traffic history bar in game ticks.
         private const int _maxEnts = 128; // maximum number of entities to track.

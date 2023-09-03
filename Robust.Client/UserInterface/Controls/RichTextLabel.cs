@@ -10,9 +10,9 @@ using Robust.Shared.Utility;
 namespace Robust.Client.UserInterface.Controls
 {
     [Virtual]
-    public class RichTextLabel : Control
+    public partial class RichTextLabel : Control
     {
-        [Dependency] private readonly MarkupTagManager _tagManager = default!;
+        [Dependency] private MarkupTagManager _tagManager = default!;
 
         private FormattedMessage? _message;
         private RichTextEntry _entry;

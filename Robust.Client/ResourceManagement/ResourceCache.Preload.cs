@@ -18,11 +18,15 @@ namespace Robust.Client.ResourceManagement
 {
     internal partial class ResourceCache
     {
-        [field: Dependency] public IClyde Clyde { get; } = default!;
-        [field: Dependency] public IClydeAudio ClydeAudio { get; } = default!;
-        [field: Dependency] public IFontManager FontManager { get; } = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private IClyde _clyde = default!;
+        [Dependency] private IClydeAudio _clydeAudio = default!;
+        [Dependency] private IFontManager _fontManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private IConfigurationManager _configurationManager = default!;
+
+        public IClyde Clyde => _clyde;
+        public IClydeAudio ClydeAudio => _clydeAudio;
+        public IFontManager FontManager => _fontManager;
 
         public void PreloadTextures()
         {

@@ -23,21 +23,21 @@ namespace Robust.Client.Replays.Playback;
 
 internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
 {
-    [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly IBaseClient _client = default!;
-    [Dependency] private readonly IMidiManager _midi = default!;
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IClydeAudio _clydeAudio = default!;
-    [Dependency] private readonly IClientGameTiming _timing = default!;
-    [Dependency] private readonly IClientNetManager _netMan = default!;
-    [Dependency] private readonly IComponentFactory _factory = default!;
-    [Dependency] private readonly IPrototypeManager _protoMan = default!;
-    [Dependency] private readonly IGameController _controller = default!;
-    [Dependency] private readonly IClientEntityManager _entMan = default!;
-    [Dependency] private readonly IConfigurationManager _confMan = default!;
-    [Dependency] private readonly NetworkResourceManager _netResMan = default!;
-    [Dependency] private readonly IClientGameStateManager _gameState = default!;
-    [Dependency] private readonly IClientNetConfigurationManager _netConf = default!;
+    [Dependency] private ILogManager _logMan = default!;
+    [Dependency] private IBaseClient _client = default!;
+    [Dependency] private IMidiManager _midi = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IClydeAudio _clydeAudio = default!;
+    [Dependency] private IClientGameTiming _timing = default!;
+    [Dependency] private IClientNetManager _netMan = default!;
+    [Dependency] private IComponentFactory _factory = default!;
+    [Dependency] private IPrototypeManager _protoMan = default!;
+    [Dependency] private IGameController _controller = default!;
+    [Dependency] private IClientEntityManager _entMan = default!;
+    [Dependency] private IConfigurationManager _confMan = default!;
+    [Dependency] private NetworkResourceManager _netResMan = default!;
+    [Dependency] private IClientGameStateManager _gameState = default!;
+    [Dependency] private IClientNetConfigurationManager _netConf = default!;
 
     public event Action<MappingDataNode, List<object>>? ReplayPlaybackStarted;
     public event Action? ReplayPlaybackStopped;

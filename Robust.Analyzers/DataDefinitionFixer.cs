@@ -45,7 +45,7 @@ public sealed class DefinitionFixer : CodeFixProvider
         return WellKnownFixAllProviders.BatchFixer;
     }
 
-    private static async Task RegisterPartialTypeFix(CodeFixContext context, Diagnostic diagnostic)
+    internal static async Task RegisterPartialTypeFix(CodeFixContext context, Diagnostic diagnostic)
     {
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
         var span = diagnostic.Location.SourceSpan;

@@ -16,9 +16,9 @@ namespace Robust.Shared.Sandboxing
         object CreateInstance(Type type);
     }
 
-    internal sealed class SandboxHelper : ISandboxHelper
+    internal sealed partial class SandboxHelper : ISandboxHelper
     {
-        [Dependency] private readonly IModLoader _modLoader = default!;
+        [Dependency] private IModLoader _modLoader = default!;
 
         public object CreateInstance(Type type)
         {

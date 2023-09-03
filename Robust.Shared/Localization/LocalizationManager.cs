@@ -24,10 +24,10 @@ namespace Robust.Shared.Localization
 {
     internal sealed partial class LocalizationManager : ILocalizationManagerInternal, IPostInjectInit
     {
-        [Dependency] private readonly IResourceManager _res = default!;
-        [Dependency] private readonly ILogManager _log = default!;
-        [Dependency] private readonly IPrototypeManager _prototype = default!;
-        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private IResourceManager _res = default!;
+        [Dependency] private ILogManager _log = default!;
+        [Dependency] private IPrototypeManager _prototype = default!;
+        [Dependency] private IEntityManager _entMan = default!;
 
         private ISawmill _logSawmill = default!;
         private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();

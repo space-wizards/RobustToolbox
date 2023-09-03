@@ -18,16 +18,16 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems
 {
-    public abstract class SharedBroadphaseSystem : EntitySystem
+    public abstract partial class SharedBroadphaseSystem : EntitySystem
     {
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
-        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
-        [Dependency] private readonly IParallelManager _parallel = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
-        [Dependency] private readonly SharedMapSystem _map = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private IConfigurationManager _cfg = default!;
+        [Dependency] private IMapManagerInternal _mapManager = default!;
+        [Dependency] private IParallelManager _parallel = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private SharedMapSystem _map = default!;
+        [Dependency] private SharedPhysicsSystem _physicsSystem = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
 
         private EntityQuery<BroadphaseComponent> _broadphaseQuery;
         private EntityQuery<MapGridComponent> _gridQuery;

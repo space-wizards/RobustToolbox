@@ -26,11 +26,11 @@ namespace Robust.Shared.Toolshed;
 /// <seealso cref="IInvocationContext"/>
 public sealed partial class ToolshedManager
 {
-    [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
-    [Dependency] private readonly IEntityManager _entity = default!;
-    [Dependency] private readonly IReflectionManager _reflection = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly INetManager _net = default!;
+    [Dependency] private IDynamicTypeFactoryInternal _typeFactory = default!;
+    [Dependency] private IEntityManager _entity = default!;
+    [Dependency] private IReflectionManager _reflection = default!;
+    [Dependency] private ILogManager _logManager = default!;
+    [Dependency] private INetManager _net = default!;
 
     private ISawmill _log = default!;
 

@@ -24,14 +24,14 @@ namespace Robust.Server.GameStates;
 
 internal sealed partial class PvsSystem : EntitySystem
 {
-    [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
-    [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Shared.IoC.Dependency] private readonly IServerNetConfigurationManager _netConfigManager = default!;
-    [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
-    [Shared.IoC.Dependency] private readonly IParallelManager _parallelManager = default!;
-    [Shared.IoC.Dependency] private readonly IComponentFactory _factory = default!;
+    [Shared.IoC.Dependency] private IMapManagerInternal _mapManager = default!;
+    [Shared.IoC.Dependency] private IPlayerManager _playerManager = default!;
+    [Shared.IoC.Dependency] private IConfigurationManager _configManager = default!;
+    [Shared.IoC.Dependency] private SharedTransformSystem _transform = default!;
+    [Shared.IoC.Dependency] private IServerNetConfigurationManager _netConfigManager = default!;
+    [Shared.IoC.Dependency] private IServerGameStateManager _serverGameStateManager = default!;
+    [Shared.IoC.Dependency] private IParallelManager _parallelManager = default!;
+    [Shared.IoC.Dependency] private IComponentFactory _factory = default!;
 
     public const float ChunkSize = 8;
 
@@ -1096,7 +1096,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
                 if (state.Empty)
                 {
-                    Log.Error($@"{nameof(GetEntityState)} returned an empty state while enumerating entities. 
+                    Log.Error($@"{nameof(GetEntityState)} returned an empty state while enumerating entities.
 Tick: {fromTick}--{_gameTiming.CurTick}
 Entity: {ToPrettyString(uid)}
 Last modified: {md.EntityLastModifiedTick}

@@ -8,11 +8,11 @@ using System;
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
-    public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
+    public sealed partial class UserInterfaceSystem : SharedUserInterfaceSystem
     {
-        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private IDynamicTypeFactory _dynamicTypeFactory = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IReflectionManager _reflectionManager = default!;
 
         public override void Initialize()
         {

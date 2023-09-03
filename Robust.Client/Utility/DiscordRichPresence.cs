@@ -11,7 +11,7 @@ using LogLevel = DiscordRPC.Logging.LogLevel;
 
 namespace Robust.Client.Utility
 {
-    internal sealed class DiscordRichPresence : IDiscordRichPresence
+    internal sealed partial class DiscordRichPresence : IDiscordRichPresence
     {
         private static RichPresence _defaultPresence = new() {};
 
@@ -19,9 +19,9 @@ namespace Robust.Client.Utility
 
         private DiscordRpcClient? _client;
 
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly ILocalizationManager _loc = default!;
+        [Dependency] private IConfigurationManager _configurationManager = default!;
+        [Dependency] private ILogManager _logManager = default!;
+        [Dependency] private ILocalizationManager _loc = default!;
 
         private bool _initialized;
 

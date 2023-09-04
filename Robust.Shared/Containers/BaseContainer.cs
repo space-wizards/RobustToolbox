@@ -240,10 +240,9 @@ namespace Robust.Shared.Containers
 
         /// <summary>
         /// Whether the given entity can be inserted into this container.
-        /// This should always return false if the entity is already contained within the container.
         /// </summary>
         /// <param name="assumeEmpty">Whether to assume that the container is currently empty.</param>
-        protected internal abstract bool CanInsert(EntityUid toInsert, bool assumeEmpty, IEntityManager entMan);
+        protected internal virtual bool CanInsert(EntityUid toInsert, bool assumeEmpty, IEntityManager entMan) => true;
 
         /// <summary>
         /// Attempts to remove the entity from this container.

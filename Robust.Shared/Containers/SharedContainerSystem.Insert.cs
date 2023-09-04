@@ -19,10 +19,11 @@ public abstract partial class SharedContainerSystem
         if (container.Owner == toInsert)
             return false;
 
-        if (!container.CanInsert(toInsert, assumeEmpty, EntityManager))
+        if (!assumeEmpty && container.Contains(toInsert))
             return false;
 
-        DebugTools.Assert(!container.Contains(toInsert), "Can insert returned true despite already containing the entity.");
+        if (!container.CanInsert(toInsert, assumeEmpty, EntityManager))
+            return false;
 
         if (!_xformQuery.Resolve(toInsert, ref toInsertXform))
             return false;

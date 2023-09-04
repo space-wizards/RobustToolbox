@@ -51,12 +51,6 @@ namespace Robust.Shared.Containers
         private EntityUid[]? _containedEntityArray;
 
         /// <inheritdoc />
-        protected internal override bool CanInsert(EntityUid toinsert, bool assumeEmpty, IEntityManager entMan)
-        {
-            return assumeEmpty || (ContainedEntity == null);
-        }
-
-        /// <inheritdoc />
         public override bool Contains(EntityUid contained)
         {
             if (contained != ContainedEntity)

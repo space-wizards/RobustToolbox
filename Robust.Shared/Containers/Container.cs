@@ -42,11 +42,6 @@ namespace Robust.Shared.Containers
             _containerList.Remove(toRemove);
         }
 
-        protected internal override bool CanInsert(EntityUid toInsert, bool assumeEmpty, IEntityManager entMan)
-        {
-            return assumeEmpty || !_containerList.Contains(toInsert);
-        }
-
         /// <inheritdoc />
         public override bool Contains(EntityUid contained)
         {

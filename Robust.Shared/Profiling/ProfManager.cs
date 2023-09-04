@@ -14,6 +14,7 @@ namespace Robust.Shared.Profiling;
 
 // See ProfData.cs for description of profiling data layout.
 
+[IoC.InjectDependencies]
 public sealed partial class ProfManager
 {
     [IoC.Dependency] private IConfigurationManager _cfg = default!;

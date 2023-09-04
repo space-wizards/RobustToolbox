@@ -14,6 +14,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands;
 
+[InjectDependencies]
 internal sealed partial class TeleportCommand : LocalizedCommands
 {
     [Dependency] private IMapManager _map = default!;
@@ -69,6 +70,7 @@ internal sealed partial class TeleportCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 public sealed partial class TeleportToCommand : LocalizedCommands
 {
     [Dependency] private ISharedPlayerManager _players = default!;
@@ -167,6 +169,7 @@ public sealed partial class TeleportToCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 sealed partial class LocationCommand : LocalizedCommands
 {
     [Dependency] private IEntityManager _ent = default!;
@@ -185,6 +188,7 @@ sealed partial class LocationCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 sealed partial class TpGridCommand : LocalizedCommands
 {
     [Dependency] private IEntityManager _ent = default!;

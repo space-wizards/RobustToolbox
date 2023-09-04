@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
+    [InjectDependencies]
     internal sealed partial class AddComponentCommand : LocalizedCommands
     {
         [Dependency] private IComponentFactory _componentFactory = default!;

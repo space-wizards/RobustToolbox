@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
+[InjectDependencies]
 public abstract partial class SharedAppearanceSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;

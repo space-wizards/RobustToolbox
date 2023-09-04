@@ -22,6 +22,7 @@ using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
 
 namespace Robust.Client.ViewVariables
 {
+    [InjectDependencies]
     internal sealed partial class ClientViewVariablesManager : ViewVariablesManager, IClientViewVariablesManagerInternal
     {
         [Dependency] private IUserInterfaceManager _userInterfaceManager = default!;

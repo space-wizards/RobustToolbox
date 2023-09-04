@@ -18,6 +18,7 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.Physics.Systems
 {
+    [InjectDependencies]
     public abstract partial class SharedPhysicsSystem : EntitySystem
     {
         /*

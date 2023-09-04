@@ -22,6 +22,7 @@ namespace Robust.Server.Console.Commands
     }
     */
 
+    [InjectDependencies]
     sealed partial class ShutdownCommand : LocalizedCommands
     {
         [Dependency] private IBaseServer _server = default!;
@@ -34,6 +35,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
+    [InjectDependencies]
     sealed partial class NetworkAuditCommand : LocalizedCommands
     {
         [Dependency] private INetManager _netManager = default!;
@@ -57,6 +59,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
+    [InjectDependencies]
     sealed partial class ShowTimeCommand : LocalizedCommands
     {
         [Dependency] private IGameTiming _timing = default!;

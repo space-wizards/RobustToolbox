@@ -20,6 +20,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    [InjectDependencies]
     public abstract partial class SharedGridFixtureSystem : EntitySystem
     {
         [Dependency] private FixtureSystem _fixtures = default!;

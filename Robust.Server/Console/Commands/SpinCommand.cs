@@ -7,6 +7,7 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.Console.Commands;
 
+[InjectDependencies]
 public sealed partial class SpinCommand : LocalizedCommands
 {
     [Dependency] private IEntityManager _entities = default!;

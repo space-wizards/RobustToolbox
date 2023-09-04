@@ -47,6 +47,7 @@ namespace Robust.Server
     /// <summary>
     /// The master class that runs the rest of the engine.
     /// </summary>
+    [InjectDependencies]
     internal sealed partial class BaseServer : IBaseServerInternal, IPostInjectInit
     {
         private static readonly Gauge ServerUpTime = Metrics.CreateGauge(

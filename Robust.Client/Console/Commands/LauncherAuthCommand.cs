@@ -9,6 +9,7 @@ using Robust.Shared.Network;
 
 namespace Robust.Client.Console.Commands
 {
+    [InjectDependencies]
     internal sealed partial class LauncherAuthCommand : LocalizedCommands
     {
         [Dependency] private IAuthManager _auth = default!;

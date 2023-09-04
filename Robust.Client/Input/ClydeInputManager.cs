@@ -5,6 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Input
 {
+    [InjectDependencies]
     internal sealed partial class ClydeInputManager : InputManager
     {
         [Dependency] private IClydeInternal _clyde = default!;

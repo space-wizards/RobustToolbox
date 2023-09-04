@@ -19,6 +19,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.UserInterface.Screens;
 
 [GenerateTypedNameReferences, ContentAccessAllowed]
+[InjectDependencies]
 public sealed partial class DebugBuiltinConnectionScreen : UIScreen
 {
     [Dependency] private IBaseClient _client = default!;

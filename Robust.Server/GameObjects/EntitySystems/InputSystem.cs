@@ -11,6 +11,7 @@ namespace Robust.Server.GameObjects
     /// <summary>
     ///     Server side processing of incoming user commands.
     /// </summary>
+    [InjectDependencies]
     public sealed partial class InputSystem : SharedInputSystem
     {
         [Dependency] private IPlayerManager _playerManager = default!;

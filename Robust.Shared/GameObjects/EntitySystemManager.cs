@@ -20,6 +20,7 @@ using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.GameObjects
 {
+    [InjectDependencies]
     public sealed partial class EntitySystemManager : IEntitySystemManager, IPostInjectInit
     {
         [IoC.Dependency] private IReflectionManager _reflectionManager = default!;

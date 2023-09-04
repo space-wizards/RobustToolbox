@@ -7,7 +7,6 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.ServerStatus
 {
-
     internal sealed partial class StatusHost
     {
 

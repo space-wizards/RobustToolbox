@@ -15,6 +15,7 @@ using Robust.Shared.Utility;
 namespace Robust.Server.Toolshed.Commands.Players;
 
 [ToolshedCommand]
+[InjectDependencies]
 public sealed partial class PlayerCommand : ToolshedCommand
 {
     [Dependency] private IPlayerManager _playerManager = default!;

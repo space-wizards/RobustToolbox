@@ -3,6 +3,7 @@ using Robust.Shared.Upload;
 
 namespace Robust.Client.Upload;
 
+[InjectDependencies]
 public sealed partial class NetworkResourceManager : SharedNetworkResourceManager
 {
     [Dependency] private IBaseClient _client = default!;

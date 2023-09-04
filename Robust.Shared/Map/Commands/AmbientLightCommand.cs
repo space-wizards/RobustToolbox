@@ -9,6 +9,7 @@ namespace Robust.Shared.Map.Commands;
 /// <summary>
 /// Sets the ambient light for a particular map
 /// </summary>
+[InjectDependencies]
 public sealed partial class AmbientLightCommand : IConsoleCommand
 {
     [Dependency] private IMapManager _mapManager = default!;

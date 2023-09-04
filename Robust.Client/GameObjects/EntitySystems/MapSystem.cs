@@ -10,6 +10,7 @@ using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Client.GameObjects
 {
+    [InjectDependencies]
     public sealed partial class MapSystem : SharedMapSystem
     {
         [Dependency] private IMapManager _mapManager = default!;

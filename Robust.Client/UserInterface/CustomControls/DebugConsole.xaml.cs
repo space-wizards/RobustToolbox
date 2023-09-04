@@ -39,6 +39,7 @@ namespace Robust.Client.UserInterface.CustomControls
     // And also if Update() stops firing due to an exception loop the console will still work.
     // (At least from the main thread, which is what's throwing the exceptions..)
     [GenerateTypedNameReferences]
+    [InjectDependencies]
     public sealed partial class DebugConsole : Control, IDebugConsoleView, IPostInjectInit
     {
         [Dependency] private IClientConsoleHost _consoleHost = default!;

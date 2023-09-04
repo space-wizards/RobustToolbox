@@ -16,6 +16,7 @@ namespace Robust.Shared.Sandboxing
         object CreateInstance(Type type);
     }
 
+    [InjectDependencies]
     internal sealed partial class SandboxHelper : ISandboxHelper
     {
         [Dependency] private IModLoader _modLoader = default!;

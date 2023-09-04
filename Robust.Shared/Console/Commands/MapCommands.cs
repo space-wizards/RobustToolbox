@@ -8,6 +8,7 @@ using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Console.Commands;
 
+[InjectDependencies]
 sealed partial class AddMapCommand : LocalizedCommands
 {
     [Dependency] private IMapManager _map = default!;
@@ -38,6 +39,7 @@ sealed partial class AddMapCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 sealed partial class RemoveMapCommand : LocalizedCommands
 {
     [Dependency] private IMapManager _map = default!;
@@ -66,6 +68,7 @@ sealed partial class RemoveMapCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 sealed partial class RemoveGridCommand : LocalizedCommands
 {
     [Dependency] private IMapManager _map = default!;
@@ -94,6 +97,7 @@ sealed partial class RemoveGridCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 internal sealed partial class RunMapInitCommand : LocalizedCommands
 {
     [Dependency] private IMapManager _map = default!;
@@ -128,6 +132,7 @@ internal sealed partial class RunMapInitCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 internal sealed partial class ListMapsCommand : LocalizedCommands
 {
     [Dependency] private IMapManager _map = default!;
@@ -154,6 +159,7 @@ internal sealed partial class ListMapsCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 internal sealed partial class ListGridsCommand : LocalizedCommands
 {
     [Dependency] private IEntityManager _ent = default!;

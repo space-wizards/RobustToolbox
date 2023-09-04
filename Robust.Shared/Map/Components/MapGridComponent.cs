@@ -18,6 +18,7 @@ namespace Robust.Shared.Map.Components
 {
     [RegisterComponent]
     [NetworkedComponent]
+    [InjectDependencies]
     public sealed partial class MapGridComponent : Component
     {
         [Dependency] private IEntityManager _entManager = default!;

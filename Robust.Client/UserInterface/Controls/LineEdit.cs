@@ -17,6 +17,7 @@ namespace Robust.Client.UserInterface.Controls
     ///     Allows the user to input and modify a line of text.
     /// </summary>
     [Virtual]
+    [InjectDependencies]
     public partial class LineEdit : Control
     {
         [Dependency] private IClyde _clyde = default!;

@@ -18,6 +18,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
+    [InjectDependencies]
     public sealed partial class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
         [Dependency] private IPlayerManager _playerManager = default!;

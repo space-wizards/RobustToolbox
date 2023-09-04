@@ -6,6 +6,7 @@ using Robust.Shared.Network.Messages;
 
 namespace Robust.Client.Console
 {
+    [InjectDependencies]
     public sealed partial class ScriptClient : IScriptClient
     {
         [Dependency] private IClientConGroupController _conGroupController = default!;

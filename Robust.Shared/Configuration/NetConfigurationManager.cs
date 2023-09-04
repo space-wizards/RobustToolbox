@@ -65,6 +65,7 @@ namespace Robust.Shared.Configuration
     }
 
     /// <inheritdoc cref="INetConfigurationManager"/>
+    [InjectDependencies]
     internal abstract partial class NetConfigurationManager : ConfigurationManager, INetConfigurationManagerInternal
     {
         [Dependency] protected INetManager NetManager = null!;

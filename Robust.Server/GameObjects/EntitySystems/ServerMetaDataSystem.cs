@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.GameObjects;
 
+[InjectDependencies]
 public sealed partial class ServerMetaDataSystem : MetaDataSystem
 {
     [Dependency] private PvsSystem _pvsSystem = default!;

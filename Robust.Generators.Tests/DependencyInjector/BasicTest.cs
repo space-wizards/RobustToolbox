@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Robust.Generators.DependencyInjector;
 
 namespace Robust.Generators.Tests.DependencyInjector;
 
@@ -134,7 +135,7 @@ public sealed class BasicTest
     public void Test()
     {
         // Create an instance of the source generator.
-        var generator = new DependencyInjectorSourceGenerator();
+        var generator = new DependencyInjectorGenerator();
 
         // Source generators should be tested using 'GeneratorDriver'.
         var driver = CSharpGeneratorDriver.Create(generator);

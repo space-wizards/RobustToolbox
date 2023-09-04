@@ -12,6 +12,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.ServerHub;
 
+[InjectDependencies]
 internal sealed partial class HubManager
 {
     [Dependency] private IConfigurationManager _cfg = default!;

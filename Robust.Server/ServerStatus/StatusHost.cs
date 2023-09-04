@@ -27,6 +27,7 @@ using HttpListenerContext = SpaceWizards.HttpListener.HttpListenerContext;
 
 namespace Robust.Server.ServerStatus
 {
+    [InjectDependencies]
     internal sealed partial class StatusHost : IStatusHost, IDisposable
     {
         private const string Sawmill = "statushost";

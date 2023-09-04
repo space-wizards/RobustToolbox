@@ -6,6 +6,7 @@ using Robust.Shared.ContentPack;
 
 namespace Robust.Shared.Replays;
 
+[InjectDependencies]
 internal sealed partial class ReplayStartCommand : LocalizedCommands
 {
     [Dependency] private IReplayRecordingManager _replay = default!;
@@ -67,6 +68,7 @@ internal sealed partial class ReplayStartCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 internal sealed partial class ReplayStopCommand : LocalizedCommands
 {
     [Dependency] private IReplayRecordingManager _replay = default!;
@@ -87,6 +89,7 @@ internal sealed partial class ReplayStopCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 internal sealed partial class ReplayStatsCommand : LocalizedCommands
 {
     [Dependency] private IReplayRecordingManager _replay = default!;

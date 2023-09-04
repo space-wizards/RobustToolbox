@@ -6,6 +6,7 @@ using Robust.Shared.Localization;
 
 namespace Robust.Client.Console.Commands
 {
+    [InjectDependencies]
     public sealed partial class PhysicsOverlayCommands : LocalizedCommands
     {
         [Dependency] private IEntitySystemManager _entitySystems = default!;

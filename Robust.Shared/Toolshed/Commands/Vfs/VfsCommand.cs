@@ -11,6 +11,7 @@ namespace Robust.Shared.Toolshed.Commands.Vfs;
 /// </summary>
 /// <seealso cref="UserVfsLocVariableName"/>
 [PublicAPI]
+[InjectDependencies]
 public abstract partial class VfsCommand : ToolshedCommand
 {
     [Dependency] protected IResourceManager Resources = default!;

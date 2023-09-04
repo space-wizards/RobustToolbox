@@ -21,6 +21,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes
 {
+    [InjectDependencies]
     public abstract partial class PrototypeManager : IPrototypeManagerInternal
     {
         [Dependency] private IReflectionManager _reflectionManager = default!;

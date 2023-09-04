@@ -12,6 +12,7 @@ namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
+    [InjectDependencies]
     private sealed partial class Sdl2WindowingImpl : IWindowingImpl
     {
         [Dependency] private ILogManager _logManager = default!;

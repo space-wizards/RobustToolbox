@@ -32,6 +32,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.Console.Commands
 {
+    [InjectDependencies]
     internal sealed partial class DumpEntitiesCommand : LocalizedCommands
     {
         [Dependency] private IEntityManager _entityManager = default!;
@@ -48,6 +49,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class GetComponentRegistrationCommand : LocalizedCommands
     {
         [Dependency] private IComponentFactory _componentFactory = default!;
@@ -94,6 +96,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ToggleMonitorCommand : LocalizedCommands
     {
         [Dependency] private IUserInterfaceManager _uiMgr = default!;
@@ -178,6 +181,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ShowPositionsCommand : LocalizedCommands
     {
         [Dependency] private IEntitySystemManager _entitySystems = default!;
@@ -191,6 +195,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ShowRotationsCommand : LocalizedCommands
     {
         [Dependency] private IEntitySystemManager _entitySystems = default!;
@@ -204,6 +209,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ShowRayCommand : LocalizedCommands
     {
         [Dependency] private IEntitySystemManager _entitySystems = default!;
@@ -231,6 +237,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class DisconnectCommand : LocalizedCommands
     {
         [Dependency] private IClientNetManager _netManager = default!;
@@ -243,6 +250,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class EntityInfoCommand : LocalizedCommands
     {
         [Dependency] private IEntityManager _entityManager = default!;
@@ -294,6 +302,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class SnapGridGetCell : LocalizedCommands
     {
         [Dependency] private IMapManager _map = default!;
@@ -338,6 +347,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class SetPlayerName : LocalizedCommands
     {
         [Dependency] private IBaseClient _baseClient = default!;
@@ -358,6 +368,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class LoadResource : LocalizedCommands
     {
         [Dependency] private IResourceCache _res = default!;
@@ -395,6 +406,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ReloadResource : LocalizedCommands
     {
         [Dependency] private IResourceCache _res = default!;
@@ -428,6 +440,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class GridTileCount : LocalizedCommands
     {
         [Dependency] private IMapManager _map = default!;
@@ -459,6 +472,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class GuiDumpCommand : LocalizedCommands
     {
         [Dependency] private IUserInterfaceManager _ui = default!;
@@ -531,6 +545,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class SetClipboardCommand : LocalizedCommands
     {
         [Dependency] private IClipboardManager _clipboard = default!;
@@ -543,6 +558,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class GetClipboardCommand : LocalizedCommands
     {
         [Dependency] private IClipboardManager _clipboard = default!;
@@ -555,6 +571,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ToggleLight : LocalizedCommands
     {
         [Dependency] private ILightManager _light = default!;
@@ -568,6 +585,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ToggleFOV : LocalizedCommands
     {
         [Dependency] private IEyeManager _eye = default!;
@@ -580,6 +598,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ToggleHardFOV : LocalizedCommands
     {
         [Dependency] private ILightManager _light = default!;
@@ -593,6 +612,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ToggleShadows : LocalizedCommands
     {
         [Dependency] private ILightManager _light = default!;
@@ -606,6 +626,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ToggleLightBuf : LocalizedCommands
     {
         [Dependency] private ILightManager _light = default!;
@@ -619,6 +640,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ChunkInfoCommand : LocalizedCommands
     {
         [Dependency] private IEntityManager _entManager = default!;
@@ -646,6 +668,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ReloadShadersCommand : LocalizedCommands
     {
         [Dependency] private IResourceCacheInternal _res = default!;
@@ -811,6 +834,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class ClydeDebugLayerCommand : LocalizedCommands
     {
         [Dependency] private IClydeInternal _clyde = default!;
@@ -834,6 +858,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class GetKeyInfoCommand : LocalizedCommands
     {
         [Dependency] private IClydeInternal _clyde = default!;

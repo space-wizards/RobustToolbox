@@ -17,6 +17,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables
 {
+    [InjectDependencies]
     internal sealed partial class ServerViewVariablesManager : ViewVariablesManager, IServerViewVariablesInternal
     {
         [Dependency] private INetManager _netManager = default!;

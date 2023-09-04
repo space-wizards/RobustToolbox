@@ -15,6 +15,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
+    [InjectDependencies]
     public abstract partial class SharedTransformSystem : EntitySystem
     {
         [Dependency] private IGameTiming _gameTiming = default!;

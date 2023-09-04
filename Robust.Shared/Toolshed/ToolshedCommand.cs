@@ -44,6 +44,7 @@ namespace Robust.Shared.Toolshed;
 /// <seealso cref="CommandInvocationContextAttribute"/>
 /// <seealso cref="TakesPipedTypeAsGenericAttribute"/>
 [Reflect(false)]
+[InjectDependencies]
 public abstract partial class ToolshedCommand
 {
     [Dependency] protected ToolshedManager Toolshed = default!;

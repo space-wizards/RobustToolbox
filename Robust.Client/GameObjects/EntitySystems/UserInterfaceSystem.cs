@@ -8,6 +8,7 @@ using System;
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
+    [InjectDependencies]
     public sealed partial class UserInterfaceSystem : SharedUserInterfaceSystem
     {
         [Dependency] private IDynamicTypeFactory _dynamicTypeFactory = default!;

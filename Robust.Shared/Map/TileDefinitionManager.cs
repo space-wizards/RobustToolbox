@@ -7,6 +7,7 @@ using Robust.Shared.Random;
 namespace Robust.Shared.Map
 {
     [Virtual]
+    [InjectDependencies]
     internal partial class TileDefinitionManager : ITileDefinitionManager
     {
         [Dependency] private IPrototypeManager _prototypeManager = default!;

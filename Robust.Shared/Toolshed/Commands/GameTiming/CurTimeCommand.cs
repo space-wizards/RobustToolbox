@@ -5,6 +5,7 @@ using Robust.Shared.Timing;
 namespace Robust.Shared.Toolshed.Commands.GameTiming;
 
 [ToolshedCommand]
+[InjectDependencies]
 public sealed partial class CurTimeCommand : ToolshedCommand
 {
     [Dependency] private IGameTiming _gameTiming = default!;

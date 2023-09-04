@@ -19,6 +19,7 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Server.Placement
 {
+    [InjectDependencies]
     public sealed partial class PlacementManager : IPlacementManager
     {
         [Dependency] private IComponentFactory _factory = default!;

@@ -10,6 +10,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Configuration;
 
+[InjectDependencies]
 internal sealed partial class ClientNetConfigurationManager : NetConfigurationManager, IClientNetConfigurationManager
 {
     [Dependency] private IBaseClient _client = default!;

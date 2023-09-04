@@ -14,6 +14,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed;
 
+[InjectDependencies]
 internal sealed partial class ToolshedCommandImplementor
 {
     [Dependency] private ToolshedManager _toolshedManager = default!;

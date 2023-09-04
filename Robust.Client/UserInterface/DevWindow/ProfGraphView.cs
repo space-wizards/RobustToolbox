@@ -12,6 +12,7 @@ using Robust.Shared.Profiling;
 
 namespace Robust.Client.UserInterface;
 
+[InjectDependencies]
 internal sealed partial class ProfGraphView : Control
 {
     private const int HeightFps = 15;

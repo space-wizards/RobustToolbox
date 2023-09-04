@@ -21,6 +21,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Client.Replays.Playback;
 
+[InjectDependencies]
 internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
 {
     [Dependency] private ILogManager _logMan = default!;

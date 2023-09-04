@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.GameObjects
 {
+    [InjectDependencies]
     public sealed partial class MidiSystem : EntitySystem
     {
         [Dependency] private IMidiManager _midiManager = default!;

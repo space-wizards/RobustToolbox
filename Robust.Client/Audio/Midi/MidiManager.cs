@@ -29,6 +29,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Audio.Midi;
 
+[InjectDependencies]
 internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";

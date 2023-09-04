@@ -7,6 +7,7 @@ using Robust.Shared.Localization;
 namespace Robust.Shared.Console;
 
 [Obsolete("You should use ToolshedCommand instead.")]
+[InjectDependencies]
 public abstract partial class LocalizedCommands : IConsoleCommand
 {
     [Dependency] protected ILocalizationManager LocalizationManager = default!;

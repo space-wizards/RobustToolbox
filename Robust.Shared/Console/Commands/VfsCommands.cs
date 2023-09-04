@@ -4,6 +4,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands;
 
+[InjectDependencies]
 public sealed partial class VfsListCommand : LocalizedCommands
 {
     [Dependency] private IResourceManager _resourceManager = default!;

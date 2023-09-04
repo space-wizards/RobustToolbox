@@ -10,6 +10,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Physics
 {
+    [InjectDependencies]
     internal sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private IOverlayManager _overlay = default!;

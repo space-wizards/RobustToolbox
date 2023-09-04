@@ -11,6 +11,7 @@ namespace Robust.Client.GameStates;
 /// <summary>
 /// Tracks dirty entities on the client for the purposes of gamestatemanager.
 /// </summary>
+[InjectDependencies]
 public sealed partial class ClientDirtySystem : EntitySystem
 {
     [Dependency] private IClientGameTiming _timing = default!;

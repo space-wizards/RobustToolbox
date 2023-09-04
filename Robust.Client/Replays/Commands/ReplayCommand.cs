@@ -8,6 +8,7 @@ using Robust.Shared.Replays;
 
 namespace Robust.Client.Replays.Commands;
 
+[InjectDependencies]
 public abstract partial class BaseReplayCommand : LocalizedCommands
 {
     [Dependency] protected IReplayPlaybackManager PlaybackManager = default!;

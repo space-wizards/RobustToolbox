@@ -12,6 +12,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Server.Console.Commands
 {
+    [InjectDependencies]
     public sealed partial class SaveGridCommand : LocalizedCommands
     {
         [Dependency] private IEntityManager _ent = default!;
@@ -58,6 +59,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
+    [InjectDependencies]
     public sealed partial class LoadGridCommand : LocalizedCommands
     {
         [Dependency] private IEntitySystemManager _system = default!;
@@ -144,6 +146,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
+    [InjectDependencies]
     public sealed partial class SaveMap : LocalizedCommands
     {
         [Dependency] private IEntitySystemManager _system = default!;
@@ -206,6 +209,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
+    [InjectDependencies]
     public sealed partial class LoadMap : LocalizedCommands
     {
         [Dependency] private IEntitySystemManager _system = default!;

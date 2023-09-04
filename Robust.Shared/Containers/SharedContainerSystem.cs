@@ -12,6 +12,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
 {
+    [InjectDependencies]
     public abstract partial class SharedContainerSystem
     {
         [Dependency] private SharedPhysicsSystem _physics = default!;

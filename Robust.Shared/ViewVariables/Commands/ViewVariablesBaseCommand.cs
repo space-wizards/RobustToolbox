@@ -7,6 +7,7 @@ using Robust.Shared.Network;
 
 namespace Robust.Shared.ViewVariables.Commands;
 
+[InjectDependencies]
 public abstract partial class ViewVariablesBaseCommand : LocalizedCommands
 {
     [Dependency] protected INetManager _netMan = default!;

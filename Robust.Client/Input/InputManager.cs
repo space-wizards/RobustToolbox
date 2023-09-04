@@ -34,6 +34,7 @@ using static Robust.Client.Input.Keyboard;
 namespace Robust.Client.Input
 {
     [Virtual]
+    [InjectDependencies]
     internal partial class InputManager : IInputManager
     {
         // This is for both userdata and resources.
@@ -918,6 +919,7 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
+    [InjectDependencies]
     internal sealed partial class BindCommand : LocalizedCommands
     {
         [Dependency] private IInputManager _inputManager = default!;
@@ -992,6 +994,7 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
+    [InjectDependencies]
     internal sealed partial class SaveBindCommand : LocalizedCommands
     {
         [Dependency] private IInputManager _inputManager = default!;

@@ -13,6 +13,7 @@ namespace Robust.Shared.Upload;
 /// <summary>
 ///     Manages sending runtime-loaded prototypes from game staff to clients.
 /// </summary>
+[InjectDependencies]
 public abstract partial class SharedPrototypeLoadManager : IGamePrototypeLoadManager
 {
     [Dependency] private IReplayRecordingManager _replay = default!;

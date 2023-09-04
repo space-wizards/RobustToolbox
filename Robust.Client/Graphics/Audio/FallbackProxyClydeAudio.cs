@@ -14,6 +14,7 @@ namespace Robust.Client.Graphics.Audio
     ///     For "start ss14 with no audio devices" Smugleaf
     /// </summary>
     [UsedImplicitly]
+    [InjectDependencies]
     internal sealed partial class FallbackProxyClydeAudio : ProxyClydeAudio
     {
         [Dependency] private IDependencyCollection _deps = default!;

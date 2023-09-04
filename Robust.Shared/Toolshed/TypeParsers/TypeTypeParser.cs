@@ -20,6 +20,7 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 
 
 // TODO: This should be able to parse more types, currently it only knows the ones in SimpleTypes.
+[InjectDependencies]
 internal sealed partial class TypeTypeParser : TypeParser<Type>
 {
     [Dependency] private IModLoader _modLoader = default!;

@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
+    [InjectDependencies]
     internal sealed partial class ClientSpawnCommand : LocalizedCommands
     {
         [Dependency] private IPlayerManager _playerManager = default!;

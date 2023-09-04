@@ -36,6 +36,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
+    [InjectDependencies]
     public sealed partial class NetManager : IClientNetManager, IServerNetManager, IPostInjectInit
     {
         internal const int SharedKeyLength = CryptoAeadXChaCha20Poly1305Ietf.KeyBytes; // 32 bytes

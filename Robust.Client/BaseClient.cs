@@ -23,6 +23,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client
 {
     /// <inheritdoc />
+    [InjectDependencies]
     public sealed partial class BaseClient : IBaseClient, IPostInjectInit
     {
         [Dependency] private IClientNetManager _net = default!;

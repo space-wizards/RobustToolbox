@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Replays.Commands;
 
 [UsedImplicitly]
+[InjectDependencies]
 public sealed partial class ReplaySkipCommand : BaseReplayCommand
 {
     [Dependency] private IConfigurationManager _cfg = default!;

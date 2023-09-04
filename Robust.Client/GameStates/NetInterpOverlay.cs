@@ -12,6 +12,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
+    [InjectDependencies]
     internal sealed partial class NetInterpOverlay : Overlay
     {
         [Dependency] private IEntityManager _entityManager = default!;
@@ -82,6 +83,7 @@ namespace Robust.Client.GameStates
             }
         }
 
+        [InjectDependencies]
         private sealed partial class NetShowInterpCommand : LocalizedCommands
         {
             [Dependency] private IEntityManager _entManager = default!;

@@ -11,6 +11,7 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.Console.Commands;
 
+[InjectDependencies]
 public sealed partial class ScaleCommand : LocalizedCommands
 {
     [Dependency] private IEntityManager _entityManager = default!;

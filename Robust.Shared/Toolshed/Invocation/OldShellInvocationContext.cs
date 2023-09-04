@@ -8,6 +8,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.Invocation;
 
 /// <inheritdoc />
+[InjectDependencies]
 internal sealed partial class OldShellInvocationContext : IInvocationContext
 {
     [field: Dependency]

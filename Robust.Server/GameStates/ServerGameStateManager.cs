@@ -31,6 +31,7 @@ namespace Robust.Server.GameStates
 {
     /// <inheritdoc cref="IServerGameStateManager"/>
     [UsedImplicitly]
+    [InjectDependencies]
     public sealed partial class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
         // Mapping of net UID of clients -> last known acked state.

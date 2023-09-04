@@ -11,6 +11,7 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Server.Prototypes
 {
+    [InjectDependencies]
     public sealed partial class ServerPrototypeManager : PrototypeManager
     {
         [Dependency] private IPlayerManager _playerManager = default!;

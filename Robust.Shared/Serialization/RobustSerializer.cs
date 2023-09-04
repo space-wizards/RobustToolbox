@@ -13,6 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization
 {
+    [InjectDependencies]
     internal abstract partial class RobustSerializer : IRobustSerializerInternal
     {
         [Dependency] private IReflectionManager _reflectionManager = default!;

@@ -31,6 +31,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
 {
+    [InjectDependencies]
     internal sealed partial class UserInterfaceManager : IUserInterfaceManagerInternal
     {
         [Dependency] private IDependencyCollection _rootDependencies = default!;

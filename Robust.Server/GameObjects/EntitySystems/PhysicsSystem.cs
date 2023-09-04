@@ -12,6 +12,7 @@ using Robust.Shared.Physics.Systems;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
+    [InjectDependencies]
     public sealed partial class PhysicsSystem : SharedPhysicsSystem
     {
         [Dependency] private IConfigurationManager _configurationManager = default!;

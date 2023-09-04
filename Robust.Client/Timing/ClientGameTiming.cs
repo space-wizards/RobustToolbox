@@ -6,6 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Timing
 {
+    [InjectDependencies]
     public sealed partial class ClientGameTiming : GameTiming, IClientGameTiming
     {
         [Dependency] private IClientNetManager _netManager = default!;

@@ -14,6 +14,7 @@ namespace Robust.Client.UserInterface.Controls
     ///     A control to handle output of message-by-message output panels, like the debug console and chat panel.
     /// </summary>
     [Virtual]
+    [InjectDependencies]
     public partial class OutputPanel : Control
     {
         [Dependency] private MarkupTagManager _tagManager = default!;

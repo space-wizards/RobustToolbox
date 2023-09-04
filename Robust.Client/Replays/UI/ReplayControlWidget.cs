@@ -16,6 +16,7 @@ namespace Robust.Client.Replays.UI;
 /// This is a simple replay demonstration widget that has basic controls for manipulating a replay.
 /// </summary>
 [GenerateTypedNameReferences]
+[InjectDependencies]
 public sealed partial class ReplayControlWidget : UIWidget // AKA Tardis - The funny time control box.
 {
     [Dependency] private IReplayPlaybackManager _playback = default!;

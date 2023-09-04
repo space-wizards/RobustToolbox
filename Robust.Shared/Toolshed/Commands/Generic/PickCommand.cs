@@ -6,6 +6,7 @@ using Robust.Shared.Random;
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
 [ToolshedCommand]
+[InjectDependencies]
 public sealed partial class PickCommand : ToolshedCommand
 {
     [Dependency] private IRobustRandom _random = default!;

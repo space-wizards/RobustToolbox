@@ -47,6 +47,7 @@ namespace Robust.Client.Console
     }
 
     /// <inheritdoc cref="IClientConsoleHost" />
+    [InjectDependencies]
     internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal, IPostInjectInit
     {
         [Dependency] private IClientConGroupController _conGroup = default!;

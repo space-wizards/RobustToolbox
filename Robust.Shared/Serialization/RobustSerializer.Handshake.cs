@@ -4,7 +4,6 @@ using Robust.Shared.Network;
 
 namespace Robust.Shared.Serialization
 {
-
     internal abstract partial class RobustSerializer
     {
         /// <summary>

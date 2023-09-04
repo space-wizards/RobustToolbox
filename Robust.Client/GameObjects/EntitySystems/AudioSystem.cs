@@ -27,6 +27,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameObjects;
 
 [UsedImplicitly]
+[InjectDependencies]
 public sealed partial class AudioSystem : SharedAudioSystem
 {
     [Dependency] private IReplayRecordingManager _replayRecording = default!;

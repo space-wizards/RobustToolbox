@@ -11,6 +11,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Upload.Commands;
 
+[InjectDependencies]
 public sealed partial class UploadFolderCommand : IConsoleCommand
 {
     public string Command => "uploadfolder";

@@ -10,6 +10,7 @@ namespace Robust.Server.Upload;
 /// <summary>
 ///     Manages sending runtime-loaded prototypes from game staff to clients.
 /// </summary>
+[InjectDependencies]
 public sealed partial class GamePrototypeLoadManager : SharedPrototypeLoadManager
 {
     [Dependency] private IServerNetManager _netManager = default!;

@@ -8,6 +8,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Console.Commands
 {
     [UsedImplicitly]
+    [InjectDependencies]
     internal sealed partial class ExecCommand : LocalizedCommands
     {
         private static readonly Regex CommentRegex = new Regex(@"^\s*#");

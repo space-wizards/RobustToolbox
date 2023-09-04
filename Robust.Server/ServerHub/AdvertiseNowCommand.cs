@@ -3,6 +3,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.ServerHub;
 
+[InjectDependencies]
 internal sealed partial class AdvertiseNowCommand : LocalizedCommands
 {
     [Dependency] private HubManager _hubManager = default!;

@@ -13,6 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
+[InjectDependencies]
 internal sealed partial class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
     where T : class, IPrototype
 {

@@ -32,6 +32,7 @@ using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteS
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
+    [InjectDependencies]
     public sealed partial class SpriteComponent : Component, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
         [Dependency] private IResourceCache resourceCache = default!;

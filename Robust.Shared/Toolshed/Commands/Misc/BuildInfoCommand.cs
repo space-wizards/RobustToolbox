@@ -6,6 +6,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
+[InjectDependencies]
 internal sealed partial class BuildInfoCommand : ToolshedCommand
 {
     [Dependency] private IConfigurationManager _cfg = default!;

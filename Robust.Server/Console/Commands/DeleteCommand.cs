@@ -5,6 +5,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.Console.Commands
 {
+    [InjectDependencies]
     public sealed partial class DeleteCommand : LocalizedCommands
     {
         [Dependency] private IEntityManager _entityManager = default!;

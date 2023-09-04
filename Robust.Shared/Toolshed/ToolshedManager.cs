@@ -24,6 +24,7 @@ namespace Robust.Shared.Toolshed;
 /// </summary>
 /// <seealso cref="ToolshedCommand"/>
 /// <seealso cref="IInvocationContext"/>
+[InjectDependencies]
 public sealed partial class ToolshedManager
 {
     [Dependency] private IDynamicTypeFactoryInternal _typeFactory = default!;

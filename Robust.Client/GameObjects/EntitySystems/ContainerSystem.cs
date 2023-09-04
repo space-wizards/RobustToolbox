@@ -16,6 +16,7 @@ using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
 {
+    [InjectDependencies]
     public sealed partial class ContainerSystem : SharedContainerSystem
     {
         [Dependency] private INetManager _netMan = default!;

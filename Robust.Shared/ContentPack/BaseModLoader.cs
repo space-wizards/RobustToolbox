@@ -9,6 +9,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.ContentPack
 {
+    [InjectDependencies]
     internal abstract partial class BaseModLoader : IPostInjectInit
     {
         [Dependency] protected IReflectionManager ReflectionManager = default!;

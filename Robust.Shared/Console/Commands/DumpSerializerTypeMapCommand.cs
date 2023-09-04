@@ -4,6 +4,7 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Console.Commands;
 
+[InjectDependencies]
 internal sealed partial class DumpSerializerTypeMapCommand : LocalizedCommands
 {
     [Dependency] private IRobustSerializerInternal _robustSerializer = default!;

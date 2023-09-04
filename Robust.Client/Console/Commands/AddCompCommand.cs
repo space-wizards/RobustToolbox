@@ -6,6 +6,7 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
+    [InjectDependencies]
     internal sealed partial class AddCompCommand : LocalizedCommands
     {
         [Dependency] private IComponentFactory _componentFactory = default!;
@@ -34,6 +35,7 @@ namespace Robust.Client.Console.Commands
     }
 
     [UsedImplicitly]
+    [InjectDependencies]
     internal sealed partial class RemoveCompCommand : LocalizedCommands
     {
         [Dependency] private IComponentFactory _componentFactory = default!;

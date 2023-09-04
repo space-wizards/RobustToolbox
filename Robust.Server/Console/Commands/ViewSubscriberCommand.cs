@@ -7,6 +7,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Server.Console.Commands
 {
+    [InjectDependencies]
     public sealed partial class AddViewSubscriberCommand : LocalizedCommands
     {
         [Dependency] private IEntityManager _entities = default!;
@@ -44,6 +45,7 @@ namespace Robust.Server.Console.Commands
             _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().AddViewSubscriber(uid, playerSession);
         }
 
+        [InjectDependencies]
         public sealed partial class RemoveViewSubscriberCommand : LocalizedCommands
         {
             [Dependency] private IEntityManager _entities = default!;

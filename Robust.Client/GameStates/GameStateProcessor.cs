@@ -12,6 +12,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
+    [InjectDependencies]
     internal sealed partial class GameStateProcessor : IGameStateProcessor, IPostInjectInit
     {
         [Dependency] private ILogManager _logMan = default!;

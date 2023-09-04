@@ -21,6 +21,7 @@ namespace Robust.Shared.GameObjects
     ///     This class is instantiated by the <c>EntitySystemManager</c>, and any IoC Dependencies will be resolved.
     /// </remarks>
     [Reflect(false), PublicAPI]
+    [InjectDependencies]
     public abstract partial class EntitySystem : IEntitySystem, IPostInjectInit
     {
         [Dependency] protected EntityManager EntityManager;

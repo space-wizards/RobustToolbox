@@ -18,6 +18,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems
 {
+    [InjectDependencies]
     public abstract partial class SharedBroadphaseSystem : EntitySystem
     {
         [Dependency] private IConfigurationManager _cfg = default!;

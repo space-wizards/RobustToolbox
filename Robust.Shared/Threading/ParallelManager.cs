@@ -25,6 +25,7 @@ internal interface IParallelManagerInternal : IParallelManager
     void Initialize();
 }
 
+[InjectDependencies]
 internal sealed partial class ParallelManager : IParallelManagerInternal
 {
     [Dependency] private IConfigurationManager _cfg = default!;

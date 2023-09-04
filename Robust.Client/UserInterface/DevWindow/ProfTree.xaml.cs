@@ -12,6 +12,7 @@ using Robust.Shared.Profiling;
 namespace Robust.Client.UserInterface;
 
 [GenerateTypedNameReferences]
+[InjectDependencies]
 internal sealed partial class ProfTree : Control
 {
     public const float TreeLevelMargin = 16;

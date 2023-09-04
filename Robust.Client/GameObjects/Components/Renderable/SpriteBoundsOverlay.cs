@@ -20,6 +20,7 @@ namespace Robust.Client.GameObjects
         }
     }
 
+    [InjectDependencies]
     public sealed partial class SpriteBoundsSystem : EntitySystem
     {
         [Dependency] private IEntityManager _entityManager = default!;

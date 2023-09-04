@@ -29,6 +29,7 @@ using static Robust.Shared.Network.Messages.MsgScriptCompletionResponse;
 
 namespace Robust.Server.Scripting
 {
+    [InjectDependencies]
     internal sealed partial class ScriptHost : IScriptHost
     {
         [Dependency] private IServerNetManager _netManager = default!;

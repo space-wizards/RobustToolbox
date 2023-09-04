@@ -5,6 +5,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.GameObjects;
 
+[InjectDependencies]
 public sealed partial class EyeSystem : SharedEyeSystem
 {
     [Dependency] private IEyeManager _eyeManager = default!;

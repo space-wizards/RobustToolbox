@@ -18,6 +18,7 @@ using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.Prototypes
 {
+    [InjectDependencies]
     public sealed partial class ClientPrototypeManager : PrototypeManager
     {
         [Dependency] private IClyde _clyde = default!;

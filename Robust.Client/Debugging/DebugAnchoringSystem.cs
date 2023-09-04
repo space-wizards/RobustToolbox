@@ -13,6 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Debugging
 {
+    [InjectDependencies]
     public sealed partial class DebugAnchoringSystem : EntitySystem
     {
         [Dependency] private IEyeManager _eyeManager = default!;

@@ -16,6 +16,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems;
 
+[InjectDependencies]
 public abstract partial class SharedJointSystem : EntitySystem
 {
     [Dependency] private SharedContainerSystem _container = default!;

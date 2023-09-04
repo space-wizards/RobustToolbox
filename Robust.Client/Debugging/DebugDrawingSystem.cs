@@ -10,6 +10,7 @@ namespace Robust.Client.Debugging
     /// <summary>
     /// A collection of visual debug overlays for the client game.
     /// </summary>
+    [InjectDependencies]
     public sealed partial class DebugDrawingSystem : EntitySystem
     {
         [Dependency] private IOverlayManager _overlayManager = default!;

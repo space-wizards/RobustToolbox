@@ -29,11 +29,13 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public abstract class ESystemBase2 : ESystemBase { }
         public sealed class ESystemB : ESystemBase2 { }
 
+        [InjectDependencies]
         public sealed partial class ESystemDepA : ESystemBase
         {
             [Dependency] public ESystemDepB ESystemDepB = default!;
         }
 
+        [InjectDependencies]
         public sealed partial class ESystemDepB : ESystemBase
         {
             [Dependency] public ESystemDepA ESystemDepA = default!;

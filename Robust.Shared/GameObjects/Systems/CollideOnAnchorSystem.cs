@@ -4,6 +4,7 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Shared.GameObjects
 {
+    [InjectDependencies]
     public sealed partial class CollideOnAnchorSystem : EntitySystem
     {
         [Dependency] private SharedPhysicsSystem _physics = default!;

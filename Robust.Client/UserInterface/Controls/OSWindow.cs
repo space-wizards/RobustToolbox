@@ -13,6 +13,7 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     /// <seealso cref="BaseWindow"/>
     [Virtual]
+    [InjectDependencies]
     public partial class OSWindow : Control
     {
         [Dependency] private IClyde _clyde = default!;

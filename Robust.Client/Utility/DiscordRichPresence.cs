@@ -11,6 +11,7 @@ using LogLevel = DiscordRPC.Logging.LogLevel;
 
 namespace Robust.Client.Utility
 {
+    [InjectDependencies]
     internal sealed partial class DiscordRichPresence : IDiscordRichPresence
     {
         private static RichPresence _defaultPresence = new() {};

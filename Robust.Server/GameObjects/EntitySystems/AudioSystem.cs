@@ -10,6 +10,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Server.GameObjects;
 [UsedImplicitly]
+[InjectDependencies]
 public sealed partial class AudioSystem : SharedAudioSystem
 {
     [Dependency] private TransformSystem _transform = default!;

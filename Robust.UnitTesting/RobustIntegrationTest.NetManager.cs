@@ -16,6 +16,7 @@ namespace Robust.UnitTesting
 {
     public partial class RobustIntegrationTest
     {
+        [InjectDependencies]
         internal sealed partial class IntegrationNetManager : IClientNetManager, IServerNetManager
         {
             [Dependency] private IGameTiming _gameTiming = default!;

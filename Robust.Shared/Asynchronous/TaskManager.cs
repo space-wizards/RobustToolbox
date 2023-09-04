@@ -6,6 +6,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Asynchronous
 {
+    [InjectDependencies]
     internal sealed partial class TaskManager : ITaskManager
     {
         private RobustSynchronizationContext _mainThreadContext = default!;

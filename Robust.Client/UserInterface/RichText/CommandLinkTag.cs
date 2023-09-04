@@ -8,6 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
+[InjectDependencies]
 public sealed partial class CommandLinkTag : IMarkupTag
 {
     [Dependency] private IClientConsoleHost _clientConsoleHost = default!;

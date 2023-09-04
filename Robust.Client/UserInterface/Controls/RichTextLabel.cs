@@ -10,6 +10,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.UserInterface.Controls
 {
     [Virtual]
+    [InjectDependencies]
     public partial class RichTextLabel : Control
     {
         [Dependency] private MarkupTagManager _tagManager = default!;

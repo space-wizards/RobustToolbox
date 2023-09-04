@@ -13,6 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.ViewVariables;
 
+[InjectDependencies]
 internal abstract partial class ViewVariablesManager : IViewVariablesManager, IPostInjectInit
 {
     [Dependency] private ISerializationManager _serMan = default!;

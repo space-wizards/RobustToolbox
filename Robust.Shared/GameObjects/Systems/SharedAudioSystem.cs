@@ -8,6 +8,8 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Robust.Shared.GameObjects;
+
+[InjectDependencies]
 public abstract partial class SharedAudioSystem : EntitySystem
 {
     [Dependency] protected IConfigurationManager CfgManager = default!;

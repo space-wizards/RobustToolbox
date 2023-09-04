@@ -11,6 +11,7 @@ using Robust.Shared.Timing;
 namespace Robust.Shared.Physics.Controllers
 {
     [MeansImplicitUse]
+    [InjectDependencies]
     public abstract partial class VirtualController : EntitySystem
     {
         [Dependency] protected SharedPhysicsSystem PhysicsSystem = default!;

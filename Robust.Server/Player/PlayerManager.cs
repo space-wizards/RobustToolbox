@@ -27,6 +27,7 @@ namespace Robust.Server.Player
     /// <summary>
     ///     This class will manage connected player sessions.
     /// </summary>
+    [InjectDependencies]
     public sealed partial class PlayerManager : IPlayerManager
     {
         private static readonly Gauge PlayerCountMetric = Metrics

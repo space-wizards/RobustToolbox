@@ -7,6 +7,7 @@ namespace Robust.Server.GameStates;
 ///     Placeholder system to expose some parts of the internal <see cref="PvsSystem"/> that allows entities to ignore
 ///     normal PVS rules, such that they are always sent to clients.
 /// </summary>
+[Shared.IoC.InjectDependencies]
 public sealed partial class PvsOverrideSystem : EntitySystem
 {
     [Shared.IoC.Dependency] private PvsSystem _pvs = default!;

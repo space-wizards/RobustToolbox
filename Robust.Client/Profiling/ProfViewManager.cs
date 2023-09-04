@@ -10,6 +10,7 @@ namespace Robust.Client.Profiling;
 /// <summary>
 /// Manager for managing recording and snapshots of profiles, consuming shared <see cref="ProfManager"/>
 /// </summary>
+[InjectDependencies]
 public sealed partial class ProfViewManager
 {
     [Dependency]
@@ -121,6 +122,7 @@ public sealed partial class ProfViewManager
     }
 }
 
+[InjectDependencies]
 public sealed partial class ProfSnapshotCommand : LocalizedCommands
 {
     [Dependency] private ProfViewManager _profView = default!;

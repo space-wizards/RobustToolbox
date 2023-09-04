@@ -8,6 +8,7 @@ namespace Robust.Client.GameObjects;
 /// <summary>
 ///     A generic visualizer system that modifies sprite layer data.
 /// </summary>
+[InjectDependencies]
 public sealed partial class GenericVisualizerSystem : VisualizerSystem<GenericVisualizerComponent>
 {
     [Dependency] private IReflectionManager _refMan = default!;

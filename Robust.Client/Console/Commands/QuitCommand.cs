@@ -14,6 +14,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    [InjectDependencies]
     sealed partial class QuitCommand : LocalizedCommands
     {
         [Dependency] private IGameController _gameController = default!;

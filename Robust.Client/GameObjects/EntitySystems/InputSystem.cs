@@ -21,6 +21,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
+    [InjectDependencies]
     public sealed partial class InputSystem : SharedInputSystem, IPostInjectInit
     {
         [Dependency] private IInputManager _inputManager = default!;

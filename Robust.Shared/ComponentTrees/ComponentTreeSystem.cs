@@ -17,6 +17,7 @@ namespace Robust.Shared.ComponentTrees;
 ///     Keeps track of <see cref="DynamicTree{T}"/>s for various rendering-related components.
 /// </summary>
 [UsedImplicitly]
+[InjectDependencies]
 public abstract partial class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     where TTreeComp : Component, IComponentTreeComponent<TComp>, new()
     where TComp : Component, IComponentTreeEntry<TComp>, new()

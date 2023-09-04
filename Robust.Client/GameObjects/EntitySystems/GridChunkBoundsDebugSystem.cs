@@ -12,6 +12,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
+    [InjectDependencies]
     public sealed partial class GridChunkBoundsDebugSystem : EntitySystem
     {
         [Dependency] private IEyeManager _eyeManager = default!;

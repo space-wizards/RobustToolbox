@@ -4,6 +4,7 @@ using Robust.Shared.Network;
 
 namespace Robust.Client.Console.Commands
 {
+    [InjectDependencies]
     internal sealed partial class SendGarbageCommand : LocalizedCommands
     {
         [Dependency] private IClientNetManager _netManager = default!;

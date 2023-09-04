@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Configuration
 {
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
+    [InjectDependencies]
     internal sealed partial class CVarCommand : LocalizedCommands
     {
         [Dependency] private IConfigurationManager _cfg = default!;

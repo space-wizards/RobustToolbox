@@ -20,6 +20,7 @@ namespace Robust.Client.UserInterface
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     [SuppressMessage("ReSharper", "CommentTypo")]
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
+    [InjectDependencies]
     internal sealed partial class FileDialogManager : IFileDialogManager
     {
         // Uses nativefiledialog to open the file dialogs cross platform.

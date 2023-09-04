@@ -34,6 +34,7 @@ namespace Robust.Client.UserInterface.Controls;
 /// Cursor positions and such should never be inside a surrogate pair, however.
 /// </para>
 /// </remarks>
+[InjectDependencies]
 public sealed partial class TextEdit : Control
 {
     [Dependency] private IClipboardManager _clipboard = null!;
@@ -1543,6 +1544,7 @@ public sealed partial class TextEdit : Control
 //
 
 // bind F12 Command textedit_ropeviz
+[InjectDependencies]
 internal sealed partial class TextEditRopeVizCommand : IConsoleCommand
 {
     [Dependency] private IUserInterfaceManager _ui = default!;
@@ -1561,6 +1563,7 @@ internal sealed partial class TextEditRopeVizCommand : IConsoleCommand
 }
 
 // bind F11 Command textedit_rebalance
+[InjectDependencies]
 internal sealed partial class TextEditRebalanceCommand : IConsoleCommand
 {
     [Dependency] private IUserInterfaceManager _ui = default!;
@@ -1579,6 +1582,7 @@ internal sealed partial class TextEditRebalanceCommand : IConsoleCommand
 }
 
 // bind F10 Command textedit_debugoverlay
+[InjectDependencies]
 internal sealed partial class TextEditDebugOverlayCommand : IConsoleCommand
 {
     [Dependency] private IUserInterfaceManager _ui = default!;
@@ -1597,6 +1601,7 @@ internal sealed partial class TextEditDebugOverlayCommand : IConsoleCommand
 }
 
 // bind F9 Command textedit_queuelinebreak
+[InjectDependencies]
 internal sealed partial class TextEditQueueLineBreakCommand : IConsoleCommand
 {
     [Dependency] private IUserInterfaceManager _ui = default!;

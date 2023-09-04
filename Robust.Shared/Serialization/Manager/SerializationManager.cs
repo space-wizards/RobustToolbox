@@ -16,6 +16,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
+    [InjectDependencies]
     public sealed partial class SerializationManager : ISerializationManager
     {
         [IoC.Dependency] private IReflectionManager _reflectionManager = default!;

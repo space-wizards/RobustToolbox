@@ -12,6 +12,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
 {
+    [InjectDependencies]
     public abstract partial class ReflectionManager : IReflectionManager
     {
         [Dependency] private ILogManager _logMan = default!;

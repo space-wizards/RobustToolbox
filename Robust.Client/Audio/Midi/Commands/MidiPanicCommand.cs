@@ -4,6 +4,7 @@ using Robust.Shared.Localization;
 
 namespace Robust.Client.Audio.Midi.Commands;
 
+[InjectDependencies]
 public sealed partial class MidiPanicCommand : LocalizedCommands
 {
     [Dependency] private IMidiManager _midiManager = default!;

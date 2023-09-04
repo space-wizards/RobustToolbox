@@ -6,6 +6,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
 {
+    [InjectDependencies]
     public sealed partial class PointLightSystem : SharedPointLightSystem
     {
         [Dependency] private IResourceCache _resourceCache = default!;

@@ -8,6 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
+    [InjectDependencies]
     internal sealed partial class DebugClydePanel : PanelContainer
     {
         [Dependency] private IClydeInternal _clydeInternal = default!;

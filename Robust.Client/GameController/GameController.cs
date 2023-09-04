@@ -45,6 +45,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client
 {
+    [InjectDependencies]
     internal sealed partial class GameController : IGameControllerInternal
     {
         [Dependency] private INetConfigurationManagerInternal _configurationManager = default!;

@@ -9,6 +9,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 
 namespace Robust.Client.UserInterface;
+
 internal sealed partial class UserInterfaceManager
 {
     private readonly List<Control> _modalStack = new();

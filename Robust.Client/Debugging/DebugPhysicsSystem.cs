@@ -69,6 +69,7 @@ using Robust.Shared.Physics.Systems;
 
 namespace Robust.Client.Debugging
 {
+    [InjectDependencies]
     public sealed partial class DebugPhysicsSystem : SharedDebugPhysicsSystem
     {
         /*

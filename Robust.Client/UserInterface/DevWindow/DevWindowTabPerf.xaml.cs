@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 namespace Robust.Client.UserInterface;
 
 [GenerateTypedNameReferences]
+[InjectDependencies]
 public sealed partial class DevWindowTabPerf : Control
 {
     [Dependency] private ProfViewManager _profViewMgr = default!;

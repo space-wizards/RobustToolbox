@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Physics;
 
+[InjectDependencies]
 public sealed partial class GridSplitVisualCommand : LocalizedCommands
 {
     [Dependency] private IEntitySystemManager _systemManager = default!;

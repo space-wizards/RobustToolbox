@@ -6,6 +6,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.State
 {
+    [InjectDependencies]
     internal sealed partial class StateManager : IStateManager
     {
         [Dependency] private IDynamicTypeFactory _typeFactory = default!;

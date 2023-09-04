@@ -12,6 +12,7 @@ using Robust.Shared.Maths;
 namespace Robust.Client.Graphics
 {
     /// <inheritdoc />
+    [InjectDependencies]
     public sealed partial class EyeManager : IEyeManager
     {
         // If you modify this make sure to edit the value in the Robust.Shared.Audio.AudioParams struct default too!

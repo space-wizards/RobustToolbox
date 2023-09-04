@@ -24,6 +24,7 @@ namespace Robust.Server.Physics
     /// <summary>
     /// Handles generating fixtures for MapGrids.
     /// </summary>
+    [InjectDependencies]
     public sealed partial class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private IMapManager _mapManager = default!;

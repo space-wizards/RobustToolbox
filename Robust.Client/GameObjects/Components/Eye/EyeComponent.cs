@@ -10,6 +10,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent, ComponentReference(typeof(SharedEyeComponent))]
+    [InjectDependencies]
     public sealed partial class EyeComponent : SharedEyeComponent
     {
         [Dependency] private IEyeManager _eyeManager = default!;

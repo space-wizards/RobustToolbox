@@ -9,6 +9,7 @@ using Robust.Shared.Log;
 
 namespace Robust.Shared.Exceptions
 {
+    [InjectDependencies]
     internal sealed partial class RuntimeLog : IRuntimeLog, IPostInjectInit
     {
         [Dependency] private ILogManager _logManager = default!;

@@ -25,6 +25,7 @@ namespace Robust.Client.Console.Commands
     }
 #endif
 
+    [InjectDependencies]
     internal sealed partial class ServerScriptCommand : LocalizedCommands
     {
         [Dependency] private IScriptClient _scriptClient = default!;

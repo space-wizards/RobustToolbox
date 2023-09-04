@@ -160,6 +160,7 @@ namespace Robust.Shared.IoC
     }
 
     /// <inheritdoc />
+    [InjectDependencies]
     internal sealed partial class DynamicTypeFactory : IDynamicTypeFactoryInternal
     {
         // https://blog.ploeh.dk/2012/03/15/ImplementinganAbstractFactory/

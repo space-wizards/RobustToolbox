@@ -16,6 +16,7 @@ using static Robust.Client.UserInterface.Controls.LineEdit;
 
 namespace Robust.Client.UserInterface.Controllers.Implementations;
 
+[InjectDependencies]
 public sealed partial class EntitySpawningUIController : UIController
 {
     [Dependency] private IPlacementManager _placement = default!;

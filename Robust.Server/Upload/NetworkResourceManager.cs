@@ -10,6 +10,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.Upload;
 
+[InjectDependencies]
 public sealed partial class NetworkResourceManager : SharedNetworkResourceManager
 {
     [Dependency] private IPlayerManager _playerManager = default!;

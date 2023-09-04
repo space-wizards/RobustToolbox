@@ -19,6 +19,7 @@ using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.Graphics.Audio
 {
+    [Robust.Shared.IoC.InjectDependencies]
     internal partial class ClydeAudio
     {
         [Robust.Shared.IoC.Dependency] private IConfigurationManager _cfg = default!;

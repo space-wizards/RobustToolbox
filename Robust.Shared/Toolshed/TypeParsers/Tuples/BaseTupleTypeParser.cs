@@ -11,6 +11,7 @@ using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.TypeParsers.Tuples;
 
+[InjectDependencies]
 public abstract partial class BaseTupleTypeParser<TParses> : TypeParser<TParses>
     where TParses: ITuple
 {

@@ -11,6 +11,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers.Math;
 
+[InjectDependencies]
 public abstract partial class SpanLikeTypeParser<T, TElem> : TypeParser<T>
     where T : notnull
     where TElem : unmanaged

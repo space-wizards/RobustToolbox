@@ -14,6 +14,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.Replays.Commands;
 
 [UsedImplicitly]
+[InjectDependencies]
 public sealed partial class ReplayLoadCommand : BaseReplayCommand
 {
     [Dependency] private IResourceManager _resMan = default!;

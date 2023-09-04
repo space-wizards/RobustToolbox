@@ -16,6 +16,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Robust.Client.ResourceManagement
 {
+    [InjectDependencies]
     internal partial class ResourceCache
     {
         [Dependency] private IClyde _clyde = default!;

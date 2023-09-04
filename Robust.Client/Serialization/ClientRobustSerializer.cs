@@ -4,6 +4,7 @@ using System;
 
 namespace Robust.Client.Serialization;
 
+[InjectDependencies]
 internal sealed partial class ClientRobustSerializer : RobustSerializer, IClientRobustSerializer
 {
     [Dependency] private IBaseClient _client = default!;

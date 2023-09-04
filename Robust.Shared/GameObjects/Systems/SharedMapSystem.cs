@@ -12,6 +12,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
+    [InjectDependencies]
     public abstract partial class SharedMapSystem : EntitySystem
     {
         [Dependency] private IGameTiming _timing = default!;

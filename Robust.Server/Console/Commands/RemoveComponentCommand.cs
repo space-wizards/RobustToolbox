@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
+    [InjectDependencies]
     internal sealed partial class RemoveComponentCommand : LocalizedCommands
     {
         [Dependency] private IComponentFactory _compFactory = default!;

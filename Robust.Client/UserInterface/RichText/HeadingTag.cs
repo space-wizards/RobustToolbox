@@ -6,6 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
+[InjectDependencies]
 public sealed partial class HeadingTag : IMarkupTag
 {
     [Dependency] private IResourceCache _resourceCache = default!;

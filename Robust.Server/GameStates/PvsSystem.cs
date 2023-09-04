@@ -22,6 +22,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
+[Shared.IoC.InjectDependencies]
 internal sealed partial class PvsSystem : EntitySystem
 {
     [Shared.IoC.Dependency] private IMapManagerInternal _mapManager = default!;

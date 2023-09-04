@@ -625,7 +625,7 @@ public abstract partial class SharedTransformSystem
 
     public TransformComponent? GetParent(TransformComponent xform)
     {
-        if (!xform.ParentUid.IsValid()) 
+        if (!xform.ParentUid.IsValid())
             return null;
         return _xformQuery.GetComponent(xform.ParentUid);
     }
@@ -1375,12 +1375,12 @@ public abstract partial class SharedTransformSystem
     /// Attempts to place one entity next to another entity. If the target entity is in a container, this will attempt
     /// to insert that entity into the same container.
     /// </summary>
-    public void PlaceNextToOrDrop(EntityUid uid, EntityUid target, 
+    public void PlaceNextToOrDrop(EntityUid uid, EntityUid target,
         TransformComponent? xform = null, TransformComponent? targetXform = null)
     {
         if (!_xformQuery.Resolve(target, ref targetXform))
             return;
-        
+
         if (!_xformQuery.Resolve(uid, ref xform))
             return;
 

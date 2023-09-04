@@ -9,6 +9,7 @@ using Robust.Shared.Replays;
 
 namespace Robust.Server.Configuration;
 
+[InjectDependencies]
 internal sealed partial class ServerNetConfigurationManager : NetConfigurationManager, IServerNetConfigurationManager
 {
     [Dependency] private IGameTiming _timing = default!;

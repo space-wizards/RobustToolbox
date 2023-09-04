@@ -35,6 +35,7 @@ namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
     [UsedImplicitly]
+    [InjectDependencies]
     public sealed partial class ClientGameStateManager : IClientGameStateManager, IPostInjectInit
     {
         private GameStateProcessor _processor = default!;

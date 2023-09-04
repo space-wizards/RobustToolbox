@@ -11,6 +11,7 @@ namespace Robust.Client.UserInterface.RichText;
 /// Applies the font provided as the tags parameter to the markup drawing context.
 /// Definitely not save for user supplied markup
 /// </summary>
+[InjectDependencies]
 public sealed partial class FontTag : IMarkupTag
 {
     public const string DefaultFont = "Default";

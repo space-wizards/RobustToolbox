@@ -7,6 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
+[InjectDependencies]
 public abstract partial class MetaDataSystem : EntitySystem
 {
     [Dependency] private IGameTiming _timing = default!;

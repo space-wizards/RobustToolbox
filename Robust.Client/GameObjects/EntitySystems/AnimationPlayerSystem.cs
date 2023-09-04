@@ -8,6 +8,7 @@ using TerraFX.Interop.Windows;
 
 namespace Robust.Client.GameObjects
 {
+    [InjectDependencies]
     public sealed partial class AnimationPlayerSystem : EntitySystem, IPostInjectInit
     {
         private readonly List<AnimationPlayerComponent> _activeAnimations = new();

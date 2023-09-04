@@ -9,6 +9,7 @@ using Robust.Shared.ViewVariables.Commands;
 namespace Robust.Client.ViewVariables
 {
     [UsedImplicitly]
+    [InjectDependencies]
     public sealed partial class ViewVariablesCommand : ViewVariablesBaseCommand
     {
         [Dependency] private IClientViewVariablesManager _cvvm = default!;

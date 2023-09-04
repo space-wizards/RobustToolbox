@@ -10,6 +10,7 @@ using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
+[InjectDependencies]
 internal sealed partial class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
 {
     [Dependency] private ToolshedManager _toolshed = default!;
@@ -29,6 +30,7 @@ internal sealed partial class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
     }
 }
 
+[InjectDependencies]
 internal sealed partial class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
 {
     [Dependency] private ToolshedManager _toolshed = default!;

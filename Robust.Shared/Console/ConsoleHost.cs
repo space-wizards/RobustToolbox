@@ -17,6 +17,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Console
 {
     /// <inheritdoc />
+    [InjectDependencies]
     public abstract partial class ConsoleHost : IConsoleHost
     {
         protected const string SawmillName = "con";

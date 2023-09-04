@@ -29,6 +29,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Server.GameObjects;
 
+[InjectDependencies]
 public sealed partial class MapLoaderSystem : EntitySystem
 {
     /*

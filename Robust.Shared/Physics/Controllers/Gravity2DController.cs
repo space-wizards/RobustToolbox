@@ -15,6 +15,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Controllers;
 
+[InjectDependencies]
 public sealed partial class Gravity2DController : VirtualController
 {
     [Dependency] private IMapManager _mapManager = default!;

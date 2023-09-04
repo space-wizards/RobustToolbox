@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.UserInterface;
 
 [GenerateTypedNameReferences]
+[InjectDependencies]
 internal sealed partial class ProfSettings : Control
 {
     [Dependency] private IConfigurationManager _cfg = default!;

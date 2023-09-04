@@ -12,6 +12,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
+    [InjectDependencies]
     internal sealed partial class DebugCoordsPanel : PanelContainer
     {
         [Dependency] private IPlayerManager _playerManager = default!;

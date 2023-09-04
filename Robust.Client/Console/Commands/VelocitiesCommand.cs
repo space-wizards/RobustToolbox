@@ -5,6 +5,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
+    [InjectDependencies]
     public sealed partial class VelocitiesCommand : LocalizedCommands
     {
         [Dependency] private IEntitySystemManager _entitySystems = default!;

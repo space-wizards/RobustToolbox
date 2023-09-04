@@ -22,6 +22,7 @@ public interface ITypeParser : IPostInjectInit
 }
 
 [PublicAPI]
+[InjectDependencies]
 public abstract partial class TypeParser<T> : ITypeParser
     where T: notnull
 {

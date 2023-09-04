@@ -12,6 +12,7 @@ using Robust.Shared.Utility;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
+    [InjectDependencies]
     public sealed partial class UserInterfaceSystem : SharedUserInterfaceSystem
     {
         [Dependency] private IPlayerManager _playerMan = default!;

@@ -4,6 +4,7 @@ using Robust.Shared.Localization;
 
 namespace Robust.Client.Console.Commands
 {
+    [InjectDependencies]
     internal sealed partial class ReloadLocalizationsCommand : LocalizedCommands
     {
         [Dependency] private ILocalizationManager _loc = default!;

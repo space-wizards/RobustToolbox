@@ -23,4 +23,10 @@ namespace Robust.Shared.IoC
     public sealed class DependencyAttribute : Attribute
     {
     }
+
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+    public sealed class InjectDependenciesAttribute : Attribute
+    {
+
+    }
 }

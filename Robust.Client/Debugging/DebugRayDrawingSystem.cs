@@ -14,6 +14,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Debugging
 {
+    [InjectDependencies]
     internal sealed partial class DebugRayDrawingSystem : SharedDebugRayDrawingSystem
     {
         [Dependency] private IOverlayManager _overlayManager = default!;

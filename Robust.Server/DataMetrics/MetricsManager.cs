@@ -16,6 +16,7 @@ using EventSource = System.Diagnostics.Tracing.EventSource;
 
 namespace Robust.Server.DataMetrics;
 
+[InjectDependencies]
 internal sealed partial class MetricsManager : IMetricsManager, IDisposable
 {
     [Dependency] private IConfigurationManager _cfg = default!;

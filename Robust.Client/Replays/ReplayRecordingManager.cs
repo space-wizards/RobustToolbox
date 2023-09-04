@@ -18,6 +18,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Replays;
 
+[InjectDependencies]
 internal sealed partial class ReplayRecordingManager : SharedReplayRecordingManager
 {
     [Dependency] private IBaseClient _client = default!;

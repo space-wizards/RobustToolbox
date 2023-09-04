@@ -18,6 +18,7 @@ namespace Robust.Shared.Physics.Systems
     /// <summary>
     /// Manages physics fixtures.
     /// </summary>
+    [InjectDependencies]
     public sealed partial class FixtureSystem : EntitySystem
     {
         [Dependency] private EntityLookupSystem _lookup = default!;

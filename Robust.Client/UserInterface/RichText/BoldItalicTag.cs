@@ -5,6 +5,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
+[InjectDependencies]
 public sealed partial class BoldItalicTag : IMarkupTag
 {
     public const string BoldItalicFont = "DefaultBoldItalic";

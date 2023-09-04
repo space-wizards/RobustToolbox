@@ -13,6 +13,7 @@ using Robust.Shared.Maths;
 namespace Robust.Client.UserInterface
 {
     [GenerateTypedNameReferences]
+    [InjectDependencies]
     public sealed partial class DevWindowTabUI : Control
     {
         [Dependency] private IClydeInternal _clyde = default!;

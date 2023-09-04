@@ -23,6 +23,7 @@ namespace Robust.Client.GameObjects
     /// Updates the layer animation for every visible sprite.
     /// </summary>
     [UsedImplicitly]
+    [InjectDependencies]
     public sealed partial class SpriteSystem : EntitySystem
     {
         [Dependency] private IConfigurationManager _cfg = default!;

@@ -22,6 +22,7 @@ namespace Robust.Shared.GameObjects
 
     /// <inheritdoc />
     [Virtual]
+    [global::Robust.Shared.IoC.InjectDependencies]
     public partial class EntityManager : IEntityManager
     {
         #region Dependencies

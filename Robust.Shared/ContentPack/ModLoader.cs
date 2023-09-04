@@ -18,6 +18,7 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Class for managing the loading of assemblies into the engine.
     /// </summary>
+    [InjectDependencies]
     internal sealed partial class ModLoader : BaseModLoader, IModLoaderInternal, IDisposable
     {
         [Dependency] private IResourceManagerInternal _res = default!;

@@ -8,6 +8,7 @@ using Robust.Shared.Toolshed.TypeParsers;
 namespace Robust.Shared.Toolshed.Commands.Entities;
 
 [ToolshedCommand]
+[InjectDependencies]
 internal sealed partial class WithCommand : ToolshedCommand
 {
     [Dependency] private IComponentFactory _componentFactory = default!;

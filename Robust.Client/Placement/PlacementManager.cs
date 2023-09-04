@@ -23,6 +23,7 @@ using Robust.Shared.Log;
 
 namespace Robust.Client.Placement
 {
+    [InjectDependencies]
     public sealed partial class PlacementManager : IPlacementManager, IDisposable, IEntityEventSubscriber
     {
         [Dependency] private IClientNetManager _networkManager = default!;

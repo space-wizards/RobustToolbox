@@ -6,6 +6,7 @@ using Robust.Shared.Toolshed;
 namespace Robust.Shared.GameObjects;
 
 [ToolshedCommand]
+[InjectDependencies]
 internal sealed partial class EntitySystemUpdateOrderCommand : ToolshedCommand
 {
     [Dependency] private IEntitySystemManager _entitySystemManager = default!;

@@ -29,6 +29,7 @@ using static Robust.Shared.Replays.ReplayConstants;
 
 namespace Robust.Shared.Replays;
 
+[InjectDependencies]
 internal abstract partial class SharedReplayRecordingManager : IReplayRecordingManagerInternal
 {
     // date format for default replay names. Like the sortable template, but without colons.

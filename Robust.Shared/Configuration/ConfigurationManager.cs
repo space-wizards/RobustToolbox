@@ -18,6 +18,7 @@ namespace Robust.Shared.Configuration
     ///     Stores and manages global configuration variables.
     /// </summary>
     [Virtual]
+    [InjectDependencies]
     internal partial class ConfigurationManager : IConfigurationManagerInternal
     {
         [Dependency] private IGameTiming _gameTiming = default!;

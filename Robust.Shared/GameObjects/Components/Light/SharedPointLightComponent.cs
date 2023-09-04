@@ -10,6 +10,7 @@ using System.Numerics;
 namespace Robust.Shared.GameObjects
 {
     [NetworkedComponent]
+    [InjectDependencies]
     public abstract partial class SharedPointLightComponent : Component
     {
         [Dependency] private IEntitySystemManager _sysMan = default!;

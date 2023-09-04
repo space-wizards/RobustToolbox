@@ -5,6 +5,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Timing
 {
+    [InjectDependencies]
     internal sealed partial class TimerManager : ITimerManager
     {
         [Dependency] private IRuntimeLog _runtimeLog = default!;

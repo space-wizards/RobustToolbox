@@ -10,6 +10,7 @@ namespace Robust.Analyzers;
 public sealed class DependencyAnalyzer : DiagnosticAnalyzer
 {
     private const string DependencyAttributeName = "Robust.Shared.IoC.DependencyAttribute";
+    private const string InjectDependenciesAttributeName = "Robust.Shared.IoC.InjectDependenciesAttribute";
 
     private static readonly DiagnosticDescriptor DependencyPartialRule = new(
         Diagnostics.IdDependencyNotPartial,
@@ -20,8 +21,17 @@ public sealed class DependencyAnalyzer : DiagnosticAnalyzer
         true
     );
 
+    private static readonly DiagnosticDescriptor DependencyNoInjectDependenciesAttributeRule = new(
+        Diagnostics.IdDependencyNoInjectDependenciesAttribute,
+        "Type misses [InjectDependencies]",
+        "Type {0} has [Dependency] fields but is not marked as [InjectDependencies]",
+        "Usage",
+        DiagnosticSeverity.Error,
+        true
+    );
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
-        DependencyPartialRule
+        DependencyPartialRule, DependencyNoInjectDependenciesAttributeRule
     );
 
     public override void Initialize(AnalysisContext context)
@@ -38,12 +48,21 @@ public sealed class DependencyAnalyzer : DiagnosticAnalyzer
             return;
 
         var depAttribute = context.Compilation.GetTypeByMetadataName(DependencyAttributeName);
-        if (depAttribute == null)
+        var injDepAttribute = context.Compilation.GetTypeByMetadataName(InjectDependenciesAttributeName);
+        if (depAttribute == null || injDepAttribute == null)
             return;
 
         var type = context.SemanticModel.GetDeclaredSymbol(declaration)!;
         if (!IsDependencyOwner(type, depAttribute))
             return;
+
+        if (!HasAttribute(type, injDepAttribute))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                DependencyNoInjectDependenciesAttributeRule,
+                declaration.Identifier.GetLocation(),
+                type.Name));
+        }
 
         if (!DataDefinitionAnalyzer.IsPartial(declaration))
         {

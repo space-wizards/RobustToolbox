@@ -140,10 +140,12 @@ namespace Robust.UnitTesting.Shared.IoC
             Assert.That(IoCManager.Resolve<IIoCTestPriorities>(), Is.EqualTo(obj));
         }
 
+        [InjectDependencies]
         private sealed partial class DependencyA
         {
             [Dependency] public DependencyB _depB = default!;
         }
+        [InjectDependencies]
         private sealed partial class DependencyB
         {
             [Dependency] public DependencyA _depA = default!;
@@ -239,6 +241,7 @@ namespace Robust.UnitTesting.Shared.IoC
     }
 
     [Virtual]
+    [InjectDependencies]
     public partial class TestFieldInjectionParent
     {
         [Dependency]
@@ -256,6 +259,7 @@ namespace Robust.UnitTesting.Shared.IoC
         }
     }
 
+    [InjectDependencies]
     public sealed partial class TestFieldInjection : TestFieldInjectionParent
     {
         [Dependency]
@@ -284,6 +288,7 @@ namespace Robust.UnitTesting.Shared.IoC
         }
     }
 
+    [InjectDependencies]
     public sealed partial class TestUnregisteredInjection
     {
         [Dependency]
@@ -304,6 +309,7 @@ namespace Robust.UnitTesting.Shared.IoC
         }
     }
 
+    [InjectDependencies]
     public sealed partial class ExplicitInjectionTest
     {
         [Dependency] public IDependencyCollection DependencyCollection = default!;

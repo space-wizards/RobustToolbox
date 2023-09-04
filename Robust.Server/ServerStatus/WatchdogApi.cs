@@ -19,6 +19,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.ServerStatus
 {
+    [InjectDependencies]
     public sealed partial class WatchdogApi : IWatchdogApi, IPostInjectInit
     {
         [Dependency] private IStatusHost _statusHost = default!;

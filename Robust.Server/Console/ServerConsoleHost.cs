@@ -16,6 +16,7 @@ using Robust.Shared.Utility;
 namespace Robust.Server.Console
 {
     /// <inheritdoc cref="IServerConsoleHost" />
+    [InjectDependencies]
     internal sealed partial class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
     {
         [Dependency] private IConGroupController _groupController = default!;

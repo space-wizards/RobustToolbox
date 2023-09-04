@@ -12,6 +12,7 @@ namespace Robust.Client.UserInterface.Controllers;
 ///     and <see cref="UISystemDependencyAttribute"/> to depend on <see cref="EntitySystem"/>s, which will be automatically
 ///     injected once they are created.
 /// </summary>
+[InjectDependencies]
 public abstract partial class UIController
 {
     [Dependency] protected IUserInterfaceManager UIManager = default!;

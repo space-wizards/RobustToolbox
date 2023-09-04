@@ -15,6 +15,7 @@ using Robust.Shared.Replays;
 
 namespace Robust.Client.Replays.Loading;
 
+[InjectDependencies]
 public sealed partial class ReplayLoadManager : IReplayLoadManager
 {
     [Dependency] private ILogManager _logMan = default!;

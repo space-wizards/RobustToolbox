@@ -10,6 +10,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Toolshed;
 
+[InjectDependencies]
 public sealed partial class ToolshedEnvironment
 {
     [Dependency] private IReflectionManager _reflection = default!;

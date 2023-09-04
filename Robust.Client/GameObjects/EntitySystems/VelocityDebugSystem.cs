@@ -10,6 +10,7 @@ using Robust.Shared.Physics.Components;
 
 namespace Robust.Client.GameObjects
 {
+    [InjectDependencies]
     public sealed partial class VelocityDebugSystem : EntitySystem
     {
         [Dependency] private IEyeManager _eyeManager = default!;

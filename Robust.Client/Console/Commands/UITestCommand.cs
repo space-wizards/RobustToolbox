@@ -244,6 +244,7 @@ internal sealed class UITestCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 internal sealed partial class UITest2Command : LocalizedCommands
 {
     [Dependency] private IClyde _clyde = default!;

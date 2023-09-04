@@ -14,6 +14,7 @@ using Con = System.Console;
 
 namespace Robust.Server.Console
 {
+    [InjectDependencies]
     internal sealed partial class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
     {
         [Dependency] private IServerConsoleHost _conShell = default!;

@@ -4,6 +4,7 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console.Commands;
 
+[InjectDependencies]
 internal sealed partial class DumpEventTablesCommand : LocalizedCommands
 {
     [Dependency] private EntityManager _entities = default!;

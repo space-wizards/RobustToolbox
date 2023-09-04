@@ -22,6 +22,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization
 {
+    [InjectDependencies]
     internal sealed partial class LocalizationManager : ILocalizationManagerInternal, IPostInjectInit
     {
         [Dependency] private IResourceManager _res = default!;

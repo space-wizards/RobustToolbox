@@ -68,6 +68,7 @@ public record struct WorldAABBEvent
     public Box2 AABB;
 }
 
+[InjectDependencies]
 public sealed partial class EntityLookupSystem : EntitySystem
 {
     [Dependency] private IMapManager _mapManager = default!;

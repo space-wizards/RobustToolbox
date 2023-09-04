@@ -5,6 +5,7 @@ using Robust.Shared.Log;
 
 namespace Robust.Shared.Console.Commands;
 
+[InjectDependencies]
 internal sealed partial class LogSetLevelCommand : LocalizedCommands
 {
     [Dependency] private ILogManager _logManager = default!;
@@ -58,6 +59,7 @@ internal sealed partial class LogSetLevelCommand : LocalizedCommands
     }
 }
 
+[InjectDependencies]
 internal sealed partial class TestLog : LocalizedCommands
 {
     [Dependency] private ILogManager _logManager = default!;

@@ -14,6 +14,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
+[InjectDependencies]
 internal sealed partial class ComponentTypeParser : TypeParser<ComponentType>
 {
     [Dependency] private IComponentFactory _factory = default!;

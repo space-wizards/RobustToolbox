@@ -6,6 +6,7 @@ using Robust.Shared.Placement;
 
 namespace Robust.Shared.Console.Commands;
 
+[InjectDependencies]
 public sealed partial class SpawnCommand : LocalizedCommands
 {
     [Dependency] private IEntityManager _entityManager = default!;

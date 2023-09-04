@@ -14,6 +14,7 @@ using TerraFX.Interop.DirectX;
 
 namespace Robust.Client.Physics
 {
+    [InjectDependencies]
     internal sealed partial class PhysicsIslandCommand : LocalizedCommands
     {
         [Dependency] private IEntitySystemManager _entitySystemManager = default!;
@@ -33,6 +34,7 @@ namespace Robust.Client.Physics
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class DebugPhysicsIslandSystem : EntitySystem
     {
         [Dependency] private IGameTiming _gameTiming = default!;

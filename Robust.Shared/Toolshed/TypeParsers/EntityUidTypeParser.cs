@@ -11,6 +11,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
+[InjectDependencies]
 internal sealed partial class EntityUidTypeParser : TypeParser<EntityUid>
 {
     [Dependency] private IEntityManager _entity = default!;

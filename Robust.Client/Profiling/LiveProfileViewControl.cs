@@ -10,6 +10,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Profiling;
 
+[InjectDependencies]
 public sealed partial class LiveProfileViewControl : Control
 {
     [Dependency] private ProfManager _profManager = default!;

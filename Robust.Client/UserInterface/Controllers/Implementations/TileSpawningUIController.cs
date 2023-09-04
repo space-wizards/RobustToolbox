@@ -15,6 +15,7 @@ using static Robust.Client.UserInterface.Controls.BaseButton;
 
 namespace Robust.Client.UserInterface.Controllers.Implementations;
 
+[InjectDependencies]
 public sealed partial class TileSpawningUIController : UIController
 {
     [Dependency] private IPlacementManager _placement = default!;

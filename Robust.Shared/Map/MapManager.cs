@@ -12,6 +12,7 @@ namespace Robust.Shared.Map;
 
 /// <inheritdoc cref="IMapManager" />
 [Virtual]
+[InjectDependencies]
 internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 {
     [Dependency] private IGameTiming _gameTiming = default!;

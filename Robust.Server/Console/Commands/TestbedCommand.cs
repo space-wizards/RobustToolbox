@@ -48,6 +48,7 @@ namespace Robust.Server.Console.Commands
     /// <summary>
     ///     Copies of Box2D's physics testbed for debugging.
     /// </summary>
+    [InjectDependencies]
     public sealed partial class TestbedCommand : LocalizedCommands
     {
         [Dependency] private IEntityManager _ent = default!;

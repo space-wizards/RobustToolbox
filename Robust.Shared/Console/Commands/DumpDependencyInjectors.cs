@@ -3,6 +3,7 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.Console.Commands;
 
+[InjectDependencies]
 internal sealed partial class DumpDependencyInjectors : LocalizedCommands
 {
     [Dependency] private IDependencyCollection _dependencies = default!;

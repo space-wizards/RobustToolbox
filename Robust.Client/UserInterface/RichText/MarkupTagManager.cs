@@ -8,6 +8,7 @@ using Robust.Shared.Sandboxing;
 
 namespace Robust.Client.UserInterface.RichText;
 
+[InjectDependencies]
 public sealed partial class MarkupTagManager
 {
     [Dependency] private IReflectionManager _reflectionManager = default!;

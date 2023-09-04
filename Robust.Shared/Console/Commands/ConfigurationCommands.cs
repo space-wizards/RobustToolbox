@@ -5,6 +5,7 @@ using Robust.Shared.IoC;
 namespace Robust.Shared.Console.Commands;
 
 [UsedImplicitly]
+[InjectDependencies]
 public sealed partial class SaveConfig : LocalizedCommands
 {
     [Dependency] private IConfigurationManager _cfg = default!;

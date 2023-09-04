@@ -8,6 +8,7 @@ using Robust.Shared.Network;
 
 namespace Robust.Server.Console.Commands
 {
+    [InjectDependencies]
     public sealed partial class ListPlayers : LocalizedCommands
     {
         [Dependency] private IPlayerManager _players = default!;
@@ -39,6 +40,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
+    [InjectDependencies]
     internal sealed partial class KickCommand : LocalizedCommands
     {
         [Dependency] private IPlayerManager _players = default!;

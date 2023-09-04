@@ -8,6 +8,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Graphics
 {
+    [InjectDependencies]
     internal sealed partial class OverlayManager : IOverlayManagerInternal, IPostInjectInit
     {
         [Dependency] private ILogManager _logMan = default!;

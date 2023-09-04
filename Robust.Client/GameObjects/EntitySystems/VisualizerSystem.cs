@@ -6,6 +6,7 @@ namespace Robust.Client.GameObjects;
 /// <summary>
 ///     An abstract entity system inheritor for systems that deal with appearance data.
 /// </summary>
+[InjectDependencies]
 public abstract partial class VisualizerSystem<T> : EntitySystem
     where T: Component
 {

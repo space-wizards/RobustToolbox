@@ -20,6 +20,7 @@ namespace Robust.Client.GameStates
     /// <summary>
     ///     Visual debug overlay for the network diagnostic graph.
     /// </summary>
+    [InjectDependencies]
     internal sealed partial class NetGraphOverlay : Overlay
     {
         [Dependency] private IGameTiming _gameTiming = default!;

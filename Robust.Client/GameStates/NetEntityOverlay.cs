@@ -20,6 +20,7 @@ namespace Robust.Client.GameStates
     /// A network entity report that lists all entities as they are updated through game states.
     /// https://developer.valvesoftware.com/wiki/Networking_Entities#cl_entityreport
     /// </summary>
+    [InjectDependencies]
     sealed partial class NetEntityOverlay : Overlay
     {
         [Dependency] private IClientGameTiming _gameTiming = default!;

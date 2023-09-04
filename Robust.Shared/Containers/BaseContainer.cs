@@ -274,7 +274,8 @@ namespace Robust.Shared.Containers
             xform ??= entMan.GetComponent<TransformComponent>(toRemove);
             meta ??= entMan.GetComponent<MetaDataComponent>(toRemove);
 
-            if (!force && !CanRemove(toRemove, entMan))
+            var sys = entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>();
+            if (!force && !sys.CanRemove(toRemove, this))
                 return false;
 
             if (force && !Contains(toRemove))
@@ -306,7 +307,7 @@ namespace Robust.Shared.Containers
             else if (reparent)
             {
                 // Container ECS when.
-                entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>().AttachParentToContainerOrGrid(xform);
+                sys.AttachParentToContainerOrGrid(xform);
                 if (localRotation != null)
                     entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetLocalRotation(xform, localRotation.Value);
             }
@@ -336,33 +337,6 @@ namespace Robust.Shared.Containers
         [Obsolete("use force option in Remove()")]
         public void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, MetaDataComponent? meta = null)
             => Remove(toRemove, entMan, meta: meta, reparent: false, force: true);
-
-        /// <summary>
-        /// Checks if the entity can be removed from this container.
-        /// </summary>
-        /// <param name="toremove">The entity to check.</param>
-        /// <param name="entMan"></param>
-        /// <returns>True if the entity can be removed, false otherwise.</returns>
-        public virtual bool CanRemove(EntityUid toRemove, IEntityManager? entMan = null)
-        {
-            if (!Contains(toRemove))
-                return false;
-
-            IoCManager.Resolve(ref entMan);
-
-            //raise events
-            var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(this, toRemove);
-            entMan.EventBus.RaiseLocalEvent(Owner, removeAttemptEvent, true);
-            if (removeAttemptEvent.Cancelled)
-                return false;
-
-            var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(this, toRemove);
-            entMan.EventBus.RaiseLocalEvent(toRemove, gettingRemovedAttemptEvent, true);
-            if (gettingRemovedAttemptEvent.Cancelled)
-                return false;
-
-            return true;
-        }
 
         /// <summary>
         /// Checks if the entity is contained in this container.

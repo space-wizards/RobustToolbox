@@ -1000,7 +1000,7 @@ namespace Robust.Client.GameStates
 
                     // In some cursed scenarios an entity inside of a container can leave PVS without the container itself leaving PVS.
                     // In those situations, we need to add the entity back to the list of expected entities after detaching.
-                    IContainer? container = null;
+                    BaseContainer? container = null;
                     if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
                         metas.TryGetComponent(xform.ParentUid, out var containerMeta) &&
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
@@ -1238,7 +1238,7 @@ namespace Robust.Client.GameStates
             var xform = _entities.GetComponent<TransformComponent>(uid);
             if (xform.ParentUid.IsValid())
             {
-                IContainer? container = null;
+                BaseContainer? container = null;
                 if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
                     _entities.TryGetComponent(xform.ParentUid, out MetaDataComponent? containerMeta) &&
                     (containerMeta.Flags & MetaDataFlags.Detached) == 0)

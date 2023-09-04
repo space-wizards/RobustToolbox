@@ -28,7 +28,7 @@ namespace Robust.Client.Map
 
         public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
 
-        private readonly Dictionary<ushort, Box2[]> _tileRegions = new();
+        private readonly Dictionary<int, Box2[]> _tileRegions = new();
 
         public Box2 ErrorTileRegion { get; private set; }
 
@@ -39,7 +39,7 @@ namespace Robust.Client.Map
         }
 
         /// <inheritdoc />
-        public Box2[]? TileAtlasRegion(ushort tileType)
+        public Box2[]? TileAtlasRegion(int tileType)
         {
             if (_tileRegions.TryGetValue(tileType, out var region))
             {

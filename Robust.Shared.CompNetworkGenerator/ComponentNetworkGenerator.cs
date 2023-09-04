@@ -158,7 +158,7 @@ namespace {nameSpace};
 
 public partial class {componentName}
 {{
-    [Serializable, NetSerializable]
+    [System.Serializable, NetSerializable]
     public class {stateName} : ComponentState
     {{{stateFields}
     }}

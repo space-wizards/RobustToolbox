@@ -569,13 +569,13 @@ namespace Robust.Shared.GameObjects
 
             while (enumerator.MoveNext(out var component, out var reg))
             {
-                if (component.Deleted)
-                    continue;
-
                 if (reg.ReferenceEvent != byRef)
                     ThrowByRefMisMatch();
 
-                found.Add(new OrderedEventDispatch((ref Unit ev) => reg.Handler(euid, component, ref ev), reg.Order));
+                found.Add(new OrderedEventDispatch((ref Unit ev) => {
+                    if (!component.Deleted)
+                        reg.Handler(euid, component, ref ev);
+                    }, reg.Order));
             }
         }
 

@@ -360,12 +360,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntities() => Entities;
 
-        /// <summary>
-        /// Marks this entity as dirty so that it will be updated over the network.
-        /// </summary>
-        /// <remarks>
-        /// Calling Dirty on a component will call this directly.
-        /// </remarks>
+        /// <inheritdoc />
         public virtual void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null)
         {
             // We want to retrieve MetaDataComponent even if its Deleted flag is set.
@@ -382,7 +377,8 @@ namespace Robust.Shared.GameObjects
 #pragma warning restore CS0618
             }
 
-            if (metadata.EntityLastModifiedTick == _gameTiming.CurTick) return;
+            if (metadata.EntityLastModifiedTick == _gameTiming.CurTick)
+                return;
 
             metadata.EntityLastModifiedTick = _gameTiming.CurTick;
 
@@ -392,12 +388,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
         [Obsolete("use override with an EntityUid")]
         public void Dirty(Component component, MetaDataComponent? meta = null)
         {
             Dirty(component.Owner, component, meta);
         }
 
+        /// <inheritdoc />
         public virtual void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
         {
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)

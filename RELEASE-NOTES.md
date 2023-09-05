@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 154.1.0
+
+### New features
+
+* Add MathHelper.Max for TimeSpans.
+
+### Bugfixes
+
+* Make joint initialisation only log under IsFirstTimePredicted on client.
+
+### Other
+
+* Mark the proxy Dirty(component) as obsolete in line with EntityManager (Dirty(EntityUid, Component) should be used in its place). 
+
+
 ## 154.0.0
 
 ### Breaking changes

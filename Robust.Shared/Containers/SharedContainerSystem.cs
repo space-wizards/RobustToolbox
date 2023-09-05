@@ -260,12 +260,10 @@ namespace Robust.Shared.Containers
         public bool TryFindComponentsOnEntityContainerOrParent<T>(
             EntityUid uid,
             EntityQuery<T> entityQuery,
-            ref List<T> foundComponents,
+            List<T> foundComponents,
             MetaDataComponent? meta = null,
             TransformComponent? xform = null) where T : Component
         {
-            T? foundComponent = null;
-
             if (!_metas.Resolve(uid, ref meta))
                 return foundComponents.Any();
 
@@ -278,10 +276,10 @@ namespace Robust.Shared.Containers
             if (!xform.ParentUid.Valid)
                 return foundComponents.Any();
 
-            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent, false) && foundComponent != null)
+            if (EntityManager.TryGetComponent(xform.ParentUid, out T? foundComponent) && foundComponent != null)
                 foundComponents.Add(foundComponent);
 
-            return TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, ref foundComponents);
+            return TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, foundComponents);
         }
 
         /// <summary>

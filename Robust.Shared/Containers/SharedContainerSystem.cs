@@ -276,7 +276,7 @@ namespace Robust.Shared.Containers
             if (!xform.ParentUid.Valid)
                 return foundComponents.Any();
 
-            if (EntityManager.TryGetComponent(xform.ParentUid, out T? foundComponent) && foundComponent != null)
+            if (EntityManager.TryGetComponent(xform.ParentUid, out T? foundComponent))
                 foundComponents.Add(foundComponent);
 
             return TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, foundComponents);

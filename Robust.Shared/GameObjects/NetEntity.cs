@@ -14,7 +14,9 @@ namespace Robust.Shared.GameObjects;
 [Serializable, NetSerializable]
 public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFormattable
 {
-    private readonly int _id;
+    internal readonly int _id;
+
+    public const int ClientEntity = 2 << 29;
 
     /*
      * Differed to EntityUid to be more consistent with Arch.

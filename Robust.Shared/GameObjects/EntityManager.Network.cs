@@ -21,6 +21,11 @@ public partial class EntityManager
         return false;
     }
 
+    public bool IsClientSide(NetEntity netEntity)
+    {
+        return (netEntity._id & NetEntity.ClientEntity) == NetEntity.ClientEntity;
+    }
+
     #region NetEntity
 
     /// <inheritdoc />
@@ -227,6 +232,33 @@ public partial class EntityManager
         foreach (var netEntity in netEntities)
         {
             entities.Add(GetEntity(netEntity));
+        }
+
+        return entities;
+    }
+
+    public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        var entities = _poolManager.GetEntitySet();
+        entities.EnsureCapacity(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntity<T>(netEntity, callerEntity));
+        }
+
+        return entities;
+    }
+
+    /// <inheritdoc />
+    public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        var entities = _poolManager.GetEntityList();
+        entities.EnsureCapacity(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntity<T>(netEntity, callerEntity));
         }
 
         return entities;

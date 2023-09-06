@@ -8,8 +8,7 @@ namespace Robust.Client.GameObjects;
 
 public sealed partial class ClientEntityManager
 {
-    // TODO: Generate clientside
-    protected override NetEntity GenerateNetEntity() => NetEntity.Invalid;
+    protected override NetEntity GenerateNetEntity() => new(NextNetworkId++ | NetEntity.ClientEntity);
 
     /// <summary>
     /// If the client fails to resolve a NetEntity then during component state handling or the likes we
@@ -32,7 +31,7 @@ public sealed partial class ClientEntityManager
         if (!MetaQuery.Resolve(uid, ref metadata, false))
             return false;
 
-        return !metadata.NetEntity.IsValid();
+        return (metadata.NetEntity._id & NetEntity.ClientEntity) == NetEntity.ClientEntity;
     }
 
     public override EntityUid EnsureEntity<T>(NetEntity nEntity, EntityUid callerEntity)
@@ -47,11 +46,7 @@ public sealed partial class ClientEntityManager
             return entity;
         }
 
-        // Spawn an entity and reserve it at this point.
-        entity = Spawn();
-        MetaQuery.GetComponent(entity).NetEntity = nEntity;
-        NetEntityLookup[nEntity] = entity;
-
+        // Flag the callerEntity to have their state potentially re-run later.
         var pending = PendingNetEntityStates.GetOrNew(nEntity);
         pending.Add((typeof(T), callerEntity));
 

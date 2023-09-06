@@ -973,6 +973,18 @@ public partial class EntitySystem
         return EntityManager.EnsureCoordinates<T>(netCoordinates, callerEntity);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntitySet<T>(netEntities, callerEntity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntityList<T>(netEntities, callerEntity);
+    }
+
     /// <summary>
     ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>

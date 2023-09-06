@@ -157,6 +157,10 @@ public partial interface IEntityManager
 
     public List<EntityCoordinates> GetEntityList(List<NetCoordinates> netEntities);
 
+    public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity);
+
+    public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity);
+
     public List<EntityCoordinates> GetEntityList(ICollection<NetCoordinates> netEntities);
 
     public List<EntityCoordinates?> GetEntityList(List<NetCoordinates?> netEntities);

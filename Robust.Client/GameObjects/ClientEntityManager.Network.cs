@@ -17,14 +17,6 @@ public sealed partial class ClientEntityManager
     /// <returns></returns>
     internal readonly Dictionary<NetEntity, List<(Type type, EntityUid Owner)>> PendingNetEntityStates = new();
 
-    /// <summary>
-    /// Set the inverse lookup for a particular entityuid.
-    /// </summary>
-    public void SetNetEntity(EntityUid uid, NetEntity netEntity)
-    {
-        NetEntityLookup[netEntity] = uid;
-    }
-
     public override bool IsClientSide(EntityUid uid, MetaDataComponent? metadata = null)
     {
         // Can't log false because some content code relies on invalid UIDs.

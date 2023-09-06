@@ -635,10 +635,9 @@ namespace Robust.Shared.GameObjects
 #pragma warning disable CS0618
                 Owner = uid,
 #pragma warning restore CS0618
-                NetEntity = netEntity,
             };
 
-            NetEntityLookup[netEntity] = uid;
+            SetNetEntity(uid, netEntity, metadata);
 
             Entities.Add(uid);
             // add the required MetaDataComponent directly.

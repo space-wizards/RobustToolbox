@@ -15,6 +15,26 @@ public partial class EntityManager
     /// </summary>
     protected readonly Dictionary<NetEntity, EntityUid> NetEntityLookup = new(EntityCapacity);
 
+    /// <summary>
+    /// Clears an old inverse lookup for a particular entityuid.
+    /// Do not call this unless you are sure of what you're doing.
+    /// </summary>
+    internal void ClearNetEntity(NetEntity netEntity)
+    {
+        NetEntityLookup.Remove(netEntity);
+    }
+
+    /// <summary>
+    /// Set the inverse lookup for a particular entityuid.
+    /// Do not call this unless you are sure of what you're doing.
+    /// </summary>
+    internal void SetNetEntity(EntityUid uid, NetEntity netEntity, MetaDataComponent component)
+    {
+        DebugTools.Assert(!NetEntityLookup.ContainsKey(netEntity));
+        NetEntityLookup[netEntity] = uid;
+        component.NetEntity = netEntity;
+    }
+
     /// <inheritdoc />
     public virtual bool IsClientSide(EntityUid uid, MetaDataComponent? metadata = null)
     {

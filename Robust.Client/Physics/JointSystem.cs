@@ -62,8 +62,8 @@ namespace Robust.Client.Physics
                     continue;
                 }
 
-                var other = state.UidA == GetNetEntity(uid) ? GetEntity(state.UidB) : GetEntity(state.UidA);
-
+                var uidA = GetEntity(state.UidA);
+                var other = uidA == uid ? GetEntity(state.UidB) : uidA;
 
                 // Add new joint (if possible).
                 // Need to wait for BOTH joint components to come in first before we can add it. Yay dependencies!

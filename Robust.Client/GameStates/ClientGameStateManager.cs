@@ -695,8 +695,8 @@ namespace Robust.Client.GameStates
                     _toApply.Add(uid, (false, GameTick.Zero, es, null));
 
                     var newMeta = metas.GetComponent(uid);
-                    newMeta.NetEntity = es.NetEntity;
-                    _entityManager.SetNetEntity(uid, es.NetEntity);
+                    _entityManager.ClearNetEntity(newMeta.NetEntity);
+                    _entityManager.SetNetEntity(uid, es.NetEntity, newMeta);
                     newMeta.LastStateApplied = curState.ToSequence;
 
                     // Check if there's any component states awaiting this entity.

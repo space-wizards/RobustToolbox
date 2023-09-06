@@ -72,6 +72,9 @@ public sealed partial class ReplayLoadManager
 
             var uid = _entMan.CreateEntityUninitialized(metaState.PrototypeId);
             entities.Add(uid);
+            var metaComp = _entMan.GetComponent<MetaDataComponent>(uid);
+            _entMan.ClearNetEntity(metaComp.NetEntity);
+            _entMan.SetNetEntity(uid, ent.NetEntity, metaComp);
 
             if (i++ % 50 == 0)
             {

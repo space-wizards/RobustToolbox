@@ -25,12 +25,12 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// <summary>
     ///     An Invalid entity UID you can compare against.
     /// </summary>
-    public static readonly NetEntity Invalid = new(-1);
+    public static readonly NetEntity Invalid = new(0);
 
     /// <summary>
     ///     The first entity UID the entityManager should use when the manager is initialized.
     /// </summary>
-    public static readonly NetEntity First = new(0);
+    public static readonly NetEntity First = new(1);
 
     /// <summary>
     ///     Creates an instance of this structure, with the given network ID.

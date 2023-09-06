@@ -94,6 +94,9 @@ internal sealed partial class ReplayPlaybackManager
 
             _entMan.CreateEntityUninitialized(metaState.PrototypeId, uid);
             meta = metas.GetComponent(uid);
+            _entMan.ClearNetEntity(meta.NetEntity);
+            _entMan.SetNetEntity(uid, es.NetEntity, meta);
+
             _entMan.InitializeEntity(uid, meta);
             _entMan.StartEntity(uid);
             meta.LastStateApplied = checkpoint.Tick;

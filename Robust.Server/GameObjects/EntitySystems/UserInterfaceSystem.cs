@@ -340,7 +340,7 @@ namespace Robust.Server.GameObjects
             return true;
         }
 
-        private void CloseShared(PlayerBoundUserInterface bui, IPlayerSession session, ActiveUserInterfaceComponent? activeUis = null)
+        protected override void CloseShared(PlayerBoundUserInterface bui, ICommonSession session, ActiveUserInterfaceComponent? activeUis = null)
         {
             var owner = bui.Owner;
             bui._subscribedSessions.Remove(session);

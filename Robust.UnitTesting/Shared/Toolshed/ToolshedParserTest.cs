@@ -45,7 +45,7 @@ public sealed partial class ToolshedParserTest : ToolshedTest
             ParseCommand("ent 1");
             ParseCommand("ent c1");
 
-            ExpectError<InvalidEntityUid>();
+            ExpectError<InvalidEntity>();
             ParseCommand("ent foodigity");
         });
     }

@@ -132,18 +132,18 @@ public partial class EntityManager
     #region NetCoordinates
 
     /// <inheritdoc />
-    public NetCoordinates GetNetCoordinates(EntityCoordinates coordinates)
+    public NetCoordinates GetNetCoordinates(EntityCoordinates coordinates, MetaDataComponent? metadata = null)
     {
-        return new NetCoordinates(GetNetEntity(coordinates.EntityId), coordinates.Position);
+        return new NetCoordinates(GetNetEntity(coordinates.EntityId, metadata), coordinates.Position);
     }
 
     /// <inheritdoc />
-    public NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates)
+    public NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates, MetaDataComponent? metadata = null)
     {
         if (coordinates == null)
             return null;
 
-        return new NetCoordinates(GetNetEntity(coordinates.Value.EntityId), coordinates.Value.Position);
+        return new NetCoordinates(GetNetEntity(coordinates.Value.EntityId, metadata), coordinates.Value.Position);
     }
 
     /// <inheritdoc />

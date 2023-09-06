@@ -11,15 +11,15 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class EntityTypeParser : TypeParser<EntityUid>
+internal sealed class EntityTypeParser : TypeParser<NetEntity>
 {
     public override bool TryParse(ParserContext parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var start = parserContext.Index;
-        var word = parserContext.GetWord(ParserContext.IsToken);
+        var start = parser.Index;
+        var word = parser.GetWord(ParserContext.IsToken);
         error = null;
 
-        if (!EntityUid.TryParse(word, out var ent))
+        if (!NetEntity.TryParse(word, out var ent))
         {
             result = null;
 
@@ -28,7 +28,7 @@ internal sealed class EntityTypeParser : TypeParser<EntityUid>
             else
                 error = new OutOfInputError();
 
-            error.Contextualize(parserContext.Input, (start, parserContext.Index));
+            error.Contextualize(parser.Input, (start, parser.Index));
             return false;
         }
 
@@ -39,7 +39,7 @@ internal sealed class EntityTypeParser : TypeParser<EntityUid>
     public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        return (CompletionResult.FromHint("<entity id>"), null);
+        return (CompletionResult.FromHint("<NetEntity>"), null);
     }
 }
 
@@ -47,7 +47,7 @@ public record InvalidEntity(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"Couldn't parse {Value} as a EntityUid.");
+        return FormattedMessage.FromMarkup($"Couldn't parse {Value} as a NetEntity.");
     }
 
     public string? Expression { get; set; }
@@ -55,7 +55,7 @@ public record InvalidEntity(string Value) : IConError
     public StackTrace? Trace { get; set; }
 }
 
-public record DeadEntity(EntityUid Entity) : IConError
+public record DeadEntity(NetEntity Entity) : IConError
 {
     public FormattedMessage DescribeInner()
     {

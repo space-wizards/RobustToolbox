@@ -109,12 +109,12 @@ public partial interface IEntityManager
     /// <summary>
     /// Returns the corresponding <see cref="NetCoordinates"/> for the specified local coordinates.
     /// </summary>
-    public NetCoordinates GetNetCoordinates(EntityCoordinates coordinates);
+    public NetCoordinates GetNetCoordinates(EntityCoordinates coordinates, MetaDataComponent? metadata = null);
 
     /// <summary>
     /// Returns the corresponding <see cref="NetCoordinates"/> for the specified local coordinates.
     /// </summary>
-    public NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates);
+    public NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates, MetaDataComponent? metadata = null);
 
     /// <summary>
     /// Returns the corresponding <see cref="EntityCoordinates"/> for the specified network coordinates.

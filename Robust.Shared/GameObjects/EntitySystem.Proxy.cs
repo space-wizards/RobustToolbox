@@ -1065,18 +1065,18 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected NetCoordinates GetNetCoordinates(EntityCoordinates coordinates)
+    protected NetCoordinates GetNetCoordinates(EntityCoordinates coordinates, MetaDataComponent? metadata = null)
     {
-        return EntityManager.GetNetCoordinates(coordinates);
+        return EntityManager.GetNetCoordinates(coordinates, metadata);
     }
 
     /// <summary>
     ///     Returns the <see cref="NetEntity"/> of an entity. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates)
+    protected NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates, MetaDataComponent? metadata = null)
     {
-        return EntityManager.GetNetCoordinates(coordinates);
+        return EntityManager.GetNetCoordinates(coordinates, metadata);
     }
 
     /// <summary>

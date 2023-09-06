@@ -220,8 +220,10 @@ namespace Robust.Client.GameObjects
             SetEntityContextActive(_inputManager, controlled);
         }
 
-        void IPostInjectInit.PostInject()
+        protected override void PostInject()
         {
+            base.PostInject();
+
             _sawmillInputContext = _logManager.GetSawmill("input.context");
         }
     }

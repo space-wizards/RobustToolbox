@@ -5,7 +5,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
-internal sealed class StopwatchCommand : ToolshedCommand
+public sealed class StopwatchCommand : ToolshedCommand
 {
     [CommandImplementation]
     public object? Stopwatch([CommandInvocationContext] IInvocationContext ctx, [CommandArgument] CommandRun expr)

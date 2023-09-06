@@ -11,7 +11,7 @@ public sealed partial class ToolshedManager
 {
     internal bool IsTransformableTo(Type left, Type right)
     {
-        if (left.IsAssignableTo(right))
+        if (left.IsAssignableToGeneric(right, this))
             return true;
 
         var asType = typeof(IAsType<>).MakeGenericType(right);
@@ -56,17 +56,15 @@ public sealed partial class ToolshedManager
 
         if (to.IsGenericType && to.GetGenericTypeDefinition() == typeof(IEnumerable<>))
         {
-            if (to.GenericTypeArguments[0] == from)
-            {
-                var tys = new [] {from};
-                return Expression.Convert(
-                    Expression.New(
-                                typeof(UnitEnumerable<>).MakeGenericType(tys).GetConstructor(tys)!,
-                                Expression.Convert(input, from)
-                            ),
-                        to
-                    );
-            }
+            var toInner = to.GenericTypeArguments[0];
+            var tys = new [] {toInner};
+            return Expression.Convert(
+                Expression.New(
+                            typeof(UnitEnumerable<>).MakeGenericType(tys).GetConstructor(tys)!,
+                            Expression.Convert(input, toInner)
+                        ),
+                    to
+                );
         }
 
         return Expression.Convert(input, to);

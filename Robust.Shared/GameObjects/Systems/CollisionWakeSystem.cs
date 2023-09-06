@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<CollisionWakeComponent, ComponentRemove>(OnRemove);
+            SubscribeLocalEvent<CollisionWakeComponent, ComponentShutdown>(OnRemove);
 
             SubscribeLocalEvent<CollisionWakeComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<CollisionWakeComponent, ComponentHandleState>(OnHandleState);
@@ -59,7 +59,7 @@ namespace Robust.Shared.GameObjects
             args.State = new CollisionWakeComponent.CollisionWakeState(component.Enabled);
         }
 
-        private void OnRemove(EntityUid uid, CollisionWakeComponent component, ComponentRemove args)
+        private void OnRemove(EntityUid uid, CollisionWakeComponent component, ComponentShutdown args)
         {
             if (component.Enabled
                 && !Terminating(uid)

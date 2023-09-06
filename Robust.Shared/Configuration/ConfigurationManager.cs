@@ -130,7 +130,7 @@ namespace Robust.Shared.Configuration
                 using var file = File.OpenRead(configFile);
                 var result = LoadFromTomlStream(file);
                 _configFile = configFile;
-                _sawmill.Info($"Configuration Loaded from '{Path.GetFullPath(configFile)}'");
+                _sawmill.Info($"Configuration loaded from file");
                 return result;
             }
             catch (Exception e)
@@ -612,6 +612,11 @@ namespace Robust.Shared.Configuration
                 return Enum.Parse(type, value);
             }
 
+            if (type == typeof(long))
+            {
+                return long.Parse(value);
+            }
+
             // Must be a string.
             return value;
         }
@@ -633,7 +638,11 @@ namespace Robust.Shared.Configuration
                     return obj.Get<float>();
 
                 case TomlObjectType.Int:
-                    return obj.Get<int>();
+                    var val = obj.Get<long>();
+                    if (val is >= int.MinValue and <= int.MaxValue)
+                        return obj.Get<int>();
+
+                    return val;
 
                 case TomlObjectType.String:
                     return obj.Get<string>();

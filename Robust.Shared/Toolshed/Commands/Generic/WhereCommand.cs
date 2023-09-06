@@ -5,7 +5,7 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
 [ToolshedCommand]
-internal sealed class WhereCommand : ToolshedCommand
+public sealed class WhereCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Where<T>(

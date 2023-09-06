@@ -19,7 +19,8 @@ internal static unsafe class GlibcBug
             var versionString = Marshal.PtrToStringUTF8((IntPtr) gnu_get_libc_version());
             var version = Version.Parse(versionString!);
             var badVersion = new Version(2, 35);
-            if (version >= badVersion)
+            var fixedVersion = new Version(2, 37);
+            if (version >= badVersion && version < fixedVersion)
             {
                 C.ForegroundColor = ConsoleColor.Yellow;
                 C.WriteLine($"!!!WARNING!!!: glibc {badVersion} or higher detected (you have {version}).");

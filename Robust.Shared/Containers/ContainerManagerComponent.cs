@@ -16,10 +16,9 @@ namespace Robust.Shared.Containers
     /// <summary>
     /// Holds data about a set of entity containers on this entity.
     /// </summary>
-    [ComponentReference(typeof(IContainerManager))]
     [NetworkedComponent]
     [RegisterComponent, ComponentProtoName("ContainerContainer")]
-    public sealed partial class ContainerManagerComponent : Component, IContainerManager, ISerializationHooks
+    public sealed partial class ContainerManagerComponent : Component, ISerializationHooks
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;

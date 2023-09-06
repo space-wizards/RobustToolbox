@@ -53,7 +53,6 @@ namespace Robust.Shared.GameObjects
 
         event Action<EntityUid>? EntityAdded;
         event Action<EntityUid>? EntityInitialized;
-        event Action<EntityUid>? EntityStarted;
         event Action<EntityUid, MetaDataComponent>? EntityDeleted;
         event Action<EntityUid>? EntityDirtied; // only raised after initialization
 

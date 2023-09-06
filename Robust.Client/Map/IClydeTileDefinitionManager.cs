@@ -27,6 +27,6 @@ namespace Robust.Client.Map
         ///     Gets the region inside the texture atlas to use to draw a tile type.
         /// </summary>
         /// <returns>If null, do not draw the tile at all.</returns>
-        Box2[]? TileAtlasRegion(ushort tileType);
+        Box2[]? TileAtlasRegion(int tileType);
     }
 }

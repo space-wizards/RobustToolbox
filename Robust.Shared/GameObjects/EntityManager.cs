@@ -630,20 +630,15 @@ namespace Robust.Shared.GameObjects
             _eventBus.OnEntityAdded(uid);
             var netEntity = GenerateNetEntity();
 
-#pragma warning disable CS0618
             metadata = new MetaDataComponent
             {
+#pragma warning disable CS0618
                 Owner = uid,
+#pragma warning restore CS0618
                 NetEntity = netEntity,
             };
 
-            // TODO: Dump on server
-            if (netEntity.IsValid())
-            {
-                NetEntityLookup[netEntity] = uid;
-            }
-
-#pragma warning restore CS0618
+            NetEntityLookup[netEntity] = uid;
 
             Entities.Add(uid);
             // add the required MetaDataComponent directly.

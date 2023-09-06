@@ -147,6 +147,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         await client.WaitPost(() =>
         {
             entC = cEntMan.SpawnEntity(null, cEntMan.GetCoordinates(sEntMan.GetNetCoordinates(coords)));
+            entCNet = cEntMan.GetNetEntity(entC);
             childC = cEntMan.SpawnEntity(null, new EntityCoordinates(entC, default));
             clientChildA = cEntMan.SpawnEntity(null, new EntityCoordinates(entA, default));
             clientChildB = cEntMan.SpawnEntity(null, new EntityCoordinates(entB, default));

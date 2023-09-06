@@ -63,8 +63,10 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         var coordsA = new EntityCoordinates(map, default);
         var coordsB = new EntityCoordinates(map, new Vector2(100, 100));
         EntityUid player = default;
-        EntityUid entA = default;
-        EntityUid entB = default;
+        EntityUid serverEntA = default;
+        EntityUid serverEntB = default;
+        NetEntity serverNetA = default;
+        NetEntity serverNetB = default;
 
         await server.WaitPost(() =>
         {
@@ -75,17 +77,19 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             session.JoinGame();
 
             // Spawn test entities.
-            entA = server.EntMan.SpawnAttachedTo(null, coordsA);
-            entB = server.EntMan.SpawnAttachedTo(null, coordsB);
+            serverEntA = server.EntMan.SpawnAttachedTo(null, coordsA);
+            serverEntB = server.EntMan.SpawnAttachedTo(null, coordsB);
+            serverNetA = server.EntMan.GetNetEntity(serverEntA);
+            serverNetB = server.EntMan.GetNetEntity(serverEntB);
 
             // Setup components
-            var cmp = server.EntMan.EnsureComponent<UnknownEntityTestComponent>(entA);
-            cmp.Other = entB;
-            server.EntMan.Dirty(entA, cmp);
+            var cmp = server.EntMan.EnsureComponent<UnknownEntityTestComponent>(serverEntA);
+            cmp.Other = serverEntB;
+            server.EntMan.Dirty(serverEntA, cmp);
 
-            cmp = server.EntMan.EnsureComponent<UnknownEntityTestComponent>(entB);
-            cmp.Other = entA;
-            server.EntMan.Dirty(entB, cmp);
+            cmp = server.EntMan.EnsureComponent<UnknownEntityTestComponent>(serverEntB);
+            cmp.Other = serverEntA;
+            server.EntMan.Dirty(serverEntB, cmp);
         });
 
         await RunTicks();
@@ -95,8 +99,8 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         {
             Assert.That(client.AttachedEntity, Is.EqualTo(player));
             Assert.That(client.EntMan.EntityExists(player));
-            Assert.That(client.EntMan.EntityExists(entA), Is.False);
-            Assert.That(client.EntMan.EntityExists(entB), Is.False);
+            Assert.That(client.EntMan.EntityExists(client.EntMan.GetEntity(serverNetA)), Is.False);
+            Assert.That(client.EntMan.EntityExists(client.EntMan.GetEntity(serverNetB)), Is.False);
         });
 
         // Move the player into PVS range of one of the entities.
@@ -105,11 +109,13 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
 
         await client.WaitPost(() =>
         {
-            Assert.That(client.EntMan.EntityExists(entB), Is.True);
-            Assert.That(client.EntMan.EntityExists(entA), Is.False);
+            var clientEntA = client.EntMan.GetEntity(serverNetA);
+            var clientEntB = client.EntMan.GetEntity(serverNetB);
+            Assert.That(client.EntMan.EntityExists(clientEntB), Is.True);
+            Assert.That(client.EntMan.EntityExists(client.EntMan.GetEntity(serverNetA)), Is.False);
 
-            Assert.That(client.EntMan.TryGetComponent(entB, out UnknownEntityTestComponent? cmp));
-            Assert.That(cmp?.Other, Is.EqualTo(entA));
+            Assert.That(client.EntMan.TryGetComponent(clientEntB, out UnknownEntityTestComponent? cmp));
+            Assert.That(cmp?.Other, Is.EqualTo(clientEntA));
         });
 
         // Move the player into PVS range of the other entity
@@ -118,14 +124,16 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
 
         await client.WaitPost(() =>
         {
-            Assert.That(client.EntMan.EntityExists(entB), Is.True);
-            Assert.That(client.EntMan.EntityExists(entA), Is.True);
+            var clientEntA = client.EntMan.GetEntity(serverNetA);
+            var clientEntB = client.EntMan.GetEntity(serverNetB);
+            Assert.That(client.EntMan.EntityExists(clientEntB), Is.True);
+            Assert.That(client.EntMan.EntityExists(clientEntA), Is.True);
 
-            Assert.That(client.EntMan.TryGetComponent(entB, out UnknownEntityTestComponent? cmp));
-            Assert.That(cmp?.Other, Is.EqualTo(entA));
+            Assert.That(client.EntMan.TryGetComponent(clientEntB, out UnknownEntityTestComponent? cmp));
+            Assert.That(cmp?.Other, Is.EqualTo(clientEntA));
 
-            Assert.That(client.EntMan.TryGetComponent(entA, out cmp));
-            Assert.That(cmp?.Other, Is.EqualTo(entB));
+            Assert.That(client.EntMan.TryGetComponent(clientEntA, out cmp));
+            Assert.That(cmp?.Other, Is.EqualTo(clientEntB));
         });
 
         server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, false));

@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class EntityTypeParser : TypeParser<NetEntity>
+internal sealed class EntityTypeParser : TypeParser<EntityUid>
 {
     public override bool TryParse(ParserContext parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
@@ -19,7 +19,7 @@ internal sealed class EntityTypeParser : TypeParser<NetEntity>
         var word = parser.GetWord(ParserContext.IsToken);
         error = null;
 
-        if (!NetEntity.TryParse(word, out var ent))
+        if (!EntityUid.TryParse(word, out var ent))
         {
             result = null;
 
@@ -47,7 +47,7 @@ public record InvalidEntity(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"Couldn't parse {Value} as a NetEntity.");
+        return FormattedMessage.FromMarkup($"Couldn't parse {Value} as an Entity.");
     }
 
     public string? Expression { get; set; }
@@ -55,7 +55,7 @@ public record InvalidEntity(string Value) : IConError
     public StackTrace? Trace { get; set; }
 }
 
-public record DeadEntity(NetEntity Entity) : IConError
+public record DeadEntity(EntityUid Entity) : IConError
 {
     public FormattedMessage DescribeInner()
     {

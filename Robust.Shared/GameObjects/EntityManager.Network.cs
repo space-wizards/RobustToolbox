@@ -94,7 +94,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
-    public virtual EntityUid EnsureEntity(NetEntity nEntity, Type type, EntityUid callerEntity)
+    public virtual EntityUid EnsureEntity<T>(NetEntity nEntity, EntityUid callerEntity)
     {
         // On server we don't want to ensure any reserved entities for later or flag for comp state handling
         // so this is just GetEntity.
@@ -103,12 +103,12 @@ public partial class EntityManager
 
     /// <inheritdoc />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public EntityUid? EnsureEntity(NetEntity? nEntity, Type type, EntityUid callerEntity)
+    public EntityUid? EnsureEntity<T>(NetEntity? nEntity, EntityUid callerEntity)
     {
         if (nEntity == null)
             return null;
 
-        return EnsureEntity(nEntity.Value, type, callerEntity);
+        return EnsureEntity<T>(nEntity.Value, callerEntity);
     }
 
     /// <inheritdoc />
@@ -181,6 +181,23 @@ public partial class EntityManager
             return null;
 
         return new EntityCoordinates(GetEntity(coordinates.Value.NetEntity), coordinates.Value.Position);
+    }
+
+    /// <inheritdoc />
+    public virtual EntityCoordinates EnsureCoordinates<T>(NetCoordinates netCoordinates, EntityUid callerEntity)
+    {
+        // See EnsureEntity
+        return GetCoordinates(netCoordinates);
+    }
+
+    /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityCoordinates? EnsureCoordinates<T>(NetCoordinates? netCoordinates, EntityUid callerEntity)
+    {
+        if (netCoordinates == null)
+            return null;
+
+        return EnsureCoordinates<T>(netCoordinates.Value, callerEntity);
     }
 
     #endregion

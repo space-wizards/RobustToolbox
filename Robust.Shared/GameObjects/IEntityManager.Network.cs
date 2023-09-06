@@ -31,14 +31,14 @@ public partial interface IEntityManager
     /// Tries to get a corresponding <see cref="EntityUid"/> if it exists, otherwise creates an entity for it.
     /// </summary>
     /// <param name="nEntity">The net entity we're trying to resolve.</param>
-    /// <param name="type">The type of the component that may need its state handling run later.</param>
+    /// <param name="T">The type of the component that may need its state handling run later.</param>
     /// <param name="callerEntity">The entity trying to resolve the net entity. This may be flagged for later component state handling.</param>
-    public EntityUid EnsureEntity(NetEntity nEntity, Type type, EntityUid callerEntity);
+    public EntityUid EnsureEntity<T>(NetEntity nEntity, EntityUid callerEntity);
 
     /// <summary>
     /// Tries to get a corresponding <see cref="EntityUid"/> if it exists and nEntity is not null.
     /// </summary>
-    public EntityUid? EnsureEntity(NetEntity? nEntity, Type type, EntityUid callerEntity);
+    public EntityUid? EnsureEntity<T>(NetEntity? nEntity, EntityUid callerEntity);
 
     /// <summary>
     /// Returns the corresponding local <see cref="EntityUid"/>.
@@ -139,6 +139,19 @@ public partial interface IEntityManager
     /// Returns the corresponding <see cref="EntityCoordinates"/> for the specified network coordinates.
     /// </summary>
     public EntityCoordinates? GetCoordinates(NetCoordinates? coordinates);
+
+    /// <summary>
+    /// Tries to get a corresponding <see cref="EntityCoordinates"/> if it exists, otherwise creates an entity for it.
+    /// </summary>
+    /// <param name="netCoordinates">The net coordinates we're trying to resolve.</param>
+    /// <param name="T">The type of the component that may need its state handling run later.</param>
+    /// <param name="callerEntity">The entity trying to resolve the net entity. This may be flagged for later component state handling.</param>
+    public EntityCoordinates EnsureCoordinates<T>(NetCoordinates netCoordinates, EntityUid callerEntity);
+
+    /// <summary>
+    /// Tries to get a corresponding <see cref="EntityCoordinates"/> if it exists and nEntity is not null.
+    /// </summary>
+    public EntityCoordinates? EnsureCoordinates<T>(NetCoordinates? netCoordinates, EntityUid callerEntity);
 
     public HashSet<EntityCoordinates> GetEntitySet(HashSet<NetCoordinates> netEntities);
 

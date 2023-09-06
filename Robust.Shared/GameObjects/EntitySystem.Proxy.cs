@@ -941,18 +941,36 @@ public partial class EntitySystem
     ///     Returns the <see cref="NetEntity"/> of an entity or creates a new entity if none exists.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid EnsureEntity(NetEntity netEntity, Type type, EntityUid callerEntity)
+    protected EntityUid EnsureEntity<T>(NetEntity netEntity, EntityUid callerEntity)
     {
-        return EntityManager.EnsureEntity(netEntity, type, callerEntity);
+        return EntityManager.EnsureEntity<T>(netEntity, callerEntity);
     }
 
     /// <summary>
     ///     Returns the <see cref="NetEntity"/> of an entity or creates a new one if not null.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid? EnsureEntity(NetEntity? netEntity, Type type, EntityUid callerEntity)
+    protected EntityUid? EnsureEntity<T>(NetEntity? netEntity, EntityUid callerEntity)
     {
-        return EntityManager.EnsureEntity(netEntity, type, callerEntity);
+        return EntityManager.EnsureEntity<T>(netEntity, callerEntity);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetCoordinates"/> of an entity or creates a new entity if none exists.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityCoordinates EnsureCoordinates<T>(NetCoordinates netCoordinates, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureCoordinates<T>(netCoordinates, callerEntity);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetCoordinates"/> of an entity or creates a new one if not null.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityCoordinates? EnsureCoordinates<T>(NetCoordinates? netCoordinates, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureCoordinates<T>(netCoordinates, callerEntity);
     }
 
     /// <summary>

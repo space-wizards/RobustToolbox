@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects;
@@ -34,7 +35,7 @@ public sealed partial class ClientEntityManager
         return !metadata.NetEntity.IsValid();
     }
 
-    public override EntityUid EnsureEntity(NetEntity nEntity, Type type, EntityUid callerEntity)
+    public override EntityUid EnsureEntity<T>(NetEntity nEntity, EntityUid callerEntity)
     {
         if (!nEntity.Valid)
         {
@@ -52,8 +53,14 @@ public sealed partial class ClientEntityManager
         NetEntityLookup[nEntity] = entity;
 
         var pending = PendingNetEntityStates.GetOrNew(nEntity);
-        pending.Add((type, callerEntity));
+        pending.Add((typeof(T), callerEntity));
 
         return entity;
+    }
+
+    public override EntityCoordinates EnsureCoordinates<T>(NetCoordinates netCoordinates, EntityUid callerEntity)
+    {
+        var entity = EnsureEntity<T>(netCoordinates.NetEntity, callerEntity);
+        return new EntityCoordinates(entity, netCoordinates.Position);
     }
 }

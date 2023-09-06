@@ -134,7 +134,7 @@ namespace Robust.Shared.CompNetworkGenerator
                         getStateInit.Append($@"
                 {name} = GetNetEntity(component.{name}),");
                         handleStateSetters.Append($@"
-            component.{name} = EnsureEntity(state.{name}, typeof({componentName}), uid);");
+            component.{name} = EnsureEntity<{componentName}>(state.{name}, uid);");
 
                         break;
                     case GlobalEntityCoordinatesName:
@@ -145,7 +145,7 @@ namespace Robust.Shared.CompNetworkGenerator
                         getStateInit.Append($@"
                 {name} = GetNetCoordinates(component.{name}),");
                         handleStateSetters.Append($@"
-            component.{name} = GetCoordinates(state.{name});");
+            component.{name} = EnsureCoordinates<{componentName}>(state.{name}, uid);");
 
                         break;
                     default:

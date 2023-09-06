@@ -83,7 +83,7 @@ public readonly struct NetCoordinates : IEquatable<NetCoordinates>, ISpanFormatt
     /// <inheritdoc />
     public override string ToString()
     {
-        return $"EntId={NetEntity}, X={Position.X:N2}, Y={Position.Y:N2}";
+        return $"NetEntity={NetEntity}, X={Position.X:N2}, Y={Position.Y:N2}";
     }
 
     public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
@@ -97,6 +97,6 @@ public readonly struct NetCoordinates : IEquatable<NetCoordinates>, ISpanFormatt
         return FormatHelpers.TryFormatInto(
             destination,
             out charsWritten,
-            $"EntId={NetEntity}, X={Position.X:N2}, Y={Position.Y:N2}");
+            $"NetEntity={NetEntity}, X={Position.X:N2}, Y={Position.Y:N2}");
     }
 }

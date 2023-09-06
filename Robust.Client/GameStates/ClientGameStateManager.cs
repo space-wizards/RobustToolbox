@@ -873,17 +873,17 @@ namespace Robust.Client.GameStates
             var toDelete = new List<EntityUid>(Math.Max(64, _entities.EntityCount - stateEnts.Count));
             foreach (var ent in currentEnts)
             {
-                if (_entities.IsClientSide(ent))
+                if (metas.TryGetComponent(ent, out var metadata) && _entities.IsClientSide(ent, metadata))
                 {
                     if (deleteClientEntities)
                         toDelete.Add(ent);
                     continue;
                 }
 
-                if (stateEnts.Contains(ent) && metas.TryGetComponent(ent, out var meta))
+                if (stateEnts.Contains(ent) && metadata != null)
                 {
-                    if (resetAllEntities || meta.LastStateApplied > state.ToSequence)
-                        meta.LastStateApplied = GameTick.Zero; // TODO track last-state-applied for individual components? Is it even worth it?
+                    if (resetAllEntities || metadata.LastStateApplied > state.ToSequence)
+                        metadata.LastStateApplied = GameTick.Zero; // TODO track last-state-applied for individual components? Is it even worth it?
                     continue;
                 }
 
@@ -1053,7 +1053,7 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
 
                     if (container != null)
-                        containerSys.AddExpectedEntity(_entities.GetNetEntity(ent), container);
+                        containerSys.AddExpectedEntity(netEntity, container);
                 }
 
                 detached?.Add(netEntity);

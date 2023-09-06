@@ -43,7 +43,7 @@ public partial class EntityManager
 
     public bool IsClientSide(NetEntity netEntity)
     {
-        return (netEntity._id & NetEntity.ClientEntity) == NetEntity.ClientEntity;
+        return (netEntity.Id & NetEntity.ClientEntity) == NetEntity.ClientEntity;
     }
 
     #region NetEntity

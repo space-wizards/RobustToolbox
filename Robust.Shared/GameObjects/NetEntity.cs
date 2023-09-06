@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects;
 [Serializable, NetSerializable]
 public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFormattable
 {
-    internal readonly int _id;
+    public readonly int Id;
 
     public const int ClientEntity = 2 << 29;
 
@@ -37,7 +37,7 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// </summary>
     public NetEntity(int id)
     {
-        _id = id;
+        Id = id;
     }
 
     public bool Valid => IsValid();
@@ -71,13 +71,13 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     [Pure]
     public bool IsValid()
     {
-        return _id > -1;
+        return Id > -1;
     }
 
     /// <inheritdoc />
     public bool Equals(NetEntity other)
     {
-        return _id == other._id;
+        return Id == other.Id;
     }
 
     /// <inheritdoc />
@@ -90,7 +90,7 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return _id;
+        return Id;
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// </summary>
     public static bool operator ==(NetEntity a, NetEntity b)
     {
-        return a._id == b._id;
+        return a.Id == b.Id;
     }
 
     /// <summary>
@@ -115,13 +115,13 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// </summary>
     public static explicit operator int(NetEntity self)
     {
-        return self._id;
+        return self.Id;
     }
 
     /// <inheritdoc />
     public override string ToString()
     {
-        return _id.ToString();
+        return Id.ToString();
     }
 
     public string ToString(string? format, IFormatProvider? formatProvider)
@@ -135,13 +135,13 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
         ReadOnlySpan<char> format,
         IFormatProvider? provider)
     {
-        return _id.TryFormat(destination, out charsWritten);
+        return Id.TryFormat(destination, out charsWritten);
     }
 
     /// <inheritdoc />
     public int CompareTo(NetEntity other)
     {
-        return _id.CompareTo(other._id);
+        return Id.CompareTo(other.Id);
     }
 
     #region ViewVariables

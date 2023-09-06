@@ -23,7 +23,7 @@ public sealed partial class ClientEntityManager
         if (!MetaQuery.Resolve(uid, ref metadata, false))
             return false;
 
-        return (metadata.NetEntity._id & NetEntity.ClientEntity) == NetEntity.ClientEntity;
+        return (metadata.NetEntity.Id & NetEntity.ClientEntity) == NetEntity.ClientEntity;
     }
 
     public override EntityUid EnsureEntity<T>(NetEntity nEntity, EntityUid callerEntity)

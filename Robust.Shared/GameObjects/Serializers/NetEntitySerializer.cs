@@ -41,6 +41,6 @@ public sealed class NetEntitySerializer : ITypeSerializer<NetEntity, ValueDataNo
     public NetEntity CreateCopy(ISerializationManager serializationManager, NetEntity source, IDependencyCollection dependencies,
         SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
-        return new NetEntity(source.GetHashCode());
+        return new NetEntity(source.Id);
     }
 }

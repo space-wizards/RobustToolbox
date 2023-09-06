@@ -49,6 +49,8 @@ namespace Robust.Client.GameStates
         // Game state dictionaries that get used every tick.
         private readonly Dictionary<EntityUid, (bool EnteringPvs, GameTick LastApplied, EntityState? curState, EntityState? nextState)> _toApply = new();
         private readonly Dictionary<NetEntity, EntityState> _toCreate = new();
+        private readonly Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)> _compStateWork = new();
+        private readonly Dictionary<EntityUid, HashSet<Type>> _pendingReapplyNetStates = new();
 
         private uint _metaCompNetId;
 
@@ -667,6 +669,7 @@ namespace Robust.Client.GameStates
             var enteringPvs = 0;
             _toApply.Clear();
             _toCreate.Clear();
+            _pendingReapplyNetStates.Clear();
             var curSpan = curState.EntityStates.Span;
 
             // Create new entities
@@ -699,8 +702,11 @@ namespace Robust.Client.GameStates
                     // Check if there's any component states awaiting this entity.
                     if (_entityManager.PendingNetEntityStates.TryGetValue(es.NetEntity, out var value))
                     {
-                        // TODO: Dis.
-                        throw new NotImplementedException();
+                        foreach (var (type, owner) in value)
+                        {
+                            var pending = _pendingReapplyNetStates.GetOrNew(owner);
+                            pending.Add(type);
+                        }
                     }
                 }
 
@@ -758,6 +764,15 @@ namespace Robust.Client.GameStates
                 }
             }
 
+            // Check pending states and see if we need to force any entities to re-run component states.
+            foreach (var uid in _pendingReapplyNetStates.Keys)
+            {
+                if (_toApply.ContainsKey(uid))
+                    continue;
+
+                _toApply[uid] = (false, GameTick.Zero, null, null);
+            }
+
             var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);
 
             // Apply entity states.
@@ -780,6 +795,7 @@ namespace Robust.Client.GameStates
                     if (!_toApply.TryGetValue(xform.ParentUid, out var parent) || !parent.EnteringPvs)
                         queuedBroadphaseUpdates.Add((entity, xform));
                 }
+
                 _prof.WriteValue("Count", ProfData.Int32(_toApply.Count));
             }
 
@@ -1110,8 +1126,9 @@ namespace Robust.Client.GameStates
         private void HandleEntityState(EntityUid uid, IEventBus bus, EntityState? curState,
             EntityState? nextState, GameTick lastApplied, GameTick toTick, bool enteringPvs)
         {
-            var size = (curState?.ComponentChanges.Span.Length ?? 0) + (nextState?.ComponentChanges.Span.Length ?? 0);
-            var compStateWork = new Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)>(size);
+            _compStateWork.Clear();
+            var meta = _entityManager.GetComponent<MetaDataComponent>(uid);
+            var netEntity = meta.NetEntity;
 
             // First remove any deleted components
             if (curState?.NetComponents != null)
@@ -1136,9 +1153,7 @@ namespace Robust.Client.GameStates
                 //
                 // as to why we need to reset: because in the process of detaching to null-space, we will have dirtied
                 // the entity. most notably, all entities will have been ejected from their containers.
-                var meta = _entityManager.GetComponent<MetaDataComponent>(uid);
-
-                foreach (var (id, state) in _processor.GetLastServerStates(meta.NetEntity))
+                foreach (var (id, state) in _processor.GetLastServerStates(netEntity))
                 {
                     if (!_entityManager.TryGetComponent(uid, id, out var comp))
                     {
@@ -1148,7 +1163,7 @@ namespace Robust.Client.GameStates
                         _entityManager.AddComponent(uid, newComp, true);
                     }
 
-                    compStateWork[id] = (comp, state, null);
+                    _compStateWork[id] = (comp, state, null);
                 }
             }
             else if (curState != null)
@@ -1165,7 +1180,7 @@ namespace Robust.Client.GameStates
                     else if (compChange.LastModifiedTick <= lastApplied && lastApplied != GameTick.Zero)
                         continue;
 
-                    compStateWork[compChange.NetID] = (comp, compChange.State, null);
+                    _compStateWork[compChange.NetID] = (comp, compChange.State, null);
                 }
             }
 
@@ -1183,14 +1198,38 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    if (compStateWork.TryGetValue(compState.NetID, out var state))
-                        compStateWork[compState.NetID] = (comp, state.curState, compState.State);
+                    if (_compStateWork.TryGetValue(compState.NetID, out var state))
+                        _compStateWork[compState.NetID] = (comp, state.curState, compState.State);
                     else
-                        compStateWork[compState.NetID] = (comp, null, compState.State);
+                        _compStateWork[compState.NetID] = (comp, null, compState.State);
                 }
             }
 
-            foreach (var (comp, cur, next) in compStateWork.Values)
+            // If we have a NetEntity we reference come in then apply their state.
+            if (_pendingReapplyNetStates.TryGetValue(uid, out var reapplyTypes))
+            {
+                var lastState = _processor.GetLastServerStates(netEntity);
+
+                foreach (var type in reapplyTypes)
+                {
+                    var compRef = _compFactory.GetRegistration(type);
+                    var netId = compRef.NetID;
+
+                    if (netId == null)
+                        continue;
+
+                    if (_compStateWork.ContainsKey(netId.Value) ||
+                        !_entityManager.TryGetComponent(uid, type, out var comp) ||
+                        !lastState.TryGetValue(netId.Value, out var lastCompState))
+                    {
+                        continue;
+                    }
+
+                    _compStateWork[netId.Value] = (comp, lastCompState, null);
+                }
+            }
+
+            foreach (var (comp, cur, next) in _compStateWork.Values)
             {
                 try
                 {

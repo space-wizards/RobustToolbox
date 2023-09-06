@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Map;
@@ -25,6 +26,19 @@ public partial interface IEntityManager
     /// Returns true if the entity only exists on the client.
     /// </summary>
     public bool IsClientSide(EntityUid uid, MetaDataComponent? metadata = null);
+
+    /// <summary>
+    /// Tries to get a corresponding <see cref="EntityUid"/> if it exists, otherwise creates an entity for it.
+    /// </summary>
+    /// <param name="nEntity">The net entity we're trying to resolve.</param>
+    /// <param name="type">The type of the component that may need its state handling run later.</param>
+    /// <param name="callerEntity">The entity trying to resolve the net entity. This may be flagged for later component state handling.</param>
+    public EntityUid EnsureEntity(NetEntity nEntity, Type type, EntityUid callerEntity);
+
+    /// <summary>
+    /// Tries to get a corresponding <see cref="EntityUid"/> if it exists and nEntity is not null.
+    /// </summary>
+    public EntityUid? EnsureEntity(NetEntity? nEntity, Type type, EntityUid callerEntity);
 
     /// <summary>
     /// Returns the corresponding local <see cref="EntityUid"/>.

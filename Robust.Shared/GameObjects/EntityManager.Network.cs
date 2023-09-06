@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -91,6 +94,24 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    public virtual EntityUid EnsureEntity(NetEntity nEntity, Type type, EntityUid callerEntity)
+    {
+        // On server we don't want to ensure any reserved entities for later or flag for comp state handling
+        // so this is just GetEntity.
+        return GetEntity(nEntity);
+    }
+
+    /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityUid? EnsureEntity(NetEntity? nEntity, Type type, EntityUid callerEntity)
+    {
+        if (nEntity == null)
+            return null;
+
+        return EnsureEntity(nEntity.Value, type, callerEntity);
+    }
+
+    /// <inheritdoc />
     public EntityUid GetEntity(NetEntity nEntity)
     {
         if (nEntity == NetEntity.Invalid)
@@ -100,6 +121,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid? GetEntity(NetEntity? nEntity)
     {
         if (nEntity == null)

@@ -695,6 +695,13 @@ namespace Robust.Client.GameStates
                     newMeta.NetEntity = es.NetEntity;
                     _entityManager.SetNetEntity(uid, es.NetEntity);
                     newMeta.LastStateApplied = curState.ToSequence;
+
+                    // Check if there's any component states awaiting this entity.
+                    if (_entityManager.PendingNetEntityStates.TryGetValue(es.NetEntity, out var value))
+                    {
+                        // TODO: Dis.
+                        throw new NotImplementedException();
+                    }
                 }
 
                 _prof.WriteValue("Count", ProfData.Int32(count));
@@ -915,6 +922,9 @@ namespace Robust.Client.GameStates
 
             foreach (var netEntity in delSpan)
             {
+                // Don't worry about this for later.
+                _entityManager.PendingNetEntityStates.Remove(netEntity);
+
                 var id = _entityManager.GetEntity(netEntity);
 
                 if (!xforms.TryGetComponent(id, out var xform))

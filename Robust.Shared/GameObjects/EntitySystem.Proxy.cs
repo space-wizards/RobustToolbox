@@ -938,6 +938,24 @@ public partial class EntitySystem
     }
 
     /// <summary>
+    ///     Returns the <see cref="NetEntity"/> of an entity or creates a new entity if none exists.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid EnsureEntity(NetEntity netEntity, Type type, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntity(netEntity, type, callerEntity);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> of an entity or creates a new one if not null.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid? EnsureEntity(NetEntity? netEntity, Type type, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntity(netEntity, type, callerEntity);
+    }
+
+    /// <summary>
     ///     Returns the <see cref="EntityUid"/> of a <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

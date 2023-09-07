@@ -43,7 +43,7 @@ namespace Robust.Shared.ContentPack
             {
                 if (directory.Children.TryGetValue(segment, out var child))
                 {
-                    if (!(child is DirectoryNode childDir))
+                    if (child is not DirectoryNode childDir)
                     {
                         throw new ArgumentException("A file already exists at that location.");
                     }
@@ -55,6 +55,7 @@ namespace Robust.Shared.ContentPack
                 var newDir = new DirectoryNode();
 
                 directory.Children.Add(segment, newDir);
+                directory = newDir;
             }
         }
 
@@ -205,7 +206,28 @@ namespace Robust.Shared.ContentPack
 
         public void Rename(ResPath oldPath, ResPath newPath)
         {
-            throw new NotImplementedException();
+            if (!oldPath.IsRooted)
+                throw new ArgumentException("Path must be rooted", nameof(oldPath));
+
+            if (!newPath.IsRooted)
+                throw new ArgumentException("Path must be rooted", nameof(newPath));
+
+            if (!TryGetNodeAt(oldPath.Directory, out var parent) || parent is not DirectoryNode sourceDir)
+                throw new ArgumentException("Source directory does not exist.");
+
+            if (!TryGetNodeAt(newPath.Directory, out var target) || target is not DirectoryNode targetDir)
+                throw new ArgumentException("Target directory does not exist.");
+
+            var newFile = newPath.Filename;
+            if (targetDir.Children.ContainsKey(newFile))
+                throw new ArgumentException("Target node already exists");
+
+            var oldFile = oldPath.Filename;
+            if (!sourceDir.Children.TryGetValue(oldFile, out var node))
+                throw new ArgumentException("Node does not exist in original directory.");
+
+            sourceDir.Children.Remove(oldFile);
+            targetDir.Children.Add(newFile, node);
         }
 
         public void OpenOsWindow(ResPath path)

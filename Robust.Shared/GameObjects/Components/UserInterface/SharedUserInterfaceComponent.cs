@@ -73,19 +73,20 @@ namespace Robust.Shared.GameObjects
         ///     The Entity receiving the message.
         ///     Only set when the message is raised as a directed event.
         /// </summary>
-        public EntityUid Entity { get; set; } = EntityUid.Invalid;
+        public EntityUid Entity = EntityUid.Invalid;
     }
 
     /// <summary>
     /// Abstract class for all BUI events.
     /// </summary>
+    [Serializable, NetSerializable]
     public abstract class BaseBoundUserInterfaceEvent : EntityEventArgs
     {
         /// <summary>
         ///     The UI of this message.
         ///     Only set when the message is raised as a directed event.
         /// </summary>
-        public Enum UiKey { get; set; } = default!;
+        public Enum UiKey = default!;
 
         /// <summary>
         ///     The session sending or receiving this message.

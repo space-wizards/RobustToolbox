@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -1480,7 +1479,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public TComp1 GetComponentInternal(EntityUid uid)
+        internal TComp1 GetComponentInternal(EntityUid uid)
         {
             if (_traitDict.TryGetValue(uid, out var comp))
                 return (TComp1) comp;

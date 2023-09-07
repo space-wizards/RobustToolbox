@@ -572,7 +572,8 @@ namespace Robust.Shared.GameObjects
                 if (reg.ReferenceEvent != byRef)
                     ThrowByRefMisMatch();
 
-                found.Add(new OrderedEventDispatch((ref Unit ev) => {
+                found.Add(new OrderedEventDispatch((ref Unit ev) =>
+                {
                     if (!component.Deleted)
                         reg.Handler(euid, component, ref ev);
                     }, reg.Order));

@@ -12,14 +12,20 @@ public partial interface IEntityManager
     /// </summary>
     public bool TryGetEntity(NetEntity nEntity, out EntityUid entity);
 
-    /// <inheritdoc />
-    public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity);
+    /// <summary>
+    /// TryGet version of <see cref="GetEntity"/>
+    /// </summary>
+    public bool TryGetEntity(NetEntity? nEntity, out EntityUid entity);
 
-    /// <inheritdoc />
+    /// <summary>
+    /// TryGet version of <see cref="GetNetEntity"/>
+    /// </summary>
     public bool TryGetNetEntity(EntityUid uid, out NetEntity netEntity, MetaDataComponent? metadata = null);
 
-    /// <inheritdoc />
-    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity,
+    /// <summary>
+    /// TryGet version of <see cref="GetNetEntity"/>
+    /// </summary>
+    public bool TryGetNetEntity(EntityUid? uid, out NetEntity netEntity,
         MetaDataComponent? metadata = null);
 
     /// <summary>

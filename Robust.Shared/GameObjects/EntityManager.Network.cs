@@ -51,32 +51,26 @@ public partial class EntityManager
     /// <inheritdoc />
     public bool TryGetEntity(NetEntity nEntity, out EntityUid entity)
     {
-        if (nEntity == NetEntity.Invalid)
-        {
-            entity = EntityUid.Invalid;
-            return false;
-        }
-
-        return NetEntityLookup.TryGetValue(nEntity, out entity);
-    }
-
-    /// <inheritdoc />
-    public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
-    {
-        if (nEntity == null)
-        {
-            entity = null;
-            return false;
-        }
-
-        if (TryGetEntity(nEntity.Value, out var went))
+        if (NetEntityLookup.TryGetValue(nEntity, out var went))
         {
             entity = went;
             return true;
         }
 
-        entity = null;
+        entity = EntityUid.Invalid;
         return false;
+    }
+
+    /// <inheritdoc />
+    public bool TryGetEntity(NetEntity? nEntity, out EntityUid entity)
+    {
+        if (nEntity == null)
+        {
+            entity = EntityUid.Invalid;
+            return false;
+        }
+
+        return TryGetEntity(nEntity.Value, out entity);
     }
 
     /// <inheritdoc />
@@ -100,22 +94,15 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
-    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid? uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
     {
         if (uid == null)
         {
-            netEntity = null;
+            netEntity = NetEntity.Invalid;
             return false;
         }
 
-        if (TryGetNetEntity(uid.Value, out var went, metadata))
-        {
-            netEntity = went;
-            return true;
-        }
-
-        netEntity = null;
-        return false;
+        return TryGetNetEntity(uid.Value, out netEntity, metadata);
     }
 
     /// <inheritdoc />
@@ -142,7 +129,7 @@ public partial class EntityManager
         if (nEntity == NetEntity.Invalid)
             return EntityUid.Invalid;
 
-        return NetEntityLookup.TryGetValue(nEntity, out var entity) ? entity : EntityUid.Invalid;
+        return NetEntityLookup[nEntity];
     }
 
     /// <inheritdoc />
@@ -161,8 +148,7 @@ public partial class EntityManager
         if (uid == EntityUid.Invalid)
             return NetEntity.Invalid;
 
-        // I wanted this to logMissing but it seems to break a loootttt of dodgy stuff on content.
-        return MetaQuery.Resolve(uid, ref metadata, false) ? metadata.NetEntity : NetEntity.Invalid;
+        return MetaQuery.GetComponent(uid).NetEntity;
     }
 
     /// <inheritdoc />

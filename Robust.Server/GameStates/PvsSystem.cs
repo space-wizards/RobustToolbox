@@ -613,9 +613,9 @@ internal sealed partial class PvsSystem : EntitySystem
         var tree = _treePool.Get();
         foreach (var netEntity in chunk)
         {
-            AddToChunkSetRecursively(in netEntity, visMask, tree, chunkSet);
-#if DEBUG
             var uid = GetEntity(netEntity);
+            AddToChunkSetRecursively(in uid, in netEntity, visMask, tree, chunkSet);
+#if DEBUG
             var xform = _xformQuery.GetComponent(uid);
             if (chunkLocation is MapChunkLocation)
                 DebugTools.Assert(xform.GridUid == null || xform.GridUid == uid);
@@ -648,12 +648,11 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private bool AddToChunkSetRecursively(in NetEntity netEntity, uint visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
+    private bool AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, uint visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
     {
         if (set.ContainsKey(netEntity))
             return true;
 
-        var uid = GetEntity(netEntity);
         var mComp = _metaQuery.GetComponent(uid);
 
         // TODO: Don't need to know about parents so no longer need to use bool for this method.
@@ -679,7 +678,7 @@ internal sealed partial class PvsSystem : EntitySystem
         var parentNetEntity = _metaQuery.GetComponent(parent).NetEntity;
 
         if (!set.ContainsKey(parentNetEntity) && //was the parent not yet added to toSend?
-            !AddToChunkSetRecursively(in parentNetEntity, visMask, tree, set)) //did we just fail to add the parent?
+            !AddToChunkSetRecursively(in parent, in parentNetEntity, visMask, tree, set)) //did we just fail to add the parent?
         {
             return false; //we failed? suppose we dont get added either
         }
@@ -713,17 +712,6 @@ internal sealed partial class PvsSystem : EntitySystem
             throw new Exception("Encountered non-empty object inside of _visSetPool. Was the same object returned to the pool more than once?");
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-        var netDeletions = _poolManager.GetNetEntityList(deletions?.Count ?? 0);
-
-        if (deletions?.Count > 0)
-        {
-            foreach (var netEntity in deletions)
-            {
-                netDeletions.Add(netEntity);
-            }
-        }
-
-        _poolManager.Return(deletions);
         var entStateCount = 0;
 
         var stack = _stackPool.Get();
@@ -863,7 +851,7 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         if (entityStates.Count == 0) entityStates = default;
-        return (entityStates, netDeletions, leftView, sessionData.RequestedFull ? GameTick.Zero : fromTick);
+        return (entityStates, deletions, leftView, sessionData.RequestedFull ? GameTick.Zero : fromTick);
     }
 
     /// <summary>
@@ -1004,14 +992,15 @@ internal sealed partial class PvsSystem : EntitySystem
             if (!_xformQuery.TryGetComponent(child, out var childXform))
                 continue;
 
-            var childNetEntity = GetNetEntity(child);
+            var metadata = _metaQuery.GetComponent(child);
+            var childNetEntity = GetNetEntity(child, metadata);
 
             if (!toSend.ContainsKey(childNetEntity))
             {
                 var (entered, _) = ProcessEntry(in childNetEntity, lastAcked, lastSent, lastSeen, ref newEntityCount,
                     ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-                AddToSendSet(in childNetEntity, _metaQuery.GetComponent(child), toSend, fromTick, in entered, ref entStateCount);
+                AddToSendSet(in childNetEntity, metadata, toSend, fromTick, in entered, ref entStateCount);
             }
 
             RecursivelyAddChildren(childXform, lastAcked, lastSent, toSend, lastSeen, fromTick, ref newEntityCount,
@@ -1248,7 +1237,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         }
 
         DebugTools.Assert(meta.EntityLastModifiedTick >= meta.LastComponentRemoved);
-        DebugTools.Assert(meta.NetEntity.IsValid());
+        DebugTools.Assert(GetEntity(meta.NetEntity) == entityUid);
         var entState = new EntityState(meta.NetEntity, changed, meta.EntityLastModifiedTick, netComps);
 
         return entState;

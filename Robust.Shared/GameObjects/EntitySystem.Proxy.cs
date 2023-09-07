@@ -909,7 +909,7 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
+    public bool TryGetEntity(NetEntity? nEntity, out EntityUid entity)
     {
         return EntityManager.TryGetEntity(nEntity, out entity);
     }
@@ -921,7 +921,7 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid? uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
     {
         return EntityManager.TryGetNetEntity(uid, out netEntity);
     }

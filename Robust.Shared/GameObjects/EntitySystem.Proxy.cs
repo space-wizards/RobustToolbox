@@ -403,6 +403,13 @@ public partial class EntitySystem
         return EntityManager.ToPrettyString(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityStringRepresentation ToPrettyString(NetEntity netEntity)
+    {
+        return EntityManager.ToPrettyString(netEntity);
+    }
+
     #endregion
 
     #region Component Get

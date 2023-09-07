@@ -746,6 +746,12 @@ namespace Robust.Shared.GameObjects
             return ToPrettyString(uid, metadata);
         }
 
+        /// <inheritdoc />
+        public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
+        {
+            return ToPrettyString(GetEntity(netEntity));
+        }
+
         private EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent metadata)
         {
             return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);

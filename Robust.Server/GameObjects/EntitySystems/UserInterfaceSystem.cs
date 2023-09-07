@@ -383,7 +383,7 @@ namespace Robust.Server.GameObjects
                 return false;
 
             _openInterfaces.GetOrNew(session).Add(bui);
-            RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, GetNetEntity(bui.Owner), session));
+            RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Owner, session));
 
             RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
 
@@ -428,7 +428,7 @@ namespace Robust.Server.GameObjects
             if (_openInterfaces.TryGetValue(session, out var buis))
                 buis.Remove(bui);
 
-            RaiseLocalEvent(owner, new BoundUIClosedEvent(bui.UiKey, GetNetEntity(owner), session));
+            RaiseLocalEvent(owner, new BoundUIClosedEvent(bui.UiKey, owner, session));
 
             if (bui._subscribedSessions.Count == 0)
                 DeactivateInterface(bui.Owner, bui, activeUis);

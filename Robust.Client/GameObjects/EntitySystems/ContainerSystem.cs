@@ -265,7 +265,7 @@ namespace Robust.Client.GameObjects
                 return false;
 
             DebugTools.Assert(container.ExpectedEntities.Contains(entity),
-                $"While removing expected contained entity {entity}, the entity was missing from the container expected set. Container: {container.ID} in {ToPrettyString(container.Owner)}");
+                $"While removing expected contained entity {ToPrettyString(entity)}, the entity was missing from the container expected set. Container: {container.ID} in {ToPrettyString(container.Owner)}");
             container.ExpectedEntities.Remove(entity);
             return true;
         }

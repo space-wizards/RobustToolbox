@@ -776,9 +776,11 @@ public sealed class TextEdit : Control
     {
         var size = base.ArrangeOverride(finalSize);
 
-        _scrollBar.Page = size.Y * UIScale;
+        var renderBoxSize = _renderBox.Size;
 
-        UpdateLineBreaks((int)(size.X * UIScale));
+        _scrollBar.Page = renderBoxSize.Y * UIScale;
+
+        UpdateLineBreaks((int)(renderBoxSize.X * UIScale));
 
         return size;
     }

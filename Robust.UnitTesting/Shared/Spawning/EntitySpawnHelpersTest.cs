@@ -13,394 +13,88 @@ namespace Robust.UnitTesting.Shared.Spawning;
 /// <see cref="IEntityManager.TrySpawnNextTo"/>) work as intended.
 /// </summary>
 [TestFixture]
-[FixtureLifeCycle(LifeCycle.InstancePerTestCase)]
-public sealed partial class EntitySpawnHelpersTest : RobustIntegrationTest
+[Virtual]
+public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
 {
-    private ServerIntegrationInstance _server = default!;
-    private IEntityManager _entMan = default!;
-    private IMapManager _mapMan = default!;
-    private SharedTransformSystem _xforms = default!;
-    private SharedContainerSystem _container = default!;
+    protected ServerIntegrationInstance Server = default!;
+    protected IEntityManager EntMan = default!;
+    protected IMapManager MapMan = default!;
+    protected SharedTransformSystem Xforms = default!;
+    protected SharedContainerSystem Container = default!;
 
-    private EntityUid _map;
-    private MapId _mapId;
-    private EntityUid _parent; // entity parented to the map.
-    private EntityUid _childA; // in a container, inside _parent
-    private EntityUid _childB; // in another container, inside _parent
-    private EntityUid _grandChildA; // in a container, inside _childA
-    private EntityUid _grandChildB; // attached to _childB, not directly in a container.
-    private EntityUid _greatGrandChildA; //  in a container, inside _grandChildA
-    private EntityUid _greatGrandChildB; //  in a container, inside _grandChildB
+    protected EntityUid Map;
+    protected MapId MapId;
+    protected EntityUid Parent; // entity parented to the map.
+    protected EntityUid ChildA; // in a container, inside _parent
+    protected EntityUid ChildB; // in another container, inside _parent
+    protected EntityUid GrandChildA; // in a container, inside _childA
+    protected EntityUid GrandChildB; // attached to _childB, not directly in a container.
+    protected EntityUid GreatGrandChildA; //  in a container, inside _grandChildA
+    protected EntityUid GreatGrandChildB; //  in a container, inside _grandChildB
 
-    private EntityCoordinates _parentPos;
-    private EntityCoordinates _grandChildBPos;
+    protected EntityCoordinates ParentPos;
+    protected EntityCoordinates GrandChildBPos;
 
-    [Test]
-    public async Task TestTrySpawnNextTo()
+    protected async Task Setup()
     {
-        await Setup();
-
-        // Spawning next to an entity in a container will insert the entity into the container.
-        await _server.WaitPost(() =>
-        {
-            Assert.That(_entMan.TrySpawnNextTo(null, _childA, out var uid));
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid!.Value), Is.EqualTo(_parent));
-            Assert.That(_container.IsEntityInContainer(uid.Value));
-            Assert.That(_container.GetContainer(_parent, "childA").Contains(uid.Value));
-        });
-
-        // The container is now full, spawning will fail.
-        await _server.WaitPost(() =>
-        {
-            int count = _entMan.EntityCount;
-            Assert.That(_entMan.TrySpawnNextTo(null, _childA, out var uid), Is.False);
-            Assert.That(_entMan.EntityCount, Is.EqualTo(count));
-            Assert.That(_entMan.EntityExists(uid), Is.False);
-        });
-
-        // Spawning next to an entity that is not in a container will simply spawn it in the same position
-        await _server.WaitPost(() =>
-        {
-            Assert.That(_entMan.TrySpawnNextTo(null, _grandChildB, out var uid));
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid!.Value), Is.EqualTo(_childB));
-            Assert.That(_container.IsEntityInContainer(uid.Value), Is.False);
-            Assert.That(_container.IsEntityOrParentInContainer(uid.Value));
-            Assert.That(_entMan.GetComponent<TransformComponent>(uid.Value).Coordinates, Is.EqualTo(_grandChildBPos));
-        });
-
-        // Spawning "next to" a nullspace entity will fail.
-        await _server.WaitPost(() =>
-        {
-            int count = _entMan.EntityCount;
-            Assert.That(_entMan.TrySpawnNextTo(null, _map, out var uid), Is.False);
-            Assert.That(_entMan.EntityCount, Is.EqualTo(count));
-            Assert.That(_entMan.EntityExists(uid), Is.False);
-        });
-
-        await _server.WaitPost(() =>_mapMan.DeleteMap(_mapId));
-        _server.Dispose();
-    }
-
-    [Test]
-    public async Task TestTrySpawnInContainer()
-    {
-        await Setup();
-
-        // Spawning into a non-existent container does nothing.
-        await _server.WaitPost(() =>
-        {
-            int count = _entMan.EntityCount;
-            Assert.That(_entMan.TrySpawnInContainer(null, _childA, "foo", out var uid), Is.False);
-            Assert.That(_entMan.EntityCount, Is.EqualTo(count));
-            Assert.That(_entMan.EntityExists(uid), Is.False);
-            Assert.That(_entMan.TrySpawnInContainer(null, _grandChildB, "foo", out uid), Is.False);
-            Assert.That(_entMan.EntityCount, Is.EqualTo(count));
-            Assert.That(_entMan.EntityExists(uid), Is.False);
-        });
-
-        // Spawning into a container works as expected.
-        await _server.WaitPost(() =>
-        {
-            Assert.That(_entMan.TrySpawnInContainer(null, _childA, "grandChildA", out var uid));
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid!.Value), Is.EqualTo(_childA));
-            Assert.That(_container.IsEntityInContainer(uid.Value));
-            Assert.That(_container.GetContainer(_childA, "grandChildA").Contains(uid.Value));
-        });
-
-        // Spawning another entity will fail as the container is now full
-        await _server.WaitPost(() =>
-        {
-            int count = _entMan.EntityCount;
-            Assert.That(_entMan.TrySpawnInContainer(null, _childA, "grandChildA", out var uid), Is.False);
-            Assert.That(_entMan.EntityCount, Is.EqualTo(count));
-            Assert.That(_entMan.EntityExists(uid), Is.False);
-        });
-
-        await _server.WaitPost(() =>_mapMan.DeleteMap(_mapId));
-        _server.Dispose();
-    }
-
-    [Test]
-    public async Task TestSpawnNextToOrDrop()
-    {
-        await Setup();
-
-        // Spawning next to an entity in a container will insert the entity into the container.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnNextToOrDrop(null, _greatGrandChildA);
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_grandChildA));
-            Assert.That(_container.IsEntityInContainer(uid));
-            Assert.That(_container.GetContainer(_grandChildA, "greatGrandChildA").Contains(uid));
-        });
-
-        // The container is now full, spawning will insert into the outer container.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnNextToOrDrop(null, _greatGrandChildA);
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_childA));
-            Assert.That(_container.IsEntityInContainer(uid));
-            Assert.That(_container.GetContainer(_childA, "grandChildA").Contains(uid));
-        });
-
-        // If outer two containers are full, will insert into outermost container.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnNextToOrDrop(null, _greatGrandChildA);
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_parent));
-            Assert.That(_container.IsEntityInContainer(uid));
-            Assert.That(_container.GetContainer(_parent, "childA").Contains(uid));
-        });
-
-        // Finally, this will drop the item on the map.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnNextToOrDrop(null, _greatGrandChildA);
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_map));
-            Assert.That(_container.IsEntityInContainer(uid), Is.False);
-            Assert.That(_entMan.GetComponent<TransformComponent>(uid).Coordinates, Is.EqualTo(_parentPos));
-        });
-
-        // Repeating this will just drop it on the map again.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnNextToOrDrop(null, _greatGrandChildA);
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_map));
-            Assert.That(_container.IsEntityInContainer(uid), Is.False);
-            Assert.That(_entMan.GetComponent<TransformComponent>(uid).Coordinates, Is.EqualTo(_parentPos));
-        });
-
-        // Repeat the above but with the B-children. As _grandChildB is not actually IN a container, entities will
-        // simply be parented to _childB.
-
-        // First insert works fine
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnNextToOrDrop(null, _greatGrandChildB);
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_grandChildB));
-            Assert.That(_container.IsEntityInContainer(uid));
-            Assert.That(_container.GetContainer(_grandChildB, "greatGrandChildB").Contains(uid));
-        });
-
-        // Second insert will drop the entity next to _grandChildB
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnNextToOrDrop(null, _greatGrandChildB);
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_childB));
-            Assert.That(_container.IsEntityInContainer(uid), Is.False);
-            Assert.That(_entMan.GetComponent<TransformComponent>(uid).Coordinates, Is.EqualTo(_grandChildBPos));
-        });
-
-        // Repeating this will just repeat the above behaviour.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnNextToOrDrop(null, _greatGrandChildB);
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_childB));
-            Assert.That(_container.IsEntityInContainer(uid), Is.False);
-            Assert.That(_entMan.GetComponent<TransformComponent>(uid).Coordinates, Is.EqualTo(_grandChildBPos));
-        });
-
-        // Spawning "next to" a map just drops the entity in nullspace
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnNextToOrDrop(null, _map);
-            Assert.That(_entMan.EntityExists(uid));
-            var xform = _entMan.GetComponent<TransformComponent>(uid);
-            Assert.That(xform.ParentUid, Is.EqualTo(EntityUid.Invalid));
-            Assert.That(xform.MapID, Is.EqualTo(MapId.Nullspace));
-            Assert.Null(xform.MapUid);
-            Assert.Null(xform.GridUid);
-        });
-
-        await _server.WaitPost(() =>_mapMan.DeleteMap(_mapId));
-        _server.Dispose();
-    }
-
-    [Test]
-    public async Task TestSpawnInContainerOrDrop()
-    {
-        await Setup();
-
-        // Spawning next to an entity in a container will insert the entity into the container.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnInContainerOrDrop(null, _grandChildA, "greatGrandChildA");
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_grandChildA));
-            Assert.That(_container.IsEntityInContainer(uid));
-            Assert.That(_container.GetContainer(_grandChildA, "greatGrandChildA").Contains(uid));
-        });
-
-        // The container is now full, spawning will insert into the outer container.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnInContainerOrDrop(null, _grandChildA, "greatGrandChildA");
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_childA));
-            Assert.That(_container.IsEntityInContainer(uid));
-            Assert.That(_container.GetContainer(_childA, "grandChildA").Contains(uid));
-        });
-
-        // If outer two containers are full, will insert into outermost container.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnInContainerOrDrop(null, _grandChildA, "greatGrandChildA");
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_parent));
-            Assert.That(_container.IsEntityInContainer(uid));
-            Assert.That(_container.GetContainer(_parent, "childA").Contains(uid));
-        });
-
-        // Finally, this will drop the item on the map.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnInContainerOrDrop(null, _grandChildA, "greatGrandChildA");
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_map));
-            Assert.That(_container.IsEntityInContainer(uid), Is.False);
-            Assert.That(_entMan.GetComponent<TransformComponent>(uid).Coordinates, Is.EqualTo(_parentPos));
-        });
-
-        // Repeating this will just drop it on the map again.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnInContainerOrDrop(null, _grandChildA, "greatGrandChildA");
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_map));
-            Assert.That(_container.IsEntityInContainer(uid), Is.False);
-            Assert.That(_entMan.GetComponent<TransformComponent>(uid).Coordinates, Is.EqualTo(_parentPos));
-        });
-
-        // Repeat the above but with the B-children. As _grandChildB is not actually IN a container, entities will
-        // simply be parented to _childB.
-
-        // First insert works fine
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnInContainerOrDrop(null, _grandChildB, "greatGrandChildB");
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_grandChildB));
-            Assert.That(_container.IsEntityInContainer(uid));
-            Assert.That(_container.GetContainer(_grandChildB, "greatGrandChildB").Contains(uid));
-        });
-
-        // Second insert will drop the entity next to _grandChildB
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnInContainerOrDrop(null, _grandChildB, "greatGrandChildB");
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_childB));
-            Assert.That(_container.IsEntityInContainer(uid), Is.False);
-            Assert.That(_entMan.GetComponent<TransformComponent>(uid).Coordinates, Is.EqualTo(_grandChildBPos));
-        });
-
-        // Repeating this will just repeat the above behaviour.
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnInContainerOrDrop(null, _grandChildB, "greatGrandChildB");
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_childB));
-            Assert.That(_container.IsEntityInContainer(uid), Is.False);
-            Assert.That(_entMan.GetComponent<TransformComponent>(uid).Coordinates, Is.EqualTo(_grandChildBPos));
-        });
-
-        // Trying to spawning inside a non-existent container just drops the entity
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnInContainerOrDrop(null, _grandChildB, "foo");
-            Assert.That(_entMan.EntityExists(uid));
-            Assert.That(_xforms.GetParentUid(uid), Is.EqualTo(_childB));
-            Assert.That(_container.IsEntityInContainer(uid), Is.False);
-            Assert.That(_entMan.GetComponent<TransformComponent>(uid).Coordinates, Is.EqualTo(_grandChildBPos));
-        });
-
-        // Trying to spawning "inside" a map just drops the entity in nullspace
-        await _server.WaitPost(() =>
-        {
-            var uid = _entMan.SpawnInContainerOrDrop(null, _map, "foo");
-            Assert.That(_entMan.EntityExists(uid));
-            var xform = _entMan.GetComponent<TransformComponent>(uid);
-            Assert.That(xform.ParentUid, Is.EqualTo(EntityUid.Invalid));
-            Assert.That(xform.MapID, Is.EqualTo(MapId.Nullspace));
-            Assert.Null(xform.MapUid);
-            Assert.Null(xform.GridUid);
-        });
-
-        await _server.WaitPost(() =>_mapMan.DeleteMap(_mapId));
-        _server.Dispose();
-    }
-
-    public async Task Setup()
-    {
-        _server = StartServer();
-        await _server.WaitIdleAsync();
-        _mapMan = _server.ResolveDependency<IMapManager>();
-        _entMan = _server.ResolveDependency<IEntityManager>();
-        _xforms = _entMan.System<SharedTransformSystem>();
-        _container = _entMan.System<SharedContainerSystem>();
+        Server = StartServer();
+        await Server.WaitIdleAsync();
+        MapMan = Server.ResolveDependency<IMapManager>();
+        EntMan = Server.ResolveDependency<IEntityManager>();
+        Xforms = EntMan.System<SharedTransformSystem>();
+        Container = EntMan.System<SharedContainerSystem>();
 
         // Set up map and spawn several nested containers
-        await _server.WaitPost(() =>
+        await Server.WaitPost(() =>
         {
-            _mapId = _mapMan.CreateMap();
-            _map = _mapMan.GetMapEntityId(_mapId);
-            _parent = _entMan.SpawnEntity(null, new EntityCoordinates(_map, new(1,2)));
-            _childA = _entMan.SpawnEntity(null, new EntityCoordinates(_map, default));
-            _childB = _entMan.SpawnEntity(null, new EntityCoordinates(_map, default));
-            _grandChildA = _entMan.SpawnEntity(null, new EntityCoordinates(_map, default));
-            _grandChildB = _entMan.SpawnEntity(null, new EntityCoordinates(_map, default));
-            _greatGrandChildA = _entMan.SpawnEntity(null, new EntityCoordinates(_map, default));
-            _greatGrandChildB = _entMan.SpawnEntity(null, new EntityCoordinates(_map, default));
-            _container.EnsureContainer<TestContainer>(_parent, "childA").Insert(_childA);
-            _container.EnsureContainer<TestContainer>(_parent, "childB").Insert(_childB);
-            _container.EnsureContainer<TestContainer>(_childA, "grandChildA").Insert(_grandChildA);
-            _xforms.SetCoordinates(_grandChildB, new EntityCoordinates(_childB, new(2,1)));
-            _container.EnsureContainer<TestContainer>(_grandChildA, "greatGrandChildA").Insert(_greatGrandChildA);
-            _container.EnsureContainer<TestContainer>(_grandChildB, "greatGrandChildB").Insert(_greatGrandChildB);
+            MapId = MapMan.CreateMap();
+            Map = MapMan.GetMapEntityId(MapId);
+            Parent = EntMan.SpawnEntity(null, new EntityCoordinates(Map, new(1,2)));
+            ChildA = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
+            ChildB = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
+            GrandChildA = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
+            GrandChildB = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
+            GreatGrandChildA = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
+            GreatGrandChildB = EntMan.SpawnEntity(null, new EntityCoordinates(Map, default));
+            Container.EnsureContainer<TestContainer>(Parent, "childA").Insert(ChildA);
+            Container.EnsureContainer<TestContainer>(Parent, "childB").Insert(ChildB);
+            Container.EnsureContainer<TestContainer>(ChildA, "grandChildA").Insert(GrandChildA);
+            Xforms.SetCoordinates(GrandChildB, new EntityCoordinates(ChildB, new(2,1)));
+            Container.EnsureContainer<TestContainer>(GrandChildA, "greatGrandChildA").Insert(GreatGrandChildA);
+            Container.EnsureContainer<TestContainer>(GrandChildB, "greatGrandChildB").Insert(GreatGrandChildB);
         });
-        await _server.WaitRunTicks(5);
+        await Server.WaitRunTicks(5);
 
         // Ensure transform hierarchy is as expected
 
-        Assert.That(_xforms.GetParentUid(_parent), Is.EqualTo(_map));
-        Assert.That(_xforms.GetParentUid(_childA), Is.EqualTo(_parent));
-        Assert.That(_xforms.GetParentUid(_childB), Is.EqualTo(_parent));
-        Assert.That(_xforms.GetParentUid(_grandChildA), Is.EqualTo(_childA));
-        Assert.That(_xforms.GetParentUid(_grandChildB), Is.EqualTo(_childB));
-        Assert.That(_xforms.GetParentUid(_greatGrandChildA), Is.EqualTo(_grandChildA));
-        Assert.That(_xforms.GetParentUid(_greatGrandChildB), Is.EqualTo(_grandChildB));
+        Assert.That(Xforms.GetParentUid(Parent), Is.EqualTo(Map));
+        Assert.That(Xforms.GetParentUid(ChildA), Is.EqualTo(Parent));
+        Assert.That(Xforms.GetParentUid(ChildB), Is.EqualTo(Parent));
+        Assert.That(Xforms.GetParentUid(GrandChildA), Is.EqualTo(ChildA));
+        Assert.That(Xforms.GetParentUid(GrandChildB), Is.EqualTo(ChildB));
+        Assert.That(Xforms.GetParentUid(GreatGrandChildA), Is.EqualTo(GrandChildA));
+        Assert.That(Xforms.GetParentUid(GreatGrandChildB), Is.EqualTo(GrandChildB));
 
-        Assert.That(_container.IsEntityInContainer(_parent), Is.False);
-        Assert.That(_container.IsEntityInContainer(_childA));
-        Assert.That(_container.IsEntityInContainer(_childB));
-        Assert.That(_container.IsEntityInContainer(_grandChildA));
-        Assert.That(_container.IsEntityInContainer(_grandChildB), Is.False);
-        Assert.That(_container.IsEntityOrParentInContainer(_grandChildB));
-        Assert.That(_container.IsEntityInContainer(_greatGrandChildA));
-        Assert.That(_container.IsEntityInContainer(_greatGrandChildB));
+        Assert.That(Container.IsEntityInContainer(Parent), Is.False);
+        Assert.That(Container.IsEntityInContainer(ChildA));
+        Assert.That(Container.IsEntityInContainer(ChildB));
+        Assert.That(Container.IsEntityInContainer(GrandChildA));
+        Assert.That(Container.IsEntityInContainer(GrandChildB), Is.False);
+        Assert.That(Container.IsEntityOrParentInContainer(GrandChildB));
+        Assert.That(Container.IsEntityInContainer(GreatGrandChildA));
+        Assert.That(Container.IsEntityInContainer(GreatGrandChildB));
 
-        Assert.That(_container.GetContainer(_parent, "childA").Contains(_childA));
-        Assert.That(_container.GetContainer(_parent, "childB").Contains(_childB));
-        Assert.That(_container.GetContainer(_childA, "grandChildA").Contains(_grandChildA));
-        Assert.That(_container.GetContainer(_grandChildA, "greatGrandChildA").Contains(_greatGrandChildA));
-        Assert.That(_container.GetContainer(_grandChildB, "greatGrandChildB").Contains(_greatGrandChildB));
+        Assert.That(Container.GetContainer(Parent, "childA").Contains(ChildA));
+        Assert.That(Container.GetContainer(Parent, "childB").Contains(ChildB));
+        Assert.That(Container.GetContainer(ChildA, "grandChildA").Contains(GrandChildA));
+        Assert.That(Container.GetContainer(GrandChildA, "greatGrandChildA").Contains(GreatGrandChildA));
+        Assert.That(Container.GetContainer(GrandChildB, "greatGrandChildB").Contains(GreatGrandChildB));
 
-        _parentPos = _entMan.GetComponent<TransformComponent>(_parent).Coordinates;
-        _grandChildBPos = _entMan.GetComponent<TransformComponent>(_grandChildB).Coordinates;
+        ParentPos = EntMan.GetComponent<TransformComponent>(Parent).Coordinates;
+        GrandChildBPos = EntMan.GetComponent<TransformComponent>(GrandChildB).Coordinates;
 
-        Assert.That(_parentPos.Position, Is.EqualTo(new Vector2(1, 2)));
-        Assert.That(_grandChildBPos.Position, Is.EqualTo(new Vector2(2, 1)));
+        Assert.That(ParentPos.Position, Is.EqualTo(new Vector2(1, 2)));
+        Assert.That(GrandChildBPos.Position, Is.EqualTo(new Vector2(2, 1)));
     }
 
     /// <summary>

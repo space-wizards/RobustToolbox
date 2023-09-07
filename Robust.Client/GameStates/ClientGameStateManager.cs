@@ -500,7 +500,6 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, comp) in netComps.Value)
                 {
-                    DebugTools.AssertNotNull(netId);
                     if (!comp.NetSyncEnabled)
                         continue;
 

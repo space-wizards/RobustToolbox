@@ -113,10 +113,16 @@ namespace Robust.Client.GameObjects
 
                 // Remove gone entities.
                 var toRemove = new ValueList<EntityUid>();
-                var entityUids = GetEntityArray(nents);
 
+                DebugTools.Assert(!container.Contains(EntityUid.Invalid));
+
+                // No need to ensure entities here.
+                var entityUids = GetEntityArray(nents);
                 foreach (var entity in container.ContainedEntities)
                 {
+                    if (!entity.IsValid())
+                        continue;
+
                     if (!entityUids.Contains(entity))
                     {
                         toRemove.Add(entity);

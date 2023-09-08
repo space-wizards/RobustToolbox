@@ -45,7 +45,7 @@ public abstract partial class SharedJointSystem
             return;
 
         component.Relayed.Clear();
-        component.Relayed.UnionWith(GetEntitySet(state.Entities));
+        component.Relayed.UnionWith(EnsureEntitySet<JointRelayTargetComponent>(state.Entities, uid));
     }
 
     private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ComponentShutdown args)

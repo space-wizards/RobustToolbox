@@ -1046,7 +1046,6 @@ public partial class EntitySystem
         return EntityManager.GetEntityList(netEntities);
     }
 
-
     /// <summary>
     ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
     /// </summary>

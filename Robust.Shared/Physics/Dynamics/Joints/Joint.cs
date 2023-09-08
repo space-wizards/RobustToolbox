@@ -72,7 +72,7 @@ public abstract class JointState
     public Vector2 LocalAnchorB { get; internal set; }
     public float Breakpoint { get; internal set; }
 
-    public abstract Joint GetJoint(IEntityManager entManager);
+    public abstract Joint GetJoint(IEntityManager entManager, EntityUid owner);
 }
 
 [ImplicitDataDefinitionForInheritors]
@@ -208,11 +208,11 @@ public abstract partial class Joint : IEquatable<Joint>
         Debug.Assert(BodyAUid != BodyBUid);
     }
 
-    protected Joint(JointState state, IEntityManager entManager)
+    protected Joint(JointState state, IEntityManager entManager, EntityUid owner)
     {
         ID = state.ID;
-        BodyAUid = entManager.GetEntity(state.UidA);
-        BodyBUid = entManager.GetEntity(state.UidB);
+        BodyAUid = entManager.EnsureEntity<JointComponent>(state.UidA, owner);
+        BodyBUid = entManager.EnsureEntity<JointComponent>(state.UidB, owner);
         Enabled = state.Enabled;
         _collideConnected = state.CollideConnected;
         _localAnchorA = state.LocalAnchorA;

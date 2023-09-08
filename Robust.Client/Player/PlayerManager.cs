@@ -6,6 +6,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -24,6 +25,7 @@ namespace Robust.Client.Player
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IEntityManager _entManager = default!;
+        [Dependency] private readonly ILogManager _logMan = default!;
 
         /// <summary>
         ///     Active sessions of connected clients to the server.
@@ -65,6 +67,8 @@ namespace Robust.Client.Player
             }
         }
         private LocalPlayer? _localPlayer;
+        private ISawmill _sawmill = default!;
+
         public event Action<LocalPlayerChangedEventArgs>? LocalPlayerChanged;
 
         /// <inheritdoc />
@@ -82,6 +86,7 @@ namespace Robust.Client.Player
         {
             _client.RunLevelChanged += OnRunLevelChanged;
 
+            _sawmill = _logMan.GetSawmill("player");
             _network.RegisterNetMessage<MsgPlayerListReq>();
             _network.RegisterNetMessage<MsgPlayerList>(HandlePlayerList);
         }
@@ -122,7 +127,13 @@ namespace Robust.Client.Player
 
             if (myState != null)
             {
-                UpdateAttachedEntity(_entManager.GetEntity(myState.ControlledEntity));
+                var uid = _entManager.GetEntity(myState.ControlledEntity);
+                if (myState.ControlledEntity is {Valid: true} && !_entManager.EntityExists(uid))
+                {
+                    _sawmill.Error($"Received player state for local player with an unknown net entity!");
+                }
+
+                UpdateAttachedEntity(uid);
                 UpdateSessionStatus(myState.Status);
             }
 

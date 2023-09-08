@@ -51,9 +51,9 @@ public sealed class FrictionJointState : JointState
     public float MaxForce { get; }
     public float MaxTorque { get; }
 
-    public override Joint GetJoint(IEntityManager entManager)
+    public override Joint GetJoint(IEntityManager entManager, EntityUid owner)
     {
-        return new FrictionJoint(this, entManager);
+        return new FrictionJoint(this, entManager, owner);
     }
 }
 
@@ -107,7 +107,8 @@ public sealed partial class FrictionJoint : Joint, IEquatable<FrictionJoint>
         LocalAnchorB = anchorB;
     }
 
-    internal FrictionJoint(FrictionJointState state, IEntityManager entManager) : base(state, entManager)
+    internal FrictionJoint(FrictionJointState state, IEntityManager entManager, EntityUid owner)
+        : base(state, entManager, owner)
     {
         MaxForce = state.MaxForce;
         MaxTorque = state.MaxTorque;

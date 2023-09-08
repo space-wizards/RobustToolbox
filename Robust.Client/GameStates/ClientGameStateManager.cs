@@ -942,7 +942,8 @@ namespace Robust.Client.GameStates
                 // Don't worry about this for later.
                 _entityManager.PendingNetEntityStates.Remove(netEntity);
 
-                var id = _entityManager.GetEntity(netEntity);
+                if (!_entityManager.TryGetEntity(netEntity, out var id))
+                    continue;
 
                 if (!xforms.TryGetComponent(id, out var xform))
                     continue; // Already deleted? or never sent to us?

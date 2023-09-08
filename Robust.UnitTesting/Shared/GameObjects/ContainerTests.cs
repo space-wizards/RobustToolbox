@@ -57,7 +57,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
              var mapPos = MapCoordinates.Nullspace;
 
              EntityUid entityUid = default!;
-             EntityUid itemUid = default!;
 
              await server.WaitAssertion(() =>
              {
@@ -83,6 +82,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  await client.WaitRunTicks(1);
              }
 
+             EntityUid itemUid = default!;
              await server.WaitAssertion(() =>
              {
                  var containerSys = sEntManager.System<SharedContainerSystem>();
@@ -100,9 +100,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await server.WaitRunTicks(4);
              await client.WaitRunTicks(10);
 
+             EntityUid cEntityUid = default!;
              await client.WaitAssertion(() =>
              {
-                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(entityUid, out var containerManagerComp))
+                 cEntityUid = client.EntMan.GetEntity(server.EntMan.GetNetEntity(entityUid));
+                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cEntityUid, out var containerManagerComp))
                  {
                      Assert.Fail();
                      return;
@@ -128,7 +130,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
              await client.WaitAssertion(() =>
              {
-                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(entityUid, out var containerManagerComp))
+                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cEntityUid, out var containerManagerComp))
                  {
                      Assert.Fail();
                      return;

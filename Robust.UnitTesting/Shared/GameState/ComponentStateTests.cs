@@ -63,6 +63,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         var coordsA = new EntityCoordinates(map, default);
         var coordsB = new EntityCoordinates(map, new Vector2(100, 100));
         EntityUid player = default;
+        EntityUid cPlayer = default;
         EntityUid serverEntA = default;
         EntityUid serverEntB = default;
         NetEntity serverNetA = default;
@@ -97,8 +98,9 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         // Check player got properly attached and only knows about the expected entities
         await client.WaitPost(() =>
         {
-            Assert.That(client.AttachedEntity, Is.EqualTo(player));
-            Assert.That(client.EntMan.EntityExists(player));
+            cPlayer = client.EntMan.GetEntity(server.EntMan.GetNetEntity(player));
+            Assert.That(client.AttachedEntity, Is.EqualTo(cPlayer));
+            Assert.That(client.EntMan.EntityExists(cPlayer));
             Assert.That(client.EntMan.EntityExists(client.EntMan.GetEntity(serverNetA)), Is.False);
             Assert.That(client.EntMan.EntityExists(client.EntMan.GetEntity(serverNetB)), Is.False);
         });

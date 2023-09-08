@@ -680,17 +680,18 @@ namespace Robust.Client.GameStates
 
                 foreach (var es in curSpan)
                 {
-                    var uid = _entityManager.GetEntity(es.NetEntity);
-
-                    if (metas.HasComponent(uid))
+                    if (_entityManager.TryGetEntity(es.NetEntity, out var nUid))
+                    {
+                        DebugTools.Assert(_entityManager.EntityExists(nUid));
                         continue;
+                    }
 
                     count++;
                     var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
                     if (metaState == null)
                         throw new MissingMetadataException(es.NetEntity);
 
-                    uid = _entities.CreateEntity(metaState.PrototypeId);
+                    var uid = _entities.CreateEntity(metaState.PrototypeId);
                     _toCreate.Add(es.NetEntity, es);
                     _toApply.Add(uid, (false, GameTick.Zero, es, null));
 
@@ -748,10 +749,10 @@ namespace Robust.Client.GameStates
             {
                 foreach (var es in nextState.EntityStates.Span)
                 {
-                    var uid = _entityManager.GetEntity(es.NetEntity);
-
-                    if (!metas.TryGetComponent(uid, out var meta))
+                    if (!_entityManager.TryGetEntity(es.NetEntity, out var uid))
                         continue;
+
+                    DebugTools.Assert(metas.HasComponent(uid));
 
                     // Does the next state actually have any future information about this entity that could be used for interpolation?
                     if (es.EntityLastModified != nextState.ToSequence)

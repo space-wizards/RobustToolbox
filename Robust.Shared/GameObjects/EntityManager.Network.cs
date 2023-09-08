@@ -77,6 +77,7 @@ public partial class EntityManager
             return false;
         }
 
+        // TODO NetEntity figure out why this happens
         // I wanted this to logMissing but it seems to break a loootttt of dodgy stuff on content.
         if (MetaQuery.Resolve(uid, ref metadata, false))
         {
@@ -104,7 +105,7 @@ public partial class EntityManager
     public virtual EntityUid EnsureEntity<T>(NetEntity nEntity, EntityUid callerEntity)
     {
         // On server we don't want to ensure any reserved entities for later or flag for comp state handling
-        // so this is just GetEntity.
+        // so this is just GetEntity. Client-side code overrides this method.
         return GetEntity(nEntity);
     }
 
@@ -124,7 +125,7 @@ public partial class EntityManager
         if (nEntity == NetEntity.Invalid)
             return EntityUid.Invalid;
 
-        return NetEntityLookup[nEntity];
+        return NetEntityLookup.GetValueOrDefault(nEntity);
     }
 
     /// <inheritdoc />
@@ -143,7 +144,8 @@ public partial class EntityManager
         if (uid == EntityUid.Invalid)
             return NetEntity.Invalid;
 
-        return MetaQuery.GetComponent(uid).NetEntity;
+        DebugTools.Assert(metadata == null || metadata.Owner == uid);
+        return (metadata ?? MetaQuery.GetComponent(uid)).NetEntity;
     }
 
     /// <inheritdoc />

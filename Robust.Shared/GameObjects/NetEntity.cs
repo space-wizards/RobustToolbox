@@ -71,7 +71,7 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     [Pure]
     public bool IsValid()
     {
-        return Id > -1;
+        return Id > 0;
     }
 
     /// <inheritdoc />

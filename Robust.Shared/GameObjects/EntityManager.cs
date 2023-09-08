@@ -769,7 +769,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.
         /// </summary>
-        protected EntityUid GenerateEntityUid()
+        internal EntityUid GenerateEntityUid()
         {
             return new EntityUid(NextEntityUid++);
         }

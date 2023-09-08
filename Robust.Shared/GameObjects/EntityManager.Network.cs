@@ -9,6 +9,11 @@ namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
+    // TODO POOLING
+    // Add overrides of the various NetEntity-EntityUid collection conversion methods that return pooled collections.
+    // Alternatively: just add overrides that take in an existing collection.
+    // I guess with a ref keyword to make it clear that they modify the collection?
+
     /// <summary>
     /// Inverse lookup for net entities.
     /// Regular lookup uses MetadataComponent.
@@ -229,8 +234,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public List<EntityUid> GetEntityList(List<NetEntity> netEntities)
     {
-        var entities = _poolManager.GetEntityList();
-        entities.EnsureCapacity(netEntities.Count);
+        var entities = new List<EntityUid>(netEntities.Count);
 
         foreach (var netEntity in netEntities)
         {
@@ -242,8 +246,7 @@ public partial class EntityManager
 
     public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
     {
-        var entities = _poolManager.GetEntitySet();
-        entities.EnsureCapacity(netEntities.Count);
+        var entities = new HashSet<EntityUid>(netEntities.Count);
 
         foreach (var netEntity in netEntities)
         {
@@ -256,8 +259,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
     {
-        var entities = _poolManager.GetEntityList();
-        entities.EnsureCapacity(netEntities.Count);
+        var entities = new List<EntityUid>(netEntities.Count);
 
         foreach (var netEntity in netEntities)
         {
@@ -270,9 +272,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public List<EntityUid> GetEntityList(ICollection<NetEntity> netEntities)
     {
-        var entities = _poolManager.GetEntityList();
-        entities.EnsureCapacity(netEntities.Count);
-
+        var entities = new List<EntityUid>(netEntities.Count);
         foreach (var netEntity in netEntities)
         {
             entities.Add(GetEntity(netEntity));

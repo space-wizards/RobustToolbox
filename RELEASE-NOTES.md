@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 154.2.0
+
+### Bugfixes
+
+* Fix Direction.TurnCw/TurnCcw to South returning Invalid.
+
+
 ## 154.1.0
 
 ### New features
@@ -66,7 +73,7 @@ END TEMPLATE-->
 
 ### Other
 
-* Mark the proxy Dirty(component) as obsolete in line with EntityManager (Dirty(EntityUid, Component) should be used in its place). 
+* Mark the proxy Dirty(component) as obsolete in line with EntityManager (Dirty(EntityUid, Component) should be used in its place).
 
 
 ## 154.0.0

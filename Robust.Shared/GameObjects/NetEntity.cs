@@ -144,6 +144,8 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
         return Id.CompareTo(other.Id);
     }
 
+    public bool IsClientSide() => (Id & ClientEntity) == ClientEntity;
+
     #region ViewVariables
 
 

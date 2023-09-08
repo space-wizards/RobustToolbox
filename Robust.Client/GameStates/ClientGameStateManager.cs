@@ -696,7 +696,12 @@ namespace Robust.Client.GameStates
                     _toApply.Add(uid, (false, GameTick.Zero, es, null));
 
                     var newMeta = metas.GetComponent(uid);
+
+                    // Client creates a client-side net entity for the newly created entity.
+                    // We need to clear this mapping before assigning the real net id.
+                    // TODO NetEntity Jank: prevent the client from creating this in the first place.
                     _entityManager.ClearNetEntity(newMeta.NetEntity);
+
                     _entityManager.SetNetEntity(uid, es.NetEntity, newMeta);
                     newMeta.LastStateApplied = curState.ToSequence;
 

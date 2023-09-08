@@ -73,7 +73,12 @@ public sealed partial class ReplayLoadManager
             var uid = _entMan.CreateEntityUninitialized(metaState.PrototypeId);
             entities.Add(uid);
             var metaComp = _entMan.GetComponent<MetaDataComponent>(uid);
+
+            // Client creates a client-side net entity for the newly created entity.
+            // We need to clear this mapping before assigning the real net id.
+            // TODO NetEntity Jank: prevent the client from creating this in the first place.
             _entMan.ClearNetEntity(metaComp.NetEntity);
+
             _entMan.SetNetEntity(uid, ent.NetEntity, metaComp);
 
             if (i++ % 50 == 0)

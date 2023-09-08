@@ -677,6 +677,9 @@ internal sealed partial class PvsSystem : EntitySystem
         var parent = xform.ParentUid;
         var parentNetEntity = _metaQuery.GetComponent(parent).NetEntity;
 
+        // TODO performance
+        // AddToChunkSetRecursively will result in a redundant set.ContainsKey() check.
+        // This can probably be avoided somehow
         if (!set.ContainsKey(parentNetEntity) && //was the parent not yet added to toSend?
             !AddToChunkSetRecursively(in parent, in parentNetEntity, visMask, tree, set)) //did we just fail to add the parent?
         {

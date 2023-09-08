@@ -131,14 +131,15 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         await RunTicks();
 
         // Get the client version of the entities.
-        entA = cEntMan.GetEntity(entANet);
-        entB = cEntMan.GetEntity(entBNet);
-        childA = cEntMan.GetEntity(childANet);
-        childB = cEntMan.GetEntity(childBNet);
+        var cEntA = cEntMan.GetEntity(entANet);
+        var cEntB = cEntMan.GetEntity(entBNet);
+        var cChildA = cEntMan.GetEntity(childANet);
+        var cChildB = cEntMan.GetEntity(childBNet);
+        var cGrid2 = cEntMan.GetEntity(grid2Net);
 
         // Spawn client-side children and one client-side entity
-        EntityUid entC = default;
-        EntityUid childC = default;
+        EntityUid cEntC = default;
+        EntityUid cChildC = default;
         EntityUid clientChildA = default;
         EntityUid clientChildB = default;
 
@@ -146,11 +147,11 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
 
         await client.WaitPost(() =>
         {
-            entC = cEntMan.SpawnEntity(null, cEntMan.GetCoordinates(sEntMan.GetNetCoordinates(coords)));
-            entCNet = cEntMan.GetNetEntity(entC);
-            childC = cEntMan.SpawnEntity(null, new EntityCoordinates(entC, default));
-            clientChildA = cEntMan.SpawnEntity(null, new EntityCoordinates(entA, default));
-            clientChildB = cEntMan.SpawnEntity(null, new EntityCoordinates(entB, default));
+            cEntC = cEntMan.SpawnEntity(null, cEntMan.GetCoordinates(sEntMan.GetNetCoordinates(coords)));
+            entCNet = cEntMan.GetNetEntity(cEntC);
+            cChildC = cEntMan.SpawnEntity(null, new EntityCoordinates(cEntC, default));
+            clientChildA = cEntMan.SpawnEntity(null, new EntityCoordinates(cEntA, default));
+            clientChildB = cEntMan.SpawnEntity(null, new EntityCoordinates(cEntB, default));
         });
 
         await RunTicks();
@@ -160,53 +161,53 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         await client.WaitPost(() =>
         {
             // Exist
-            Assert.That(cEntMan.EntityExists(entA));
-            Assert.That(cEntMan.EntityExists(entB));
-            Assert.That(cEntMan.EntityExists(entC));
-            Assert.That(cEntMan.EntityExists(childA));
-            Assert.That(cEntMan.EntityExists(childB));
-            Assert.That(cEntMan.EntityExists(childC));
+            Assert.That(cEntMan.EntityExists(cEntA));
+            Assert.That(cEntMan.EntityExists(cEntB));
+            Assert.That(cEntMan.EntityExists(cEntC));
+            Assert.That(cEntMan.EntityExists(cChildA));
+            Assert.That(cEntMan.EntityExists(cChildB));
+            Assert.That(cEntMan.EntityExists(cChildC));
             Assert.That(cEntMan.EntityExists(clientChildA));
             Assert.That(cEntMan.EntityExists(clientChildB));
 
             // Client-side where appropriate
-            Assert.That(cEntMan.IsClientSide(entC));
-            Assert.That(cEntMan.IsClientSide(childC));
+            Assert.That(cEntMan.IsClientSide(cEntC));
+            Assert.That(cEntMan.IsClientSide(cChildC));
             Assert.That(cEntMan.IsClientSide(clientChildA));
             Assert.That(cEntMan.IsClientSide(clientChildB));
-            Assert.That(!cEntMan.IsClientSide(entA));
-            Assert.That(!cEntMan.IsClientSide(entB));
-            Assert.That(!cEntMan.IsClientSide(childA));
-            Assert.That(!cEntMan.IsClientSide(childB));
+            Assert.That(!cEntMan.IsClientSide(cEntA));
+            Assert.That(!cEntMan.IsClientSide(cEntB));
+            Assert.That(!cEntMan.IsClientSide(cChildA));
+            Assert.That(!cEntMan.IsClientSide(cChildB));
 
             // Correct parents.
 
-            Assert.That(Parent(entA), Is.EqualTo(grid2Net));
-            Assert.That(Parent(entB), Is.EqualTo(grid2Net));
-            Assert.That(Parent(entC), Is.EqualTo(grid2Net));
-            Assert.That(Parent(childA), Is.EqualTo(entANet));
-            Assert.That(Parent(childB), Is.EqualTo(entBNet));
-            Assert.That(Parent(childC), Is.EqualTo(entCNet));
+            Assert.That(Parent(cEntA), Is.EqualTo(grid2Net));
+            Assert.That(Parent(cEntB), Is.EqualTo(grid2Net));
+            Assert.That(Parent(cEntC), Is.EqualTo(grid2Net));
+            Assert.That(Parent(cChildA), Is.EqualTo(entANet));
+            Assert.That(Parent(cChildB), Is.EqualTo(entBNet));
+            Assert.That(Parent(cChildC), Is.EqualTo(entCNet));
             Assert.That(Parent(clientChildA), Is.EqualTo(entANet));
             Assert.That(Parent(clientChildB), Is.EqualTo(entBNet));
         });
 
         // Delete client-side entity.
-        await client.WaitPost(() => cEntMan.DeleteEntity(entC));
+        await client.WaitPost(() => cEntMan.DeleteEntity(cEntC));
         await RunTicks();
         await client.WaitPost(() =>
         {
-            Assert.That(!cEntMan.EntityExists(entC));
-            Assert.That(!cEntMan.EntityExists(childC));
+            Assert.That(!cEntMan.EntityExists(cEntC));
+            Assert.That(!cEntMan.EntityExists(cChildC));
         });
 
         // Delete server-side entity.
-        await server.WaitPost(() => sEntMan.DeleteEntity(sEntMan.GetEntity(entBNet)));
+        await server.WaitPost(() => sEntMan.DeleteEntity(entB));
         await RunTicks();
         await client.WaitPost(() =>
         {
-            Assert.That(!cEntMan.EntityExists(entB));
-            Assert.That(!cEntMan.EntityExists(childB));
+            Assert.That(!cEntMan.EntityExists(cEntB));
+            Assert.That(!cEntMan.EntityExists(cChildB));
 
             // Was never explicitly deleted by the client.
             Assert.That(cEntMan.EntityExists(clientChildB));
@@ -217,9 +218,9 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         await RunTicks();
         await client.WaitPost(() =>
         {
-            Assert.That(!cEntMan.EntityExists(cEntMan.GetEntity(sEntMan.GetNetEntity(grid2))));
-            Assert.That(!cEntMan.EntityExists(entA));
-            Assert.That(!cEntMan.EntityExists(childA));
+            Assert.That(!cEntMan.EntityExists(cGrid2));
+            Assert.That(!cEntMan.EntityExists(cEntA));
+            Assert.That(!cEntMan.EntityExists(cChildA));
 
             // Was never explicitly deleted by the client.
             Assert.That(cEntMan.EntityExists(clientChildA));

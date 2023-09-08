@@ -859,36 +859,36 @@ namespace Robust.Client.GameStates
 
             // Construct hashset for set.Contains() checks.
             var entityStates = state.EntityStates.Span;
-            var stateEnts = _pool.GetEntitySet(entityStates.Length);
+            var stateEnts = _pool.GetNetEntitySet(entityStates.Length);
             foreach (var entState in entityStates)
             {
-                stateEnts.Add(_entityManager.GetEntity(entState.NetEntity));
+                stateEnts.Add(entState.NetEntity);
             }
 
-            var metas = _entities.GetEntityQuery<MetaDataComponent>();
             var xforms = _entities.GetEntityQuery<TransformComponent>();
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
-            var currentEnts = _entities.GetEntities();
             var toDelete = new List<EntityUid>(Math.Max(64, _entities.EntityCount - stateEnts.Count));
-            foreach (var ent in currentEnts)
+
+            // Client side entities won't need the transform, but that should always be a tiny minority of entities
+            var metaQuery = _entityManager.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+
+            while (metaQuery.MoveNext(out var ent, out var metadata, out var xform))
             {
-                if (metas.TryGetComponent(ent, out var metadata) && _entities.IsClientSide(ent, metadata))
+                var netEnt = metadata.NetEntity;
+                if (metadata.NetEntity.IsClientSide())
                 {
                     if (deleteClientEntities)
                         toDelete.Add(ent);
                     continue;
                 }
 
-                if (stateEnts.Contains(ent) && metadata != null)
+                if (stateEnts.Contains(netEnt))
                 {
                     if (resetAllEntities || metadata.LastStateApplied > state.ToSequence)
                         metadata.LastStateApplied = GameTick.Zero; // TODO track last-state-applied for individual components? Is it even worth it?
                     continue;
                 }
-
-                if (!xforms.TryGetComponent(ent, out var xform))
-                    continue;
 
                 // This entity is going to get deleted, but maybe some if its children won't be, so lets detach them to
                 // null. First we will detach the parent in order to reduce the number of broadphase/lookup updates.

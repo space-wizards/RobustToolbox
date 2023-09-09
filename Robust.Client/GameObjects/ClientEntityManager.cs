@@ -37,6 +37,7 @@ namespace Robust.Client.GameObjects
 
         public override void FlushEntities()
         {
+            PendingNetEntityStates.Clear();
             using var _ = _gameTiming.StartStateApplicationArea();
             base.FlushEntities();
         }

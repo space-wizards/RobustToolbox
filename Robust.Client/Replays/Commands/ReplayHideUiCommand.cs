@@ -9,7 +9,7 @@ public sealed class ReplayHideUiCommand : BaseReplayCommand
 {
     [Dependency] private readonly IUserInterfaceManager _userInterfaceManager = default!;
 
-    public override string Command => "replay_hideui";
+    public override string Command => "replay_toggleui";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {

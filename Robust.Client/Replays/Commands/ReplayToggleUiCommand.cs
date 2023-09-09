@@ -5,7 +5,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Replays.Commands;
 
-public sealed class ReplayHideUiCommand : BaseReplayCommand
+public sealed class ReplayToggleUiCommand : BaseReplayCommand
 {
     [Dependency] private readonly IUserInterfaceManager _userInterfaceManager = default!;
 

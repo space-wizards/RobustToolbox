@@ -37,6 +37,8 @@ namespace Robust.Client.GameObjects
 
         public override void FlushEntities()
         {
+            // Server doesn't network deletions on client shutdown so we need to
+            // manually clear these out or risk stale data getting used.
             PendingNetEntityStates.Clear();
             using var _ = _gameTiming.StartStateApplicationArea();
             base.FlushEntities();

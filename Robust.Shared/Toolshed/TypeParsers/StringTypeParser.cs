@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
@@ -12,13 +13,13 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 [Virtual]
 internal class StringTypeParser : TypeParser<string>
 {
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
         error = null;
-        parser.Consume(char.IsWhiteSpace);
-        if (parser.PeekChar() is not '"')
+        parserContext.ConsumeWhitespace();
+        if (parserContext.PeekRune() != new Rune('"'))
         {
-            if (parser.PeekChar() is null)
+            if (parserContext.PeekRune() is null)
             {
                 error = new OutOfInputError();
                 result = null;
@@ -26,38 +27,38 @@ internal class StringTypeParser : TypeParser<string>
             }
 
             error = new StringMustStartWithQuote();
-            error.Contextualize(parser.Input, (parser.Index, parser.Index + 1));
+            error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index + 1));
             result = null;
             return false;
         }
 
-        parser.GetChar();
+        parserContext.GetRune();
 
         var output = new StringBuilder();
 
         while (true)
         {
-            while (parser.PeekChar() is not '"' and not '\\' and not null)
+            while (parserContext.PeekChar() is not '"' and not '\\' and not null)
             {
-                output.Append(parser.GetChar());
+                output.Append(parserContext.GetRune());
             }
 
-            if (parser.PeekChar() is '"' or null)
+            if (parserContext.PeekChar() is '"' or null)
             {
-                if (parser.PeekChar() is null)
+                if (parserContext.PeekRune() is null)
                 {
                     error = new OutOfInputError();
                     result = null;
                     return false;
                 }
 
-                parser.GetChar();
+                parserContext.GetRune();
                 break;
             }
 
-            parser.GetChar(); // okay it's \
+            parserContext.GetRune(); // okay it's \
 
-            switch (parser.GetChar())
+            switch (parserContext.GetChar())
             {
                 case '"':
                     output.Append('"');
@@ -75,13 +76,13 @@ internal class StringTypeParser : TypeParser<string>
             }
         }
 
-        parser.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
         result = output.ToString();
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
         return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHint($"\"<{argName ?? "string"}>\""), null));

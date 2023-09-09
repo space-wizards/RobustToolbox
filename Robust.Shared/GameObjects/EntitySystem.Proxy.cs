@@ -190,8 +190,11 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Marks an entity as dirty.
+    /// Marks this entity as dirty so that it will be updated over the network.
     /// </summary>
+    /// <remarks>
+    /// Calling Dirty on a component will call this directly.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void DirtyEntity(EntityUid uid, MetaDataComponent? meta = null)
     {
@@ -202,6 +205,7 @@ public partial class EntitySystem
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("Use Dirty(EntityUid, Component, MetaDataComponent?")]
     protected void Dirty(Component component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(component, meta);
@@ -533,6 +537,13 @@ public partial class EntitySystem
         return EntityManager.AddComponent<T>(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid, T, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void AddComp<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
+    {
+        EntityManager.AddComponent(uid, component, overwrite);
+    }
+
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected T EnsureComp<T>(EntityUid uid) where T : Component, new()
@@ -697,14 +708,14 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.SpawnNextToOrDrop" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid SpawnNextToOrDrop(
-        string? protoName, 
-        EntityUid target, 
-        TransformComponent? xform = null, 
+        string? protoName,
+        EntityUid target,
+        TransformComponent? xform = null,
         ComponentRegistry? overrides = null)
     {
         return EntityManager.SpawnNextToOrDrop(protoName, target, xform, overrides);
     }
-    
+
     /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid SpawnInContainerOrDrop(
@@ -712,7 +723,7 @@ public partial class EntitySystem
         EntityUid containerUid,
         string containerId,
         TransformComponent? xform = null,
-        ContainerManagerComponent? container = null, 
+        ContainerManagerComponent? container = null,
         ComponentRegistry? overrides = null)
     {
         return EntityManager.SpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);

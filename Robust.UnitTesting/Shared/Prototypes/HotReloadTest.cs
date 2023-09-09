@@ -1,3 +1,4 @@
+#if TOOLS
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -114,3 +115,4 @@ namespace Robust.UnitTesting.Shared.Prototypes
     {
     }
 }
+#endif

@@ -14,18 +14,18 @@ internal sealed class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
 {
     [Dependency] private readonly ToolshedManager _toolshed = default!;
 
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var res = _toolshed.TryParse<ValueRef<T, T>>(parser, out var inner, out error);
+        var res = _toolshed.TryParse<ValueRef<T, T>>(parserContext, out var inner, out error);
         result = null;
         if (res)
             result = new ValueRef<T>((ValueRef<T, T>)inner!);
         return res;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return _toolshed.TryAutocomplete(parser, typeof(ValueRef<T, T>), argName);
+        return _toolshed.TryAutocomplete(parserContext, typeof(ValueRef<T, T>), argName);
     }
 }
 
@@ -33,30 +33,15 @@ internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
 {
     [Dependency] private readonly ToolshedManager _toolshed = default!;
 
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
         error = null;
-        parser.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
-        var chkpoint = parser.Save();
-        var success = _toolshed.TryParse<T>(parser, out var value, out error);
-
-        if (error is UnparseableValueError)
-            error = null;
-
-        if (value is not null && success)
-        {
-            result = new ValueRef<T, TAuto>((T)value);
-            error = null;
-            return true;
-        }
-
-        parser.Restore(chkpoint);
-
-        if (parser.EatMatch('$'))
+        if (parserContext.EatMatch('$'))
         {
             // We're parsing a variable.
-            if (parser.GetWord(x => char.IsLetterOrDigit(x) || x == '_') is not { } word)
+            if (parserContext.GetWord(ParserContext.IsToken) is not { } word)
             {
                 error = new OutOfInputError();
                 result = null;
@@ -69,46 +54,61 @@ internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
         }
         else
         {
-            if (Block<T>.TryParse(false, parser, null, out var block, out _, out error))
+            var chkpoint = parserContext.Save();
+            if (Block<T>.TryParse(false, parserContext, null, out var block, out _, out error))
             {
                 result = new ValueRef<T, TAuto>(block);
                 return true;
             }
+            parserContext.Restore(chkpoint);
+
+            var success = _toolshed.TryParse<T>(parserContext, out var value, out error);
+
+            if (error is UnparseableValueError)
+                error = null;
+
+            if (value is not null && success)
+            {
+                result = new ValueRef<T, TAuto>((T)value);
+                error = null;
+                return true;
+            }
+
 
             result = null;
             return false;
         }
     }
 
-    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        parser.Consume(char.IsWhiteSpace);
+        parserContext.ConsumeWhitespace();
 
-        if (parser.EatMatch('$'))
+        if (parserContext.EatMatch('$'))
         {
             return (CompletionResult.FromHint("<variable name>"), null);
         }
         else
         {
-            var chkpoint = parser.Save();
-            var (res, err) = await _toolshed.TryAutocomplete(parser, typeof(TAuto), null);
-            parser.Restore(chkpoint);
+            var chkpoint = parserContext.Save();
+            var (res, err) = await _toolshed.TryAutocomplete(parserContext, typeof(TAuto), null);
+            parserContext.Restore(chkpoint);
             CompletionOption[] parseOptions = Array.Empty<CompletionOption>();
             if (err is not UnparseableValueError || res is not null)
             {
                 parseOptions = res?.Options ?? parseOptions;
             }
 
-            chkpoint = parser.Save();
-            Block<T>.TryParse(true, parser, null, out _, out var result, out _);
+            chkpoint = parserContext.Save();
+            Block<T>.TryParse(true, parserContext, null, out _, out var result, out _);
             if (result is not null)
             {
                 var (blockRes, _) = await result.Value;
                 var options = blockRes?.Options ?? Array.Empty<CompletionOption>();
                 return (CompletionResult.FromHintOptions(parseOptions.Concat(options).ToArray(), $"<variable, block, or value of type {typeof(T).PrettyName()}>"), err);
             }
-            parser.Restore(chkpoint);
+            parserContext.Restore(chkpoint);
 
             return (CompletionResult.FromHint("$<variable name>"), null);
         }

@@ -9,7 +9,7 @@ namespace Robust.Shared.Enums
         public EntityUid MobUid { get; set; }
         public string? PlacementOption { get; set; }
         public int Range { get; set; }
-        public ushort TileType { get; set; }
+        public int TileType { get; set; }
         public int Uses { get; set; } = 1;
     }
 }

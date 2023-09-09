@@ -8,7 +8,10 @@ namespace Robust.Shared.Toolshed.Commands.Entities;
 internal sealed class PausedCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public IEnumerable<EntityUid> Paused([PipedArgument] IEnumerable<EntityUid> entities, [CommandInverted] bool inverted)
+    public IEnumerable<EntityUid> Paused(
+            [PipedArgument] IEnumerable<EntityUid> entities,
+            [CommandInverted] bool inverted
+        )
     {
         return entities.Where(x => Comp<MetaDataComponent>(x).EntityPaused ^ inverted);
     }

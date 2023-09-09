@@ -10,7 +10,11 @@ namespace Robust.Shared.Toolshed.Invocation;
 /// <inheritdoc />
 internal sealed class OldShellInvocationContext : IInvocationContext
 {
-    [Dependency] private readonly ToolshedManager _toolshed = default!;
+    [field: Dependency]
+    public ToolshedManager Toolshed { get; } = default!;
+
+    public ToolshedEnvironment Environment => Toolshed.DefaultEnvironment;
+
     private readonly List<IConError> _errors = new();
 
     /// <summary>
@@ -22,16 +26,6 @@ internal sealed class OldShellInvocationContext : IInvocationContext
     {
         IoCManager.InjectDependencies(this);
         Shell = shell;
-    }
-
-    /// <inheritdoc />
-    public bool CheckInvokable(CommandSpec command, out IConError? error)
-    {
-        if (_toolshed.ActivePermissionController is { } controller)
-            return controller.CheckInvokable(command, Session, out error);
-
-        error = null;
-        return true;
     }
 
     /// <inheritdoc />

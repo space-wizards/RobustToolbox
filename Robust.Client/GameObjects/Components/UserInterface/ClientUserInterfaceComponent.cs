@@ -6,7 +6,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
-    [RegisterComponent, ComponentReference(typeof(SharedUserInterfaceComponent))]
+    [RegisterComponent]
     public sealed partial class ClientUserInterfaceComponent : SharedUserInterfaceComponent
     {
         [ViewVariables]

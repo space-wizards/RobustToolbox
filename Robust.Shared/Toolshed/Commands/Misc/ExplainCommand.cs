@@ -3,7 +3,7 @@
 namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
-internal sealed class ExplainCommand : ToolshedCommand
+public sealed class ExplainCommand : ToolshedCommand
 {
     [CommandImplementation]
     public void Explain(

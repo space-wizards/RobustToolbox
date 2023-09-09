@@ -34,7 +34,7 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="manager">The container manager that this entity is inside of.</param>
         /// <returns>If a container manager was found.</returns>
-        public static bool TryGetContainerMan(this EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager, IEntityManager? entMan = null)
+        public static bool TryGetContainerMan(this EntityUid entity, [NotNullWhen(true)] out ContainerManagerComponent? manager, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
             DebugTools.Assert(entMan.EntityExists(entity));
@@ -132,9 +132,10 @@ namespace Robust.Shared.Containers
         /// <see cref="SharedContainerSystem.TryGetManagerComp"/>
         /// </summary>
         [Obsolete("Use SharedContainerSystem.TryGetManagerComp() instead")]
-        private static bool TryGetManagerComp(this EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager, IEntityManager? entMan = null)
+        private static bool TryGetManagerComp(this EntityUid entity, [NotNullWhen(true)] out ContainerManagerComponent? manager, IEntityManager? entMan = null)
         {
-            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>()
+            IoCManager.Resolve(ref entMan);
+            return entMan.System<SharedContainerSystem>()
                 .TryGetManagerComp(entity, out manager);
         }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.Tracing;
 using System.Threading;
 using Robust.Shared.Log;
 using Robust.Shared.Exceptions;
@@ -167,6 +168,7 @@ namespace Robust.Shared.Timing
                     // announce we are falling behind
                     if ((_timing.RealTime - _lastKeepUp).TotalSeconds >= 15.0)
                     {
+                        GameLoopEventSource.Log.CannotKeepUp();
                         _sawmill.Warning("MainLoop: Cannot keep up!");
                         _lastKeepUp = _timing.RealTime;
                     }
@@ -174,6 +176,7 @@ namespace Robust.Shared.Timing
 
                 _timing.StartFrame();
                 realFrameEvent = new FrameEventArgs((float)_timing.RealFrameTime.TotalSeconds);
+                GameLoopEventSource.Log.InputStart();
 #if EXCEPTION_TOLERANCE
                 try
 #endif
@@ -189,6 +192,8 @@ namespace Robust.Shared.Timing
                     _runtimeLog.LogException(exp, "GameLoop Input");
                 }
 #endif
+                GameLoopEventSource.Log.InputStop();
+
                 _timing.InSimulation = true;
                 var tickPeriod = _timing.CalcAdjustedTickPeriod();
 
@@ -216,6 +221,8 @@ namespace Robust.Shared.Timing
                     try
                     {
 #endif
+                        GameLoopEventSource.Log.TickStart(_timing.CurTick.Value);
+
                         using var tickGroup = _prof.Group("Tick");
                         _prof.WriteValue("Tick", ProfData.Int64(_timing.CurTick.Value));
 
@@ -232,6 +239,8 @@ namespace Robust.Shared.Timing
                         {
                             Tick?.Invoke(this, simFrameEvent);
                         }
+
+                        GameLoopEventSource.Log.TickStop(_timing.CurTick.Value);
 #if EXCEPTION_TOLERANCE
                     }
                     catch (Exception exp)
@@ -271,6 +280,7 @@ namespace Robust.Shared.Timing
 
                 // update out of the simulation
 
+                GameLoopEventSource.Log.UpdateStart();
 #if EXCEPTION_TOLERANCE
                 try
 #endif
@@ -285,6 +295,7 @@ namespace Robust.Shared.Timing
                     _runtimeLog.LogException(exp, "GameLoop Update");
                 }
 #endif
+                GameLoopEventSource.Log.UpdateStop();
 
                 // render the simulation
 #if EXCEPTION_TOLERANCE
@@ -314,6 +325,8 @@ namespace Robust.Shared.Timing
                 _prof.WriteGroupEnd(profFrameGroupStart, "Frame", profFrameSw);
                 _prof.MarkIndex(profFrameStart, ProfIndexType.Frame);
 
+                GameLoopEventSource.Log.SleepStart();
+
                 // Set sleep to 1 if you want to be nice and give the rest of the timeslice up to the os scheduler.
                 // Set sleep to 0 if you want to use 100% cpu, but still cooperate with the scheduler.
                 // do not call sleep if you want to be 'that thread' and hog 100% cpu.
@@ -335,6 +348,8 @@ namespace Robust.Shared.Timing
 
                         break;
                 }
+
+                GameLoopEventSource.Log.SleepStop();
             }
         }
     }
@@ -369,5 +384,38 @@ namespace Robust.Shared.Timing
         ///     have low CPU usage. You should use this on a dedicated server.
         /// </summary>
         Delay = 1,
+    }
+
+    [EventSource(Name = "Robust.GameLoop")]
+    internal sealed class GameLoopEventSource : EventSource
+    {
+        public static GameLoopEventSource Log { get; } = new();
+
+        [Event(1)]
+        public void CannotKeepUp() => WriteEvent(1);
+
+        [Event(2)]
+        public void InputStart() => WriteEvent(2);
+
+        [Event(3)]
+        public void InputStop() => WriteEvent(3);
+
+        [Event(4)]
+        public void TickStart(uint tick) => WriteEvent(4, tick);
+
+        [Event(5)]
+        public void TickStop(uint tick) => WriteEvent(5, tick);
+
+        [Event(6)]
+        public void UpdateStart() => WriteEvent(6);
+
+        [Event(7)]
+        public void UpdateStop() => WriteEvent(7);
+
+        [Event(8)]
+        public void SleepStart() => WriteEvent(8);
+
+        [Event(9)]
+        public void SleepStop() => WriteEvent(9);
     }
 }

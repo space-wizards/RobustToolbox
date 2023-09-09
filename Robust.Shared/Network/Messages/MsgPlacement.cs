@@ -23,7 +23,7 @@ namespace Robust.Shared.Network.Messages
         /// </summary>
         public bool Replacement { get; set; }
         public bool IsTile { get; set; }
-        public ushort TileType { get; set; }
+        public int TileType { get; set; }
         public string EntityTemplateName { get; set; }
         public EntityCoordinates EntityCoordinates { get; set; }
         public Direction DirRcv { get; set; }
@@ -44,7 +44,7 @@ namespace Robust.Shared.Network.Messages
                     IsTile = buffer.ReadBoolean();
                     Replacement = buffer.ReadBoolean();
 
-                    if (IsTile) TileType = buffer.ReadUInt16();
+                    if (IsTile) TileType = buffer.ReadInt32();
                     else EntityTemplateName = buffer.ReadString();
 
                     EntityCoordinates = buffer.ReadEntityCoordinates();

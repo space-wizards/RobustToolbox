@@ -1,7 +1,3 @@
-﻿using System;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
@@ -9,6 +5,12 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace Robust.Server.ServerHub;
 
@@ -21,12 +23,12 @@ internal sealed class HubManager
     private ISawmill _sawmill = default!;
 
     private string? _advertiseUrl;
-    private string _masterUrl = "";
+    private IReadOnlyList<string> _hubUrls = Array.Empty<string>();
     private TimeSpan _nextPing;
     private TimeSpan _interval;
 
     private bool _active;
-    private bool _firstAdvertisement = true;
+    private readonly HashSet<string> _hubUrlsAdvertisedTo = new HashSet<string>();
     private HttpClient? _httpClient;
 
     public async void Start()
@@ -38,7 +40,10 @@ internal sealed class HubManager
             return;
 
         _cfg.OnValueChanged(CVars.HubAdvertiseInterval, UpdateInterval, true);
-        _cfg.OnValueChanged(CVars.HubMasterUrl, s => _masterUrl = s, true);
+        _cfg.OnValueChanged(CVars.HubUrls, s => _hubUrls = s.Split(",", StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .ToList()
+        , true);
 
         var url = _cfg.GetCVar(CVars.HubServerUrl);
         if (string.IsNullOrEmpty(url))
@@ -100,32 +105,37 @@ internal sealed class HubManager
         DebugTools.AssertNotNull(_advertiseUrl);
         DebugTools.AssertNotNull(_httpClient);
 
-        var apiUrl = $"{_masterUrl}api/servers/advertise";
-
-        try
+        foreach (var hubUrl in _hubUrls)
         {
-            using var response = await _httpClient!.PostAsJsonAsync(apiUrl, new AdvertiseRequest(_advertiseUrl!));
+            var apiUrl = $"{hubUrl}api/servers/advertise";
 
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                var errorText = await response.Content.ReadAsStringAsync();
-                _sawmill.Log(
-                    LogLevel.Error,
-                    "Error status while advertising server: [{StatusCode}] {Response}",
-                    response.StatusCode,
-                    errorText);
-                return;
-            }
+                using var response = await _httpClient!.PostAsJsonAsync(apiUrl, new AdvertiseRequest(_advertiseUrl!));
 
-            if (_firstAdvertisement)
-            {
-                _sawmill.Info("Successfully advertised to hub with address {ServerHubAddress}", _advertiseUrl);
-                _firstAdvertisement = false;
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorText = await response.Content.ReadAsStringAsync();
+                    _sawmill.Error("Error status while advertising server: [{StatusCode}] {ErrorText}, to {HubUrl}",
+                        response.StatusCode,
+                        errorText,
+                        hubUrl);
+                    continue;
+                }
+
+                if (!_hubUrlsAdvertisedTo.Contains(hubUrl))
+                {
+                    _sawmill.Info("Successfully advertised to {HubUrl} with address {AdvertiseUrl}",
+                        hubUrl,
+                        _advertiseUrl);
+                    _hubUrlsAdvertisedTo.Add(hubUrl);
+                }
             }
-        }
-        catch (Exception e)
-        {
-            _sawmill.Log(LogLevel.Error, e, $"Exception while trying to advertise server to hub");
+            catch (Exception e)
+            {
+                _sawmill.Log(LogLevel.Error, e, "Exception while trying to advertise server to {HubUrl}",
+                    hubUrl);
+            }
         }
     }
 

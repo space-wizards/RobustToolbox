@@ -51,6 +51,7 @@ namespace Robust.Server.Prototypes
 
         public override void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? changed = null)
         {
+            LoadDirectory(new("/EnginePrototypes/"), changed: changed);
             LoadDirectory(_server.Options.PrototypeDirectory, changed: changed);
             ResolveResults();
         }

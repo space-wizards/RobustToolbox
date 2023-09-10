@@ -13,22 +13,18 @@ public abstract partial class SharedContainerSystem : EntitySystem
 {
     private void OnStartupValidation(EntityUid uid, ContainerManagerComponent component, ComponentStartup args)
     {
-        var metaQuery = GetEntityQuery<MetaDataComponent>();
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        var physicsQuery = GetEntityQuery<PhysicsComponent>();
-
         foreach (var cont in component.Containers.Values)
         {
             foreach (var ent in cont.ContainedEntities)
             {
-                if (!metaQuery.TryGetComponent(ent, out var meta))
+                if (!MetaQuery.TryGetComponent(ent, out var meta))
                 {
                     ValidateMissingEntity(uid, cont, ent);
                     continue;
                 }
 
-                var xform = xformQuery.GetComponent(ent);
-                physicsQuery.TryGetComponent(ent, out var physics);
+                var xform = TransformQuery.GetComponent(ent);
+                PhysicsQuery.TryGetComponent(ent, out var physics);
 
                 DebugTools.Assert(xform.ParentUid == uid,
                     $"Entity not parented to its container. Entity: {ToPrettyString(ent)}, parent: {ToPrettyString(uid)}");
@@ -46,10 +42,10 @@ public abstract partial class SharedContainerSystem : EntitySystem
                 // entities in containers without having to "re-insert" them.
                 meta.Flags |= MetaDataFlags.InContainer;
                 _lookup.RemoveFromEntityTree(ent, xform);
-                ((BaseContainer)cont).RecursivelyUpdatePhysics(ent, xform, physics, _physics, physicsQuery, xformQuery);
+                cont.RecursivelyUpdatePhysics(ent, xform, physics, _physics, PhysicsQuery, TransformQuery);
 
                 // assert children have correct properties
-                ValidateChildren(xform, xformQuery, physicsQuery);
+                ValidateChildren(xform, TransformQuery, PhysicsQuery);
             }
         }
     }

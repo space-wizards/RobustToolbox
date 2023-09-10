@@ -5,9 +5,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -21,9 +19,6 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly PointLightSystem _lightSys = default!;
 
-        private EntityQuery<MetaDataComponent> _metaQuery;
-        private EntityQuery<TransformComponent> _xformQuery;
-
         private readonly HashSet<EntityUid> _updateQueue = new();
 
         public readonly Dictionary<NetEntity, BaseContainer> ExpectedEntities = new();
@@ -31,9 +26,6 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-
-            _metaQuery = GetEntityQuery<MetaDataComponent>();
-            _xformQuery = GetEntityQuery<TransformComponent>();
 
             EntityManager.EntityInitialized += HandleEntityInitialized;
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
@@ -58,7 +50,7 @@ namespace Robust.Client.GameObjects
             if (!RemoveExpectedEntity(GetNetEntity(uid), out var container))
                 return;
 
-            container.Insert(uid, EntityManager, transform: _xformQuery.GetComponent(uid), meta: _metaQuery.GetComponent(uid));
+            container.Insert(uid, EntityManager, transform: TransformQuery.GetComponent(uid), meta: MetaQuery.GetComponent(uid));
         }
 
         private void HandleComponentState(EntityUid uid, ContainerManagerComponent component, ref ComponentHandleState args)
@@ -66,7 +58,7 @@ namespace Robust.Client.GameObjects
             if (args.Current is not ContainerManagerComponentState cast)
                 return;
 
-            var xform = _xformQuery.GetComponent(uid);
+            var xform = TransformQuery.GetComponent(uid);
 
             // Delete now-gone containers.
             var toDelete = new ValueList<string>();
@@ -82,8 +74,8 @@ namespace Robust.Client.GameObjects
                 {
                     container.Remove(entity,
                         EntityManager,
-                        _xformQuery.GetComponent(entity),
-                        _metaQuery.GetComponent(entity),
+                        TransformQuery.GetComponent(entity),
+                        MetaQuery.GetComponent(entity),
                         force: true,
                         reparent: false);
 
@@ -121,7 +113,7 @@ namespace Robust.Client.GameObjects
                 DebugTools.Assert(!container.Contains(EntityUid.Invalid));
 
                 // No need to ensure entities here.
-                var entities = GetEntityList(stateContainer.ExpectedEntities);
+                var entities = GetEntityList(stateContainer.CompStateEntities);
 
                 foreach (var entity in container.ContainedEntities)
                 {
@@ -136,8 +128,8 @@ namespace Robust.Client.GameObjects
                     container.Remove(
                         entity,
                         EntityManager,
-                        _xformQuery.GetComponent(entity),
-                        _metaQuery.GetComponent(entity),
+                        TransformQuery.GetComponent(entity),
+                        MetaQuery.GetComponent(entity),
                         force: true,
                         reparent: false);
 
@@ -188,9 +180,9 @@ namespace Robust.Client.GameObjects
 
                     RemoveExpectedEntity(netEnt, out _);
                     container.Insert(entity.Value, EntityManager,
-                        _xformQuery.GetComponent(entity.Value),
+                        TransformQuery.GetComponent(entity.Value),
                         xform,
-                        _metaQuery.GetComponent(entity.Value),
+                        MetaQuery.GetComponent(entity.Value),
                         force: true);
 
                     DebugTools.Assert(container.Contains(entity.Value));

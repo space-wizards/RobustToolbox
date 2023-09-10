@@ -29,8 +29,11 @@ namespace Robust.Shared.Containers
         [ViewVariables]
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
 
-        [ViewVariables]
+        [ViewVariables, NonSerialized]
         public List<NetEntity> ExpectedEntities = new();
+
+        // TODO: I hate this but I am getting conflict city and taking 2d4 psychic damage for every pr I have to merge with.
+        internal List<NetEntity> CompStateEntities = new();
 
         /// <summary>
         /// The ID of this container.

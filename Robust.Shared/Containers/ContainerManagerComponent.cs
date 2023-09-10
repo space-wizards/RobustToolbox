@@ -140,9 +140,19 @@ namespace Robust.Shared.Containers
         {
             public Dictionary<string, BaseContainer> Containers;
 
-            public ContainerManagerComponentState(Dictionary<string, BaseContainer> containers)
+            public ContainerManagerComponentState(IEntityManager entManager, Dictionary<string, BaseContainer> containers)
             {
                 Containers = containers;
+
+                foreach (var container in containers.Values)
+                {
+                    container.CompStateEntities.Clear();
+
+                    foreach (var ent in container.ContainedEntities)
+                    {
+                        container.CompStateEntities.Add(entManager.GetNetEntity(ent));
+                    }
+                }
             }
         }
 

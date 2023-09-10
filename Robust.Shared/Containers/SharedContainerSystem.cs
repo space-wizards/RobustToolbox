@@ -8,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
@@ -21,9 +22,9 @@ namespace Robust.Shared.Containers
 
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MapComponent> _mapQuery;
-
-        private EntityQuery<MetaDataComponent> _metas;
-        private EntityQuery<TransformComponent> _xforms;
+        protected EntityQuery<MetaDataComponent> MetaQuery;
+        protected EntityQuery<PhysicsComponent> PhysicsQuery;
+        protected EntityQuery<TransformComponent> TransformQuery;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -36,13 +37,14 @@ namespace Robust.Shared.Containers
 
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _mapQuery = GetEntityQuery<MapComponent>();
-            _metas = EntityManager.GetEntityQuery<MetaDataComponent>();
-            _xforms = EntityManager.GetEntityQuery<TransformComponent>();
+            MetaQuery = GetEntityQuery<MetaDataComponent>();
+            PhysicsQuery = GetEntityQuery<PhysicsComponent>();
+            TransformQuery = GetEntityQuery<TransformComponent>();
         }
 
         private void OnContainerGetState(EntityUid uid, ContainerManagerComponent component, ref ComponentGetState args)
         {
-            args.State = new ContainerManagerComponent.ContainerManagerComponentState(component.Containers);
+            args.State = new ContainerManagerComponent.ContainerManagerComponentState(EntityManager, component.Containers);
         }
 
         // TODO: Make ContainerManagerComponent ECS and make these proxy methods the real deal.
@@ -227,13 +229,13 @@ namespace Robust.Shared.Containers
             MetaDataComponent? meta = null,
             TransformComponent? xform = null) where T : Component
         {
-            if (!_metas.Resolve(uid, ref meta))
+            if (!MetaQuery.Resolve(uid, ref meta))
                 return false;
 
             if ((meta.Flags & MetaDataFlags.InContainer) != MetaDataFlags.InContainer)
                 return false;
 
-            if (!_xforms.Resolve(uid, ref xform))
+            if (!TransformQuery.Resolve(uid, ref xform))
                 return false;
 
             if (!xform.ParentUid.Valid)
@@ -255,13 +257,13 @@ namespace Robust.Shared.Containers
             MetaDataComponent? meta = null,
             TransformComponent? xform = null) where T : Component
         {
-            if (!_metas.Resolve(uid, ref meta))
+            if (!MetaQuery.Resolve(uid, ref meta))
                 return foundComponents.Any();
 
             if ((meta.Flags & MetaDataFlags.InContainer) != MetaDataFlags.InContainer)
                 return foundComponents.Any();
 
-            if (!_xforms.Resolve(uid, ref xform))
+            if (!TransformQuery.Resolve(uid, ref xform))
                 return foundComponents.Any();
 
             if (!xform.ParentUid.Valid)

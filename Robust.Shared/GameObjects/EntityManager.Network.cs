@@ -106,7 +106,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
-    public bool TryGetNetEntity(EntityUid? uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
     {
         if (uid == null)
         {

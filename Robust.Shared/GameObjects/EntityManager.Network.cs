@@ -231,7 +231,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public HashSet<EntityUid> GetEntitySet(HashSet<NetEntity> netEntities)
     {
-        var entities = _poolManager.GetEntitySet();
+        var entities = new HashSet<EntityUid>();
         entities.EnsureCapacity(netEntities.Count);
 
         foreach (var netEntity in netEntities)
@@ -334,7 +334,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityUid> entities)
     {
-        var newSet = _poolManager.GetNetEntitySet();
+        var newSet = new HashSet<NetEntity>();
         newSet.EnsureCapacity(entities.Count);
 
         foreach (var ent in entities)
@@ -349,7 +349,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(List<EntityUid> entities)
     {
-        var netEntities = _poolManager.GetNetEntityList();
+        var netEntities = new List<NetEntity>();
         netEntities.EnsureCapacity(entities.Count);
 
         foreach (var netEntity in entities)
@@ -363,7 +363,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(ICollection<EntityUid> entities)
     {
-        var netEntities = _poolManager.GetNetEntityList();
+        var netEntities = new List<NetEntity>();
         netEntities.EnsureCapacity(entities.Count);
 
         foreach (var netEntity in entities)

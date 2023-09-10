@@ -83,7 +83,7 @@ public sealed partial class ReplayLoadManager
         }
 
         HashSet<ResPath> uploadedFiles = new();
-        var detached = _pool.GetNetEntitySet();
+        var detached = new HashSet<NetEntity>();
         var detachQueue = new Dictionary<GameTick, List<NetEntity>>();
 
         if (initMessages != null)

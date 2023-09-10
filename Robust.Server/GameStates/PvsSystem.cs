@@ -24,10 +24,8 @@ namespace Robust.Server.GameStates;
 
 internal sealed partial class PvsSystem : EntitySystem
 {
-    [Shared.IoC.Dependency] private readonly IComponentFactory _factory = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
     [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
-    [Shared.IoC.Dependency] private readonly ObjectPoolManager _poolManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IParallelManager _parallelManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
@@ -868,7 +866,7 @@ internal sealed partial class PvsSystem : EntitySystem
         if (lastSent == null)
             return null;
 
-        var leftView = _poolManager.GetNetEntityList();
+        var leftView = new List<NetEntity>();
         foreach (var netEntity in lastSent.Keys)
         {
             if (!visibleEnts.ContainsKey(netEntity))
@@ -1080,7 +1078,7 @@ internal sealed partial class PvsSystem : EntitySystem
     public (List<EntityState>?, List<NetEntity>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
     {
         List<EntityState>? stateEntities;
-        var toSend = _poolManager.GetEntitySet();
+        var toSend = new HashSet<EntityUid>();
         DebugTools.Assert(toSend.Count == 0);
         bool enumerateAll = false;
 
@@ -1182,7 +1180,6 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
             }
         }
 
-        _poolManager.Return(toSend);
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         if (stateEntities.Count == 0)
@@ -1283,14 +1280,13 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         if (session.Status != SessionStatus.InGame)
             return Array.Empty<EntityUid>();
 
-        var viewers = _poolManager.GetEntitySet();
+        var viewers = new HashSet<EntityUid>();
 
         if (session.AttachedEntity != null)
         {
             // Fast path
             if (session is IPlayerSession { ViewSubscriptionCount: 0 })
             {
-                _poolManager.Return(viewers);
                 return new[] { session.AttachedEntity.Value };
             }
 
@@ -1308,7 +1304,6 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
         var viewerArray = viewers.ToArray();
 
-        _poolManager.Return(viewers);
         return viewerArray;
     }
 

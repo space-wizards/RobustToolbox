@@ -63,7 +63,6 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly ObjectPoolManager _pool = default!;
         [Dependency] private readonly IConsoleHost _conHost = default!;
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
@@ -865,7 +864,7 @@ namespace Robust.Client.GameStates
 
             // Construct hashset for set.Contains() checks.
             var entityStates = state.EntityStates.Span;
-            var stateEnts = _pool.GetNetEntitySet(entityStates.Length);
+            var stateEnts = new HashSet<NetEntity>();
             foreach (var entState in entityStates)
             {
                 stateEnts.Add(entState.NetEntity);
@@ -920,8 +919,6 @@ namespace Robust.Client.GameStates
             {
                 _entities.DeleteEntity(ent);
             }
-
-            _pool.Return(stateEnts);
         }
 
         private void ProcessDeletions(

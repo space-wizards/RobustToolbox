@@ -13,12 +13,12 @@ public sealed class MsgStateRequestFull : NetMessage
 
     public GameTick Tick;
 
-    public EntityUid MissingEntity;
+    public NetEntity MissingEntity;
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
     {
         Tick = buffer.ReadGameTick();
-        MissingEntity = buffer.ReadEntityUid();
+        MissingEntity = buffer.ReadNetEntity();
     }
 
     public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)

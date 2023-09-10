@@ -125,7 +125,7 @@ public sealed class TeleportToCommand : LocalizedCommands
         [NotNullWhen(true)] out EntityUid? victimUid,
         [NotNullWhen(true)] out TransformComponent? transform)
     {
-        if (EntityUid.TryParse(str, out var uid) && _entities.TryGetComponent(uid, out transform))
+        if (NetEntity.TryParse(str, out var uidNet) && _entities.TryGetEntity(uidNet, out var uid) && _entities.TryGetComponent(uid, out transform))
         {
             victimUid = uid;
             return true;
@@ -160,10 +160,10 @@ public sealed class TeleportToCommand : LocalizedCommands
         hint = Loc.GetString(hint);
 
         var opts = CompletionResult.FromHintOptions(users, hint);
-        if (last != string.Empty && !EntityUid.TryParse(last, out _))
+        if (last != string.Empty && !NetEntity.TryParse(last, out _))
             return opts;
 
-        return CompletionResult.FromHintOptions(opts.Options.Concat(CompletionHelper.EntityUids(last, _entities)), hint);
+        return CompletionResult.FromHintOptions(opts.Options.Concat(CompletionHelper.NetEntities(last, _entities)), hint);
     }
 }
 
@@ -201,11 +201,11 @@ sealed class TpGridCommand : LocalizedCommands
             return;
         }
 
-        var gridId = EntityUid.Parse(args[0]);
+        var gridIdNet = NetEntity.Parse(args[0]);
         var xPos = float.Parse(args[1], CultureInfo.InvariantCulture);
         var yPos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
-        if (!_ent.EntityExists(gridId))
+        if (!_ent.TryGetEntity(gridIdNet, out var gridId) || !_ent.EntityExists(gridId))
         {
             shell.WriteError($"Entity does not exist: {args[0]}");
             return;
@@ -217,7 +217,7 @@ sealed class TpGridCommand : LocalizedCommands
             return;
         }
 
-        var gridXform = _ent.GetComponent<TransformComponent>(gridId);
+        var gridXform = _ent.GetComponent<TransformComponent>(gridId.Value);
         var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
 
         gridXform.Coordinates = new EntityCoordinates(_map.GetMapEntityId(mapId), new Vector2(xPos, yPos));

@@ -19,7 +19,7 @@ public sealed class MsgStateLeavePvs : NetMessage
 {
     public override MsgGroups MsgGroup => MsgGroups.Entity;
 
-    public List<EntityUid> Entities;
+    public List<NetEntity> Entities;
     public GameTick Tick;
 
     public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
@@ -30,7 +30,7 @@ public sealed class MsgStateLeavePvs : NetMessage
 
         for (int i = 0; i < length; i++)
         {
-            Entities.Add(buffer.ReadEntityUid());
+            Entities.Add(buffer.ReadNetEntity());
         }
     }
 

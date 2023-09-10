@@ -38,14 +38,14 @@ public sealed partial class ToolshedParserTest : ToolshedTest
     }
 
     [Test]
-    public async Task EntityUidTypeParser()
+    public async Task EntityTypeParser()
     {
         await Server.WaitAssertion(() =>
         {
             ParseCommand("ent 1");
-            ParseCommand("ent c1");
+            // Clientside entities are a myth.
 
-            ExpectError<InvalidEntityUid>();
+            ExpectError<InvalidEntity>();
             ParseCommand("ent foodigity");
         });
     }

@@ -130,7 +130,7 @@ namespace Robust.Server.Physics
 
             var msg = new ChunkSplitDebugMessage
             {
-                Grid = uid,
+                Grid = GetNetEntity(uid),
             };
 
             foreach (var (index, group) in _nodes[uid])

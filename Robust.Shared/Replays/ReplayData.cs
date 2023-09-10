@@ -151,14 +151,14 @@ public sealed class CheckpointState : IComparable<CheckpointState>
     public readonly (TimeSpan, GameTick) TimeBase;
     public readonly int Index;
     public readonly Dictionary<string, object> Cvars;
-    public readonly List<EntityUid> Detached;
+    public readonly List<NetEntity> Detached;
 
     public CheckpointState(
         GameState state,
         (TimeSpan, GameTick) time,
         Dictionary<string, object> cvars,
         int index,
-        HashSet<EntityUid> detached)
+        HashSet<NetEntity> detached)
     {
         FullState = state;
         TimeBase = time;
@@ -175,7 +175,7 @@ public sealed class CheckpointState : IComparable<CheckpointState>
         int i = 0, j = 0;
         foreach (var entState in state.EntityStates.Span)
         {
-            if (detached.Contains(entState.Uid))
+            if (detached.Contains(entState.NetEntity))
                 DetachedStates[i++] = entState;
             else
                 attachedStates[j++] = entState;
@@ -232,10 +232,10 @@ public sealed class ReplayMessage
     [Serializable, NetSerializable]
     public sealed class LeavePvs
     {
-        public readonly List<EntityUid> Entities;
+        public readonly List<NetEntity> Entities;
         public readonly GameTick Tick;
 
-        public LeavePvs(List<EntityUid> entities, GameTick tick)
+        public LeavePvs(List<NetEntity> entities, GameTick tick)
         {
             Entities = entities;
             Tick = tick;

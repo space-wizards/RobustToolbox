@@ -128,7 +128,7 @@ namespace Robust.Client.GameObjects
                     return;
                 }
 
-                if (component.Owner.IsClientSide() || !animatedComp.NetSyncEnabled)
+                if (IsClientSide(component.Owner) || !animatedComp.NetSyncEnabled)
                     continue;
 
                 var reg = _compFact.GetRegistration(animatedComp);

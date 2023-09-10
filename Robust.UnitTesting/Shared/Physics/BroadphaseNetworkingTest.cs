@@ -69,6 +69,8 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
             grid1 = gridComp.Owner;
         });
 
+        var map1Net = sEntMan.GetNetEntity(map1);
+
         // Spawn player entity on grid 1
         EntityUid player = default;
         await server.WaitPost(() =>
@@ -93,6 +95,8 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
             session.JoinGame();
         });
 
+        var playerNet = sEntMan.GetNetEntity(player);
+
         for (int i = 0; i < 10; i++)
         {
             await server.WaitRunTicks(1);
@@ -102,20 +106,26 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         // Check player got properly attached
         await client.WaitPost(() =>
         {
-            var ent = cPlayerMan.LocalPlayer?.ControlledEntity;
-            Assert.That(ent, Is.EqualTo(player));
+            var ent = cEntMan.GetNetEntity(cPlayerMan.LocalPlayer?.ControlledEntity);
+            Assert.That(ent, Is.EqualTo(playerNet));
         });
 
         var sPlayerXform = sEntMan.GetComponent<TransformComponent>(player);
-        var cPlayerXform = cEntMan.GetComponent<TransformComponent>(player);
+        var cPlayerXform = cEntMan.GetComponent<TransformComponent>(cEntMan.GetEntity(playerNet));
 
         // Client initially has correct transform data.
         var broadphase = new BroadphaseData(grid1, map1, true, false);
-        Assert.That(cPlayerXform.GridUid, Is.EqualTo(grid1));
+        var grid1Net = sEntMan.GetNetEntity(grid1);
+
+        Assert.That(cPlayerXform.GridUid, Is.EqualTo(cEntMan.GetEntity(grid1Net)));
         Assert.That(sPlayerXform.GridUid, Is.EqualTo(grid1));
-        Assert.That(cPlayerXform.MapUid, Is.EqualTo(map1));
+        Assert.That(cPlayerXform.MapUid, Is.EqualTo(cEntMan.GetEntity(map1Net)));
         Assert.That(sPlayerXform.MapUid, Is.EqualTo(map1));
-        Assert.That(cPlayerXform.Broadphase, Is.EqualTo(broadphase));
+
+        Assert.That(cPlayerXform.Broadphase?.Uid, Is.EqualTo(cEntMan.GetEntity(sEntMan.GetNetEntity(broadphase.Uid))));
+        Assert.That(cPlayerXform.Broadphase?.PhysicsMap, Is.EqualTo(cEntMan.GetEntity(sEntMan.GetNetEntity(broadphase.PhysicsMap))));
+        Assert.That(cPlayerXform.Broadphase?.Static, Is.EqualTo(broadphase.Static));
+        Assert.That(cPlayerXform.Broadphase?.CanCollide, Is.EqualTo(broadphase.CanCollide));
         Assert.That(sPlayerXform.Broadphase, Is.EqualTo(broadphase));
 
         // Set up maps 2 & grid 2 and move the player there (in the same tick).
@@ -136,6 +146,9 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
 
         });
 
+        var grid2Net = sEntMan.GetNetEntity(grid2);
+        var map2Net = sEntMan.GetNetEntity(map2);
+
         for (int i = 0; i < 10; i++)
         {
             await server.WaitRunTicks(1);
@@ -144,11 +157,15 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
 
         // Player & server xforms should match.
         broadphase = new BroadphaseData(grid2, map2, true, false);
-        Assert.That(cPlayerXform.GridUid, Is.EqualTo(grid2));
+        Assert.That(cEntMan.GetNetEntity(cPlayerXform.GridUid), Is.EqualTo(grid2Net));
         Assert.That(sPlayerXform.GridUid, Is.EqualTo(grid2));
-        Assert.That(cPlayerXform.MapUid, Is.EqualTo(map2));
+        Assert.That(cEntMan.GetNetEntity(cPlayerXform.MapUid), Is.EqualTo(map2Net));
         Assert.That(sPlayerXform.MapUid, Is.EqualTo(map2));
-        Assert.That(cPlayerXform.Broadphase, Is.EqualTo(broadphase));
+
+        Assert.That(cPlayerXform.Broadphase?.Uid, Is.EqualTo(cEntMan.GetEntity(sEntMan.GetNetEntity(broadphase.Uid))));
+        Assert.That(cPlayerXform.Broadphase?.PhysicsMap, Is.EqualTo(cEntMan.GetEntity(sEntMan.GetNetEntity(broadphase.PhysicsMap))));
+        Assert.That(cPlayerXform.Broadphase?.Static, Is.EqualTo(broadphase.Static));
+        Assert.That(cPlayerXform.Broadphase?.CanCollide, Is.EqualTo(broadphase.CanCollide));
         Assert.That(sPlayerXform.Broadphase, Is.EqualTo(broadphase));
     }
 }

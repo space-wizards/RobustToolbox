@@ -11,14 +11,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
+internal sealed class EntityTypeParser : TypeParser<EntityUid>
 {
-    [Dependency] private readonly IEntityManager _entity = default!;
-
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parser, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var start = parserContext.Index;
-        var word = parserContext.GetWord(ParserContext.IsToken);
+        var start = parser.Index;
+        var word = parser.GetWord(ParserContext.IsToken);
         error = null;
 
         if (!EntityUid.TryParse(word, out var ent))
@@ -26,11 +24,11 @@ internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
             result = null;
 
             if (word is not null)
-                error = new InvalidEntityUid(word);
+                error = new InvalidEntity(word);
             else
                 error = new OutOfInputError();
 
-            error.Contextualize(parserContext.Input, (start, parserContext.Index));
+            error.Contextualize(parser.Input, (start, parser.Index));
             return false;
         }
 
@@ -41,15 +39,15 @@ internal sealed class EntityUidTypeParser : TypeParser<EntityUid>
     public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        return (CompletionResult.FromHint("<entity id>"), null);
+        return (CompletionResult.FromHint("<NetEntity>"), null);
     }
 }
 
-public record InvalidEntityUid(string Value) : IConError
+public record InvalidEntity(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"Couldn't parse {Value} as an entity ID. Entity IDs are numeric, optionally starting with a c to indicate client-sided-ness.");
+        return FormattedMessage.FromMarkup($"Couldn't parse {Value} as an Entity.");
     }
 
     public string? Expression { get; set; }

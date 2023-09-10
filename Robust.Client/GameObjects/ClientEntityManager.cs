@@ -16,7 +16,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public sealed class ClientEntityManager : EntityManager, IClientEntityManagerInternal
+    public sealed partial class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
@@ -24,8 +24,6 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IClientGameStateManager _stateMan = default!;
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
-
-        protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;
 
         public override void Initialize()
         {
@@ -37,13 +35,16 @@ namespace Robust.Client.GameObjects
 
         public override void FlushEntities()
         {
+            // Server doesn't network deletions on client shutdown so we need to
+            // manually clear these out or risk stale data getting used.
+            PendingNetEntityStates.Clear();
             using var _ = _gameTiming.StartStateApplicationArea();
             base.FlushEntities();
         }
 
-        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, EntityUid uid)
+        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName)
         {
-            return base.CreateEntity(prototypeName, uid);
+            return base.CreateEntity(prototypeName);
         }
 
         void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
@@ -66,7 +67,7 @@ namespace Robust.Client.GameObjects
 
         public override void QueueDeleteEntity(EntityUid uid)
         {
-            if (uid.IsClientSide())
+            if (IsClientSide(uid))
             {
                 base.QueueDeleteEntity(uid);
                 return;

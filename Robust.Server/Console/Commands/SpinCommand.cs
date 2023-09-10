@@ -29,10 +29,12 @@ public sealed class SpinCommand : LocalizedCommands
         }
 
         // get the target
-        EntityUid target;
+        EntityUid? target;
+
         if (args.Length == 3)
         {
-            if (!EntityUid.TryParse(args[2], out target))
+            if (!NetEntity.TryParse(args[2], out var targetNet) ||
+                !_entities.TryGetEntity(targetNet, out target))
             {
                 shell.WriteError($"Unable to find entity {args[1]}");
                 return;
@@ -65,6 +67,6 @@ public sealed class SpinCommand : LocalizedCommands
 
         var physicsSystem = _entities.System<SharedPhysicsSystem>();
         physicsSystem.SetAngularDamping(physics, drag);
-        physicsSystem.SetAngularVelocity(target, speed, body: physics);
+        physicsSystem.SetAngularVelocity(target.Value, speed, body: physics);
     }
 }

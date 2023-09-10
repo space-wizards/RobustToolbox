@@ -70,6 +70,9 @@ namespace Robust.Shared.Containers
             return true;
         }
 
+        protected internal override bool CanInsert(EntityUid toInsert, bool assumeEmpty, IEntityManager entMan)
+            => ContainedEntity == null || assumeEmpty;
+
         /// <inheritdoc />
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
         {

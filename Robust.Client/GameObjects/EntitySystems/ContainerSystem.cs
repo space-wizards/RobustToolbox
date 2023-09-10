@@ -23,6 +23,9 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly PointLightSystem _lightSys = default!;
 
+        private EntityQuery<PointLightComponent> _pointLightQuery;
+        private EntityQuery<SpriteComponent> _spriteQuery;
+
         private readonly HashSet<EntityUid> _updateQueue = new();
 
         public readonly Dictionary<NetEntity, BaseContainer> ExpectedEntities = new();
@@ -30,6 +33,9 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
+
+            _pointLightQuery = GetEntityQuery<PointLightComponent>();
+            _spriteQuery = GetEntityQuery<SpriteComponent>();
 
             EntityManager.EntityInitialized += HandleEntityInitialized;
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
@@ -276,24 +282,19 @@ namespace Robust.Client.GameObjects
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
-            var pointQuery = EntityManager.GetEntityQuery<PointLightComponent>();
-            var spriteQuery = EntityManager.GetEntityQuery<SpriteComponent>();
 
             foreach (var toUpdate in _updateQueue)
             {
                 if (Deleted(toUpdate))
                     continue;
 
-                UpdateEntityRecursively(toUpdate, pointQuery, spriteQuery);
+                UpdateEntityRecursively(toUpdate);
             }
 
             _updateQueue.Clear();
         }
 
-        private void UpdateEntityRecursively(
-            EntityUid entity,
-            EntityQuery<PointLightComponent> pointQuery,
-            EntityQuery<SpriteComponent> spriteQuery)
+        private void UpdateEntityRecursively(EntityUid entity)
         {
             // Recursively go up parents and containers to see whether both sprites and lights need to be occluded
             // Could maybe optimise this more by checking nearest parent that has sprite / light and whether it's container
@@ -321,23 +322,21 @@ namespace Robust.Client.GameObjects
             // This is the CBT bit.
             // The issue is we need to go through the children and re-check whether they are or are not contained.
             // if they are contained then the occlusion values may need updating for all those children
-            UpdateEntity(entity, xform, pointQuery, spriteQuery, spriteOccluded, lightOccluded);
+            UpdateEntity(entity, xform, spriteOccluded, lightOccluded);
         }
 
         private void UpdateEntity(
             EntityUid entity,
             TransformComponent xform,
-            EntityQuery<PointLightComponent> pointQuery,
-            EntityQuery<SpriteComponent> spriteQuery,
             bool spriteOccluded,
             bool lightOccluded)
         {
-            if (spriteQuery.TryGetComponent(entity, out var sprite))
+            if (_spriteQuery.TryGetComponent(entity, out var sprite))
             {
                 sprite.ContainerOccluded = spriteOccluded;
             }
 
-            if (pointQuery.TryGetComponent(entity, out var light))
+            if (_pointLightQuery.TryGetComponent(entity, out var light))
                 _lightSys.SetContainerOccluded(entity, lightOccluded, light);
 
             var childEnumerator = xform.ChildEnumerator;
@@ -358,14 +357,14 @@ namespace Robust.Client.GameObjects
                         childLightOccluded = childLightOccluded || container.OccludesLight;
                     }
 
-                    UpdateEntity(child.Value, TransformQuery.GetComponent(child.Value), pointQuery, spriteQuery, childSpriteOccluded, childLightOccluded);
+                    UpdateEntity(child.Value, TransformQuery.GetComponent(child.Value), childSpriteOccluded, childLightOccluded);
                 }
             }
             else
             {
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    UpdateEntity(child.Value, TransformQuery.GetComponent(child.Value), pointQuery, spriteQuery, spriteOccluded, lightOccluded);
+                    UpdateEntity(child.Value, TransformQuery.GetComponent(child.Value), spriteOccluded, lightOccluded);
                 }
             }
         }

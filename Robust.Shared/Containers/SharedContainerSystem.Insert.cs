@@ -25,7 +25,7 @@ public abstract partial class SharedContainerSystem
         if (!container.CanInsert(toInsert, assumeEmpty, EntityManager))
             return false;
 
-        if (!_xformQuery.Resolve(toInsert, ref toInsertXform))
+        if (!_xforms.Resolve(toInsert, ref toInsertXform))
             return false;
 
         // no, you can't put maps or grids into containers

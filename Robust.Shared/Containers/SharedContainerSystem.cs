@@ -19,9 +19,11 @@ namespace Robust.Shared.Containers
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
-        private EntityQuery<TransformComponent> _xformQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MapComponent> _mapQuery;
+
+        private EntityQuery<MetaDataComponent> _metas;
+        private EntityQuery<TransformComponent> _xforms;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -32,9 +34,10 @@ namespace Robust.Shared.Containers
             SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentGetState>(OnContainerGetState);
 
-            _xformQuery = GetEntityQuery<TransformComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _mapQuery = GetEntityQuery<MapComponent>();
+            _metas = EntityManager.GetEntityQuery<MetaDataComponent>();
+            _xforms = EntityManager.GetEntityQuery<TransformComponent>();
         }
 
         private void OnContainerGetState(EntityUid uid, ContainerManagerComponent component, ref ComponentGetState args)
@@ -212,6 +215,62 @@ namespace Robust.Shared.Containers
                 return false;
 
             return IsEntityOrParentInContainer(xform.ParentUid, metas: metas, xforms: xforms);
+        }
+
+        /// <summary>
+        ///     Finds the first instance of a component on the recursive parented containers that hold an entity
+        /// </summary>
+        public bool TryFindComponentOnEntityContainerOrParent<T>(
+            EntityUid uid,
+            EntityQuery<T> entityQuery,
+            [NotNullWhen(true)] ref T? foundComponent,
+            MetaDataComponent? meta = null,
+            TransformComponent? xform = null) where T : Component
+        {
+            if (!_metas.Resolve(uid, ref meta))
+                return false;
+
+            if ((meta.Flags & MetaDataFlags.InContainer) != MetaDataFlags.InContainer)
+                return false;
+
+            if (!_xforms.Resolve(uid, ref xform))
+                return false;
+
+            if (!xform.ParentUid.Valid)
+                return false;
+
+            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent, false))
+                return true;
+
+            return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, entityQuery, ref foundComponent);
+        }
+
+        /// <summary>
+        ///     Finds all instances of a component on the recursive parented containers that hold an entity
+        /// </summary>
+        public bool TryFindComponentsOnEntityContainerOrParent<T>(
+            EntityUid uid,
+            EntityQuery<T> entityQuery,
+            List<T> foundComponents,
+            MetaDataComponent? meta = null,
+            TransformComponent? xform = null) where T : Component
+        {
+            if (!_metas.Resolve(uid, ref meta))
+                return foundComponents.Any();
+
+            if ((meta.Flags & MetaDataFlags.InContainer) != MetaDataFlags.InContainer)
+                return foundComponents.Any();
+
+            if (!_xforms.Resolve(uid, ref xform))
+                return foundComponents.Any();
+
+            if (!xform.ParentUid.Valid)
+                return foundComponents.Any();
+
+            if (EntityManager.TryGetComponent(xform.ParentUid, out T? foundComponent))
+                foundComponents.Add(foundComponent);
+
+            return TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, foundComponents);
         }
 
         /// <summary>

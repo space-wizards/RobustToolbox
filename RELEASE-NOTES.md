@@ -54,6 +54,15 @@ END TEMPLATE-->
 *None yet*
 
 
+## 157.0.0
+
+### Breaking changes
+
+* Unrevert container changes from 155.0.0.
+* Added server-client EntityUid separation. A given EntityUid will no longer refer to the same entity on the server & client.
+* EntityUid is no longer net-serializable, use NetEntity instead, EntityManager & entity systems have helper methods for converting between the two,
+
+
 ## 156.0.0
 
 ### Breaking changes

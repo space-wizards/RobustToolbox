@@ -69,7 +69,7 @@ namespace Robust.Client.GameObjects
             foreach (var (id, container) in component.Containers)
             {
                 if (cast.Containers.TryGetValue(id, out var stateContainer)
-                    && stateContainer.GetType() == container.GetType())
+                    && stateContainer.ContainerType == container.SerializedName)
                 {
                     continue;
                 }

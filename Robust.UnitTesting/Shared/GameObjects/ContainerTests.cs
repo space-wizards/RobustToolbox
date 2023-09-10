@@ -184,8 +184,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
              MapId mapId;
              var mapPos = MapCoordinates.Nullspace;
 
-             EntityUid entityUid = default!;
-             EntityUid itemUid = default!;
+             EntityUid sEntityUid = default!;
+             EntityUid sItemUid = default!;
              NetEntity netEnt = default;
 
              await server.WaitAssertion(() =>
@@ -195,14 +195,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  mapId = sMapManager.CreateMap();
                  mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
-                 entityUid = sEntManager.SpawnEntity(null, mapPos);
-                 sEntManager.GetComponent<MetaDataComponent>(entityUid).EntityName = "Container";
-                 containerSys.EnsureContainer<Container>(entityUid, "dummy");
+                 sEntityUid = sEntManager.SpawnEntity(null, mapPos);
+                 sEntManager.GetComponent<MetaDataComponent>(sEntityUid).EntityName = "Container";
+                 containerSys.EnsureContainer<Container>(sEntityUid, "dummy");
 
                  // Setup PVS
-                 sEntManager.AddComponent<Robust.Server.GameObjects.EyeComponent>(entityUid);
+                 sEntManager.AddComponent<Robust.Server.GameObjects.EyeComponent>(sEntityUid);
                  var player = sPlayerManager.ServerSessions.First();
-                 player.AttachToEntity(entityUid);
+                 player.AttachToEntity(sEntityUid);
                  player.JoinGame();
              });
 
@@ -216,14 +216,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
              {
                  var containerSys = sEntManager.System<SharedContainerSystem>();
 
-                 itemUid = sEntManager.SpawnEntity(null, mapPos);
-                 netEnt = sEntManager.GetNetEntity(itemUid);
-                 sEntManager.GetComponent<MetaDataComponent>(itemUid).EntityName = "Item";
-                 var container = containerSys.GetContainer(entityUid, "dummy");
-                 container.Insert(itemUid);
+                 sItemUid = sEntManager.SpawnEntity(null, mapPos);
+                 netEnt = sEntManager.GetNetEntity(sItemUid);
+                 sEntManager.GetComponent<MetaDataComponent>(sItemUid).EntityName = "Item";
+                 var container = containerSys.GetContainer(sEntityUid, "dummy");
+                 container.Insert(sItemUid);
 
                  // Move item out of PVS so that it doesn't get sent to the client
-                 sEntManager.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(100000, 0);
+                 sEntManager.GetComponent<TransformComponent>(sItemUid).LocalPosition = new Vector2(100000, 0);
              });
 
             await server.WaitRunTicks(1);
@@ -233,7 +233,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 await client.WaitRunTicks(1);
             }
 
-            var cUid = cEntManager.GetEntity(sEntManager.GetNetEntity(entityUid));
+            var cUid = cEntManager.GetEntity(sEntManager.GetNetEntity(sEntityUid));
 
              await client.WaitAssertion(() =>
              {
@@ -258,14 +258,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                  // If possible it'd be best to only have the DeleteEntity, but right now
                  // the entity deleted event is not played on the client if the entity does not exist on the client.
-                 if (sEntManager.EntityExists(itemUid)
+                 if (sEntManager.EntityExists(sItemUid)
                      // && itemUid.TryGetContainer(out var container))
-                     && containerSystem.TryGetContainingContainer(itemUid, out var container))
+                     && containerSystem.TryGetContainingContainer(sItemUid, out var container))
                  {
-                     container.ForceRemove(itemUid);
+                     container.ForceRemove(sItemUid);
                  }
 
-                 sEntManager.DeleteEntity(itemUid);
+                 sEntManager.DeleteEntity(sItemUid);
              });
 
              await server.WaitRunTicks(1);

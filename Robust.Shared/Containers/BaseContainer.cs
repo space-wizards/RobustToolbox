@@ -35,7 +35,7 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// The ID of this container.
         /// </summary>
-        [ViewVariables, NonSerialized, Access(typeof(SharedContainerSystem))]
+        [ViewVariables, NonSerialized, Access(typeof(SharedContainerSystem), typeof(ContainerManagerComponent))]
         public string ID = default!;
 
         [NonSerialized]

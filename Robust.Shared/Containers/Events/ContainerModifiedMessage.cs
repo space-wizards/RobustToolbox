@@ -12,14 +12,14 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// The container being acted upon.
         /// </summary>
-        public BaseContainer Container { get; }
+        public IContainer Container { get; }
 
         /// <summary>
         /// The entity that was removed or inserted from/into the container.
         /// </summary>
         public EntityUid Entity { get; }
 
-        protected ContainerModifiedMessage(EntityUid entity, BaseContainer container)
+        protected ContainerModifiedMessage(EntityUid entity, IContainer container)
         {
             Entity = entity;
             Container = container;

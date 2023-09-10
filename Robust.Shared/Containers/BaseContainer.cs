@@ -12,81 +12,57 @@ using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Robust.Shared.Serialization;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Containers
 {
     /// <summary>
     /// Base container class that all container inherit from.
     /// </summary>
-    [ImplicitDataDefinitionForInheritors]
-    [Serializable, NetSerializable]
-    public abstract partial class BaseContainer
+    public abstract partial class BaseContainer : IContainer
     {
-        /// <summary>
-        /// Readonly collection of all the entities contained within this specific container
-        /// </summary>
+        /// <inheritdoc />
         [ViewVariables]
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
 
-        [ViewVariables, NonSerialized]
-        public List<EntityUid> ExpectedEntities = new();
+        [ViewVariables]
+        public abstract List<EntityUid> ExpectedEntities { get; }
 
-        /// <summary>
-        /// The ID of this container.
-        /// </summary>
-        [ViewVariables, NonSerialized, Access(typeof(SharedContainerSystem), typeof(ContainerManagerComponent))]
-        public string ID = default!;
+        /// <inheritdoc />
+        public abstract string ContainerType { get; }
 
-        [NonSerialized]
-        internal ContainerManagerComponent Manager = default!;
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool Deleted { get; private set; }
 
-        /// <summary>
-        /// Prevents light from escaping the container, from ex. a flashlight.
-        /// </summary>
+        /// <inheritdoc />
+        [ViewVariables]
+        public string ID { get; internal set; } = default!; // Make sure you set me in init
+
+        /// <inheritdoc />
+        public ContainerManagerComponent Manager { get; internal set; } = default!; // Make sure you set me in init
+
+        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("occludes")]
         public bool OccludesLight { get; set; } = true;
 
-        /// <summary>
-        /// The entity that owns this container.
-        /// </summary>
+        /// <inheritdoc />
         [ViewVariables]
         public EntityUid Owner => Manager.Owner;
 
-        /// <summary>
-        /// Should the contents of this container be shown? False for closed containers like lockers, true for
-        /// things like glass display cases.
-        /// </summary>
+        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("showEnts")]
         public bool ShowContents { get; set; }
 
-        internal void Init(string id, EntityUid owner, ContainerManagerComponent component)
-        {
-            DebugTools.AssertNull(ID);
-            ID = id;
-            Manager = component;
-
-            // TODO fix container init.
-            // Eventually, we want an owner field, but currently it needs to use component.Owner
-            // Owner = owner;
-        }
-
         /// <summary>
-        /// Attempts to insert the entity into this container.
+        /// DO NOT CALL THIS METHOD DIRECTLY!
+        /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> instead.
         /// </summary>
-        /// <remarks>
-        /// If the insertion is successful, the inserted entity will end up parented to the
-        /// container entity, and the inserted entity's local position will be set to the zero vector.
-        /// </remarks>
-        /// <param name="toinsert">The entity to insert.</param>
-        /// <param name="entMan"></param>
-        /// <returns>False if the entity could not be inserted.</returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if this container is a child of the entity,
-        /// which would cause infinite loops.
-        /// </exception>
+        protected BaseContainer() { }
+
+        /// <inheritdoc />
         public bool Insert(
             EntityUid toinsert,
             IEntityManager? entMan = null,
@@ -96,12 +72,17 @@ namespace Robust.Shared.Containers
             PhysicsComponent? physics = null,
             bool force = false)
         {
+            DebugTools.Assert(!Deleted);
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
             DebugTools.Assert(physics == null || physics.Owner == toinsert);
             DebugTools.Assert(!ExpectedEntities.Contains(toinsert));
             IoCManager.Resolve(ref entMan);
+
+            //Verify we can insert into this container
+            if (!force && !CanInsert(toinsert, entMan))
+                return false;
 
             var physicsQuery = entMan.GetEntityQuery<PhysicsComponent>();
             var transformQuery = entMan.GetEntityQuery<TransformComponent>();
@@ -110,11 +91,6 @@ namespace Robust.Shared.Containers
             // ECS containers when
             var physicsSys = entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
             var jointSys = entMan.EntitySysManager.GetEntitySystem<SharedJointSystem>();
-            var containerSys = entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>();
-
-            //Verify we can insert into this container
-            if (!force && !containerSys.CanInsert(toinsert, this))
-                return false;
 
             // Please somebody ecs containers
             var lookupSys = entMan.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
@@ -238,22 +214,45 @@ namespace Robust.Shared.Containers
             }
         }
 
-        /// <summary>
-        /// Whether the given entity can be inserted into this container.
-        /// </summary>
-        /// <param name="assumeEmpty">Whether to assume that the container is currently empty.</param>
-        protected internal virtual bool CanInsert(EntityUid toInsert, bool assumeEmpty, IEntityManager entMan) => true;
+        /// <inheritdoc />
+        public virtual bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
+        {
+            DebugTools.Assert(!Deleted);
 
-        /// <summary>
-        /// Attempts to remove the entity from this container.
-        /// </summary>
-        /// <param name="reparent">If false, this operation will not rigger a move or parent change event. Ignored if
-        /// destination is not null</param>
-        /// <param name="force">If true, this will not perform can-remove checks.</param>
-        /// <param name="destination">Where to place the entity after removing. Avoids unnecessary broadphase updates.
-        /// If not specified, and reparent option is true, then the entity will either be inserted into a parent
-        /// container, the grid, or the map.</param>
-        /// <param name="localRotation">Optional final local rotation after removal. Avoids redundant move events.</param>
+            // cannot insert into itself.
+            if (Owner == toinsert)
+                return false;
+
+            IoCManager.Resolve(ref entMan);
+
+            // no, you can't put maps or grids into containers
+            if (entMan.HasComponent<MapComponent>(toinsert) || entMan.HasComponent<MapGridComponent>(toinsert))
+                return false;
+
+            var xformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+            var xformQuery = entMan.GetEntityQuery<TransformComponent>();
+
+            // Crucial, prevent circular insertion.
+            if (xformSystem.ContainsEntity(xformQuery.GetComponent(toinsert), Owner, xformQuery))
+                return false;
+
+            //Improvement: Traverse the entire tree to make sure we are not creating a loop.
+
+            //raise events
+            var insertAttemptEvent = new ContainerIsInsertingAttemptEvent(this, toinsert);
+            entMan.EventBus.RaiseLocalEvent(Owner, insertAttemptEvent, true);
+            if (insertAttemptEvent.Cancelled)
+                return false;
+
+            var gettingInsertedAttemptEvent = new ContainerGettingInsertedAttemptEvent(this, toinsert);
+            entMan.EventBus.RaiseLocalEvent(toinsert, gettingInsertedAttemptEvent, true);
+            if (gettingInsertedAttemptEvent.Cancelled)
+                return false;
+
+            return true;
+        }
+
+        /// <inheritdoc />
         public bool Remove(
             EntityUid toRemove,
             IEntityManager? entMan = null,
@@ -265,6 +264,7 @@ namespace Robust.Shared.Containers
             Angle? localRotation = null)
         {
             IoCManager.Resolve(ref entMan);
+            DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
             DebugTools.Assert(entMan.EntityExists(toRemove));
             DebugTools.Assert(xform == null || xform.Owner == toRemove);
@@ -273,8 +273,7 @@ namespace Robust.Shared.Containers
             xform ??= entMan.GetComponent<TransformComponent>(toRemove);
             meta ??= entMan.GetComponent<MetaDataComponent>(toRemove);
 
-            var sys = entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>();
-            if (!force && !sys.CanRemove(toRemove, this))
+            if (!force && !CanRemove(toRemove, entMan))
                 return false;
 
             if (force && !Contains(toRemove))
@@ -306,7 +305,7 @@ namespace Robust.Shared.Containers
             else if (reparent)
             {
                 // Container ECS when.
-                sys.AttachParentToContainerOrGrid(xform);
+                entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>().AttachParentToContainerOrGrid(xform);
                 if (localRotation != null)
                     entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetLocalRotation(xform, localRotation.Value);
             }
@@ -337,22 +336,40 @@ namespace Robust.Shared.Containers
         public void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, MetaDataComponent? meta = null)
             => Remove(toRemove, entMan, meta: meta, reparent: false, force: true);
 
-        /// <summary>
-        /// Checks if the entity is contained in this container.
-        /// This is not recursive, so containers of children are not checked.
-        /// </summary>
-        /// <param name="contained">The entity to check.</param>
-        /// <returns>True if the entity is immediately contained in this container, false otherwise.</returns>
+        /// <inheritdoc />
+        public virtual bool CanRemove(EntityUid toRemove, IEntityManager? entMan = null)
+        {
+            DebugTools.Assert(!Deleted);
+
+            if (!Contains(toRemove))
+                return false;
+
+            IoCManager.Resolve(ref entMan);
+
+            //raise events
+            var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(this, toRemove);
+            entMan.EventBus.RaiseLocalEvent(Owner, removeAttemptEvent, true);
+            if (removeAttemptEvent.Cancelled)
+                return false;
+
+            var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(this, toRemove);
+            entMan.EventBus.RaiseLocalEvent(toRemove, gettingRemovedAttemptEvent, true);
+            if (gettingRemovedAttemptEvent.Cancelled)
+                return false;
+
+            return true;
+        }
+
+        /// <inheritdoc />
         public abstract bool Contains(EntityUid contained);
 
-        /// <summary>
-        /// Clears the container and marks it as deleted.
-        /// </summary>
+        /// <inheritdoc />
         public void Shutdown(IEntityManager? entMan = null, INetManager? netMan = null)
         {
             IoCManager.Resolve(ref entMan, ref netMan);
             InternalShutdown(entMan, netMan.IsClient);
             Manager.Containers.Remove(ID);
+            Deleted = true;
         }
 
         /// <inheritdoc />

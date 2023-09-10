@@ -1069,7 +1069,7 @@ namespace Robust.Client.GameStates
             var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
 
 #if EXCEPTION_TOLERANCE
-            var brokenEnts = _pool.GetEntitySet();
+            var brokenEnts = new List<EntityUid>();
 #endif
             using (_prof.Group("Initialize Entity"))
             {
@@ -1122,8 +1122,6 @@ namespace Robust.Client.GameStates
             {
                 _entityManager.DeleteEntity(entity);
             }
-
-            _pool.Return(brokenEnts);
 #endif
         }
 

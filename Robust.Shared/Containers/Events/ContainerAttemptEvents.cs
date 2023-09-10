@@ -6,10 +6,10 @@ namespace Robust.Shared.Containers;
 
 public abstract class ContainerAttemptEventBase : CancellableEntityEventArgs
 {
-    public readonly BaseContainer Container;
+    public readonly IContainer Container;
     public readonly EntityUid EntityUid;
 
-    public ContainerAttemptEventBase(BaseContainer container, EntityUid entityUid)
+    public ContainerAttemptEventBase(IContainer container, EntityUid entityUid)
     {
         Container = container;
         EntityUid = entityUid;
@@ -18,44 +18,28 @@ public abstract class ContainerAttemptEventBase : CancellableEntityEventArgs
 
 public sealed class ContainerIsInsertingAttemptEvent : ContainerAttemptEventBase
 {
-    /// <summary>
-    /// If true, this check should assume that the container is currently empty.
-    /// I.e., could the entity be inserted if the container doesn't contain anything else?
-    /// </summary>
-    public bool AssumeEmpty { get; set; }
-    
-    public ContainerIsInsertingAttemptEvent(BaseContainer container, EntityUid entityUid, bool assumeEmpty)
-        : base(container, entityUid)
+    public ContainerIsInsertingAttemptEvent(IContainer container, EntityUid entityUid) : base(container, entityUid)
     {
-        AssumeEmpty = assumeEmpty;
     }
 }
 
 public sealed class ContainerGettingInsertedAttemptEvent : ContainerAttemptEventBase
 {
-    /// <summary>
-    /// If true, this check should assume that the container is currently empty.
-    /// I.e., could the entity be inserted if the container doesn't contain anything else?
-    /// </summary>
-    public bool AssumeEmpty { get; set; }
-
-    public ContainerGettingInsertedAttemptEvent(BaseContainer container, EntityUid entityUid, bool assumeEmpty)
-        : base(container, entityUid)
+    public ContainerGettingInsertedAttemptEvent(IContainer container, EntityUid entityUid) : base(container, entityUid)
     {
-        AssumeEmpty = assumeEmpty;
     }
 }
 
 public sealed class ContainerIsRemovingAttemptEvent : ContainerAttemptEventBase
 {
-    public ContainerIsRemovingAttemptEvent(BaseContainer container, EntityUid entityUid) : base(container, entityUid)
+    public ContainerIsRemovingAttemptEvent(IContainer container, EntityUid entityUid) : base(container, entityUid)
     {
     }
 }
 
 public sealed class ContainerGettingRemovedAttemptEvent : ContainerAttemptEventBase
 {
-    public ContainerGettingRemovedAttemptEvent(BaseContainer container, EntityUid entityUid) : base(container, entityUid)
+    public ContainerGettingRemovedAttemptEvent(IContainer container, EntityUid entityUid) : base(container, entityUid)
     {
     }
 }

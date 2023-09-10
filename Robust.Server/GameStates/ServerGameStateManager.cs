@@ -38,7 +38,7 @@ namespace Robust.Server.GameStates
 
         private PvsSystem _pvs = default!;
 
-        [Dependency] private readonly IServerEntityManager _entityManager = default!;
+        [Dependency] private readonly EntityManager _entityManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;

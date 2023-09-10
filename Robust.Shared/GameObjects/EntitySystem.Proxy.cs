@@ -190,8 +190,11 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Marks an entity as dirty.
+    /// Marks this entity as dirty so that it will be updated over the network.
     /// </summary>
+    /// <remarks>
+    /// Calling Dirty on a component will call this directly.
+    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void DirtyEntity(EntityUid uid, MetaDataComponent? meta = null)
     {
@@ -202,6 +205,7 @@ public partial class EntitySystem
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("Use Dirty(EntityUid, Component, MetaDataComponent?")]
     protected void Dirty(Component component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(component, meta);
@@ -399,6 +403,13 @@ public partial class EntitySystem
         return EntityManager.ToPrettyString(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityStringRepresentation ToPrettyString(NetEntity netEntity)
+    {
+        return EntityManager.ToPrettyString(netEntity);
+    }
+
     #endregion
 
     #region Component Get
@@ -531,6 +542,13 @@ public partial class EntitySystem
     protected T AddComp<T>(EntityUid uid) where T :  Component, new()
     {
         return EntityManager.AddComponent<T>(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid, T, bool)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void AddComp<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
+    {
+        EntityManager.AddComponent(uid, component, overwrite);
     }
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid)"/>
@@ -885,7 +903,7 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetEntity(NetEntity nEntity, out EntityUid entity)
+    public bool TryGetEntity(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         return EntityManager.TryGetEntity(nEntity, out entity);
     }
@@ -897,13 +915,13 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetNetEntity(EntityUid uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
     {
         return EntityManager.TryGetNetEntity(uid, out netEntity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid? uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
     {
         return EntityManager.TryGetNetEntity(uid, out netEntity);
     }
@@ -918,12 +936,60 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> of an entity. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    ///     Returns the <see cref="NetEntity"/> of an entity.  Errors if the entity does not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity? GetNetEntity(EntityUid? uid, MetaDataComponent? metadata = null)
     {
         return EntityManager.GetNetEntity(uid, metadata);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> of an entity or creates a new entity if none exists.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid EnsureEntity<T>(NetEntity netEntity, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntity<T>(netEntity, callerEntity);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> of an entity or creates a new one if not null.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid? EnsureEntity<T>(NetEntity? netEntity, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntity<T>(netEntity, callerEntity);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetCoordinates"/> of an entity or creates a new entity if none exists.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityCoordinates EnsureCoordinates<T>(NetCoordinates netCoordinates, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureCoordinates<T>(netCoordinates, callerEntity);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetCoordinates"/> of an entity or creates a new one if not null.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityCoordinates? EnsureCoordinates<T>(NetCoordinates? netCoordinates, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureCoordinates<T>(netCoordinates, callerEntity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntitySet<T>(netEntities, callerEntity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        return EntityManager.EnsureEntityList<T>(netEntities, callerEntity);
     }
 
     /// <summary>
@@ -945,7 +1011,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected HashSet<NetEntity> GetNetEntitySet(HashSet<EntityUid> uids)
@@ -963,7 +1029,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity> GetNetEntityList(ICollection<EntityUid> uids)
@@ -980,9 +1046,8 @@ public partial class EntitySystem
         return EntityManager.GetEntityList(netEntities);
     }
 
-
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity> GetNetEntityList(List<EntityUid> uids)
@@ -1000,7 +1065,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity?> GetNetEntityList(List<EntityUid?> uids)
@@ -1018,7 +1083,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity[] GetNetEntityArray(EntityUid[] uids)
@@ -1036,7 +1101,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Errors if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity?[] GetNetEntityArray(EntityUid?[] uids)
@@ -1054,18 +1119,18 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected NetCoordinates GetNetCoordinates(EntityCoordinates coordinates)
+    protected NetCoordinates GetNetCoordinates(EntityCoordinates coordinates, MetaDataComponent? metadata = null)
     {
-        return EntityManager.GetNetCoordinates(coordinates);
+        return EntityManager.GetNetCoordinates(coordinates, metadata);
     }
 
     /// <summary>
     ///     Returns the <see cref="NetEntity"/> of an entity. Returns <see cref="NetEntity.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates)
+    protected NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates, MetaDataComponent? metadata = null)
     {
-        return EntityManager.GetNetCoordinates(coordinates);
+        return EntityManager.GetNetCoordinates(coordinates, metadata);
     }
 
     /// <summary>

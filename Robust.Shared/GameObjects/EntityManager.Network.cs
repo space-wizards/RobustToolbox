@@ -1,16 +1,42 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
+    // TODO POOLING
+    // Just add overrides that take in an existing collection.
+
     /// <summary>
     /// Inverse lookup for net entities.
     /// Regular lookup uses MetadataComponent.
     /// </summary>
     protected readonly Dictionary<NetEntity, EntityUid> NetEntityLookup = new(EntityCapacity);
+
+    /// <summary>
+    /// Clears an old inverse lookup for a particular entityuid.
+    /// Do not call this unless you are sure of what you're doing.
+    /// </summary>
+    internal void ClearNetEntity(NetEntity netEntity)
+    {
+        NetEntityLookup.Remove(netEntity);
+    }
+
+    /// <summary>
+    /// Set the inverse lookup for a particular entityuid.
+    /// Do not call this unless you are sure of what you're doing.
+    /// </summary>
+    internal void SetNetEntity(EntityUid uid, NetEntity netEntity, MetaDataComponent component)
+    {
+        DebugTools.Assert(!NetEntityLookup.ContainsKey(netEntity));
+        NetEntityLookup[netEntity] = uid;
+        component.NetEntity = netEntity;
+    }
 
     /// <inheritdoc />
     public virtual bool IsClientSide(EntityUid uid, MetaDataComponent? metadata = null)
@@ -21,15 +47,29 @@ public partial class EntityManager
     #region NetEntity
 
     /// <inheritdoc />
-    public bool TryGetEntity(NetEntity nEntity, out EntityUid entity)
+    public bool TryParseNetEntity(string arg, [NotNullWhen(true)] out EntityUid? entity)
     {
-        if (nEntity == NetEntity.Invalid)
+        if (!NetEntity.TryParse(arg, out var netEntity) ||
+            !TryGetEntity(netEntity, out entity))
         {
-            entity = EntityUid.Invalid;
+            entity = null;
             return false;
         }
 
-        return NetEntityLookup.TryGetValue(nEntity, out entity);
+        return true;
+    }
+
+    /// <inheritdoc />
+    public bool TryGetEntity(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity)
+    {
+        if (NetEntityLookup.TryGetValue(nEntity, out var went))
+        {
+            entity = went;
+            return true;
+        }
+
+        entity = EntityUid.Invalid;
+        return false;
     }
 
     /// <inheritdoc />
@@ -37,22 +77,15 @@ public partial class EntityManager
     {
         if (nEntity == null)
         {
-            entity = null;
+            entity = EntityUid.Invalid;
             return false;
         }
 
-        if (TryGetEntity(nEntity.Value, out var went))
-        {
-            entity = went;
-            return true;
-        }
-
-        entity = null;
-        return false;
+        return TryGetEntity(nEntity.Value, out entity);
     }
 
     /// <inheritdoc />
-    public bool TryGetNetEntity(EntityUid uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
     {
         if (uid == EntityUid.Invalid)
         {
@@ -60,6 +93,7 @@ public partial class EntityManager
             return false;
         }
 
+        // TODO NetEntity figure out why this happens
         // I wanted this to logMissing but it seems to break a loootttt of dodgy stuff on content.
         if (MetaQuery.Resolve(uid, ref metadata, false))
         {
@@ -72,22 +106,33 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
-    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid? uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
     {
         if (uid == null)
         {
-            netEntity = null;
+            netEntity = NetEntity.Invalid;
             return false;
         }
 
-        if (TryGetNetEntity(uid.Value, out var went, metadata))
-        {
-            netEntity = went;
-            return true;
-        }
+        return TryGetNetEntity(uid.Value, out netEntity, metadata);
+    }
 
-        netEntity = null;
-        return false;
+    /// <inheritdoc />
+    public virtual EntityUid EnsureEntity<T>(NetEntity nEntity, EntityUid callerEntity)
+    {
+        // On server we don't want to ensure any reserved entities for later or flag for comp state handling
+        // so this is just GetEntity. Client-side code overrides this method.
+        return GetEntity(nEntity);
+    }
+
+    /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityUid? EnsureEntity<T>(NetEntity? nEntity, EntityUid callerEntity)
+    {
+        if (nEntity == null)
+            return null;
+
+        return EnsureEntity<T>(nEntity.Value, callerEntity);
     }
 
     /// <inheritdoc />
@@ -96,10 +141,11 @@ public partial class EntityManager
         if (nEntity == NetEntity.Invalid)
             return EntityUid.Invalid;
 
-        return NetEntityLookup.TryGetValue(nEntity, out var entity) ? entity : EntityUid.Invalid;
+        return NetEntityLookup.GetValueOrDefault(nEntity);
     }
 
     /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid? GetEntity(NetEntity? nEntity)
     {
         if (nEntity == null)
@@ -114,8 +160,8 @@ public partial class EntityManager
         if (uid == EntityUid.Invalid)
             return NetEntity.Invalid;
 
-        // I wanted this to logMissing but it seems to break a loootttt of dodgy stuff on content.
-        return MetaQuery.Resolve(uid, ref metadata, false) ? metadata.NetEntity : NetEntity.Invalid;
+        DebugTools.Assert(metadata == null || metadata.Owner == uid);
+        return (metadata ?? MetaQuery.GetComponent(uid)).NetEntity;
     }
 
     /// <inheritdoc />
@@ -132,18 +178,18 @@ public partial class EntityManager
     #region NetCoordinates
 
     /// <inheritdoc />
-    public NetCoordinates GetNetCoordinates(EntityCoordinates coordinates)
+    public NetCoordinates GetNetCoordinates(EntityCoordinates coordinates, MetaDataComponent? metadata = null)
     {
-        return new NetCoordinates(GetNetEntity(coordinates.EntityId), coordinates.Position);
+        return new NetCoordinates(GetNetEntity(coordinates.EntityId, metadata), coordinates.Position);
     }
 
     /// <inheritdoc />
-    public NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates)
+    public NetCoordinates? GetNetCoordinates(EntityCoordinates? coordinates, MetaDataComponent? metadata = null)
     {
         if (coordinates == null)
             return null;
 
-        return new NetCoordinates(GetNetEntity(coordinates.Value.EntityId), coordinates.Value.Position);
+        return new NetCoordinates(GetNetEntity(coordinates.Value.EntityId, metadata), coordinates.Value.Position);
     }
 
     /// <inheritdoc />
@@ -159,6 +205,23 @@ public partial class EntityManager
             return null;
 
         return new EntityCoordinates(GetEntity(coordinates.Value.NetEntity), coordinates.Value.Position);
+    }
+
+    /// <inheritdoc />
+    public virtual EntityCoordinates EnsureCoordinates<T>(NetCoordinates netCoordinates, EntityUid callerEntity)
+    {
+        // See EnsureEntity
+        return GetCoordinates(netCoordinates);
+    }
+
+    /// <inheritdoc />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public EntityCoordinates? EnsureCoordinates<T>(NetCoordinates? netCoordinates, EntityUid callerEntity)
+    {
+        if (netCoordinates == null)
+            return null;
+
+        return EnsureCoordinates<T>(netCoordinates.Value, callerEntity);
     }
 
     #endregion
@@ -182,8 +245,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public List<EntityUid> GetEntityList(List<NetEntity> netEntities)
     {
-        var entities = _poolManager.GetEntityList();
-        entities.EnsureCapacity(netEntities.Count);
+        var entities = new List<EntityUid>(netEntities.Count);
 
         foreach (var netEntity in netEntities)
         {
@@ -193,12 +255,35 @@ public partial class EntityManager
         return entities;
     }
 
+    public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        var entities = new HashSet<EntityUid>(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntity<T>(netEntity, callerEntity));
+        }
+
+        return entities;
+    }
+
+    /// <inheritdoc />
+    public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
+    {
+        var entities = new List<EntityUid>(netEntities.Count);
+
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntity<T>(netEntity, callerEntity));
+        }
+
+        return entities;
+    }
+
     /// <inheritdoc />
     public List<EntityUid> GetEntityList(ICollection<NetEntity> netEntities)
     {
-        var entities = _poolManager.GetEntityList();
-        entities.EnsureCapacity(netEntities.Count);
-
+        var entities = new List<EntityUid>(netEntities.Count);
         foreach (var netEntity in netEntities)
         {
             entities.Add(GetEntity(netEntity));

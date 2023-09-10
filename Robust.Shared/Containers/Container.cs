@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
@@ -15,26 +17,25 @@ namespace Robust.Shared.Containers
     /// For example, inventory containers should be modified only through an inventory component.
     /// </summary>
     [UsedImplicitly]
-    [SerializedType(ClassName)]
+    [Serializable, NetSerializable]
     public sealed partial class Container : BaseContainer
     {
-        private const string ClassName = "Container";
-
         /// <summary>
         /// The generic container class uses a list of entities
         /// </summary>
         [DataField("ents")]
+        [NonSerialized]
         private List<EntityUid> _containerList = new();
 
-        private readonly List<NetEntity> _expectedEntities = new();
+        /// <summary>
+        /// The generic container class uses a list of entities
+        /// </summary>
+        private List<NetEntity> _containedNetEntities = new();
 
         /// <inheritdoc />
         public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
 
-        public override List<NetEntity> ExpectedEntities => _expectedEntities;
-
-        /// <inheritdoc />
-        public override string ContainerType => ClassName;
+        internal override IList<NetEntity> ContainedNetEntities => _containedNetEntities;
 
         /// <inheritdoc />
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
@@ -56,6 +57,9 @@ namespace Robust.Shared.Containers
                 return false;
 
 #if DEBUG
+            if (IoCManager.Resolve<IGameTiming>().ApplyingState)
+                return true;
+
             var entMan = IoCManager.Resolve<IEntityManager>();
             var flags = entMan.GetComponent<MetaDataComponent>(contained).Flags;
             DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0, $"Entity has bad container flags. Ent: {entMan.ToPrettyString(contained)}. Container: {ID}, Owner: {entMan.ToPrettyString(Owner)}");
@@ -73,6 +77,26 @@ namespace Robust.Shared.Containers
                 else if (entMan.EntityExists(entity))
                     Remove(entity, entMan, reparent: false, force: true);
             }
+        }
+
+        internal override void HandleState(IEntityManager entMan)
+        {
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            _containerList ??= new List<EntityUid>();
+
+            foreach (var netEntity in ContainedNetEntities)
+            {
+                if (entMan.TryGetEntity(netEntity, out var entity) &&
+                    _containerList.Contains(entity.Value))
+                {
+                    _containerList.Add(entity.Value);
+                }
+            }
+        }
+
+        internal override void SetState(IEntityManager entMan)
+        {
+            _containedNetEntities = entMan.GetNetEntityList(_containerList);
         }
     }
 }

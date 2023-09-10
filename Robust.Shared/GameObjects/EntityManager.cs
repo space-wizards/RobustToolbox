@@ -371,12 +371,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <summary>
-        /// Marks this entity as dirty so that it will be updated over the network.
-        /// </summary>
-        /// <remarks>
-        /// Calling Dirty on a component will call this directly.
-        /// </remarks>
+        /// <inheritdoc />
         public virtual void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null)
         {
             // We want to retrieve MetaDataComponent even if its Deleted flag is set.
@@ -392,7 +387,8 @@ namespace Robust.Shared.GameObjects
 #pragma warning restore CS0618
             }
 
-            if (metadata.EntityLastModifiedTick == _gameTiming.CurTick) return;
+            if (metadata.EntityLastModifiedTick == _gameTiming.CurTick)
+                return;
 
             metadata.EntityLastModifiedTick = _gameTiming.CurTick;
 
@@ -402,12 +398,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
         [Obsolete("use override with an EntityUid")]
         public void Dirty(Component component, MetaDataComponent? meta = null)
         {
             Dirty(component.Owner, component, meta);
         }
 
+        /// <inheritdoc />
         public virtual void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
         {
             if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
@@ -549,20 +547,6 @@ namespace Robust.Shared.GameObjects
             }
 
             _eventBus.OnEntityDeleted(uid);
-
-            // Another try-catch, so quickly after the other one?!
-            // Yes. Both of these are try-catch blocks for *events*, which take our precious execution flow away from
-            // us and into whatever spooky code subscribed to this. We don't want an exception in user code suddenly
-            // fucking up entity deletion and leaving us with a frankesteintity, now do we?
-            try
-            {
-                EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(uid));
-            }
-            catch (Exception e)
-            {
-                _sawmill.Error($"Caught exception while raising {nameof(EntityDeletedMessage)} on '{ToPrettyString(uid, metadata)}'\n{e}");
-            }
-
             DestroyArch(uid);
             // Need to get the ID above before MetadataComponent shutdown but only remove it after everything else is done.
             NetEntityLookup.Remove(netEntity);
@@ -650,19 +634,14 @@ namespace Robust.Shared.GameObjects
             EntityAdded?.Invoke(uid);
             _eventBus.OnEntityAdded(uid);
 
-            var netEntity = GenerateNetEntity();
-
-            // TODO: Dump on server
-            if (netEntity.IsValid())
-            {
-                NetEntityLookup[netEntity] = uid;
-            }
-
             metadata = new MetaDataComponent
             {
+#pragma warning disable CS0618
                 Owner = uid,
-                NetEntity = netEntity
+#pragma warning restore CS0618
             };
+
+            SetNetEntity(uid, netEntity, metadata);
 
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid, metadata, false);
@@ -861,6 +840,12 @@ namespace Robust.Shared.GameObjects
             return ToPrettyString(uid, metadata);
         }
 
+        /// <inheritdoc />
+        public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
+        {
+            return ToPrettyString(GetEntity(netEntity));
+        }
+
         private EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent metadata)
         {
             return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
@@ -873,6 +858,14 @@ namespace Robust.Shared.GameObjects
             // Part of shared the EntityManager so that systems can have convenient proxy methods, but the
             // server should never be calling this.
             DebugTools.Assert("Why are you raising predictive events on the server?");
+        }
+
+        /// <summary>
+        ///     Factory for generating a new EntityUid for an entity currently being created.
+        /// </summary>
+        internal EntityUid GenerateEntityUid()
+        {
+            return new EntityUid(NextEntityUid++);
         }
 
         /// <summary>

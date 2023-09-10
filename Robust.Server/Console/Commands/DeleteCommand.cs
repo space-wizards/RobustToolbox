@@ -31,7 +31,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            _entityManager.DeleteEntity(entity);
+            _entityManager.DeleteEntity(entity.Value);
         }
     }
 }

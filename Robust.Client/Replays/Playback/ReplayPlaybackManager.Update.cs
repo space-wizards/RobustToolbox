@@ -50,7 +50,7 @@ internal sealed partial class ReplayPlaybackManager
         }
 
         _timing.CurTick += 1;
-        _entMan.TickUpdate(args.DeltaSeconds, noPredictions: true);
+        _cEntManager.TickUpdate(args.DeltaSeconds, noPredictions: true);
 
         if (!Playing || AutoPauseCountdown == null)
             return;

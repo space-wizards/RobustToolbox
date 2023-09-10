@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Map
 {
     /// <summary>
-    ///     A set of coordinates relative to another entity. Used for net
+    ///     A set of coordinates relative to another entity.
     /// </summary>
     [PublicAPI]
     public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>, ISpanFormattable

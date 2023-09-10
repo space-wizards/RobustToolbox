@@ -52,8 +52,9 @@ public sealed class ClientDirtySystem : EntitySystem
         if (args.Terminating)
             return;
 
+        var uid = args.BaseArgs.Owner;
         var comp = args.BaseArgs.Component;
-        if (!_timing.InPrediction || IsClientSide(comp.Owner) || !comp.NetSyncEnabled)
+        if (!_timing.InPrediction || !comp.NetSyncEnabled || IsClientSide(uid))
             return;
 
         // Was this component added during prediction? If yes, then there is no need to re-add it when resetting.
@@ -62,7 +63,7 @@ public sealed class ClientDirtySystem : EntitySystem
 
         var netId = _compFact.GetRegistration(comp).NetID;
         if (netId != null)
-            RemovedComponents.GetOrNew(comp.Owner).Add(netId.Value);
+            RemovedComponents.GetOrNew(uid).Add(netId.Value);
     }
 
     public void Reset()

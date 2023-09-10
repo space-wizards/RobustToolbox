@@ -6,25 +6,40 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
 {
     [UsedImplicitly]
-    [SerializedType(ClassName)]
+    [Serializable, NetSerializable]
     public sealed partial class ContainerSlot : BaseContainer
     {
-        private const string ClassName = "ContainerSlot";
-
         /// <inheritdoc />
         public override IReadOnlyList<EntityUid> ContainedEntities
         {
             get
             {
-                if (ContainedEntity == null)
+                if (_containedEntity == null)
                     return Array.Empty<EntityUid>();
 
+                _containedEntityArray ??= new[] { _containedEntity.Value };
+                DebugTools.Assert(_containedEntityArray[0] == _containedEntity);
                 return _containedEntityArray;
+            }
+        }
+
+        // todo this is the worst code i have written for ss14
+        internal override IList<NetEntity> ContainedNetEntities
+        {
+            get
+            {
+                if (_containedNetEntity == null)
+                    return Array.Empty<NetEntity>();
+
+                _containedNetEntityArray ??= new[] { _containedNetEntity.Value };
+                DebugTools.Assert(_containedNetEntityArray[0] == _containedNetEntity);
+                return _containedNetEntityArray;
             }
         }
 
@@ -36,39 +51,39 @@ namespace Robust.Shared.Containers
             {
                 _containedEntity = value;
                 if (value != null)
-                    _containedEntityArray[0] = value!.Value;
+                {
+                    _containedEntityArray ??= new EntityUid[1];
+                    _containedEntityArray[0] = value.Value;
+                }
             }
         }
 
-        public override List<NetEntity> ExpectedEntities => _expectedEntities;
+        public NetEntity? ContainedNetEntity
+        {
+            get => _containedNetEntity;
+            private set
+            {
+                _containedNetEntity = value;
+                if (value != null)
+                {
+                    _containedNetEntityArray ??= new NetEntity[1];
+                    _containedNetEntityArray[0] = value.Value;
+                }
+            }
+        }
 
+        [NonSerialized]
         private EntityUid? _containedEntity;
-        private readonly List<NetEntity> _expectedEntities = new();
+
+        private NetEntity? _containedNetEntity;
+
         // Used by ContainedEntities to avoid allocating.
-        private readonly EntityUid[] _containedEntityArray = new EntityUid[1];
+        [NonSerialized]
+        private EntityUid[]? _containedEntityArray;
 
-        /// <inheritdoc />
-        public override string ContainerType => ClassName;
-
-        /// <inheritdoc />
-        public override bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
-        {
-            return (ContainedEntity == null) && CanInsertIfEmpty(toinsert, entMan);
-        }
-
-        /// <summary>
-        /// Checks if the entity can be inserted into this container, assuming that the container slot is empty.
-        /// </summary>
-        /// <remarks>
-        /// Useful if you need to know whether an item could be inserted into a slot, without having to actually eject
-        /// the currently contained entity first.
-        /// </remarks>
-        /// <param name="toinsert">The entity to attempt to insert.</param>
-        /// <returns>True if the entity could be inserted into an empty slot, false otherwise.</returns>
-        public bool CanInsertIfEmpty(EntityUid toinsert, IEntityManager? entMan = null)
-        {
-            return base.CanInsert(toinsert, entMan);
-        }
+        // Used by ContainedNetEntities to avoid allocating.
+        [NonSerialized]
+        private NetEntity[]? _containedNetEntityArray;
 
         /// <inheritdoc />
         public override bool Contains(EntityUid contained)
@@ -77,6 +92,9 @@ namespace Robust.Shared.Containers
                 return false;
 
 #if DEBUG
+            if (IoCManager.Resolve<IGameTiming>().ApplyingState)
+                return true;
+
             var entMan = IoCManager.Resolve<IEntityManager>();
             var flags = entMan.GetComponent<MetaDataComponent>(contained).Flags;
             DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0, $"Entity has bad container flags. Ent: {entMan.ToPrettyString(contained)}. Container: {ID}, Owner: {entMan.ToPrettyString(Owner)}");
@@ -114,6 +132,17 @@ namespace Robust.Shared.Containers
                 entMan.DeleteEntity(entity);
             else if (entMan.EntityExists(entity))
                 Remove(entity, entMan, reparent: false, force: true);
+        }
+
+        internal override void HandleState(IEntityManager entMan)
+        {
+            if (entMan.TryGetEntity(ContainedNetEntity, out var entity))
+                ContainedEntity = entity;
+        }
+
+        internal override void SetState(IEntityManager entMan)
+        {
+            ContainedNetEntity = entMan.GetNetEntity(ContainedEntity);
         }
     }
 }

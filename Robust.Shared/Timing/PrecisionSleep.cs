@@ -137,6 +137,10 @@ internal sealed unsafe class PrecisionSleepLinuxNanosleep : PrecisionSleep
         }
     }
 
+#pragma warning disable CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
+    // ReSharper disable IdentifierTypo
+    // ReSharper disable InconsistentNaming
     [DllImport("libc.so.6", SetLastError=true)]
     private static extern int nanosleep(timespec* req, timespec* rem);
 
@@ -151,4 +155,8 @@ internal sealed unsafe class PrecisionSleepLinuxNanosleep : PrecisionSleep
         public long tv_sec;
         public long tv_usec;
     }
+    // ReSharper restore InconsistentNaming
+    // ReSharper restore IdentifierTypo
+#pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
+#pragma warning restore CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
 }

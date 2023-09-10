@@ -20,7 +20,7 @@ namespace Robust.Client.Physics
         {
             if (args.Current is not JointComponentState jointState) return;
 
-            component.Relay = GetEntity(jointState.Relay);
+            component.Relay = EnsureEntity<JointComponent>(jointState.Relay, uid);
 
             // Initial state gets applied before the entity (& entity's transform) have been initialized.
             // So just let joint init code handle that.
@@ -29,7 +29,7 @@ namespace Robust.Client.Physics
                 component.Joints.Clear();
                 foreach (var (id, state) in jointState.Joints)
                 {
-                    component.Joints[id] = state.GetJoint(EntityManager);
+                    component.Joints[id] = state.GetJoint(EntityManager, uid);
                 }
                 return;
             }
@@ -62,8 +62,8 @@ namespace Robust.Client.Physics
                     continue;
                 }
 
-                var other = state.UidA == GetNetEntity(uid) ? GetEntity(state.UidB) : GetEntity(state.UidA);
-
+                var uidA = GetEntity(state.UidA);
+                var other = uidA == uid ? GetEntity(state.UidB) : uidA;
 
                 // Add new joint (if possible).
                 // Need to wait for BOTH joint components to come in first before we can add it. Yay dependencies!
@@ -82,11 +82,11 @@ namespace Robust.Client.Physics
                 // TODO: component state handling ordering.
                 if (Transform(uid).MapID == MapId.Nullspace)
                 {
-                    AddedJoints.Add(state.GetJoint(EntityManager));
+                    AddedJoints.Add(state.GetJoint(EntityManager, uid));
                     continue;
                 }
 
-                AddJoint(state.GetJoint(EntityManager));
+                AddJoint(state.GetJoint(EntityManager, uid));
             }
         }
     }

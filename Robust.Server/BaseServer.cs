@@ -369,7 +369,6 @@ namespace Robust.Server
             // otherwise the prototypes will be cleared
             _prototype.Initialize();
             _prototype.LoadDefaultPrototypes();
-            _prototype.ResolveResults();
             _refMan.Initialize();
 
             IoCManager.Resolve<ToolshedManager>().Initialize();
@@ -389,6 +388,11 @@ namespace Robust.Server
             _protoLoadMan.Initialize();
             _netResMan.Initialize();
 
+            // String serializer has to be locked before PostInit as content can depend on it (e.g., replays that start
+            // automatically recording on startup).
+            AddFinalStringsToSerializer();
+            _stringSerializer.LockStrings();
+
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             _statusHost.Start();
@@ -397,9 +401,6 @@ namespace Robust.Server
             AppDomain.CurrentDomain.ProcessExit += ProcessExiting;
 
             _watchdogApi.Initialize();
-
-            AddFinalStringsToSerializer();
-            _stringSerializer.LockStrings();
 
             if (OperatingSystem.IsWindows() && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
             {

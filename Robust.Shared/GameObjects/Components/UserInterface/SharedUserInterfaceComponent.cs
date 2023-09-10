@@ -64,21 +64,29 @@ namespace Robust.Shared.GameObjects
     {
     }
 
+    /// <summary>
+    /// Abstract class for local BUI events.
+    /// </summary>
+    public abstract class BaseLocalBoundUserInterfaceEvent : BaseBoundUserInterfaceEvent
+    {
+        /// <summary>
+        ///     The Entity receiving the message.
+        ///     Only set when the message is raised as a directed event.
+        /// </summary>
+        public EntityUid Entity = EntityUid.Invalid;
+    }
 
-    [NetSerializable, Serializable]
-    public abstract class BoundUserInterfaceMessage : EntityEventArgs
+    /// <summary>
+    /// Abstract class for all BUI events.
+    /// </summary>
+    [Serializable, NetSerializable]
+    public abstract class BaseBoundUserInterfaceEvent : EntityEventArgs
     {
         /// <summary>
         ///     The UI of this message.
         ///     Only set when the message is raised as a directed event.
         /// </summary>
-        public Enum UiKey { get; set; } = default!;
-
-        /// <summary>
-        ///     The Entity receiving the message.
-        ///     Only set when the message is raised as a directed event.
-        /// </summary>
-        public NetEntity Entity { get; set; } = NetEntity.Invalid;
+        public Enum UiKey = default!;
 
         /// <summary>
         ///     The session sending or receiving this message.
@@ -86,6 +94,19 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [NonSerialized]
         public ICommonSession Session = default!;
+    }
+
+    /// <summary>
+    /// Abstract class for networked BUI events.
+    /// </summary>
+    [NetSerializable, Serializable]
+    public abstract class BoundUserInterfaceMessage : BaseBoundUserInterfaceEvent
+    {
+        /// <summary>
+        ///     The Entity receiving the message.
+        ///     Only set when the message is raised as a directed event.
+        /// </summary>
+        public NetEntity Entity { get; set; } = NetEntity.Invalid;
     }
 
     [NetSerializable, Serializable]
@@ -129,9 +150,9 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public sealed class BoundUIOpenedEvent : BoundUserInterfaceMessage
+    public sealed class BoundUIOpenedEvent : BaseLocalBoundUserInterfaceEvent
     {
-        public BoundUIOpenedEvent(Enum uiKey, NetEntity uid, ICommonSession session)
+        public BoundUIOpenedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
         {
             UiKey = uiKey;
             Entity = uid;
@@ -139,9 +160,9 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public sealed class BoundUIClosedEvent : BoundUserInterfaceMessage
+    public sealed class BoundUIClosedEvent : BaseLocalBoundUserInterfaceEvent
     {
-        public BoundUIClosedEvent(Enum uiKey, NetEntity uid, ICommonSession session)
+        public BoundUIClosedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
         {
             UiKey = uiKey;
             Entity = uid;

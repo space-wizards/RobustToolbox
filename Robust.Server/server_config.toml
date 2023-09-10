@@ -51,6 +51,8 @@ tags = ""
 # want to use HTTPS (with a reverse proxy), or other advanced scenarios.
 # Must be in the form of an ss14:// or ss14s:// URI pointing to the status API.
 server_url = ""
+# Comma-separated list of URLs of hub servers to advertise to.
+hub_urls = "https://central.spacestation14.io/hub/"
 
 [build]
 # *Absolutely all of these can be supplied using a "build.json" file*

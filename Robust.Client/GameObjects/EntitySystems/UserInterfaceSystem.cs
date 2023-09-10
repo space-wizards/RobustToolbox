@@ -98,7 +98,7 @@ namespace Robust.Client.GameObjects
 
             var playerSession = _playerManager.LocalPlayer?.Session;
             if(playerSession != null)
-                RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, GetNetEntity(uid), playerSession), true);
+                RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, uid, playerSession), true);
 
             return true;
         }
@@ -119,7 +119,7 @@ namespace Robust.Client.GameObjects
 
             var playerSession = _playerManager.LocalPlayer?.Session;
             if(playerSession != null)
-                RaiseLocalEvent(uid, new BoundUIClosedEvent(uiKey, GetNetEntity(uid), playerSession), true);
+                RaiseLocalEvent(uid, new BoundUIClosedEvent(uiKey, uid, playerSession), true);
 
             return true;
         }

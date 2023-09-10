@@ -90,7 +90,7 @@ sealed class RemoveGridCommand : LocalizedCommands
             return;
         }
 
-        _map.DeleteGrid(gridId);
+        _map.DeleteGrid(gridId.Value);
         shell.WriteLine($"Grid {gridId} was removed.");
     }
 }

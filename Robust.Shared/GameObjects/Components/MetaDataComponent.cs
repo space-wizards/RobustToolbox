@@ -67,6 +67,7 @@ namespace Robust.Shared.GameObjects
         /// Network identifier for this entity.
         /// </summary>
         [ViewVariables]
+        [Access(typeof(EntityManager), Other = AccessPermissions.ReadExecute)]
         public NetEntity NetEntity { get; internal set; } = NetEntity.Invalid;
 
         /// <summary>

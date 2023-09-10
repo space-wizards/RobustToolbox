@@ -94,6 +94,14 @@ internal sealed partial class ReplayPlaybackManager
 
             _entMan.CreateEntityUninitialized(metaState.PrototypeId, uid);
             meta = metas.GetComponent(uid);
+
+            // Client creates a client-side net entity for the newly created entity.
+            // We need to clear this mapping before assigning the real net id.
+            // TODO NetEntity Jank: prevent the client from creating this in the first place.
+            _entMan.ClearNetEntity(meta.NetEntity);
+
+            _entMan.SetNetEntity(uid, es.NetEntity, meta);
+
             _entMan.InitializeEntity(uid, meta);
             _entMan.StartEntity(uid);
             meta.LastStateApplied = checkpoint.Tick;

@@ -186,8 +186,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)
     {
-        component.DynamicTree = new DynamicTreeBroadPhase();
-        component.StaticTree = new DynamicTreeBroadPhase();
         component.StaticSundriesTree = new DynamicTree<EntityUid>(
             (in EntityUid value) => GetTreeAABB(value, uid));
         component.SundriesTree = new DynamicTree<EntityUid>(

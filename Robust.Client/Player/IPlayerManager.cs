@@ -7,7 +7,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Player
 {
-    public interface IPlayerManager : Shared.Players.ISharedPlayerManager
+    public interface IPlayerManager : ISharedPlayerManager
     {
         new IEnumerable<ICommonSession> Sessions { get; }
 

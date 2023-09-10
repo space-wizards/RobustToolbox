@@ -269,7 +269,7 @@ namespace Robust.UnitTesting
             public ISharedPlayerManager PlayerMan { get; private set; } = default!;
             public IGameTiming Timing { get; private set; } = default!;
             public IMapManager MapMan { get; private set; } = default!;
-            
+
             protected virtual void ResolveIoC(IDependencyCollection deps)
             {
                 EntMan = deps.Resolve<IEntityManager>();
@@ -902,6 +902,17 @@ namespace Robust.UnitTesting
 
                 GameLoop.RunInit();
                 ResolveIoC(deps);
+
+                // Offset client generated Uids.
+                // Not that we have client-server uid separation, there might be bugs where tests might accidentally
+                // use server side uids on the client and vice versa. This can sometimes accidentally work if the
+                // entities get created in the same order. For that reason we arbitrarily increment the queued Uid by
+                // some arbitrary quantity.
+                var e = (EntityManager) EntMan;
+                for (var i = 0; i < 10; i++)
+                {
+                    e.GenerateEntityUid();
+                }
 
                 return client;
             }

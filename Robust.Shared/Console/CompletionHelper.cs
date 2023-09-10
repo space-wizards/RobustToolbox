@@ -164,7 +164,7 @@ public static class CompletionHelper
             if (!entManager.TryGetNetEntity(ent, out var netEntity))
                 continue;
 
-            var netString = netEntity.ToString();
+            var netString = netEntity.Value.ToString();
 
             if (!netString.StartsWith(text))
                 continue;
@@ -184,7 +184,7 @@ public static class CompletionHelper
             if (!entManager.TryGetNetEntity(uid, out var netEntity, metadata: metadata))
                 continue;
 
-            var netString = netEntity.ToString();
+            var netString = netEntity.Value.ToString();
 
             if (!netString.StartsWith(text))
                 continue;

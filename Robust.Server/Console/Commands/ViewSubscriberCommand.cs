@@ -41,7 +41,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().AddViewSubscriber(uid, playerSession);
+            _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().AddViewSubscriber(uid.Value, playerSession);
         }
 
         public sealed class RemoveViewSubscriberCommand : LocalizedCommands
@@ -78,7 +78,7 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().RemoveViewSubscriber(uid, playerSession);
+                _entities.EntitySysManager.GetEntitySystem<ViewSubscriberSystem>().RemoveViewSubscriber(uid.Value, playerSession);
             }
         }
     }

@@ -14,7 +14,7 @@ namespace Robust.Server.GameObjects
     /// </summary>
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
-    [RegisterComponent, ComponentReference(typeof(SharedUserInterfaceComponent))]
+    [RegisterComponent]
     public sealed partial class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
         [ViewVariables]

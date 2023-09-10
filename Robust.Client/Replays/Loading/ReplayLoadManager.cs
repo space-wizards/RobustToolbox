@@ -19,7 +19,7 @@ public sealed partial class ReplayLoadManager : IReplayLoadManager
 {
     [Dependency] private readonly ILogManager _logMan = default!;
     [Dependency] private readonly IBaseClient _client = default!;
-    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private readonly EntityManager _entMan = default!;
     [Dependency] private readonly IClientGameTiming _timing = default!;
     [Dependency] private readonly IClientNetManager _netMan = default!;
     [Dependency] private readonly IComponentFactory _factory = default!;

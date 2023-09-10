@@ -693,7 +693,9 @@ public abstract partial class SharedTransformSystem
         if (args.Current is TransformComponentState newState)
         {
             var parent = GetEntity(newState.ParentID);
-            var newParentId = newState.ParentID;
+            if (!parent.IsValid() && newState.ParentID.IsValid())
+                Log.Error($"Received transform component state with an unknown parent Id. Entity: {ToPrettyString(uid)}. Net parent: {newState.ParentID}");
+
             var oldAnchored = xform.Anchored;
 
             // update actual position data, if required

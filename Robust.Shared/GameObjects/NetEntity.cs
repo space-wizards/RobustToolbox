@@ -14,7 +14,9 @@ namespace Robust.Shared.GameObjects;
 [Serializable, NetSerializable]
 public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFormattable
 {
-    private readonly int _id;
+    public readonly int Id;
+
+    public const int ClientEntity = 2 << 29;
 
     /*
      * Differed to EntityUid to be more consistent with Arch.
@@ -23,19 +25,19 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// <summary>
     ///     An Invalid entity UID you can compare against.
     /// </summary>
-    public static readonly NetEntity Invalid = new(-1);
+    public static readonly NetEntity Invalid = new(0);
 
     /// <summary>
     ///     The first entity UID the entityManager should use when the manager is initialized.
     /// </summary>
-    public static readonly NetEntity First = new(0);
+    public static readonly NetEntity First = new(1);
 
     /// <summary>
     ///     Creates an instance of this structure, with the given network ID.
     /// </summary>
     public NetEntity(int id)
     {
-        _id = id;
+        Id = id;
     }
 
     public bool Valid => IsValid();
@@ -69,13 +71,13 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     [Pure]
     public bool IsValid()
     {
-        return _id > -1;
+        return Id > 0;
     }
 
     /// <inheritdoc />
     public bool Equals(NetEntity other)
     {
-        return _id == other._id;
+        return Id == other.Id;
     }
 
     /// <inheritdoc />
@@ -88,7 +90,7 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return _id;
+        return Id;
     }
 
     /// <summary>
@@ -96,7 +98,7 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// </summary>
     public static bool operator ==(NetEntity a, NetEntity b)
     {
-        return a._id == b._id;
+        return a.Id == b.Id;
     }
 
     /// <summary>
@@ -113,13 +115,13 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// </summary>
     public static explicit operator int(NetEntity self)
     {
-        return self._id;
+        return self.Id;
     }
 
     /// <inheritdoc />
     public override string ToString()
     {
-        return _id.ToString();
+        return Id.ToString();
     }
 
     public string ToString(string? format, IFormatProvider? formatProvider)
@@ -133,14 +135,16 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
         ReadOnlySpan<char> format,
         IFormatProvider? provider)
     {
-        return _id.TryFormat(destination, out charsWritten);
+        return Id.TryFormat(destination, out charsWritten);
     }
 
     /// <inheritdoc />
     public int CompareTo(NetEntity other)
     {
-        return _id.CompareTo(other._id);
+        return Id.CompareTo(other.Id);
     }
+
+    public bool IsClientSide() => (Id & ClientEntity) == ClientEntity;
 
     #region ViewVariables
 

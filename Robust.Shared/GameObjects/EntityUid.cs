@@ -19,7 +19,7 @@ namespace Robust.Shared.GameObjects
     [CopyByRef]
     public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>, ISpanFormattable
     {
-        internal readonly int _uid;
+        public readonly int Id;
 
         internal readonly int Version;
 
@@ -51,9 +51,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates an instance of this structure, with the given network ID.
         /// </summary>
-        public EntityUid(int uid, int version)
+        public EntityUid(int id, int version)
         {
-            _uid = uid;
+            Id = id;
             Version = version;
         }
 
@@ -97,13 +97,13 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool IsValid()
         {
-            return _uid > Invalid._uid;
+            return Id > Invalid.Id;
         }
 
         /// <inheritdoc />
         public bool Equals(EntityUid other)
         {
-            return _uid == other._uid && Version == other.Version;
+            return Id == other.Id && Version == other.Version;
         }
 
         /// <inheritdoc />
@@ -116,7 +116,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return _uid;
+            return Id;
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public static bool operator ==(EntityUid a, EntityUid b)
         {
-            return a._uid == b._uid && a.Version == b.Version;
+            return a.Id == b.Id && a.Version == b.Version;
         }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public static explicit operator int(EntityUid self)
         {
-            return self._uid;
+            return self.Id;
         }
 
         public static implicit operator Entity(EntityUid self)
@@ -157,7 +157,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override string ToString()
         {
-            return _uid.ToString();
+            return Id.ToString();
         }
 
         public string ToString(string? format, IFormatProvider? formatProvider)
@@ -171,13 +171,13 @@ namespace Robust.Shared.GameObjects
             ReadOnlySpan<char> format,
             IFormatProvider? provider)
         {
-            return _uid.TryFormat(destination, out charsWritten);
+            return Id.TryFormat(destination, out charsWritten);
         }
 
         /// <inheritdoc />
         public int CompareTo(EntityUid other)
         {
-            return _uid.CompareTo(other._uid);
+            return Id.CompareTo(other.Id);
         }
 
         #region ViewVariables

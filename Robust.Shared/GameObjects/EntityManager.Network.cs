@@ -160,8 +160,10 @@ public partial class EntityManager
         if (uid == EntityUid.Invalid)
             return NetEntity.Invalid;
 
-        DebugTools.Assert(metadata == null || metadata.Owner == uid);
-        return (metadata ?? MetaQuery.GetComponent(uid)).NetEntity;
+        if (!MetaQuery.Resolve(uid, ref metadata))
+            return NetEntity.Invalid;
+
+        return metadata.NetEntity;
     }
 
     /// <inheritdoc />
@@ -334,8 +336,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityUid> entities)
     {
-        var newSet = new HashSet<NetEntity>();
-        newSet.EnsureCapacity(entities.Count);
+        var newSet = new HashSet<NetEntity>(entities.Count);
 
         foreach (var ent in entities)
         {
@@ -349,8 +350,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(List<EntityUid> entities)
     {
-        var netEntities = new List<NetEntity>();
-        netEntities.EnsureCapacity(entities.Count);
+        var netEntities = new List<NetEntity>(entities.Count);
 
         foreach (var netEntity in entities)
         {
@@ -363,8 +363,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(ICollection<EntityUid> entities)
     {
-        var netEntities = new List<NetEntity>();
-        netEntities.EnsureCapacity(entities.Count);
+        var netEntities = new List<NetEntity>(entities.Count);
 
         foreach (var netEntity in entities)
         {

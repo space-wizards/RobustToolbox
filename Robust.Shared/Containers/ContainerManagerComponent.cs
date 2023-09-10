@@ -146,7 +146,12 @@ namespace Robust.Shared.Containers
 
                 foreach (var container in containers.Values)
                 {
-                    container.SetState(entManager);
+                    container.CompStateEntities.Clear();
+
+                    foreach (var ent in container.ContainedEntities)
+                    {
+                        container.CompStateEntities.Add(entManager.GetNetEntity(ent));
+                    }
                 }
             }
         }

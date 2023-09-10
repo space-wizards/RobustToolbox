@@ -29,20 +29,6 @@ namespace Robust.Shared.Containers
             }
         }
 
-        // todo this is the worst code i have written for ss14
-        internal override IList<NetEntity> ContainedNetEntities
-        {
-            get
-            {
-                if (_containedNetEntity == null)
-                    return Array.Empty<NetEntity>();
-
-                _containedNetEntityArray ??= new[] { _containedNetEntity.Value };
-                DebugTools.Assert(_containedNetEntityArray[0] == _containedNetEntity);
-                return _containedNetEntityArray;
-            }
-        }
-
         [DataField("ent")]
         public EntityUid? ContainedEntity
         {
@@ -58,32 +44,12 @@ namespace Robust.Shared.Containers
             }
         }
 
-        public NetEntity? ContainedNetEntity
-        {
-            get => _containedNetEntity;
-            private set
-            {
-                _containedNetEntity = value;
-                if (value != null)
-                {
-                    _containedNetEntityArray ??= new NetEntity[1];
-                    _containedNetEntityArray[0] = value.Value;
-                }
-            }
-        }
-
         [NonSerialized]
         private EntityUid? _containedEntity;
-
-        private NetEntity? _containedNetEntity;
 
         // Used by ContainedEntities to avoid allocating.
         [NonSerialized]
         private EntityUid[]? _containedEntityArray;
-
-        // Used by ContainedNetEntities to avoid allocating.
-        [NonSerialized]
-        private NetEntity[]? _containedNetEntityArray;
 
         /// <inheritdoc />
         public override bool Contains(EntityUid contained)
@@ -132,17 +98,6 @@ namespace Robust.Shared.Containers
                 entMan.DeleteEntity(entity);
             else if (entMan.EntityExists(entity))
                 Remove(entity, entMan, reparent: false, force: true);
-        }
-
-        internal override void HandleState(IEntityManager entMan)
-        {
-            if (entMan.TryGetEntity(ContainedNetEntity, out var entity))
-                ContainedEntity = entity;
-        }
-
-        internal override void SetState(IEntityManager entMan)
-        {
-            ContainedNetEntity = entMan.GetNetEntity(ContainedEntity);
         }
     }
 }

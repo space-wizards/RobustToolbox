@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -9,6 +6,9 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
@@ -50,7 +50,7 @@ namespace Robust.Client.GameObjects
             if (!RemoveExpectedEntity(GetNetEntity(uid), out var container))
                 return;
 
-            container.Insert(uid);
+            container.Insert(uid, EntityManager, transform: TransformQuery.GetComponent(uid), meta: MetaQuery.GetComponent(uid));
         }
 
         private void HandleComponentState(EntityUid uid, ContainerManagerComponent component, ref ComponentHandleState args)
@@ -95,8 +95,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var (id, stateContainer) in cast.Containers)
             {
-                stateContainer.HandleState(EntityManager);
-
+                DebugTools.AssertNotNull(stateContainer.ExpectedEntities);
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
                     container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(stateContainer.GetType(), inject: false);
@@ -104,23 +103,24 @@ namespace Robust.Client.GameObjects
                     component.Containers.Add(id, container);
                 }
 
-                foreach (var netEntity in stateContainer.ContainedNetEntities)
-                {
-                    if (!EntityManager.TryGetEntity(netEntity, out _))
-                        AddExpectedEntity(netEntity, container);
-                }
-
-                DebugTools.AssertNotNull(stateContainer.ContainedEntities);
                 DebugTools.Assert(container.ID == id);
                 container.ShowContents = stateContainer.ShowContents;
                 container.OccludesLight = stateContainer.OccludesLight;
 
                 // Remove gone entities.
                 var toRemove = new ValueList<EntityUid>();
+
+                DebugTools.Assert(!container.Contains(EntityUid.Invalid));
+
+                // No need to ensure entities here.
+                var entities = GetEntityList(stateContainer.CompStateEntities);
+
                 foreach (var entity in container.ContainedEntities)
                 {
-                    if (!stateContainer.Contains(entity))
+                    if (!entities.Remove(entity))
+                    {
                         toRemove.Add(entity);
+                    }
                 }
 
                 foreach (var entity in toRemove)
@@ -140,10 +140,10 @@ namespace Robust.Client.GameObjects
                 var removedExpected = new ValueList<NetEntity>();
                 foreach (var netEntity in container.ExpectedEntities)
                 {
-                    if (!stateContainer.ContainedNetEntities.Contains(netEntity))
-                    {
+                    var entity = GetEntity(netEntity);
+
+                    if (!entities.Contains(entity))
                         removedExpected.Add(netEntity);
-                    }
                 }
 
                 foreach (var entityUid in removedExpected)
@@ -152,12 +152,11 @@ namespace Robust.Client.GameObjects
                 }
 
                 // Add new entities.
-                foreach (var netEnt in stateContainer.ContainedNetEntities)
+                for (var i = 0; i < stateContainer.ExpectedEntities.Count; i++)
                 {
-                    if (!TryGetEntity(netEnt, out var entity))
-                        continue;
+                    var netEnt = stateContainer.ExpectedEntities[i];
 
-                    if (!EntityManager.TryGetComponent(entity, out MetaDataComponent? meta))
+                    if (!TryGetEntity(netEnt, out var entity) || !TryComp<MetaDataComponent>(entity, out var meta))
                     {
                         AddExpectedEntity(netEnt, container);
                         continue;
@@ -220,11 +219,12 @@ namespace Robust.Client.GameObjects
         public void AddExpectedEntity(NetEntity netEntity, BaseContainer container)
         {
 #if DEBUG
-            if (EntityManager.TryGetEntity(netEntity, out var uid))
+            var uid = GetEntity(netEntity);
+
+            if (TryComp<MetaDataComponent>(uid, out var meta))
             {
-                DebugTools.Assert(!TryComp(uid, out MetaDataComponent? meta) ||
-                                  (meta.Flags & ( MetaDataFlags.Detached | MetaDataFlags.InContainer) ) == MetaDataFlags.Detached,
-                    $"Adding entity {ToPrettyString(uid.Value)} to list of expected entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");
+                DebugTools.Assert((meta.Flags & ( MetaDataFlags.Detached | MetaDataFlags.InContainer) ) == MetaDataFlags.Detached,
+                    $"Adding entity {ToPrettyString(uid)} to list of expected entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");
             }
 #endif
 
@@ -250,7 +250,7 @@ namespace Robust.Client.GameObjects
                 return false;
 
             DebugTools.Assert(container.ExpectedEntities.Contains(netEntity),
-                $"While removing expected contained entity {netEntity}, the entity was missing from the container expected set. Container: {container.ID} in {ToPrettyString(container.Owner)}");
+                $"While removing expected contained entity {ToPrettyString(netEntity)}, the entity was missing from the container expected set. Container: {container.ID} in {ToPrettyString(container.Owner)}");
             container.ExpectedEntities.Remove(netEntity);
             return true;
         }

@@ -20,16 +20,18 @@ namespace Robust.Shared.Containers
     /// Base container class that all container inherit from.
     /// </summary>
     [ImplicitDataDefinitionForInheritors]
-    [Serializable, NetSerializable]
     public abstract partial class BaseContainer
     {
-        public abstract string SerializedName { get; }
-
         /// <summary>
         /// Readonly collection of all the entities contained within this specific container
         /// </summary>
         [ViewVariables]
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
+
+        /// <summary>
+        /// Number of contained entities.
+        /// </summary>
+        public abstract int Count { get; }
 
         [ViewVariables, NonSerialized]
         public List<NetEntity> ExpectedEntities = new();

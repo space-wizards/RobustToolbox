@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.Containers;
 using Robust.Shared.Containers;
@@ -297,9 +298,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             /// The generic container class uses a list of entities
             /// </summary>
             private readonly List<EntityUid> _containerList = new();
-            private readonly List<NetEntity> _expectedEntities = new();
 
-            public override string SerializedName => "ContainerOnly";
+            public override int Count => _containerList.Count;
 
             /// <inheritdoc />
             public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;

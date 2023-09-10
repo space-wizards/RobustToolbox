@@ -27,7 +27,7 @@ namespace Robust.Shared.Containers
         [NonSerialized]
         private List<EntityUid> _containerList = new();
 
-        public override string SerializedName => "Container";
+        public override int Count => _containerList.Count;
 
         /// <inheritdoc />
         public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;

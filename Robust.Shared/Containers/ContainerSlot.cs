@@ -15,7 +15,7 @@ namespace Robust.Shared.Containers
     [SerializedType(nameof(ContainerSlot))]
     public sealed partial class ContainerSlot : BaseContainer
     {
-        public override string SerializedName => "ContainerSlot";
+        public override int Count => ContainedEntity == null ? 0 : 1;
 
         /// <inheritdoc />
         public override IReadOnlyList<EntityUid> ContainedEntities

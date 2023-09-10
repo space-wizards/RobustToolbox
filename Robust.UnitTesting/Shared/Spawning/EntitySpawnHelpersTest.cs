@@ -107,7 +107,7 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
     {
         private readonly List<EntityUid> _ents = new();
 
-        public override string SerializedName => "Test";
+        public override int Count => _ents.Count;
 
         public override IReadOnlyList<EntityUid> ContainedEntities => _ents;
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan) => _ents.Add(toInsert);

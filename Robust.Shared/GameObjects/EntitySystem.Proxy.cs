@@ -1038,6 +1038,15 @@ public partial class EntitySystem
     }
 
     /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected List<NetEntity> GetNetEntityList(IReadOnlyList<EntityUid> uids)
+    {
+        return EntityManager.GetNetEntityList(uids);
+    }
+
+    /// <summary>
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

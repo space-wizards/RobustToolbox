@@ -361,6 +361,19 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    public List<NetEntity> GetNetEntityList(IReadOnlyList<EntityUid> entities)
+    {
+        var netEntities = new List<NetEntity>(entities.Count);
+
+        foreach (var netEntity in entities)
+        {
+            netEntities.Add(GetNetEntity(netEntity));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(ICollection<EntityUid> entities)
     {
         var netEntities = new List<NetEntity>(entities.Count);

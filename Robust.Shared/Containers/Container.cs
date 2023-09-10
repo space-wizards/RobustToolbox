@@ -27,8 +27,15 @@ namespace Robust.Shared.Containers
         [NonSerialized]
         private List<EntityUid> _containerList = new();
 
+        /// <summary>
+        /// The generic container class uses a list of entities
+        /// </summary>
+        private List<NetEntity> _containedNetEntities = new();
+
         /// <inheritdoc />
         public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
+
+        internal override IList<NetEntity> ContainedNetEntities => _containedNetEntities;
 
         /// <inheritdoc />
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
@@ -70,6 +77,26 @@ namespace Robust.Shared.Containers
                 else if (entMan.EntityExists(entity))
                     Remove(entity, entMan, reparent: false, force: true);
             }
+        }
+
+        internal override void HandleState(IEntityManager entMan)
+        {
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            _containerList ??= new List<EntityUid>();
+
+            foreach (var netEntity in ContainedNetEntities)
+            {
+                if (entMan.TryGetEntity(netEntity, out var entity) &&
+                    _containerList.Contains(entity.Value))
+                {
+                    _containerList.Add(entity.Value);
+                }
+            }
+        }
+
+        internal override void SetState(IEntityManager entMan)
+        {
+            _containedNetEntities = entMan.GetNetEntityList(_containerList);
         }
     }
 }

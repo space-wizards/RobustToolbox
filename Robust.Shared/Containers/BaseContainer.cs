@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -6,13 +9,10 @@ using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using System;
-using System.Collections.Generic;
-using System.Numerics;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Containers
 {
@@ -29,11 +29,13 @@ namespace Robust.Shared.Containers
         [ViewVariables]
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
 
+        /// <summary>
+        /// Collection of all the entities sent by the server within this specific container
+        /// </summary>
+        internal abstract IList<NetEntity> ContainedNetEntities { get; }
+
         [ViewVariables, NonSerialized]
         public List<NetEntity> ExpectedEntities = new();
-
-        // TODO: I hate this but I am getting conflict city and taking 2d4 psychic damage for every pr I have to merge with.
-        internal List<NetEntity> CompStateEntities = new();
 
         /// <summary>
         /// The ID of this container.
@@ -374,5 +376,9 @@ namespace Robust.Shared.Containers
         /// <param name="toRemove"></param>
         /// <param name="entMan"></param>
         protected abstract void InternalRemove(EntityUid toRemove, IEntityManager entMan);
+
+        internal abstract void HandleState(IEntityManager entMan);
+
+        internal abstract void SetState(IEntityManager entMan);
     }
 }

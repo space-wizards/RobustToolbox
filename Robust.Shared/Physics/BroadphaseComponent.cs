@@ -1,4 +1,5 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Physics.BroadPhase;
 
 namespace Robust.Shared.Physics;
@@ -9,21 +10,16 @@ namespace Robust.Shared.Physics;
 [RegisterComponent, NetworkedComponent]
 public sealed partial class BroadphaseComponent : Component
 {
+
     /// <summary>
     /// Stores all non-static bodies.
     /// </summary>
-    [RegisterComponent]
-    public sealed partial class BroadphaseComponent : Component
-    {
-        /// <summary>
-        /// Stores all non-static bodies.
-        /// </summary>
-        public IBroadPhase DynamicTree = new DynamicTreeBroadPhase();
+    public IBroadPhase DynamicTree = new DynamicTreeBroadPhase();
 
-        /// <summary>
-        /// Stores all static bodies.
-        /// </summary>
-        public IBroadPhase StaticTree = new DynamicTreeBroadPhase();
+    /// <summary>
+    /// Stores all static bodies.
+    /// </summary>
+    public IBroadPhase StaticTree = new DynamicTreeBroadPhase();
 
     /// <summary>
     /// Stores all other non-static entities not in another tree.

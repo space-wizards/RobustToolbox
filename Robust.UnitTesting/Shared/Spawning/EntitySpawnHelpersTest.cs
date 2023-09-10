@@ -102,10 +102,13 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
     /// <summary>
     /// Simple container that can store up to 2 entities.
     /// </summary>
-    [Serializable, NetSerializable]
+    [Serializable, NetSerializable, SerializedType("Test")]
     private sealed partial class TestContainer : BaseContainer
     {
         private readonly List<EntityUid> _ents = new();
+
+        public override string SerializedName => "Test";
+
         public override IReadOnlyList<EntityUid> ContainedEntities => _ents;
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan) => _ents.Add(toInsert);
         protected override void InternalRemove(EntityUid toRemove, IEntityManager entMan) => _ents.Remove(toRemove);

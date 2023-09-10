@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -9,6 +10,8 @@ using Robust.Shared.Utility;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
@@ -16,6 +19,7 @@ namespace Robust.Client.GameObjects
     public sealed class ContainerSystem : SharedContainerSystem
     {
         [Dependency] private readonly INetManager _netMan = default!;
+        [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly PointLightSystem _lightSys = default!;
 
@@ -93,27 +97,29 @@ namespace Robust.Client.GameObjects
 
             // Add new containers and update existing contents.
 
-            foreach (var (id, stateContainer) in cast.Containers)
+            foreach (var (id, values) in cast.Containers)
             {
-                DebugTools.AssertNotNull(stateContainer.ExpectedEntities);
+                var containerType = values.ContainerType;
+
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
-                    container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(stateContainer.GetType(), inject: false);
+                    container = ContainerFactory(component, containerType);
                     container.Init(id, uid, component);
                     component.Containers.Add(id, container);
                 }
 
                 DebugTools.Assert(container.ID == id);
-                container.ShowContents = stateContainer.ShowContents;
-                container.OccludesLight = stateContainer.OccludesLight;
+                container.ShowContents = values.ShowContents;
+                container.OccludesLight = values.OccludesLight;
 
                 // Remove gone entities.
                 var toRemove = new ValueList<EntityUid>();
 
                 DebugTools.Assert(!container.Contains(EntityUid.Invalid));
+                var netEntities = values.ContainedEntities;
 
                 // No need to ensure entities here.
-                var entities = GetEntityList(stateContainer.CompStateEntities);
+                var entities = GetEntityList(netEntities);
 
                 foreach (var entity in container.ContainedEntities)
                 {
@@ -152,9 +158,9 @@ namespace Robust.Client.GameObjects
                 }
 
                 // Add new entities.
-                for (var i = 0; i < stateContainer.ExpectedEntities.Count; i++)
+                for (var i = 0; i < netEntities.Length; i++)
                 {
-                    var netEnt = stateContainer.ExpectedEntities[i];
+                    var netEnt = netEntities[i];
 
                     if (!TryGetEntity(netEnt, out var entity) || !TryComp<MetaDataComponent>(entity, out var meta))
                     {
@@ -188,6 +194,18 @@ namespace Robust.Client.GameObjects
                     DebugTools.Assert(container.Contains(entity.Value));
                 }
             }
+        }
+
+        private BaseContainer ContainerFactory(ContainerManagerComponent component, string containerType)
+        {
+            var type = _serializer.FindSerializedType(typeof(BaseContainer), containerType);
+
+            if (type is null)
+                throw new ArgumentException($"Valid container of type {containerType} cannot be found.");
+
+            var newContainer = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type);
+            newContainer.Manager = component;
+            return newContainer;
         }
 
         protected override void OnParentChanged(ref EntParentChangedMessage message)

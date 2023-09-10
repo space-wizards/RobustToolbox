@@ -283,14 +283,14 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             Assert.That(state.Containers, Has.Count.EqualTo(1));
             var cont = state.Containers.Values.First();
-            Assert.That(cont.ID, Is.EqualTo("dummy"));
+            Assert.That(state.Containers.Keys.First(), Is.EqualTo("dummy"));
             Assert.That(cont.OccludesLight, Is.True);
             Assert.That(cont.ShowContents, Is.True);
             Assert.That(cont.ContainedEntities.Count, Is.EqualTo(1));
-            Assert.That(cont.ContainedEntities[0], Is.EqualTo(childEnt));
+            Assert.That(cont.ContainedEntities[0], Is.EqualTo(entManager.GetNetEntity(childEnt)));
         }
 
-        [Serializable, NetSerializable]
+        [Serializable, NetSerializable, SerializedType("ContainerOnly")]
         private sealed partial class ContainerOnlyContainer : BaseContainer
         {
             /// <summary>
@@ -298,6 +298,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             /// </summary>
             private readonly List<EntityUid> _containerList = new();
             private readonly List<NetEntity> _expectedEntities = new();
+
+            public override string SerializedName => "ContainerOnly";
 
             /// <inheritdoc />
             public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;

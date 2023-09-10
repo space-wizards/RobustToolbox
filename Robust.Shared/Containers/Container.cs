@@ -17,7 +17,7 @@ namespace Robust.Shared.Containers
     /// For example, inventory containers should be modified only through an inventory component.
     /// </summary>
     [UsedImplicitly]
-    [Serializable, NetSerializable]
+    [Serializable, NetSerializable, SerializedType("Container")]
     public sealed partial class Container : BaseContainer
     {
         /// <summary>
@@ -26,6 +26,8 @@ namespace Robust.Shared.Containers
         [DataField("ents")]
         [NonSerialized]
         private List<EntityUid> _containerList = new();
+
+        public override string SerializedName => "Container";
 
         /// <inheritdoc />
         public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;

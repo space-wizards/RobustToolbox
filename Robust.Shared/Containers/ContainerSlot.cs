@@ -12,9 +12,11 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Containers
 {
     [UsedImplicitly]
-    [Serializable, NetSerializable]
+    [Serializable, NetSerializable, SerializedType("ContainerSlot")]
     public sealed partial class ContainerSlot : BaseContainer
     {
+        public override string SerializedName => "ContainerSlot";
+
         /// <inheritdoc />
         public override IReadOnlyList<EntityUid> ContainedEntities
         {

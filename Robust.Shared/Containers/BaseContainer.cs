@@ -23,6 +23,8 @@ namespace Robust.Shared.Containers
     [Serializable, NetSerializable]
     public abstract partial class BaseContainer
     {
+        public abstract string SerializedName { get; }
+
         /// <summary>
         /// Readonly collection of all the entities contained within this specific container
         /// </summary>
@@ -31,9 +33,6 @@ namespace Robust.Shared.Containers
 
         [ViewVariables, NonSerialized]
         public List<NetEntity> ExpectedEntities = new();
-
-        // TODO: I hate this but I am getting conflict city and taking 2d4 psychic damage for every pr I have to merge with.
-        internal List<NetEntity> CompStateEntities = new();
 
         /// <summary>
         /// The ID of this container.

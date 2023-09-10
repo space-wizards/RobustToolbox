@@ -769,6 +769,18 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public IComponent GetComponentInternal(EntityUid uid, CompIdx type)
+        {
+            var dict = _entTraitArray[type.Value];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                    return comp;
+            }
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
+        }
+
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
         {

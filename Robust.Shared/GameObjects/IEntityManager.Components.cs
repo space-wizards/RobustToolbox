@@ -258,6 +258,14 @@ namespace Robust.Shared.GameObjects
         IComponent GetComponent(EntityUid uid, ushort netId);
 
         /// <summary>
+        ///     Returns the component of a specific type, even if it has been marked for deletion.
+        /// </summary>
+        /// <param name="uid">Entity UID to look on.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <returns>The component of Type from the Entity.</returns>
+        IComponent GetComponentInternal(EntityUid uid, CompIdx type);
+
+        /// <summary>
         ///     Returns the component of a specific type.
         /// </summary>
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>

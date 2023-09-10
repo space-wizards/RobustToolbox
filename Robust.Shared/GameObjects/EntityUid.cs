@@ -38,13 +38,13 @@ namespace Robust.Shared.GameObjects
 
         public EntityUid()
         {
-            _uid = Invalid._uid;
+            Id = Invalid.Id;
             Version = Invalid.Version;
         }
 
         internal EntityUid(EntityReference reference)
         {
-            _uid = reference.Entity.Id + ArchUidOffset;
+            Id = reference.Entity.Id + ArchUidOffset;
             Version = reference.Version + ArchVersionOffset;
         }
 
@@ -88,7 +88,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetArchId() => _uid - 1;
+        public int GetArchId() => Id - ArchUidOffset;
 
         /// <summary>
         ///     Checks if the ID value is valid. Does not check if it identifies
@@ -146,7 +146,7 @@ namespace Robust.Shared.GameObjects
 
         public static implicit operator Entity(EntityUid self)
         {
-            return DangerousEntityExtensions.CreateEntityStruct(self._uid - ArchUidOffset, 0);
+            return DangerousEntityExtensions.CreateEntityStruct(self.Id - ArchUidOffset, 0);
         }
 
         public static implicit operator EntityUid(EntityReference other)

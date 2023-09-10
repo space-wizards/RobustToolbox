@@ -207,7 +207,7 @@ namespace Robust.Shared.GameObjects
             if (!uid.IsValid() || !EntityExists(uid))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
-            AddComponentInternal(uid, newComponent, false, true);
+            AddComponentInternal(uid, newComponent, false);
 
             return new CompInitializeHandle<T>(this, uid, newComponent, reg.Idx);
         }
@@ -709,11 +709,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IComponent GetComponentInternal(EntityUid uid, CompIdx type)
         {
-            var dict = _entTraitArray[type.Value];
-            if (dict.TryGetValue(uid, out var comp))
-            {
-                    return comp;
-            }
+            if (TryGetComponent(uid, type, out var component))
+                return component;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
         }

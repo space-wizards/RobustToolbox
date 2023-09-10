@@ -302,6 +302,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             /// <inheritdoc />
             public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
 
+            internal override IList<NetEntity> ContainedNetEntities { get; }
+
             /// <inheritdoc />
             protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
             {
@@ -312,6 +314,16 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             protected override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
             {
                 _containerList.Remove(toRemove);
+            }
+
+            internal override void HandleState(IEntityManager entMan)
+            {
+                throw new NotImplementedException();
+            }
+
+            internal override void SetState(IEntityManager entMan)
+            {
+                throw new NotImplementedException();
             }
 
             /// <inheritdoc />

@@ -633,6 +633,7 @@ namespace Robust.Shared.GameObjects
             // we want this called before adding components
             EntityAdded?.Invoke(uid);
             _eventBus.OnEntityAdded(uid);
+            var netEntity = GenerateNetEntity();
 
             metadata = new MetaDataComponent
             {
@@ -858,14 +859,6 @@ namespace Robust.Shared.GameObjects
             // Part of shared the EntityManager so that systems can have convenient proxy methods, but the
             // server should never be calling this.
             DebugTools.Assert("Why are you raising predictive events on the server?");
-        }
-
-        /// <summary>
-        ///     Factory for generating a new EntityUid for an entity currently being created.
-        /// </summary>
-        internal EntityUid GenerateEntityUid()
-        {
-            return new EntityUid(NextEntityUid++);
         }
 
         /// <summary>

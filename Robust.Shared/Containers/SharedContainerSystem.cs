@@ -48,14 +48,14 @@ namespace Robust.Shared.Containers
 
             foreach (var container in component.Containers.Values)
             {
-                var uidArr = new EntityUid[container.ContainedEntities.Count];
+                var uidArr = new NetEntity[container.ContainedEntities.Count];
 
                 for (var index = 0; index < container.ContainedEntities.Count; index++)
                 {
-                    uidArr[index] = container.ContainedEntities[index];
+                    uidArr[index] = GetNetEntity(container.ContainedEntities[index]);
                 }
 
-                var sContainer = new ContainerManagerComponent.ContainerManagerComponentState.ContainerData(container.SerializedName, container.ShowContents, container.OccludesLight, GetNetEntityArray(uidArr));
+                var sContainer = new ContainerManagerComponent.ContainerManagerComponentState.ContainerData(container.GetType().Name, container.ShowContents, container.OccludesLight, uidArr);
                 containerSet.Add(container.ID, sContainer);
             }
 

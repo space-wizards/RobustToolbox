@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
@@ -74,9 +73,9 @@ namespace Robust.Client.GameObjects
             var toDelete = new ValueList<string>();
             foreach (var (id, container) in component.Containers)
             {
-                if (cast.Containers.TryGetValue(id, out var stateContainer)
-                    && stateContainer.ContainerType == container.SerializedName)
+                if (cast.Containers.ContainsKey(id))
                 {
+                    DebugTools.Assert(cast.Containers[id].ContainerType == container.GetType().Name);
                     continue;
                 }
 
@@ -103,36 +102,32 @@ namespace Robust.Client.GameObjects
 
             // Add new containers and update existing contents.
 
-            foreach (var (id, values) in cast.Containers)
+            foreach (var (id, data) in cast.Containers)
             {
-                var containerType = values.ContainerType;
-
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
-                    container = ContainerFactory(component, containerType);
+                    var type = _serializer.FindSerializedType(typeof(BaseContainer), data.ContainerType);
+                    container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject:false);
                     container.Init(id, uid, component);
                     component.Containers.Add(id, container);
                 }
 
                 DebugTools.Assert(container.ID == id);
-                container.ShowContents = values.ShowContents;
-                container.OccludesLight = values.OccludesLight;
+                container.ShowContents = data.ShowContents;
+                container.OccludesLight = data.OccludesLight;
 
                 // Remove gone entities.
                 var toRemove = new ValueList<EntityUid>();
 
                 DebugTools.Assert(!container.Contains(EntityUid.Invalid));
-                var netEntities = values.ContainedEntities;
 
-                // No need to ensure entities here.
-                var entities = GetEntityList(netEntities);
+                var stateNetEnts = data.ContainedEntities;
+                var stateEnts = GetEntityArray(stateNetEnts); // No need to ensure entities.
 
                 foreach (var entity in container.ContainedEntities)
                 {
-                    if (!entities.Remove(entity))
-                    {
+                    if (!stateEnts.Contains(entity))
                         toRemove.Add(entity);
-                    }
                 }
 
                 foreach (var entity in toRemove)
@@ -152,9 +147,7 @@ namespace Robust.Client.GameObjects
                 var removedExpected = new ValueList<NetEntity>();
                 foreach (var netEntity in container.ExpectedEntities)
                 {
-                    var entity = GetEntity(netEntity);
-
-                    if (!entities.Contains(entity))
+                    if (!stateNetEnts.Contains(netEntity))
                         removedExpected.Add(netEntity);
                 }
 
@@ -164,15 +157,19 @@ namespace Robust.Client.GameObjects
                 }
 
                 // Add new entities.
-                for (var i = 0; i < netEntities.Length; i++)
+                for (var i = 0; i < stateNetEnts.Length; i++)
                 {
-                    var netEnt = netEntities[i];
-
-                    if (!TryGetEntity(netEnt, out var entity) || !TryComp<MetaDataComponent>(entity, out var meta))
+                    var entity = stateEnts[i];
+                    var netEnt = stateNetEnts[i];
+                    if (!entity.IsValid())
                     {
+                        DebugTools.Assert(netEnt.IsValid());
                         AddExpectedEntity(netEnt, container);
                         continue;
                     }
+
+                    var meta = MetaData(entity);
+                    DebugTools.Assert(meta.NetEntity == netEnt);
 
                     // If an entity is currently in the shadow realm, it means we probably left PVS and are now getting
                     // back into range. We do not want to directly insert this entity, as IF the container and entity
@@ -187,31 +184,19 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
-                    if (container.Contains(entity.Value))
+                    if (container.Contains(entity))
                         continue;
 
                     RemoveExpectedEntity(netEnt, out _);
-                    container.Insert(entity.Value, EntityManager,
-                        TransformQuery.GetComponent(entity.Value),
+                    container.Insert(entity, EntityManager,
+                        TransformQuery.GetComponent(entity),
                         xform,
-                        MetaQuery.GetComponent(entity.Value),
+                        MetaQuery.GetComponent(entity),
                         force: true);
 
-                    DebugTools.Assert(container.Contains(entity.Value));
+                    DebugTools.Assert(container.Contains(entity));
                 }
             }
-        }
-
-        private BaseContainer ContainerFactory(ContainerManagerComponent component, string containerType)
-        {
-            var type = _serializer.FindSerializedType(typeof(BaseContainer), containerType);
-
-            if (type is null)
-                throw new ArgumentException($"Valid container of type {containerType} cannot be found.");
-
-            var newContainer = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type);
-            newContainer.Manager = component;
-            return newContainer;
         }
 
         protected override void OnParentChanged(ref EntParentChangedMessage message)

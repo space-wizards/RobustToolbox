@@ -148,7 +148,7 @@ namespace Robust.Shared.Containers
             [Serializable, NetSerializable]
             public readonly struct ContainerData
             {
-                public readonly string ContainerType;
+                public readonly string ContainerType; // TODO remove this. We dont have to send a whole string.
                 public readonly bool ShowContents;
                 public readonly bool OccludesLight;
                 public readonly NetEntity[] ContainedEntities;

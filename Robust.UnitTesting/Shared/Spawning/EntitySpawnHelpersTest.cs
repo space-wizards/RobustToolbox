@@ -102,7 +102,7 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
     /// <summary>
     /// Simple container that can store up to 2 entities.
     /// </summary>
-    [Serializable, NetSerializable, SerializedType("Test")]
+    [SerializedType(nameof(TestContainer))]
     private sealed partial class TestContainer : BaseContainer
     {
         private readonly List<EntityUid> _ents = new();

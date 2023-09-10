@@ -290,7 +290,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(cont.ContainedEntities[0], Is.EqualTo(entManager.GetNetEntity(childEnt)));
         }
 
-        [Serializable, NetSerializable, SerializedType("ContainerOnly")]
+        [SerializedType(nameof(ContainerOnlyContainer))]
         private sealed partial class ContainerOnlyContainer : BaseContainer
         {
             /// <summary>

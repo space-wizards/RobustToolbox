@@ -54,6 +54,37 @@ END TEMPLATE-->
 *None yet*
 
 
+## 155.0.0
+
+### Breaking changes
+
+* MapInitEvent now gets raised for components that get added to entities that have already been map-initialized.
+
+### New features
+
+* VirtualWritableDirProvider now supports file renaming/moving.
+* Added a new command for toggling the replay UI (`replay_toggleui`).
+
+### Bugfixes
+
+* Fixed formatting of localization file errors.
+* Directed event subscriptions will no longer error if the corresponding component is queued for deletion.
+
+
+## 154.2.0
+
+
+
+### New features
+
+* Added support for advertising to multiple hubs simultaneously.
+* Added new functions to ContainerSystem that recursively look for a component on a contained entity's parents.
+
+### Bugfixes
+
+* Fix Direction.TurnCw/TurnCcw to South returning Invalid.
+
+
 ## 154.1.0
 
 ### New features
@@ -66,7 +97,7 @@ END TEMPLATE-->
 
 ### Other
 
-* Mark the proxy Dirty(component) as obsolete in line with EntityManager (Dirty(EntityUid, Component) should be used in its place). 
+* Mark the proxy Dirty(component) as obsolete in line with EntityManager (Dirty(EntityUid, Component) should be used in its place).
 
 
 ## 154.0.0

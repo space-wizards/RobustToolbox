@@ -54,7 +54,7 @@ public abstract partial class SharedContainerSystem : EntitySystem
         }
     }
 
-    protected abstract void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing);
+    protected abstract void ValidateMissingEntity(EntityUid uid, BaseContainer cont, EntityUid missing);
 
     private void ValidateChildren(TransformComponent xform, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> physicsQuery)
     {

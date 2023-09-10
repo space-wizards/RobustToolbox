@@ -11,7 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.Physics.Components;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
@@ -25,7 +24,7 @@ namespace Robust.Client.GameObjects
 
         private readonly HashSet<EntityUid> _updateQueue = new();
 
-        public readonly Dictionary<NetEntity, IContainer> ExpectedEntities = new();
+        public readonly Dictionary<NetEntity, BaseContainer> ExpectedEntities = new();
 
         public override void Initialize()
         {
@@ -43,7 +42,7 @@ namespace Robust.Client.GameObjects
             base.Shutdown();
         }
 
-        protected override void ValidateMissingEntity(EntityUid uid, IContainer cont, EntityUid missing)
+        protected override void ValidateMissingEntity(EntityUid uid, BaseContainer cont, EntityUid missing)
         {
             var netEntity = GetNetEntity(missing);
             DebugTools.Assert(ExpectedEntities.TryGetValue(netEntity, out var expectedContainer) && expectedContainer == cont && cont.ExpectedEntities.Contains(netEntity));
@@ -52,9 +51,6 @@ namespace Robust.Client.GameObjects
         private void HandleEntityInitialized(EntityUid uid)
         {
             if (!RemoveExpectedEntity(GetNetEntity(uid), out var container))
-                return;
-
-            if (container.Deleted)
                 return;
 
             container.Insert(uid);
@@ -73,8 +69,11 @@ namespace Robust.Client.GameObjects
             var toDelete = new ValueList<string>();
             foreach (var (id, container) in component.Containers)
             {
-                if (cast.Containers.ContainsKey(id))
+                if (cast.Containers.TryGetValue(id, out var stateContainer)
+                    && stateContainer.GetType() == container.GetType())
+                {
                     continue;
+                }
 
                 foreach (var entity in container.ContainedEntities.ToArray())
                 {
@@ -99,17 +98,19 @@ namespace Robust.Client.GameObjects
 
             // Add new containers and update existing contents.
 
-            foreach (var (containerType, id, showEnts, occludesLight, nents) in cast.Containers.Values)
+            foreach (var (id, stateContainer) in cast.Containers)
             {
+                DebugTools.AssertNotNull(stateContainer.ContainedEntities);
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
-                    container = ContainerFactory(component, containerType, id);
+                    container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(stateContainer.GetType(), inject: false);
+                    container.Init(id, uid, component);
                     component.Containers.Add(id, container);
                 }
 
-                // sync show flag
-                container.ShowContents = showEnts;
-                container.OccludesLight = occludesLight;
+                DebugTools.Assert(container.ID == id);
+                container.ShowContents = stateContainer.ShowContents;
+                container.OccludesLight = stateContainer.OccludesLight;
 
                 // Remove gone entities.
                 var toRemove = new ValueList<EntityUid>();
@@ -120,13 +121,8 @@ namespace Robust.Client.GameObjects
                 var entityUids = GetEntityArray(nents);
                 foreach (var entity in container.ContainedEntities)
                 {
-                    if (!entity.IsValid())
-                        continue;
-
-                    if (!entityUids.Contains(entity))
-                    {
+                    if (!stateContainer.Contains(entity))
                         toRemove.Add(entity);
-                    }
                 }
 
                 foreach (var entity in toRemove)
@@ -146,10 +142,8 @@ namespace Robust.Client.GameObjects
                 var removedExpected = new ValueList<NetEntity>();
                 foreach (var entityUid in container.ExpectedEntities)
                 {
-                    if (!nents.Contains(entityUid))
-                    {
+                    if (!stateContainer.Contains(entityUid))
                         removedExpected.Add(entityUid);
-                    }
                 }
 
                 foreach (var entityUid in removedExpected)
@@ -158,7 +152,7 @@ namespace Robust.Client.GameObjects
                 }
 
                 // Add new entities.
-                for (var i = 0; i < nents.Length; i++)
+                foreach (var entity in stateContainer.ContainedEntities)
                 {
                     var entity = entityUids[i];
                     var netEnt = nents[i];
@@ -220,24 +214,10 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            if (container.Deleted)
-                return;
-
             container.Insert(message.Entity, EntityManager);
         }
 
-        private IContainer ContainerFactory(ContainerManagerComponent component, string containerType, string id)
-        {
-            var type = _serializer.FindSerializedType(typeof(IContainer), containerType);
-            if (type is null) throw new ArgumentException($"Container of type {containerType} for id {id} cannot be found.");
-
-            var newContainer = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type);
-            newContainer.ID = id;
-            newContainer.Manager = component;
-            return newContainer;
-        }
-
-        public void AddExpectedEntity(NetEntity entity, IContainer container)
+        public void AddExpectedEntity(EntityUid uid, BaseContainer container)
         {
 #if DEBUG
             var uid = GetEntity(entity);
@@ -265,7 +245,7 @@ namespace Robust.Client.GameObjects
             container.ExpectedEntities.Add(entity);
         }
 
-        public bool RemoveExpectedEntity(NetEntity entity, [NotNullWhen(true)] out IContainer? container)
+        public bool RemoveExpectedEntity(EntityUid uid, [NotNullWhen(true)] out BaseContainer? container)
         {
             if (!ExpectedEntities.Remove(entity, out container))
                 return false;

@@ -10,9 +10,7 @@ namespace Robust.Shared.GameObjects;
 public partial class EntityManager
 {
     // TODO POOLING
-    // Add overrides of the various NetEntity-EntityUid collection conversion methods that return pooled collections.
-    // Alternatively: just add overrides that take in an existing collection.
-    // I guess with a ref keyword to make it clear that they modify the collection?
+    // Just add overrides that take in an existing collection.
 
     /// <summary>
     /// Inverse lookup for net entities.
@@ -49,7 +47,20 @@ public partial class EntityManager
     #region NetEntity
 
     /// <inheritdoc />
-    public bool TryGetEntity(NetEntity nEntity, out EntityUid entity)
+    public bool TryParseNetEntity(string arg, [NotNullWhen(true)] out EntityUid? entity)
+    {
+        if (!NetEntity.TryParse(arg, out var netEntity) ||
+            !TryGetEntity(netEntity, out entity))
+        {
+            entity = null;
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    public bool TryGetEntity(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         if (NetEntityLookup.TryGetValue(nEntity, out var went))
         {
@@ -62,7 +73,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
-    public bool TryGetEntity(NetEntity? nEntity, out EntityUid entity)
+    public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         if (nEntity == null)
         {
@@ -74,7 +85,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
-    public bool TryGetNetEntity(EntityUid uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
     {
         if (uid == EntityUid.Invalid)
         {

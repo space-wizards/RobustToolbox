@@ -29,8 +29,8 @@ namespace Robust.Shared.Containers
         [ViewVariables]
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
 
-        [ViewVariables, NonSerialized]
-        public List<EntityUid> ExpectedEntities = new();
+        [ViewVariables]
+        public List<NetEntity> ExpectedEntities = new();
 
         /// <summary>
         /// The ID of this container.
@@ -96,6 +96,7 @@ namespace Robust.Shared.Containers
             PhysicsComponent? physics = null,
             bool force = false)
         {
+            IoCManager.Resolve(ref entMan);
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);

@@ -355,11 +355,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                 Assert.That(containerComp.Containers.ContainsKey("testContainer"));
 
-                var BaseContainer = containerComp.GetContainer("testContainer");
-                Assert.That(BaseContainer.ContainedEntities.Count, Is.EqualTo(1));
+                var baseContainer = containerComp.GetContainer("testContainer");
+                Assert.That(baseContainer.ContainedEntities, Has.Count.EqualTo(1));
 
-                var containeeEnt = BaseContainer.ContainedEntities[0];
-                Assert.That(entMan.GetComponent<MetaDataComponent>(containeeEnt).EntityName, Is.EqualTo("ContaineeEnt"));
+                var containeeEnt = baseContainer.ContainedEntities[0];
+                Assert.That(sEntManager.GetComponent<MetaDataComponent>(containeeEnt).EntityName, Is.EqualTo("ContaineeEnt"));
             });
         }
     }

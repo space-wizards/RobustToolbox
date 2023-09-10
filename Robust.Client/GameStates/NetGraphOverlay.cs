@@ -309,12 +309,13 @@ namespace Robust.Client.GameStates
 
             public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                EntityUid eValue;
+                EntityUid? entity;
+
                 if (args.Length == 0)
                 {
-                    eValue = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+                    entity = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
                 }
-                else if (!NetEntity.TryParse(args[0], out var netEntity) || !_entManager.TryGetEntity(netEntity, out eValue))
+                else if (!NetEntity.TryParse(args[0], out var netEntity) || !_entManager.TryGetEntity(netEntity, out entity))
                 {
                     shell.WriteError("Invalid argument: Needs to be 0 or an entityId.");
                     return;
@@ -326,7 +327,7 @@ namespace Robust.Client.GameStates
                     _overlayManager.AddOverlay(overlay);
                 }
 
-                overlay.WatchEntId = eValue;
+                overlay.WatchEntId = entity.Value;
             }
         }
     }

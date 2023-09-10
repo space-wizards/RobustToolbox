@@ -44,6 +44,7 @@ namespace Robust.Shared.Containers
             }
         }
 
+        [NonSerialized]
         private EntityUid? _containedEntity;
 
         // Used by ContainedEntities to avoid allocating.

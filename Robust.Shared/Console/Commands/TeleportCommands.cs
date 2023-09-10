@@ -217,7 +217,7 @@ sealed class TpGridCommand : LocalizedCommands
             return;
         }
 
-        var gridXform = _ent.GetComponent<TransformComponent>(gridId);
+        var gridXform = _ent.GetComponent<TransformComponent>(gridId.Value);
         var mapId = args.Length == 4 ? new MapId(int.Parse(args[3])) : gridXform.MapID;
 
         gridXform.Coordinates = new EntityCoordinates(_map.GetMapEntityId(mapId), new Vector2(xPos, yPos));

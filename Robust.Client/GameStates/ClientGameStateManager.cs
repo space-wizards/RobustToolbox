@@ -763,10 +763,10 @@ namespace Robust.Client.GameStates
                     if (es.EntityLastModified != nextState.ToSequence)
                         continue;
 
-                    if (_toApply.TryGetValue(uid, out var state))
-                        _toApply[uid] = (state.EnteringPvs, state.LastApplied, state.curState, es);
+                    if (_toApply.TryGetValue(uid.Value, out var state))
+                        _toApply[uid.Value] = (state.EnteringPvs, state.LastApplied, state.curState, es);
                     else
-                        _toApply[uid] = (false, GameTick.Zero, null, es);
+                        _toApply[uid.Value] = (false, GameTick.Zero, null, es);
                 }
             }
 
@@ -954,7 +954,7 @@ namespace Robust.Client.GameStates
                     continue; // Already deleted? or never sent to us?
 
                 // First, a single recursive map change
-                xformSys.DetachParentToNull(id, xform);
+                xformSys.DetachParentToNull(id.Value, xform);
 
                 // Then detach all children.
                 var childEnumerator = xform.ChildEnumerator;
@@ -964,7 +964,7 @@ namespace Robust.Client.GameStates
                 }
 
                 // Finally, delete the entity.
-                _entities.DeleteEntity(id);
+                _entities.DeleteEntity(id.Value);
             }
             _prof.WriteValue("Count", ProfData.Int32(delSpan.Length));
         }

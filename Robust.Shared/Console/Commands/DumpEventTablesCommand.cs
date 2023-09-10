@@ -29,7 +29,7 @@ internal sealed class DumpEventTablesCommand : LocalizedCommands
 
         var eventBus = (EntityEventBus)_entities.EventBus;
 
-        var table = eventBus._entEventTables[entity];
+        var table = eventBus._entEventTables[entity.Value];
         foreach (var (evType, comps) in table.EventIndices)
         {
             shell.WriteLine($"{evType}:");

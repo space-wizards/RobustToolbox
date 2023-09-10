@@ -8,19 +8,24 @@ namespace Robust.Shared.GameObjects;
 public partial interface IEntityManager
 {
     /// <summary>
-    /// TryGet version of <see cref="GetEntity"/>
+    /// Tries to parse a string as a NetEntity and return the relevant EntityUid.
     /// </summary>
-    public bool TryGetEntity(NetEntity nEntity, out EntityUid entity);
+    public bool TryParseNetEntity(string arg, [NotNullWhen(true)] out EntityUid? entity);
 
     /// <summary>
     /// TryGet version of <see cref="GetEntity"/>
     /// </summary>
-    public bool TryGetEntity(NetEntity? nEntity, out EntityUid entity);
+    public bool TryGetEntity(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity);
+
+    /// <summary>
+    /// TryGet version of <see cref="GetEntity"/>
+    /// </summary>
+    public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity);
 
     /// <summary>
     /// TryGet version of <see cref="GetNetEntity"/>
     /// </summary>
-    public bool TryGetNetEntity(EntityUid uid, out NetEntity netEntity, MetaDataComponent? metadata = null);
+    public bool TryGetNetEntity(EntityUid uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null);
 
     /// <summary>
     /// TryGet version of <see cref="GetNetEntity"/>

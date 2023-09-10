@@ -29,7 +29,7 @@ public sealed class SpinCommand : LocalizedCommands
         }
 
         // get the target
-        EntityUid target;
+        EntityUid? target;
 
         if (args.Length == 3)
         {
@@ -67,6 +67,6 @@ public sealed class SpinCommand : LocalizedCommands
 
         var physicsSystem = _entities.System<SharedPhysicsSystem>();
         physicsSystem.SetAngularDamping(physics, drag);
-        physicsSystem.SetAngularVelocity(target, speed, body: physics);
+        physicsSystem.SetAngularVelocity(target.Value, speed, body: physics);
     }
 }

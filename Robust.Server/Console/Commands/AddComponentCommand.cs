@@ -44,17 +44,17 @@ namespace Robust.Server.Console.Commands
 
             if (_entityManager.HasComponent(uid, registration.Type))
             {
-                shell.WriteLine($"Entity {_entityManager.GetComponent<MetaDataComponent>(uid).EntityName} already has a {componentName} component.");
+                shell.WriteLine($"Entity {_entityManager.GetComponent<MetaDataComponent>(uid.Value).EntityName} already has a {componentName} component.");
             }
 
             var component = (Component) _componentFactory.GetComponent(registration.Type);
 
 #pragma warning disable CS0618
-            component.Owner = uid;
+            component.Owner = uid.Value;
 #pragma warning restore CS0618
-            _entityManager.AddComponent(uid, component);
+            _entityManager.AddComponent(uid.Value, component);
 
-            shell.WriteLine($"Added {componentName} component to entity {_entityManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
+            shell.WriteLine($"Added {componentName} component to entity {_entityManager.GetComponent<MetaDataComponent>(uid.Value).EntityName}.");
         }
     }
 }

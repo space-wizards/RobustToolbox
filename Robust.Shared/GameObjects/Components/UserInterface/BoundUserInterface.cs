@@ -1,28 +1,17 @@
 using System;
-using System.Collections.Generic;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.ViewVariables;
+using Robust.Shared.Players;
 
-namespace Robust.Client.GameObjects
+namespace Robust.Shared.GameObjects
 {
-    [RegisterComponent]
-    public sealed partial class ClientUserInterfaceComponent : SharedUserInterfaceComponent
-    {
-        [ViewVariables]
-        internal readonly Dictionary<Enum, PrototypeData> _interfaces = new();
-
-        [ViewVariables]
-        public readonly Dictionary<Enum, BoundUserInterface> OpenInterfaces = new();
-    }
-
     /// <summary>
     ///     An abstract class to override to implement bound user interfaces.
     /// </summary>
     public abstract class BoundUserInterface : IDisposable
     {
         [Dependency] protected readonly IEntityManager EntMan = default!;
-        protected readonly UserInterfaceSystem UiSystem = default!;
+        [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
+        protected readonly SharedUserInterfaceSystem UiSystem;
 
         public readonly Enum UiKey;
         public EntityUid Owner { get; }
@@ -35,7 +24,7 @@ namespace Robust.Client.GameObjects
         protected BoundUserInterface(EntityUid owner, Enum uiKey)
         {
             IoCManager.InjectDependencies(this);
-            UiSystem = EntMan.System<UserInterfaceSystem>();
+            UiSystem = EntMan.System<SharedUserInterfaceSystem>();
 
             Owner = owner;
             UiKey = uiKey;
@@ -68,7 +57,7 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void Close()
         {
-            UiSystem.TryCloseUi(Owner, UiKey);
+            UiSystem.TryCloseUi(_playerManager.LocalSession, Owner, UiKey);
         }
 
         /// <summary>
@@ -77,6 +66,11 @@ namespace Robust.Client.GameObjects
         public void SendMessage(BoundUserInterfaceMessage message)
         {
             UiSystem.SendUiMessage(this, message);
+        }
+
+        public void SendPredictedMessage(BoundUserInterfaceMessage message)
+        {
+            UiSystem.SendPredictedUiMessage(this, message);
         }
 
         internal void InternalReceiveMessage(BoundUserInterfaceMessage message)

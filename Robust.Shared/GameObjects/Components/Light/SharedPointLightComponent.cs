@@ -12,7 +12,8 @@ namespace Robust.Shared.GameObjects
     {
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("color"), AutoNetworkedField]
-        public Color Color = Color.White;
+        [Animatable]
+        public Color Color { get; set; } = Color.White;
 
         /// <summary>
         /// Offset from the center of the entity.
@@ -38,7 +39,8 @@ namespace Robust.Shared.GameObjects
 
         [Access(typeof(SharedPointLightSystem))]
         [DataField("enabled")]
-        public bool Enabled = true;
+        [Animatable]
+        public bool Enabled { get; set; } = true;
 
         /// <summary>
         /// How far the light projects.

@@ -16,6 +16,7 @@ using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 using Robust.Shared.Physics;
 using Robust.Client.ComponentTrees;
+using Robust.Shared.Graphics;
 using static Robust.Shared.GameObjects.OccluderComponent;
 using Robust.Shared.Utility;
 using Vector4 = Robust.Shared.Maths.Vector4;

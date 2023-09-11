@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;

@@ -150,7 +150,7 @@ namespace Robust.Client.Graphics.Clyde
                 Vector2 scale,
                 Angle? worldRot,
                 Angle eyeRot = default,
-                Shared.Maths.Direction? overrideDirection = null,
+                Direction? overrideDirection = null,
                 SpriteComponent? sprite = null,
                 TransformComponent? xform = null,
                 SharedTransformSystem? xformSystem = null)
@@ -357,7 +357,7 @@ namespace Robust.Client.Graphics.Clyde
                     Vector2 scale,
                     Angle? worldRot,
                     Angle eyeRot = default,
-                    Shared.Maths.Direction? overrideDirection = null,
+                    Direction? overrideDirection = null,
                     SpriteComponent? sprite = null,
                     TransformComponent? xform = null,
                     SharedTransformSystem? xformSystem = null)

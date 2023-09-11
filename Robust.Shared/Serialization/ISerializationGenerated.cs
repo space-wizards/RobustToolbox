@@ -7,6 +7,7 @@ namespace Robust.Shared.Serialization;
 
 public interface ISerializationGenerated<T> : ISerializationGenerated
 {
+    /// <seealso cref="ISerializationManager.CopyTo"/>
     [Obsolete("Use ISerializationManager.CopyTo instead")]
     void Copy(
         ref T target,
@@ -14,6 +15,7 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         SerializationHookContext hookCtx,
         ISerializationContext? context = null);
 
+    /// <seealso cref="ISerializationManager.CopyTo"/>
     [Obsolete("Use ISerializationManager.CopyTo instead")]
     void InternalCopy(
         ref T target,
@@ -21,12 +23,14 @@ public interface ISerializationGenerated<T> : ISerializationGenerated
         SerializationHookContext hookCtx,
         ISerializationContext? context = null);
 
+    /// <seealso cref="ISerializationManager.CreateCopy"/>
     [Obsolete("Use ISerializationManager.CreateCopy instead")]
     T Instantiate();
 }
 
 public interface ISerializationGenerated
 {
+    /// <seealso cref="ISerializationManager.CopyTo"/>
     [Obsolete("Use ISerializationManager.CopyTo instead")]
     void Copy(
         ref object target,

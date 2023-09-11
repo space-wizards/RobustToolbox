@@ -19,9 +19,9 @@ public abstract partial class SharedJointSystem
     [Serializable, NetSerializable]
     private sealed class JointRelayComponentState : ComponentState
     {
-        public HashSet<EntityUid> Entities;
+        public HashSet<NetEntity> Entities;
 
-        public JointRelayComponentState(HashSet<EntityUid> entities)
+        public JointRelayComponentState(HashSet<NetEntity> entities)
         {
             Entities = entities;
         }
@@ -36,7 +36,7 @@ public abstract partial class SharedJointSystem
 
     private void OnRelayGetState(EntityUid uid, JointRelayTargetComponent component, ref ComponentGetState args)
     {
-        args.State = new JointRelayComponentState(component.Relayed);
+        args.State = new JointRelayComponentState(GetNetEntitySet(component.Relayed));
     }
 
     private void OnRelayHandleState(EntityUid uid, JointRelayTargetComponent component, ref ComponentHandleState args)
@@ -45,7 +45,7 @@ public abstract partial class SharedJointSystem
             return;
 
         component.Relayed.Clear();
-        component.Relayed.UnionWith(state.Entities);
+        component.Relayed.UnionWith(EnsureEntitySet<JointRelayTargetComponent>(state.Entities, uid));
     }
 
     private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ComponentShutdown args)

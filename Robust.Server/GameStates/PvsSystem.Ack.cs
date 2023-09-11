@@ -45,7 +45,7 @@ internal sealed partial class PvsSystem
             return;
 
         var ackedTick = sessionData.LastReceivedAck;
-        Dictionary<EntityUid, PvsEntityVisibility>? ackedData;
+        Dictionary<NetEntity, PvsEntityVisibility>? ackedData;
 
         if (sessionData.Overflow != null && sessionData.Overflow.Value.Tick <= ackedTick)
         {

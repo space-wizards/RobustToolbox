@@ -25,18 +25,16 @@ namespace Robust.Shared.Containers
         [Dependency] private readonly INetManager _netMan = default!;
 
         [DataField("containers")]
-        public Dictionary<string, IContainer> Containers = new();
+        public Dictionary<string, BaseContainer> Containers = new();
 
         void ISerializationHooks.AfterDeserialization()
         {
-            // TODO remove ISerializationHooks I guess the IDs can be set by a custom serializer for the dictionary? But
-            // the component??? Maybe other systems need to stop assuming that containers have been initialized during
-            // their own init.
+            // TODO custom type serializer
+            // TODO set owner uid on init.
             foreach (var (id, container) in Containers)
             {
-                var baseContainer = (BaseContainer) container;
-                baseContainer.Manager = this;
-                baseContainer.ID = id;
+                container.Manager = this;
+                container.ID = id;
             }
         }
 
@@ -55,13 +53,20 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         public T MakeContainer<T>(string id)
-            where T : IContainer
+            where T : BaseContainer
         {
-            return (T) MakeContainer(id, typeof(T));
+            if (HasContainer(id))
+                throw new ArgumentException($"Container with specified ID already exists: '{id}'");
+
+            var container = _dynFactory.CreateInstanceUnchecked<T>(typeof(T), inject: false);
+            container.Init(id, Owner, this);
+            Containers[id] = container;
+            _entMan.Dirty(this);
+            return container;
         }
 
         /// <inheritdoc />
-        public IContainer GetContainer(string id)
+        public BaseContainer GetContainer(string id)
         {
             return Containers[id];
         }
@@ -73,7 +78,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool TryGetContainer(string id, [NotNullWhen(true)] out IContainer? container)
+        public bool TryGetContainer(string id, [NotNullWhen(true)] out BaseContainer? container)
         {
             var ret = Containers.TryGetValue(id, out var cont);
             container = cont!;
@@ -81,11 +86,11 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out IContainer? container)
+        public bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out BaseContainer? container)
         {
             foreach (var contain in Containers.Values)
             {
-                if (!contain.Deleted && contain.Contains(entity))
+                if (contain.Contains(entity))
                 {
                     container = contain;
                     return true;
@@ -101,7 +106,7 @@ namespace Robust.Shared.Containers
         {
             foreach (var container in Containers.Values)
             {
-                if (!container.Deleted && container.Contains(entity)) return true;
+                if (container.Contains(entity)) return true;
             }
 
             return false;
@@ -125,19 +130,6 @@ namespace Robust.Shared.Containers
             return true; // If we don't contain the entity, it will always be removed
         }
 
-        private IContainer MakeContainer(string id, Type type)
-        {
-            if (HasContainer(id)) throw new ArgumentException($"Container with specified ID already exists: '{id}'");
-
-            var container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type);
-            container.ID = id;
-            container.Manager = this;
-
-            Containers[id] = container;
-            _entMan.Dirty(this);
-            return container;
-        }
-
         public AllContainersEnumerable GetAllContainers()
         {
             return new(this);
@@ -156,25 +148,22 @@ namespace Robust.Shared.Containers
             [Serializable, NetSerializable]
             public readonly struct ContainerData
             {
-                public readonly string ContainerType;
-                public readonly string Id;
+                public readonly string ContainerType; // TODO remove this. We dont have to send a whole string.
                 public readonly bool ShowContents;
                 public readonly bool OccludesLight;
-                public readonly EntityUid[] ContainedEntities;
+                public readonly NetEntity[] ContainedEntities;
 
-                public ContainerData(string containerType, string id, bool showContents, bool occludesLight, EntityUid[] containedEntities)
+                public ContainerData(string containerType, bool showContents, bool occludesLight, NetEntity[] containedEntities)
                 {
                     ContainerType = containerType;
-                    Id = id;
                     ShowContents = showContents;
                     OccludesLight = occludesLight;
                     ContainedEntities = containedEntities;
                 }
 
-                public void Deconstruct(out string type, out string id, out bool showEnts, out bool occludesLight, out EntityUid[] ents)
+                public void Deconstruct(out string type, out bool showEnts, out bool occludesLight, out NetEntity[] ents)
                 {
                     type = ContainerType;
-                    id = Id;
                     showEnts = ShowContents;
                     occludesLight = OccludesLight;
                     ents = ContainedEntities;
@@ -182,24 +171,7 @@ namespace Robust.Shared.Containers
             }
         }
 
-        [DataDefinition]
-        private partial struct ContainerPrototypeData
-        {
-            [DataField("entities")] public List<EntityUid> Entities = new ();
-
-            [DataField("type")] public string? Type = null;
-
-            // explicit parameterless constructor is required.
-            public ContainerPrototypeData() { }
-
-            public ContainerPrototypeData(List<EntityUid> entities, string type)
-            {
-                Entities = entities;
-                Type = type;
-            }
-        }
-
-        public readonly struct AllContainersEnumerable : IEnumerable<IContainer>
+        public readonly struct AllContainersEnumerable : IEnumerable<BaseContainer>
         {
             private readonly ContainerManagerComponent? _manager;
 
@@ -213,7 +185,7 @@ namespace Robust.Shared.Containers
                 return new(_manager);
             }
 
-            IEnumerator<IContainer> IEnumerable<IContainer>.GetEnumerator()
+            IEnumerator<BaseContainer> IEnumerable<BaseContainer>.GetEnumerator()
             {
                 return GetEnumerator();
             }
@@ -224,9 +196,9 @@ namespace Robust.Shared.Containers
             }
         }
 
-        public struct AllContainersEnumerator : IEnumerator<IContainer>
+        public struct AllContainersEnumerator : IEnumerator<BaseContainer>
         {
-            private Dictionary<string, IContainer>.ValueCollection.Enumerator _enumerator;
+            private Dictionary<string, BaseContainer>.ValueCollection.Enumerator _enumerator;
 
             public AllContainersEnumerator(ContainerManagerComponent? manager)
             {
@@ -238,11 +210,8 @@ namespace Robust.Shared.Containers
             {
                 while (_enumerator.MoveNext())
                 {
-                    if (!_enumerator.Current.Deleted)
-                    {
-                        Current = _enumerator.Current;
-                        return true;
-                    }
+                    Current = _enumerator.Current;
+                    return true;
                 }
 
                 return false;
@@ -250,11 +219,11 @@ namespace Robust.Shared.Containers
 
             void IEnumerator.Reset()
             {
-                ((IEnumerator<IContainer>) _enumerator).Reset();
+                ((IEnumerator<BaseContainer>) _enumerator).Reset();
             }
 
             [AllowNull]
-            public IContainer Current { get; private set; }
+            public BaseContainer Current { get; private set; }
 
             object IEnumerator.Current => Current;
 

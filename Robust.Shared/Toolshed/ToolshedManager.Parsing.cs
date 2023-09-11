@@ -42,7 +42,7 @@ public sealed partial class ToolshedManager
             }
             else
             {
-                var parser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(parserType);
+                var parser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(parserType, oneOff: true);
                 parser.PostInject();
                 _log.Info($"Setting up {parserType.PrettyName()}, {parser.Parses.PrettyName()}");
                 _consoleTypeParsers.Add(parser.Parses, parser);

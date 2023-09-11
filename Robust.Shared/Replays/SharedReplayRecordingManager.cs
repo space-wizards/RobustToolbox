@@ -19,6 +19,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
@@ -107,7 +108,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
         try
         {
-            WriteGameState(continueRecording: false);
+            WriteBatch(continueRecording: false);
             _sawmill.Info("Replay recording stopped!");
         }
         catch
@@ -137,7 +138,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
                 _sawmill.Info("Reached requested replay recording length. Stopping recording.");
 
             if (!continueRecording || _recState.Buffer.Length > _tickBatchSize)
-                WriteGameState(continueRecording);
+                WriteBatch(continueRecording);
         }
         catch (Exception e)
         {
@@ -201,12 +202,19 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             new BoundedChannelOptions(NetConf.GetCVar(CVars.ReplayWriteChannelSize))
             {
                 SingleReader = true,
-                SingleWriter = true,
-                AllowSynchronousContinuations = false
+                SingleWriter = true
             }
         );
 
-        var writeTask = Task.Run(() => WriteQueueLoop(commandQueue.Reader, zip));
+        var writeTaskTcs = new TaskCompletionSource();
+        // This is on its own thread instead of the thread pool.
+        // Official SS14 servers write replays to an NFS mount,
+        // which causes some write calls to have significant latency (~1s).
+        // We want to avoid clogging thread pool threads with that, so...
+        var writeThread = new Thread(() => WriteQueueLoop(writeTaskTcs, commandQueue.Reader, zip, context));
+        writeThread.Priority = ThreadPriority.BelowNormal;
+        writeThread.Name = "Replay Recording Thread";
+        writeThread.Start();
 
         _recState = new RecordingState(
             zip,
@@ -216,7 +224,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             Timing.CurTime,
             recordingEnd,
             commandQueue.Writer,
-            writeTask,
+            writeTaskTcs.Task,
             directory,
             filePath,
             state
@@ -252,26 +260,35 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         _queuedMessages.Add(obj);
     }
 
-    private void WriteGameState(bool continueRecording = true)
+    private void WriteBatch(bool continueRecording = true)
     {
         DebugTools.Assert(_recState != null);
 
+        var batchIndex = _recState.Index++;
+        RecordingEventSource.Log.WriteBatchStart(batchIndex);
+
         _recState.Buffer.Position = 0;
 
-        // Compress stream to buffer.
-        // First 4 bytes of buffer are reserved for the length of the uncompressed stream.
-        var bound = ZStd.CompressBound((int)_recState.Buffer.Length);
-        var buf = ArrayPool<byte>.Shared.Rent(4 + bound);
-        var length = _recState.CompressionContext.Compress2(buf.AsSpan(4, bound), _recState.Buffer.AsSpan());
-        BitConverter.TryWriteBytes(buf, (int)_recState.Buffer.Length);
-        WritePooledBytes(
-            _recState,
-            ReplayZipFolder / $"{DataFilePrefix}{_recState.Index++}.{Ext}",
-            buf, 4 + length, CompressionLevel.NoCompression);
+        var uncompressed = _recState.Buffer.AsSpan();
+        var poolData = ArrayPool<byte>.Shared.Rent(uncompressed.Length);
+        uncompressed.CopyTo(poolData);
 
-        _recState.UncompressedSize += (int)_recState.Buffer.Length;
-        _recState.CompressedSize += length;
-        if (_recState.UncompressedSize >= _maxUncompressedSize || _recState.CompressedSize >= _maxCompressedSize)
+        WriteTickBatch(
+            _recState,
+            ReplayZipFolder / $"{DataFilePrefix}{batchIndex}.{Ext}",
+            poolData,
+            uncompressed.Length);
+
+        RecordingEventSource.Log.WriteBatchStop(batchIndex);
+
+        // Note: these values are ASYNCHRONOUSLY updated from the replay write thread.
+        // This means reading them here won't get the most up-to-date values,
+        // and we'll probably always be off-by-one.
+        // That's considered acceptable.
+        var uncompressedSize = Interlocked.Read(ref _recState.UncompressedSize);
+        var compressedSize = Interlocked.Read(ref _recState.CompressedSize);
+
+        if (uncompressedSize >= _maxUncompressedSize || compressedSize >= _maxCompressedSize)
         {
             _sawmill.Info("Reached max replay recording size. Stopping recording.");
             continueRecording = false;
@@ -288,8 +305,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         if (_recState == null)
             return;
 
-        _recState.CompressionContext.Dispose();
-        // File stream is always disposed from the worker task.
+        // File stream & compression context is always disposed from the worker task.
         _recState.WriteCommandChannel.Complete();
 
         _recState = null;

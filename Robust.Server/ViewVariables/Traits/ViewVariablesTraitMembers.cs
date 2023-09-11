@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
@@ -27,10 +28,11 @@ namespace Robust.Server.ViewVariables.Traits
             if (messageRequestMeta is ViewVariablesRequestMembers)
             {
                 var members = new List<(MemberData mData, MemberInfo mInfo)>();
+                var obj = Session.Object;
+                var objType = Session.ObjectType;
 
-                foreach (var property in Session.ObjectType.GetAllProperties())
+                foreach (var property in objType.GetAllProperties())
                 {
-
                     if (!ViewVariablesUtility.TryGetViewVariablesAccess(property, out var access))
                     {
                         continue;
@@ -53,7 +55,7 @@ namespace Robust.Server.ViewVariables.Traits
                     _members.Add(property);
                 }
 
-                foreach (var field in Session.ObjectType.GetAllFields())
+                foreach (var field in objType.GetAllFields())
                 {
                     if (!ViewVariablesUtility.TryGetViewVariablesAccess(field, out var access))
                     {
@@ -66,7 +68,7 @@ namespace Robust.Server.ViewVariables.Traits
                         Name = field.Name,
                         Type = field.FieldType.AssemblyQualifiedName,
                         TypePretty = PrettyPrint.PrintUserFacingTypeShort(field.FieldType, 2),
-                        Value = field.GetValue(Session.Object),
+                        Value = field.GetValue(obj),
                         PropertyIndex = _members.Count
                     }, field));
 

@@ -17,9 +17,9 @@ internal sealed class WeldJointState : JointState
     public float Damping { get; internal set; }
     public float Bias { get; internal set; }
 
-    public override Joint GetJoint()
+    public override Joint GetJoint(IEntityManager entManager, EntityUid owner)
     {
-        return new WeldJoint(this);
+        return new WeldJoint(this, entManager, owner);
     }
 }
 
@@ -73,7 +73,8 @@ public sealed partial class WeldJoint : Joint, IEquatable<WeldJoint>
 
     internal WeldJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}
 
-    internal WeldJoint(WeldJointState state) : base(state)
+    internal WeldJoint(WeldJointState state, IEntityManager entManager, EntityUid owner)
+        : base(state, entManager, owner)
     {
         Stiffness = state.Stiffness;
         Damping = state.Damping;
@@ -81,11 +82,11 @@ public sealed partial class WeldJoint : Joint, IEquatable<WeldJoint>
     }
 
     public override JointType JointType => JointType.Weld;
-    public override JointState GetState()
+    public override JointState GetState(IEntityManager entManager)
     {
         var weldJointState = new WeldJointState();
 
-        base.GetState(weldJointState);
+        base.GetState(weldJointState, entManager);
         return weldJointState;
     }
 

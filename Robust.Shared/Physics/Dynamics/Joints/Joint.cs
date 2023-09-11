@@ -66,13 +66,13 @@ public abstract class JointState
     public string ID { get; internal set; } = default!;
     public bool Enabled { get; internal set; }
     public bool CollideConnected { get; internal set; }
-    public EntityUid UidA { get; internal set; }
-    public EntityUid UidB { get; internal set; }
+    public NetEntity UidA { get; internal set; }
+    public NetEntity UidB { get; internal set; }
     public Vector2 LocalAnchorA { get; internal set; }
     public Vector2 LocalAnchorB { get; internal set; }
     public float Breakpoint { get; internal set; }
 
-    public abstract Joint GetJoint();
+    public abstract Joint GetJoint(IEntityManager entManager, EntityUid owner);
 }
 
 [ImplicitDataDefinitionForInheritors]
@@ -208,11 +208,11 @@ public abstract partial class Joint : IEquatable<Joint>
         Debug.Assert(BodyAUid != BodyBUid);
     }
 
-    protected Joint(JointState state)
+    protected Joint(JointState state, IEntityManager entManager, EntityUid owner)
     {
         ID = state.ID;
-        BodyAUid = state.UidA;
-        BodyBUid = state.UidB;
+        BodyAUid = entManager.EnsureEntity<JointComponent>(state.UidA, owner);
+        BodyBUid = entManager.EnsureEntity<JointComponent>(state.UidB, owner);
         Enabled = state.Enabled;
         _collideConnected = state.CollideConnected;
         _localAnchorA = state.LocalAnchorA;
@@ -224,17 +224,17 @@ public abstract partial class Joint : IEquatable<Joint>
     /// Applies our properties to the provided state
     /// </summary>
     /// <param name="state"></param>
-    protected void GetState(JointState state)
+    protected void GetState(JointState state, IEntityManager entManager)
     {
         state.ID = ID;
         state.CollideConnected = _collideConnected;
         state.Enabled = Enabled;
-        state.UidA = BodyAUid;
-        state.UidB = BodyBUid;
+        state.UidA = entManager.GetNetEntity(BodyAUid);
+        state.UidB = entManager.GetNetEntity(BodyBUid);
         state.Breakpoint = _breakpoint;
     }
 
-    public abstract JointState GetState();
+    public abstract JointState GetState(IEntityManager entManager);
 
     internal virtual void ApplyState(JointState state)
     {

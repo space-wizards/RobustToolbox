@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Players;
@@ -33,7 +34,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 return name;
             }
 
-            public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
+            public override bool HandleCmdMessage(IEntityManager entManager, ICommonSession? session, IFullInputCmdMessage message)
             {
                 return false;
             }
@@ -43,7 +44,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
         [TestCase(10,10)]
         public void ResolvesHandlers_WhenNoDependencies(int handlersPerType, int numFunctions)
         {
-            var registry = new CommandBindRegistry();
+            var registry = new CommandBindRegistry(new DummySawmill());
             var allHandlers = new Dictionary<BoundKeyFunction,List<InputCmdHandler>>();
             for (int i = 0; i < numFunctions; i++)
             {
@@ -105,7 +106,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
         [TestCase(true, true)]
         public void ResolvesHandlers_WithDependency(bool before, bool after)
         {
-            var registry = new CommandBindRegistry();
+            var registry = new CommandBindRegistry(new DummySawmill());
             var bkf = new BoundKeyFunction("test");
 
             var aHandler1 = new TestInputCmdHandler( );
@@ -204,7 +205,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
         [Test]
         public void ThrowsError_WhenCircularDependency()
         {
-            var registry = new CommandBindRegistry();
+            var registry = new CommandBindRegistry(new DummySawmill());
             var bkf = new BoundKeyFunction("test");
 
             var aHandler1 = new TestInputCmdHandler();

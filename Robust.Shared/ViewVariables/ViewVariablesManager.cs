@@ -104,7 +104,7 @@ internal abstract partial class ViewVariablesManager : IViewVariablesManager, IP
                 traits.Add(ViewVariablesTraits.Enumerable);
             }
 
-            if (typeof(EntityUid).IsAssignableFrom(type))
+            if (typeof(NetEntity).IsAssignableFrom(type))
             {
                 traits.Add(ViewVariablesTraits.Entity);
             }

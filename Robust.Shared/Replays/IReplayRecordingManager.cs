@@ -124,6 +124,11 @@ public interface IReplayRecordingManager
     /// Thrown if we are currently recording (<see cref="IsRecording"/> true).
     /// </exception>
     Task WaitWriteTasks();
+
+    /// <summary>
+    /// Returns true if there are any currently running write tasks.
+    /// </summary>
+    bool IsWriting();
 }
 
 /// <summary>

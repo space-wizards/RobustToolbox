@@ -258,11 +258,12 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
+    /// WARNING: Do not subscribe to this unless you know what you are doing!
     /// The component has been added to the entity. This is the first function
     /// to be called after the component has been allocated and (optionally) deserialized.
     /// </summary>
     [ComponentEvent]
-    public sealed class ComponentAdd : EntityEventArgs { }
+    public readonly record struct ComponentAdd;
 
     /// <summary>
     /// Raised when all of the entity's other components have been added and are available,

@@ -68,6 +68,7 @@ sealed class RemoveMapCommand : LocalizedCommands
 
 sealed class RemoveGridCommand : LocalizedCommands
 {
+    [Dependency] private readonly IEntityManager _entManager = default!;
     [Dependency] private readonly IMapManager _map = default!;
 
     public override string Command => "rmgrid";
@@ -81,15 +82,15 @@ sealed class RemoveGridCommand : LocalizedCommands
             return;
         }
 
-        var gridId = EntityUid.Parse(args[0]);
+        var gridIdNet = NetEntity.Parse(args[0]);
 
-        if (!_map.GridExists(gridId))
+        if (!_entManager.TryGetEntity(gridIdNet, out var gridId) || !_map.GridExists(gridId))
         {
             shell.WriteError($"Grid {gridId} does not exist.");
             return;
         }
 
-        _map.DeleteGrid(gridId);
+        _map.DeleteGrid(gridId.Value);
         shell.WriteLine($"Grid {gridId} was removed.");
     }
 }

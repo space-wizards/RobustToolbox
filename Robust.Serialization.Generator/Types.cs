@@ -286,23 +286,6 @@ internal static class Types
         return true;
     }
 
-    internal static bool HasEmptyPublicConstructor(ITypeSymbol type)
-    {
-        if (type is not INamedTypeSymbol named)
-            return false;
-
-        foreach (var constructor in named.InstanceConstructors)
-        {
-            if (constructor.DeclaredAccessibility == Accessibility.Public &&
-                constructor.Parameters.Length == 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     internal static bool IsVirtualClass(ITypeSymbol type)
     {
         return type.IsReferenceType && !type.IsSealed && type.TypeKind != TypeKind.Interface;

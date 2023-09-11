@@ -83,7 +83,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         private void OnMessageReceived(BoundUIWrapMessage msg, EntitySessionEventArgs args)
         {
-            var uid = msg.Entity;
+            var uid = GetEntity(msg.Entity);
             if (!TryComp(uid, out ServerUserInterfaceComponent? uiComp) || args.SenderSession is not IPlayerSession session)
                 return;
 
@@ -118,7 +118,7 @@ namespace Robust.Server.GameObjects
             // get the wrapped message and populate it with the sender & UI key information.
             var message = msg.Message;
             message.Session = args.SenderSession;
-            message.Entity = uid;
+            message.Entity = GetNetEntity(uid);
             message.UiKey = msg.UiKey;
 
             // Raise as object so the correct type is used.
@@ -128,12 +128,13 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            var query = GetEntityQuery<TransformComponent>();
-            foreach (var (activeUis, xform) in EntityQuery<ActiveUserInterfaceComponent, TransformComponent>(true))
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var query = AllEntityQuery<ActiveUserInterfaceComponent, TransformComponent>();
+            while (query.MoveNext(out var uid, out var activeUis, out var xform))
             {
                 foreach (var ui in activeUis.Interfaces)
                 {
-                    CheckRange(activeUis, ui, xform, query);
+                    CheckRange(uid, activeUis, ui, xform, xformQuery);
 
                     if (!ui.StateDirty)
                         continue;
@@ -160,9 +161,9 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Verify that the subscribed clients are still in range of the interface.
         /// </summary>
-        private void CheckRange(ActiveUserInterfaceComponent activeUis, BoundUserInterface ui, TransformComponent transform, EntityQuery<TransformComponent> query)
+        private void CheckRange(EntityUid uid, ActiveUserInterfaceComponent activeUis, BoundUserInterface ui, TransformComponent transform, EntityQuery<TransformComponent> query)
         {
-            if (ui.InteractionRangeSqrd <= 0)
+            if (ui.InteractionRange <= 0)
                 return;
 
             // We have to cache the set of sessions because Unsubscribe modifies the original.
@@ -180,6 +181,20 @@ namespace Robust.Server.GameObjects
 
                 if (_ignoreUIRangeQuery.HasComponent(session.AttachedEntity))
                     continue;
+
+                // Handle pluggable BoundUserInterfaceCheckRangeEvent
+                var checkRangeEvent = new BoundUserInterfaceCheckRangeEvent(uid, ui, session);
+                RaiseLocalEvent(uid, ref checkRangeEvent, broadcast: true);
+                if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Pass)
+                    continue;
+
+                if (checkRangeEvent.Result == BoundUserInterfaceRangeResult.Fail)
+                {
+                    CloseUi(ui, session, activeUis);
+                    continue;
+                }
+
+                DebugTools.Assert(checkRangeEvent.Result == BoundUserInterfaceRangeResult.Default);
 
                 if (uiMap != xform.MapID)
                 {
@@ -306,9 +321,9 @@ namespace Robust.Server.GameObjects
         ///     The player session to send this new state to.
         ///     Set to null for sending it to every subscribed player session.
         /// </param>
-        public static void SetUiState(BoundUserInterface bui, BoundUserInterfaceState state, IPlayerSession? session = null, bool clearOverrides = true)
+        public void SetUiState(BoundUserInterface bui, BoundUserInterfaceState state, IPlayerSession? session = null, bool clearOverrides = true)
         {
-            var msg = new BoundUIWrapMessage(bui.Owner, new UpdateBoundStateMessage(state), bui.UiKey);
+            var msg = new BoundUIWrapMessage(GetNetEntity(bui.Owner), new UpdateBoundStateMessage(state), bui.UiKey);
             if (session == null)
             {
                 bui.LastStateMsg = msg;
@@ -370,7 +385,7 @@ namespace Robust.Server.GameObjects
             _openInterfaces.GetOrNew(session).Add(bui);
             RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Owner, session));
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
+            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
 
             // Fun fact, clients needs to have BUIs open before they can receive the state.....
             if (bui.LastStateMsg != null)
@@ -399,7 +414,7 @@ namespace Robust.Server.GameObjects
             if (!bui._subscribedSessions.Remove(session))
                 return false;
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, new CloseBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
+            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new CloseBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
             CloseShared(bui, session, activeUis);
             return true;
         }
@@ -477,7 +492,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         public void SendUiMessage(BoundUserInterface bui, BoundUserInterfaceMessage message)
         {
-            var msg = new BoundUIWrapMessage(bui.Owner, message, bui.UiKey);
+            var msg = new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey);
             foreach (var session in bui.SubscribedSessions)
             {
                 RaiseNetworkEvent(msg, session.ConnectedClient);
@@ -503,10 +518,70 @@ namespace Robust.Server.GameObjects
             if (!bui.SubscribedSessions.Contains(session))
                 return false;
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, message, bui.UiKey), session.ConnectedClient);
+            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey), session.ConnectedClient);
             return true;
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Raised by <see cref="UserInterfaceSystem"/> to check whether an interface is still accessible by its user.
+    /// </summary>
+    [ByRefEvent]
+    [PublicAPI]
+    public struct BoundUserInterfaceCheckRangeEvent
+    {
+        /// <summary>
+        /// The entity owning the UI being checked for.
+        /// </summary>
+        public readonly EntityUid Target;
+
+        /// <summary>
+        /// The UI itself.
+        /// </summary>
+        /// <returns></returns>
+        public readonly BoundUserInterface UserInterface;
+
+        /// <summary>
+        /// The player for which the UI is being checked.
+        /// </summary>
+        public readonly IPlayerSession Player;
+
+        /// <summary>
+        /// The result of the range check.
+        /// </summary>
+        public BoundUserInterfaceRangeResult Result;
+
+        public BoundUserInterfaceCheckRangeEvent(
+            EntityUid target,
+            BoundUserInterface userInterface,
+            IPlayerSession player)
+        {
+            Target = target;
+            UserInterface = userInterface;
+            Player = player;
+        }
+    }
+
+    /// <summary>
+    /// Possible results for a <see cref="BoundUserInterfaceCheckRangeEvent"/>.
+    /// </summary>
+    public enum BoundUserInterfaceRangeResult : byte
+    {
+        /// <summary>
+        /// Run built-in range check.
+        /// </summary>
+        Default,
+
+        /// <summary>
+        /// Range check passed, UI is accessible.
+        /// </summary>
+        Pass,
+
+        /// <summary>
+        /// Range check failed, UI is inaccessible.
+        /// </summary>
+        Fail
     }
 }

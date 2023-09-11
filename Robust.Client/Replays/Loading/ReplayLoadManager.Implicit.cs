@@ -70,14 +70,14 @@ public sealed partial class ReplayLoadManager
         {
             // This shouldn't be possible, yet it has happened?
             // TODO this should probably also throw an exception.
-            _sawmill.Error($"Encountered blank entity state? Entity: {entState.Uid}. Last modified: {entState.EntityLastModified}. Attempting to continue.");
+            _sawmill.Error($"Encountered blank entity state? Entity: {entState.NetEntity}. Last modified: {entState.EntityLastModified}. Attempting to continue.");
             return null;
         }
 
         if (!_confMan.GetCVar(CVars.ReplayIgnoreErrors))
-            throw new MissingMetadataException(entState.Uid);
+            throw new MissingMetadataException(entState.NetEntity);
 
-        _sawmill.Error($"Missing metadata component. Entity: {entState.Uid}. Last modified: {entState.EntityLastModified}.");
+        _sawmill.Error($"Missing metadata component. Entity: {entState.NetEntity}. Last modified: {entState.EntityLastModified}.");
         return null;
     }
 }

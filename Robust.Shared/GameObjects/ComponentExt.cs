@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -15,6 +16,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="entity">The entity to fetch or create the component on.</param>
         /// <typeparam name="T">The type of the component to fetch or create.</typeparam>
         /// <returns>The existing component, or the new component if none existed yet.</returns>
+        [Obsolete]
         public static T EnsureComponent<T>(this EntityUid entity) where T : Component, new()
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
@@ -37,6 +39,7 @@ namespace Robust.Shared.GameObjects
         ///     Defaults to a predetermined warning if null.
         /// </param>
         /// <returns>The existing component, or the new component if none existed yet.</returns>
+        [Obsolete]
         public static T EnsureComponentWarn<T>(this EntityUid entity, string? warning = null) where T : Component, new()
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
@@ -52,6 +55,7 @@ namespace Robust.Shared.GameObjects
             return entMan.AddComponent<T>(entity);
         }
 
+        [Obsolete]
         public static IComponent SetAndDirtyIfChanged<TValue>(
             this IComponent comp,
             ref TValue backingField,

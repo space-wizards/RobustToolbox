@@ -103,7 +103,8 @@ internal abstract partial class ViewVariablesManager
             return null;
 
         if (segments.Length == 1
-            && EntityUid.TryParse(segments[0], out var u)
+            && NetEntity.TryParse(segments[0], out var uNet)
+            && _entMan.TryGetEntity(uNet, out var u)
             && _entMan.EntityExists(u))
         {
             return null;

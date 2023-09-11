@@ -40,9 +40,9 @@ internal sealed class MouseJointState : JointState
     public float Stiffness { get; internal set; }
     public float Damping { get; internal set; }
 
-    public override Joint GetJoint()
+    public override Joint GetJoint(IEntityManager entManager, EntityUid owner)
     {
-        return new MouseJoint(this);
+        return new MouseJoint(this, entManager, owner);
     }
 }
 
@@ -126,14 +126,15 @@ public sealed partial class MouseJoint : Joint, IEquatable<MouseJoint>
         LocalAnchorB = localAnchorB;
     }
 
-    internal MouseJoint(MouseJointState state) : base(state)
+    internal MouseJoint(MouseJointState state, IEntityManager entManager, EntityUid owner)
+        : base(state, entManager, owner)
     {
         Damping = state.Damping;
         Stiffness = state.Stiffness;
         MaxForce = state.MaxForce;
     }
 
-    public override JointState GetState()
+    public override JointState GetState(IEntityManager entManager)
     {
         var mouseState = new MouseJointState
         {
@@ -144,7 +145,7 @@ public sealed partial class MouseJoint : Joint, IEquatable<MouseJoint>
             LocalAnchorB = LocalAnchorB
         };
 
-        base.GetState(mouseState);
+        base.GetState(mouseState, entManager);
         return mouseState;
     }
 

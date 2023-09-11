@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 158.0.0
+
+### Breaking changes
+
+* Remove SharedEyeComponent.
+* Add Tile Overlay edge priority.
+
+
 ## 157.1.0
 
 ### New features

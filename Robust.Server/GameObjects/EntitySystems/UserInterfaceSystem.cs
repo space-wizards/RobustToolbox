@@ -242,7 +242,7 @@ namespace Robust.Server.GameObjects
         ///     The player session to send this new state to.
         ///     Set to null for sending it to every subscribed player session.
         /// </param>
-        public void SetUiState(PlayerBoundUserInterface bui, BoundUserInterfaceState state, IPlayerSession? session = null, bool clearOverrides = true)
+        public void SetUiState(PlayerBoundUserInterface bui, BoundUserInterfaceState state, ICommonSession? session = null, bool clearOverrides = true)
         {
             var msg = new BoundUIWrapMessage(GetNetEntity(bui.Owner), new UpdateBoundStateMessage(state), bui.UiKey);
             if (session == null)
@@ -262,7 +262,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Switches between closed and open for a specific client.
         /// </summary>
-        public bool TryToggleUi(EntityUid uid, Enum uiKey, IPlayerSession session, UserInterfaceComponent? ui = null)
+        public bool TryToggleUi(EntityUid uid, Enum uiKey, ICommonSession session, UserInterfaceComponent? ui = null)
         {
             if (!TryGetUi(uid, uiKey, out var bui, ui))
                 return false;
@@ -274,7 +274,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Switches between closed and open for a specific client.
         /// </summary>
-        public void ToggleUi(PlayerBoundUserInterface bui, IPlayerSession session)
+        public void ToggleUi(PlayerBoundUserInterface bui, ICommonSession session)
         {
             if (bui._subscribedSessions.Contains(session))
                 CloseUi(bui, session);
@@ -295,7 +295,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Opens this interface for a specific client.
         /// </summary>
-        public bool OpenUi(PlayerBoundUserInterface bui, IPlayerSession session)
+        public bool OpenUi(PlayerBoundUserInterface bui, ICommonSession session)
         {
             if (session.Status == SessionStatus.Connecting || session.Status == SessionStatus.Disconnected)
                 return false;

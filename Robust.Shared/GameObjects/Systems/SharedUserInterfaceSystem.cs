@@ -40,7 +40,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     internal void OnMessageReceived(BaseBoundUIWrapMessage msg, EntitySessionEventArgs args)
     {
-        var uid = msg.Entity;
+        var uid = GetEntity(msg.Entity);
+
         if (!TryComp(uid, out UserInterfaceComponent? uiComp) || args.SenderSession is not { } session)
             return;
 
@@ -75,7 +76,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // get the wrapped message and populate it with the sender & UI key information.
         var message = msg.Message;
         message.Session = args.SenderSession;
-        message.Entity = uid;
+        message.Entity = msg.Entity;
         message.UiKey = msg.UiKey;
 
         // Raise as object so the correct type is used.
@@ -123,7 +124,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     internal void SendUiMessage(BoundUserInterface bui, BoundUserInterfaceMessage msg)
     {
-        RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, msg, bui.UiKey));
+        RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), msg, bui.UiKey));
     }
 
 
@@ -132,6 +133,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     internal void SendPredictedUiMessage(BoundUserInterface bui, BoundUserInterfaceMessage msg)
     {
-        RaisePredictiveEvent(new PredictedBoundUIWrapMessage(bui.Owner, msg, bui.UiKey));
+        RaisePredictiveEvent(new PredictedBoundUIWrapMessage(GetNetEntity(bui.Owner), msg, bui.UiKey));
     }
 }

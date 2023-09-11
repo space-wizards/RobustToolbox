@@ -162,7 +162,7 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     internal sealed class BoundUIWrapMessage : BaseBoundUIWrapMessage
     {
-        public BoundUIWrapMessage(EntityUid entity, BoundUserInterfaceMessage message, Enum uiKey) : base(entity, message, uiKey)
+        public BoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey) : base(entity, message, uiKey)
         {
         }
     }
@@ -173,7 +173,7 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     internal sealed class PredictedBoundUIWrapMessage : BaseBoundUIWrapMessage
     {
-        public PredictedBoundUIWrapMessage(EntityUid entity, BoundUserInterfaceMessage message, Enum uiKey) : base(entity, message, uiKey)
+        public PredictedBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey) : base(entity, message, uiKey)
         {
         }
     }

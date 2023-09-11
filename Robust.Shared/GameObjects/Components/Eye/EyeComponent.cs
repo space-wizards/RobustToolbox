@@ -9,7 +9,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [RegisterComponent, NetworkedComponent, Access(typeof(SharedEyeSystem)), AutoGenerateComponentState]
+    [RegisterComponent, NetworkedComponent, Access(typeof(SharedEyeSystem)), AutoGenerateComponentState(true)]
     public sealed partial class EyeComponent : Component
     {
         #region Client

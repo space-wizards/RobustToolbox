@@ -8,6 +8,20 @@ public abstract class SharedEyeSystem : EntitySystem
 {
     [Dependency] protected readonly SharedTransformSystem TransformSystem = default!;
 
+    /// <summary>
+    /// Refreshes all values for IEye with the component.
+    /// </summary>
+    public void UpdateEye(EyeComponent component)
+    {
+        if (component._eye == null)
+            return;
+
+        component._eye.Offset = component.Offset;
+        component._eye.DrawFov = component.DrawFov;
+        component._eye.Rotation = component.Rotation;
+        component._eye.Zoom = component.Zoom;
+    }
+
     public void SetOffset(EntityUid uid, Vector2 value, EyeComponent? eyeComponent = null)
     {
         if (!Resolve(uid, ref eyeComponent))

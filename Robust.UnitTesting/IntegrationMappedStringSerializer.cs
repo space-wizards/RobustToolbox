@@ -78,7 +78,7 @@ namespace Robust.UnitTesting
 
         public (byte[] mapHash, byte[] package) GeneratePackage()
         {
-            throw new NotSupportedException();
+            return (Array.Empty<byte>(), Array.Empty<byte>());
         }
 
         public void SetPackage(byte[] hash, byte[] package)

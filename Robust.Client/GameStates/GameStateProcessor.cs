@@ -20,7 +20,7 @@ namespace Robust.Client.GameStates
 
         private readonly List<GameState> _stateBuffer = new();
 
-        private readonly Dictionary<GameTick, List<EntityUid>> _pvsDetachMessages = new();
+        private readonly Dictionary<GameTick, List<NetEntity>> _pvsDetachMessages = new();
 
         private ISawmill _logger = default!;
         private ISawmill _stateLogger = default!;
@@ -44,7 +44,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         /// This dictionary stores the full most recently received server state of any entity. This is used whenever predicted entities get reset.
         /// </summary>
-        internal readonly Dictionary<EntityUid, Dictionary<ushort, ComponentState>> _lastStateFullRep
+        internal readonly Dictionary<NetEntity, Dictionary<ushort, ComponentState>> _lastStateFullRep
             = new();
 
         /// <inheritdoc />
@@ -178,10 +178,10 @@ namespace Robust.Client.GameStates
 
             foreach (var entityState in state.EntityStates.Span)
             {
-                if (!_lastStateFullRep.TryGetValue(entityState.Uid, out var compData))
+                if (!_lastStateFullRep.TryGetValue(entityState.NetEntity, out var compData))
                 {
                     compData = new Dictionary<ushort, ComponentState>();
-                    _lastStateFullRep.Add(entityState.Uid, compData);
+                    _lastStateFullRep.Add(entityState.NetEntity, compData);
                 }
 
                 foreach (var change in entityState.ComponentChanges.Span)
@@ -263,7 +263,7 @@ namespace Robust.Client.GameStates
             return false;
         }
 
-        internal void AddLeavePvsMessage(List<EntityUid> entities, GameTick tick)
+        internal void AddLeavePvsMessage(List<NetEntity> entities, GameTick tick)
         {
             // Late message may still need to be processed,
             DebugTools.Assert(entities.Count > 0);
@@ -272,9 +272,9 @@ namespace Robust.Client.GameStates
 
         public void ClearDetachQueue() => _pvsDetachMessages.Clear();
 
-        public List<(GameTick Tick, List<EntityUid> Entities)> GetEntitiesToDetach(GameTick toTick, int budget)
+        public List<(GameTick Tick, List<NetEntity> Entities)> GetEntitiesToDetach(GameTick toTick, int budget)
         {
-            var result = new List<(GameTick Tick, List<EntityUid> Entities)>();
+            var result = new List<(GameTick Tick, List<NetEntity> Entities)>();
             foreach (var (tick, entities) in _pvsDetachMessages)
             {
                 if (tick > toTick)
@@ -353,11 +353,11 @@ namespace Robust.Client.GameStates
             LastFullStateRequested = _timing.LastRealTick;
         }
 
-        public void MergeImplicitData(Dictionary<EntityUid, Dictionary<ushort, ComponentState>> implicitData)
+        public void MergeImplicitData(Dictionary<NetEntity, Dictionary<ushort, ComponentState>> implicitData)
         {
-            foreach (var (uid, implicitEntState) in implicitData)
+            foreach (var (netEntity, implicitEntState) in implicitData)
             {
-                var fullRep = _lastStateFullRep[uid];
+                var fullRep = _lastStateFullRep[netEntity];
 
                 foreach (var (netId, implicitCompState) in implicitEntState)
                 {
@@ -374,7 +374,7 @@ namespace Robust.Client.GameStates
                     // state from the entity prototype.
                     if (implicitCompState is not IComponentDeltaState implicitDelta || !implicitDelta.FullState)
                     {
-                        _logger.Error($"Server sent delta state and client failed to construct an implicit full state for entity {uid}");
+                        _logger.Error($"Server sent delta state and client failed to construct an implicit full state for entity {netEntity}");
                         continue;
                     }
 
@@ -385,17 +385,17 @@ namespace Robust.Client.GameStates
             }
         }
 
-        public Dictionary<ushort, ComponentState> GetLastServerStates(EntityUid entity)
+        public Dictionary<ushort, ComponentState> GetLastServerStates(NetEntity netEntity)
         {
-            return _lastStateFullRep[entity];
+            return _lastStateFullRep[netEntity];
         }
 
-        public Dictionary<EntityUid, Dictionary<ushort, ComponentState>> GetFullRep()
+        public Dictionary<NetEntity, Dictionary<ushort, ComponentState>> GetFullRep()
         {
             return _lastStateFullRep;
         }
 
-        public bool TryGetLastServerStates(EntityUid entity,
+        public bool TryGetLastServerStates(NetEntity entity,
             [NotNullWhen(true)] out Dictionary<ushort, ComponentState>? dictionary)
         {
             return _lastStateFullRep.TryGetValue(entity, out dictionary);

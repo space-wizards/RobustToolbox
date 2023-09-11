@@ -21,9 +21,9 @@ public sealed class JointSystem : SharedJointSystem
 
         foreach (var (id, joint) in component.Joints)
         {
-            states.Add(id, joint.GetState());
+            states.Add(id, joint.GetState(EntityManager));
         }
 
-        args.State = new JointComponentState(component.Relay, states);
+        args.State = new JointComponentState(GetNetEntity(component.Relay), states);
     }
 }

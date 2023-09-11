@@ -30,9 +30,15 @@ namespace Robust.Shared.Map
         ResPath? Sprite { get; }
 
         /// <summary>
-        /// Possible sprites to use if we're neighboring another tile.
+        ///     Possible sprites to use if we're neighboring another tile.
         /// </summary>
         Dictionary<Direction, ResPath> EdgeSprites { get; }
+
+        /// <summary>
+        ///     When drawing adjacent tiles that both specify edge sprites, the one with the higher priority
+        ///     is always solely drawn.
+        /// </summary>
+        int EdgeSpritePriority { get; }
 
         /// <summary>
         ///     Physics objects that are interacting on this tile are slowed down by this float.

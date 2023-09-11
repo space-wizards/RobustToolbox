@@ -75,7 +75,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     Applies a given set of game states.
         /// </summary>
-        IEnumerable<EntityUid> ApplyGameState(GameState curState, GameState? nextState);
+        IEnumerable<NetEntity> ApplyGameState(GameState curState, GameState? nextState);
 
         /// <summary>
         ///     Resets any entities that have changed while predicting future ticks.
@@ -86,12 +86,12 @@ namespace Robust.Client.GameStates
         ///     An input command has been dispatched.
         /// </summary>
         /// <param name="message">Message being dispatched.</param>
-        void InputCommandDispatched(FullInputCmdMessage message);
+        void InputCommandDispatched(ClientFullInputCmdMessage clientMsg, FullInputCmdMessage message);
 
         /// <summary>
         ///     Requests a full state from the server. This should override even implicit entity data.
         /// </summary>
-        void RequestFullState(EntityUid? missingEntity = null);
+        void RequestFullState(NetEntity? missingEntity = null);
 
         uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs;
 
@@ -105,7 +105,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         /// Returns the full collection of cached game states that are used to reset predicted entities.
         /// </summary>
-        Dictionary<EntityUid, Dictionary<ushort, ComponentState>> GetFullRep();
+        Dictionary<NetEntity, Dictionary<ushort, ComponentState>> GetFullRep();
 
         /// <summary>
         /// This will perform some setup in order to reset the game to an earlier state. To fully reset the state
@@ -144,12 +144,12 @@ namespace Robust.Client.GameStates
         /// Queue a collection of entities that are to be detached to null-space & marked as PVS-detached.
         /// This store and modify the list given to it.
         /// </summary>
-        void QueuePvsDetach(List<EntityUid> entities, GameTick tick);
+        void QueuePvsDetach(List<NetEntity> entities, GameTick tick);
 
         /// <summary>
         /// Immediately detach several entities.
         /// </summary>
-        void DetachImmediate(List<EntityUid> entities);
+        void DetachImmediate(List<NetEntity> entities);
 
         /// <summary>
         /// Clears the PVS detach queue.

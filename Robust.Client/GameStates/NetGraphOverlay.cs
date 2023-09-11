@@ -26,6 +26,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IEntityManager _entManager = default!;
 
         private const int HistorySize = 60 * 5; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
@@ -73,7 +74,7 @@ namespace Robust.Client.GameStates
             _history.Add((toSeq, sz, lag, buffer));
 
             // not watching an ent
-            if(!WatchEntId.IsValid() || WatchEntId.IsClientSide())
+            if(!WatchEntId.IsValid() || _entManager.IsClientSide(WatchEntId))
                 return;
 
             string? entStateString = null;
@@ -86,7 +87,9 @@ namespace Robust.Client.GameStates
                 var sb = new StringBuilder();
                 foreach (var entState in entStates.Span)
                 {
-                    if (entState.Uid != WatchEntId)
+                    var uid = _entManager.GetEntity(entState.NetEntity);
+
+                    if (uid != WatchEntId)
                         continue;
 
                     if (!entState.ComponentChanges.HasContents)
@@ -115,7 +118,9 @@ namespace Robust.Client.GameStates
 
             foreach (var ent in args.Detached)
             {
-                if (ent != WatchEntId)
+                var uid = _entManager.GetEntity(ent);
+
+                if (uid != WatchEntId)
                     continue;
 
                 conShell.WriteLine($"watchEnt: Left PVS at tick {args.AppliedState.ToSequence}, eid={WatchEntId}" + "\n");
@@ -126,7 +131,9 @@ namespace Robust.Client.GameStates
             {
                 foreach (var entDelete in entDeletes.Span)
                 {
-                    if (entDelete == WatchEntId)
+                    var uid = _entManager.GetEntity(entDelete);
+
+                    if (uid == WatchEntId)
                         entDelString = "\n  Deleted";
                 }
             }
@@ -294,30 +301,33 @@ namespace Robust.Client.GameStates
 
         private sealed class NetWatchEntCommand : LocalizedCommands
         {
+            [Dependency] private readonly IEntityManager _entManager = default!;
+            [Dependency] private readonly IOverlayManager _overlayManager = default!;
+            [Dependency] private readonly IPlayerManager _playerManager = default!;
+
             public override string Command => "net_watchent";
 
             public override void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                EntityUid eValue;
+                EntityUid? entity;
+
                 if (args.Length == 0)
                 {
-                    eValue = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+                    entity = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
                 }
-                else if (!EntityUid.TryParse(args[0], out eValue))
+                else if (!NetEntity.TryParse(args[0], out var netEntity) || !_entManager.TryGetEntity(netEntity, out entity))
                 {
                     shell.WriteError("Invalid argument: Needs to be 0 or an entityId.");
                     return;
                 }
 
-                var overlayMan = IoCManager.Resolve<IOverlayManager>();
-
-                if (!overlayMan.TryGetOverlay(out NetGraphOverlay? overlay))
+                if (!_overlayManager.TryGetOverlay(out NetGraphOverlay? overlay))
                 {
-                    overlay = new();
-                    overlayMan.AddOverlay(overlay);
+                    overlay = new NetGraphOverlay();
+                    _overlayManager.AddOverlay(overlay);
                 }
 
-                overlay.WatchEntId = eValue;
+                overlay.WatchEntId = entity.Value;
             }
         }
     }

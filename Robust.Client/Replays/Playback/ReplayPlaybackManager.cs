@@ -33,7 +33,8 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
     [Dependency] private readonly IComponentFactory _factory = default!;
     [Dependency] private readonly IPrototypeManager _protoMan = default!;
     [Dependency] private readonly IGameController _controller = default!;
-    [Dependency] private readonly IClientEntityManager _entMan = default!;
+    [Dependency] private readonly IClientEntityManager _cEntManager = default!;
+    [Dependency] private readonly ClientEntityManager _entMan = default!;
     [Dependency] private readonly IConfigurationManager _confMan = default!;
     [Dependency] private readonly NetworkResourceManager _netResMan = default!;
     [Dependency] private readonly IClientGameStateManager _gameState = default!;

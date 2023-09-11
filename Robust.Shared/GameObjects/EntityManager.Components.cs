@@ -347,6 +347,9 @@ namespace Robust.Shared.GameObjects
 
             if (metadata.EntityInitialized)
                 component.LifeStartup(this);
+
+            if (metadata.EntityLifeStage >= EntityLifeStage.MapInitialized)
+                EventBus.RaiseComponentEvent(component, MapInitEventInstance);
         }
 
         /// <inheritdoc />
@@ -766,6 +769,18 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public IComponent GetComponentInternal(EntityUid uid, CompIdx type)
+        {
+            var dict = _entTraitArray[type.Value];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                    return comp;
+            }
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
+        }
+
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
         {
@@ -1050,7 +1065,7 @@ namespace Robust.Shared.GameObjects
             where TComp1 : Component
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            return new EntityQueryEnumerator<TComp1>(trait1, _metaQuery);
+            return new EntityQueryEnumerator<TComp1>(trait1, MetaQuery);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
@@ -1059,7 +1074,7 @@ namespace Robust.Shared.GameObjects
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            return new EntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, _metaQuery);
+            return new EntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, MetaQuery);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
@@ -1070,7 +1085,7 @@ namespace Robust.Shared.GameObjects
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, _metaQuery);
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, MetaQuery);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
@@ -1084,7 +1099,7 @@ namespace Robust.Shared.GameObjects
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
             var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
 
-            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, _metaQuery);
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, MetaQuery);
         }
 
         /// <inheritdoc />
@@ -1106,7 +1121,7 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var t1Comp in comps.Values)
                 {
-                    if (t1Comp.Deleted || !_metaQuery.TryGetComponentInternal(t1Comp.Owner, out var metaComp)) continue;
+                    if (t1Comp.Deleted || !MetaQuery.TryGetComponentInternal(t1Comp.Owner, out var metaComp)) continue;
 
                     if (metaComp.EntityPaused) continue;
 
@@ -1297,7 +1312,7 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var (uid, comp) in comps)
                 {
-                    if (comp.Deleted || !_metaQuery.TryGetComponent(uid, out var meta) || meta.EntityPaused) continue;
+                    if (comp.Deleted || !MetaQuery.TryGetComponent(uid, out var meta) || meta.EntityPaused) continue;
 
                     yield return (uid, comp);
                 }

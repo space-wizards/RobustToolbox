@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Players;
@@ -33,7 +34,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 return name;
             }
 
-            public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
+            public override bool HandleCmdMessage(IEntityManager entManager, ICommonSession? session, IFullInputCmdMessage message)
             {
                 return false;
             }

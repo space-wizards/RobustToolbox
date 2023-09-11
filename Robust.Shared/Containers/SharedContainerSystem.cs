@@ -6,7 +6,9 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
@@ -16,6 +18,13 @@ namespace Robust.Shared.Containers
     {
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
+
+        private EntityQuery<MapGridComponent> _gridQuery;
+        private EntityQuery<MapComponent> _mapQuery;
+        protected EntityQuery<MetaDataComponent> MetaQuery;
+        protected EntityQuery<PhysicsComponent> PhysicsQuery;
+        protected EntityQuery<TransformComponent> TransformQuery;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -25,23 +34,28 @@ namespace Robust.Shared.Containers
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentGetState>(OnContainerGetState);
+
+            _gridQuery = GetEntityQuery<MapGridComponent>();
+            _mapQuery = GetEntityQuery<MapComponent>();
+            MetaQuery = GetEntityQuery<MetaDataComponent>();
+            PhysicsQuery = GetEntityQuery<PhysicsComponent>();
+            TransformQuery = GetEntityQuery<TransformComponent>();
         }
 
         private void OnContainerGetState(EntityUid uid, ContainerManagerComponent component, ref ComponentGetState args)
         {
-            // naive implementation that just sends the full state of the component
             Dictionary<string, ContainerManagerComponent.ContainerManagerComponentState.ContainerData> containerSet = new(component.Containers.Count);
 
             foreach (var container in component.Containers.Values)
             {
-                var uidArr = new EntityUid[container.ContainedEntities.Count];
+                var uidArr = new NetEntity[container.ContainedEntities.Count];
 
                 for (var index = 0; index < container.ContainedEntities.Count; index++)
                 {
-                    uidArr[index] = container.ContainedEntities[index];
+                    uidArr[index] = GetNetEntity(container.ContainedEntities[index]);
                 }
 
-                var sContainer = new ContainerManagerComponent.ContainerManagerComponentState.ContainerData(container.ContainerType, container.ID, container.ShowContents, container.OccludesLight, uidArr);
+                var sContainer = new ContainerManagerComponent.ContainerManagerComponentState.ContainerData(container.GetType().Name, container.ShowContents, container.OccludesLight, uidArr);
                 containerSet.Add(container.ID, sContainer);
             }
 
@@ -53,7 +67,7 @@ namespace Robust.Shared.Containers
         #region Proxy Methods
 
         public T MakeContainer<T>(EntityUid uid, string id, ContainerManagerComponent? containerManager = null)
-            where T : IContainer
+            where T : BaseContainer
         {
             if (!Resolve(uid, ref containerManager, false))
                 containerManager = EntityManager.AddComponent<ContainerManagerComponent>(uid); // Happy Vera.
@@ -62,7 +76,7 @@ namespace Robust.Shared.Containers
         }
 
         public T EnsureContainer<T>(EntityUid uid, string id, out bool alreadyExisted, ContainerManagerComponent? containerManager = null)
-            where T : IContainer
+            where T : BaseContainer
         {
             if (!Resolve(uid, ref containerManager, false))
                 containerManager = EntityManager.AddComponent<ContainerManagerComponent>(uid);
@@ -82,12 +96,12 @@ namespace Robust.Shared.Containers
         }
 
         public T EnsureContainer<T>(EntityUid uid, string id, ContainerManagerComponent? containerManager = null)
-           where T : IContainer
+           where T : BaseContainer
         {
             return EnsureContainer<T>(uid, id, out _, containerManager);
         }
 
-        public IContainer GetContainer(EntityUid uid, string id, ContainerManagerComponent? containerManager = null)
+        public BaseContainer GetContainer(EntityUid uid, string id, ContainerManagerComponent? containerManager = null)
         {
             if (!Resolve(uid, ref containerManager))
                 throw new ArgumentException("Entity does not have a ContainerManagerComponent!", nameof(uid));
@@ -103,7 +117,7 @@ namespace Robust.Shared.Containers
             return containerManager.HasContainer(id);
         }
 
-        public bool TryGetContainer(EntityUid uid, string id, [NotNullWhen(true)] out IContainer? container, ContainerManagerComponent? containerManager = null)
+        public bool TryGetContainer(EntityUid uid, string id, [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null)
         {
             if (Resolve(uid, ref containerManager, false))
                 return containerManager.TryGetContainer(id, out container);
@@ -112,7 +126,7 @@ namespace Robust.Shared.Containers
             return false;
         }
 
-        public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out IContainer? container, ContainerManagerComponent? containerManager = null, bool skipExistCheck = false)
+        public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out BaseContainer? container, ContainerManagerComponent? containerManager = null, bool skipExistCheck = false)
         {
             if (Resolve(uid, ref containerManager, false) && (skipExistCheck || EntityManager.EntityExists(containedUid)))
                 return containerManager.TryGetContainer(containedUid, out container);
@@ -158,7 +172,7 @@ namespace Robust.Shared.Containers
 
         #region Container Helpers
 
-        public bool TryGetContainingContainer(EntityUid uid, [NotNullWhen(true)] out IContainer? container, MetaDataComponent? meta = null, TransformComponent? transform = null)
+        public bool TryGetContainingContainer(EntityUid uid, [NotNullWhen(true)] out BaseContainer? container, MetaDataComponent? meta = null, TransformComponent? transform = null)
         {
             container = null;
 
@@ -221,6 +235,62 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
+        ///     Finds the first instance of a component on the recursive parented containers that hold an entity
+        /// </summary>
+        public bool TryFindComponentOnEntityContainerOrParent<T>(
+            EntityUid uid,
+            EntityQuery<T> entityQuery,
+            [NotNullWhen(true)] ref T? foundComponent,
+            MetaDataComponent? meta = null,
+            TransformComponent? xform = null) where T : Component
+        {
+            if (!MetaQuery.Resolve(uid, ref meta))
+                return false;
+
+            if ((meta.Flags & MetaDataFlags.InContainer) != MetaDataFlags.InContainer)
+                return false;
+
+            if (!TransformQuery.Resolve(uid, ref xform))
+                return false;
+
+            if (!xform.ParentUid.Valid)
+                return false;
+
+            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent, false))
+                return true;
+
+            return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, entityQuery, ref foundComponent);
+        }
+
+        /// <summary>
+        ///     Finds all instances of a component on the recursive parented containers that hold an entity
+        /// </summary>
+        public bool TryFindComponentsOnEntityContainerOrParent<T>(
+            EntityUid uid,
+            EntityQuery<T> entityQuery,
+            List<T> foundComponents,
+            MetaDataComponent? meta = null,
+            TransformComponent? xform = null) where T : Component
+        {
+            if (!MetaQuery.Resolve(uid, ref meta))
+                return foundComponents.Any();
+
+            if ((meta.Flags & MetaDataFlags.InContainer) != MetaDataFlags.InContainer)
+                return foundComponents.Any();
+
+            if (!TransformQuery.Resolve(uid, ref xform))
+                return foundComponents.Any();
+
+            if (!xform.ParentUid.Valid)
+                return foundComponents.Any();
+
+            if (EntityManager.TryGetComponent(xform.ParentUid, out T? foundComponent))
+                foundComponents.Add(foundComponent);
+
+            return TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, foundComponents);
+        }
+
+        /// <summary>
         ///     Returns true if the two entities are not contained, or are contained in the same container.
         /// </summary>
         public bool IsInSameOrNoContainer(EntityUid user, EntityUid other)
@@ -273,8 +343,8 @@ namespace Robust.Shared.Containers
         public bool IsInSameOrTransparentContainer(
             EntityUid user,
             EntityUid other,
-            IContainer? userContainer = null,
-            IContainer? otherContainer = null,
+            BaseContainer? userContainer = null,
+            BaseContainer? otherContainer = null,
             bool userSeeInsideSelf = false)
         {
             if (userContainer == null)
@@ -309,14 +379,14 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Gets the top-most container in the hierarchy for this entity, if it exists.
         /// </summary>
-        public bool TryGetOuterContainer(EntityUid uid, TransformComponent xform, [NotNullWhen(true)] out IContainer? container)
+        public bool TryGetOuterContainer(EntityUid uid, TransformComponent xform, [NotNullWhen(true)] out BaseContainer? container)
         {
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             return TryGetOuterContainer(uid, xform, out container, xformQuery);
         }
 
         public bool TryGetOuterContainer(EntityUid uid, TransformComponent xform,
-            [NotNullWhen(true)] out IContainer? container, EntityQuery<TransformComponent> xformQuery)
+            [NotNullWhen(true)] out BaseContainer? container, EntityQuery<TransformComponent> xformQuery)
         {
             container = null;
 
@@ -386,7 +456,7 @@ namespace Robust.Shared.Containers
         /// Attempts to remove all entities in a container. Returns removed entities.
         /// </summary>
         public List<EntityUid> EmptyContainer(
-            IContainer container,
+            BaseContainer container,
             bool force = false,
             EntityCoordinates? destination = null,
             bool reparent = true)
@@ -408,7 +478,7 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Attempts to remove and delete all entities in a container.
         /// </summary>
-        public void CleanContainer(IContainer container)
+        public void CleanContainer(BaseContainer container)
         {
             foreach (var ent in container.ContainedEntities.ToArray())
             {
@@ -429,7 +499,7 @@ namespace Robust.Shared.Containers
                 transform.AttachToGridOrMap();
         }
 
-        private bool TryInsertIntoContainer(TransformComponent transform, IContainer container)
+        private bool TryInsertIntoContainer(TransformComponent transform, BaseContainer container)
         {
             if (container.Insert(transform.Owner)) return true;
 

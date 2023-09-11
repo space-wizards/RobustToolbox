@@ -1,17 +1,17 @@
+#nullable enable
+
 using System.Numerics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
-#nullable enable
-
-namespace Robust.Client.Graphics
+namespace Robust.Shared.Graphics
 {
     /// <inheritdoc />
     [Virtual]
     public class Eye : IEye
     {
-        private Vector2 _scale = Vector2.One/2f;
+        private Vector2 _scale = Vector2.One / 2f;
         private Angle _rotation = Angle.Zero;
         private MapCoordinates _coords;
 

@@ -296,6 +296,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class SnapGridGetCell : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IMapManager _map = default!;
 
         public override string Command => "sggcell";
@@ -310,7 +311,7 @@ namespace Robust.Client.Console.Commands
 
             string indices = args[1];
 
-            if (!EntityUid.TryParse(args[0], out var gridUid))
+            if (!NetEntity.TryParse(args[0], out var gridNet))
             {
                 shell.WriteError($"{args[0]} is not a valid entity UID.");
                 return;
@@ -322,7 +323,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (_map.TryGetGrid(gridUid, out var grid))
+            if (_map.TryGetGrid(_entManager.GetEntity(gridNet), out var grid))
             {
                 foreach (var entity in grid.GetAnchoredEntities(new Vector2i(
                              int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
@@ -430,6 +431,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class GridTileCount : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IMapManager _map = default!;
 
         public override string Command => "gridtc";
@@ -442,7 +444,8 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var gridUid))
+            if (!NetEntity.TryParse(args[0], out var gridUidNet) ||
+                !_entManager.TryGetEntity(gridUidNet, out var gridUid))
             {
                 shell.WriteLine($"{args[0]} is not a valid entity UID.");
                 return;

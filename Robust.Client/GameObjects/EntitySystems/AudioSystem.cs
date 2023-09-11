@@ -81,9 +81,13 @@ public sealed class AudioSystem : SharedAudioSystem
     #region Event Handlers
     private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
     {
-        var stream = EntityManager.EntityExists(ev.EntityUid)
-            ? (PlayingStream?) Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams, false)
-            : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams, false);
+        var uid = GetEntity(ev.NetEntity);
+        var coords = GetCoordinates(ev.Coordinates);
+        var fallback = GetCoordinates(ev.FallbackCoordinates);
+
+        var stream = EntityManager.EntityExists(uid)
+            ? (PlayingStream?) Play(ev.FileName, uid, fallback, ev.AudioParams, false)
+            : (PlayingStream?) Play(ev.FileName, coords, fallback, ev.AudioParams, false);
 
         if (stream != null)
             stream.NetIdentifier = ev.Identifier;
@@ -98,7 +102,10 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
     {
-        var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams, false);
+        var coords = GetCoordinates(ev.Coordinates);
+        var fallback = GetCoordinates(ev.FallbackCoordinates);
+
+        var stream = (PlayingStream?) Play(ev.FileName, coords, fallback, ev.AudioParams, false);
         if (stream != null)
             stream.NetIdentifier = ev.Identifier;
     }
@@ -383,8 +390,8 @@ public sealed class AudioSystem : SharedAudioSystem
             _replayRecording.RecordReplayMessage(new PlayAudioEntityMessage
             {
                 FileName = filename,
-                EntityUid = entity,
-                FallbackCoordinates = fallbackCoordinates ?? default,
+                NetEntity = GetNetEntity(entity),
+                FallbackCoordinates = GetNetCoordinates(fallbackCoordinates) ?? default,
                 AudioParams = audioParams ?? AudioParams.Default
             });
         }
@@ -437,8 +444,8 @@ public sealed class AudioSystem : SharedAudioSystem
             _replayRecording.RecordReplayMessage(new PlayAudioPositionalMessage
             {
                 FileName = filename,
-                Coordinates = coordinates,
-                FallbackCoordinates = fallbackCoordinates,
+                Coordinates = GetNetCoordinates(coordinates),
+                FallbackCoordinates = GetNetCoordinates(fallbackCoordinates),
                 AudioParams = audioParams ?? AudioParams.Default
             });
         }

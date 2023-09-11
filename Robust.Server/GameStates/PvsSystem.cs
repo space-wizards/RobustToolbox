@@ -5,7 +5,6 @@ using System.Numerics;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.Configuration;
-using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Collections;
@@ -93,15 +92,15 @@ internal sealed partial class PvsSystem : EntitySystem
         new DefaultObjectPool<Dictionary<GridChunkLocation, int>>(
             new ChunkPoolPolicy<GridChunkLocation>(), MaxVisPoolSize);
 
-    private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
-    private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
-    private readonly List<(uint, IChunkIndexLocation)> _chunkList = new(64);
+    private readonly Dictionary<int, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
+    private readonly Dictionary<int, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
+    private readonly List<(int, IChunkIndexLocation)> _chunkList = new(64);
     internal readonly HashSet<ICommonSession> PendingAcks = new();
 
-    private readonly Dictionary<(uint visMask, IChunkIndexLocation location), (Dictionary<NetEntity, MetaDataComponent> metadata,
+    private readonly Dictionary<(int visMask, IChunkIndexLocation location), (Dictionary<NetEntity, MetaDataComponent> metadata,
         RobustTree<NetEntity> tree)?> _previousTrees = new();
 
-    private readonly HashSet<(uint visMask, IChunkIndexLocation location)> _reusedTrees = new();
+    private readonly HashSet<(int visMask, IChunkIndexLocation location)> _reusedTrees = new();
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
@@ -414,7 +413,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     #endregion
 
-    public (List<(uint, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
+    public (List<(int, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
     {
         var playerChunks = new HashSet<int>[sessions.Length];
         var viewerEntities = new EntityUid[sessions.Length][];
@@ -450,7 +449,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
                 if (mapId == MapId.Nullspace) continue;
 
-                uint visMask = EyeComponent.DefaultVisibilityMask;
+                int visMask = EyeComponent.DefaultVisibilityMask;
                 if (_eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
 
@@ -498,10 +497,10 @@ internal sealed partial class PvsSystem : EntitySystem
                             EntityQuery<TransformComponent> transformQuery,
                             Vector2 viewPos,
                             float range,
-                            uint visMask,
+                            int visMask,
                             Dictionary<GridChunkLocation, int> gridDict,
                             HashSet<int>[] playerChunks,
-                            List<(uint, IChunkIndexLocation)> _chunkList,
+                            List<(int, IChunkIndexLocation)> _chunkList,
                             SharedTransformSystem xformSystem) tuple) =>
                     {
                         {
@@ -537,7 +536,7 @@ internal sealed partial class PvsSystem : EntitySystem
     }
 
     public void RegisterNewPreviousChunkTrees(
-        List<(uint, IChunkIndexLocation)> chunks,
+        List<(int, IChunkIndexLocation)> chunks,
         (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] trees,
         bool[] reuse)
     {
@@ -581,7 +580,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     public bool TryCalculateChunk(
         IChunkIndexLocation chunkLocation,
-        uint visMask,
+        int visMask,
         out (Dictionary<NetEntity, MetaDataComponent> mData, RobustTree<NetEntity> tree)? result)
     {
         if (!_entityPvsCollection.IsDirty(chunkLocation) && _previousTrees.TryGetValue((visMask, chunkLocation), out var previousTree))
@@ -646,7 +645,7 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private bool AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, uint visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
+    private bool AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, int visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
     {
         if (set.ContainsKey(netEntity))
             return true;

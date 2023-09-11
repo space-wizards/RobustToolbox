@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 157.1.0
+
+### New features
+
+* UI tooltips now use rich text labels.
+
+
 ## 157.0.0
 
 ### Breaking changes

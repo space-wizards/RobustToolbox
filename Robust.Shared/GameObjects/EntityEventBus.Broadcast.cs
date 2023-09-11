@@ -20,9 +20,13 @@ namespace Robust.Shared.GameObjects
         /// <param name="source"></param>
         /// <param name="subscriber">Subscriber that owns the handler.</param>
         /// <param name="eventHandler">Delegate that handles the event.</param>
+        /// <seealso cref="SubscribeEvent{T}(EventSource, IEntityEventSubscriber, EntityEventRefHandler{T})"/>
+        [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
             EntityEventHandler<T> eventHandler) where T : notnull;
 
+        /// <seealso cref="SubscribeEvent{T}(EventSource, IEntityEventSubscriber, EntityEventRefHandler{T})"/>
+        [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         void SubscribeEvent<T>(
             EventSource source,
             IEntityEventSubscriber subscriber,
@@ -133,7 +137,7 @@ namespace Robust.Shared.GameObjects
                 var type = args.GetType();
                 ref var unitRef = ref ExtractUnitRef(ref args, type);
 
-                ProcessSingleEvent(source, ref unitRef, type, false);
+                ProcessSingleEvent(source, ref unitRef, type);
             }
         }
 
@@ -260,7 +264,7 @@ namespace Robust.Shared.GameObjects
             var eventType = toRaise.GetType();
             ref var unitRef = ref ExtractUnitRef(ref toRaise, eventType);
 
-            ProcessSingleEvent(source, ref unitRef, eventType, false);
+            ProcessSingleEvent(source, ref unitRef, eventType);
         }
 
         public void RaiseEvent<T>(EventSource source, T toRaise) where T : notnull
@@ -268,7 +272,7 @@ namespace Robust.Shared.GameObjects
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
 
-            ProcessSingleEvent(source, ref Unsafe.As<T, Unit>(ref toRaise), typeof(T), false);
+            ProcessSingleEvent(source, ref Unsafe.As<T, Unit>(ref toRaise), typeof(T));
         }
 
         public void RaiseEvent<T>(EventSource source, ref T toRaise) where T : notnull
@@ -276,7 +280,7 @@ namespace Robust.Shared.GameObjects
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
 
-            ProcessSingleEvent(source, ref Unsafe.As<T, Unit>(ref toRaise), typeof(T), true);
+            ProcessSingleEvent(source, ref Unsafe.As<T, Unit>(ref toRaise), typeof(T));
         }
 
         /// <inheritdoc />
@@ -301,7 +305,7 @@ namespace Robust.Shared.GameObjects
                 inverse.Remove(eventType);
         }
 
-        private void ProcessSingleEvent(EventSource source, ref Unit unitRef, Type eventType, bool byRef)
+        private void ProcessSingleEvent(EventSource source, ref Unit unitRef, Type eventType)
         {
             if (!_eventData.TryGetValue(eventType, out var subs))
                 return;
@@ -314,20 +318,16 @@ namespace Robust.Shared.GameObjects
                 // This means ordered broadcast events have no overhead over non-ordered ones.
             }
 
-            ProcessSingleEventCore(source, ref unitRef, subs, byRef);
+            ProcessSingleEventCore(source, ref unitRef, subs);
         }
 
         private static void ProcessSingleEventCore(
             EventSource source,
             ref Unit unitRef,
-            EventData subs,
-            bool byRef)
+            EventData subs)
         {
             foreach (var handler in subs.BroadcastRegistrations)
             {
-                if (handler.ReferenceEvent != byRef)
-                    ThrowByRefMisMatch();
-
                 if ((handler.Mask & source) != 0)
                     handler.Handler(ref unitRef);
             }

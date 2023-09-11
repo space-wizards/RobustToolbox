@@ -39,10 +39,6 @@ internal sealed partial class EntityEventBus : IEventBus
 
     public bool IgnoreUnregisteredComponents;
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowByRefMisMatch() =>
-        throw new InvalidOperationException("Mismatching by-ref ness on event!");
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ref Unit ExtractUnitRef(ref object obj, Type objType)
     {

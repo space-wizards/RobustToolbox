@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using Robust.Client.Graphics;
+using Robust.Shared.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Timer = Robust.Shared.Timing.Timer;

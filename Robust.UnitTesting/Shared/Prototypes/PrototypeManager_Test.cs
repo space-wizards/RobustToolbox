@@ -58,7 +58,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
-            var componentData = prototype.Components["PointLight"].Component as PointLightComponent;
+            var componentData = prototype.Components["PointLight"].Component as SharedPointLightComponent;
 
             Assert.That(componentData!.NetSyncEnabled, Is.EqualTo(false));
         }

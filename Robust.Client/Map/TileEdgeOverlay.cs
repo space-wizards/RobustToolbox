@@ -6,6 +6,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Direction = Robust.Shared.Maths.Direction;
 
 namespace Robust.Client.Map;
 

@@ -410,8 +410,12 @@ namespace Robust.Shared.GameObjects
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>
         /// <param name="e">Entity to remove</param>
-        public virtual void DeleteEntity(EntityUid e)
+        public virtual void DeleteEntity(EntityUid? uid)
         {
+            if (uid == null)
+                return;
+            var e = uid.Value;
+
             // Some UIs get disposed after entity-manager has shut down and already deleted all entities.
             if (!Started)
                 return;

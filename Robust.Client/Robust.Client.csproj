@@ -55,8 +55,6 @@
     <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
     <RobustLinkAssemblies Include="OpenToolkit.Graphics" />
   </ItemGroup>
-    <Folder Include="GameObjects\Components\Eye\" />
-
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />
 

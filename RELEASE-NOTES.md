@@ -54,6 +54,25 @@ END TEMPLATE-->
 *None yet*
 
 
+## 159.0.0
+
+### Breaking changes
+
+* Remove ComponentReference from PointLights.
+* Move more of UserInterfaceSystem to shared.
+* Mark some EntitySystem proxy methods as protected instead of public.
+
+### New features
+
+* Make entity deletion take in a nullable EntityUid.
+* Added a method to send predicted messages via BUIs.
+
+### Other
+
+* Add Obsoletions to more sourcegen serv4 methods.
+* Remove inactive reviewers from CODEOWNERs.
+
+
 ## 158.0.0
 
 ### Breaking changes

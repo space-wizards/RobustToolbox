@@ -97,10 +97,10 @@ internal sealed partial class PvsSystem : EntitySystem
     private readonly List<(int, IChunkIndexLocation)> _chunkList = new(64);
     internal readonly HashSet<ICommonSession> PendingAcks = new();
 
-    private readonly Dictionary<(uint visMask, IChunkIndexLocation location), (Dictionary<NetEntity, MetaDataComponent> metadata,
+    private readonly Dictionary<(int visMask, IChunkIndexLocation location), (Dictionary<NetEntity, MetaDataComponent> metadata,
         RobustTree<NetEntity> tree)?> _previousTrees = new();
 
-    private readonly HashSet<(uint visMask, IChunkIndexLocation location)> _reusedTrees = new();
+    private readonly HashSet<(int visMask, IChunkIndexLocation location)> _reusedTrees = new();
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
@@ -536,7 +536,7 @@ internal sealed partial class PvsSystem : EntitySystem
     }
 
     public void RegisterNewPreviousChunkTrees(
-        List<(uint, IChunkIndexLocation)> chunks,
+        List<(int, IChunkIndexLocation)> chunks,
         (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] trees,
         bool[] reuse)
     {
@@ -580,7 +580,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     public bool TryCalculateChunk(
         IChunkIndexLocation chunkLocation,
-        uint visMask,
+        int visMask,
         out (Dictionary<NetEntity, MetaDataComponent> mData, RobustTree<NetEntity> tree)? result)
     {
         if (!_entityPvsCollection.IsDirty(chunkLocation) && _previousTrees.TryGetValue((visMask, chunkLocation), out var previousTree))
@@ -645,7 +645,7 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private bool AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, uint visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
+    private bool AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, int visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
     {
         if (set.ContainsKey(netEntity))
             return true;

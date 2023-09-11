@@ -33,14 +33,12 @@ public sealed class PointLightSystem : SharedPointLightSystem
 
     public override bool ResolveLight(EntityUid uid, [NotNullWhen(true)] ref SharedPointLightComponent? component)
     {
-        if (TryComp<PointLightComponent>(uid, out var comp))
-        {
-            component = comp;
+        if (component is not null)
             return true;
-        }
 
-        component = null;
-        return false;
+        TryComp<PointLightComponent>(uid, out var comp);
+        component = comp;
+        return component != null;
     }
 
     public override bool TryGetLight(EntityUid uid, [NotNullWhen(true)] out SharedPointLightComponent? component)

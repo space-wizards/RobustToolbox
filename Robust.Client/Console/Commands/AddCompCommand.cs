@@ -22,7 +22,8 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var entity = EntityUid.Parse(args[0]);
+            var netEntity = NetEntity.Parse(args[0]);
+            var entity = _entityManager.GetEntity(netEntity);
             var componentName = args[1];
 
             var component = (Component) _componentFactory.GetComponent(componentName);
@@ -49,7 +50,8 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var entityUid = EntityUid.Parse(args[0]);
+            var netEntity = NetEntity.Parse(args[0]);
+            var entityUid = _entityManager.GetEntity(netEntity);
             var componentName = args[1];
 
             var registration = _componentFactory.GetRegistration(componentName);

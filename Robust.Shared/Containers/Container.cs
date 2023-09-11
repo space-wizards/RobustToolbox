@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
@@ -15,26 +17,20 @@ namespace Robust.Shared.Containers
     /// For example, inventory containers should be modified only through an inventory component.
     /// </summary>
     [UsedImplicitly]
-    [SerializedType(ClassName)]
+    [SerializedType(nameof(Container))]
     public sealed partial class Container : BaseContainer
     {
-        private const string ClassName = "Container";
-
         /// <summary>
         /// The generic container class uses a list of entities
         /// </summary>
         [DataField("ents")]
+        [NonSerialized]
         private List<EntityUid> _containerList = new();
 
-        private readonly List<EntityUid> _expectedEntities = new();
+        public override int Count => _containerList.Count;
 
         /// <inheritdoc />
         public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
-
-        public override List<EntityUid> ExpectedEntities => _expectedEntities;
-
-        /// <inheritdoc />
-        public override string ContainerType => ClassName;
 
         /// <inheritdoc />
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
@@ -56,6 +52,9 @@ namespace Robust.Shared.Containers
                 return false;
 
 #if DEBUG
+            if (IoCManager.Resolve<IGameTiming>().ApplyingState)
+                return true;
+
             var entMan = IoCManager.Resolve<IEntityManager>();
             var flags = entMan.GetComponent<MetaDataComponent>(contained).Flags;
             DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0, $"Entity has bad container flags. Ent: {entMan.ToPrettyString(contained)}. Container: {ID}, Owner: {entMan.ToPrettyString(Owner)}");

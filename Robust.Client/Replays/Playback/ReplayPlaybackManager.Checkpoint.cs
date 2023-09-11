@@ -82,19 +82,28 @@ internal sealed partial class ReplayPlaybackManager
         var metas = _entMan.GetEntityQuery<MetaDataComponent>();
         foreach (var es in checkpoint.DetachedStates)
         {
-            if (metas.TryGetComponent(es.Uid, out var meta) && !meta.EntityDeleted)
+            var uid = _entMan.GetEntity(es.NetEntity);
+            if (metas.TryGetComponent(uid, out var meta) && !meta.EntityDeleted)
                 continue;
-            ;
+
             var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?
                 .FirstOrDefault(c => c.NetID == _metaId).State;
 
             if (metaState == null)
-                throw new MissingMetadataException(es.Uid);
+                throw new MissingMetadataException(es.NetEntity);
 
-            _entMan.CreateEntityUninitialized(metaState.PrototypeId, es.Uid);
-            meta = metas.GetComponent(es.Uid);
-            _entMan.InitializeEntity(es.Uid, meta);
-            _entMan.StartEntity(es.Uid);
+            _entMan.CreateEntityUninitialized(metaState.PrototypeId, uid);
+            meta = metas.GetComponent(uid);
+
+            // Client creates a client-side net entity for the newly created entity.
+            // We need to clear this mapping before assigning the real net id.
+            // TODO NetEntity Jank: prevent the client from creating this in the first place.
+            _entMan.ClearNetEntity(meta.NetEntity);
+
+            _entMan.SetNetEntity(uid, es.NetEntity, meta);
+
+            _entMan.InitializeEntity(uid, meta);
+            _entMan.StartEntity(uid);
             meta.LastStateApplied = checkpoint.Tick;
         }
     }

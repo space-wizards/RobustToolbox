@@ -18,7 +18,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// <param name="recursive">If true, this will also recursively send any children of the given index.</param>
     public void AddGlobalOverride(EntityUid uid, bool removeExistingOverride = true, bool recursive = false)
     {
-        _pvs.EntityPVSCollection.AddGlobalOverride(uid, removeExistingOverride, recursive);
+        _pvs.EntityPVSCollection.AddGlobalOverride(GetNetEntity(uid), removeExistingOverride, recursive);
     }
 
     /// <summary>
@@ -28,7 +28,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// <param name="removeExistingOverride">Whether or not to supersede existing overrides.</param>
     public void AddSessionOverride(EntityUid uid, ICommonSession session,bool removeExistingOverride = true)
     {
-        _pvs.EntityPVSCollection.UpdateIndex(uid, session, removeExistingOverride);
+        _pvs.EntityPVSCollection.UpdateIndex(GetNetEntity(uid), session, removeExistingOverride);
     }
 
     /// <summary>
@@ -39,6 +39,6 @@ public sealed class PvsOverrideSystem : EntitySystem
         if (!Resolve(uid, ref xform))
             return;
 
-        _pvs.EntityPVSCollection.UpdateIndex(uid, xform.Coordinates, true);
+        _pvs.EntityPVSCollection.UpdateIndex(GetNetEntity(uid), xform.Coordinates, true);
     }
 }

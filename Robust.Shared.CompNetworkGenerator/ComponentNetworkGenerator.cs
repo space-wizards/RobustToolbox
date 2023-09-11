@@ -14,9 +14,14 @@ namespace Robust.Shared.CompNetworkGenerator
     {
         private const string ClassAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
         private const string MemberAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
+        private const string GlobalEntityUidName = "global::Robust.Shared.GameObjects.EntityUid";
+        private const string GlobalNullableEntityUidName = "global::Robust.Shared.GameObjects.EntityUid?";
+        private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
+        private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
 
         private static string GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
         {
+            // Debugger.Launch();
             var nameSpace = classSymbol.ContainingNamespace.ToDisplayString();
             var componentName = classSymbol.Name;
             var stateName = $"{componentName}_AutoState";
@@ -115,27 +120,59 @@ namespace Robust.Shared.CompNetworkGenerator
 
             foreach (var (type, name, attribute) in fields)
             {
-                stateFields.Append($@"
-        public {type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {name} = default!;");
+                var typeDisplayStr = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
+                var nullableAnnotation = nullable ? "?" : string.Empty;
 
-                // get first ctor arg of the field attribute, which determines whether the field should be cloned
-                // (like if its a dict or list)
-                if (attribute.ConstructorArguments[0].Value is bool val && val)
+                switch (typeDisplayStr)
                 {
-                    getStateInit.Append($@"
+                    case GlobalEntityUidName:
+                    case GlobalNullableEntityUidName:
+                        stateFields.Append($@"
+        public NetEntity{nullableAnnotation} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = GetNetEntity(component.{name}),");
+                        handleStateSetters.Append($@"
+            component.{name} = EnsureEntity<{componentName}>(state.{name}, uid);");
+
+                        break;
+                    case GlobalEntityCoordinatesName:
+                    case GlobalNullableEntityCoordinatesName:
+                        stateFields.Append($@"
+        public NetCoordinates{nullableAnnotation} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = GetNetCoordinates(component.{name}),");
+                        handleStateSetters.Append($@"
+            component.{name} = EnsureCoordinates<{componentName}>(state.{name}, uid);");
+
+                        break;
+                    default:
+                        stateFields.Append($@"
+        public {typeDisplayStr} {name} = default!;");
+
+                        if (attribute.ConstructorArguments[0].Value is bool val && val)
+                        {
+                            // get first ctor arg of the field attribute, which determines whether the field should be cloned
+                            // (like if its a dict or list)
+                            getStateInit.Append($@"
                 {name} = component.{name},");
 
-                    handleStateSetters.Append($@"
+                            handleStateSetters.Append($@"
             if (state.{name} != null)
                 component.{name} = new(state.{name});");
-                }
-                else
-                {
-                    getStateInit.Append($@"
+                        }
+                        else
+                        {
+                            getStateInit.Append($@"
                 {name} = component.{name},");
 
-                    handleStateSetters.Append($@"
+                            handleStateSetters.Append($@"
             component.{name} = state.{name};");
+                        }
+
+                        break;
                 }
             }
 
@@ -153,6 +190,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization;
+using Robust.Shared.Map;
 
 namespace {nameSpace};
 

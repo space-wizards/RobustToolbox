@@ -54,6 +54,75 @@ END TEMPLATE-->
 *None yet*
 
 
+## 157.1.0
+
+### New features
+
+* UI tooltips now use rich text labels.
+
+
+## 157.0.0
+
+### Breaking changes
+
+* Unrevert container changes from 155.0.0.
+* Added server-client EntityUid separation. A given EntityUid will no longer refer to the same entity on the server & client.
+* EntityUid is no longer net-serializable, use NetEntity instead, EntityManager & entity systems have helper methods for converting between the two,
+
+
+## 156.0.0
+
+### Breaking changes
+
+* Revert container changes from 155.0.0.
+
+
+## 155.0.0
+
+### Breaking changes
+
+* MapInitEvent now gets raised for components that get added to entities that have already been map-initialized.
+
+### New features
+
+* VirtualWritableDirProvider now supports file renaming/moving.
+* Added a new command for toggling the replay UI (`replay_toggleui`).
+
+### Bugfixes
+
+* Fixed formatting of localization file errors.
+* Directed event subscriptions will no longer error if the corresponding component is queued for deletion.
+
+
+## 154.2.0
+
+
+
+### New features
+
+* Added support for advertising to multiple hubs simultaneously.
+* Added new functions to ContainerSystem that recursively look for a component on a contained entity's parents.
+
+### Bugfixes
+
+* Fix Direction.TurnCw/TurnCcw to South returning Invalid.
+
+
+## 154.1.0
+
+### New features
+
+* Add MathHelper.Max for TimeSpans.
+
+### Bugfixes
+
+* Make joint initialisation only log under IsFirstTimePredicted on client.
+
+### Other
+
+* Mark the proxy Dirty(component) as obsolete in line with EntityManager (Dirty(EntityUid, Component) should be used in its place).
+
+
 ## 154.0.0
 
 ### Breaking changes

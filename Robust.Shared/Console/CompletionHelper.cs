@@ -155,18 +155,21 @@ public static class CompletionHelper
         }
     }
 
-    public static IEnumerable<CompletionOption> EntityUids(string text, IEntityManager? entManager = null)
+    public static IEnumerable<CompletionOption> NetEntities(string text, IEntityManager? entManager = null)
     {
         IoCManager.Resolve(ref entManager);
 
         foreach (var ent in entManager.GetEntities())
         {
-            var entString = ent.ToString();
-
-            if (!entString.StartsWith(text))
+            if (!entManager.TryGetNetEntity(ent, out var netEntity))
                 continue;
 
-            yield return new CompletionOption(entString);
+            var netString = netEntity.Value.ToString();
+
+            if (!netString.StartsWith(text))
+                continue;
+
+            yield return new CompletionOption(netString);
         }
     }
 
@@ -174,14 +177,19 @@ public static class CompletionHelper
     {
         IoCManager.Resolve(ref entManager);
 
-        var query = entManager.AllEntityQueryEnumerator<T>();
+        var query = entManager.AllEntityQueryEnumerator<T, MetaDataComponent>();
 
-        while (query.MoveNext(out var uid, out _))
+        while (query.MoveNext(out var uid, out _, out var metadata))
         {
-            if (!uid.ToString().StartsWith(text))
+            if (!entManager.TryGetNetEntity(uid, out var netEntity, metadata: metadata))
                 continue;
 
-            yield return new CompletionOption(uid.ToString());
+            var netString = netEntity.Value.ToString();
+
+            if (!netString.StartsWith(text))
+                continue;
+
+            yield return new CompletionOption(netString);
         }
     }
 }

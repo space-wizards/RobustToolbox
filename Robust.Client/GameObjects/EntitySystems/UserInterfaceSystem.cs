@@ -22,7 +22,8 @@ namespace Robust.Client.GameObjects
 
         private void MessageReceived(BoundUIWrapMessage ev)
         {
-            var uid = ev.Entity;
+            var uid = GetEntity(ev.Entity);
+
             if (!TryComp<UserInterfaceComponent>(uid, out var cmp))
                 return;
 
@@ -32,7 +33,7 @@ namespace Robust.Client.GameObjects
             if (_playerManager.LocalPlayer != null)
                 message.Session = _playerManager.LocalPlayer.Session;
 
-            message.Entity = uid;
+            message.Entity = GetNetEntity(uid);
             message.UiKey = uiKey;
 
             // Raise as object so the correct type is used.

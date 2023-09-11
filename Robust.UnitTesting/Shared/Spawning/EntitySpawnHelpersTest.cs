@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -5,6 +6,7 @@ using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Serialization;
 
 namespace Robust.UnitTesting.Shared.Spawning;
 
@@ -100,18 +102,19 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
     /// <summary>
     /// Simple container that can store up to 2 entities.
     /// </summary>
+    [SerializedType(nameof(TestContainer))]
     private sealed partial class TestContainer : BaseContainer
     {
         private readonly List<EntityUid> _ents = new();
-        private readonly List<EntityUid> _expected = new();
-        public override string ContainerType => nameof(TestContainer);
+
+        public override int Count => _ents.Count;
+
         public override IReadOnlyList<EntityUid> ContainedEntities => _ents;
-        public override List<EntityUid> ExpectedEntities => _expected;
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan) => _ents.Add(toInsert);
         protected override void InternalRemove(EntityUid toRemove, IEntityManager entMan) => _ents.Remove(toRemove);
         public override bool Contains(EntityUid contained) => _ents.Contains(contained);
         protected override void InternalShutdown(IEntityManager entMan, bool isClient) { }
-        public override bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
+        protected internal override bool CanInsert(EntityUid toinsert, bool assumeEmpty, IEntityManager entMan)
             => _ents.Count < 2 && !_ents.Contains(toinsert);
     }
 }

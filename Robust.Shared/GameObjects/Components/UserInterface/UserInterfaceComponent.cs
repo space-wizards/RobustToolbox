@@ -75,9 +75,23 @@ namespace Robust.Shared.GameObjects
     {
     }
 
+    /// <summary>
+    /// Abstract class for local BUI events.
+    /// </summary>
+    public abstract class BaseLocalBoundUserInterfaceEvent : BaseBoundUserInterfaceEvent
+    {
+        /// <summary>
+        ///     The Entity receiving the message.
+        ///     Only set when the message is raised as a directed event.
+        /// </summary>
+        public EntityUid Entity = EntityUid.Invalid;
+    }
 
-    [NetSerializable, Serializable]
-    public abstract class BoundUserInterfaceMessage : EntityEventArgs
+    /// <summary>
+    /// Abstract class for all BUI events.
+    /// </summary>
+    [Serializable, NetSerializable]
+    public abstract class BaseBoundUserInterfaceEvent : EntityEventArgs
     {
         /// <summary>
         ///     The UI of this message.
@@ -86,17 +100,24 @@ namespace Robust.Shared.GameObjects
         public Enum UiKey = default!;
 
         /// <summary>
-        ///     The Entity receiving the message.
-        ///     Only set when the message is raised as a directed event.
-        /// </summary>
-        public EntityUid Entity = EntityUid.Invalid;
-
-        /// <summary>
         ///     The session sending or receiving this message.
         ///     Only set when the message is raised as a directed event.
         /// </summary>
         [NonSerialized]
         public ICommonSession Session = default!;
+    }
+
+    /// <summary>
+    /// Abstract class for networked BUI events.
+    /// </summary>
+    [NetSerializable, Serializable]
+    public abstract class BoundUserInterfaceMessage : BaseBoundUserInterfaceEvent
+    {
+        /// <summary>
+        ///     The Entity receiving the message.
+        ///     Only set when the message is raised as a directed event.
+        /// </summary>
+        public NetEntity Entity { get; set; } = NetEntity.Invalid;
     }
 
     [NetSerializable, Serializable]
@@ -123,11 +144,11 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     internal abstract class BaseBoundUIWrapMessage : EntityEventArgs
     {
-        public readonly EntityUid Entity;
+        public readonly NetEntity Entity;
         public readonly BoundUserInterfaceMessage Message;
         public readonly Enum UiKey;
 
-        public BaseBoundUIWrapMessage(EntityUid entity, BoundUserInterfaceMessage message, Enum uiKey)
+        public BaseBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
         {
             Message = message;
             UiKey = uiKey;
@@ -157,7 +178,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public sealed class BoundUIOpenedEvent : BoundUserInterfaceMessage
+    public sealed class BoundUIOpenedEvent : BaseLocalBoundUserInterfaceEvent
     {
         public BoundUIOpenedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
         {
@@ -167,7 +188,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public sealed class BoundUIClosedEvent : BoundUserInterfaceMessage
+    public sealed class BoundUIClosedEvent : BaseLocalBoundUserInterfaceEvent
     {
         public BoundUIClosedEvent(Enum uiKey, EntityUid uid, ICommonSession session)
         {

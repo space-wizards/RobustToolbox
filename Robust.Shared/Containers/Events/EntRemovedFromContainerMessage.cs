@@ -9,7 +9,7 @@ namespace Robust.Shared.Containers
     [PublicAPI]
     public sealed class EntRemovedFromContainerMessage : ContainerModifiedMessage
     {
-        public EntRemovedFromContainerMessage(EntityUid entity, IContainer container) : base(entity, container) { }
+        public EntRemovedFromContainerMessage(EntityUid entity, BaseContainer container) : base(entity, container) { }
     }
 
     /// <summary>
@@ -18,6 +18,6 @@ namespace Robust.Shared.Containers
     [PublicAPI]
     public sealed class EntGotRemovedFromContainerMessage : ContainerModifiedMessage
     {
-        public EntGotRemovedFromContainerMessage(EntityUid entity, IContainer container) : base(entity, container) { }
+        public EntGotRemovedFromContainerMessage(EntityUid entity, BaseContainer container) : base(entity, container) { }
     }
 }

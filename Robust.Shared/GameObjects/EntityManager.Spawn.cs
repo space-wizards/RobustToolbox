@@ -13,11 +13,11 @@ public partial class EntityManager
     // This method will soon be marked as obsolete.
     public EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => SpawnAttachedTo(protoName, coordinates, overrides);
-    
+
     // This method will soon be marked as obsolete.
     public EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         => Spawn(protoName, coordinates, overrides);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params string?[] protoNames)
     {
@@ -100,8 +100,8 @@ public partial class EntityManager
 
         if (!xform.ParentUid.IsValid())
             return false;
-        
-        if (!_metaQuery.TryGetComponent(target, out var meta))
+
+        if (!MetaQuery.TryGetComponent(target, out var meta))
             return false;
 
         if ((meta.Flags & MetaDataFlags.InContainer) == 0)
@@ -135,7 +135,7 @@ public partial class EntityManager
         EntityUid containerUid,
         string containerId,
         [NotNullWhen(true)] out EntityUid? uid,
-        ContainerManagerComponent? containerComp = null, 
+        ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null)
     {
         uid = null;
@@ -160,7 +160,7 @@ public partial class EntityManager
         xform ??= _xformQuery.GetComponent(target);
         if (!xform.ParentUid.IsValid())
             return Spawn(protoName);
-        
+
         var uid = Spawn(protoName, overrides);
         _xforms.PlaceNextToOrDrop(uid, target);
         return uid;
@@ -180,7 +180,7 @@ public partial class EntityManager
              || !containerComp.Containers.TryGetValue(containerId, out var container)
              || !container.Insert(uid, this))
         {
-            
+
             xform ??= _xformQuery.GetComponent(containerUid);
             if (xform.ParentUid.IsValid())
                 _xforms.PlaceNextToOrDrop(uid, containerUid, targetXform: xform);

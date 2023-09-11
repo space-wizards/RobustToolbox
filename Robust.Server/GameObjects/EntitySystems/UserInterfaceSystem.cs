@@ -242,9 +242,9 @@ namespace Robust.Server.GameObjects
         ///     The player session to send this new state to.
         ///     Set to null for sending it to every subscribed player session.
         /// </param>
-        public static void SetUiState(PlayerBoundUserInterface bui, BoundUserInterfaceState state, ICommonSession? session = null, bool clearOverrides = true)
+        public void SetUiState(PlayerBoundUserInterface bui, BoundUserInterfaceState state, IPlayerSession? session = null, bool clearOverrides = true)
         {
-            var msg = new BoundUIWrapMessage(bui.Owner, new UpdateBoundStateMessage(state), bui.UiKey);
+            var msg = new BoundUIWrapMessage(GetNetEntity(bui.Owner), new UpdateBoundStateMessage(state), bui.UiKey);
             if (session == null)
             {
                 bui.LastStateMsg = msg;
@@ -306,7 +306,7 @@ namespace Robust.Server.GameObjects
             _openInterfaces.GetOrNew(session).Add(bui);
             RaiseLocalEvent(bui.Owner, new BoundUIOpenedEvent(bui.UiKey, bui.Owner, session));
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
+            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new OpenBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
 
             // Fun fact, clients needs to have BUIs open before they can receive the state.....
             if (bui.LastStateMsg != null)
@@ -335,7 +335,7 @@ namespace Robust.Server.GameObjects
             if (!bui._subscribedSessions.Remove(session))
                 return false;
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, new CloseBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
+            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), new CloseBoundInterfaceMessage(), bui.UiKey), session.ConnectedClient);
             CloseShared(bui, session, activeUis);
             return true;
         }
@@ -415,7 +415,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         public void SendUiMessage(PlayerBoundUserInterface bui, BoundUserInterfaceMessage message)
         {
-            var msg = new BoundUIWrapMessage(bui.Owner, message, bui.UiKey);
+            var msg = new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey);
             foreach (var session in bui.SubscribedSessions)
             {
                 RaiseNetworkEvent(msg, session.ConnectedClient);
@@ -441,7 +441,7 @@ namespace Robust.Server.GameObjects
             if (!bui.SubscribedSessions.Contains(session))
                 return false;
 
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, message, bui.UiKey), session.ConnectedClient);
+            RaiseNetworkEvent(new BoundUIWrapMessage(GetNetEntity(bui.Owner), message, bui.UiKey), session.ConnectedClient);
             return true;
         }
 

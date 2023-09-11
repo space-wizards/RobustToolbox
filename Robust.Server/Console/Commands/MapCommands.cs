@@ -27,11 +27,13 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var uid))
+            if (!NetEntity.TryParse(args[0], out var uidNet))
             {
                 shell.WriteError("Not a valid entity ID.");
                 return;
             }
+
+            var uid = _ent.GetEntity(uidNet);
 
             // no saving default grid
             if (!_ent.EntityExists(uid))

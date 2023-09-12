@@ -52,7 +52,6 @@ namespace Robust.Shared.GameObjects
     public interface IComponentFactory
     {
         event Action<ComponentRegistration> ComponentAdded;
-        event Action<ComponentRegistration, CompIdx> ComponentReferenceAdded;
         event Action<string> ComponentIgnoreAdded;
 
         /// <summary>
@@ -156,7 +155,7 @@ namespace Robust.Shared.GameObjects
         /// </exception>
         [Pure]
         string GetComponentName(Type componentType);
-        
+
         /// <summary>
         ///     Gets the name of a component, throwing an exception if it does not exist.
         /// </summary>

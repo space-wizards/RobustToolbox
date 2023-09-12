@@ -402,7 +402,7 @@ public partial class SharedPhysicsSystem
     public void TrySetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
     {
         if (_fixturesQuery.Resolve(uid, ref manager, false) &&
-           _physicsQuery.Resolve(uid, ref body, false) &&
+           PhysicsQuery.Resolve(uid, ref body, false) &&
            _xformQuery.Resolve(uid, ref xform, false))
         {
             SetBodyType(uid, value, manager, body, xform);

@@ -501,7 +501,7 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool HasComp<T>(EntityUid uid)
+    protected bool HasComp<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -519,7 +519,7 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid)
+    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent
     {
         return EntityManager.HasComponent<T>(uid);
     }

@@ -67,7 +67,6 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly ObjectPoolManager _pool = default!;
         [Dependency] private readonly IConsoleHost _conHost = default!;
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
@@ -834,7 +833,7 @@ namespace Robust.Client.GameStates
             {
                 try
                 {
-                    ProcessDeletions(delSpan, xforms, metas, xformSys);
+                    ProcessDeletions(delSpan, xforms, xformSys);
                 }
                 catch (Exception e)
                 {
@@ -872,7 +871,7 @@ namespace Robust.Client.GameStates
 
             // Construct hashset for set.Contains() checks.
             var entityStates = state.EntityStates.Span;
-            var stateEnts = new HashSet<NetEntity>();
+            using var stateEnts = new PooledSet<NetEntity>();
             foreach (var entState in entityStates)
             {
                 stateEnts.Add(entState.NetEntity);
@@ -927,14 +926,11 @@ namespace Robust.Client.GameStates
             {
                 _entities.DeleteEntity(ent);
             }
-
-            _pool.Return(stateEnts);
         }
 
         private void ProcessDeletions(
             ReadOnlySpan<NetEntity> delSpan,
             EntityQuery<TransformComponent> xforms,
-            EntityQuery<MetaDataComponent> metas,
             SharedTransformSystem xformSys)
         {
             // Processing deletions is non-trivial, because by default deletions will also delete all child entities.

@@ -40,7 +40,6 @@ namespace Robust.Shared.GameObjects
         [IoC.Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [IoC.Dependency] private readonly IMapManager _mapManager = default!;
         [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
-        [IoC.Dependency] private readonly ObjectPoolManager _poolManager = default!;
         [IoC.Dependency] private readonly ISerializationManager _serManager = default!;
         [IoC.Dependency] private readonly ProfManager _prof = default!;
 
@@ -870,11 +869,6 @@ namespace Robust.Shared.GameObjects
             // server should never be calling this.
             DebugTools.Assert("Why are you raising predictive events on the server?");
         }
-
-        /// <summary>
-        /// </summary>
-        /// Generates a unique network id and increments <see cref="NextNetworkId"/>
-        protected virtual NetEntity GenerateNetEntity() => new(NextNetworkId++);
 
         /// <summary>
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>

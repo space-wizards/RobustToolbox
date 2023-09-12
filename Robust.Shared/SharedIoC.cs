@@ -49,7 +49,6 @@ namespace Robust.Shared
             deps.Register<IParallelManagerInternal, ParallelManager>();
             deps.Register<ToolshedManager>();
             deps.Register<HttpClientHolder>();
-            deps.Register<ObjectPoolManager>();
         }
     }
 }

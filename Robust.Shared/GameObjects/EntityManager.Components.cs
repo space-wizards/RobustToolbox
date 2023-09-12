@@ -578,12 +578,12 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent<T>(EntityUid uid)
+        public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
             if (!_world.IsAlive(uid) || !_world.TryGet(uid, out T comp))
                 return false;
 
-            return !((IComponent) comp!).Deleted;
+            return !comp!.Deleted;
         }
 
         /// <inheritdoc />

@@ -164,7 +164,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Component reference type to check for.</typeparam>
         /// <param name="uid">Entity UID to check.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
-        bool HasComponent<T>(EntityUid uid);
+        bool HasComponent<T>(EntityUid uid) where T : IComponent;
 
         /// <summary>
         ///     Checks if the entity has a component type.
@@ -188,7 +188,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
-        bool HasComponent(EntityUid ?uid, Type type);
+        bool HasComponent(EntityUid? uid, Type type);
 
         /// <summary>
         ///     Checks if the entity has a component with a given network ID. This does not check

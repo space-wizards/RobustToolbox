@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 159.0.1
+
+### Bugfixes
+
+* Fix pending entity states not being removed when coming in (only on entity deletion).
+
+### Internal
+
+* Remove PhysicsComponent ref from Fixture.
+
+
 ## 159.0.0
 
 ### Breaking changes

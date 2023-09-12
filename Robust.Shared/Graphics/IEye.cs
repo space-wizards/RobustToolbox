@@ -1,9 +1,9 @@
-﻿using System.Numerics;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics
+namespace Robust.Shared.Graphics
 {
     /// <summary>
     /// An Eye is a point through which the player can view the world.

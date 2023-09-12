@@ -4,41 +4,52 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [NetworkedComponent]
-    public abstract partial class SharedUserInterfaceComponent : Component
+    [RegisterComponent, NetworkedComponent]
+    public sealed partial class UserInterfaceComponent : Component
     {
-        [DataField("interfaces")]
-        internal List<PrototypeData> _interfaceData = new();
+        // TODO: Obviously clean this shit up, I just moved it into shared.
 
-        [DataDefinition]
-        public sealed partial class PrototypeData
-        {
-            [DataField("key", required: true)]
-            public Enum UiKey { get; private set; } = default!;
+        [ViewVariables] public readonly Dictionary<Enum, BoundUserInterface> OpenInterfaces = new();
 
-            [DataField("type", required: true)]
-            public string ClientType { get; private set; } = default!;
+        [ViewVariables] public readonly Dictionary<Enum, PlayerBoundUserInterface> Interfaces = new();
 
-            /// <summary>
-            ///     Maximum range before a BUI auto-closes. A non-positive number means there is no limit.
-            /// </summary>
-            [DataField("range")]
-            public float InteractionRange = 2f;
+        public Dictionary<Enum, PrototypeData> MappedInterfaceData = new();
 
-            // TODO BUI move to content?
-            // I've tried to keep the name general, but really this is a bool for: can ghosts/stunned/dead people press buttons on this UI?
-            /// <summary>
-            ///     Determines whether the server should verify that a client is capable of performing generic UI interactions when receiving UI messages.
-            /// </summary>
-            /// <remarks>
-            ///     Avoids requiring each system to individually validate client inputs. However, perhaps some BUIs are supposed to be bypass accessibility checks
-            /// </remarks>
-            [DataField("requireInputValidation")]
-            public bool RequireInputValidation = true;
-        }
+        /// <summary>
+        /// Loaded on Init from serialized data.
+        /// </summary>
+        [DataField("interfaces")] internal List<PrototypeData> InterfaceData = new();
+    }
+
+    [DataDefinition]
+    public sealed partial class PrototypeData
+    {
+        [DataField("key", required: true)]
+        public Enum UiKey { get; private set; } = default!;
+
+        [DataField("type", required: true)]
+        public string ClientType { get; private set; } = default!;
+
+        /// <summary>
+        ///     Maximum range before a BUI auto-closes. A non-positive number means there is no limit.
+        /// </summary>
+        [DataField("range")]
+        public float InteractionRange = 2f;
+
+        // TODO BUI move to content?
+        // I've tried to keep the name general, but really this is a bool for: can ghosts/stunned/dead people press buttons on this UI?
+        /// <summary>
+        ///     Determines whether the server should verify that a client is capable of performing generic UI interactions when receiving UI messages.
+        /// </summary>
+        /// <remarks>
+        ///     Avoids requiring each system to individually validate client inputs. However, perhaps some BUIs are supposed to be bypass accessibility checks
+        /// </remarks>
+        [DataField("requireInputValidation")]
+        public bool RequireInputValidation = true;
     }
 
     /// <summary>
@@ -131,22 +142,39 @@ namespace Robust.Shared.GameObjects
     }
 
     [Serializable, NetSerializable]
-    internal sealed class BoundUIWrapMessage : EntityEventArgs
+    internal abstract class BaseBoundUIWrapMessage : EntityEventArgs
     {
         public readonly NetEntity Entity;
         public readonly BoundUserInterfaceMessage Message;
         public readonly Enum UiKey;
 
-        public BoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
+        public BaseBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey)
         {
             Message = message;
             UiKey = uiKey;
             Entity = entity;
         }
+    }
 
-        public override string ToString()
+    /// <summary>
+    /// Helper message raised from client to server.
+    /// </summary>
+    [Serializable, NetSerializable]
+    internal sealed class BoundUIWrapMessage : BaseBoundUIWrapMessage
+    {
+        public BoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey) : base(entity, message, uiKey)
         {
-            return $"{nameof(BoundUIWrapMessage)}: {Message}";
+        }
+    }
+
+    /// <summary>
+    /// Helper message raised from client to server.
+    /// </summary>
+    [Serializable, NetSerializable]
+    internal sealed class PredictedBoundUIWrapMessage : BaseBoundUIWrapMessage
+    {
+        public PredictedBoundUIWrapMessage(NetEntity entity, BoundUserInterfaceMessage message, Enum uiKey) : base(entity, message, uiKey)
+        {
         }
     }
 

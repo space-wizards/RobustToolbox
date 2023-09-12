@@ -25,7 +25,6 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
     [Dependency] private readonly IPlayerManager _player = default!;
     [Dependency] private readonly IClientGameStateManager _state = default!;
     [Dependency] private readonly IClientGameTiming _timing = default!;
-    [Dependency] private readonly ObjectPoolManager _pool = default!;
 
     public override void Initialize()
     {
@@ -122,7 +121,7 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager
             players,
             deletions);
 
-        var detached = _pool.GetNetEntityList();
+        var detached = new List<NetEntity>();
         var query = _entMan.AllEntityQueryEnumerator<MetaDataComponent>();
         while (query.MoveNext(out var uid, out var comp))
         {

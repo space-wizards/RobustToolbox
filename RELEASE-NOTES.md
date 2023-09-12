@@ -54,6 +54,67 @@ END TEMPLATE-->
 *None yet*
 
 
+## 159.0.1
+
+### Bugfixes
+
+* Fix pending entity states not being removed when coming in (only on entity deletion).
+
+### Internal
+
+* Remove PhysicsComponent ref from Fixture.
+
+
+## 159.0.0
+
+### Breaking changes
+
+* Remove ComponentReference from PointLights.
+* Move more of UserInterfaceSystem to shared.
+* Mark some EntitySystem proxy methods as protected instead of public.
+
+### New features
+
+* Make entity deletion take in a nullable EntityUid.
+* Added a method to send predicted messages via BUIs.
+
+### Other
+
+* Add Obsoletions to more sourcegen serv4 methods.
+* Remove inactive reviewers from CODEOWNERs.
+
+
+## 158.0.0
+
+### Breaking changes
+
+* Remove SharedEyeComponent.
+* Add Tile Overlay edge priority.
+
+
+## 157.1.0
+
+### New features
+
+* UI tooltips now use rich text labels.
+
+
+## 157.0.0
+
+### Breaking changes
+
+* Unrevert container changes from 155.0.0.
+* Added server-client EntityUid separation. A given EntityUid will no longer refer to the same entity on the server & client.
+* EntityUid is no longer net-serializable, use NetEntity instead, EntityManager & entity systems have helper methods for converting between the two,
+
+
+## 156.0.0
+
+### Breaking changes
+
+* Revert container changes from 155.0.0.
+
+
 ## 155.0.0
 
 ### Breaking changes

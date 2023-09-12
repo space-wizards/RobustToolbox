@@ -44,7 +44,22 @@ namespace Robust.Shared.Containers
 
         private void OnContainerGetState(EntityUid uid, ContainerManagerComponent component, ref ComponentGetState args)
         {
-            args.State = new ContainerManagerComponent.ContainerManagerComponentState(EntityManager, component.Containers);
+            Dictionary<string, ContainerManagerComponent.ContainerManagerComponentState.ContainerData> containerSet = new(component.Containers.Count);
+
+            foreach (var container in component.Containers.Values)
+            {
+                var uidArr = new NetEntity[container.ContainedEntities.Count];
+
+                for (var index = 0; index < container.ContainedEntities.Count; index++)
+                {
+                    uidArr[index] = GetNetEntity(container.ContainedEntities[index]);
+                }
+
+                var sContainer = new ContainerManagerComponent.ContainerManagerComponentState.ContainerData(container.GetType().Name, container.ShowContents, container.OccludesLight, uidArr);
+                containerSet.Add(container.ID, sContainer);
+            }
+
+            args.State = new ContainerManagerComponent.ContainerManagerComponentState(containerSet);
         }
 
         // TODO: Make ContainerManagerComponent ECS and make these proxy methods the real deal.

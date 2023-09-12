@@ -138,15 +138,35 @@ namespace Robust.Shared.Containers
         [Serializable, NetSerializable]
         internal sealed class ContainerManagerComponentState : ComponentState
         {
-            public Dictionary<string, BaseContainer> Containers;
+            public Dictionary<string, ContainerData> Containers;
 
-            public ContainerManagerComponentState(IEntityManager entManager, Dictionary<string, BaseContainer> containers)
+            public ContainerManagerComponentState(Dictionary<string, ContainerData> containers)
             {
                 Containers = containers;
+            }
 
-                foreach (var container in containers.Values)
+            [Serializable, NetSerializable]
+            public readonly struct ContainerData
+            {
+                public readonly string ContainerType; // TODO remove this. We dont have to send a whole string.
+                public readonly bool ShowContents;
+                public readonly bool OccludesLight;
+                public readonly NetEntity[] ContainedEntities;
+
+                public ContainerData(string containerType, bool showContents, bool occludesLight, NetEntity[] containedEntities)
                 {
-                    container.SetState(entManager);
+                    ContainerType = containerType;
+                    ShowContents = showContents;
+                    OccludesLight = occludesLight;
+                    ContainedEntities = containedEntities;
+                }
+
+                public void Deconstruct(out string type, out bool showEnts, out bool occludesLight, out NetEntity[] ents)
+                {
+                    type = ContainerType;
+                    showEnts = ShowContents;
+                    occludesLight = OccludesLight;
+                    ents = ContainedEntities;
                 }
             }
         }

@@ -15,6 +15,12 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using ComponentRegistry = Robust.Shared.Prototypes.ComponentRegistry;
 
 namespace Robust.Shared.GameObjects
@@ -419,8 +425,12 @@ namespace Robust.Shared.GameObjects
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>
         /// <param name="e">Entity to remove</param>
-        public virtual void DeleteEntity(EntityUid e)
+        public virtual void DeleteEntity(EntityUid? uid)
         {
+            if (uid == null)
+                return;
+            var e = uid.Value;
+
             // Some UIs get disposed after entity-manager has shut down and already deleted all entities.
             if (!Started)
                 return;
@@ -860,6 +870,11 @@ namespace Robust.Shared.GameObjects
             // server should never be calling this.
             DebugTools.Assert("Why are you raising predictive events on the server?");
         }
+
+        /// <summary>
+        /// </summary>
+        /// Generates a unique network id and increments <see cref="NextNetworkId"/>
+        protected virtual NetEntity GenerateNetEntity() => new(NextNetworkId++);
 
         /// <summary>
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>

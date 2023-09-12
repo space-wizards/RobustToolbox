@@ -30,7 +30,7 @@ public partial interface IEntityManager
     /// <summary>
     /// TryGet version of <see cref="GetNetEntity"/>
     /// </summary>
-    public bool TryGetNetEntity(EntityUid? uid, out NetEntity netEntity,
+    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity,
         MetaDataComponent? metadata = null);
 
     /// <summary>

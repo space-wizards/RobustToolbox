@@ -37,7 +37,7 @@ namespace Robust.Client.Graphics
             Vector2 scale,
             Angle? worldRot,
             Angle eyeRotation = default,
-            Direction? overrideDirection = null,
+            Shared.Maths.Direction? overrideDirection = null,
             SpriteComponent? sprite = null,
             TransformComponent? xform = null,
             SharedTransformSystem? xformSystem = null);

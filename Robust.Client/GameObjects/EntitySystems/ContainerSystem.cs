@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+using System;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -9,6 +7,10 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using Robust.Shared.Serialization;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
@@ -16,8 +18,12 @@ namespace Robust.Client.GameObjects
     public sealed class ContainerSystem : SharedContainerSystem
     {
         [Dependency] private readonly INetManager _netMan = default!;
+        [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly PointLightSystem _lightSys = default!;
+
+        private EntityQuery<PointLightComponent> _pointLightQuery;
+        private EntityQuery<SpriteComponent> _spriteQuery;
 
         private readonly HashSet<EntityUid> _updateQueue = new();
 
@@ -26,6 +32,9 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
+
+            _pointLightQuery = GetEntityQuery<PointLightComponent>();
+            _spriteQuery = GetEntityQuery<SpriteComponent>();
 
             EntityManager.EntityInitialized += HandleEntityInitialized;
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
@@ -50,7 +59,7 @@ namespace Robust.Client.GameObjects
             if (!RemoveExpectedEntity(GetNetEntity(uid), out var container))
                 return;
 
-            container.Insert(uid);
+            container.Insert(uid, EntityManager, transform: TransformQuery.GetComponent(uid), meta: MetaQuery.GetComponent(uid));
         }
 
         private void HandleComponentState(EntityUid uid, ContainerManagerComponent component, ref ComponentHandleState args)
@@ -64,9 +73,9 @@ namespace Robust.Client.GameObjects
             var toDelete = new ValueList<string>();
             foreach (var (id, container) in component.Containers)
             {
-                if (cast.Containers.TryGetValue(id, out var stateContainer)
-                    && stateContainer.GetType() == container.GetType())
+                if (cast.Containers.ContainsKey(id))
                 {
+                    DebugTools.Assert(cast.Containers[id].ContainerType == container.GetType().Name);
                     continue;
                 }
 
@@ -93,33 +102,31 @@ namespace Robust.Client.GameObjects
 
             // Add new containers and update existing contents.
 
-            foreach (var (id, stateContainer) in cast.Containers)
+            foreach (var (id, data) in cast.Containers)
             {
-                stateContainer.HandleState(EntityManager);
-
                 if (!component.Containers.TryGetValue(id, out var container))
                 {
-                    container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(stateContainer.GetType(), inject: false);
+                    var type = _serializer.FindSerializedType(typeof(BaseContainer), data.ContainerType);
+                    container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type!, inject:false);
                     container.Init(id, uid, component);
                     component.Containers.Add(id, container);
                 }
 
-                foreach (var netEntity in stateContainer.ContainedNetEntities)
-                {
-                    if (!EntityManager.TryGetEntity(netEntity, out _))
-                        AddExpectedEntity(netEntity, container);
-                }
-
-                DebugTools.AssertNotNull(stateContainer.ContainedEntities);
                 DebugTools.Assert(container.ID == id);
-                container.ShowContents = stateContainer.ShowContents;
-                container.OccludesLight = stateContainer.OccludesLight;
+                container.ShowContents = data.ShowContents;
+                container.OccludesLight = data.OccludesLight;
 
                 // Remove gone entities.
                 var toRemove = new ValueList<EntityUid>();
+
+                DebugTools.Assert(!container.Contains(EntityUid.Invalid));
+
+                var stateNetEnts = data.ContainedEntities;
+                var stateEnts = GetEntityArray(stateNetEnts); // No need to ensure entities.
+
                 foreach (var entity in container.ContainedEntities)
                 {
-                    if (!stateContainer.Contains(entity))
+                    if (!stateEnts.Contains(entity))
                         toRemove.Add(entity);
                 }
 
@@ -140,10 +147,8 @@ namespace Robust.Client.GameObjects
                 var removedExpected = new ValueList<NetEntity>();
                 foreach (var netEntity in container.ExpectedEntities)
                 {
-                    if (!stateContainer.ContainedNetEntities.Contains(netEntity))
-                    {
+                    if (!stateNetEnts.Contains(netEntity))
                         removedExpected.Add(netEntity);
-                    }
                 }
 
                 foreach (var entityUid in removedExpected)
@@ -152,16 +157,19 @@ namespace Robust.Client.GameObjects
                 }
 
                 // Add new entities.
-                foreach (var netEnt in stateContainer.ContainedNetEntities)
+                for (var i = 0; i < stateNetEnts.Length; i++)
                 {
-                    if (!TryGetEntity(netEnt, out var entity))
-                        continue;
-
-                    if (!EntityManager.TryGetComponent(entity, out MetaDataComponent? meta))
+                    var entity = stateEnts[i];
+                    var netEnt = stateNetEnts[i];
+                    if (!entity.IsValid())
                     {
+                        DebugTools.Assert(netEnt.IsValid());
                         AddExpectedEntity(netEnt, container);
                         continue;
                     }
+
+                    var meta = MetaData(entity);
+                    DebugTools.Assert(meta.NetEntity == netEnt);
 
                     // If an entity is currently in the shadow realm, it means we probably left PVS and are now getting
                     // back into range. We do not want to directly insert this entity, as IF the container and entity
@@ -176,17 +184,17 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
-                    if (container.Contains(entity.Value))
+                    if (container.Contains(entity))
                         continue;
 
                     RemoveExpectedEntity(netEnt, out _);
-                    container.Insert(entity.Value, EntityManager,
-                        TransformQuery.GetComponent(entity.Value),
+                    container.Insert(entity, EntityManager,
+                        TransformQuery.GetComponent(entity),
                         xform,
-                        MetaQuery.GetComponent(entity.Value),
+                        MetaQuery.GetComponent(entity),
                         force: true);
 
-                    DebugTools.Assert(container.Contains(entity.Value));
+                    DebugTools.Assert(container.Contains(entity));
                 }
             }
         }
@@ -220,11 +228,12 @@ namespace Robust.Client.GameObjects
         public void AddExpectedEntity(NetEntity netEntity, BaseContainer container)
         {
 #if DEBUG
-            if (EntityManager.TryGetEntity(netEntity, out var uid))
+            var uid = GetEntity(netEntity);
+
+            if (TryComp<MetaDataComponent>(uid, out var meta))
             {
-                DebugTools.Assert(!TryComp(uid, out MetaDataComponent? meta) ||
-                                  (meta.Flags & ( MetaDataFlags.Detached | MetaDataFlags.InContainer) ) == MetaDataFlags.Detached,
-                    $"Adding entity {ToPrettyString(uid.Value)} to list of expected entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");
+                DebugTools.Assert((meta.Flags & ( MetaDataFlags.Detached | MetaDataFlags.InContainer) ) == MetaDataFlags.Detached,
+                    $"Adding entity {ToPrettyString(uid)} to list of expected entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");
             }
 #endif
 
@@ -250,7 +259,7 @@ namespace Robust.Client.GameObjects
                 return false;
 
             DebugTools.Assert(container.ExpectedEntities.Contains(netEntity),
-                $"While removing expected contained entity {netEntity}, the entity was missing from the container expected set. Container: {container.ID} in {ToPrettyString(container.Owner)}");
+                $"While removing expected contained entity {ToPrettyString(netEntity)}, the entity was missing from the container expected set. Container: {container.ID} in {ToPrettyString(container.Owner)}");
             container.ExpectedEntities.Remove(netEntity);
             return true;
         }
@@ -258,31 +267,24 @@ namespace Robust.Client.GameObjects
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
-            var pointQuery = EntityManager.GetEntityQuery<PointLightComponent>();
-            var spriteQuery = EntityManager.GetEntityQuery<SpriteComponent>();
-            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
             foreach (var toUpdate in _updateQueue)
             {
                 if (Deleted(toUpdate))
                     continue;
 
-                UpdateEntityRecursively(toUpdate, xformQuery, pointQuery, spriteQuery);
+                UpdateEntityRecursively(toUpdate);
             }
 
             _updateQueue.Clear();
         }
 
-        private void UpdateEntityRecursively(
-            EntityUid entity,
-            EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<PointLightComponent> pointQuery,
-            EntityQuery<SpriteComponent> spriteQuery)
+        private void UpdateEntityRecursively(EntityUid entity)
         {
             // Recursively go up parents and containers to see whether both sprites and lights need to be occluded
             // Could maybe optimise this more by checking nearest parent that has sprite / light and whether it's container
             // occluded but this probably isn't a big perf issue.
-            var xform = xformQuery.GetComponent(entity);
+            var xform = TransformQuery.GetComponent(entity);
             var parent = xform.ParentUid;
             var child = entity;
             var spriteOccluded = false;
@@ -290,7 +292,7 @@ namespace Robust.Client.GameObjects
 
             while (parent.IsValid() && (!spriteOccluded || !lightOccluded))
             {
-                var parentXform = xformQuery.GetComponent(parent);
+                var parentXform = TransformQuery.GetComponent(parent);
                 if (TryComp<ContainerManagerComponent>(parent, out var manager) && manager.TryGetContainer(child, out var container))
                 {
                     spriteOccluded = spriteOccluded || !container.ShowContents;
@@ -305,24 +307,21 @@ namespace Robust.Client.GameObjects
             // This is the CBT bit.
             // The issue is we need to go through the children and re-check whether they are or are not contained.
             // if they are contained then the occlusion values may need updating for all those children
-            UpdateEntity(entity, xform, xformQuery, pointQuery, spriteQuery, spriteOccluded, lightOccluded);
+            UpdateEntity(entity, xform, spriteOccluded, lightOccluded);
         }
 
         private void UpdateEntity(
             EntityUid entity,
             TransformComponent xform,
-            EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<PointLightComponent> pointQuery,
-            EntityQuery<SpriteComponent> spriteQuery,
             bool spriteOccluded,
             bool lightOccluded)
         {
-            if (spriteQuery.TryGetComponent(entity, out var sprite))
+            if (_spriteQuery.TryGetComponent(entity, out var sprite))
             {
                 sprite.ContainerOccluded = spriteOccluded;
             }
 
-            if (pointQuery.TryGetComponent(entity, out var light))
+            if (_pointLightQuery.TryGetComponent(entity, out var light))
                 _lightSys.SetContainerOccluded(entity, lightOccluded, light);
 
             var childEnumerator = xform.ChildEnumerator;
@@ -343,14 +342,14 @@ namespace Robust.Client.GameObjects
                         childLightOccluded = childLightOccluded || container.OccludesLight;
                     }
 
-                    UpdateEntity(child.Value, xformQuery.GetComponent(child.Value), xformQuery, pointQuery, spriteQuery, childSpriteOccluded, childLightOccluded);
+                    UpdateEntity(child.Value, TransformQuery.GetComponent(child.Value), childSpriteOccluded, childLightOccluded);
                 }
             }
             else
             {
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    UpdateEntity(child.Value, xformQuery.GetComponent(child.Value), xformQuery, pointQuery, spriteQuery, spriteOccluded, lightOccluded);
+                    UpdateEntity(child.Value, TransformQuery.GetComponent(child.Value), spriteOccluded, lightOccluded);
                 }
             }
         }

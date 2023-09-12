@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -9,10 +6,13 @@ using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using System;
+using System.Collections.Generic;
+using System.Numerics;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Containers
 {
@@ -20,7 +20,6 @@ namespace Robust.Shared.Containers
     /// Base container class that all container inherit from.
     /// </summary>
     [ImplicitDataDefinitionForInheritors]
-    [Serializable, NetSerializable]
     public abstract partial class BaseContainer
     {
         /// <summary>
@@ -30,9 +29,9 @@ namespace Robust.Shared.Containers
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
 
         /// <summary>
-        /// Collection of all the entities sent by the server within this specific container
+        /// Number of contained entities.
         /// </summary>
-        internal abstract IList<NetEntity> ContainedNetEntities { get; }
+        public abstract int Count { get; }
 
         [ViewVariables, NonSerialized]
         public List<NetEntity> ExpectedEntities = new();
@@ -150,7 +149,6 @@ namespace Robust.Shared.Containers
 
             // Avoid unnecessary broadphase updates while unanchoring, changing physics collision, and re-parenting.
             var old = transform.Broadphase;
-
             transform.Broadphase = BroadphaseData.Invalid;
 
             // Unanchor the entity (without changing physics body types).
@@ -377,9 +375,5 @@ namespace Robust.Shared.Containers
         /// <param name="toRemove"></param>
         /// <param name="entMan"></param>
         protected abstract void InternalRemove(EntityUid toRemove, IEntityManager entMan);
-
-        internal abstract void HandleState(IEntityManager entMan);
-
-        internal abstract void SetState(IEntityManager entMan);
     }
 }

@@ -106,7 +106,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
-    public bool TryGetNetEntity(EntityUid? uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
     {
         if (uid == null)
         {
@@ -160,8 +160,10 @@ public partial class EntityManager
         if (uid == EntityUid.Invalid)
             return NetEntity.Invalid;
 
-        DebugTools.Assert(metadata == null || metadata.Owner == uid);
-        return (metadata ?? MetaQuery.GetComponent(uid)).NetEntity;
+        if (!MetaQuery.Resolve(uid, ref metadata))
+            return NetEntity.Invalid;
+
+        return metadata.NetEntity;
     }
 
     /// <inheritdoc />
@@ -231,7 +233,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public HashSet<EntityUid> GetEntitySet(HashSet<NetEntity> netEntities)
     {
-        var entities = _poolManager.GetEntitySet();
+        var entities = new HashSet<EntityUid>();
         entities.EnsureCapacity(netEntities.Count);
 
         foreach (var netEntity in netEntities)
@@ -334,8 +336,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityUid> entities)
     {
-        var newSet = _poolManager.GetNetEntitySet();
-        newSet.EnsureCapacity(entities.Count);
+        var newSet = new HashSet<NetEntity>(entities.Count);
 
         foreach (var ent in entities)
         {
@@ -349,8 +350,20 @@ public partial class EntityManager
     /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(List<EntityUid> entities)
     {
-        var netEntities = _poolManager.GetNetEntityList();
-        netEntities.EnsureCapacity(entities.Count);
+        var netEntities = new List<NetEntity>(entities.Count);
+
+        foreach (var netEntity in entities)
+        {
+            netEntities.Add(GetNetEntity(netEntity));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
+    public List<NetEntity> GetNetEntityList(IReadOnlyList<EntityUid> entities)
+    {
+        var netEntities = new List<NetEntity>(entities.Count);
 
         foreach (var netEntity in entities)
         {
@@ -363,8 +376,7 @@ public partial class EntityManager
     /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(ICollection<EntityUid> entities)
     {
-        var netEntities = _poolManager.GetNetEntityList();
-        netEntities.EnsureCapacity(entities.Count);
+        var netEntities = new List<NetEntity>(entities.Count);
 
         foreach (var netEntity in entities)
         {

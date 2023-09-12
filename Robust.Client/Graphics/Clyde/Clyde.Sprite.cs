@@ -14,6 +14,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
+using Robust.Shared.Graphics;
 
 namespace Robust.Client.Graphics.Clyde;
 

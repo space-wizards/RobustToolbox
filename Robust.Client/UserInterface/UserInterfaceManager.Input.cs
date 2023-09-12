@@ -39,7 +39,7 @@ internal partial class UserInterfaceManager
     private float? _tooltipDelay;
     private bool _showingTooltip;
     private Control? _suppliedTooltip;
-    private const float TooltipDelay = 1;
+    private const float TooltipDelay = 0.25f;
 
     private WindowRoot? _focusedRoot;
 

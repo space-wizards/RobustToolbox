@@ -1,4 +1,5 @@
 using System.Numerics;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics

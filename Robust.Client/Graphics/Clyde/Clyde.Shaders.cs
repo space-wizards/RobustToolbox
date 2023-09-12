@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Text;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;

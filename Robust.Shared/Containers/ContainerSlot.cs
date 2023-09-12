@@ -12,9 +12,11 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Containers
 {
     [UsedImplicitly]
-    [Serializable, NetSerializable]
+    [SerializedType(nameof(ContainerSlot))]
     public sealed partial class ContainerSlot : BaseContainer
     {
+        public override int Count => ContainedEntity == null ? 0 : 1;
+
         /// <inheritdoc />
         public override IReadOnlyList<EntityUid> ContainedEntities
         {
@@ -26,20 +28,6 @@ namespace Robust.Shared.Containers
                 _containedEntityArray ??= new[] { _containedEntity.Value };
                 DebugTools.Assert(_containedEntityArray[0] == _containedEntity);
                 return _containedEntityArray;
-            }
-        }
-
-        // todo this is the worst code i have written for ss14
-        internal override IList<NetEntity> ContainedNetEntities
-        {
-            get
-            {
-                if (_containedNetEntity == null)
-                    return Array.Empty<NetEntity>();
-
-                _containedNetEntityArray ??= new[] { _containedNetEntity.Value };
-                DebugTools.Assert(_containedNetEntityArray[0] == _containedNetEntity);
-                return _containedNetEntityArray;
             }
         }
 
@@ -58,32 +46,12 @@ namespace Robust.Shared.Containers
             }
         }
 
-        public NetEntity? ContainedNetEntity
-        {
-            get => _containedNetEntity;
-            private set
-            {
-                _containedNetEntity = value;
-                if (value != null)
-                {
-                    _containedNetEntityArray ??= new NetEntity[1];
-                    _containedNetEntityArray[0] = value.Value;
-                }
-            }
-        }
-
         [NonSerialized]
         private EntityUid? _containedEntity;
-
-        private NetEntity? _containedNetEntity;
 
         // Used by ContainedEntities to avoid allocating.
         [NonSerialized]
         private EntityUid[]? _containedEntityArray;
-
-        // Used by ContainedNetEntities to avoid allocating.
-        [NonSerialized]
-        private NetEntity[]? _containedNetEntityArray;
 
         /// <inheritdoc />
         public override bool Contains(EntityUid contained)
@@ -101,6 +69,9 @@ namespace Robust.Shared.Containers
 #endif
             return true;
         }
+
+        protected internal override bool CanInsert(EntityUid toInsert, bool assumeEmpty, IEntityManager entMan)
+            => ContainedEntity == null || assumeEmpty;
 
         /// <inheritdoc />
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
@@ -132,17 +103,6 @@ namespace Robust.Shared.Containers
                 entMan.DeleteEntity(entity);
             else if (entMan.EntityExists(entity))
                 Remove(entity, entMan, reparent: false, force: true);
-        }
-
-        internal override void HandleState(IEntityManager entMan)
-        {
-            if (entMan.TryGetEntity(ContainedNetEntity, out var entity))
-                ContainedEntity = entity;
-        }
-
-        internal override void SetState(IEntityManager entMan)
-        {
-            ContainedNetEntity = entMan.GetNetEntity(ContainedEntity);
         }
     }
 }

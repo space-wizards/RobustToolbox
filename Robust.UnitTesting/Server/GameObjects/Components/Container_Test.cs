@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.Containers;
 using Robust.Shared.Containers;
@@ -39,7 +40,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entManager = sim.Resolve<IEntityManager>();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var entity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var entity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
 
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
@@ -76,8 +77,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entManager = sim.Resolve<IEntityManager>();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var owner = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
-            var inserted = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var owner = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
+            var inserted = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var transform = entManager.GetComponent<TransformComponent>(inserted);
 
             var container = containerSys.MakeContainer<Container>(owner, "dummy");
@@ -106,10 +107,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entManager = sim.Resolve<IEntityManager>();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var owner = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
-            var inserted = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var owner = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
+            var inserted = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var transform = entManager.GetComponent<TransformComponent>(inserted);
-            var entity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var entity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
 
             var container = containerSys.MakeContainer<Container>(owner, "dummy");
             Assert.That(container.Insert(inserted), Is.True);
@@ -134,7 +135,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entMan = sim.Resolve<IEntityManager>();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var coordinates = new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0));
+            var coordinates = new EntityCoordinates(new EntityUid(1), new Vector2(0, 0));
             var entityOne = sim.SpawnEntity(null, coordinates);
             var entityTwo = sim.SpawnEntity(null, coordinates);
             var entityThree = sim.SpawnEntity(null, coordinates);
@@ -167,7 +168,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var sim = SimulationFactory();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var entity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var entity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
             Assert.That(container.Insert(entity), Is.False);
@@ -180,8 +181,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var sim = SimulationFactory();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var mapEnt = EntityUid.FirstUid;
-            var entity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var mapEnt = new EntityUid(1);
+            var entity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
             Assert.That(container.Insert(mapEnt), Is.False);
@@ -195,7 +196,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
             var grid = sim.Resolve<IMapManager>().CreateGrid(new MapId(1)).Owner;
-            var entity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var entity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
             Assert.That(container.Insert(grid), Is.False);
@@ -209,9 +210,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entManager = sim.Resolve<IEntityManager>();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var containerEntity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var containerEntity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(containerEntity, "dummy");
-            var insertEntity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var insertEntity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
 
             var result = container.Insert(insertEntity);
 
@@ -232,9 +233,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var sim = SimulationFactory();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var containerEntity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var containerEntity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(containerEntity, "dummy");
-            var insertEntity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var insertEntity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
 
             var result = container.Remove(insertEntity);
 
@@ -247,11 +248,11 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var sim = SimulationFactory();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
 
-            var entity1 = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var entity1 = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container1 = containerSys.MakeContainer<Container>(entity1, "dummy");
-            var entity2 = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var entity2 = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container2 = containerSys.MakeContainer<Container>(entity2, "dummy");
-            var transferEntity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var transferEntity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             container1.Insert(transferEntity);
 
             var result = container2.Insert(transferEntity);
@@ -268,9 +269,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entManager = sim.Resolve<IEntityManager>();
             var containerSys = entManager.System<ContainerSystem>();
 
-            var entity = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var entity = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
-            var childEnt = sim.SpawnEntity(null, new EntityCoordinates(EntityUid.FirstUid, new Vector2(0, 0)));
+            var childEnt = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), new Vector2(0, 0)));
 
             container.OccludesLight = true;
             container.ShowContents = true;
@@ -283,26 +284,25 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             Assert.That(state.Containers, Has.Count.EqualTo(1));
             var cont = state.Containers.Values.First();
-            Assert.That(cont.ID, Is.EqualTo("dummy"));
+            Assert.That(state.Containers.Keys.First(), Is.EqualTo("dummy"));
             Assert.That(cont.OccludesLight, Is.True);
             Assert.That(cont.ShowContents, Is.True);
             Assert.That(cont.ContainedEntities.Count, Is.EqualTo(1));
-            Assert.That(cont.ContainedEntities[0], Is.EqualTo(childEnt));
+            Assert.That(cont.ContainedEntities[0], Is.EqualTo(entManager.GetNetEntity(childEnt)));
         }
 
-        [Serializable, NetSerializable]
+        [SerializedType(nameof(ContainerOnlyContainer))]
         private sealed partial class ContainerOnlyContainer : BaseContainer
         {
             /// <summary>
             /// The generic container class uses a list of entities
             /// </summary>
             private readonly List<EntityUid> _containerList = new();
-            private readonly List<NetEntity> _expectedEntities = new();
+
+            public override int Count => _containerList.Count;
 
             /// <inheritdoc />
             public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
-
-            internal override IList<NetEntity> ContainedNetEntities { get; }
 
             /// <inheritdoc />
             protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
@@ -314,16 +314,6 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             protected override void InternalRemove(EntityUid toRemove, IEntityManager entMan)
             {
                 _containerList.Remove(toRemove);
-            }
-
-            internal override void HandleState(IEntityManager entMan)
-            {
-                throw new NotImplementedException();
-            }
-
-            internal override void SetState(IEntityManager entMan)
-            {
-                throw new NotImplementedException();
             }
 
             /// <inheritdoc />

@@ -121,12 +121,23 @@ public abstract partial class SharedPhysicsSystem
 
         public bool Return(Contact obj)
         {
-            SetContact(obj, EntityUid.Invalid, EntityUid.Invalid, string.Empty, string.Empty, null, 0, null, 0);
+            SetContact(obj,
+                EntityUid.Invalid, EntityUid.Invalid,
+                string.Empty, string.Empty,
+                null, 0,
+                null, 0,
+                null, null);
             return true;
         }
     }
 
-    private static void SetContact(Contact contact, EntityUid uidA, EntityUid uidB, string fixtureAId, string fixtureBId, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
+    private static void SetContact(Contact contact,
+        EntityUid uidA, EntityUid uidB,
+        string fixtureAId, string fixtureBId,
+        Fixture? fixtureA, int indexA,
+        Fixture? fixtureB, int indexB,
+        PhysicsComponent? bodyA,
+        PhysicsComponent? bodyB)
     {
         contact.Enabled = true;
         contact.IsTouching = false;
@@ -142,8 +153,8 @@ public abstract partial class SharedPhysicsSystem
         contact.FixtureA = fixtureA;
         contact.FixtureB = fixtureB;
 
-        contact.BodyA = fixtureA?.Body;
-        contact.BodyB = fixtureB?.Body;
+        contact.BodyA = bodyA;
+        contact.BodyB = bodyB;
 
         contact.ChildIndexA = indexA;
         contact.ChildIndexB = indexB;
@@ -199,7 +210,12 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private Contact CreateContact(EntityUid uidA, EntityUid uidB, string fixtureAId, string fixtureBId, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+    private Contact CreateContact(
+        EntityUid uidA, EntityUid uidB,
+        string fixtureAId, string fixtureBId,
+        Fixture fixtureA, int indexA,
+        Fixture fixtureB, int indexB,
+        PhysicsComponent bodyA, PhysicsComponent bodyB)
     {
         var type1 = fixtureA.Shape.ShapeType;
         var type2 = fixtureB.Shape.ShapeType;
@@ -213,11 +229,11 @@ public abstract partial class SharedPhysicsSystem
         // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
         if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
         {
-            SetContact(contact, uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB);
+            SetContact(contact, uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB, bodyA, bodyB);
         }
         else
         {
-            SetContact(contact, uidB, uidA, fixtureBId, fixtureAId, fixtureB, indexB, fixtureA, indexA);
+            SetContact(contact, uidB, uidA, fixtureBId, fixtureAId, fixtureB, indexB, fixtureA, indexA, bodyB, bodyA);
         }
 
         contact.Type = _registers[(int)type1, (int)type2];
@@ -253,27 +269,27 @@ public abstract partial class SharedPhysicsSystem
             return;
 
         // Call the factory.
-        var contact = CreateContact(uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB);
+        var contact = CreateContact(uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB, bodyA, bodyB);
         contact.Flags = flags;
 
         // Contact creation may swap fixtures.
-        fixtureA = contact.FixtureA!;
-        fixtureB = contact.FixtureB!;
-        bodyA = contact.BodyA!;
-        bodyB = contact.BodyB!;
+        var fixA = contact.FixtureA!;
+        var fixB = contact.FixtureB!;
+        var bodA = contact.BodyA!;
+        var bodB = contact.BodyB!;
 
         // Insert into world
         _activeContacts.AddLast(contact.MapNode);
 
         // Connect to body A
-        DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
-        fixtureA.Contacts.Add(fixtureB, contact);
-        bodyA.Contacts.AddLast(contact.BodyANode);
+        DebugTools.Assert(!fixA.Contacts.ContainsKey(fixB));
+        fixA.Contacts.Add(fixB, contact);
+        bodA.Contacts.AddLast(contact.BodyANode);
 
         // Connect to body B
-        DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
-        fixtureB.Contacts.Add(fixtureA, contact);
-        bodyB.Contacts.AddLast(contact.BodyBNode);
+        DebugTools.Assert(!fixB.Contacts.ContainsKey(fixA));
+        fixB.Contacts.Add(fixA, contact);
+        bodB.Contacts.AddLast(contact.BodyBNode);
     }
 
     /// <summary>

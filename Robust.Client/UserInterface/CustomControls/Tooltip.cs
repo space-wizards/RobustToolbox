@@ -1,16 +1,32 @@
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
     public sealed class Tooltip : PanelContainer
     {
-        private readonly Label _label;
+        private readonly RichTextLabel _label;
 
         public string? Text
         {
-            get => _label.Text;
-            set => _label.Text = value;
+            get => _label.GetMessage();
+            set
+            {
+                if (value == null)
+                {
+                    _label.SetMessage(string.Empty);
+                }
+                else
+                {
+                    _label.SetMessage(value);
+                }
+            }
+        }
+
+        public void SetMessage(FormattedMessage message)
+        {
+            _label.SetMessage(message);
         }
 
         /// <summary>
@@ -28,7 +44,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             AddChild(vbox);
 
-            vbox.AddChild(_label = new Label());
+            vbox.AddChild(_label = new RichTextLabel());
         }
 
         protected override void FrameUpdate(FrameEventArgs args)

@@ -501,7 +501,7 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool HasComp<T>(EntityUid uid) where T : IComponent
+    protected bool HasComp<T>(EntityUid uid)
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -519,7 +519,7 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent
+    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid)
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -644,7 +644,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Del(EntityUid uid)
+    protected void Del(EntityUid? uid)
     {
         EntityManager.DeleteEntity(uid);
     }
@@ -674,7 +674,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.Spawn(string?, ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid Spawn(string? prototype)
+    protected EntityUid Spawn(string? prototype = null)
         => EntityManager.Spawn(prototype);
 
     /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
@@ -921,7 +921,7 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetNetEntity(EntityUid? uid, out NetEntity netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
     {
         return EntityManager.TryGetNetEntity(uid, out netEntity);
     }
@@ -936,7 +936,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> of an entity.  Errors if the entity does not exist.
+    ///     Returns the <see cref="NetEntity"/> of an entity.  Logs an error if the entity does not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity? GetNetEntity(EntityUid? uid, MetaDataComponent? metadata = null)
@@ -981,13 +981,13 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
+    protected HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity)
     {
         return EntityManager.EnsureEntitySet<T>(netEntities, callerEntity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
+    protected List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
     {
         return EntityManager.EnsureEntityList<T>(netEntities, callerEntity);
     }
@@ -1011,7 +1011,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected HashSet<NetEntity> GetNetEntitySet(HashSet<EntityUid> uids)
@@ -1029,10 +1029,19 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity> GetNetEntityList(ICollection<EntityUid> uids)
+    {
+        return EntityManager.GetNetEntityList(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected List<NetEntity> GetNetEntityList(IReadOnlyList<EntityUid> uids)
     {
         return EntityManager.GetNetEntityList(uids);
     }
@@ -1047,7 +1056,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity> GetNetEntityList(List<EntityUid> uids)
@@ -1065,7 +1074,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity?> GetNetEntityList(List<EntityUid?> uids)
@@ -1083,7 +1092,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Errors if the entities do not exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities. Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity[] GetNetEntityArray(EntityUid[] uids)
@@ -1101,7 +1110,7 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Errors if the entities do not exist.
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected NetEntity?[] GetNetEntityArray(EntityUid?[] uids)
@@ -1152,73 +1161,73 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public HashSet<EntityCoordinates> GetEntitySet(HashSet<NetCoordinates> netEntities)
+    protected HashSet<EntityCoordinates> GetEntitySet(HashSet<NetCoordinates> netEntities)
     {
         return EntityManager.GetEntitySet(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public List<EntityCoordinates> GetEntityList(List<NetCoordinates> netEntities)
+    protected List<EntityCoordinates> GetEntityList(List<NetCoordinates> netEntities)
     {
         return EntityManager.GetEntityList(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public List<EntityCoordinates> GetEntityList(ICollection<NetCoordinates> netEntities)
+    protected List<EntityCoordinates> GetEntityList(ICollection<NetCoordinates> netEntities)
     {
         return EntityManager.GetEntityList(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public List<EntityCoordinates?> GetEntityList(List<NetCoordinates?> netEntities)
+    protected List<EntityCoordinates?> GetEntityList(List<NetCoordinates?> netEntities)
     {
         return EntityManager.GetEntityList(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public EntityCoordinates[] GetEntityArray(NetCoordinates[] netEntities)
+    protected EntityCoordinates[] GetEntityArray(NetCoordinates[] netEntities)
     {
         return EntityManager.GetEntityArray(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public EntityCoordinates?[] GetEntityArray(NetCoordinates?[] netEntities)
+    protected EntityCoordinates?[] GetEntityArray(NetCoordinates?[] netEntities)
     {
         return EntityManager.GetEntityArray(netEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public HashSet<NetCoordinates> GetNetCoordinatesSet(HashSet<EntityCoordinates> entities)
+    protected HashSet<NetCoordinates> GetNetCoordinatesSet(HashSet<EntityCoordinates> entities)
     {
         return EntityManager.GetNetCoordinatesSet(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public List<NetCoordinates> GetNetCoordinatesList(List<EntityCoordinates> entities)
+    protected List<NetCoordinates> GetNetCoordinatesList(List<EntityCoordinates> entities)
     {
         return EntityManager.GetNetCoordinatesList(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public List<NetCoordinates> GetNetCoordinatesList(ICollection<EntityCoordinates> entities)
+    protected List<NetCoordinates> GetNetCoordinatesList(ICollection<EntityCoordinates> entities)
     {
         return EntityManager.GetNetCoordinatesList(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public List<NetCoordinates?> GetNetCoordinatesList(List<EntityCoordinates?> entities)
+    protected List<NetCoordinates?> GetNetCoordinatesList(List<EntityCoordinates?> entities)
     {
         return EntityManager.GetNetCoordinatesList(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NetCoordinates[] GetNetCoordinatesArray(EntityCoordinates[] entities)
+    protected NetCoordinates[] GetNetCoordinatesArray(EntityCoordinates[] entities)
     {
         return EntityManager.GetNetCoordinatesArray(entities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NetCoordinates?[] GetNetCoordinatesArray(EntityCoordinates?[] entities)
+    protected NetCoordinates?[] GetNetCoordinatesArray(EntityCoordinates?[] entities)
     {
         return EntityManager.GetNetCoordinatesArray(entities);
     }

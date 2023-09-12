@@ -98,7 +98,6 @@ namespace Robust.Shared.Physics.Systems
             }
 
             manager.Fixtures.Add(fixtureId, fixture);
-            fixture.Body = body;
 
             if (body.CanCollide && Resolve(uid, ref xform))
             {
@@ -206,16 +205,12 @@ namespace Robust.Shared.Physics.Systems
             // hence we'll just make sure its body is set and SharedBroadphaseSystem will deal with it later.
             if (Resolve(uid, ref body, false))
             {
-                foreach (var (id, fixture) in component.Fixtures)
+                foreach (var id in component.Fixtures.Keys)
                 {
                     if (string.IsNullOrEmpty(id))
                     {
                         throw new InvalidOperationException($"Tried to setup fixture on init for {ToPrettyString(uid)} with no ID!");
                     }
-
-#pragma warning disable CS0618
-                    fixture.Body = body;
-#pragma warning restore CS0618
                 }
 
                 // Make sure all the right stuff is set on the body
@@ -241,15 +236,6 @@ namespace Robust.Shared.Physics.Systems
                 return;
             }
 
-            // State handling funnies, someday we'll remove fixture.Body and it won't matter
-            // Alternatively if this is necessary just add it to FixtureSerializer.
-            foreach (var (id, fixture) in component.Fixtures)
-            {
-#pragma warning disable CS0618
-                fixture.Body = physics;
-#pragma warning restore CS0618
-            }
-
             var toAddFixtures = new ValueList<(string Id, Fixture Fixture)>();
             var toRemoveFixtures = new ValueList<(string Id, Fixture Fixture)>();
             var computeProperties = false;
@@ -261,9 +247,6 @@ namespace Robust.Shared.Physics.Systems
             {
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
-#pragma warning disable CS0618
-                newFixture.Body = physics;
-#pragma warning restore CS0618
                 newFixtures.Add(id, newFixture);
             }
 

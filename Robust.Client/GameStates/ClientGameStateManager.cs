@@ -47,7 +47,7 @@ namespace Robust.Client.GameStates
                 = new();
 
         // Game state dictionaries that get used every tick.
-        private readonly Dictionary<EntityUid, (bool EnteringPvs, GameTick LastApplied, EntityState? curState, EntityState? nextState)> _toApply = new();
+        private readonly Dictionary<EntityUid, (NetEntity NetEntity, bool EnteringPvs, GameTick LastApplied, EntityState? curState, EntityState? nextState)> _toApply = new();
         private readonly Dictionary<NetEntity, EntityState> _toCreate = new();
         private readonly Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)> _compStateWork = new();
         private readonly Dictionary<EntityUid, HashSet<Type>> _pendingReapplyNetStates = new();
@@ -692,7 +692,7 @@ namespace Robust.Client.GameStates
 
                     var uid = _entities.CreateEntity(metaState.PrototypeId);
                     _toCreate.Add(es.NetEntity, es);
-                    _toApply.Add(uid, (false, GameTick.Zero, es, null));
+                    _toApply.Add(uid, (es.NetEntity, false, GameTick.Zero, es, null));
 
                     var newMeta = metas.GetComponent(uid);
 
@@ -712,6 +712,8 @@ namespace Robust.Client.GameStates
                             var pending = _pendingReapplyNetStates.GetOrNew(owner);
                             pending.Add(type);
                         }
+
+                        _entityManager.PendingNetEntityStates.Remove(es.NetEntity);
                     }
                 }
 
@@ -720,12 +722,13 @@ namespace Robust.Client.GameStates
 
             foreach (var es in curSpan)
             {
+                if (_toCreate.ContainsKey(es.NetEntity))
+                    continue;
+
                 var uid = _entityManager.GetEntity(es.NetEntity);
 
-                if (!metas.TryGetComponent(uid, out var meta) || _toCreate.ContainsKey(es.NetEntity))
-                {
+                if (!metas.TryGetComponent(uid, out var meta))
                     continue;
-                }
 
                 bool isEnteringPvs = (meta.Flags & MetaDataFlags.Detached) != 0;
                 if (isEnteringPvs)
@@ -739,7 +742,7 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                _toApply.Add(uid, (isEnteringPvs, meta.LastStateApplied, es, null));
+                _toApply.Add(uid, (es.NetEntity, isEnteringPvs, meta.LastStateApplied, es, null));
                 meta.LastStateApplied = curState.ToSequence;
             }
 
@@ -763,9 +766,9 @@ namespace Robust.Client.GameStates
                         continue;
 
                     if (_toApply.TryGetValue(uid.Value, out var state))
-                        _toApply[uid.Value] = (state.EnteringPvs, state.LastApplied, state.curState, es);
+                        _toApply[uid.Value] = (es.NetEntity, state.EnteringPvs, state.LastApplied, state.curState, es);
                     else
-                        _toApply[uid.Value] = (false, GameTick.Zero, null, es);
+                        _toApply[uid.Value] = (es.NetEntity, false, GameTick.Zero, null, es);
                 }
             }
 
@@ -775,7 +778,7 @@ namespace Robust.Client.GameStates
                 if (_toApply.ContainsKey(uid))
                     continue;
 
-                _toApply[uid] = (false, GameTick.Zero, null, null);
+                _toApply[uid] = (_entityManager.GetNetEntity(uid), false, GameTick.Zero, null, null);
             }
 
             var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);
@@ -785,7 +788,7 @@ namespace Robust.Client.GameStates
             {
                 foreach (var (entity, data) in _toApply)
                 {
-                    HandleEntityState(entity, _entities.EventBus, data.curState,
+                    HandleEntityState(entity, data.NetEntity, _entities.EventBus, data.curState,
                         data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
 
                     if (!data.EnteringPvs)
@@ -1125,12 +1128,11 @@ namespace Robust.Client.GameStates
 #endif
         }
 
-        private void HandleEntityState(EntityUid uid, IEventBus bus, EntityState? curState,
+        private void HandleEntityState(EntityUid uid, NetEntity netEntity, IEventBus bus, EntityState? curState,
             EntityState? nextState, GameTick lastApplied, GameTick toTick, bool enteringPvs)
         {
             _compStateWork.Clear();
             var meta = _entityManager.GetComponent<MetaDataComponent>(uid);
-            var netEntity = meta.NetEntity;
 
             // First remove any deleted components
             if (curState?.NetComponents != null)

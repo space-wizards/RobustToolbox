@@ -1132,7 +1132,6 @@ namespace Robust.Client.GameStates
             EntityState? nextState, GameTick lastApplied, GameTick toTick, bool enteringPvs)
         {
             _compStateWork.Clear();
-            var meta = _entityManager.GetComponent<MetaDataComponent>(uid);
 
             // First remove any deleted components
             if (curState?.NetComponents != null)

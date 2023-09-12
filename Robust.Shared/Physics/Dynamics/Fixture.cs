@@ -50,11 +50,6 @@ namespace Robust.Shared.Physics.Dynamics
         [DataField("shape")]
         public IPhysShape Shape { get; private set; } = new PhysShapeAabb();
 
-        [Obsolete("Use other means to obtain the PhysicsComponent for the fixture.")]
-        [ViewVariables]
-        [field:NonSerialized]
-        internal PhysicsComponent Body { get; set; } = default!;
-
         /// <summary>
         /// All of the other fixtures this fixture has a contact with.
         /// </summary>
@@ -181,7 +176,7 @@ namespace Robust.Shared.Physics.Dynamics
         {
             if (other == null) return false;
 
-            return Equivalent(other) && other.Body == Body;
+            return Equivalent(other);
         }
     }
 

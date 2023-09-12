@@ -110,18 +110,8 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
         public override int Count => _ents.Count;
 
         public override IReadOnlyList<EntityUid> ContainedEntities => _ents;
-        internal override IList<NetEntity> ContainedNetEntities { get; }
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan) => _ents.Add(toInsert);
         protected override void InternalRemove(EntityUid toRemove, IEntityManager entMan) => _ents.Remove(toRemove);
-        internal override void HandleState(IEntityManager entMan)
-        {
-            throw new NotImplementedException();
-        }
-
-        internal override void SetState(IEntityManager entMan)
-        {
-            throw new NotImplementedException();
-        }
 
         public override bool Contains(EntityUid contained) => _ents.Contains(contained);
         protected override void InternalShutdown(IEntityManager entMan, bool isClient) { }

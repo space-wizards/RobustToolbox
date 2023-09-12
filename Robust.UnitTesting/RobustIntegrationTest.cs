@@ -911,7 +911,7 @@ namespace Robust.UnitTesting
                 var e = (EntityManager) EntMan;
                 for (var i = 0; i < 10; i++)
                 {
-                    e.GenerateEntityUid();
+                    EntMan.SpawnEntity(null, MapCoordinates.Nullspace);
                 }
 
                 return client;

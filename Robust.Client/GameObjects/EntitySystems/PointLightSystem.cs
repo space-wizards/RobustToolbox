@@ -25,7 +25,7 @@ namespace Robust.Client.GameObjects
             if (args.Current is not PointLightComponentState state)
                 return;
 
-            component.Enabled = state.Enabled;
+            SetEnabled(uid, state.Enabled, component);
             component.Offset = state.Offset;
             component.Softness = state.Softness;
             component.CastShadows = state.CastShadows;

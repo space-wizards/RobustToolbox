@@ -44,7 +44,7 @@ namespace Robust.Client.UserInterface
             LayoutContainer.SetPosition(tooltip, new Vector2(screenPosition.X, screenPosition.Y - combinedMinSize.Y));
 
             var right = tooltip.Position.X + combinedMinSize.X;
-            var top = tooltip.Position.Y - combinedMinSize.Y;
+            var top = tooltip.Position.Y;
 
             if (right > screenBounds.X)
             {

@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Prometheus;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Replays;
@@ -18,7 +16,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public sealed class ClientEntityManager : EntityManager, IClientEntityManagerInternal
+    public sealed partial class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
@@ -26,8 +24,6 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IClientGameStateManager _stateMan = default!;
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
-
-        protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;
 
         public override void Initialize()
         {
@@ -39,13 +35,16 @@ namespace Robust.Client.GameObjects
 
         public override void FlushEntities()
         {
+            // Server doesn't network deletions on client shutdown so we need to
+            // manually clear these out or risk stale data getting used.
+            PendingNetEntityStates.Clear();
             using var _ = _gameTiming.StartStateApplicationArea();
             base.FlushEntities();
         }
 
-        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, EntityUid uid)
+        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName)
         {
-            return base.CreateEntity(prototypeName, uid);
+            return base.CreateEntity(prototypeName);
         }
 
         void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
@@ -66,9 +65,12 @@ namespace Robust.Client.GameObjects
                 base.DirtyEntity(uid, meta);
         }
 
-        public override void QueueDeleteEntity(EntityUid uid)
+        public override void QueueDeleteEntity(EntityUid? uid)
         {
-            if (uid.IsClientSide())
+            if (uid == null)
+                return;
+
+            if (IsClientSide(uid.Value))
             {
                 base.QueueDeleteEntity(uid);
                 return;
@@ -79,7 +81,7 @@ namespace Robust.Client.GameObjects
 
             // Client-side entity deletion is not supported and will cause errors.
             if (_client.RunLevel == ClientRunLevel.Connected || _client.RunLevel == ClientRunLevel.InGame)
-                LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
+                LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid.Value)}. Trace: {Environment.StackTrace}");
         }
 
         /// <inheritdoc />

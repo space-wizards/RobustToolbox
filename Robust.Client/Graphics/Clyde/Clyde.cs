@@ -12,6 +12,7 @@ using Robust.Client.UserInterface;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
@@ -21,6 +22,7 @@ using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using Color = Robust.Shared.Maths.Color;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
 {

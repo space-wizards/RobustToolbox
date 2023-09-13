@@ -6,6 +6,7 @@ using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
@@ -14,9 +15,9 @@ public interface ITypeParser : IPostInjectInit
 {
     public Type Parses { get; }
 
-    public bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error);
+    public bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error);
 
-    public ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName);
 }
 
@@ -30,8 +31,8 @@ public abstract class TypeParser<T> : ITypeParser
 
     public virtual Type Parses => typeof(T);
 
-    public abstract bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error);
-    public abstract ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public abstract bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error);
+    public abstract ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName);
 
     public virtual void PostInject()

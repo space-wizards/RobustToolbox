@@ -31,14 +31,14 @@ public sealed class PlayAudioGlobalMessage : AudioMessage
 [Serializable, NetSerializable]
 public sealed class PlayAudioPositionalMessage : AudioMessage
 {
-    public EntityCoordinates Coordinates { get; set; }
-    public EntityCoordinates FallbackCoordinates { get; set; }
+    public NetCoordinates Coordinates { get; set; }
+    public NetCoordinates FallbackCoordinates { get; set; }
 }
 
 [Serializable, NetSerializable]
 public sealed class PlayAudioEntityMessage : AudioMessage
 {
-    public EntityUid EntityUid { get; set; }
-    public EntityCoordinates Coordinates { get; set; }
-    public EntityCoordinates FallbackCoordinates { get; set; }
+    public NetEntity NetEntity { get; set; }
+    public NetCoordinates Coordinates { get; set; }
+    public NetCoordinates FallbackCoordinates { get; set; }
 }

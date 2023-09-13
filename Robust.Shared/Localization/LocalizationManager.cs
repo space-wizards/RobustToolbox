@@ -248,12 +248,17 @@ namespace Robust.Shared.Localization
 
             var resources = files.AsParallel().Select(path =>
             {
-                using var fileStream = resourceManager.ContentFileRead(path);
-                using var reader = new StreamReader(fileStream, EncodingHelpers.UTF8);
+                string contents;
 
-                var parser = new LinguiniParser(reader);
+                using (var fileStream = resourceManager.ContentFileRead(path))
+                using (var reader = new StreamReader(fileStream, EncodingHelpers.UTF8))
+                {
+                    contents = reader.ReadToEnd();
+                }
+
+                var parser = new LinguiniParser(contents);
                 var resource = parser.Parse();
-                return (path, resource, parser.GetReadonlyData);
+                return (path, resource, contents);
             });
 
             foreach (var (path, resource, data) in resources)
@@ -264,11 +269,11 @@ namespace Robust.Shared.Localization
             }
         }
 
-        private void WriteWarningForErrs(ResPath path, List<ParseError> errs, ReadOnlyMemory<char> resource)
+        private void WriteWarningForErrs(ResPath path, List<ParseError> errs, string resource)
         {
             foreach (var err in errs)
             {
-                _logSawmill.Warning("{path}:\n{exception}", path, err.FormatCompileErrors(resource));
+                _logSawmill.Error($"{path}:\n{err.FormatCompileErrors(resource.AsMemory())}");
             }
         }
 
@@ -276,7 +281,7 @@ namespace Robust.Shared.Localization
         {
             foreach (var err in errs)
             {
-                _logSawmill.Warning("Error extracting `{locId}`\n{e1}", locId, err);
+                _logSawmill.Error("Error extracting `{locId}`\n{e1}", locId, err);
             }
         }
     }

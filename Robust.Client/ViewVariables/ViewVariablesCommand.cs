@@ -63,20 +63,22 @@ namespace Robust.Client.ViewVariables
             }
 
             // Entity.
-            if (!EntityUid.TryParse(args[0], out var entity))
+            if (!NetEntity.TryParse(args[0], out var netEntity))
             {
                 shell.WriteLine("Invalid specifier format.");
                 return;
             }
 
+            var entity = _entities.GetEntity(netEntity);
+
             if (!_entities.EntityExists(entity))
             {
                 shell.WriteLine("That entity does not exist locally. Attempting to open remote view...");
-                _cvvm.OpenVV(new ViewVariablesEntitySelector(entity));
+                _cvvm.OpenVV(new ViewVariablesEntitySelector(netEntity));
                 return;
             }
 
-            _cvvm.OpenVV(entity);
+            _cvvm.OpenVV(netEntity);
         }
     }
 }

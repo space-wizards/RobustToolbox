@@ -55,9 +55,6 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public event Action<RemovedComponentEventArgs>? ComponentRemoved;
 
-        /// <inheritdoc />
-        public event Action<DeletedComponentEventArgs>? ComponentDeleted;
-
         public void InitializeComponents()
         {
             if (Initialized)
@@ -118,7 +115,9 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             DebugTools.Assert(metadata == null || metadata.Owner == uid);
+#pragma warning restore CS0618 // Type or member is obsolete
             metadata ??= GetComponent<MetaDataComponent>(uid);
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
             metadata.EntityLifeStage = EntityLifeStage.Initializing;
@@ -185,7 +184,9 @@ namespace Robust.Shared.GameObjects
         public Component AddComponent(EntityUid uid, ushort netId)
         {
             var newComponent = (Component)_componentFactory.GetComponent(netId);
+#pragma warning disable CS0618 // Type or member is obsolete
             newComponent.Owner = uid;
+#pragma warning restore CS0618 // Type or member is obsolete
             AddComponent(uid, newComponent);
             return newComponent;
         }
@@ -193,7 +194,9 @@ namespace Robust.Shared.GameObjects
         public T AddComponent<T>(EntityUid uid) where T : Component, new()
         {
             var newComponent = _componentFactory.GetComponent<T>();
+#pragma warning disable CS0618 // Type or member is obsolete
             newComponent.Owner = uid;
+#pragma warning restore CS0618 // Type or member is obsolete
             AddComponent(uid, newComponent);
             return newComponent;
         }
@@ -202,19 +205,21 @@ namespace Robust.Shared.GameObjects
             where T : Component
         {
             private readonly IEntityManager _entMan;
+            private readonly EntityUid _owner;
             public readonly CompIdx CompType;
             public readonly T Comp;
 
-            public CompInitializeHandle(IEntityManager entityManager, T comp, CompIdx compType)
+            public CompInitializeHandle(IEntityManager entityManager, EntityUid owner, T comp, CompIdx compType)
             {
                 _entMan = entityManager;
+                _owner = owner;
                 Comp = comp;
                 CompType = compType;
             }
 
             public void Dispose()
             {
-                var metadata = _entMan.GetComponent<MetaDataComponent>(Comp.Owner);
+                var metadata = _entMan.GetComponent<MetaDataComponent>(_owner);
 
                 if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                     return;
@@ -237,18 +242,16 @@ namespace Robust.Shared.GameObjects
         {
             var reg = _componentFactory.GetRegistration<T>();
             var newComponent = (T)_componentFactory.GetComponent(reg);
+#pragma warning disable CS0618 // Type or member is obsolete
             newComponent.Owner = uid;
+#pragma warning restore CS0618 // Type or member is obsolete
 
             if (!uid.IsValid() || !EntityExists(uid))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
 
-            if (newComponent == null) throw new ArgumentNullException(nameof(newComponent));
-
-            if (newComponent.Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
-
             AddComponentInternal(uid, newComponent, false, true);
 
-            return new CompInitializeHandle<T>(this, newComponent, reg.Idx);
+            return new CompInitializeHandle<T>(this, uid, newComponent, reg.Idx);
         }
 
         /// <inheritdoc />
@@ -259,7 +262,16 @@ namespace Robust.Shared.GameObjects
 
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (component.Owner == default)
+            {
+                component.Owner = uid;
+            }
+            else if (component.Owner != uid)
+            {
+                throw new InvalidOperationException("Component is not owned by entity.");
+            }
+#pragma warning restore CS0618 // Type or member is obsolete
 
             AddComponentInternal(uid, component, overwrite, false);
         }
@@ -335,6 +347,9 @@ namespace Robust.Shared.GameObjects
 
             if (metadata.EntityInitialized)
                 component.LifeStartup(this);
+
+            if (metadata.EntityLifeStage >= EntityLifeStage.MapInitialized)
+                EventBus.RaiseComponentEvent(component, MapInitEventInstance);
         }
 
         /// <inheritdoc />
@@ -606,8 +621,6 @@ namespace Robust.Shared.GameObjects
             // TODO if terminating the entity, maybe defer this?
             // _entCompIndex.Remove(uid) gets called later on anyways.
             _entCompIndex.Remove(entityUid, component);
-
-            ComponentDeleted?.Invoke(new DeletedComponentEventArgs(new ComponentEventArgs(component, entityUid), terminating));
         }
 
         /// <inheritdoc />
@@ -753,6 +766,18 @@ namespace Robust.Shared.GameObjects
         public IComponent GetComponent(EntityUid uid, ushort netId)
         {
             return _netComponents[uid][netId];
+        }
+
+        /// <inheritdoc />
+        public IComponent GetComponentInternal(EntityUid uid, CompIdx type)
+        {
+            var dict = _entTraitArray[type.Value];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                    return comp;
+            }
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
         }
 
         /// <inheritdoc />
@@ -1040,7 +1065,7 @@ namespace Robust.Shared.GameObjects
             where TComp1 : Component
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            return new EntityQueryEnumerator<TComp1>(trait1, _metaQuery);
+            return new EntityQueryEnumerator<TComp1>(trait1, MetaQuery);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
@@ -1049,7 +1074,7 @@ namespace Robust.Shared.GameObjects
         {
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            return new EntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, _metaQuery);
+            return new EntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, MetaQuery);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
@@ -1060,7 +1085,7 @@ namespace Robust.Shared.GameObjects
             var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
             var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, _metaQuery);
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, MetaQuery);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
@@ -1074,7 +1099,7 @@ namespace Robust.Shared.GameObjects
             var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
             var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
 
-            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, _metaQuery);
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, MetaQuery);
         }
 
         /// <inheritdoc />
@@ -1096,7 +1121,7 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var t1Comp in comps.Values)
                 {
-                    if (t1Comp.Deleted || !_metaQuery.TryGetComponentInternal(t1Comp.Owner, out var metaComp)) continue;
+                    if (t1Comp.Deleted || !MetaQuery.TryGetComponentInternal(t1Comp.Owner, out var metaComp)) continue;
 
                     if (metaComp.EntityPaused) continue;
 
@@ -1287,7 +1312,7 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var (uid, comp) in comps)
                 {
-                    if (comp.Deleted || !_metaQuery.TryGetComponent(uid, out var meta) || meta.EntityPaused) continue;
+                    if (comp.Deleted || !MetaQuery.TryGetComponent(uid, out var meta) || meta.EntityPaused) continue;
 
                     yield return (uid, comp);
                 }
@@ -1422,7 +1447,9 @@ namespace Robust.Shared.GameObjects
         {
             if (component != null)
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 DebugTools.Assert(uid == component.Owner, "Specified Entity is not the component's Owner!");
+#pragma warning restore CS0618 // Type or member is obsolete
                 return true;
             }
 
@@ -1515,7 +1542,9 @@ namespace Robust.Shared.GameObjects
         {
             if (component != null)
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 DebugTools.Assert(uid == component.Owner, "Specified Entity is not the component's Owner!");
+#pragma warning restore CS0618 // Type or member is obsolete
                 return true;
             }
 

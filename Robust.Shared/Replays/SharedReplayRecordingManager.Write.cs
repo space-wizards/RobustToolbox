@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
 using System.Threading.Channels;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -25,7 +26,7 @@ internal abstract partial class SharedReplayRecordingManager
     // and even then not for much longer than a couple hundred ms at most.
     private readonly List<Task> _finalizingWriteTasks = new();
 
-    private static void WriteYaml(RecordingState state, ResPath path, YamlDocument data)
+    private void WriteYaml(RecordingState state, ResPath path, YamlDocument data)
     {
         var memStream = new MemoryStream();
         using var writer = new StreamWriter(memStream);
@@ -43,7 +44,7 @@ internal abstract partial class SharedReplayRecordingManager
         WriteBytes(state, path, memStream.AsMemory());
     }
 
-    private static void WritePooledBytes(
+    private void WritePooledBytes(
         RecordingState state,
         ResPath path,
         byte[] bytes,
@@ -67,6 +68,45 @@ internal abstract partial class SharedReplayRecordingManager
         });
     }
 
+    private void WriteTickBatch(
+        RecordingState state,
+        ResPath path,
+        byte[] bytes,
+        int length)
+    {
+        DebugTools.Assert(path.IsRelative, "Zip path should be relative");
+
+        WriteQueueTask(state, () =>
+        {
+            byte[]? buf = null;
+            try
+            {
+                // Compress stream to buffer.
+                // First 4 bytes of buffer are reserved for the length of the uncompressed stream.
+                var bound = ZStd.CompressBound(length);
+                buf = ArrayPool<byte>.Shared.Rent(4 + bound);
+                var compressedLength = state.CompressionContext.Compress2(
+                    buf.AsSpan(4, bound),
+                    bytes.AsSpan(0, length));
+
+                BitConverter.TryWriteBytes(buf, length);
+
+                Interlocked.Add(ref state.UncompressedSize, length);
+                Interlocked.Add(ref state.CompressedSize, compressedLength);
+
+                var entry = state.Zip.CreateEntry(path.ToString(), CompressionLevel.NoCompression);
+                using var stream = entry.Open();
+                stream.Write(buf, 0, compressedLength + 4);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(bytes);
+                if (buf != null)
+                    ArrayPool<byte>.Shared.Return(buf);
+            }
+        });
+    }
+
     private void WriteToml(RecordingState state, IEnumerable<string> enumerable, ResPath path)
     {
         var memStream = new MemoryStream();
@@ -75,7 +115,7 @@ internal abstract partial class SharedReplayRecordingManager
         WriteBytes(state, path, memStream.AsMemory());
     }
 
-    private static void WriteBytes(
+    private void WriteBytes(
         RecordingState recState,
         ResPath path,
         ReadOnlyMemory<byte> bytes,
@@ -91,14 +131,18 @@ internal abstract partial class SharedReplayRecordingManager
         });
     }
 
-    private static void WriteQueueTask(RecordingState recState, Action a)
+    private void WriteQueueTask(RecordingState recState, Action a)
     {
         var task = recState.WriteCommandChannel.WriteAsync(a);
 
         // If we have to wait here, it's because the channel is full.
         // Synchronous waiting is safe here: the writing code doesn't rely on the synchronization context.
         if (!task.IsCompletedSuccessfully)
+        {
+            RecordingEventSource.Log.WriteQueueBlocked();
+            _sawmill.Warning("Forced to wait on replay write queue. Consider increasing replay.write_channel_size!");
             task.AsTask().Wait();
+        }
     }
 
     protected void UpdateWriteTasks()
@@ -143,6 +187,12 @@ internal abstract partial class SharedReplayRecordingManager
         }
     }
 
+    public bool IsWriting()
+    {
+        UpdateWriteTasks();
+        return _finalizingWriteTasks.Count > 0;
+    }
+
     public Task WaitWriteTasks()
     {
         if (IsRecording)
@@ -154,23 +204,42 @@ internal abstract partial class SharedReplayRecordingManager
         return Task.WhenAll(_finalizingWriteTasks);
     }
 
-    private static async Task WriteQueueLoop(ChannelReader<Action> reader, ZipArchive archive)
+#pragma warning disable RA0004
+    private static void WriteQueueLoop(
+        TaskCompletionSource taskCompletionSource,
+        ChannelReader<Action> reader,
+        ZipArchive archive,
+        ZStdCompressionContext compressionContext)
     {
         try
         {
+            var i = 0;
             while (true)
             {
-                var result = await reader.WaitToReadAsync();
+                var result = reader.WaitToReadAsync().AsTask().Result;
+
                 if (!result)
                     break;
 
-                var action = await reader.ReadAsync();
+                var action = reader.ReadAsync().AsTask().Result;
+                RecordingEventSource.Log.WriteTaskStart(i);
                 action();
+                RecordingEventSource.Log.WriteTaskStop(i);
+
+                i += 1;
             }
+
+            taskCompletionSource.TrySetResult();
+        }
+        catch (Exception e)
+        {
+            taskCompletionSource.TrySetException(e);
         }
         finally
         {
             archive.Dispose();
+            compressionContext.Dispose();
         }
     }
+#pragma warning restore RA0004
 }

@@ -32,7 +32,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class EdgeShape : IPhysShape, IEquatable<EdgeShape>
+    public sealed partial class EdgeShape : IPhysShape, IEquatable<EdgeShape>
     {
         // Note that the normal is from Vertex 2 to Vertex 1 CCW
 

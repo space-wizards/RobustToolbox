@@ -101,6 +101,8 @@ namespace Robust.Server.Player
         [ViewVariables]
         public int MaxPlayers { get; private set; } = 32;
 
+        public ICommonSession? LocalSession => null;
+
         /// <inheritdoc />
         public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 

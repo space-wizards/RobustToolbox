@@ -16,7 +16,7 @@ using System.Numerics;
 namespace Robust.UnitTesting.Shared.GameObjects.Systems
 {
     [TestFixture, Parallelizable]
-    public sealed class AnchoredSystemTests
+    public sealed partial class AnchoredSystemTests
     {
         private static readonly MapId TestMapId = new(1);
 
@@ -94,7 +94,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         }
 
         [ComponentProtoName("AnchorOnInit")]
-        private sealed class AnchorOnInitComponent : Component { };
+        private sealed partial class AnchorOnInitComponent : Component { };
 
         private sealed class AnchorOnInitTestSystem : EntitySystem
         {

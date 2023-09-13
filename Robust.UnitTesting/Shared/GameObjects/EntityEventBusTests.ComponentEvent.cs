@@ -4,7 +4,6 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Reflection;
 using Robust.UnitTesting.Shared.Reflection;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -26,13 +25,13 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Setup(m => m.ComponentFactory).Returns(compFactory);
 
             IComponent? outIComponent = compInstance;
-            entManMock.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))
+            entManMock.Setup(m => m.TryGetComponent(entUid, CompIdx.Index<MetaDataComponent>(), out outIComponent))
                 .Returns(true);
 
-            entManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
+            entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<MetaDataComponent>()))
                 .Returns(compInstance);
 
-            entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<MetaDataComponent>()))
+            entManMock.Setup(m => m.GetComponentInternal(entUid, CompIdx.Index<MetaDataComponent>()))
                 .Returns(compInstance);
 
             var bus = new EntityEventBus(entManMock.Object);
@@ -186,8 +185,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     CompIdx.Index<T>());
 
                 compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<T>())).Returns(reg);
-                entManMock.Setup(m => m.TryGetComponent(entUid, typeof(T), out inst)).Returns(true);
-                entManMock.Setup(m => m.GetComponent(entUid, typeof(T))).Returns(inst);
+                entManMock.Setup(m => m.TryGetComponent(entUid, CompIdx.Index<T>(), out inst)).Returns(true);
+                entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<T>())).Returns(inst);
+                entManMock.Setup(m => m.GetComponentInternal(entUid, CompIdx.Index<T>())).Returns(inst);
                 allRefTypes.Add(CompIdx.Index<T>());
             }
 
@@ -242,19 +242,19 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(c, Is.True, "C did not fire");
         }
 
-        private sealed class DummyComponent : Component
+        private sealed partial class DummyComponent : Component
         {
         }
 
-        private sealed class OrderAComponent : Component
+        private sealed partial class OrderAComponent : Component
         {
         }
 
-        private sealed class OrderBComponent : Component
+        private sealed partial class OrderBComponent : Component
         {
         }
 
-        private sealed class OrderCComponent : Component
+        private sealed partial class OrderCComponent : Component
         {
         }
 

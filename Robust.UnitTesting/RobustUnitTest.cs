@@ -26,7 +26,6 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
-using EyeComponent = Robust.Server.GameObjects.EyeComponent;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 
 namespace Robust.UnitTesting

@@ -9,7 +9,11 @@ namespace Robust.Shared.Serialization.Manager.Attributes
     [Virtual]
     public class DataFieldAttribute : DataFieldBaseAttribute
     {
-        public readonly string Tag;
+        /// <summary>
+        ///     The name of this field in YAML.
+        ///     If null, the name of the C# field will be used instead, with the first letter lowercased.
+        /// </summary>
+        public string? Tag { get; internal set; }
 
         /// <summary>
         ///     Whether or not this field being mapped is required for the component to function.
@@ -18,14 +22,13 @@ namespace Robust.Shared.Serialization.Manager.Attributes
         /// </summary>
         public readonly bool Required;
 
-
-        public DataFieldAttribute(string tag, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false, Type? customTypeSerializer = null) : base(readOnly, priority, serverOnly, customTypeSerializer)
+        public DataFieldAttribute(string? tag = null, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false, Type? customTypeSerializer = null) : base(readOnly, priority, serverOnly, customTypeSerializer)
         {
             Tag = tag;
             Required = required;
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
             return Tag;
         }

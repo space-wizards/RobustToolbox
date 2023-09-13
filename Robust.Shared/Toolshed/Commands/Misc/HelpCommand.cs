@@ -3,7 +3,7 @@
 namespace Robust.Shared.Toolshed.Commands.Misc;
 
 [ToolshedCommand]
-internal sealed class HelpCommand : ToolshedCommand
+public sealed class HelpCommand : ToolshedCommand
 {
     private static readonly string Gold = Color.Gold.ToHex();
     private static readonly string Aqua = Color.Aqua.ToHex();

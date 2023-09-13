@@ -1,33 +1,24 @@
-﻿using System;
+using System;
 using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.GameObjects;
+
+[Serializable, NetSerializable]
+public sealed class PointLightComponentState : ComponentState
 {
-    [Serializable, NetSerializable]
-    public sealed class PointLightComponentState : ComponentState
-    {
-        public readonly Color Color;
+    public Color Color;
 
-        public readonly float Energy;
+    public float Energy;
 
-        public readonly float Softness;
-        public readonly bool Enabled;
-        public readonly bool CastShadows;
+    public float Softness;
 
-        public readonly float Radius;
-        public readonly Vector2 Offset;
+    public bool CastShadows;
 
-        public PointLightComponentState(bool enabled, Color color, float radius, Vector2 offset, float energy, float softness, bool castShadows)
-        {
-            Enabled = enabled;
-            Color = color;
-            Radius = radius;
-            Offset = offset;
-            Energy = energy;
-            Softness = softness;
-            CastShadows = castShadows;
-        }
-    }
+    public bool Enabled;
+
+    public float Radius;
+
+    public Vector2 Offset;
 }

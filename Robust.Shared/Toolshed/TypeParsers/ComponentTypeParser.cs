@@ -9,6 +9,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
@@ -17,10 +18,10 @@ internal sealed class ComponentTypeParser : TypeParser<ComponentType>
 {
     [Dependency] private readonly IComponentFactory _factory = default!;
 
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var start = parser.Index;
-        var word = parser.GetWord();
+        var start = parserContext.Index;
+        var word = parserContext.GetWord(ParserContext.IsToken);
         error = null;
 
         if (word is null)
@@ -34,7 +35,7 @@ internal sealed class ComponentTypeParser : TypeParser<ComponentType>
         {
             result = null;
             error = new UnknownComponentError(word);
-            error.Contextualize(parser.Input, (start, parser.Index));
+            error.Contextualize(parserContext.Input, (start, parserContext.Index));
             return false;
         }
 
@@ -42,7 +43,7 @@ internal sealed class ComponentTypeParser : TypeParser<ComponentType>
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
         return ValueTask.FromResult<(CompletionResult? result, IConError? error)>(

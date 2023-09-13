@@ -57,11 +57,18 @@ namespace Robust.Shared.GameObjects
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
     [RegisterComponent, NetworkedComponent]
-    public sealed class MetaDataComponent : Component
+    public sealed partial class MetaDataComponent : Component
     {
         [DataField("name")] internal string? _entityName;
         [DataField("desc")] internal string? _entityDescription;
         internal EntityPrototype? _entityPrototype;
+
+        /// <summary>
+        /// Network identifier for this entity.
+        /// </summary>
+        [ViewVariables]
+        [Access(typeof(EntityManager), Other = AccessPermissions.ReadExecute)]
+        public NetEntity NetEntity { get; internal set; } = NetEntity.Invalid;
 
         /// <summary>
         /// When this entity was paused, if applicable. Note that this is the actual time, not the duration which gets

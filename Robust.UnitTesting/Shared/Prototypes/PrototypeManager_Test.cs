@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using JetBrains.Annotations;
 using NUnit.Framework;
@@ -59,7 +58,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
-            var componentData = prototype.Components["PointLight"].Component as PointLightComponent;
+            var componentData = prototype.Components["PointLight"].Component as SharedPointLightComponent;
 
             Assert.That(componentData!.NetSyncEnabled, Is.EqualTo(false));
         }
@@ -147,9 +146,9 @@ namespace Robust.UnitTesting.Shared.Prototypes
         private sealed class CircleTestPrototype : IPrototype, IInheritingPrototype
         {
             [IdDataField()]
-            public string ID { get; } = default!;
+            public string ID { get; private set; } = default!;
             [ParentDataField(typeof(AbstractPrototypeIdArraySerializer<CircleTestPrototype>))]
-            public string[]? Parents { get; }
+            public string[]? Parents { get; private set; }
             [AbstractDataField]
             public bool Abstract { get; }
         }
@@ -223,7 +222,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
   name: {LoadStringTestDummyId}";
     }
 
-    public sealed class TestBasicPrototypeComponent : Component
+    public sealed partial class TestBasicPrototypeComponent : Component
     {
 
         [DataField("foo")] public string Foo = null!;

@@ -35,7 +35,7 @@ namespace Robust.Client.GameStates
 
         private readonly Font _font;
         private readonly int _lineHeight;
-        private readonly Dictionary<EntityUid, NetEntData> _netEnts = new();
+        private readonly Dictionary<NetEntity, NetEntData> _netEnts = new();
 
         public NetEntityOverlay()
         {
@@ -77,12 +77,12 @@ namespace Robust.Client.GameStates
 
             foreach (var entityState in gameState.EntityStates.Span)
             {
-                if (!_netEnts.TryGetValue(entityState.Uid, out var netEnt))
+                if (!_netEnts.TryGetValue(entityState.NetEntity, out var netEnt))
                 {
                     if (_netEnts.Count >= _maxEnts)
                         continue;
 
-                    _netEnts[entityState.Uid] = netEnt = new();
+                    _netEnts[entityState.NetEntity] = netEnt = new();
                 }
 
                 if (!netEnt.InPVS && netEnt.LastUpdate < gameState.ToSequence)
@@ -119,11 +119,13 @@ namespace Robust.Client.GameStates
             var screenHandle = args.ScreenHandle;
 
             int i = 0;
-            foreach (var (uid, netEnt) in _netEnts)
+            foreach (var (nent, netEnt) in _netEnts)
             {
+                var uid = _entityManager.GetEntity(nent);
+
                 if (!_entityManager.EntityExists(uid))
                 {
-                    _netEnts.Remove(uid);
+                    _netEnts.Remove(nent);
                     continue;
                 }
 

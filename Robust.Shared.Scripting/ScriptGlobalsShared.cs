@@ -35,6 +35,9 @@ namespace Robust.Shared.Scripting
 
         [field: Dependency] public ToolshedManager shed { get; } = default!;
 
+        public ToolshedManager Toolshed => shed;
+        public ToolshedEnvironment Environment => shed.DefaultEnvironment;
+
         protected ScriptGlobalsShared(IDependencyCollection dependencies)
         {
             dependencies.InjectDependencies(this);

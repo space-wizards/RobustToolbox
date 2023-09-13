@@ -10,7 +10,7 @@ namespace Robust.Shared.Map.Components;
 /// Controls per-map lighting values.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-public sealed class MapLightComponent : Component
+public sealed partial class MapLightComponent : Component
 {
     public static readonly Color DefaultColor = Color.FromSrgb(Color.Black);
 

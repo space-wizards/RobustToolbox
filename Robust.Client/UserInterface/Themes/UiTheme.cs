@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -27,7 +28,7 @@ public sealed class UITheme : IPrototype
 
     [ViewVariables]
     [IdDataField]
-    public string ID { get; } = default!;
+    public string ID { get; private set; } = default!;
 
     [DataField("path")]
     private ResPath _path;
@@ -70,7 +71,7 @@ public sealed class UITheme : IPrototype
 
         if (!texturePath.EndsWith(".png"))
             texturePath = $"{texturePath}.png";
-        
+
         var resPath = new ResPath(texturePath);
         if (resPath.IsRelative)
         {

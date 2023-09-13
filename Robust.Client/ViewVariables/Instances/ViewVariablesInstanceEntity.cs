@@ -41,7 +41,8 @@ namespace Robust.Client.ViewVariables.Instances
         private const int TabServerComponents = 3;
 
         private TabContainer _tabs = default!;
-        private EntityUid _entity = default!;
+        private EntityUid _entity;
+        private NetEntity _netEntity = default!;
 
         private ViewVariablesAddWindow? _addComponentWindow;
         private bool _addComponentServer;
@@ -71,7 +72,8 @@ namespace Robust.Client.ViewVariables.Instances
 
         public override void Initialize(DefaultWindow window, object obj)
         {
-            _entity = (EntityUid) obj;
+            _netEntity = (NetEntity) obj;
+            _entity = _entityManager.GetEntity(_netEntity);
 
             var scrollContainer = new ScrollContainer();
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
@@ -163,7 +165,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             PopulateClientComponents();
 
-            if (!_entity.IsClientSide())
+            if (!_entityManager.IsClientSide(_entity))
             {
                 _serverVariables = new BoxContainer
                 {
@@ -268,12 +270,12 @@ namespace Robust.Client.ViewVariables.Instances
                 button.OnPressed += _ =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entity, componentType.FullName));
+                        new ViewVariablesComponentSelector(_entityManager.GetNetEntity(_entity), componentType.FullName));
                 };
                 removeButton.OnPressed += _ =>
                 {
                     // We send a command to remove the component.
-                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_entity} {componentType.ComponentName}");
+                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_netEntity} {componentType.ComponentName}");
                     PopulateServerComponents();
                 };
                 button.AddChild(removeButton);
@@ -417,7 +419,7 @@ namespace Robust.Client.ViewVariables.Instances
             if (_addComponentServer)
             {
                 // Attempted to add a component to the server entity... We send a command.
-                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_entity} {eventArgs.Entry}");
+                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_netEntity} {eventArgs.Entry}");
                 PopulateServerComponents();
                 _addComponentWindow?.Populate(await GetValidServerComponentsForAdding());
                 return;
@@ -504,7 +506,7 @@ namespace Robust.Client.ViewVariables.Instances
                 try
                 {
                     _entitySession =
-                        await ViewVariablesManager.RequestSession(new ViewVariablesEntitySelector(_entity));
+                        await ViewVariablesManager.RequestSession(new ViewVariablesEntitySelector(_netEntity));
                 }
                 catch (SessionDenyException e)
                 {

@@ -54,6 +54,273 @@ END TEMPLATE-->
 *None yet*
 
 
+## 159.0.3
+
+### Bugfixes
+
+* Fix potentially deleted entities having states re-applied when NetEntities come in.
+
+
+## 159.0.2
+
+### Bugfixes
+
+* Fix PointLight state handling not queueing ComponentTree updates.
+
+
+## 159.0.1
+
+### Bugfixes
+
+* Fix pending entity states not being removed when coming in (only on entity deletion).
+
+### Internal
+
+* Remove PhysicsComponent ref from Fixture.
+
+
+## 159.0.0
+
+### Breaking changes
+
+* Remove ComponentReference from PointLights.
+* Move more of UserInterfaceSystem to shared.
+* Mark some EntitySystem proxy methods as protected instead of public.
+
+### New features
+
+* Make entity deletion take in a nullable EntityUid.
+* Added a method to send predicted messages via BUIs.
+
+### Other
+
+* Add Obsoletions to more sourcegen serv4 methods.
+* Remove inactive reviewers from CODEOWNERs.
+
+
+## 158.0.0
+
+### Breaking changes
+
+* Remove SharedEyeComponent.
+* Add Tile Overlay edge priority.
+
+
+## 157.1.0
+
+### New features
+
+* UI tooltips now use rich text labels.
+
+
+## 157.0.0
+
+### Breaking changes
+
+* Unrevert container changes from 155.0.0.
+* Added server-client EntityUid separation. A given EntityUid will no longer refer to the same entity on the server & client.
+* EntityUid is no longer net-serializable, use NetEntity instead, EntityManager & entity systems have helper methods for converting between the two,
+
+
+## 156.0.0
+
+### Breaking changes
+
+* Revert container changes from 155.0.0.
+
+
+## 155.0.0
+
+### Breaking changes
+
+* MapInitEvent now gets raised for components that get added to entities that have already been map-initialized.
+
+### New features
+
+* VirtualWritableDirProvider now supports file renaming/moving.
+* Added a new command for toggling the replay UI (`replay_toggleui`).
+
+### Bugfixes
+
+* Fixed formatting of localization file errors.
+* Directed event subscriptions will no longer error if the corresponding component is queued for deletion.
+
+
+## 154.2.0
+
+
+
+### New features
+
+* Added support for advertising to multiple hubs simultaneously.
+* Added new functions to ContainerSystem that recursively look for a component on a contained entity's parents.
+
+### Bugfixes
+
+* Fix Direction.TurnCw/TurnCcw to South returning Invalid.
+
+
+## 154.1.0
+
+### New features
+
+* Add MathHelper.Max for TimeSpans.
+
+### Bugfixes
+
+* Make joint initialisation only log under IsFirstTimePredicted on client.
+
+### Other
+
+* Mark the proxy Dirty(component) as obsolete in line with EntityManager (Dirty(EntityUid, Component) should be used in its place).
+
+
+## 154.0.0
+
+### Breaking changes
+
+* Change ignored prototypes to skip prototypes even if the prototype type is found.
+* Moved IPlayerData interface to shared.
+
+### New features
+
+* Added a multiline text submit keybind function.
+
+### Bugfixes
+
+* Fixed multiline edits scrollbar margins.
+
+### Internal
+
+* Added more event sources.
+* Made Toolshed types oneOff IoC injections.
+
+
+## 153.0.0
+
+### Breaking changes
+
+* Removed SharedUserInterfaceComponent component references.
+* Removed EntityDeletedMessage.
+
+### Other
+
+* Performance improvements for replay recording.
+* Lidgren has been updated to [v0.2.6](https://github.com/space-wizards/SpaceWizards.Lidgren.Network/blob/v0.2.6/RELEASE-NOTES.md).
+* Make EntityManager.AddComponent with a component instance set the owner if its default, add system proxy for it.
+
+### Internal
+
+* Added some `EventSource` providers for PVS and replay recording: `Robust.Pvs` and `Robust.ReplayRecording`.
+* Added RecursiveMoveBenchmark.
+* Removed redundant prototype resolving.
+* Removed CollisionWake component removal subscription.
+* Removed redundant DebugTools.AssertNotNull(netId) in ClientGameStateManager
+
+
+## 152.0.0
+
+### Breaking changes
+
+* `Robust.Server.GameObjects.BoundUserInterface.InteractionRangeSqrd` is now a get-only property. Modify `InteractionRange` instead if you want to change it on active UIs.
+* Remove IContainerManager.
+* Remove and obsolete ComponentExt methods.
+* Remove EntityStarted and ComponentDeleted C# events.
+* Convert Tile.TypeId to an int. Old maps that were saved with TypeId being an ushort will still be properly deserialized.
+
+### New features
+
+* `BoundUserInterfaceCheckRangeEvent` can be used to implement custom logic for BUI range checks.
+* Add support for long values in CVars.
+* Allow user code to implement own logic for bound user interface range checks.
+
+### Bugfixes
+
+* Fix timers counting down slower than real time and drifting.
+* Add missing System using statement to generated component states.
+* Fix build with USE_SYSTEM_SQLITE.
+* Fix prototype manager not being initialized in robust server simulation tests.
+* Fix not running serialization hooks when copying non-byref data definition fields without a custom type serializer.
+
+### Other
+
+* Remove warning for glibc 2.37.
+* Remove personally-identifiable file paths from client logs.
+
+### Internal
+
+* Disable obsoletion and inherited member hidden warnings in serialization source generated code.
+* Update CI workflows to use setup-dotnet 3.2.0 and checkout 3.6.0.
+* Fix entity spawn tests having instance per test lifecycle with a non static OneTimeTearDown method.
+* Add new PVS test to check that there is no issue with entity states referencing other entities that the client is not yet aware of.
+
+
+## 151.0.0
+
+
+## 150.0.1
+
+### Bugfixes
+
+* Fix some partial datadefs.
+
+
+## 150.0.0
+
+### Breaking changes
+
+* Remove the Id field from Fixtures as the Id is already stored on FixturesComponent.
+
+### New features
+
+* Add AbstractDictionarySerializer for abstract classes.
+* Add many new spawn functions for entities for common operations.
+
+
+## 149.0.1
+
+### Bugfixes
+
+* Fix serialization sharing instances when copying data definitions and not assigning null when the source is null.
+* Fixed resizing a window to be bigger than its set maxsize crashing the client.
+
+
+## 149.0.0
+
+### Breaking changes
+
+* Data definitions must now be partial, their data fields must not be readonly and their data field properties must have a setter.
+
+### Internal
+
+* Copying data definitions through the serialization manager is now faster and consumes less memory.
+
+
+## 148.4.0
+
+### New features
+
+* Add recursive PVS overrides and remove IsOverride()
+
+
+## 148.3.0
+
+### New features
+
+* Happy eyeballs delay can be configured.
+* Added more colors.
+* Allow pre-startup components to be shut down.
+* Added tile texture reload command.
+* Add implementation of Random.Pick(ValueList<T> ..).
+* Add IntegrationInstance fields for common dependencies.
+
+### Bugfixes
+
+* Prevent invalid prototypes from being spawned.
+* Change default value of EntityLastModifiedTick from zero to one.
+* Make DiscordRichPresence icon CVars server-side with replication.
+
+
 ## 148.2.0
 
 ### New features

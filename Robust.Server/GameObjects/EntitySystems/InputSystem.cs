@@ -61,7 +61,7 @@ namespace Robust.Server.GameObjects
             //Client Sanitization: unbound command, just ignore
             foreach (var handler in BindRegistry.GetHandlers(function))
             {
-                if (handler.HandleCmdMessage(session, msg)) return;
+                if (handler.HandleCmdMessage(EntityManager, session, msg)) return;
             }
         }
 

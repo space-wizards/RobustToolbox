@@ -83,13 +83,13 @@ namespace Robust.Client.GameStates
         ///     The data to merge.
         ///     It's a dictionary of entity ID -> (component net ID -> ComponentState)
         /// </param>
-        void MergeImplicitData(Dictionary<EntityUid, Dictionary<ushort, ComponentState>> data);
+        void MergeImplicitData(Dictionary<NetEntity, Dictionary<ushort, ComponentState>> data);
 
         /// <summary>
         ///     Get the last state data from the server for an entity.
         /// </summary>
         /// <returns>Dictionary (net ID -> ComponentState)</returns>
-        Dictionary<ushort, ComponentState> GetLastServerStates(EntityUid entity);
+        Dictionary<ushort, ComponentState> GetLastServerStates(NetEntity entity);
 
         /// <summary>
         ///     Calculate the number of applicable states in the game state buffer from a given tick.
@@ -98,7 +98,7 @@ namespace Robust.Client.GameStates
         /// <param name="fromTick">The tick to calculate from.</param>
         int CalculateBufferSize(GameTick fromTick);
 
-        bool TryGetLastServerStates(EntityUid entity,
+        bool TryGetLastServerStates(NetEntity entity,
             [NotNullWhen(true)] out Dictionary<ushort, ComponentState>? dictionary);
     }
 }

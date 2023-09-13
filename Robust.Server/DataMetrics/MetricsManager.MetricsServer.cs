@@ -47,10 +47,13 @@ internal sealed partial class MetricsManager
                     // Task.Run this so it gets run on another thread pool thread.
                     _ = Task.Run(async () =>
                     {
+                        MetricsEvents.Log.RequestStart();
+
                         var resp = ctx.Response;
                         var req = ctx.Request;
                         try
                         {
+                            MetricsEvents.Log.ScrapeStart();
 
                             var stream = resp.OutputStream;
                             // prometheus-net is a terrible library and have to do all this insanity,
@@ -74,6 +77,8 @@ internal sealed partial class MetricsManager
                             }), cancel);
 
                             await stream.DisposeAsync();
+
+                            MetricsEvents.Log.ScrapeStop();
                         }
                         catch (ScrapeFailedException e)
                         {
@@ -97,6 +102,8 @@ internal sealed partial class MetricsManager
                         finally
                         {
                             resp.Close();
+
+                            MetricsEvents.Log.RequestStop();
                         }
                     }, CancellationToken.None);
                 }

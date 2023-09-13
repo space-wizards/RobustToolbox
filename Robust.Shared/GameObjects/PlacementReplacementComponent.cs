@@ -7,7 +7,7 @@ namespace Robust.Shared.GameObjects;
 /// If an entity with this component is placed on top of another anchored entity with this component and the same key it will replace it.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-public sealed class PlacementReplacementComponent : Component
+public sealed partial class PlacementReplacementComponent : Component
 {
     [DataField("key")]
     public string Key = "";

@@ -19,12 +19,6 @@ namespace Robust.Shared.GameObjects
         event Action<RemovedComponentEventArgs>? ComponentRemoved;
 
         /// <summary>
-        ///     A component was deleted. This is usually deferred until some time after it was removed.
-        ///     Usually you will want to subscribe to <see cref="ComponentRemoved"/>.
-        /// </summary>
-        event Action<DeletedComponentEventArgs>? ComponentDeleted;
-
-        /// <summary>
         ///     Calls Initialize() on all registered components of the entity.
         /// </summary>
         void InitializeComponents(EntityUid uid, MetaDataComponent? meta = null);
@@ -262,6 +256,14 @@ namespace Robust.Shared.GameObjects
         /// <param name="netId">Network ID of the component to retrieve.</param>
         /// <returns>The component with the specified network id.</returns>
         IComponent GetComponent(EntityUid uid, ushort netId);
+
+        /// <summary>
+        ///     Returns the component of a specific type, even if it has been marked for deletion.
+        /// </summary>
+        /// <param name="uid">Entity UID to look on.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <returns>The component of Type from the Entity.</returns>
+        IComponent GetComponentInternal(EntityUid uid, CompIdx type);
 
         /// <summary>
         ///     Returns the component of a specific type.

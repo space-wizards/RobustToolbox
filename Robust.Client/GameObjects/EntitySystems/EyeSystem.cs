@@ -1,6 +1,8 @@
 using Robust.Client.Graphics;
+using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 
 namespace Robust.Client.GameObjects;
@@ -13,8 +15,35 @@ public sealed class EyeSystem : SharedEyeSystem
     {
         base.Initialize();
         SubscribeLocalEvent<EyeComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<EyeComponent, ComponentRemove>(OnRemove);
-        SubscribeLocalEvent<EyeComponent, ComponentHandleState>(OnHandleState);
+        SubscribeLocalEvent<EyeComponent, PlayerDetachedEvent>(OnEyeDetached);
+        SubscribeLocalEvent<EyeComponent, PlayerAttachedEvent>(OnEyeAttached);
+        SubscribeLocalEvent<EyeComponent, AfterAutoHandleStateEvent>(OnEyeAutoState);
+
+        // Make sure this runs *after* entities have been moved by interpolation and movement.
+        UpdatesAfter.Add(typeof(TransformSystem));
+        UpdatesAfter.Add(typeof(PhysicsSystem));
+    }
+
+    private void OnEyeAutoState(EntityUid uid, EyeComponent component, ref AfterAutoHandleStateEvent args)
+    {
+        UpdateEye(component);
+    }
+
+    private void OnEyeAttached(EntityUid uid, EyeComponent component, PlayerAttachedEvent args)
+    {
+        // TODO: This probably shouldn't be nullable bruv.
+        if (component._eye != null)
+        {
+            _eyeManager.CurrentEye = component._eye;
+        }
+
+        var ev = new EyeAttachedEvent(uid, component);
+        RaiseLocalEvent(uid, ref ev, true);
+    }
+
+    private void OnEyeDetached(EntityUid uid, EyeComponent component, PlayerDetachedEvent args)
+    {
+        _eyeManager.ClearCurrentEye();
     }
 
     private void OnInit(EntityUid uid, EyeComponent component, ComponentInit args)
@@ -22,39 +51,35 @@ public sealed class EyeSystem : SharedEyeSystem
         component._eye = new Eye
         {
             Position = Transform(uid).MapPosition,
-            Zoom = component._setZoomOnInitialize,
-            DrawFov = component._setDrawFovOnInitialize
+            Zoom = component.Zoom,
+            DrawFov = component.DrawFov,
+            Rotation = component.Rotation,
         };
-
-        if ((_eyeManager.CurrentEye == component._eye) != component._setCurrentOnInitialize)
-        {
-            if (component._setCurrentOnInitialize)
-            {
-                _eyeManager.ClearCurrentEye();
-            }
-            else
-            {
-                _eyeManager.CurrentEye = component._eye;
-            }
-        }
     }
 
-    private void OnRemove(EntityUid uid, EyeComponent component, ComponentRemove args)
+    /// <inheritdoc />
+    public override void FrameUpdate(float frameTime)
     {
-        component.Current = false;
-    }
+        var query = AllEntityQuery<EyeComponent>();
 
-    private void OnHandleState(EntityUid uid, EyeComponent component, ref ComponentHandleState args)
-    {
-        if (args.Current is not EyeComponentState state)
+        while (query.MoveNext(out var uid, out var eyeComponent))
         {
-            return;
-        }
+            if (eyeComponent._eye == null)
+                continue;
 
-        component.DrawFov = state.DrawFov;
-        // TODO: Should be a way for content to override lerping and lerp the zoom
-        component.Zoom = state.Zoom;
-        component.Offset = state.Offset;
-        component.VisibilityMask = state.VisibilityMask;
+            if (!TryComp<TransformComponent>(eyeComponent.Target, out var xform))
+            {
+                xform = Transform(uid);
+                eyeComponent.Target = null;
+            }
+
+            eyeComponent._eye.Position = xform.MapPosition;
+        }
     }
 }
+
+/// <summary>
+/// Raised on an entity when it is attached to one with an <see cref="EyeComponent"/>
+/// </summary>
+[ByRefEvent]
+public readonly record struct EyeAttachedEvent(EntityUid Entity, EyeComponent Component);

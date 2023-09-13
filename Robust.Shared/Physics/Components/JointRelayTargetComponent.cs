@@ -9,7 +9,7 @@ namespace Robust.Shared.Physics.Components;
 /// Does this entity have joint data relayed from elsewhere.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
-public sealed class JointRelayTargetComponent : Component
+public sealed partial class JointRelayTargetComponent : Component
 {
     [DataField("relayTarget")]
     public HashSet<EntityUid> Relayed = new();

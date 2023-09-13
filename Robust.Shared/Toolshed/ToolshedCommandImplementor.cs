@@ -36,7 +36,7 @@ internal sealed class ToolshedCommandImplementor
     /// </summary>
     public bool TryParseArguments(
             bool doAutocomplete,
-            ForwardParser parser,
+            ParserContext parserContext,
             string? subCommand,
             Type? pipedType,
             [NotNullWhen(true)] out Dictionary<string, object?>? args,
@@ -47,44 +47,41 @@ internal sealed class ToolshedCommandImplementor
     {
         resolvedTypeArguments = new Type[Owner.TypeParameterParsers.Length];
 
-        var firstStart = parser.Index;
+        var firstStart = parserContext.Index;
 
         // HACK: This is for commands like Map until I have a better solution.
         if (Owner.GetType().GetCustomAttribute<MapLikeCommandAttribute>() is {} mapLike)
         {
-            var start = parser.Index;
+            var start = parserContext.Index;
             // We do our own parsing, assuming this is some kind of map-like operation.
-            var chkpoint = parser.Save();
-            DebugTools.AssertNotNull(pipedType);
-            DebugTools.Assert(pipedType?.IsGenericType ?? false);
-            DebugTools.Assert(pipedType?.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-            if (!Block.TryParse(doAutocomplete, parser, mapLike.TakesPipedType ? pipedType.GetGenericArguments()[0] : null, out var block, out autocomplete, out error))
+            var chkpoint = parserContext.Save();
+            if (!Block.TryParse(doAutocomplete, parserContext, mapLike.TakesPipedType ? pipedType!.GetGenericArguments()[0] : null, out var block, out autocomplete, out error))
             {
-                error?.Contextualize(parser.Input, (start, parser.Index));
+                error?.Contextualize(parserContext.Input, (start, parserContext.Index));
                 resolvedTypeArguments = Array.Empty<Type>();
                 args = null;
                 return false;
             }
 
             resolvedTypeArguments[0] = block.CommandRun.Commands.Last().Item1.ReturnType!;
-            parser.Restore(chkpoint);
+            parserContext.Restore(chkpoint);
             goto mapLikeDone;
         }
 
         for (var i = 0; i < Owner.TypeParameterParsers.Length; i++)
         {
-            var start = parser.Index;
-            var chkpoint = parser.Save();
-            if (!_toolshedManager.TryParse(parser, Owner.TypeParameterParsers[i], out var parsed, out error) || parsed is not { } ty)
+            var start = parserContext.Index;
+            var chkpoint = parserContext.Save();
+            if (!_toolshedManager.TryParse(parserContext, Owner.TypeParameterParsers[i], out var parsed, out error) || parsed is not { } ty)
             {
-                error?.Contextualize(parser.Input, (start, parser.Index));
+                error?.Contextualize(parserContext.Input, (start, parserContext.Index));
                 resolvedTypeArguments = Array.Empty<Type>();
                 args = null;
                 autocomplete = null;
                 if (doAutocomplete)
                 {
-                    parser.Restore(chkpoint);
-                    autocomplete = _toolshedManager.TryAutocomplete(parser, Owner.TypeParameterParsers[i], null);
+                    parserContext.Restore(chkpoint);
+                    autocomplete = _toolshedManager.TryAutocomplete(parserContext, Owner.TypeParameterParsers[i], null);
                 }
 
                 return false;
@@ -112,8 +109,8 @@ internal sealed class ToolshedCommandImplementor
         if (impls.FirstOrDefault() is not { } impl)
         {
             args = null;
-            error = new NoImplementationError(Owner.Name, resolvedTypeArguments, subCommand, pipedType);
-            error.Contextualize(parser.Input, (firstStart, parser.Index));
+            error = new NoImplementationError(Owner.Name, resolvedTypeArguments, subCommand, pipedType, parserContext.Environment);
+            error.Contextualize(parserContext.Input, (firstStart, parserContext.Index));
             autocomplete = null;
             return false;
         }
@@ -121,17 +118,17 @@ internal sealed class ToolshedCommandImplementor
         args = new();
         foreach (var argument in impl.ConsoleGetArguments())
         {
-            var start = parser.Index;
-            var chkpoint = parser.Save();
-            if (!_toolshedManager.TryParse(parser, argument.ParameterType, out var parsed, out error))
+            var start = parserContext.Index;
+            var chkpoint = parserContext.Save();
+            if (!_toolshedManager.TryParse(parserContext, argument.ParameterType, out var parsed, out error))
             {
-                error?.Contextualize(parser.Input, (start, parser.Index));
+                error?.Contextualize(parserContext.Input, (start, parserContext.Index));
                 args = null;
                 autocomplete = null;
                 if (doAutocomplete)
                 {
-                    parser.Restore(chkpoint);
-                    autocomplete = _toolshedManager.TryAutocomplete(parser, argument.ParameterType, null);
+                    parserContext.Restore(chkpoint);
+                    autocomplete = _toolshedManager.TryAutocomplete(parserContext, argument.ParameterType, null);
                 }
                 return false;
             }

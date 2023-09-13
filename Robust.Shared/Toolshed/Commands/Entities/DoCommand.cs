@@ -12,14 +12,14 @@ internal sealed class DoCommand : ToolshedCommand
     private SharedTransformSystem? _xformSys;
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public void Do<T>(
+    public IEnumerable<T> Do<T>(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] IEnumerable<T> input,
         [CommandArgument] string command)
     {
         if (ctx is not OldShellInvocationContext { } reqCtx)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("do can only be executed in a shell invocation context. Some commands like emplace provide their own context.");
         }
 
         _xformSys ??= GetSys<SharedTransformSystem>();
@@ -31,14 +31,20 @@ internal sealed class DoCommand : ToolshedCommand
             if (i is EntityUid id)
             {
                 var worldPos = _xformSys.GetWorldPosition(id, xformQ);
+                var localPos = xformQ.GetComponent(id).Coordinates;
                 cmdStr = cmdStr
                     .Replace("$ID", id.ToString())
+                    .Replace("$PID", (reqCtx.Session?.AttachedEntity ?? EntityUid.Invalid).ToString())
                     .Replace("$WX", worldPos.X.ToString(CultureInfo.InvariantCulture))
-                    .Replace("$WY", worldPos.Y.ToString(CultureInfo.InvariantCulture));
+                    .Replace("$WY", worldPos.Y.ToString(CultureInfo.InvariantCulture))
+                    .Replace("$LX", localPos.X.ToString(CultureInfo.InvariantCulture))
+                    .Replace("$LY", localPos.Y.ToString(CultureInfo.InvariantCulture));
             }
 
             cmdStr = cmdStr.Replace("$SELF", i!.ToString() ?? "");
             shell.ExecuteCommand(cmdStr);
+
+            yield return i;
         }
     }
 }

@@ -540,9 +540,9 @@ public abstract partial class SharedMapSystem
                 PhysicsComponent? body = null;
                 TransformComponent? xform = null;
 
-                foreach (var fixture in mapChunk.Fixtures)
+                foreach (var (id, fixture) in mapChunk.Fixtures)
                 {
-                    _fixtures.DestroyFixture(uid, fixture, false, manager: manager, body: body, xform: xform);
+                    _fixtures.DestroyFixture(uid, id, fixture, false, manager: manager, body: body, xform: xform);
                 }
 
                 RemoveChunk(uid, grid, mapChunk.Indices);

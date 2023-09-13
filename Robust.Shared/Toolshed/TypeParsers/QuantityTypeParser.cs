@@ -4,15 +4,16 @@ using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
 internal sealed class QuantityParser : TypeParser<Quantity>
 {
-    public override bool TryParse(ForwardParser parser, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
     {
-        var word = parser.GetWord();
+        var word = parserContext.GetWord(ParserContext.IsNumeric);
         error = null;
 
         if (word?.TrimEnd('%') is not { } maybeParseable || !float.TryParse(maybeParseable, out var v))
@@ -50,7 +51,7 @@ internal sealed class QuantityParser : TypeParser<Quantity>
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ForwardParser parser,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
         return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHint($"{argName ?? "quantity"}"), null));
@@ -59,7 +60,7 @@ internal sealed class QuantityParser : TypeParser<Quantity>
 
 public readonly record struct Quantity(float? Amount, float? Percentage);
 
-public record struct InvalidQuantity(string Value) : IConError
+public record InvalidQuantity(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {

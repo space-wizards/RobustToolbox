@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
@@ -9,9 +10,22 @@ using Robust.Shared.Toolshed.Syntax;
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
 [ToolshedCommand, MapLikeCommand(false)]
-internal sealed class EmplaceCommand : ToolshedCommand
+public sealed class EmplaceCommand : ToolshedCommand
 {
-    [CommandImplementation]
+    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    TOut Emplace<TIn, TOut>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] TIn value,
+        [CommandArgument] Block<TOut> block
+    )
+    {
+        var emplaceCtx = new EmplaceContext<TIn>(ctx, value, EntityManager);
+        return block.Invoke(null, emplaceCtx)!;
+    }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
     IEnumerable<TOut> Emplace<TIn, TOut>(
             [CommandInvocationContext] IInvocationContext ctx,
             [PipedArgument] IEnumerable<TIn> value,
@@ -27,7 +41,7 @@ internal sealed class EmplaceCommand : ToolshedCommand
     }
 }
 
-internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEntityManager EntityManager) : IInvocationContext
+internal record EmplaceContext<T>(IInvocationContext Inner, T Value, IEntityManager EntityManager) : IInvocationContext
 {
     public bool CheckInvokable(CommandSpec command, out IConError? error)
     {
@@ -35,6 +49,8 @@ internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEnt
     }
 
     public ICommonSession? Session => Inner.Session;
+    public ToolshedManager Toolshed => Inner.Toolshed;
+    public ToolshedEnvironment Environment => Inner.Environment;
 
     public void WriteLine(string line)
     {
@@ -75,7 +91,6 @@ internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEnt
                 return value;
         }
 
-        // TODO: Emplace behavior should be generalized and not hardcoded.
         if (Value is EntityUid id)
         {
             switch (name)
@@ -119,7 +134,7 @@ internal record struct EmplaceContext<T>(IInvocationContext Inner, T Value, IEnt
             {
                 case "ent":
                 {
-                    return session.AttachedEntity!;
+                    return EntityManager.GetNetEntity(session.AttachedEntity!);
                 }
                 case "name":
                 {

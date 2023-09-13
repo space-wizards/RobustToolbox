@@ -13,7 +13,6 @@ namespace Robust.Shared.Map
     ///     A set of coordinates relative to another entity.
     /// </summary>
     [PublicAPI]
-    [Serializable, NetSerializable]
     public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>, ISpanFormattable
     {
         public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);

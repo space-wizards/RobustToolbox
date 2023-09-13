@@ -63,7 +63,7 @@ namespace Robust.Shared.Physics.Systems
         public bool MetricsEnabled { get; protected set; }
 
         private EntityQuery<FixturesComponent> _fixturesQuery;
-        private EntityQuery<PhysicsComponent> _physicsQuery;
+        protected EntityQuery<PhysicsComponent> PhysicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
 
         public override void Initialize()
@@ -71,7 +71,7 @@ namespace Robust.Shared.Physics.Systems
             base.Initialize();
 
             _fixturesQuery = GetEntityQuery<FixturesComponent>();
-            _physicsQuery = GetEntityQuery<PhysicsComponent>();
+            PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);

@@ -25,13 +25,15 @@ namespace Robust.Client.GameObjects
             if (args.Current is not PointLightComponentState state)
                 return;
 
-            SetEnabled(uid, state.Enabled, component);
+            component.Enabled = state.Enabled;
             component.Offset = state.Offset;
             component.Softness = state.Softness;
             component.CastShadows = state.CastShadows;
             component.Energy = state.Energy;
             component.Radius = state.Radius;
             component.Color = state.Color;
+
+            _lightTree.QueueTreeUpdate(uid, component);
         }
 
         public override SharedPointLightComponent EnsureLight(EntityUid uid)

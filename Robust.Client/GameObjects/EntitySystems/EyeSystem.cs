@@ -17,10 +17,16 @@ public sealed class EyeSystem : SharedEyeSystem
         SubscribeLocalEvent<EyeComponent, ComponentInit>(OnInit);
         SubscribeLocalEvent<EyeComponent, PlayerDetachedEvent>(OnEyeDetached);
         SubscribeLocalEvent<EyeComponent, PlayerAttachedEvent>(OnEyeAttached);
+        SubscribeLocalEvent<EyeComponent, AfterAutoHandleStateEvent>(OnEyeAutoState);
 
         // Make sure this runs *after* entities have been moved by interpolation and movement.
         UpdatesAfter.Add(typeof(TransformSystem));
         UpdatesAfter.Add(typeof(PhysicsSystem));
+    }
+
+    private void OnEyeAutoState(EntityUid uid, EyeComponent component, ref AfterAutoHandleStateEvent args)
+    {
+        UpdateEye(component);
     }
 
     private void OnEyeAttached(EntityUid uid, EyeComponent component, PlayerAttachedEvent args)

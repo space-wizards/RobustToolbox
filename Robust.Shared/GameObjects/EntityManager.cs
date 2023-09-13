@@ -1,17 +1,16 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Prometheus;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Shared.GameObjects
 {
@@ -545,13 +544,16 @@ namespace Robust.Shared.GameObjects
             NetEntityLookup.Remove(netEntity);
         }
 
-        public virtual void QueueDeleteEntity(EntityUid uid)
+        public virtual void QueueDeleteEntity(EntityUid? uid)
         {
-            if (!QueuedDeletionsSet.Add(uid))
+            if (uid == null)
                 return;
 
-            QueuedDeletions.Enqueue(uid);
-            EntityQueueDeleted?.Invoke(uid);
+            if (!QueuedDeletionsSet.Add(uid.Value))
+                return;
+
+            QueuedDeletions.Enqueue(uid.Value);
+            EntityQueueDeleted?.Invoke(uid.Value);
         }
 
         public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);

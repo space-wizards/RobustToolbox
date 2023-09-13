@@ -14,7 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations;
 ///     Serializer used automatically for <see cref="EntProtoId"/> types.
 /// </summary>
 [TypeSerializer]
-public sealed class EntProtoIdSerializer : ITypeSerializer<EntProtoId, ValueDataNode>
+public sealed class EntProtoIdSerializer : ITypeSerializer<EntProtoId, ValueDataNode>, ITypeCopyCreator<EntProtoId>
 {
     public ValidationNode Validate(ISerializationManager serialization, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
     {
@@ -33,5 +33,11 @@ public sealed class EntProtoIdSerializer : ITypeSerializer<EntProtoId, ValueData
     public DataNode Write(ISerializationManager serialization, EntProtoId value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext? context = null)
     {
         return new ValueDataNode(value.Id);
+    }
+
+    public EntProtoId CreateCopy(ISerializationManager serializationManager, EntProtoId source, IDependencyCollection dependencies,
+        SerializationHookContext hookCtx, ISerializationContext? context = null)
+    {
+        return source;
     }
 }

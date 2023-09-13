@@ -5,7 +5,7 @@
 /// </summary>
 /// <param name="Id">The id of the prototype.</param>
 /// <typeparam name="T">The kind of prototype to wrap, for example <see cref="TileAliasPrototype"/></typeparam>
-/// <remarks><seealso cref="EntProtoId"/> for an <see cref="EntityPrototype"/> alias</remarks>
+/// <remarks><seealso cref="EntProtoId"/> for an <see cref="EntityPrototype"/> alias.</remarks>
 public readonly record struct ProtoId<T>(string Id) where T : class, IPrototype
 {
     public static implicit operator string(ProtoId<T> protoId)

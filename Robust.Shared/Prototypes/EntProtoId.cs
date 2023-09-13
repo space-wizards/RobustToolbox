@@ -1,5 +1,10 @@
 ﻿namespace Robust.Shared.Prototypes;
 
+/// <summary>
+///     Wrapper type for an <see cref="EntityPrototype"/> with a given id.
+/// </summary>
+/// <param name="Id">The id of the prototype.</param>
+/// <remarks><seealso cref="ProtoId{T}"/> for a wrapper of other prototype kinds.</remarks>
 public readonly record struct EntProtoId(string Id)
 {
     public static implicit operator string(EntProtoId protoId)

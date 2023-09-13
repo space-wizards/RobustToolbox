@@ -65,9 +65,12 @@ namespace Robust.Client.GameObjects
                 base.DirtyEntity(uid, meta);
         }
 
-        public override void QueueDeleteEntity(EntityUid uid)
+        public override void QueueDeleteEntity(EntityUid? uid)
         {
-            if (IsClientSide(uid))
+            if (uid == null)
+                return;
+
+            if (IsClientSide(uid.Value))
             {
                 base.QueueDeleteEntity(uid);
                 return;
@@ -78,7 +81,7 @@ namespace Robust.Client.GameObjects
 
             // Client-side entity deletion is not supported and will cause errors.
             if (_client.RunLevel == ClientRunLevel.Connected || _client.RunLevel == ClientRunLevel.InGame)
-                LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid)}. Trace: {Environment.StackTrace}");
+                LogManager.RootSawmill.Error($"Predicting the queued deletion of a networked entity: {ToPrettyString(uid.Value)}. Trace: {Environment.StackTrace}");
         }
 
         /// <inheritdoc />

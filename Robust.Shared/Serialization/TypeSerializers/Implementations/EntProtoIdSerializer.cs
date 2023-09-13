@@ -35,8 +35,7 @@ public sealed class EntProtoIdSerializer : ITypeSerializer<EntProtoId, ValueData
         return new ValueDataNode(value.Id);
     }
 
-    public EntProtoId CreateCopy(ISerializationManager serializationManager, EntProtoId source, IDependencyCollection dependencies,
-        SerializationHookContext hookCtx, ISerializationContext? context = null)
+    public EntProtoId CreateCopy(ISerializationManager serializationManager, EntProtoId source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
         return source;
     }

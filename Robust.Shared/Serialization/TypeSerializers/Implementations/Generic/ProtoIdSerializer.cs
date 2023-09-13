@@ -36,8 +36,7 @@ public sealed class ProtoIdSerializer<T> : ITypeSerializer<ProtoId<T>, ValueData
         return new ValueDataNode(value.Id);
     }
 
-    public ProtoId<T> CreateCopy(ISerializationManager serializationManager, ProtoId<T> source, IDependencyCollection dependencies,
-        SerializationHookContext hookCtx, ISerializationContext? context = null)
+    public ProtoId<T> CreateCopy(ISerializationManager serializationManager, ProtoId<T> source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
     {
         return source;
     }

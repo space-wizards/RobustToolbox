@@ -775,7 +775,12 @@ namespace Robust.Client.GameStates
             // Check pending states and see if we need to force any entities to re-run component states.
             foreach (var uid in _pendingReapplyNetStates.Keys)
             {
+                // State already being re-applied so don't bulldoze it.
                 if (_toApply.ContainsKey(uid))
+                    continue;
+
+                // Original entity referencing the NetEntity may have been deleted.
+                if (_entityManager.Deleted(uid))
                     continue;
 
                 _toApply[uid] = (_entityManager.GetNetEntity(uid), false, GameTick.Zero, null, null);

@@ -28,9 +28,10 @@ public sealed partial class PhysicsSystem
 
     private void UpdateIsPredicted()
     {
+        var query = GetEntityQuery<PhysicsComponent>();
         foreach (var uid in _toUpdate)
         {
-            if (!PhysicsQuery.TryGetComponent(uid, out var physics))
+            if (!query.TryGetComponent(uid, out var physics))
                 continue;
 
             var ev = new UpdateIsPredictedEvent(uid);

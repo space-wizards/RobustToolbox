@@ -190,8 +190,10 @@ namespace Robust.Shared.GameObjects
 
         // This might seem useless, but it allows you to retrieve remote entities that don't exist on the client.
         [ViewVariables]
-        private EntityUid Uid => this;
+        private EntityUid _uid => this;
 
+        [ViewVariables]
+        private NetEntity _netId => IoCManager.Resolve<IEntityManager>().GetNetEntity(this);
         #endregion
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
@@ -91,6 +92,9 @@ namespace Robust.Server.ViewVariables
             {
                 return null;
             }
+
+            if (value is EntityUid uid)
+                return IoCManager.Resolve<IEntityManager>().GetNetEntity(uid);
 
             var valType = value.GetType();
             if (!valType.IsValueType)

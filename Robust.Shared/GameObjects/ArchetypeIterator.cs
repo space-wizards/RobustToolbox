@@ -30,11 +30,12 @@ internal struct ArchetypeEnumerator
     {
         _query = query;
         _archetypes = archetypes;
+        _index = _archetypes.Count;
     }
 
     public bool MoveNext()
     {
-        while (++_index < _archetypes.Count)
+        while (--_index >= 0)
         {
             var archetype = Current;
             if (archetype.Entities > 0 && _query.Valid(archetype.BitSet))

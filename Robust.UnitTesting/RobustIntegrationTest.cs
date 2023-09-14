@@ -909,10 +909,14 @@ namespace Robust.UnitTesting
                 // entities get created in the same order. For that reason we arbitrarily increment the queued Uid by
                 // some arbitrary quantity.
                 var e = (EntityManager) EntMan;
+                e.Startup();
+
                 for (var i = 0; i < 10; i++)
                 {
                     EntMan.SpawnEntity(null, MapCoordinates.Nullspace);
                 }
+
+                e.Shutdown();
 
                 return client;
             }

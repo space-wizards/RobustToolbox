@@ -780,10 +780,10 @@ namespace Robust.Client.GameStates
                     continue;
 
                 // Original entity referencing the NetEntity may have been deleted.
-                if (_entityManager.Deleted(uid))
+                if (!metas.TryGetComponent(uid, out var meta))
                     continue;
 
-                _toApply[uid] = (_entityManager.GetNetEntity(uid), false, GameTick.Zero, null, null);
+                _toApply[uid] = (_entityManager.GetNetEntity(uid, meta), false, GameTick.Zero, null, null);
             }
 
             var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);

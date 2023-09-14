@@ -21,7 +21,7 @@ namespace Robust.Shared.GameObjects
     {
         public readonly int Id;
 
-        internal readonly int Version;
+        public readonly int Version;
 
         /// <summary>
         ///     An Invalid entity UID you can compare against.

@@ -236,17 +236,19 @@ namespace Robust.Shared.GameObjects
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool skipInit, MetaDataComponent? metadata = null) where T : Component
         {
+            var compType = component.GetType();
+
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
                 GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Terminating,
-                $"Attempted to add a {component.GetType().Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
+                $"Attempted to add a {compType.Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
 
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
 
             // TODO optimize this
             // We can't use typeof(T) here in case T is just Component
-            if (!_world.Has(uid, component.GetType()))
+            if (!_world.Has(uid, compType))
                 _world.Add(uid, (object) component);
             else
             {

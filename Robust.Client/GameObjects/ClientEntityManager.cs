@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Prometheus;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
@@ -92,12 +93,16 @@ namespace Robust.Client.GameObjects
                 base.Dirty(uid, component, meta);
         }
 
-        public override EntityStringRepresentation ToPrettyString(EntityUid uid)
+        [return: NotNullIfNotNull("uid")]
+        public override EntityStringRepresentation? ToPrettyString(EntityUid? uid)
         {
+            if (uid == null)
+                return null;
+
             if (_playerManager.LocalPlayer?.ControlledEntity == uid)
-                return base.ToPrettyString(uid) with { Session = _playerManager.LocalPlayer.Session };
-            else
-                return base.ToPrettyString(uid);
+                return base.ToPrettyString(uid).Value with { Session = _playerManager.LocalPlayer.Session };
+
+            return base.ToPrettyString(uid);
         }
 
         public override void RaisePredictiveEvent<T>(T msg)

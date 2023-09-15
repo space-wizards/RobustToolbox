@@ -257,6 +257,7 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Cleanup()
         {
+            _componentFactory.ComponentAdded -= OnComponentAdded;
             ShuttingDown = true;
             FlushEntities();
             _entitySystemManager.Clear();
@@ -848,8 +849,12 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityStringRepresentation ToPrettyString(EntityUid uid)
+        [return: NotNullIfNotNull("uid")]
+        public virtual EntityStringRepresentation? ToPrettyString(EntityUid? uid)
         {
+        	if (uid == null)
+        		return null;
+        
             // We want to retrieve the MetaData component even if it is deleted.
             if (!_world.TryGet(uid, out MetaDataComponent metadata))
                 return new EntityStringRepresentation(uid, true);
@@ -858,10 +863,17 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
+        [return: NotNullIfNotNull("netEntity")]
+        public EntityStringRepresentation? ToPrettyString(NetEntity? netEntity)
         {
             return ToPrettyString(GetEntity(netEntity));
         }
+
+        public EntityStringRepresentation ToPrettyString(EntityUid uid)
+            => ToPrettyString((EntityUid?) uid).Value;
+
+        public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
+            => ToPrettyString((NetEntity?) netEntity).Value;
 
         private EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent metadata)
         {

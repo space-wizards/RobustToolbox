@@ -50,6 +50,8 @@ namespace Robust.Shared.GameObjects
         {
             if (Initialized)
                 throw new InvalidOperationException("Already initialized.");
+
+            _componentFactory.ComponentAdded += OnComponentAdded;
         }
 
         /// <summary>

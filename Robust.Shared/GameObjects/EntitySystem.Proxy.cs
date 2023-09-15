@@ -398,17 +398,29 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityStringRepresentation ToPrettyString(EntityUid uid)
+    [return: NotNullIfNotNull("uid")]
+    protected EntityStringRepresentation? ToPrettyString(EntityUid? uid)
     {
         return EntityManager.ToPrettyString(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityStringRepresentation ToPrettyString(NetEntity netEntity)
+    [return: NotNullIfNotNull("netEntity")]
+    protected EntityStringRepresentation? ToPrettyString(NetEntity? netEntity)
     {
         return EntityManager.ToPrettyString(netEntity);
     }
+
+    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityStringRepresentation ToPrettyString(EntityUid uid)
+        => ToPrettyString((EntityUid?) uid).Value;
+
+    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityStringRepresentation ToPrettyString(NetEntity netEntity)
+        => ToPrettyString((NetEntity?) netEntity).Value;
 
     #endregion
 
@@ -491,6 +503,12 @@ public partial class EntitySystem
     protected MetaDataComponent MetaData(EntityUid uid)
     {
         return EntityManager.GetComponent<MetaDataComponent>(uid);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected (EntityUid, MetaDataComponent)  GetEntityData(NetEntity nuid)
+    {
+        return EntityManager.GetEntityData(nuid);
     }
 
     #endregion

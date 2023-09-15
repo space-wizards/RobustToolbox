@@ -54,6 +54,20 @@ END TEMPLATE-->
 *None yet*
 
 
+## 159.0.3
+
+### Bugfixes
+
+* Fix potentially deleted entities having states re-applied when NetEntities come in.
+
+
+## 159.0.2
+
+### Bugfixes
+
+* Fix PointLight state handling not queueing ComponentTree updates.
+
+
 ## 159.0.1
 
 ### Bugfixes

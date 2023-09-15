@@ -214,13 +214,15 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     }
 
     [ViewVariables]
-    private EntityUid Uid
+    private EntityUid _uid
     {
         get
         {
             return IoCManager.Resolve<IEntityManager>().GetEntity(this);
         }
     }
+
+    [ViewVariables] private NetEntity _netId => this;
 
     #endregion
 }

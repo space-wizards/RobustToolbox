@@ -560,13 +560,16 @@ namespace Robust.Shared.GameObjects
             NetEntityLookup.Remove(netEntity);
         }
 
-        public virtual void QueueDeleteEntity(EntityUid uid)
+        public virtual void QueueDeleteEntity(EntityUid? uid)
         {
-            if (Deleted(uid) || !QueuedDeletionsSet.Add(uid))
+            if (uid == null)
                 return;
 
-            QueuedDeletions.Enqueue(uid);
-            EntityQueueDeleted?.Invoke(uid);
+            if (!QueuedDeletionsSet.Add(uid.Value))
+                return;
+
+            QueuedDeletions.Enqueue(uid.Value);
+            EntityQueueDeleted?.Invoke(uid.Value);
         }
 
         public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);

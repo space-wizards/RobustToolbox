@@ -4,7 +4,6 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
@@ -39,7 +38,8 @@ namespace Robust.Client.ViewVariables.Editors
 
             vvButton.OnPressed += e =>
             {
-                IoCManager.Resolve<IConsoleHost>().ExecuteCommand($"vv {uid}");
+                var id = IoCManager.Resolve<IEntityManager>().GetNetEntity(uid);
+                IoCManager.Resolve<IConsoleHost>().ExecuteCommand($"vv {id}");
             };
 
             hBox.AddChild(lineEdit);

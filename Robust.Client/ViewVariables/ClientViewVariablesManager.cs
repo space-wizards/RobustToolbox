@@ -190,6 +190,11 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorEntityUid();
             }
 
+            if (type == typeof(NetEntity))
+            {
+                return new VVPropEditorNetEntity();
+            }
+
             if (type == typeof(Color))
             {
                 return new VVPropEditorColor();

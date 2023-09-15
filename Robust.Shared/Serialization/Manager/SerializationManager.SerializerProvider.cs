@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -16,14 +15,11 @@ namespace Robust.Shared.Serialization.Manager;
 
 public sealed partial class SerializationManager
 {
-    [Obsolete]
-    public static Type[] SerializerInterfaces => _serializerInterfaces.ToArray();
-
     /// <summary>
     ///     <see cref="CopyCreatorIndex"/>
     ///     <see cref="CopierIndex"/>
     /// </summary>
-    private static readonly ImmutableArray<Type> _serializerInterfaces = new[]
+    private static readonly ImmutableArray<Type> SerializerInterfaces = new[]
     {
         typeof(ITypeReader<,>),
         typeof(ITypeInheritanceHandler<,>),
@@ -34,12 +30,12 @@ public sealed partial class SerializationManager
     }.ToImmutableArray();
 
     /// <summary>
-    ///     <see cref="_serializerInterfaces"/>
+    ///     <see cref="SerializerInterfaces"/>
     /// </summary>
     private const int CopyCreatorIndex = 3;
 
     /// <summary>
-    ///     <see cref="_serializerInterfaces"/>
+    ///     <see cref="SerializerInterfaces"/>
     /// </summary>
     private const int CopierIndex = 4;
 
@@ -94,7 +90,7 @@ public sealed partial class SerializationManager
     {
         public SerializerProvider(IEnumerable<Type> typeSerializers)
         {
-            foreach (var serializerInterface in _serializerInterfaces)
+            foreach (var serializerInterface in SerializerInterfaces)
             {
                 RegisterSerializerInterface(serializerInterface);
             }
@@ -107,7 +103,7 @@ public sealed partial class SerializationManager
 
         public SerializerProvider()
         {
-            foreach (var serializerInterface in _serializerInterfaces)
+            foreach (var serializerInterface in SerializerInterfaces)
             {
                 RegisterSerializerInterface(serializerInterface);
             }
@@ -120,7 +116,7 @@ public sealed partial class SerializationManager
         /// <summary>
         ///     Type serializers indexed by their type serializer and type
         ///     that they serialize.
-        ///     <see cref="_serializerInterfaces"/> for the first index.
+        ///     <see cref="SerializationManager.SerializerInterfaces"/> for the first index.
         /// </summary>
         private (object? Regular, object? Generic)[]?[] _typeSerializersArray = new (object? Regular, object? Generic)[]?[] { };
 
@@ -221,7 +217,7 @@ public sealed partial class SerializationManager
                         {
                             var serializerType = val.MakeGenericType(objectType.GetGenericArguments());
                             serializer = RegisterSerializer(serializerType)!;
-                            RegisterIndexedSerializer(objectType, _serializerInterfaces.IndexOf(interfaceType), serializer, false);
+                            RegisterIndexedSerializer(objectType, SerializerInterfaces.IndexOf(interfaceType), serializer, false);
                             return true;
                         }
                     }
@@ -299,7 +295,7 @@ public sealed partial class SerializationManager
                             if (arguments.Length != 1)
                                 throw new InvalidGenericParameterCountException();
                             _typeSerializers.GetOrNew(typeInterface).Add(arguments[0], obj);
-                            RegisterIndexedSerializer(arguments[0], _serializerInterfaces.IndexOf(typeInterface), obj, true);
+                            RegisterIndexedSerializer(arguments[0], SerializerInterfaces.IndexOf(typeInterface), obj, true);
                         }
                     }
 
@@ -424,7 +420,7 @@ public sealed partial class SerializationManager
                 Array.Resize(ref _typeSerializersArray, (id + 1) * 2);
             }
 
-            var array = new (object? Regular, object? Generic)[_serializerInterfaces.Length];
+            var array = new (object? Regular, object? Generic)[SerializerInterfaces.Length];
             _typeSerializersArray[id] = array;
 
             if (regular)

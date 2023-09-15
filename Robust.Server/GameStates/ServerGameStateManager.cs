@@ -210,8 +210,6 @@ namespace Robust.Server.GameStates
             var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
             var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
             var oldestAckValue = GameTick.MaxValue.Value;
-            var tQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var mQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
 
             // Replays process game states in parallel with players
             Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
@@ -225,7 +223,7 @@ namespace Robust.Server.GameStates
                     PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
 
                     if (i >= 0)
-                        SendStateUpdate(i, resource, inputSystem, players[i], pvsData, mQuery, tQuery, ref oldestAckValue);
+                        SendStateUpdate(i, resource, inputSystem, players[i], pvsData, ref oldestAckValue);
                     else
                         _replay.Update();
 
@@ -304,8 +302,6 @@ namespace Robust.Server.GameStates
             InputSystem inputSystem,
             IPlayerSession session,
             PvsData? pvsData,
-            EntityQuery<MetaDataComponent> mQuery,
-            EntityQuery<TransformComponent> tQuery,
             ref uint oldestAckValue)
         {
             var channel = session.ConnectedClient;

@@ -154,8 +154,7 @@ namespace Robust.Shared.GameObjects
         ///     <see cref="TransformComponent"/> and <see cref="MetaDataComponent"/>. This should ONLY be
         ///     used when deleting an entity.
         /// </summary>
-        /// <param name="uid">Entity UID to modify.</param>
-        void DisposeComponents(EntityUid uid);
+        void DisposeComponents(EntityUid uid, MetaDataComponent metadata);
 
         /// <summary>
         ///     Checks if the entity has a component type.

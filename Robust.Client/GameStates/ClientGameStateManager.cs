@@ -790,7 +790,7 @@ namespace Robust.Client.GameStates
                 _toApply[uid] = (_entityManager.GetNetEntity(uid, meta), false, GameTick.Zero, null, null);
             }
 
-            var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);
+            using var queuedBroadphaseUpdates = new PooledList<(EntityUid, TransformComponent)>(enteringPvs);
 
             // Apply entity states.
             using (_prof.Group("Apply States"))
@@ -885,7 +885,7 @@ namespace Robust.Client.GameStates
             var xforms = _entities.GetEntityQuery<TransformComponent>();
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
-            var toDelete = new List<EntityUid>(Math.Max(64, _entities.EntityCount - stateEnts.Count));
+            using var toDelete = new PooledList<EntityUid>(Math.Max(64, _entities.EntityCount - stateEnts.Count));
 
             // Client side entities won't need the transform, but that should always be a tiny minority of entities
             var metaQuery = _entityManager.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
@@ -1156,10 +1156,14 @@ namespace Robust.Client.GameStates
                     }
                 }
 
-                // TODO: Don't do thearchetype move here, just defer it with compTypes.
-                foreach (var comp in toRemove)
+                if (toRemove.Count > 0)
                 {
-                    _entityManager.RemoveComponentInternal(uid, comp, terminating: false, archetypeChange: false);
+                    var metadata = _entityManager.GetComponent<MetaDataComponent>(uid);
+
+                    foreach (var comp in toRemove)
+                    {
+                        _entityManager.RemoveComponentInternal(uid, comp, terminating: false, archetypeChange: false, metadata);
+                    }
                 }
 
                 if (compTypes.Count > 0)

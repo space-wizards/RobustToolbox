@@ -91,6 +91,9 @@ namespace Robust.Shared.GameObjects
 
         private string _xformName = string.Empty;
 
+        private ComponentRegistration _metaReg = default!;
+        private ComponentRegistration _xformReg = default!;
+
         private SharedMapSystem _mapSystem = default!;
 
         private ISawmill _sawmill = default!;
@@ -117,7 +120,9 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeArch();
-            _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
+            _metaReg = _componentFactory.GetRegistration(typeof(MetaDataComponent));
+            _xformReg = _componentFactory.GetRegistration(typeof(TransformComponent));
+            _xformName = _xformReg.Name;
             _sawmill = LogManager.GetSawmill("entity");
             _resolveSawmill = LogManager.GetSawmill("resolve");
 
@@ -541,7 +546,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Dispose all my components, in a safe order so transform is available
-            DisposeComponents(uid);
+            DisposeComponents(uid, metadata);
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
 
             try
@@ -656,13 +661,13 @@ namespace Robust.Shared.GameObjects
             SetNetEntity(uid, netEntity, metadata);
 
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata, true);
+            AddComponentInternal(uid, metadata, _metaReg, true);
 
             // allocate the required TransformComponent
             xform = _componentFactory.GetComponent<TransformComponent>();
             xform.Owner = uid;
 
-            AddComponentInternal(uid, xform, true, metadata);
+            AddComponentInternal(uid, xform, _xformReg, true, metadata);
             return uid;
         }
 

@@ -35,9 +35,6 @@ namespace Robust.Shared.GameObjects
 
         private static readonly ComponentState DefaultComponentState = new();
 
-        private readonly Dictionary<EntityUid, Dictionary<ushort, Component>> _netComponents
-            = new(EntityCapacity);
-
         private readonly HashSet<Component> _deleteSet = new(TypeCapacity);
 
         /// <inheritdoc />
@@ -52,7 +49,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void ClearComponents()
         {
-            _netComponents.Clear();
             _deleteSet.Clear();
         }
 
@@ -79,7 +75,7 @@ namespace Robust.Shared.GameObjects
 #pragma warning disable CS0618 // Type or member is obsolete
             DebugTools.Assert(metadata == null || metadata.Owner == uid);
 #pragma warning restore CS0618 // Type or member is obsolete
-            metadata ??= GetComponent<MetaDataComponent>(uid);
+            metadata ??= MetaQuery.GetComponent(uid);
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
             metadata.EntityLifeStage = EntityLifeStage.Initializing;
 
@@ -238,7 +234,7 @@ namespace Robust.Shared.GameObjects
 
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
-                (metadata ?? GetComponent<MetaDataComponent>(uid)).EntityLifeStage < EntityLifeStage.Terminating,
+                (metadata ?? MetaQuery.GetComponent(uid)).EntityLifeStage < EntityLifeStage.Terminating,
                 $"Attempted to add a {reg.Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
 
             // TODO optimize this
@@ -256,14 +252,8 @@ namespace Robust.Shared.GameObjects
             {
                 // the main comp grid keeps this in sync
                 var netId = reg.NetID.Value;
-
-                if (!_netComponents.TryGetValue(uid, out var netSet))
-                {
-                    netSet = new Dictionary<ushort, Component>(NetComponentCapacity);
-                    _netComponents.Add(uid, netSet);
-                }
-
-                netSet.Add(netId, component);
+                metadata ??= MetaQuery.GetComponent(uid);
+                metadata.NetComponents.Add(netId, component);
             }
             else
             {
@@ -279,7 +269,7 @@ namespace Robust.Shared.GameObjects
             if (skipInit)
                 return;
 
-            metadata ??= GetComponent<MetaDataComponent>(uid);
+            metadata ??= MetaQuery.GetComponent(uid);
 
             // Bur this overhead sucks.
             if (metadata.EntityLifeStage < EntityLifeStage.Initializing)
@@ -341,11 +331,11 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// WARNING: Do not call this unless you're sure of what you're doing!
         /// </summary>
-        internal void RemoveComponentInternal(EntityUid uid, Component component, bool terminating, bool archetypeChange)
+        internal void RemoveComponentInternal(EntityUid uid, Component component, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
         {
-            // I hate this but also didn't want the GetComponent<MetaDataComponent> overhead.
+            // I hate this but also didn't want the MetaQuery.GetComponent overhead.
             // and with archetypes we want to avoid moves at all costs.
-            RemoveComponentImmediate(component, uid, terminating, archetypeChange);
+            RemoveComponentImmediate(component, uid, terminating, archetypeChange, metadata);
         }
 
         /// <inheritdoc />
@@ -399,7 +389,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void DisposeComponents(EntityUid uid)
+        public void DisposeComponents(EntityUid uid, MetaDataComponent metadata)
         {
             var objComps = _world.GetAllComponents(uid);
 
@@ -409,15 +399,13 @@ namespace Robust.Shared.GameObjects
 
                 try
                 {
-                    RemoveComponentImmediate(comp, uid, true, true);
+                    RemoveComponentImmediate(comp, uid, true, false, metadata);
                 }
                 catch (Exception exc)
                 {
                     _sawmill.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'\n{exc.StackTrace}");
                 }
             }
-
-            _netComponents.Remove(uid);
         }
 
         private void RemoveComponentDeferred(Component component, EntityUid uid, bool terminating)
@@ -461,7 +449,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="terminating">Is the entity terminating.</param>
         /// <param name="archetypeChange">Should we handle the archetype change or is it being handled externally.</param>
-        private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating, bool archetypeChange)
+        private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
         {
             if (component.Deleted)
             {
@@ -497,7 +485,7 @@ namespace Robust.Shared.GameObjects
             var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), terminating);
             ComponentRemoved?.Invoke(eventArgs);
             _eventBus.OnComponentRemoved(eventArgs);
-            DeleteComponent(uid, component, terminating, archetypeChange);
+            DeleteComponent(uid, component, terminating, archetypeChange, metadata);
         }
 
         /// <inheritdoc />
@@ -547,24 +535,26 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="terminating">Is the entity terminating.</param>
         /// <param name="archetypeChange">Should the archetype change be handled (where the entity is not terminating).</param>
-        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating, bool archetypeChange)
+        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
         {
+            if (terminating)
+                return;
+
             var reg = _componentFactory.GetRegistration(component);
 
-            if (!terminating && reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
+            if (reg.NetID != null)
             {
-                if (netSet.Count == 1)
-                    _netComponents.Remove(entityUid);
-                else
-                    netSet.Remove(reg.NetID.Value);
+                metadata ??= MetaQuery.GetComponent(entityUid);
+                var netSet = metadata.NetComponents;
+                netSet.Remove(reg.NetID.Value);
 
                 if (component.NetSyncEnabled)
-                    DirtyEntity(entityUid);
+                    DirtyEntity(entityUid, metadata);
             }
 
-            // Don't bother with archetype shuffles if we're terminating.
-            if (!terminating && archetypeChange)
+            if (archetypeChange)
             {
+                DebugTools.Assert(_world.Has(entityUid, reg.Idx.Type));
                 if (_world.Has(entityUid, reg.Idx.Type))
                     _world.Remove(entityUid, reg.Idx.Type);
             }
@@ -613,21 +603,17 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, ushort netId)
         {
-            return _netComponents.TryGetValue(uid, out var netSet)
-                   && netSet.ContainsKey(netId);
+            return MetaQuery.TryGetComponent(uid, out var metadata) && metadata.NetComponents.ContainsKey(netId);
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid? uid, ushort netId)
         {
-            if (!uid.HasValue)
-            {
+            if (uid == null)
                 return false;
-            }
 
-            return _netComponents.TryGetValue(uid.Value, out var netSet)
-                   && netSet.ContainsKey(netId);
+            return HasComponent(uid.Value, netId);
         }
 
         /// <inheritdoc />
@@ -696,7 +682,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IComponent GetComponent(EntityUid uid, ushort netId)
         {
-            return _netComponents[uid][netId];
+            return MetaQuery.GetComponent(uid).NetComponents[netId];
         }
 
         /// <inheritdoc />
@@ -791,8 +777,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, ushort netId, [MaybeNullWhen(false)] out IComponent component)
         {
-            if (_netComponents.TryGetValue(uid, out var netSet)
-                && netSet.TryGetValue(netId, out var comp))
+            if (MetaQuery.TryGetComponent(uid, out var metadata)
+                && metadata.NetComponents.TryGetValue(netId, out var comp))
             {
                 component = comp;
                 return true;
@@ -812,8 +798,8 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            if (_netComponents.TryGetValue(uid.Value, out var netSet)
-                && netSet.TryGetValue(netId, out var comp))
+            if (MetaQuery.TryGetComponent(uid, out var metadata)
+                && metadata.NetComponents.TryGetValue(netId, out var comp))
             {
                 component = comp;
                 return true;
@@ -888,14 +874,14 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public NetComponentEnumerable GetNetComponents(EntityUid uid)
         {
-            return new NetComponentEnumerable(_netComponents[uid]);
+            return new NetComponentEnumerable(MetaQuery.GetComponent(uid).NetComponents);
         }
 
         /// <inheritdoc />
         public NetComponentEnumerable? GetNetComponentsOrNull(EntityUid uid)
         {
-            return _netComponents.TryGetValue(uid, out var data)
-                    ? new NetComponentEnumerable(data)
+            return MetaQuery.TryGetComponent(uid, out var metadata)
+                    ? new NetComponentEnumerable(metadata.NetComponents)
                     : null;
         }
 

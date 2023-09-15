@@ -740,22 +740,33 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityStringRepresentation ToPrettyString(EntityUid uid)
+        [return: NotNullIfNotNull("uid")]
+        public virtual EntityStringRepresentation? ToPrettyString(EntityUid? uid)
         {
             // We want to retrieve the MetaData component even if it is deleted.
-            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
-                return new EntityStringRepresentation(uid, true);
+            if (uid == null)
+                return null;
+
+            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid.Value, out var component))
+                return new EntityStringRepresentation(uid.Value, true);
 
             var metadata = (MetaDataComponent) component;
 
-            return ToPrettyString(uid, metadata);
+            return ToPrettyString(uid.Value, metadata);
         }
 
         /// <inheritdoc />
-        public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
+        [return: NotNullIfNotNull("netEntity")]
+        public EntityStringRepresentation? ToPrettyString(NetEntity? netEntity)
         {
             return ToPrettyString(GetEntity(netEntity));
         }
+
+        public EntityStringRepresentation ToPrettyString(EntityUid uid)
+            => ToPrettyString((EntityUid?) uid).Value;
+
+        public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
+            => ToPrettyString((NetEntity?) netEntity).Value;
 
         private EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent metadata)
         {

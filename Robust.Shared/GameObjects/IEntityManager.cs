@@ -129,6 +129,23 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         EntityStringRepresentation ToPrettyString(EntityUid uid);
 
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        EntityStringRepresentation ToPrettyString(NetEntity netEntity);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        [return: NotNullIfNotNull("uid")]
+        EntityStringRepresentation? ToPrettyString(EntityUid? uid);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        [return: NotNullIfNotNull("netEntity")]
+        EntityStringRepresentation? ToPrettyString(NetEntity? netEntity);
+
         #endregion Entity Management
 
         /// <summary>

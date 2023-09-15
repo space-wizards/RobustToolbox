@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Server.Player;
@@ -108,11 +109,15 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public override EntityStringRepresentation ToPrettyString(EntityUid uid)
+        [return: NotNullIfNotNull("uid")]
+        public override EntityStringRepresentation? ToPrettyString(EntityUid? uid)
         {
+            if (uid == null)
+                return null;
+
             TryGetComponent(uid, out ActorComponent? actor);
 
-            return base.ToPrettyString(uid) with { Session = actor?.PlayerSession };
+            return base.ToPrettyString(uid).Value with { Session = actor?.PlayerSession };
         }
 
         #region IEntityNetworkManager impl

@@ -117,7 +117,6 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeArch();
-            InitializeComponents();
             _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
             _sawmill = LogManager.GetSawmill("entity");
             _resolveSawmill = LogManager.GetSawmill("resolve");
@@ -257,7 +256,6 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Cleanup()
         {
-            _componentFactory.ComponentAdded -= OnComponentAdded;
             ShuttingDown = true;
             FlushEntities();
             _entitySystemManager.Clear();
@@ -854,12 +852,12 @@ namespace Robust.Shared.GameObjects
         {
         	if (uid == null)
         		return null;
-        
-            // We want to retrieve the MetaData component even if it is deleted.
-            if (!_world.TryGet(uid, out MetaDataComponent metadata))
-                return new EntityStringRepresentation(uid, true);
 
-            return ToPrettyString(uid, metadata);
+            // We want to retrieve the MetaData component even if it is deleted.
+            if (!_world.TryGet(uid.Value, out MetaDataComponent metadata))
+                return new EntityStringRepresentation(uid.Value, true);
+
+            return ToPrettyString(uid.Value, metadata);
         }
 
         /// <inheritdoc />

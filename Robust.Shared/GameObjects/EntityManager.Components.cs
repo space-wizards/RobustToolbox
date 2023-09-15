@@ -46,14 +46,6 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public event Action<RemovedComponentEventArgs>? ComponentRemoved;
 
-        public void InitializeComponents()
-        {
-            if (Initialized)
-                throw new InvalidOperationException("Already initialized.");
-
-            _componentFactory.ComponentAdded += OnComponentAdded;
-        }
-
         /// <summary>
         ///     Instantly clears all components from the manager. This will NOT shut them down gracefully.
         ///     Any entities relying on existing components will be broken.

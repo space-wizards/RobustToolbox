@@ -84,7 +84,7 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     public override bool Equals(object? obj)
     {
         if (ReferenceEquals(null, obj)) return false;
-        return obj is EntityUid id && Equals(id);
+        return obj is NetEntity id && Equals(id);
     }
 
     /// <inheritdoc />

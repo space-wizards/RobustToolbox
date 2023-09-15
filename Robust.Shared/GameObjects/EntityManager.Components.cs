@@ -30,7 +30,6 @@ namespace Robust.Shared.GameObjects
         public IComponentFactory ComponentFactory => _componentFactory;
 
         private const int TypeCapacity = 32;
-        private const int ComponentCollectionCapacity = 1024;
         private const int EntityCapacity = 1024;
         private const int NetComponentCapacity = 8;
 
@@ -428,8 +427,6 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveComponentDeferred(Component component, EntityUid uid, bool terminating)
         {
-            if (component == null) throw new ArgumentNullException(nameof(component));
-
             if (component.Owner != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
@@ -574,8 +571,8 @@ namespace Robust.Shared.GameObjects
             // Don't bother with archetype shuffles if we're terminating.
             if (!terminating && archetypeChange)
             {
-                if (_world.Has(entityUid, compType))
-                    _world.Remove(entityUid, compType);
+                if (_world.Has(entityUid, reg.Idx.Type))
+                    _world.Remove(entityUid, reg.Idx.Type);
             }
         }
 
@@ -603,7 +600,7 @@ namespace Robust.Shared.GameObjects
             if (!_world.IsAlive(uid) || !_world.TryGet(uid, type, out var comp))
                 return false;
 
-            return !((IComponent) comp!).Deleted;
+            return !Unsafe.As<IComponent>(comp).Deleted;
         }
 
         /// <inheritdoc />
@@ -682,7 +679,6 @@ namespace Robust.Shared.GameObjects
             if (_world.IsAlive(uid) && _world.TryGet(uid, out T comp))
                 return comp;
 
-            var arc = _world.GetArchetype(uid);
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
         }
 
@@ -761,7 +757,7 @@ namespace Robust.Shared.GameObjects
         {
             if (_world.IsAlive(uid) && _world.TryGet(uid, type, out var comp))
             {
-                component = (IComponent) comp;
+                component = Unsafe.As<IComponent>(comp);
                 if (!component.Deleted)
                 {
                     return true;
@@ -846,8 +842,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
-            foreach (Component comp in _world.GetAllComponents(uid))
+            foreach (var obj in _world.GetAllComponents(uid))
             {
+                var comp = Unsafe.As<Component>(obj);
+
                 if (comp.Deleted) continue;
 
                 yield return comp;
@@ -876,7 +874,7 @@ namespace Robust.Shared.GameObjects
             var i = 0;
             foreach (var c in set)
             {
-                comps[i++] = (Component) c;
+                comps[i++] = Unsafe.As<Component>(c);
             }
         }
 
@@ -1116,7 +1114,7 @@ namespace Robust.Shared.GameObjects
 
                 for (var i = 0; i < chunk.Size; i++)
                 {
-                    var comp = (Component) components.GetValue(i)!;
+                    var comp = Unsafe.As<Component>(components.GetValue(i))!;
                     if (comp.Deleted)
                         continue;
 
@@ -1221,7 +1219,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (_manager.TryGetComponent(uid, _type.Value.Type, out var comp))
                 {
-                    component = (TComp1) comp;
+                    component = Unsafe.As<TComp1>(comp);
                     return true;
                 }
 

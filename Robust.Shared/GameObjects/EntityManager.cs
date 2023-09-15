@@ -429,7 +429,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(EntityUid? uid)
         {
-            if (uid == null)
+            if (uid == null || uid == EntityUid.Invalid)
                 return;
             var e = uid.Value;
 
@@ -566,7 +566,7 @@ namespace Robust.Shared.GameObjects
 
         public virtual void QueueDeleteEntity(EntityUid? uid)
         {
-            if (uid == null)
+            if (uid == null || uid.Value == EntityUid.Invalid)
                 return;
 
             if (!QueuedDeletionsSet.Add(uid.Value))
@@ -855,7 +855,7 @@ namespace Robust.Shared.GameObjects
         [return: NotNullIfNotNull("uid")]
         public virtual EntityStringRepresentation? ToPrettyString(EntityUid? uid)
         {
-        	if (uid == null)
+        	if (uid == null || uid == EntityUid.Invalid)
         		return null;
 
             // We want to retrieve the MetaData component even if it is deleted.

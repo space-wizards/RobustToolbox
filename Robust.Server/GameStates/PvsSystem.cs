@@ -963,7 +963,7 @@ internal sealed partial class PvsSystem : EntitySystem
             // point the budgets are just ignored, this should just bypass those checks. But then again 99% of the time this
             // is just the player's own entity + maybe a singularity. So currently not all that performance intensive.
             var (entered, _) = ProcessEntry(in netEntity, lastAcked, lastSent, lastSeen, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-            AddToSendSet(in netEntity, _metaQuery.GetComponent(uid), toSend, fromTick, in entered, ref entStateCount);
+            AddToSendSet(in netEntity, metadata, toSend, fromTick, in entered, ref entStateCount);
         }
 
         if (addChildren)
@@ -1126,7 +1126,6 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         else
         {
             stateEntities = new();
-            var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
             for (var i = fromTick.Value + 1; i <= toTick.Value; i++)
             {
                 if (!TryGetDirtyEntities(new GameTick(i), out var add, out var dirty))
@@ -1137,7 +1136,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
                 foreach (var uid in add)
                 {
-                    if (!toSend.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
+                    if (!toSend.Add(uid) || !_metaQuery.TryGetComponent(uid, out var md))
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
@@ -1164,7 +1163,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
                 foreach (var uid in dirty)
                 {
                     DebugTools.Assert(!add.Contains(uid));
-                    if (!toSend.Add(uid) || !metaQuery.TryGetComponent(uid, out var md))
+                    if (!toSend.Add(uid) || !_metaQuery.TryGetComponent(uid, out var md))
                         continue;
 
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);

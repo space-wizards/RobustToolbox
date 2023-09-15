@@ -75,7 +75,6 @@ namespace Robust.Shared.GameObjects
         {
             var query = new QueryDescription
             {
-                // TODO arch pool
                 All = new ComponentType[] { component }
             };
             return _world.CountEntities(in query);
@@ -197,7 +196,7 @@ namespace Robust.Shared.GameObjects
         public CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : Component, new()
         {
             var reg = _componentFactory.GetRegistration<T>();
-            var newComponent = (T)_componentFactory.GetComponent(reg);
+            var newComponent = _componentFactory.GetComponent<T>();
 #pragma warning disable CS0618 // Type or member is obsolete
             newComponent.Owner = uid;
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -316,7 +315,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false, true);
+            RemoveComponentImmediate(Unsafe.As<Component>(comp), uid, false, true);
             return true;
         }
 
@@ -327,7 +326,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false, true);
+            RemoveComponentImmediate(Unsafe.As<Component>(comp), uid, false, true);
             return true;
         }
 
@@ -410,8 +409,10 @@ namespace Robust.Shared.GameObjects
         {
             var objComps = _world.GetAllComponents(uid);
 
-            foreach (Component comp in objComps)
+            foreach (var obj in objComps)
             {
+                var comp = Unsafe.As<Component>(obj);
+
                 try
                 {
                     RemoveComponentImmediate(comp, uid, true, true);
@@ -554,8 +555,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="archetypeChange">Should the archetype change be handled (where the entity is not terminating).</param>
         private void DeleteComponent(EntityUid entityUid, Component component, bool terminating, bool archetypeChange)
         {
-            var compType = component.GetType();
-            var reg = _componentFactory.GetRegistration(compType);
+            var reg = _componentFactory.GetRegistration(component);
 
             if (!terminating && reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
             {

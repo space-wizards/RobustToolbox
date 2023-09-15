@@ -63,7 +63,7 @@ public partial class EntityManager
 
     internal ComponentType[] GetComponentType(EntityPrototype prototype, ICollection<Type>? missing = null)
     {
-        var compTypes = new ComponentType[prototype.Components.Count - missing?.Count ?? 0];
+        var compTypes = new ComponentType[prototype.Components.Count - (missing?.Count ?? 0)];
         var idx = 0;
 
         foreach (var comp in prototype.Components.Values)
@@ -76,6 +76,12 @@ public partial class EntityManager
         }
 
         return compTypes;
+    }
+
+    internal void Reserve(EntityPrototype prototype, int count)
+    {
+        var compTypes = GetComponentType(prototype);
+        _world.Reserve(compTypes, count);
     }
 
     /// <summary>

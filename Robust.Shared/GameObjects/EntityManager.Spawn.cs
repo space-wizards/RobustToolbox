@@ -48,6 +48,7 @@ public partial class EntityManager
         if (prototype != null)
         {
             var compTypes = GetComponentType(PrototypeManager.Index<EntityPrototype>(prototype));
+            _world.Reserve(compTypes, count);
         }
 
         for (var i = 0; i < count; i++)

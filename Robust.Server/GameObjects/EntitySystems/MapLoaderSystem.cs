@@ -177,6 +177,8 @@ public sealed class MapLoaderSystem : EntitySystem
                 }
             }
 
+            EntityManager.CleanupArch();
+
             rootUids = rootEnts;
         }
 
@@ -428,12 +430,19 @@ public sealed class MapLoaderSystem : EntitySystem
 
                 var entities = (SequenceDataNode) metaDef["entities"];
                 EntityPrototype? proto = null;
+                var count = entities.Count;
+                var entTotal = data.Entities.Count + count;
+                data.Entities.EnsureCapacity(entTotal);
+                data.UidEntityMap.EnsureCapacity(entTotal);
+                data.EntitiesToDeserialize.EnsureCapacity(entTotal);
 
                 if (type != null)
-                    _prototypeManager.TryIndex(type, out proto);
-
-                // TODO: Reserve prototype archetypes here
-                // Just assume it has no missing comps
+                {
+                    if (_prototypeManager.TryIndex(type, out proto) && count > 1)
+                    {
+                        EntityManager.Reserve(proto, count);
+                    }
+                }
 
                 foreach (var entityDef in entities.Cast<MappingDataNode>())
                 {
@@ -459,12 +468,6 @@ public sealed class MapLoaderSystem : EntitySystem
         else
         {
             var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
-            var count = entities.Count;
-            var entTotal = data.Entities.Count + count;
-            data.Entities.EnsureCapacity(entTotal);
-            data.UidEntityMap.EnsureCapacity(entTotal);
-            data.EntitiesToDeserialize.EnsureCapacity(entTotal);
-            // TODO: Pre-allocate entity archetypes here to avoid re-sizing.
 
             foreach (var entityDef in entities.Cast<MappingDataNode>())
             {

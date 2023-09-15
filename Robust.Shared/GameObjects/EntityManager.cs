@@ -719,9 +719,10 @@ namespace Robust.Shared.GameObjects
             using var comps = new PooledList<object>(count);
             using var adds = new PooledList<bool>(count);
             using var compRegs = new PooledList<ComponentRegistration>(count);
+            Archetype arc;
 
 #if DEBUG
-            var arc = _world.GetArchetype(entity);
+            arc = _world.GetArchetype(entity);
 #endif
 
             if (prototype != null)

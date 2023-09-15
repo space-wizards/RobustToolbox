@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using Arch.Core;
+using Arch.Core.Utils;
+using Collections.Pooled;
 using Robust.Server.Maps;
 using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
@@ -411,6 +413,10 @@ public sealed class MapLoaderSystem : EntitySystem
         if (data.Version >= 4)
         {
             var metaEntities = data.RootMappingNode.Get<SequenceDataNode>("entities");
+            using var mapSaveCompType = new PooledSet<Type>()
+            {
+                typeof(MapSaveIdComponent)
+            };
 
             foreach (var metaDef in metaEntities.Cast<MappingDataNode>())
             {
@@ -440,7 +446,18 @@ public sealed class MapLoaderSystem : EntitySystem
                 {
                     if (_prototypeManager.TryIndex(type, out proto) && count > 1)
                     {
-                        EntityManager.Reserve(proto, count);
+                        ComponentType[] compTypes;
+
+                        if (data.Options.StoreMapUids)
+                        {
+                            compTypes = EntityManager.GetComponentType(proto, mapSaveCompType);
+                        }
+                        else
+                        {
+                            compTypes = EntityManager.GetComponentType(proto);
+                        }
+
+                        EntityManager.Reserve(compTypes, count);
                     }
                 }
 
@@ -457,6 +474,7 @@ public sealed class MapLoaderSystem : EntitySystem
                     {
                         deletedPrototypeUids.Add(entity);
                     }
+                    // TODO: Move this elsewhere?
                     else if (data.Options.StoreMapUids)
                     {
                         var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);

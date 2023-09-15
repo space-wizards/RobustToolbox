@@ -61,26 +61,39 @@ public partial class EntityManager
         _sawmill.Debug($"Trimming {arc} archetypes took {sw.Elapsed.TotalMilliseconds} milliseconds");
     }
 
-    internal ComponentType[] GetComponentType(EntityPrototype prototype, ICollection<Type>? missing = null)
+    internal ComponentType[] GetComponentType(EntityPrototype prototype, ICollection<Type>? added = null, ICollection<Type>? missing = null)
     {
-        var compTypes = new ComponentType[prototype.Components.Count - (missing?.Count ?? 0)];
+        var compTypes = new ComponentType[prototype.Components.Count + (added?.Count ?? 0) - (missing?.Count ?? 0)];
         var idx = 0;
 
         foreach (var comp in prototype.Components.Values)
         {
             var componentType = comp.Component.GetType();
-            if (missing?.Contains(componentType) == true)
+            if (missing?.Contains(componentType) == true || added?.Contains(componentType) == true)
                 continue;
 
             compTypes[idx++] = componentType;
         }
 
+        if (added != null)
+        {
+            foreach (var componentType in added)
+            {
+                if (missing?.Contains(componentType) == true)
+                    continue;
+
+                compTypes[idx++] = componentType;
+            }
+        }
+
         return compTypes;
     }
 
-    internal void Reserve(EntityPrototype prototype, int count)
+    /// <summary>
+    /// Reserves additional slots for the specified ComponentTypes.
+    /// </summary>
+    internal void Reserve(ComponentType[] compTypes, int count)
     {
-        var compTypes = GetComponentType(prototype);
         _world.Reserve(compTypes, count);
     }
 

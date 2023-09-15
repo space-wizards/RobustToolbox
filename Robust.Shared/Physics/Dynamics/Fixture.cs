@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -31,6 +32,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics
@@ -49,6 +51,9 @@ namespace Robust.Shared.Physics.Dynamics
 
         [DataField("shape")]
         public IPhysShape Shape { get; private set; } = new PhysShapeAabb();
+
+        [NonSerialized]
+        public EntityUid Owner;
 
         /// <summary>
         /// All of the other fixtures this fixture has a contact with.
@@ -176,7 +181,10 @@ namespace Robust.Shared.Physics.Dynamics
         {
             if (other == null) return false;
 
-            return Equivalent(other);
+            // Owner field shouldn't be required, fixtures on other entities shouldn't be getting compared to each other.
+            // This is mainly here because it might've intruded some physics bugs, so this is here just in case.
+            DebugTools.Assert(Owner == other.Owner);
+            return Equivalent(other) && Owner == other.Owner;
         }
     }
 

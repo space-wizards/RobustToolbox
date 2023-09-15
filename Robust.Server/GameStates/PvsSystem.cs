@@ -70,6 +70,9 @@ internal sealed partial class PvsSystem : EntitySystem
         = new DefaultObjectPool<Dictionary<NetEntity, PvsEntityVisibility>>(
             new DictPolicy<NetEntity, PvsEntityVisibility>(), MaxVisPoolSize);
 
+    private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
+        = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
+
     private readonly ObjectPool<Stack<NetEntity>> _stackPool
         = new DefaultObjectPool<Stack<NetEntity>>(
             new StackPolicy<NetEntity>(), MaxVisPoolSize);
@@ -611,7 +614,8 @@ internal sealed partial class PvsSystem : EntitySystem
         foreach (var netEntity in chunk)
         {
             var uid = GetEntity(netEntity);
-            AddToChunkSetRecursively(in uid, in netEntity, visMask, tree, chunkSet);
+            var meta = _metaQuery.GetComponent(uid);
+            AddToChunkSetRecursively(in uid, in netEntity, meta, visMask, tree, chunkSet);
 #if DEBUG
             var xform = _xformQuery.GetComponent(uid);
             if (chunkLocation is MapChunkLocation)
@@ -645,12 +649,11 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private bool AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, int visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
+    private bool AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, MetaDataComponent mComp,
+        int visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
     {
         if (set.ContainsKey(netEntity))
             return true;
-
-        var mComp = _metaQuery.GetComponent(uid);
 
         // TODO: Don't need to know about parents so no longer need to use bool for this method.
         // If the eye is missing ANY layer this entity or any of its parents belongs to, it is considered invisible.
@@ -672,13 +675,10 @@ internal sealed partial class PvsSystem : EntitySystem
         DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
         var parent = xform.ParentUid;
-        var parentNetEntity = _metaQuery.GetComponent(parent).NetEntity;
+        var parentMeta = _metaQuery.GetComponent(parent);
+        var parentNetEntity = parentMeta.NetEntity;
 
-        // TODO performance
-        // AddToChunkSetRecursively will result in a redundant set.ContainsKey() check.
-        // This can probably be avoided somehow
-        if (!set.ContainsKey(parentNetEntity) && //was the parent not yet added to toSend?
-            !AddToChunkSetRecursively(in parent, in parentNetEntity, visMask, tree, set)) //did we just fail to add the parent?
+        if (!AddToChunkSetRecursively(in parent, in parentNetEntity, parentMeta, visMask, tree, set)) //did we just fail to add the parent?
         {
             return false; //we failed? suppose we dont get added either
         }
@@ -733,7 +733,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
             foreach (var rootNode in cache.Value.tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, lastAcked, lastSent, visibleEnts, lastSeen, stack, in fromTick,
+                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, lastAcked, lastSent, visibleEnts, lastSeen, cache.Value.metadata, stack, in fromTick,
                         ref newEntityCount, ref enteredEntityCount, ref entStateCount,  in newEntityBudget, in enteredEntityBudget);
             }
         }
@@ -748,7 +748,6 @@ internal sealed partial class PvsSystem : EntitySystem
                 ref newEntityCount, ref enteredEntityCount, ref entStateCount, in newEntityBudget, in enteredEntityBudget);
         }
         globalEnumerator.Dispose();
-
 
         var globalRecursiveEnumerator = _entityPvsCollection.GlobalRecursiveOverridesEnumerator;
         while (globalRecursiveEnumerator.MoveNext())
@@ -794,9 +793,9 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var (netEntity, visiblity) in visibleEnts)
         {
-            var uid = GetEntity(netEntity);
-
+            EntityUid uid;
 #if DEBUG
+            uid = GetEntity(netEntity);
             // if an entity is visible, its parents should always be visible.
             DebugTools.Assert((_xformQuery.GetComponent(uid).ParentUid is not { Valid: true } parent) ||
                               visibleEnts.ContainsKey(_metaQuery.GetComponent(parent).NetEntity),
@@ -805,6 +804,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
             if (sessionData.RequestedFull)
             {
+                uid = GetEntity(netEntity);
                 entityStates.Add(GetFullEntityState(session, uid, _metaQuery.GetComponent(uid)));
                 continue;
             }
@@ -812,6 +812,7 @@ internal sealed partial class PvsSystem : EntitySystem
             if (visiblity == PvsEntityVisibility.StayedUnchanged)
                 continue;
 
+            uid = GetEntity(netEntity);
             var entered = visiblity == PvsEntityVisibility.Entered;
             var entFromTick = entered ? lastSeen.GetValueOrDefault(netEntity) : fromTick;
             var state = GetEntityState(session, uid, entFromTick, _metaQuery.GetComponent(uid));
@@ -881,6 +882,7 @@ internal sealed partial class PvsSystem : EntitySystem
         Dictionary<NetEntity, PvsEntityVisibility>? lastSent,
         Dictionary<NetEntity, PvsEntityVisibility> toSend,
         Dictionary<NetEntity, GameTick> lastSeen,
+        Dictionary<NetEntity, MetaDataComponent> metaDataCache,
         Stack<NetEntity> stack,
         in GameTick fromTick,
         ref int newEntityCount,
@@ -906,8 +908,7 @@ internal sealed partial class PvsSystem : EntitySystem
                 if (!shouldAdd)
                     continue;
 
-                var entity = GetEntity(currentNodeIndex);
-                AddToSendSet(in currentNodeIndex, _metaQuery.GetComponent(entity), toSend, fromTick, in entered, ref entStateCount);
+                AddToSendSet(in currentNodeIndex, metaDataCache[currentNodeIndex], toSend, fromTick, in entered, ref entStateCount);
             }
 
             var node = tree[currentNodeIndex];
@@ -949,7 +950,7 @@ internal sealed partial class PvsSystem : EntitySystem
         }
 
         var metadata = _metaQuery.GetComponent(uid);
-        var netEntity = GetNetEntity(uid, metadata);
+        var netEntity = metadata.NetEntity;
 
         //did we already get added?
         // Note that we check this AFTER adding parents. This is because while this entity may already have been added
@@ -993,7 +994,7 @@ internal sealed partial class PvsSystem : EntitySystem
                 continue;
 
             var metadata = _metaQuery.GetComponent(child);
-            var childNetEntity = GetNetEntity(child, metadata);
+            var childNetEntity = metadata.NetEntity;
 
             if (!toSend.ContainsKey(childNetEntity))
             {
@@ -1077,7 +1078,7 @@ internal sealed partial class PvsSystem : EntitySystem
     public (List<EntityState>?, List<NetEntity>?, GameTick fromTick) GetAllEntityStates(ICommonSession? player, GameTick fromTick, GameTick toTick)
     {
         List<EntityState>? stateEntities;
-        var toSend = new HashSet<EntityUid>();
+        var toSend = _uidSetPool.Get();
         DebugTools.Assert(toSend.Count == 0);
         bool enumerateAll = false;
 
@@ -1178,6 +1179,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
             }
         }
 
+        _uidSetPool.Return(toSend);
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         if (stateEntities.Count == 0)
@@ -1275,34 +1277,28 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
     private EntityUid[] GetSessionViewers(ICommonSession session)
     {
-        if (session.Status != SessionStatus.InGame)
+        if (session.Status != SessionStatus.InGame || session is not IPlayerSession sess)
             return Array.Empty<EntityUid>();
 
+        // Fast path
+        if (sess.ViewSubscriptionCount == 0)
+        {
+            if (session.AttachedEntity == null)
+                return Array.Empty<EntityUid>();
+
+            return new[] { session.AttachedEntity.Value };
+        }
+
         var viewers = new HashSet<EntityUid>();
-
         if (session.AttachedEntity != null)
-        {
-            // Fast path
-            if (session is IPlayerSession { ViewSubscriptionCount: 0 })
-            {
-                return new[] { session.AttachedEntity.Value };
-            }
-
             viewers.Add(session.AttachedEntity.Value);
-        }
 
-        // This is awful, but we're not gonna add the list of view subscriptions to common session.
-        if (session is IPlayerSession playerSession)
+        foreach (var uid in sess.ViewSubscriptions)
         {
-            foreach (var uid in playerSession.ViewSubscriptions)
-            {
-                viewers.Add(uid);
-            }
+            viewers.Add(uid);
         }
 
-        var viewerArray = viewers.ToArray();
-
-        return viewerArray;
+        return viewers.ToArray();
     }
 
     // Read Safe

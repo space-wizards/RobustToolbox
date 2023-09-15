@@ -62,7 +62,6 @@ namespace Robust.Shared.GameObjects
 
             FillComponentDict();
             _componentFactory.ComponentAdded += OnComponentAdded;
-            _componentFactory.ComponentReferenceAdded += OnComponentReferenceAdded;
         }
 
         /// <summary>
@@ -93,11 +92,6 @@ namespace Robust.Shared.GameObjects
         }
 
         #region Component Management
-
-        private void OnComponentReferenceAdded(ComponentRegistration reg, CompIdx type)
-        {
-            AddComponentRefType(type);
-        }
 
         /// <inheritdoc />
         public int Count<T>() where T : Component
@@ -286,13 +280,13 @@ namespace Robust.Shared.GameObjects
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
 
-            // Check that there are no overlapping references.
-            foreach (var type in reg.References)
-            {
-                var dict = _entTraitArray[type.Value];
-                if (!dict.TryGetValue(uid, out var duplicate))
-                    continue;
+            // Check that there is no existing component.
+            var type = reg.Idx;
+            var dict = _entTraitArray[type.Value];
+            DebugTools.Assert(dict != null);
 
+            if (dict.TryGetValue(uid, out var duplicate))
+            {
                 if (!overwrite && !duplicate.Deleted)
                     throw new InvalidOperationException(
                         $"Component reference type {component.GetType().Name} already occupied by {duplicate}");
@@ -300,12 +294,9 @@ namespace Robust.Shared.GameObjects
                 RemoveComponentImmediate(duplicate, uid, false);
             }
 
-            // add the component to the grid
-            foreach (var type in reg.References)
-            {
-                _entTraitArray[type.Value].Add(uid, component);
-                _entCompIndex.Add(uid, component);
-            }
+            // actually ADD the component
+            dict.Add(uid, component);
+            _entCompIndex.Add(uid, component);
 
             // add the component to the netId grid
             if (reg.NetID != null)
@@ -600,7 +591,8 @@ namespace Robust.Shared.GameObjects
 
         private void DeleteComponent(EntityUid entityUid, Component component, bool terminating)
         {
-            var reg = _componentFactory.GetRegistration(component.GetType());
+            var type = component.GetType();
+            var reg = _componentFactory.GetRegistration(type);
 
             if (!terminating && reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
             {
@@ -613,10 +605,7 @@ namespace Robust.Shared.GameObjects
                     DirtyEntity(entityUid);
             }
 
-            foreach (var refType in reg.References)
-            {
-                _entTraitArray[refType.Value].Remove(entityUid);
-            }
+            _entTraitArray[reg.Idx.Value].Remove(entityUid);
 
             // TODO if terminating the entity, maybe defer this?
             // _entCompIndex.Remove(uid) gets called later on anyways.

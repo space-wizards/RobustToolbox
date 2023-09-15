@@ -60,9 +60,6 @@ namespace Robust.Shared.GameObjects
         public event Action<ComponentRegistration>? ComponentAdded;
 
         /// <inheritdoc />
-        public event Action<ComponentRegistration, CompIdx>? ComponentReferenceAdded;
-
-        /// <inheritdoc />
         public event Action<string>? ComponentIgnoreAdded;
 
         /// <inheritdoc />
@@ -171,31 +168,6 @@ namespace Robust.Shared.GameObjects
                 DebugTools.Assert(name != String.Empty, $"Component {type} has invalid name {type.Name}");
                 return name;
             }
-        }
-
-        private void RegisterReference(Type target, Type @interface)
-        {
-            if (_networkedComponents is not null)
-                throw new ComponentRegistrationLockException();
-
-            if (!types.ContainsKey(target))
-            {
-                throw new InvalidOperationException($"Unregistered type: {target}");
-            }
-
-            if (@interface == typeof(MetaDataComponent) || @interface == typeof(TransformComponent))
-                throw new InvalidOperationException("Cannot make Transform or Metadata a reference type!");
-
-            var idx = CompIdx.Index(@interface);
-            _idxToType[idx] = @interface;
-
-            var registration = types[target];
-            if (registration.References.Contains(idx))
-            {
-                throw new InvalidOperationException($"Attempted to register a reference twice: {@interface}");
-            }
-            registration.References.Add(idx);
-            ComponentReferenceAdded?.Invoke(registration, idx);
         }
 
         public void IgnoreMissingComponents(string postfix = "")
@@ -333,7 +305,7 @@ namespace Robust.Shared.GameObjects
         {
             return GetRegistration(netID).Name;
         }
-        
+
         public ComponentRegistration GetRegistration(ushort netID)
         {
             if (_networkedComponents is null)
@@ -450,28 +422,11 @@ namespace Robust.Shared.GameObjects
             }
 
             Register(type);
-
-#pragma warning disable CS0618
-            foreach (var attribute in Attribute.GetCustomAttributes(type, typeof(ComponentReferenceAttribute)))
-            {
-                var cast = (ComponentReferenceAttribute) attribute;
-#pragma warning restore CS0618
-
-                var refType = cast.ReferenceType;
-
-                if (!refType.IsAssignableFrom(type))
-                {
-                    _sawmill.Error("Type {0} has reference for type it does not implement: {1}.", type, refType);
-                    continue;
-                }
-
-                RegisterReference(type, refType);
-            }
         }
 
         public IEnumerable<CompIdx> GetAllRefTypes()
         {
-            return AllRegistrations.SelectMany(r => r.References).Distinct();
+            return AllRegistrations.Select(x => x.Idx).Distinct();
         }
 
         /// <inheritdoc />

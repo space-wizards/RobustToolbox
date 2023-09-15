@@ -78,14 +78,7 @@ namespace Robust.Client.Console.Commands
                     message.Append($"net ID: {registration.NetID}");
                 }
 
-                message.Append($", References:");
-
                 shell.WriteLine(message.ToString());
-
-                foreach (var type in registration.References)
-                {
-                    shell.WriteLine($"  {type}");
-                }
             }
             catch (UnknownComponentException)
             {

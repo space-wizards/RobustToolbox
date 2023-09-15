@@ -250,7 +250,6 @@ namespace Robust.Shared.GameObjects
         public virtual void Cleanup()
         {
             _componentFactory.ComponentAdded -= OnComponentAdded;
-            _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
             ShuttingDown = true;
             FlushEntities();
             _entitySystemManager.Clear();

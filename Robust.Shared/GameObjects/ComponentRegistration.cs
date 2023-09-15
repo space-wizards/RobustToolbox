@@ -33,8 +33,6 @@ public sealed class ComponentRegistration
     /// </summary>
     public Type Type { get; }
 
-    public ValueList<CompIdx> References;
-
     // Internal for sandboxing.
     // Avoid content passing an instance of this to ComponentFactory to get any type they want instantiated.
     internal ComponentRegistration(string name, Type type, CompIdx idx)
@@ -42,7 +40,6 @@ public sealed class ComponentRegistration
         Name = name;
         Type = type;
         Idx = idx;
-        References.Add(idx);
     }
 
     public override string ToString()

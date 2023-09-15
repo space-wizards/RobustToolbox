@@ -152,7 +152,10 @@ namespace Robust.Shared.GameObjects
                     poly,
                     MapGridHelpers.CollisionGroup,
                     MapGridHelpers.CollisionGroup,
-                    true);
+                    true)
+                {
+                    Owner = uid
+                };
 #pragma warning restore CS0618
 
                 newFixtures.Add(($"grid_chunk-{bounds.Left}-{bounds.Bottom}", newFixture));

@@ -212,7 +212,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : Component
+        public void AddComponent<T>(EntityUid uid, T component, MetaDataComponent? metadata = null) where T : Component
         {
             if (!uid.IsValid() || !EntityExists(uid))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
@@ -235,25 +235,28 @@ namespace Robust.Shared.GameObjects
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool skipInit, MetaDataComponent? metadata = null) where T : Component
         {
-            var compType = component.GetType();
+            // get interface aliases for mapping
+            var reg = _componentFactory.GetRegistration(component);
+            AddComponentInternal(uid, component, reg, skipInit, metadata);
+        }
+
+        private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit, MetaDataComponent? metadata = null) where T : Component
+        {
+            DebugTools.Assert(uid == component.Owner);
 
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
-                GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Terminating,
-                $"Attempted to add a {compType.Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
-
-            // get interface aliases for mapping
-            var reg = _componentFactory.GetRegistration(component);
+                (metadata ?? GetComponent<MetaDataComponent>(uid)).EntityLifeStage < EntityLifeStage.Terminating,
+                $"Attempted to add a {reg.Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
 
             // TODO optimize this
-            // We can't use typeof(T) here in case T is just Component
-            if (!_world.Has(uid, compType))
-                _world.Add(uid, (object) component);
+            if (!_world.Has(uid, reg.Idx.Type))
+                _world.Add(uid, Unsafe.As<object>(component));
             else
             {
                 // Okay so technically it may have an existing one not null but pointing to a stale component
                 // hence just set it and act casual.
-                _world.Set(uid, (object) component);
+                _world.Set(uid, Unsafe.As<object>(component));
             }
 
             // add the component to the netId grid
@@ -286,16 +289,15 @@ namespace Robust.Shared.GameObjects
 
             metadata ??= GetComponent<MetaDataComponent>(uid);
 
-            if (!metadata.EntityInitialized && !metadata.EntityInitializing)
+            // Bur this overhead sucks.
+            if (metadata.EntityLifeStage < EntityLifeStage.Initializing)
                 return;
 
             if (component.Networked)
                 DirtyEntity(uid, metadata);
 
             component.LifeInitialize(this, reg.Idx);
-
-            if (metadata.EntityInitialized)
-                component.LifeStartup(this);
+            component.LifeStartup(this);
 
             if (metadata.EntityLifeStage >= EntityLifeStage.MapInitialized)
                 EventBus.RaiseComponentEvent(component, MapInitEventInstance);

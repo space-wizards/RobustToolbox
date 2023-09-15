@@ -70,8 +70,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid">Entity being modified.</param>
         /// <param name="component">Component to add.</param>
-        /// <param name="overwrite">Should it overwrite existing components?</param>
-        void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : Component;
+        void AddComponent<T>(EntityUid uid, T component, MetaDataComponent? metadata = null) where T : Component;
 
         /// <summary>
         ///     Removes the component with the specified reference type,

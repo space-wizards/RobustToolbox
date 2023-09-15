@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Arch.Core.Utils;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -184,7 +185,7 @@ namespace Robust.Shared.Prototypes
             return true;
         }
 
-        internal static (ComponentType Type, Component Comp, bool Add) EnsureCompExistsAndDeserialize(EntityUid entity,
+        internal static (ComponentRegistration CompReg, IComponent Comp, bool Add) EnsureCompExistsAndDeserialize(EntityUid entity,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
@@ -198,21 +199,22 @@ namespace Robust.Shared.Prototypes
 
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = (Component) factory.GetComponent(compName);
+                var newComponent = Unsafe.As<Component>(factory.GetComponent(compReg));
+                newComponent.Owner = entity;
                 add = true;
-                component = newComponent;
+                component = Unsafe.As<IComponent>(newComponent);
             }
 
             if (context is not MapSerializationContext map)
             {
                 serManager.CopyTo(data, ref component, context, notNullableOverride: true);
-                return (component.GetType(), (Component) component, add);
+                return (compReg, component, add);
             }
 
             map.CurrentComponent = compName;
             serManager.CopyTo(data, ref component, context, notNullableOverride: true);
             map.CurrentComponent = null;
-            return (component.GetType(), (Component) component, add);
+            return (compReg, component, add);
         }
 
         public override string ToString()

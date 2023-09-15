@@ -657,13 +657,13 @@ namespace Robust.Shared.GameObjects
             SetNetEntity(uid, netEntity, metadata);
 
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata, false);
+            AddComponentInternal(uid, metadata, true);
 
             // allocate the required TransformComponent
             xform = _componentFactory.GetComponent<TransformComponent>();
             xform.Owner = uid;
 
-            AddComponentInternal(uid, xform, false, metadata);
+            AddComponentInternal(uid, xform, true, metadata);
             return uid;
         }
 
@@ -714,9 +714,11 @@ namespace Robust.Shared.GameObjects
         internal void LoadEntity(EntityPrototype? prototype, EntityUid entity, IEntityLoadContext? context)
         {
             var count = prototype?.Components.Count ?? 2;
+            // Lort forgiv
             using var types = new PooledList<ComponentType>(count);
             using var comps = new PooledList<object>(count);
             using var adds = new PooledList<bool>(count);
+            using var compRegs = new PooledList<ComponentRegistration>(count);
 
 #if DEBUG
             var arc = _world.GetArchetype(entity);
@@ -732,18 +734,19 @@ namespace Robust.Shared.GameObjects
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
 
                     var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, fullData, context as ISerializationContext);
-                    comp.Comp.Owner = entity;
+                    var compType = comp.CompReg.Idx.Type;
 
                     // Don't double add an existing component.
-                    if (_world.TryGet(entity, comp.Type, out var existing))
+                    if (_world.TryGet(entity, compType, out var existing))
                     {
                         DebugTools.Assert(existing != null);
                         continue;
                     }
 
-                    types.Add(comp.Type);
+                    types.Add(compType);
                     comps.Add(comp.Comp);
                     adds.Add(comp.Add);
+                    compRegs.Add(comp.CompReg);
                 }
             }
 
@@ -766,25 +769,24 @@ namespace Robust.Shared.GameObjects
                     }
 
                     var comp = EntityPrototype.EnsureCompExistsAndDeserialize(entity, _componentFactory, this, _serManager, name, data, context as ISerializationContext);
-                    comp.Comp.Owner = entity;
+                    var compType = comp.CompReg.Idx.Type;
 
                     // Don't double add an existing component.
-                    if (_world.TryGet(entity, comp.Type, out var existing))
+                    if (_world.TryGet(entity, compType, out var existing))
                     {
                         DebugTools.Assert(existing != null);
                         continue;
                     }
 
-                    types.Add(comp.Type);
+                    types.Add(compType);
                     comps.Add(comp.Comp);
                     adds.Add(comp.Add);
+                    compRegs.Add(comp.CompReg);
                 }
             }
 
-#if DEBUG
             // Shouldn't be changing archetype above or we're having a bad time.
             DebugTools.Assert(_world.GetArchetype(entity).Equals(arc));
-#endif
 
             // Yeah it can happen.
             if (types.Count == 0)
@@ -797,7 +799,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (adds[i])
                 {
-                    AddComponent(entity, (Component) comps[i], metadata: metadata);
+                    AddComponentInternal(entity, Unsafe.As<Component>(comps[i]), compRegs[i], true, metadata: metadata);
                 }
             }
         }

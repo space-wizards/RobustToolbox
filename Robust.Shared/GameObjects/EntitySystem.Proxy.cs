@@ -548,7 +548,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void AddComp<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
     {
-        EntityManager.AddComponent(uid, component, overwrite);
+        EntityManager.AddComponent(uid, component);
     }
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid)"/>

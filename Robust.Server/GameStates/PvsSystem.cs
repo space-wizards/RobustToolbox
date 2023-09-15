@@ -613,8 +613,7 @@ internal sealed partial class PvsSystem : EntitySystem
         var tree = _treePool.Get();
         foreach (var netEntity in chunk)
         {
-            var uid = GetEntity(netEntity);
-            var meta = _metaQuery.GetComponent(uid);
+            var (uid, meta) = GetEntityData(netEntity);
             AddToChunkSetRecursively(in uid, in netEntity, meta, visMask, tree, chunkSet);
 #if DEBUG
             var xform = _xformQuery.GetComponent(uid);
@@ -794,6 +793,7 @@ internal sealed partial class PvsSystem : EntitySystem
         foreach (var (netEntity, visiblity) in visibleEnts)
         {
             EntityUid uid;
+            MetaDataComponent meta;
 #if DEBUG
             uid = GetEntity(netEntity);
             // if an entity is visible, its parents should always be visible.
@@ -804,18 +804,18 @@ internal sealed partial class PvsSystem : EntitySystem
 
             if (sessionData.RequestedFull)
             {
-                uid = GetEntity(netEntity);
-                entityStates.Add(GetFullEntityState(session, uid, _metaQuery.GetComponent(uid)));
+                (uid, meta) = GetEntityData(netEntity);
+                entityStates.Add(GetFullEntityState(session, uid, meta));
                 continue;
             }
 
             if (visiblity == PvsEntityVisibility.StayedUnchanged)
                 continue;
 
-            uid = GetEntity(netEntity);
+            (uid, meta) = GetEntityData(netEntity);
             var entered = visiblity == PvsEntityVisibility.Entered;
             var entFromTick = entered ? lastSeen.GetValueOrDefault(netEntity) : fromTick;
-            var state = GetEntityState(session, uid, entFromTick, _metaQuery.GetComponent(uid));
+            var state = GetEntityState(session, uid, entFromTick, meta);
 
             if (entered || !state.Empty)
                 entityStates.Add(state);

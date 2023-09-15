@@ -35,14 +35,14 @@ public sealed partial class ClientEntityManager
 
         if (NetEntityLookup.TryGetValue(nEntity, out var entity))
         {
-            return entity;
+            return entity.Item1;
         }
 
         // Flag the callerEntity to have their state potentially re-run later.
         var pending = PendingNetEntityStates.GetOrNew(nEntity);
         pending.Add((typeof(T), callerEntity));
 
-        return entity;
+        return entity.Item1;
     }
 
     public override EntityCoordinates EnsureCoordinates<T>(NetCoordinates netCoordinates, EntityUid callerEntity)

@@ -210,8 +210,6 @@ namespace Robust.Server.GameStates
             var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
             var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
             var oldestAckValue = GameTick.MaxValue.Value;
-            var tQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var mQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
 
             // Replays process game states in parallel with players
             Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);

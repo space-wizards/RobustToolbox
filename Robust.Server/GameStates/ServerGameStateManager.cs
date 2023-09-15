@@ -225,7 +225,7 @@ namespace Robust.Server.GameStates
                     PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
 
                     if (i >= 0)
-                        SendStateUpdate(i, resource, inputSystem, players[i], pvsData, mQuery, tQuery, ref oldestAckValue);
+                        SendStateUpdate(i, resource, inputSystem, players[i], pvsData, ref oldestAckValue);
                     else
                         _replay.Update();
 
@@ -304,8 +304,6 @@ namespace Robust.Server.GameStates
             InputSystem inputSystem,
             IPlayerSession session,
             PvsData? pvsData,
-            EntityQuery<MetaDataComponent> mQuery,
-            EntityQuery<TransformComponent> tQuery,
             ref uint oldestAckValue)
         {
             var channel = session.ConnectedClient;

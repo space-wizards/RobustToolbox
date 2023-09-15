@@ -311,28 +311,27 @@ namespace Robust.Shared.GameObjects
 
         public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, overrides);
+            return CreateEntity(prototypeName, out _, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, overrides);
+            return CreateEntity(prototypeName, out _, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, overrides);
-            _xforms.SetCoordinates(newEntity, _xformQuery.GetComponent(newEntity), coordinates, unanchor: false);
+            var newEntity = CreateEntity(prototypeName, out var xform, overrides);
+            _xforms.SetCoordinates(newEntity, xform, coordinates, unanchor: false);
             return newEntity;
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, overrides);
-            var transform = _xformQuery.GetComponent(newEntity);
+            var newEntity = CreateEntity(prototypeName, out var transform, overrides);
 
             if (coordinates.MapId == MapId.Nullspace)
             {
@@ -624,9 +623,10 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private protected EntityUid AllocEntity(
             EntityPrototype? prototype,
-            out MetaDataComponent metadata)
+            out MetaDataComponent metadata,
+            out TransformComponent xform)
         {
-            var entity = AllocEntity(out metadata);
+            var entity = AllocEntity(out metadata, out xform);
             metadata._entityPrototype = prototype;
             Dirty(entity, metadata, metadata);
             return entity;
@@ -635,7 +635,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private EntityUid AllocEntity(out MetaDataComponent metadata)
+        private EntityUid AllocEntity(out MetaDataComponent metadata, out TransformComponent xform)
         {
             SpawnEntityArch(out var uid);
 
@@ -657,7 +657,7 @@ namespace Robust.Shared.GameObjects
             AddComponentInternal(uid, metadata, false);
 
             // allocate the required TransformComponent
-            var xform = _componentFactory.GetComponent<TransformComponent>();
+            xform = _componentFactory.GetComponent<TransformComponent>();
             xform.Owner = uid;
 
             AddComponentInternal(uid, xform, false, metadata);
@@ -667,23 +667,23 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, IEntityLoadContext? context = null)
+        private protected virtual EntityUid CreateEntity(string? prototypeName, out TransformComponent xform, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return AllocEntity(out _);
+                return AllocEntity(out _, out xform);
 
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            return CreateEntity(prototype, context);
+            return CreateEntity(prototype, out xform, context);
         }
 
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected EntityUid CreateEntity(EntityPrototype prototype, IEntityLoadContext? context = null)
+        private protected EntityUid CreateEntity(EntityPrototype prototype, out TransformComponent xform, IEntityLoadContext? context = null)
         {
-            var entity = AllocEntity(prototype, out var metadata);
+            var entity = AllocEntity(prototype, out var metadata, out xform);
             try
             {
                 LoadEntity(metadata.EntityPrototype, entity, context);
@@ -803,6 +803,7 @@ namespace Robust.Shared.GameObjects
         {
             try
             {
+                // TODO: Pass this + transformcomp around
                 var meta = MetaQuery.GetComponent(entity);
                 InitializeEntity(entity, meta);
                 StartEntity(entity);

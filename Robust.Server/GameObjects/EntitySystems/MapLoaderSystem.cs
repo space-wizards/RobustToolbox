@@ -459,6 +459,12 @@ public sealed class MapLoaderSystem : EntitySystem
         else
         {
             var entities = data.RootMappingNode.Get<SequenceDataNode>("entities");
+            var count = entities.Count;
+            var entTotal = data.Entities.Count + count;
+            data.Entities.EnsureCapacity(entTotal);
+            data.UidEntityMap.EnsureCapacity(entTotal);
+            data.EntitiesToDeserialize.EnsureCapacity(entTotal);
+            // TODO: Pre-allocate entity archetypes here to avoid re-sizing.
 
             foreach (var entityDef in entities.Cast<MappingDataNode>())
             {

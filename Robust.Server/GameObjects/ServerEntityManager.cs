@@ -54,7 +54,7 @@ namespace Robust.Server.GameObjects
 
         EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype)
         {
-            return AllocEntity(prototype, out _);
+            return AllocEntity(prototype, out _, out _);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
@@ -77,15 +77,15 @@ namespace Robust.Server.GameObjects
             StartEntity(entity);
         }
 
-        private protected override EntityUid CreateEntity(string? prototypeName, IEntityLoadContext? context = null)
+        private protected override EntityUid CreateEntity(string? prototypeName, out TransformComponent xform, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return base.CreateEntity(prototypeName, context);
+                return base.CreateEntity(prototypeName, out xform, context);
 
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            var entity = base.CreateEntity(prototype, context);
+            var entity = base.CreateEntity(prototype, out xform, context);
 
             // At this point in time, all data configure on the entity *should* be purely from the prototype.
             // As such, we can reset the modified ticks to Zero,

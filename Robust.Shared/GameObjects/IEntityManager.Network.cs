@@ -191,4 +191,10 @@ public partial interface IEntityManager
     public NetCoordinates[] GetNetCoordinatesArray(EntityCoordinates[] entities);
 
     public NetCoordinates?[] GetNetCoordinatesArray(EntityCoordinates?[] entities);
+
+    /// <summary>
+    /// Returns the corresponding local <see cref="EntityUid"/> along with the metdata component.
+    /// throws an exception if the net entity does not exist.
+    /// </summary>
+    (EntityUid, MetaDataComponent) GetEntityData(NetEntity nEntity);
 }

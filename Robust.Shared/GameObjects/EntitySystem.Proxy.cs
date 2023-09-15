@@ -505,6 +505,12 @@ public partial class EntitySystem
         return EntityManager.GetComponent<MetaDataComponent>(uid);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected (EntityUid, MetaDataComponent)  GetEntityData(NetEntity nuid)
+    {
+        return EntityManager.GetEntityData(nuid);
+    }
+
     #endregion
 
     #region Component Has

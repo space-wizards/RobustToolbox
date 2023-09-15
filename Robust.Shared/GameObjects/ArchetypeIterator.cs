@@ -38,7 +38,7 @@ internal struct ArchetypeEnumerator
         while (--_index >= 0)
         {
             var archetype = Current;
-            if (archetype.Entities > 0 && _query.Valid(archetype.BitSet))
+            if (archetype.Entities > 0)
             {
                 return true;
             }

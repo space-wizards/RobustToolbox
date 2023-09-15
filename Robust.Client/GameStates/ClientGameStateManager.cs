@@ -1128,8 +1128,6 @@ namespace Robust.Client.GameStates
             {
                 _entityManager.DeleteEntity(entity);
             }
-
-            _pool.Return(brokenEnts);
 #endif
         }
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Arch.Core;
 using Arch.Core.Utils;
@@ -773,9 +772,7 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component)
         {
-            // TODO arch don't use CompIdx
-            var compType = _componentFactory.IdxToType(type);
-            if (_world.IsAlive(uid) && _world.TryGet(uid, compType, out var comp))
+            if (_world.IsAlive(uid) && _world.TryGet(uid, type.Type, out var comp))
             {
                 component = (IComponent) comp;
                 if (component != null! && !component.Deleted)

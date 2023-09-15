@@ -469,8 +469,7 @@ namespace Robust.Client.ViewVariables.Instances
             _entitySession = session;
 
             _membersBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobMembers>(session, new ViewVariablesRequestMembers());
-
-            var uid = (EntityUid) _membersBlob.MemberGroups.SelectMany(p => p.Item2).Single(p => p.Name == "Uid").Value;
+            var uid = (NetEntity) _membersBlob.MemberGroups.SelectMany(p => p.Item2).First(p => p.Value is NetEntity).Value;
 
             Initialize(window, uid);
         }

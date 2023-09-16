@@ -559,7 +559,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].ContainsKey(uid);
+            return MetaQuery.HasComponentInternal(uid);
         }
 
         public bool EntityExists(EntityUid? uid)
@@ -758,10 +758,9 @@ namespace Robust.Shared.GameObjects
 
         public EntityStringRepresentation ToPrettyString(EntityUid uid)
         {
-            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
+            if (!MetaQuery.TryGetComponentInternal(uid, out var metadata))
                 return new EntityStringRepresentation(uid, true);
 
-            var metadata = Unsafe.As<MetaDataComponent>(component);
             return ToPrettyString(uid, metadata);
         }
 

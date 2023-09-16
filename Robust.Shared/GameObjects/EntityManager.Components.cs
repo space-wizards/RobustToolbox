@@ -303,7 +303,7 @@ namespace Robust.Shared.GameObjects
             {
                 // the main comp grid keeps this in sync
                 var netId = reg.NetID.Value;
-                metadata ??= MetaQuery.GetComponent(uid);
+                metadata ??= MetaQuery.GetComponentInternal(uid);
                 metadata.NetComponents.Add(netId, component);
             }
             else
@@ -320,7 +320,7 @@ namespace Robust.Shared.GameObjects
             if (skipInit)
                 return;
 
-            metadata ??= MetaQuery.GetComponent(uid);
+            metadata ??= MetaQuery.GetComponentInternal(uid);
 
             if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                 return;
@@ -643,7 +643,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, ushort netId)
         {
-            return MetaQuery.TryGetComponent(uid, out var metadata) && metadata.NetComponents.ContainsKey(netId);
+            return MetaQuery.TryGetComponentInternal(uid, out var metadata) && metadata.NetComponents.ContainsKey(netId);
         }
 
         /// <inheritdoc />
@@ -742,7 +742,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IComponent GetComponent(EntityUid uid, ushort netId)
         {
-            return MetaQuery.GetComponent(uid).NetComponents[netId];
+            return MetaQuery.GetComponentInternal(uid).NetComponents[netId];
         }
 
         /// <inheritdoc />
@@ -751,7 +751,7 @@ namespace Robust.Shared.GameObjects
             var dict = _entTraitArray[type.Value];
             if (dict.TryGetValue(uid, out var comp))
             {
-                    return comp;
+                return comp;
             }
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
@@ -858,7 +858,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, ushort netId, [MaybeNullWhen(false)] out IComponent component)
         {
-            if (MetaQuery.TryGetComponent(uid, out var metadata)
+            if (MetaQuery.TryGetComponentInternal(uid, out var metadata)
                 && metadata.NetComponents.TryGetValue(netId, out var comp))
             {
                 component = comp;
@@ -949,13 +949,13 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public NetComponentEnumerable GetNetComponents(EntityUid uid)
         {
-            return new NetComponentEnumerable(MetaQuery.GetComponent(uid).NetComponents);
+            return new NetComponentEnumerable(MetaQuery.GetComponentInternal(uid).NetComponents);
         }
 
         /// <inheritdoc />
         public NetComponentEnumerable? GetNetComponentsOrNull(EntityUid uid)
         {
-            return MetaQuery.TryGetComponent(uid, out var metadata)
+            return MetaQuery.TryGetComponentInternal(uid, out var metadata)
                 ? new NetComponentEnumerable(metadata.NetComponents)
                 : null;
         }

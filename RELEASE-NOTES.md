@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 160.0.0
+
+### Breaking changes
+
+* ComponentReference has now been entirely removed.
+* Sensor / non-hard physics bodies are now included in EntityLookup by default.
+
+
 ## 159.1.0
 
 

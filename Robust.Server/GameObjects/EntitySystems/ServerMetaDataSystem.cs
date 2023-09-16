@@ -7,6 +7,7 @@ namespace Robust.Server.GameObjects;
 public sealed class ServerMetaDataSystem : MetaDataSystem
 {
     [Dependency] private readonly PvsSystem _pvsSystem = default!;
+    private EntityQuery<MetaDataComponent> _mQuery;
 
     public override void Initialize()
     {
@@ -16,6 +17,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
 
         EntityManager.ComponentAdded += OnComponentAdded;
         EntityManager.ComponentRemoved += OnComponentRemoved;
+        _mQuery = GetEntityQuery<MetaDataComponent>();
     }
 
     public override void Shutdown()
@@ -41,11 +43,15 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
     /// </summary>
     private void OnComponentRemoved(RemovedComponentEventArgs obj)
     {
+        // TODO PERFORMANCE just include metadata in the base event?
+        if (!_mQuery.TryGetComponent(obj.BaseArgs.Owner, out var meta))
+            return;
+
         var removed = obj.BaseArgs.Component;
         if (obj.Terminating || !removed.NetSyncEnabled || (!removed.SessionSpecific && !removed.SendOnlyToOwner))
             return;
 
-        foreach (var (_, comp) in EntityManager.GetNetComponents(obj.BaseArgs.Owner))
+        foreach (var comp in meta.NetComponents.Values)
         {
             if (comp.LifeStage >= ComponentLifeStage.Removing)
                 continue;
@@ -55,7 +61,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         }
 
         // remove the flag
-        MetaData(obj.BaseArgs.Owner).Flags &= ~MetaDataFlags.SessionSpecific;
+        meta.Flags &= ~MetaDataFlags.SessionSpecific;
     }
 
     /// <summary>
@@ -67,7 +73,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         if ((meta.Flags & MetaDataFlags.SessionSpecific) == 0)
             return;
 
-        foreach (var (_, comp) in EntityManager.GetNetComponents(uid))
+        foreach (var (_, comp) in meta.NetComponents)
         {
             if (comp.SessionSpecific || comp.SendOnlyToOwner)
                 Dirty(uid, comp);

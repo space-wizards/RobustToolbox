@@ -1204,7 +1204,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         bool sendCompList = meta.LastComponentRemoved > fromTick;
         HashSet<ushort>? netComps = sendCompList ? new() : null;
 
-        foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
+        foreach (var (netId, component) in meta.NetComponents)
         {
             if (!component.NetSyncEnabled)
                 continue;
@@ -1253,7 +1253,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
         HashSet<ushort> netComps = new();
 
-        foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
+        foreach (var (netId, component) in meta.NetComponents)
         {
             if (!component.NetSyncEnabled)
                 continue;

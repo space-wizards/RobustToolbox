@@ -34,7 +34,7 @@ public sealed class AngleTypeParser : TypeParser<Angle>
 
         if (word.EndsWith("deg"))
         {
-            if (!float.TryParse(word[..^3], out var f))
+            if (!float.TryParse(word[..^3], CultureInfo.InvariantCulture, out var f))
             {
                 error = new InvalidAngle(word);
                 result = null;
@@ -47,7 +47,7 @@ public sealed class AngleTypeParser : TypeParser<Angle>
         }
         else
         {
-            if (!float.TryParse(word, out var f))
+            if (!float.TryParse(word, CultureInfo.InvariantCulture, out var f))
             {
                 error = new InvalidAngle(word);
                 result = null;

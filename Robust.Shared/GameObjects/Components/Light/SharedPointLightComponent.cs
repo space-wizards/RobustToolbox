@@ -44,18 +44,23 @@ namespace Robust.Shared.GameObjects
         public bool Enabled = true;
 
         // TODO ECS animations
-        [Animatable, Obsolete]
+        [Animatable]
         public bool AnimatedEnable
         {
+            [Obsolete]
             get => Enabled;
+
+            [Obsolete]
             set => IoCManager.Resolve<IEntityManager>().System<SharedPointLightSystem>().SetEnabled(Owner, value, this);
         }
 
         // TODO ECS animations
-        [Animatable, Obsolete]
+        [Animatable]
         public float AnimatedRadius
         {
+            [Obsolete]
             get => Radius;
+            [Obsolete]
             set => IoCManager.Resolve<IEntityManager>().System<SharedPointLightSystem>().SetRadius(Owner, value, this);
         }
 

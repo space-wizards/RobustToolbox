@@ -11,6 +11,7 @@ using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Robust.Shared.Serialization;
 
@@ -25,8 +26,11 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Readonly collection of all the entities contained within this specific container
         /// </summary>
-        [ViewVariables]
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
+
+        [ViewVariables]
+        public IReadOnlyList<NetEntity> NetContainedEntities => ContainedEntities
+            .Select(o => IoCManager.Resolve<IEntityManager>().GetNetEntity(o)).ToList();
 
         /// <summary>
         /// Number of contained entities.

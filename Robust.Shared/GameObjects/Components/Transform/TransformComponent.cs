@@ -25,6 +25,9 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IEntityManager _entMan = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
+        [ViewVariables]
+        public NetEntity NetParent => _entMan.GetNetEntity(_parent);
+
         [DataField("parent")] internal EntityUid _parent;
         [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
         [DataField("rot")] internal Angle _localRotation; // local rotation

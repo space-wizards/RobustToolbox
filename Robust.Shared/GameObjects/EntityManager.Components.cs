@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Robust.Shared.ContentPack;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
 using Robust.Shared.Physics.Components;
@@ -292,7 +291,7 @@ namespace Robust.Shared.GameObjects
                     throw new InvalidOperationException(
                         $"Component reference type {component.GetType().Name} already occupied by {duplicate}");
 
-                RemoveComponentImmediate(duplicate, uid, false);
+                RemoveComponentImmediate(duplicate, uid, false, metadata);
             }
 
             // actually ADD the component
@@ -340,19 +339,19 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool RemoveComponent<T>(EntityUid uid)
+        public bool RemoveComponent<T>(EntityUid uid, MetaDataComponent? meta = null)
         {
-            return RemoveComponent(uid, typeof(T));
+            return RemoveComponent(uid, typeof(T), meta);
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool RemoveComponent(EntityUid uid, Type type)
+        public bool RemoveComponent(EntityUid uid, Type type, MetaDataComponent? meta = null)
         {
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false);
+            RemoveComponentImmediate((Component)comp, uid, false, meta);
             return true;
         }
 
@@ -366,23 +365,22 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            // TODO PERFORMANCE pass in metadata
-            RemoveComponentImmediate((Component)comp, uid, false);
+            RemoveComponentImmediate((Component)comp, uid, false, meta);
             return true;
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveComponent(EntityUid uid, IComponent component)
+        public void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            RemoveComponent(uid, (Component)component);
+            RemoveComponent(uid, (Component)component, meta);
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveComponent(EntityUid uid, Component component)
+        public void RemoveComponent(EntityUid uid, Component component, MetaDataComponent? meta = null)
         {
-            RemoveComponentImmediate(component, uid, false);
+            RemoveComponentImmediate(component, uid, false, meta);
         }
 
         /// <inheritdoc />
@@ -445,22 +443,28 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void RemoveComponents(EntityUid uid)
+        public void RemoveComponents(EntityUid uid, MetaDataComponent? meta = null)
         {
+            if (!MetaQuery.Resolve(uid, ref meta))
+                return;
+
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                RemoveComponentImmediate(comp, uid, false);
+                RemoveComponentImmediate(comp, uid, false, meta);
             }
         }
 
         /// <inheritdoc />
-        public void DisposeComponents(EntityUid uid)
+        public void DisposeComponents(EntityUid uid, MetaDataComponent? meta = null)
         {
+            if (!MetaQuery.Resolve(uid, ref meta))
+                return;
+
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
                 try
                 {
-                    RemoveComponentImmediate(comp, uid, true);
+                    RemoveComponentImmediate(comp, uid, true, meta);
                 }
                 catch (Exception)
                 {
@@ -509,9 +513,12 @@ namespace Robust.Shared.GameObjects
 #endif
         }
 
-        // TODO PERFORMANCE take in metadata, pass onto DeleteComponent()
-        private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating)
+        private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating,
+            MetaDataComponent? meta)
         {
+            if (!MetaQuery.ResolveInternal(uid, ref meta))
+                return;
+
             if (component.Deleted)
             {
                 _sawmill.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {_componentFactory.GetComponentName(component.GetType())}.");
@@ -543,10 +550,11 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
-            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), terminating);
+            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), terminating, meta);
+            meta.LastComponentRemoved = _gameTiming.CurTick;
             ComponentRemoved?.Invoke(eventArgs);
             _eventBus.OnComponentRemoved(eventArgs);
-            DeleteComponent(uid, component, terminating);
+            DeleteComponent(uid, component, terminating, meta);
         }
 
         /// <inheritdoc />
@@ -557,6 +565,9 @@ namespace Robust.Shared.GameObjects
                 if (component.Deleted)
                     continue;
                 var uid = component.Owner;
+
+                if (!MetaQuery.TryGetComponentInternal(uid, out var meta))
+                    continue;
 
 #if EXCEPTION_TOLERANCE
             try
@@ -581,11 +592,12 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
-                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), false);
+
+                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), false, meta);
+                meta.LastComponentRemoved = _gameTiming.CurTick;
                 ComponentRemoved?.Invoke(eventArgs);
                 _eventBus.OnComponentRemoved(eventArgs);
-
-                DeleteComponent(uid, component, false);
+                DeleteComponent(uid, component, false, meta);
             }
 
             _deleteSet.Clear();

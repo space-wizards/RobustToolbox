@@ -78,7 +78,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">The component reference type to remove.</typeparam>
         /// <param name="uid">Entity UID to modify.</param>
-        bool RemoveComponent<T>(EntityUid uid);
+        bool RemoveComponent<T>(EntityUid uid, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     Removes the component with a specified type.
@@ -86,7 +86,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <returns>Returns false if the entity did not have the specified component.</returns>
-        bool RemoveComponent(EntityUid uid, Type type);
+        bool RemoveComponent(EntityUid uid, Type type, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     Removes the component with a specified network ID.
@@ -101,7 +101,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="component">Component to remove.</param>
-        void RemoveComponent(EntityUid uid, IComponent component);
+        void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     Immediately shuts down a component, but defers the removal and deletion until the end of the tick.
@@ -147,7 +147,7 @@ namespace Robust.Shared.GameObjects
         ///     Removes all components from an entity, except the required components.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
-        void RemoveComponents(EntityUid uid);
+        void RemoveComponents(EntityUid uid, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     Removes ALL components from an entity. This includes the required components,
@@ -155,7 +155,7 @@ namespace Robust.Shared.GameObjects
         ///     used when deleting an entity.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
-        void DisposeComponents(EntityUid uid);
+        void DisposeComponents(EntityUid uid, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     Checks if the entity has a component type.

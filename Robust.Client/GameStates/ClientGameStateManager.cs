@@ -1144,8 +1144,7 @@ namespace Robust.Client.GameStates
 
                 foreach (var comp in toRemove)
                 {
-                    // TODO PERFORMANCE pass metadata into component removal.
-                    _entities.RemoveComponent(uid, comp);
+                    _entities.RemoveComponent(uid, comp, meta);
                 }
             }
 

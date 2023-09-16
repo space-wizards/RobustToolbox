@@ -43,15 +43,11 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
     /// </summary>
     private void OnComponentRemoved(RemovedComponentEventArgs obj)
     {
-        // TODO PERFORMANCE just include metadata in the base event?
-        if (!_mQuery.TryGetComponent(obj.BaseArgs.Owner, out var meta))
-            return;
-
         var removed = obj.BaseArgs.Component;
         if (obj.Terminating || !removed.NetSyncEnabled || (!removed.SessionSpecific && !removed.SendOnlyToOwner))
             return;
 
-        foreach (var comp in meta.NetComponents.Values)
+        foreach (var comp in obj.Meta.NetComponents.Values)
         {
             if (comp.LifeStage >= ComponentLifeStage.Removing)
                 continue;
@@ -61,7 +57,7 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         }
 
         // remove the flag
-        meta.Flags &= ~MetaDataFlags.SessionSpecific;
+        obj.Meta.Flags &= ~MetaDataFlags.SessionSpecific;
     }
 
     /// <summary>

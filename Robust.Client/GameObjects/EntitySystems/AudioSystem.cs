@@ -362,7 +362,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// </summary>
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(AudioStream stream, AudioParams? audioParams = null)
+    public IPlayingAudioStream? Play(AudioStream stream, AudioParams? audioParams = null)
     {
         if (!TryCreateAudioSource(stream, out var source))
         {
@@ -406,7 +406,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="entity">The entity "emitting" the audio.</param>
     /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(AudioStream stream, EntityUid entity, EntityCoordinates? fallbackCoordinates = null,
+    public IPlayingAudioStream? Play(AudioStream stream, EntityUid entity, EntityCoordinates? fallbackCoordinates = null,
         AudioParams? audioParams = null)
     {
         if (!TryCreateAudioSource(stream, out var source))
@@ -460,7 +460,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(AudioStream stream, EntityCoordinates coordinates,
+    public IPlayingAudioStream? Play(AudioStream stream, EntityCoordinates coordinates,
         EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null)
     {
         if (!TryCreateAudioSource(stream, out var source))

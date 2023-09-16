@@ -755,7 +755,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IComponent GetComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null)
         {
-            return (meta ?? MetaQuery.GetComponent(uid)).NetComponents[netId];
+            return (meta ?? MetaQuery.GetComponentInternal(uid)).NetComponents[netId];
         }
 
         /// <inheritdoc />
@@ -963,7 +963,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public NetComponentEnumerable GetNetComponents(EntityUid uid, MetaDataComponent? meta = null)
         {
-            meta ??= MetaQuery.GetComponent(uid);
+            meta ??= MetaQuery.GetComponentInternal(uid);
             return new NetComponentEnumerable(meta.NetComponents);
         }
 

@@ -1,9 +1,11 @@
+using System;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 using System.Numerics;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.GameObjects
 {
@@ -39,16 +41,30 @@ namespace Robust.Shared.GameObjects
 
         [Access(typeof(SharedPointLightSystem))]
         [DataField("enabled")]
-        [Animatable]
-        public bool Enabled { get; set; } = true;
+        public bool Enabled = true;
+
+        // TODO ECS animations
+        [Animatable, Obsolete]
+        public bool AnimatedEnable
+        {
+            get => Enabled;
+            set => IoCManager.Resolve<IEntityManager>().System<SharedPointLightSystem>().SetEnabled(Owner, value, this);
+        }
+
+        // TODO ECS animations
+        [Animatable, Obsolete]
+        public float AnimatedRadius
+        {
+            get => Radius;
+            set => IoCManager.Resolve<IEntityManager>().System<SharedPointLightSystem>().SetRadius(Owner, value, this);
+        }
 
         /// <summary>
         /// How far the light projects.
         /// </summary>
         [DataField("radius")]
         [Access(typeof(SharedPointLightSystem))]
-        [Animatable]
-        public float Radius { get; set; } = 5f;
+        public float Radius = 5f;
 
         [ViewVariables]
         public bool ContainerOccluded;

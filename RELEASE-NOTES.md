@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 160.0.2
+
+### Other
+
+* Transform component and containers have new convenience fields to make using VIewVariables easier.
+
+
 ## 160.0.0
 
 ### Breaking changes

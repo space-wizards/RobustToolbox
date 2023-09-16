@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Prometheus;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -365,9 +366,8 @@ namespace Robust.Shared.GameObjects
             // We want to retrieve MetaDataComponent even if its Deleted flag is set.
             if (metadata == null)
             {
-                if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
+                if (!MetaQuery.TryGetComponentInternal(uid, out metadata))
                     throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
-                metadata = (MetaDataComponent)component;
             }
             else
             {
@@ -578,12 +578,12 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+            return !MetaQuery.TryGetComponentInternal(uid, out var comp) || comp.EntityDeleted;
         }
 
         public bool Deleted([NotNullWhen(false)] EntityUid? uid)
         {
-            return !uid.HasValue || !_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+            return !uid.HasValue || !MetaQuery.TryGetComponentInternal(uid.Value, out var comp) || comp.EntityDeleted;
         }
 
         /// <summary>
@@ -746,12 +746,7 @@ namespace Robust.Shared.GameObjects
             if (uid == null)
                 return null;
 
-            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid.Value, out var component))
-                return new EntityStringRepresentation(uid.Value, true);
-
-            var metadata = (MetaDataComponent) component;
-
-            return ToPrettyString(uid.Value, metadata);
+            return ToPrettyString(uid.Value);
         }
 
         /// <inheritdoc />
@@ -762,10 +757,18 @@ namespace Robust.Shared.GameObjects
         }
 
         public EntityStringRepresentation ToPrettyString(EntityUid uid)
-            => ToPrettyString((EntityUid?) uid).Value;
+        {
+            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid, out var component))
+                return new EntityStringRepresentation(uid, true);
+
+            var metadata = Unsafe.As<MetaDataComponent>(component);
+            return ToPrettyString(uid, metadata);
+        }
 
         public EntityStringRepresentation ToPrettyString(NetEntity netEntity)
-            => ToPrettyString((NetEntity?) netEntity).Value;
+        {
+            return ToPrettyString(GetEntity(netEntity));
+        }
 
         private EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent metadata)
         {

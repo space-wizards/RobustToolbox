@@ -235,7 +235,7 @@ namespace Robust.Shared.GameObjects
         public CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : Component, new()
         {
             var reg = _componentFactory.GetRegistration<T>();
-            var newComponent = (T)_componentFactory.GetComponent(reg);
+            var newComponent = Unsafe.As<T>(_componentFactory.GetComponent(reg));
 #pragma warning disable CS0618 // Type or member is obsolete
             newComponent.Owner = uid;
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -714,9 +714,9 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
             if (dict!.TryGetValue(uid, out var comp))
             {
-                if (!comp!.Deleted)
+                if (!comp.Deleted)
                 {
-                    return (T)(IComponent) comp;
+                    return (T) Unsafe.As<IComponent>(comp);
                 }
             }
 
@@ -763,7 +763,7 @@ namespace Robust.Shared.GameObjects
             var dict = _entTraitArray[type.Value];
             if (dict.TryGetValue(uid, out var comp))
             {
-                    return comp;
+                return comp;
             }
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
@@ -771,7 +771,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component)
+        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
             DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
@@ -779,7 +779,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!comp.Deleted)
                 {
-                    component = (T)(IComponent)comp;
+                    component = (T)Unsafe.As<IComponent>(comp);
                     return true;
                 }
             }
@@ -789,7 +789,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component)
+        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component) where T : IComponent
         {
             if (!uid.HasValue)
             {
@@ -1103,7 +1103,7 @@ namespace Robust.Shared.GameObjects
                 {
                     if (t1Comp.Deleted) continue;
 
-                    yield return (T)(object)t1Comp;
+                    yield return (T) Unsafe.As<object>(t1Comp);
                 }
             }
             else
@@ -1114,7 +1114,7 @@ namespace Robust.Shared.GameObjects
 
                     if (metaComp.EntityPaused) continue;
 
-                    yield return (T)(object)t1Comp;
+                    yield return (T) Unsafe.As<object>(t1Comp);
                 }
             }
         }
@@ -1137,8 +1137,8 @@ namespace Robust.Shared.GameObjects
                         continue;
 
                     yield return (
-                        (TComp1)(object)t1Comp,
-                        (TComp2)(object)t2Comp);
+                        (TComp1)Unsafe.As<object>(t1Comp),
+                        (TComp2)Unsafe.As<object>(t2Comp));
                 }
             }
             else
@@ -1158,8 +1158,8 @@ namespace Robust.Shared.GameObjects
                     if (meta.EntityPaused) continue;
 
                     yield return (
-                        (TComp1)(object)t1Comp,
-                        (TComp2)(object)t2Comp);
+                        (TComp1)Unsafe.As<object>(t1Comp),
+                        (TComp2)Unsafe.As<object>(t2Comp));
                 }
             }
         }
@@ -1185,9 +1185,9 @@ namespace Robust.Shared.GameObjects
                         continue;
 
                     yield return (
-                        (TComp1)(object)t1Comp,
-                        (TComp2)(object)t2Comp,
-                        (TComp3)(object)t3Comp);
+                        (TComp1)Unsafe.As<object>(t1Comp),
+                        (TComp2)Unsafe.As<object>(t2Comp),
+                        (TComp3)Unsafe.As<object>(t3Comp));
                 }
             }
             else
@@ -1210,9 +1210,9 @@ namespace Robust.Shared.GameObjects
                     if (meta.EntityPaused) continue;
 
                     yield return (
-                        (TComp1)(object)t1Comp,
-                        (TComp2)(object)t2Comp,
-                        (TComp3)(object)t3Comp);
+                        (TComp1)Unsafe.As<object>(t1Comp),
+                        (TComp2)Unsafe.As<object>(t2Comp),
+                        (TComp3)Unsafe.As<object>(t3Comp));
                 }
             }
         }
@@ -1244,10 +1244,10 @@ namespace Robust.Shared.GameObjects
                         continue;
 
                     yield return (
-                        (TComp1)(object)t1Comp,
-                        (TComp2)(object)t2Comp,
-                        (TComp3)(object)t3Comp,
-                        (TComp4)(object)t4Comp);
+                        (TComp1)Unsafe.As<object>(t1Comp),
+                        (TComp2)Unsafe.As<object>(t2Comp),
+                        (TComp3)Unsafe.As<object>(t3Comp),
+                        (TComp4)Unsafe.As<object>(t4Comp));
                 }
             }
             else
@@ -1273,10 +1273,10 @@ namespace Robust.Shared.GameObjects
                     if (meta.EntityPaused) continue;
 
                     yield return (
-                        (TComp1)(object)t1Comp,
-                        (TComp2)(object)t2Comp,
-                        (TComp3)(object)t3Comp,
-                        (TComp4)(object)t4Comp);
+                        (TComp1)Unsafe.As<object>(t1Comp),
+                        (TComp2)Unsafe.As<object>(t2Comp),
+                        (TComp3)Unsafe.As<object>(t3Comp),
+                        (TComp4)Unsafe.As<object>(t4Comp));
                 }
             }
         }
@@ -1384,7 +1384,7 @@ namespace Robust.Shared.GameObjects
         public TComp1 GetComponent(EntityUid uid)
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
-                return (TComp1) comp;
+                return Unsafe.As<TComp1>(comp);
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
@@ -1408,7 +1408,7 @@ namespace Robust.Shared.GameObjects
         {
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
             {
-                component = (TComp1) comp;
+                component = Unsafe.As<TComp1>(comp);
                 return true;
             }
 
@@ -1444,7 +1444,7 @@ namespace Robust.Shared.GameObjects
 
             if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
             {
-                component = (TComp1)comp;
+                component = Unsafe.As<TComp1>(comp);
                 return true;
             }
 
@@ -1474,7 +1474,7 @@ namespace Robust.Shared.GameObjects
         internal TComp1 GetComponentInternal(EntityUid uid)
         {
             if (_traitDict.TryGetValue(uid, out var comp))
-                return (TComp1) comp;
+                return Unsafe.As<TComp1>(comp);
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
@@ -1504,7 +1504,7 @@ namespace Robust.Shared.GameObjects
         {
             if (_traitDict.TryGetValue(uid, out var comp))
             {
-                component = (TComp1) comp;
+                component = Unsafe.As<TComp1>(comp);
                 return true;
             }
 
@@ -1539,7 +1539,7 @@ namespace Robust.Shared.GameObjects
 
             if (_traitDict.TryGetValue(uid, out var comp))
             {
-                component = (TComp1)comp;
+                component = Unsafe.As<TComp1>(comp);
                 return true;
             }
 
@@ -1607,7 +1607,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
+                comp1 = Unsafe.As<TComp1>(current.Value);
                 return true;
             }
         }
@@ -1675,8 +1675,8 @@ namespace Robust.Shared.GameObjects
                 }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
+                comp1 = Unsafe.As<TComp1>(current.Value);
+                comp2 = Unsafe.As<TComp2>(comp2Obj);
                 return true;
             }
         }
@@ -1754,9 +1754,9 @@ namespace Robust.Shared.GameObjects
                 }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
+                comp1 = Unsafe.As<TComp1>(current.Value);
+                comp2 = Unsafe.As<TComp2>(comp2Obj);
+                comp3 = Unsafe.As<TComp3>(comp3Obj);
                 return true;
             }
         }
@@ -1847,10 +1847,10 @@ namespace Robust.Shared.GameObjects
                 }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
-                comp4 = (TComp4)comp4Obj;
+                comp1 = Unsafe.As<TComp1>(current.Value);
+                comp2 = Unsafe.As<TComp2>(comp2Obj);
+                comp3 = Unsafe.As<TComp3>(comp3Obj);
+                comp4 = Unsafe.As<TComp4>(comp4Obj);
                 return true;
             }
         }
@@ -1908,7 +1908,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
+                comp1 = Unsafe.As<TComp1>(current.Value);
                 return true;
             }
         }
@@ -1968,8 +1968,8 @@ namespace Robust.Shared.GameObjects
                 }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
+                comp1 = Unsafe.As<TComp1>(current.Value);
+                comp2 = Unsafe.As<TComp2>(comp2Obj);
                 return true;
             }
         }
@@ -2039,9 +2039,9 @@ namespace Robust.Shared.GameObjects
                 }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
+                comp1 = Unsafe.As<TComp1>(current.Value);
+                comp2 = Unsafe.As<TComp2>(comp2Obj);
+                comp3 = Unsafe.As<TComp3>(comp3Obj);
                 return true;
             }
         }
@@ -2124,10 +2124,10 @@ namespace Robust.Shared.GameObjects
                 }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
-                comp4 = (TComp4)comp4Obj;
+                comp1 = Unsafe.As<TComp1>(current.Value);
+                comp2 = Unsafe.As<TComp2>(comp2Obj);
+                comp3 = Unsafe.As<TComp3>(comp3Obj);
+                comp4 = Unsafe.As<TComp4>(comp4Obj);
                 return true;
             }
         }

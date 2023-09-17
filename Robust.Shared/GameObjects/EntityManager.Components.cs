@@ -612,7 +612,10 @@ namespace Robust.Shared.GameObjects
                 metadata ??= MetaQuery.GetComponent(entityUid);
                 var netSet = metadata.NetComponents;
 
-                if (netSet.Remove(reg.NetID.Value) && component.NetSyncEnabled)
+                if (!netSet.Remove(reg.NetID.Value))
+                    _sawmill.Error($"Entity {ToPrettyString(entityUid, metadata)} did not have {component.GetType().Name} in its networked component dictionary during component deletion.");
+
+                if (component.NetSyncEnabled)
                     DirtyEntity(entityUid, metadata);
             }
 

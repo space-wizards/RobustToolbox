@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 160.1.0
+
+### New features
+
+* Add optional MetaDataComponent args to Entitymanager methods.
+
+### Internal
+
+* Move _netComponents onto MetaDataComponent.
+* Remove some component resolves internally on adding / removing components.
+
+
 ## 160.0.2
 
 ### Other

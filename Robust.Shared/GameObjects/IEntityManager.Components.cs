@@ -70,7 +70,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity being modified.</param>
         /// <param name="component">Component to add.</param>
         /// <param name="overwrite">Should it overwrite existing components?</param>
-        void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component;
+        void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : Component;
 
         /// <summary>
         ///     Removes the component with the specified reference type,
@@ -187,7 +187,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
-        bool HasComponent(EntityUid ?uid, Type type);
+        bool HasComponent(EntityUid? uid, Type type);
 
         /// <summary>
         ///     Checks if the entity has a component with a given network ID. This does not check

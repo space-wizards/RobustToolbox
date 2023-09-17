@@ -86,6 +86,9 @@ namespace Robust.Shared.GameObjects
 
         private string _xformName = string.Empty;
 
+        private ComponentRegistration _metaReg = default!;
+        private ComponentRegistration _xformReg = default!;
+
         private SharedMapSystem _mapSystem = default!;
 
         private ISawmill _sawmill = default!;
@@ -112,7 +115,9 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeComponents();
-            _xformName = _componentFactory.GetComponentName(typeof(TransformComponent));
+            _metaReg = _componentFactory.GetRegistration(typeof(MetaDataComponent));
+            _xformReg = _componentFactory.GetRegistration(typeof(TransformComponent));
+            _xformName = _xformReg.Name;
             _sawmill = LogManager.GetSawmill("entity");
             _resolveSawmill = LogManager.GetSawmill("resolve");
 
@@ -645,10 +650,12 @@ namespace Robust.Shared.GameObjects
 
             Entities.Add(uid);
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata, false, false);
+            AddComponentInternal(uid, metadata, _metaReg, false, true, metadata);
 
             // allocate the required TransformComponent
-            AddComponent<TransformComponent>(uid);
+            var xformComp = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
+            xformComp.Owner = uid;
+            AddComponentInternal(uid, xformComp, false, true, metadata);
 
             return uid;
         }

@@ -35,9 +35,6 @@ namespace Robust.Shared.GameObjects
 
         private static readonly ComponentState DefaultComponentState = new();
 
-        private readonly Dictionary<EntityUid, Dictionary<ushort, Component>> _netComponents
-            = new(EntityCapacity);
-
         private readonly Dictionary<Type, Dictionary<EntityUid, Component>> _entTraitDict
             = new();
 
@@ -70,7 +67,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void ClearComponents()
         {
-            _netComponents.Clear();
             _entCompIndex.Clear();
             _deleteSet.Clear();
             foreach (var dict in _entTraitDict.Values)
@@ -249,7 +245,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
+        public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : Component
         {
             if (!uid.IsValid() || !EntityExists(uid))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
@@ -267,18 +263,22 @@ namespace Robust.Shared.GameObjects
             }
 #pragma warning restore CS0618 // Type or member is obsolete
 
-            AddComponentInternal(uid, component, overwrite, false);
+            AddComponentInternal(uid, component, overwrite, false, metadata);
         }
 
-        private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit) where T : Component
+        private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit, MetaDataComponent? metadata = null) where T : Component
+        {
+            // get interface aliases for mapping
+            var reg = _componentFactory.GetRegistration(component);
+            AddComponentInternal(uid, component, reg, overwrite, skipInit, metadata);
+        }
+
+        private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool overwrite, bool skipInit, MetaDataComponent? metadata = null) where T : Component
         {
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
-                GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Terminating,
+                              (metadata ?? MetaQuery.GetComponent(uid)).EntityLifeStage < EntityLifeStage.Terminating,
                 $"Attempted to add a {component.GetType().Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
-
-            // get interface aliases for mapping
-            var reg = _componentFactory.GetRegistration(component);
 
             // Check that there is no existing component.
             var type = reg.Idx;
@@ -303,14 +303,8 @@ namespace Robust.Shared.GameObjects
             {
                 // the main comp grid keeps this in sync
                 var netId = reg.NetID.Value;
-
-                if (!_netComponents.TryGetValue(uid, out var netSet))
-                {
-                    netSet = new Dictionary<ushort, Component>(NetComponentCapacity);
-                    _netComponents.Add(uid, netSet);
-                }
-
-                netSet.Add(netId, component);
+                metadata ??= MetaQuery.GetComponentInternal(uid);
+                metadata.NetComponents.Add(netId, component);
             }
             else
             {
@@ -326,7 +320,7 @@ namespace Robust.Shared.GameObjects
             if (skipInit)
                 return;
 
-            var metadata = GetComponent<MetaDataComponent>(uid);
+            metadata ??= MetaQuery.GetComponentInternal(uid);
 
             if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                 return;
@@ -467,7 +461,6 @@ namespace Robust.Shared.GameObjects
             }
 
             _entCompIndex.Remove(uid);
-            _netComponents.Remove(uid);
         }
 
         private void RemoveComponentDeferred(Component component, EntityUid uid, bool terminating)
@@ -589,20 +582,17 @@ namespace Robust.Shared.GameObjects
             _deleteSet.Clear();
         }
 
-        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating)
+        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating, MetaDataComponent? metadata = null)
         {
-            var type = component.GetType();
-            var reg = _componentFactory.GetRegistration(type);
+            var reg = _componentFactory.GetRegistration(component);
 
-            if (!terminating && reg.NetID != null && _netComponents.TryGetValue(entityUid, out var netSet))
+            if (!terminating && reg.NetID != null)
             {
-                if (netSet.Count == 1)
-                    _netComponents.Remove(entityUid);
-                else
-                    netSet.Remove(reg.NetID.Value);
+                metadata ??= MetaQuery.GetComponent(entityUid);
+                var netSet = metadata.NetComponents;
 
-                if (component.NetSyncEnabled)
-                    DirtyEntity(entityUid);
+                if (netSet.Remove(reg.NetID.Value) && component.NetSyncEnabled)
+                    DirtyEntity(entityUid, metadata);
             }
 
             _entTraitArray[reg.Idx.Value].Remove(entityUid);
@@ -653,8 +643,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, ushort netId)
         {
-            return _netComponents.TryGetValue(uid, out var netSet)
-                   && netSet.ContainsKey(netId);
+            return MetaQuery.TryGetComponentInternal(uid, out var metadata) && metadata.NetComponents.ContainsKey(netId);
         }
 
         /// <inheritdoc />
@@ -666,8 +655,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            return _netComponents.TryGetValue(uid.Value, out var netSet)
-                   && netSet.ContainsKey(netId);
+            return HasComponent(uid.Value, netId);
         }
 
         /// <inheritdoc />
@@ -754,7 +742,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IComponent GetComponent(EntityUid uid, ushort netId)
         {
-            return _netComponents[uid][netId];
+            return MetaQuery.GetComponentInternal(uid).NetComponents[netId];
         }
 
         /// <inheritdoc />
@@ -870,8 +858,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, ushort netId, [MaybeNullWhen(false)] out IComponent component)
         {
-            if (_netComponents.TryGetValue(uid, out var netSet)
-                && netSet.TryGetValue(netId, out var comp))
+            if (MetaQuery.TryGetComponentInternal(uid, out var metadata)
+                && metadata.NetComponents.TryGetValue(netId, out var comp))
             {
                 component = comp;
                 return true;
@@ -891,15 +879,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            if (_netComponents.TryGetValue(uid.Value, out var netSet)
-                && netSet.TryGetValue(netId, out var comp))
-            {
-                component = comp;
-                return true;
-            }
-
-            component = default;
-            return false;
+            return TryGetComponent(uid.Value, netId, out component);
         }
 
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component
@@ -969,15 +949,15 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public NetComponentEnumerable GetNetComponents(EntityUid uid)
         {
-            return new NetComponentEnumerable(_netComponents[uid]);
+            return new NetComponentEnumerable(MetaQuery.GetComponentInternal(uid).NetComponents);
         }
 
         /// <inheritdoc />
         public NetComponentEnumerable? GetNetComponentsOrNull(EntityUid uid)
         {
-            return _netComponents.TryGetValue(uid, out var data)
-                    ? new NetComponentEnumerable(data)
-                    : null;
+            return MetaQuery.TryGetComponentInternal(uid, out var metadata)
+                ? new NetComponentEnumerable(metadata.NetComponents)
+                : null;
         }
 
         #region Join Functions

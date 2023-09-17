@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
@@ -259,7 +260,7 @@ namespace Robust.Shared.GameObjects
 
         public IComponent GetComponent(ComponentRegistration reg)
         {
-            return (IComponent) _typeFactory.CreateInstanceUnchecked(reg.Type);
+            return Unsafe.As<IComponent>(_typeFactory.CreateInstanceUnchecked(reg.Type));
         }
 
         public IComponent GetComponent(string componentName, bool ignoreCase = false)

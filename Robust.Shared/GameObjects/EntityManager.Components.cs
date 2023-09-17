@@ -351,7 +351,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false);
+            RemoveComponentImmediate(Unsafe.As<Component>(comp), uid, false);
             return true;
         }
 
@@ -362,7 +362,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false);
+            RemoveComponentImmediate(Unsafe.As<Component>(comp), uid, false);
             return true;
         }
 
@@ -370,7 +370,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component)
         {
-            RemoveComponent(uid, (Component)component);
+            RemoveComponent(uid, Unsafe.As<Component>(component));
         }
 
         /// <inheritdoc />
@@ -393,7 +393,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentDeferred((Component)comp, uid, false);
+            RemoveComponentDeferred(Unsafe.As<Component>(comp), uid, false);
             return true;
         }
 
@@ -404,14 +404,14 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp))
                 return false;
 
-            RemoveComponentDeferred((Component)comp, uid, false);
+            RemoveComponentDeferred(Unsafe.As<Component>(comp), uid, false);
             return true;
         }
 
         /// <inheritdoc />
         public void RemoveComponentDeferred(EntityUid owner, IComponent component)
         {
-            RemoveComponentDeferred((Component)component, owner, false);
+            RemoveComponentDeferred(Unsafe.As<Component>(component), owner, false);
         }
 
         /// <inheritdoc />

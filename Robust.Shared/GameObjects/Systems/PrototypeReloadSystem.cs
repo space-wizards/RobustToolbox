@@ -76,7 +76,6 @@ internal sealed class PrototypeReloadSystem : EntitySystem
         foreach (var (name, _) in newPrototypeComponents.Where(t => !ignoredComponents.Contains(t.name))
                      .Except(oldPrototypeComponents))
         {
-            var data = newPrototype.Components[name];
             var component = (Component)_componentFactory.GetComponent(name);
             component.Owner = entity;
             EntityManager.AddComponent(entity, component);

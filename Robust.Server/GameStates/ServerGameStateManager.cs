@@ -24,6 +24,7 @@ using SharpZstd.Interop;
 using Microsoft.Extensions.ObjectPool;
 using Prometheus;
 using Robust.Server.Replays;
+using Robust.Shared.Console;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Players;
 
@@ -48,6 +49,7 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IParallelManager _parallelMgr = default!;
+        [Dependency] private readonly IConsoleHost _conHost = default!;
 
         private static readonly Histogram _usageHistogram = Metrics.CreateHistogram("robust_game_state_update_usage",
             "Amount of time spent processing different parts of the game state update", new HistogramConfiguration
@@ -83,6 +85,25 @@ namespace Robust.Server.GameStates
             _parallelMgr.AddAndInvokeParallelCountChanged(ResetParallelism);
 
             _cfg.OnValueChanged(CVars.NetPVSCompressLevel, _ => ResetParallelism(), true);
+
+            // temporary command for debugging PVS bugs.
+            _conHost.RegisterCommand("print_pvs_ack", PrintPvsAckInfo);
+        }
+
+        private void PrintPvsAckInfo(IConsoleShell shell, string argstr, string[] args)
+        {
+            var ack = _pvs.PlayerData.Min(x => x.Value.LastReceivedAck);
+            var players = _pvs.PlayerData
+                .Where(x => x.Value.LastReceivedAck == ack)
+                .Select(x => x.Key)
+                .Select(x => $"{x.Name} ({_entityManager.ToPrettyString(x.AttachedEntity)})");
+
+            shell.WriteLine($@"Current tick: {_gameTiming.CurTick}
+Last Acked tick: {_lastOldestAck}
+Deletion history size: {_pvs.EntityPVSCollection.GetDeletedIndices(_lastOldestAck)?.Count ?? 0}
+Actual last acked tick: {ack}
+Last ack players: {string.Join(", ", players)}
+");
         }
 
         private void ResetParallelism()

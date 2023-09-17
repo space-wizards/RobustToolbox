@@ -517,9 +517,6 @@ namespace Robust.Shared.GameObjects
         private void RemoveComponentImmediate(Component component, EntityUid uid, bool terminating,
             MetaDataComponent? meta)
         {
-            if (!MetaQuery.ResolveInternal(uid, ref meta))
-                return;
-
             if (component.Deleted)
             {
                 _sawmill.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {_componentFactory.GetComponentName(component.GetType())}.");
@@ -551,10 +548,6 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
-            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), terminating, meta);
-            meta.LastComponentRemoved = _gameTiming.CurTick;
-            ComponentRemoved?.Invoke(eventArgs);
-            _eventBus.OnComponentRemoved(eventArgs);
             DeleteComponent(uid, component, terminating, meta);
         }
 
@@ -566,9 +559,6 @@ namespace Robust.Shared.GameObjects
                 if (component.Deleted)
                     continue;
                 var uid = component.Owner;
-
-                if (!MetaQuery.TryGetComponentInternal(uid, out var meta))
-                    continue;
 
 #if EXCEPTION_TOLERANCE
             try
@@ -593,12 +583,7 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
-
-                var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, uid), false, meta);
-                meta.LastComponentRemoved = _gameTiming.CurTick;
-                ComponentRemoved?.Invoke(eventArgs);
-                _eventBus.OnComponentRemoved(eventArgs);
-                DeleteComponent(uid, component, false, meta);
+                DeleteComponent(uid, component, false);
             }
 
             _deleteSet.Clear();
@@ -606,15 +591,26 @@ namespace Robust.Shared.GameObjects
 
         private void DeleteComponent(EntityUid entityUid, Component component, bool terminating, MetaDataComponent? metadata = null)
         {
+            if (!MetaQuery.ResolveInternal(entityUid, ref metadata))
+                return;
+
+            var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, entityUid), false, metadata);
+            ComponentRemoved?.Invoke(eventArgs);
+            _eventBus.OnComponentRemoved(eventArgs);
+
             var reg = _componentFactory.GetRegistration(component);
+            DebugTools.Assert(component.Networked == (reg.NetID != null));
 
             if (!terminating && reg.NetID != null)
             {
-                metadata ??= MetaQuery.GetComponent(entityUid);
-                var netSet = metadata.NetComponents;
+                if (!metadata.NetComponents.Remove(reg.NetID.Value))
+                    _sawmill.Error($"Entity {ToPrettyString(entityUid, metadata)} did not have {component.GetType().Name} in its networked component dictionary during component deletion.");
 
-                if (netSet.Remove(reg.NetID.Value) && component.NetSyncEnabled)
+                if (component.NetSyncEnabled)
+                {
                     DirtyEntity(entityUid, metadata);
+                    metadata.LastComponentRemoved = _gameTiming.CurTick;
+                }
             }
 
             _entTraitArray[reg.Idx.Value].Remove(entityUid);
@@ -622,6 +618,10 @@ namespace Robust.Shared.GameObjects
             // TODO if terminating the entity, maybe defer this?
             // _entCompIndex.Remove(uid) gets called later on anyways.
             _entCompIndex.Remove(entityUid, component);
+
+
+            DebugTools.Assert(_netMan.IsClient // Client side prediction can set LastComponentRemoved to some future tick,
+                              || metadata.EntityLastModifiedTick >= metadata.LastComponentRemoved);
         }
 
         /// <inheritdoc />

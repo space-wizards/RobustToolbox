@@ -47,6 +47,14 @@ public abstract class SharedAudioSystem : EntitySystem
         return string.Empty;
     }
 
+    public void Stop(EntityUid uid, AudioComponent? component = null)
+    {
+        if (!Resolve(uid, ref component))
+            return;
+
+        QueueDel(uid);
+    }
+
     /// <summary>
     /// Play an audio file globally, without position.
     /// </summary>

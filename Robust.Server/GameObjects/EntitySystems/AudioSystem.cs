@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Server.GameStates;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -12,51 +12,8 @@ namespace Robust.Server.GameObjects;
 [UsedImplicitly]
 public sealed class AudioSystem : SharedAudioSystem
 {
+    [Dependency] private readonly PvsOverrideSystem _pvs = default!;
     [Dependency] private readonly TransformSystem _transform = default!;
-
-
-    private uint _streamIndex;
-
-    private sealed class AudioSourceServer : IPlayingAudioStream
-    {
-        private readonly uint _id;
-        private readonly AudioSystem _audioSystem;
-        private readonly IEnumerable<ICommonSession>? _sessions;
-
-        internal AudioSourceServer(AudioSystem parent, uint identifier, IEnumerable<ICommonSession>? sessions = null)
-        {
-            _audioSystem = parent;
-            _id = identifier;
-            _sessions = sessions;
-        }
-        public void Stop()
-        {
-            _audioSystem.InternalStop(_id, _sessions);
-        }
-    }
-
-    private void InternalStop(uint id, IEnumerable<ICommonSession>? sessions = null)
-    {
-        var msg = new StopAudioMessageClient
-        {
-            Identifier = id
-        };
-
-        if (sessions == null)
-            RaiseNetworkEvent(msg);
-        else
-        {
-            foreach (var session in sessions)
-            {
-                RaiseNetworkEvent(msg, session.ConnectedClient);
-            }
-        }
-    }
-
-    private uint CacheIdentifier()
-    {
-        return unchecked(_streamIndex++);
-    }
 
     /// <inheritdoc />
     public override IPlayingAudioStream? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
@@ -69,6 +26,7 @@ public sealed class AudioSystem : SharedAudioSystem
             Identifier = id
         };
 
+        _pvs.AddSessionOverride();
         RaiseNetworkEvent(msg, playerFilter, recordReplay);
 
         return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
@@ -175,3 +133,5 @@ public sealed class AudioSystem : SharedAudioSystem
         return null;
     }
 }
+
+internal sealed class AudioSourceServer : IPlayingAudioStream {}

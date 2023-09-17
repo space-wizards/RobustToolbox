@@ -1,17 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Graphics;
+using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
@@ -26,7 +27,6 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects;
 
-[UsedImplicitly]
 public sealed class AudioSystem : SharedAudioSystem
 {
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
@@ -34,15 +34,20 @@ public sealed class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly IOverlayManager _overlays = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
+    [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-    [Dependency] private readonly ILogManager _logManager = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
-    internal IReadOnlyList<PlayingStream> PlayingStreams => _playingClydeStreams;
+    /// <summary>
+    /// Per-tick cache of relevant streams.
+    /// </summary>
+    private readonly List<AudioComponent> _streams = new();
 
-    private readonly List<PlayingStream> _playingClydeStreams = new();
+    private EntityQuery<PhysicsComponent> _physicsQuery;
+    private EntityQuery<TransformComponent> _xformQuery;
 
     private float _maxRayLength;
 
@@ -50,23 +55,26 @@ public sealed class AudioSystem : SharedAudioSystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeNetworkEvent<PlayAudioEntityMessage>(PlayAudioEntityHandler);
-        SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
-        SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
-        SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
+
+        _physicsQuery = GetEntityQuery<PhysicsComponent>();
+        _xformQuery = GetEntityQuery<TransformComponent>();
+
+        SubscribeLocalEvent<AudioComponent, ComponentShutdown>(OnAudioShutdown);
 
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
+
+        _overlays.AddOverlay(new AudioOverlay(EntityManager, _playerManager, IoCManager.Resolve<IResourceCache>(), this, _xformSys));
+    }
+
+    private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
+    {
+        var pStream = (PlayingStream)component.Stream;
+        pStream.Source.Dispose();
     }
 
     public override void Shutdown()
     {
         CfgManager.UnsubValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged);
-        foreach (var stream in _playingClydeStreams)
-        {
-            stream.Source.Dispose();
-        }
-        _playingClydeStreams.Clear();
-
         base.Shutdown();
     }
 
@@ -75,60 +83,21 @@ public sealed class AudioSystem : SharedAudioSystem
         _maxRayLength = value;
     }
 
-    #region Event Handlers
-    private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
-    {
-        var uid = GetEntity(ev.NetEntity);
-        var coords = GetCoordinates(ev.Coordinates);
-        var fallback = GetCoordinates(ev.FallbackCoordinates);
-
-        var stream = EntityManager.EntityExists(uid)
-            ? (PlayingStream?) Play(ev.FileName, uid, fallback, ev.AudioParams, false)
-            : (PlayingStream?) Play(ev.FileName, coords, fallback, ev.AudioParams, false);
-
-        if (stream != null)
-            stream.NetIdentifier = ev.Identifier;
-    }
-
-    private void PlayAudioGlobalHandler(PlayAudioGlobalMessage ev)
-    {
-        var stream = (PlayingStream?) Play(ev.FileName, ev.AudioParams, false);
-        if (stream != null)
-            stream.NetIdentifier = ev.Identifier;
-    }
-
-    private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
-    {
-        var coords = GetCoordinates(ev.Coordinates);
-        var fallback = GetCoordinates(ev.FallbackCoordinates);
-
-        var stream = (PlayingStream?) Play(ev.FileName, coords, fallback, ev.AudioParams, false);
-        if (stream != null)
-            stream.NetIdentifier = ev.Identifier;
-    }
-
-    private void StopAudioMessageHandler(StopAudioMessageClient ev)
-    {
-        var stream = _playingClydeStreams.Find(p => p.NetIdentifier == ev.Identifier);
-        if (stream == null)
-            return;
-
-        stream.Done = true;
-        stream.Source.Dispose();
-        _playingClydeStreams.Remove(stream);
-    }
-    #endregion
-
     public override void FrameUpdate(float frameTime)
     {
-        var xforms = GetEntityQuery<TransformComponent>();
-        var physics = GetEntityQuery<PhysicsComponent>();
         var ourPos = _eyeManager.CurrentEye.Position;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 
+        var query = AllEntityQuery<AudioComponent>();
+
+        while (query.MoveNext(out var comp))
+        {
+            _streams.Add(comp);
+        }
+
         try
         {
-            Parallel.ForEach(_playingClydeStreams, opts, (stream) => ProcessStream(stream, ourPos, xforms, physics));
+            Parallel.ForEach(_streams, opts, comp => ProcessStream((PlayingStream) comp.Stream, ourPos));
         }
         catch (Exception e)
         {
@@ -137,23 +106,20 @@ public sealed class AudioSystem : SharedAudioSystem
         }
         finally
         {
-
-            for (var i = _playingClydeStreams.Count - 1; i >= 0; i--)
+            for (var i = _streams.Count - 1; i >= 0; i--)
             {
-                var stream = _playingClydeStreams[i];
+                var comp = _streams[i];
+                var stream = (PlayingStream) comp.Stream;
+
                 if (stream.Done)
                 {
-                    stream.Source.Dispose();
-                    _playingClydeStreams.RemoveSwap(i);
+                    QueueDel(comp.Owner);
                 }
             }
         }
     }
 
-    private void ProcessStream(PlayingStream stream,
-        MapCoordinates listener,
-        EntityQuery<TransformComponent> xforms,
-        EntityQuery<PhysicsComponent> physics)
+    private void ProcessStream(PlayingStream stream, MapCoordinates listener)
     {
         if (!stream.Source.IsPlaying)
         {
@@ -175,7 +141,7 @@ public sealed class AudioSystem : SharedAudioSystem
             || stream.TrackingFallbackCoordinates != null);
 
         // Get audio Position
-        if (!TryGetStreamPosition(stream, xforms, out var mapPos)
+        if (!TryGetStreamPosition(stream, out var mapPos)
             || mapPos == MapCoordinates.Nullspace
             || mapPos.Value.MapId != listener.MapId)
         {
@@ -186,6 +152,7 @@ public sealed class AudioSystem : SharedAudioSystem
         // Max distance check
         var delta = mapPos.Value.Position - listener.Position;
         var distance = delta.Length();
+
         if (distance > stream.MaxDistance)
         {
             stream.Source.SetVolumeDirect(0);
@@ -193,17 +160,11 @@ public sealed class AudioSystem : SharedAudioSystem
         }
 
         // Update audio occlusion
-        float occlusion = 0;
-        if (distance > 0.1)
-        {
-            var rayLength = MathF.Min(distance, _maxRayLength);
-            var ray = new CollisionRay(listener.Position, delta/distance, OcclusionCollisionMask);
-            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, rayLength, stream.TrackingEntity);
-        }
+        var occlusion = GetOcclusion(stream, listener, delta, distance);
         stream.Source.SetOcclusion(occlusion);
 
         // Update attenuation dependent volume.
-        UpdatePositionalVolume(stream, distance);
+        stream.Source.SetVolumeDirect(GetPositionalVolume(stream, distance));
 
         // Update audio positions.
         var audioPos = stream.Attenuation != Attenuation.NoAttenuation ? mapPos.Value : listener;
@@ -215,16 +176,30 @@ public sealed class AudioSystem : SharedAudioSystem
         }
 
         // Make race cars go NYYEEOOOOOMMMMM
-        if (stream.TrackingEntity != null && physics.TryGetComponent(stream.TrackingEntity, out var physicsComp))
+        if (stream.TrackingEntity != null && _physicsQuery.TryGetComponent(stream.TrackingEntity, out var physicsComp))
         {
             // This actually gets the tracked entity's xform & iterates up though the parents for the second time. Bit
             // inefficient.
-            var velocity = _physics.GetMapLinearVelocity(stream.TrackingEntity.Value, physicsComp, null, xforms, physics);
+            var velocity = _physics.GetMapLinearVelocity(stream.TrackingEntity.Value, physicsComp, null, _xformQuery, _physicsQuery);
             stream.Source.SetVelocity(velocity);
         }
     }
 
-    private void UpdatePositionalVolume(PlayingStream stream, float distance)
+    internal float GetOcclusion(PlayingStream stream, MapCoordinates listener, Vector2 delta, float distance)
+    {
+        float occlusion = 0;
+
+        if (distance > 0.1)
+        {
+            var rayLength = MathF.Min(distance, _maxRayLength);
+            var ray = new CollisionRay(listener.Position, delta / distance, OcclusionCollisionMask);
+            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, rayLength, stream.TrackingEntity);
+        }
+
+        return occlusion;
+    }
+
+    internal float GetPositionalVolume(PlayingStream stream, float distance)
     {
         // OpenAL also limits the distance to <= AL_MAX_DISTANCE, but since we cull
         // sources that are further away than stream.MaxDistance, we don't do that.
@@ -265,10 +240,10 @@ public sealed class AudioSystem : SharedAudioSystem
 
         var volume = MathF.Pow(10, stream.Volume / 10);
         var actualGain = MathF.Max(0f, volume * gain);
-        stream.Source.SetVolumeDirect(actualGain);
+        return actualGain;
     }
 
-    private bool TryGetStreamPosition(PlayingStream stream, EntityQuery<TransformComponent> xformQuery, [NotNullWhen(true)] out MapCoordinates? mapPos)
+    private bool TryGetStreamPosition(PlayingStream stream, [NotNullWhen(true)] out MapCoordinates? mapPos)
     {
         if (stream.TrackingCoordinates != null)
         {
@@ -277,10 +252,10 @@ public sealed class AudioSystem : SharedAudioSystem
                 return true;
         }
 
-        if (xformQuery.TryGetComponent(stream.TrackingEntity, out var xform)
+        if (_xformQuery.TryGetComponent(stream.TrackingEntity, out var xform)
             && xform.MapID != MapId.Nullspace)
         {
-            mapPos = new MapCoordinates(_xformSys.GetWorldPosition(xform, xformQuery), xform.MapID);
+            mapPos = new MapCoordinates(_xformSys.GetWorldPosition(xform), xform.MapID);
             return true;
         }
 
@@ -331,6 +306,7 @@ public sealed class AudioSystem : SharedAudioSystem
             RolloffFactor = audioParams?.RolloffFactor ?? 1f,
             Volume = audioParams?.Volume ?? 0
         };
+
         _playingClydeStreams.Add(playing);
         return playing;
     }
@@ -520,54 +496,6 @@ public sealed class AudioSystem : SharedAudioSystem
         source.SetPlaybackPosition(offset);
     }
 
-    public sealed class PlayingStream : IPlayingAudioStream
-    {
-        public uint? NetIdentifier;
-        public IClydeAudioSource Source = default!;
-        public EntityUid? TrackingEntity;
-        public EntityCoordinates? TrackingCoordinates;
-        public EntityCoordinates? TrackingFallbackCoordinates;
-        public bool Done;
-
-        public float Volume
-        {
-            get => _volume;
-            set
-            {
-                _volume = value;
-                Source.SetVolume(value);
-            }
-        }
-
-        private float _volume;
-
-        public float MaxDistance;
-        public float ReferenceDistance;
-        public float RolloffFactor;
-
-        public Attenuation Attenuation
-        {
-            get => _attenuation;
-            set
-            {
-                if (value == _attenuation) return;
-                _attenuation = value;
-                if (_attenuation != Attenuation.Default)
-                {
-                    // Need to disable default attenuation when using a custom one
-                    // Damn Sloth wanting linear ambience sounds so they smoothly cut-off and are short-range
-                    Source.SetRolloffFactor(0f);
-                }
-            }
-        }
-        private Attenuation _attenuation = Attenuation.Default;
-
-        public void Stop()
-        {
-            Source.StopPlaying();
-        }
-    }
-
     /// <inheritdoc />
     public override IPlayingAudioStream? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
@@ -620,5 +548,49 @@ public sealed class AudioSystem : SharedAudioSystem
     public override IPlayingAudioStream? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
+    }
+}
+
+public sealed class PlayingStream : IPlayingAudioStream
+{
+    public IClydeAudioSource Source = default!;
+    public bool Done;
+
+    public float Volume
+    {
+        get => _volume;
+        set
+        {
+            _volume = value;
+            Source.SetVolume(value);
+        }
+    }
+
+    private float _volume;
+
+    public float MaxDistance;
+    public float ReferenceDistance;
+    public float RolloffFactor;
+
+    public Attenuation Attenuation
+    {
+        get => _attenuation;
+        set
+        {
+            if (value == _attenuation) return;
+            _attenuation = value;
+            if (_attenuation != Attenuation.Default)
+            {
+                // Need to disable default attenuation when using a custom one
+                // Damn Sloth wanting linear ambience sounds so they smoothly cut-off and are short-range
+                Source.SetRolloffFactor(0f);
+            }
+        }
+    }
+    private Attenuation _attenuation = Attenuation.Default;
+
+    public void Stop()
+    {
+        Source.StopPlaying();
     }
 }

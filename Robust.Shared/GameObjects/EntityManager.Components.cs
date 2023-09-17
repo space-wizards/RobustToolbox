@@ -611,11 +611,10 @@ namespace Robust.Shared.GameObjects
             {
                 metadata ??= MetaQuery.GetComponent(entityUid);
                 var netSet = metadata.NetComponents;
-                netSet.Remove(reg.NetID.Value);
 
-                // Okay so if you put the .Remove in the if here then you get a heisenbug where very occasionally
-                // a PVS assert may or may not get tripped so you should be sure that's fixed first.
-                // The easiest way to find the assert is just never have DirtyEntity called.
+                if (!netSet.Remove(reg.NetID.Value))
+                    _sawmill.Error($"Entity {ToPrettyString(entityUid, metadata)} did not have {component.GetType().Name} in it's networked component dictionary during component deletion.");
+
                 if (component.NetSyncEnabled)
                     DirtyEntity(entityUid, metadata);
             }

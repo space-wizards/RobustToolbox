@@ -187,6 +187,12 @@ internal abstract partial class SharedReplayRecordingManager
         }
     }
 
+    public bool IsWriting()
+    {
+        UpdateWriteTasks();
+        return _finalizingWriteTasks.Count > 0;
+    }
+
     public Task WaitWriteTasks()
     {
         if (IsRecording)

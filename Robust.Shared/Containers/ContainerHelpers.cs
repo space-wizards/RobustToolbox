@@ -54,7 +54,7 @@ namespace Robust.Shared.Containers
         /// <param name="container">The container that this entity is inside of.</param>
         /// <returns>If a container was found.</returns>
         [Obsolete("Use ContainerSystem.TryGetContainingContainer() instead")]
-        public static bool TryGetContainer(this EntityUid entity, [NotNullWhen(true)] out IContainer? container, IEntityManager? entMan = null)
+        public static bool TryGetContainer(this EntityUid entity, [NotNullWhen(true)] out BaseContainer? container, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
             DebugTools.Assert(entMan.EntityExists(entity));
@@ -100,7 +100,7 @@ namespace Robust.Shared.Containers
         /// <see cref="SharedContainerSystem.EmptyContainer"/>
         /// </summary>
         [Obsolete("Use SharedContainerSystem.EmptyContainer() instead")]
-        public static void EmptyContainer(this IContainer container, bool force = false, EntityCoordinates? moveTo = null,
+        public static void EmptyContainer(this BaseContainer container, bool force = false, EntityCoordinates? moveTo = null,
             bool attachToGridOrMap = false, IEntityManager? entMan = null)
         {
             IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>()
@@ -112,7 +112,7 @@ namespace Robust.Shared.Containers
         /// <see cref="SharedContainerSystem.CleanContainer"/>
         /// </summary>
         [Obsolete("Use SharedContainerSystem.CleanContainer() instead")]
-        public static void CleanContainer(this IContainer container, IEntityManager? entMan = null)
+        public static void CleanContainer(this BaseContainer container, IEntityManager? entMan = null)
         {
             IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>()
                 .CleanContainer(container);
@@ -147,10 +147,10 @@ namespace Robust.Shared.Containers
         /// <param name="containerId"></param>
         /// <returns>The new container.</returns>
         /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
-        /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
+        /// <seealso cref="BaseContainerManager.MakeContainer{T}(string)" />
         [Obsolete("Use ContainerSystem.MakeContainer() instead")]
         public static T CreateContainer<T>(this EntityUid entity, string containerId, IEntityManager? entMan = null)
-            where T : IContainer
+            where T : BaseContainer
         {
             IoCManager.Resolve(ref entMan);
             var containermanager = entMan.EnsureComponent<ContainerManagerComponent>(entity);
@@ -159,7 +159,7 @@ namespace Robust.Shared.Containers
 
         [Obsolete("Use ContainerSystem.EnsureContainer() instead")]
         public static T EnsureContainer<T>(this EntityUid entity, string containerId, IEntityManager? entMan = null)
-            where T : IContainer
+            where T : BaseContainer
         {
             IoCManager.Resolve(ref entMan);
             return EnsureContainer<T>(entity, containerId, out _, entMan);
@@ -167,7 +167,7 @@ namespace Robust.Shared.Containers
 
         [Obsolete("Use ContainerSystem.EnsureContainer() instead")]
         public static T EnsureContainer<T>(this EntityUid entity, string containerId, out bool alreadyExisted, IEntityManager? entMan = null)
-            where T : IContainer
+            where T : BaseContainer
         {
             IoCManager.Resolve(ref entMan);
             var containerManager = entMan.EnsureComponent<ContainerManagerComponent>(entity);

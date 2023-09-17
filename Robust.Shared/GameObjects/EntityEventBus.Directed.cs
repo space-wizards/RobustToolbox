@@ -116,7 +116,6 @@ namespace Robust.Shared.GameObjects
 
             // Dynamic handling of components is only for RobustUnitTest compatibility spaghetti.
             _comFac.ComponentAdded += ComFacOnComponentAdded;
-            _comFac.ComponentReferenceAdded += ComFacOnComponentReferenceAdded;
 
             InitEntSubscriptionsArray();
         }
@@ -310,11 +309,6 @@ namespace Robust.Shared.GameObjects
             EntUnsubscribe(CompIdx.Index<TComp>(), typeof(TEvent));
         }
 
-        private void ComFacOnComponentReferenceAdded(ComponentRegistration arg1, CompIdx arg2)
-        {
-            CompIdx.RefArray(ref _entSubscriptions, arg2) ??= new Dictionary<Type, DirectedRegistration>();
-        }
-
         private void ComFacOnComponentAdded(ComponentRegistration obj)
         {
             CompIdx.RefArray(ref _entSubscriptions, obj.Idx) ??= new Dictionary<Type, DirectedRegistration>();
@@ -427,40 +421,35 @@ namespace Robust.Shared.GameObjects
         private void EntAddComponent(EntityUid euid, CompIdx compType)
         {
             var eventTable = _entEventTables[euid];
+            var compSubs = _entSubscriptions[compType.Value]!;
 
-            var enumerator = EntGetReferences(compType);
-            while (enumerator.MoveNext(out var type))
+            foreach (var evType in compSubs.Keys)
             {
-                var compSubs = _entSubscriptions[type.Value]!;
+                // Skip adding this to significantly reduce memory use and GC noise on entity create.
+                if (_eventData[evType].ComponentEvent)
+                    continue;
 
-                foreach (var (evType, _) in compSubs)
-                {
-                    // Skip adding this to significantly reduce memory use and GC noise on entity create.
-                    if (_eventData[evType].ComponentEvent)
-                        continue;
+                if (eventTable.Free < 0)
+                    GrowEventTable(eventTable);
 
-                    if (eventTable.Free < 0)
-                        GrowEventTable(eventTable);
+                DebugTools.Assert(eventTable.Free >= 0);
 
-                    DebugTools.Assert(eventTable.Free >= 0);
+                ref var eventStartIdx = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                    eventTable.EventIndices,
+                    evType,
+                    out var exists);
 
-                    ref var eventStartIdx = ref CollectionsMarshal.GetValueRefOrAddDefault(
-                        eventTable.EventIndices,
-                        evType,
-                        out var exists);
+                // Allocate linked list entry by popping free list.
+                var entryIdx = eventTable.Free;
+                ref var entry = ref eventTable.ComponentLists[entryIdx];
+                eventTable.Free = entry.Next;
 
-                    // Allocate linked list entry by popping free list.
-                    var entryIdx = eventTable.Free;
-                    ref var entry = ref eventTable.ComponentLists[entryIdx];
-                    eventTable.Free = entry.Next;
+                // Set it up
+                entry.Component = compType;
+                entry.Next = exists ? eventStartIdx : -1;
 
-                    // Set it up
-                    entry.Component = type;
-                    entry.Next = exists ? eventStartIdx : -1;
-
-                    // Assign new list entry to EventIndices dictionary.
-                    eventStartIdx = entryIdx;
-                }
+                // Assign new list entry to EventIndices dictionary.
+                eventStartIdx = entryIdx;
             }
         }
 
@@ -493,51 +482,46 @@ namespace Robust.Shared.GameObjects
         private void EntRemoveComponent(EntityUid euid, CompIdx compType)
         {
             var eventTable = _entEventTables[euid];
+            var compSubs = _entSubscriptions[compType.Value]!;
 
-            var enumerator = EntGetReferences(compType);
-            while (enumerator.MoveNext(out var type))
+            foreach (var evType in compSubs.Keys)
             {
-                var compSubs = _entSubscriptions[type.Value]!;
+                ref var dictIdx = ref CollectionsMarshal.GetValueRefOrNullRef(eventTable.EventIndices, evType);
+                if (Unsafe.IsNullRef(ref dictIdx))
+                    continue;
 
-                foreach (var (evType, _) in compSubs)
+                ref var updateNext = ref dictIdx;
+
+                // Go over linked list to find index of component.
+                var entryIdx = dictIdx;
+                ref var entry = ref Unsafe.NullRef<EventTableListEntry>();
+                while (true)
                 {
-                    ref var dictIdx = ref CollectionsMarshal.GetValueRefOrNullRef(eventTable.EventIndices, evType);
-                    if (Unsafe.IsNullRef(ref dictIdx))
-                        continue;
-
-                    ref var updateNext = ref dictIdx;
-
-                    // Go over linked list to find index of component.
-                    var entryIdx = dictIdx;
-                    ref var entry = ref Unsafe.NullRef<EventTableListEntry>();
-                    while (true)
+                    entry = ref eventTable.ComponentLists[entryIdx];
+                    if (entry.Component == compType)
                     {
-                        entry = ref eventTable.ComponentLists[entryIdx];
-                        if (entry.Component == type)
-                        {
-                            // Found
-                            break;
-                        }
-
-                        entryIdx = entry.Next;
-                        updateNext = ref entry.Next;
+                        // Found
+                        break;
                     }
 
-                    if (entry.Next == -1 && Unsafe.AreSame(ref dictIdx, ref updateNext))
-                    {
-                        // Last entry for this event type, remove from dict.
-                        eventTable.EventIndices.Remove(evType);
-                    }
-                    else
-                    {
-                        // Rewrite previous index to point to next in chain.
-                        updateNext = entry.Next;
-                    }
-
-                    // Push entry back onto free list.
-                    entry.Next = eventTable.Free;
-                    eventTable.Free = entryIdx;
+                    entryIdx = entry.Next;
+                    updateNext = ref entry.Next;
                 }
+
+                if (entry.Next == -1 && Unsafe.AreSame(ref dictIdx, ref updateNext))
+                {
+                    // Last entry for this event type, remove from dict.
+                    eventTable.EventIndices.Remove(evType);
+                }
+                else
+                {
+                    // Rewrite previous index to point to next in chain.
+                    updateNext = entry.Next;
+                }
+
+                // Push entry back onto free list.
+                entry.Next = eventTable.Free;
+                eventTable.Free = entryIdx;
             }
         }
 
@@ -548,6 +532,9 @@ namespace Robust.Shared.GameObjects
 
             while (enumerator.MoveNext(out var component, out var reg))
             {
+                if (component.Deleted)
+                    continue;
+
                 if (reg.ReferenceEvent != dispatchByReference)
                     ThrowByRefMisMatch();
 
@@ -569,7 +556,11 @@ namespace Robust.Shared.GameObjects
                 if (reg.ReferenceEvent != byRef)
                     ThrowByRefMisMatch();
 
-                found.Add(new OrderedEventDispatch((ref Unit ev) => reg.Handler(euid, component, ref ev), reg.Order));
+                found.Add(new OrderedEventDispatch((ref Unit ev) =>
+                {
+                    if (!component.Deleted)
+                        reg.Handler(euid, component, ref ev);
+                    }, reg.Order));
             }
         }
 
@@ -581,27 +572,15 @@ namespace Robust.Shared.GameObjects
             bool dispatchByReference)
             where TEvent : notnull
         {
-            var enumerator = EntGetReferences(baseType);
-            while (enumerator.MoveNext(out var type))
-            {
-                var compSubs = _entSubscriptions[type.Value]!;
+            var compSubs = _entSubscriptions[baseType.Value]!;
 
-                if (!compSubs.TryGetValue(typeof(TEvent), out var reg))
-                    continue;
+            if (!compSubs.TryGetValue(typeof(TEvent), out var reg))
+                return;
 
-                if (reg.ReferenceEvent != dispatchByReference)
-                    ThrowByRefMisMatch();
+            if (reg.ReferenceEvent != dispatchByReference)
+                ThrowByRefMisMatch();
 
-                reg.Handler(euid, component, ref args);
-            }
-        }
-
-        /// <summary>
-        ///     Enumerates the type's component references, returning the type itself last.
-        /// </summary>
-        private ReferencesEnumerator EntGetReferences(CompIdx type)
-        {
-            return new(type, _comFac.GetRegistration(type).References);
+            reg.Handler(euid, component, ref args);
         }
 
         /// <summary>
@@ -645,7 +624,6 @@ namespace Robust.Shared.GameObjects
         public void Dispose()
         {
             _comFac.ComponentAdded -= ComFacOnComponentAdded;
-            _comFac.ComponentReferenceAdded -= ComFacOnComponentReferenceAdded;
 
             // punishment for use-after-free
             _entMan = null!;
@@ -653,43 +631,6 @@ namespace Robust.Shared.GameObjects
             _entEventTables = null!;
             _entSubscriptions = null!;
             _entSubscriptionsInv = null!;
-        }
-
-        private struct ReferencesEnumerator
-        {
-            private readonly CompIdx _baseType;
-            private readonly ValueList<CompIdx> _list;
-            private readonly int _totalLength;
-            private int _idx;
-
-            public ReferencesEnumerator(CompIdx baseType, ValueList<CompIdx> list)
-            {
-                _baseType = baseType;
-                _list = list;
-                _totalLength = list.Count;
-                _idx = 0;
-            }
-
-            public bool MoveNext(out CompIdx type)
-            {
-                if (_idx >= _totalLength)
-                {
-                    if (_idx++ == _totalLength)
-                    {
-                        type = _baseType;
-                        return true;
-                    }
-
-                    type = default;
-                    return false;
-                }
-
-                type = _list[_idx++];
-                if (type == _baseType)
-                    return MoveNext(out type);
-
-                return true;
-            }
         }
 
         private struct SubscriptionsEnumerator
@@ -740,7 +681,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                component = _entityManager.GetComponent(_uid, compType);
+                component = _entityManager.GetComponentInternal(_uid, compType);
                 return true;
             }
         }

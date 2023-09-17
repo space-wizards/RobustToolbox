@@ -210,7 +210,7 @@ namespace Robust.Server.Player
         {
             PlayerState.Status = Status;
             PlayerState.Name = Name;
-            PlayerState.ControlledEntity = AttachedEntity;
+            PlayerState.ControlledEntity = IoCManager.Resolve<IEntityManager>().GetNetEntity(AttachedEntity);
 
             _playerManager.Dirty();
         }

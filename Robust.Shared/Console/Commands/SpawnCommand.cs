@@ -32,8 +32,8 @@ public sealed class SpawnCommand : LocalizedCommands
         }
         else if (args.Length == 2)
         {
-            var uid = EntityUid.Parse(args[1]);
-            var entityCoordinates = _entityManager.GetComponent<TransformComponent>(uid).Coordinates;
+            var uidNet = NetEntity.Parse(args[1]);
+            var entityCoordinates = _entityManager.GetComponent<TransformComponent>(_entityManager.GetEntity(uidNet)).Coordinates;
             var createdEntity = _entityManager.SpawnEntity(args[0], entityCoordinates);
             placementEv = new PlacementEntityEvent(createdEntity, entityCoordinates, PlacementEventAction.Create, shell.Player?.UserId);
         }

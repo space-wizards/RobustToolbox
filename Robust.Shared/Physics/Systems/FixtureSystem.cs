@@ -98,7 +98,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             manager.Fixtures.Add(fixtureId, fixture);
-            fixture.Body = body;
+            fixture.Owner = uid;
 
             if (body.CanCollide && Resolve(uid, ref xform))
             {
@@ -213,9 +213,7 @@ namespace Robust.Shared.Physics.Systems
                         throw new InvalidOperationException($"Tried to setup fixture on init for {ToPrettyString(uid)} with no ID!");
                     }
 
-#pragma warning disable CS0618
-                    fixture.Body = body;
-#pragma warning restore CS0618
+                    fixture.Owner = uid;
                 }
 
                 // Make sure all the right stuff is set on the body
@@ -240,14 +238,9 @@ namespace Robust.Shared.Physics.Systems
                 Log.Error($"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;
             }
-
-            // State handling funnies, someday we'll remove fixture.Body and it won't matter
-            // Alternatively if this is necessary just add it to FixtureSerializer.
-            foreach (var (id, fixture) in component.Fixtures)
+            foreach (var fixture in component.Fixtures.Values)
             {
-#pragma warning disable CS0618
-                fixture.Body = physics;
-#pragma warning restore CS0618
+                fixture.Owner = uid;
             }
 
             var toAddFixtures = new ValueList<(string Id, Fixture Fixture)>();
@@ -261,10 +254,8 @@ namespace Robust.Shared.Physics.Systems
             {
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
-#pragma warning disable CS0618
-                newFixture.Body = physics;
-#pragma warning restore CS0618
                 newFixtures.Add(id, newFixture);
+                newFixture.Owner = uid;
             }
 
             TransformComponent? xform = null;

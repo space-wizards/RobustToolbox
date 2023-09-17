@@ -879,7 +879,7 @@ public sealed class MapLoaderSystem : EntitySystem
             return;
         }
 
-        foreach (var (netId, component) in EntityManager.GetNetComponents(entity))
+        foreach (var component in metadata.NetComponents.Values)
         {
             var compName = _factory.GetComponentName(component.GetType());
 

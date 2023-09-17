@@ -73,7 +73,6 @@ namespace Robust.Client.Player
             ControlledEntity = entity;
             InternalSession.AttachedEntity = entity;
 
-
             if (!entMan.TryGetComponent<EyeComponent?>(entity, out var eye))
             {
                 eye = entMan.AddComponent<EyeComponent>(entity);
@@ -84,7 +83,6 @@ namespace Robust.Client.Player
                 }
                 eye.NetSyncEnabled = false;
             }
-            eye.Current = true;
 
             EntityAttached?.Invoke(new EntityAttachedEventArgs(entity));
 
@@ -101,12 +99,6 @@ namespace Robust.Client.Player
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
             var previous = ControlledEntity;
-            if (entMan.TryGetComponent(previous, out MetaDataComponent? metaData) &&
-                metaData.EntityInitialized &&
-                !metaData.EntityDeleted)
-            {
-                entMan.GetComponent<EyeComponent>(previous.Value).Current = false;
-            }
 
             ControlledEntity = null;
             InternalSession.AttachedEntity = null;

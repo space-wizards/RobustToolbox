@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Maths;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {

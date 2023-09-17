@@ -54,9 +54,11 @@ public enum LookupFlags : byte
     /// </summary>
     Sensors = 1 << 6,
 
-    Uncontained = Dynamic | Static | Sundries,
+    Uncontained = Dynamic | Static | Sundries | Sensors,
 
     StaticSundries = Static | Sundries,
+
+    All = Contained | Dynamic | Static | Sundries | Sensors
 }
 
 /// <summary>
@@ -90,7 +92,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     /// <summary>
     /// Returns all non-grid entities. Consider using your own flags if you wish for a faster query.
     /// </summary>
-    public const LookupFlags DefaultFlags = LookupFlags.Contained | LookupFlags.Dynamic | LookupFlags.Static | LookupFlags.Sundries;
+    public const LookupFlags DefaultFlags = LookupFlags.All;
 
     public override void Initialize()
     {

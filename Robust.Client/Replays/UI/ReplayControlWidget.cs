@@ -63,10 +63,8 @@ public sealed partial class ReplayControlWidget : UIWidget // AKA Tardis - The f
         base.FrameUpdate(args);
         if (_playback.Replay is not { } replay)
         {
-            Visible = false;
             return;
         }
-        Visible = true;
 
         TickSlider.MinValue = 0;
         TickSlider.MaxValue = (float)replay.ReplayTime[^1].TotalSeconds;

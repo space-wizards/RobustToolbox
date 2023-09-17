@@ -281,7 +281,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
-        public readonly EntityUid ParentID;
+        public readonly NetEntity ParentID;
 
         /// <summary>
         ///     Current position offset of the entity.
@@ -310,7 +310,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="rotation">Current direction offset of this entity.</param>
         /// <param name="parentId">Current parent transform of this entity.</param>
         /// <param name="noLocalRotation"></param>
-        public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId, bool noLocalRotation, bool anchored)
+        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored)
         {
             LocalPosition = localPosition;
             Rotation = rotation;

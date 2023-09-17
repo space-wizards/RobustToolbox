@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Threading;
 using Robust.Client.Graphics;
+using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;

@@ -8,6 +8,7 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
@@ -64,6 +65,19 @@ namespace Robust.Shared.GameObjects
         internal EntityPrototype? _entityPrototype;
 
         /// <summary>
+        /// The components attached to the entity that are currently networked.
+        /// </summary>
+        [ViewVariables]
+        internal readonly Dictionary<ushort, Component> NetComponents = new();
+
+        /// <summary>
+        /// Network identifier for this entity.
+        /// </summary>
+        [ViewVariables]
+        [Access(typeof(EntityManager), Other = AccessPermissions.ReadExecute)]
+        public NetEntity NetEntity { get; internal set; } = NetEntity.Invalid;
+
+        /// <summary>
         /// When this entity was paused, if applicable. Note that this is the actual time, not the duration which gets
         /// returned by <see cref="MetaDataSystem.GetPauseTime"/>.
         /// </summary>
@@ -80,7 +94,8 @@ namespace Robust.Shared.GameObjects
         public GameTick LastStateApplied { get; internal set; } = GameTick.Zero;
 
         /// <summary>
-        ///     This is the most recent tick at which some component was removed from this entity.
+        ///     This is the most recent tick at which a networked component was removed from this entity.
+        ///     Currently only reliable server-side, client side prediction may cause the value to be wrong.
         /// </summary>
         [ViewVariables]
         public GameTick LastComponentRemoved { get; internal set; } = GameTick.Zero;

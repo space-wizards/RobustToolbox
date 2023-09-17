@@ -1,5 +1,7 @@
 ﻿using Robust.Client.Graphics;
 using Robust.Client.Utility;
+using Robust.Shared.Graphics;
+using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -21,7 +23,7 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public TextureRect DisplayRect { get; }
 
-        public RSI.State.Direction RsiDirection { get; } = RSI.State.Direction.South;
+        public RsiDirection RsiDirection { get; } = RsiDirection.South;
 
         public AnimatedTextureRect()
         {

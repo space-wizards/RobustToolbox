@@ -1,13 +1,12 @@
-using JetBrains.Annotations;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using System;
+using UserInterfaceComponent = Robust.Shared.GameObjects.UserInterfaceComponent;
 
 namespace Robust.Client.GameObjects
 {
-    [UsedImplicitly]
     public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
     {
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
@@ -19,41 +18,22 @@ namespace Robust.Client.GameObjects
             base.Initialize();
 
             SubscribeNetworkEvent<BoundUIWrapMessage>(MessageReceived);
-            SubscribeLocalEvent<ClientUserInterfaceComponent, ComponentInit>(OnUserInterfaceInit);
-            SubscribeLocalEvent<ClientUserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
-        }
-
-        private void OnUserInterfaceInit(EntityUid uid, ClientUserInterfaceComponent component, ComponentInit args)
-        {
-            component._interfaces.Clear();
-
-            foreach (var data in component._interfaceData)
-            {
-                component._interfaces[data.UiKey] = data;
-            }
-        }
-
-        private void OnUserInterfaceShutdown(EntityUid uid, ClientUserInterfaceComponent component, ComponentShutdown args)
-        {
-            foreach (var bui in component.OpenInterfaces.Values)
-            {
-                bui.Dispose();
-            }
         }
 
         private void MessageReceived(BoundUIWrapMessage ev)
         {
-            var uid = ev.Entity;
-            if (!TryComp<ClientUserInterfaceComponent>(uid, out var cmp))
+            var uid = GetEntity(ev.Entity);
+
+            if (!TryComp<UserInterfaceComponent>(uid, out var cmp))
                 return;
 
             var uiKey = ev.UiKey;
             var message = ev.Message;
             // This should probably not happen at this point, but better make extra sure!
-            if(_playerManager.LocalPlayer != null)
+            if (_playerManager.LocalPlayer != null)
                 message.Session = _playerManager.LocalPlayer.Session;
 
-            message.Entity = uid;
+            message.Entity = GetNetEntity(uid);
             message.UiKey = uiKey;
 
             // Raise as object so the correct type is used.
@@ -66,7 +46,7 @@ namespace Robust.Client.GameObjects
                     break;
 
                 case CloseBoundInterfaceMessage _:
-                    TryCloseUi(uid, uiKey, remoteCall: true, uiComp: cmp);
+                    TryCloseUi(message.Session, uid, uiKey, remoteCall: true, uiComp: cmp);
                     break;
 
                 default:
@@ -77,7 +57,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private bool TryOpenUi(EntityUid uid, Enum uiKey, ClientUserInterfaceComponent? uiComp = null)
+        private bool TryOpenUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? uiComp = null)
         {
             if (!Resolve(uid, ref uiComp))
                 return false;
@@ -85,7 +65,7 @@ namespace Robust.Client.GameObjects
             if (uiComp.OpenInterfaces.ContainsKey(uiKey))
                 return false;
 
-            var data = uiComp._interfaces[uiKey];
+            var data = uiComp.MappedInterfaceData[uiKey];
 
             // TODO: This type should be cached, but I'm too lazy.
             var type = _reflectionManager.LooseGetType(data.ClientType);
@@ -96,36 +76,13 @@ namespace Robust.Client.GameObjects
             uiComp.OpenInterfaces[uiKey] = boundInterface;
 
             var playerSession = _playerManager.LocalPlayer?.Session;
-            if(playerSession != null)
+            if (playerSession != null)
+            {
+                uiComp.Interfaces[uiKey]._subscribedSessions.Add(playerSession);
                 RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, uid, playerSession), true);
+            }
 
             return true;
-        }
-
-        internal bool TryCloseUi(EntityUid uid, Enum uiKey, bool remoteCall = false, ClientUserInterfaceComponent? uiComp = null)
-        {
-            if (!Resolve(uid, ref uiComp))
-                return false;
-
-            if (!uiComp.OpenInterfaces.TryGetValue(uiKey, out var boundUserInterface))
-                return false;
-
-            if (!remoteCall)
-                SendUiMessage(boundUserInterface, new CloseBoundInterfaceMessage());
-
-            uiComp.OpenInterfaces.Remove(uiKey);
-            boundUserInterface.Dispose();
-
-            var playerSession = _playerManager.LocalPlayer?.Session;
-            if(playerSession != null)
-                RaiseLocalEvent(uid, new BoundUIClosedEvent(uiKey, uid, playerSession), true);
-
-            return true;
-        }
-
-        internal void SendUiMessage(BoundUserInterface bui, BoundUserInterfaceMessage msg)
-        {
-            RaiseNetworkEvent(new BoundUIWrapMessage(bui.Owner, msg, bui.UiKey));
         }
     }
 }

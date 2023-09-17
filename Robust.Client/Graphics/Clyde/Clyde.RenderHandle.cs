@@ -5,6 +5,7 @@ using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared.Graphics;
 
 namespace Robust.Client.Graphics.Clyde
 {

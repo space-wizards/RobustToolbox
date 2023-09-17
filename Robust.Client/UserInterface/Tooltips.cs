@@ -38,20 +38,22 @@ namespace Robust.Client.UserInterface
         /// <param name="tooltip">control to position (current size will be used to determine bounds)</param>
         public static void PositionTooltip(Vector2 screenBounds, Vector2 screenPosition, Control tooltip)
         {
-            LayoutContainer.SetPosition(tooltip, screenPosition);
-
             tooltip.Measure(Vector2Helpers.Infinity);
             var combinedMinSize = tooltip.DesiredSize;
-            var (right, bottom) = tooltip.Position + combinedMinSize;
+
+            LayoutContainer.SetPosition(tooltip, new Vector2(screenPosition.X, screenPosition.Y - combinedMinSize.Y));
+
+            var right = tooltip.Position.X + combinedMinSize.X;
+            var top = tooltip.Position.Y;
 
             if (right > screenBounds.X)
             {
                 LayoutContainer.SetPosition(tooltip, new(screenPosition.X - combinedMinSize.X, tooltip.Position.Y));
             }
 
-            if (bottom > screenBounds.Y)
+            if (top < 0f)
             {
-                LayoutContainer.SetPosition(tooltip, new(tooltip.Position.X, screenPosition.Y - combinedMinSize.Y));
+                LayoutContainer.SetPosition(tooltip, new(tooltip.Position.X, 0f));
             }
         }
     }

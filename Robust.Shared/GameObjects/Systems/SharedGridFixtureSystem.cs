@@ -152,7 +152,10 @@ namespace Robust.Shared.GameObjects
                     poly,
                     MapGridHelpers.CollisionGroup,
                     MapGridHelpers.CollisionGroup,
-                    true) { Body = body};
+                    true)
+                {
+                    Owner = uid
+                };
 #pragma warning restore CS0618
 
                 newFixtures.Add(($"grid_chunk-{bounds.Left}-{bounds.Bottom}", newFixture));
@@ -230,7 +233,7 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public sealed class ChunkSplitDebugMessage : EntityEventArgs
     {
-        public EntityUid Grid;
+        public NetEntity Grid;
         public Dictionary<Vector2i, List<List<Vector2i>>> Nodes = new ();
         public List<(Vector2 Start, Vector2 End)> Connections = new();
     }

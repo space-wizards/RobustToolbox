@@ -19,19 +19,19 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var entity))
+            if (!NetEntity.TryParse(args[0], out var entityNet))
             {
                 shell.WriteLine("Invalid entity UID.");
                 return;
             }
 
-            if (!_entityManager.EntityExists(entity))
+            if (!_entityManager.TryGetEntity(entityNet, out var entity) || !_entityManager.EntityExists(entity))
             {
                 shell.WriteLine("That entity does not exist.");
                 return;
             }
 
-            _entityManager.DeleteEntity(entity);
+            _entityManager.DeleteEntity(entity.Value);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Robust.Shared.GameStates
             uint lastInput,
             NetListAsArray<EntityState> entities,
             NetListAsArray<PlayerState> players,
-            NetListAsArray<EntityUid> deletions)
+            NetListAsArray<NetEntity> deletions)
         {
             FromSequence = fromSequence;
             ToSequence = toSequence;
@@ -43,6 +43,6 @@ namespace Robust.Shared.GameStates
 
         public readonly NetListAsArray<EntityState> EntityStates;
         public readonly NetListAsArray<PlayerState> PlayerStates;
-        public readonly NetListAsArray<EntityUid> EntityDeletions;
+        public readonly NetListAsArray<NetEntity> EntityDeletions;
     }
 }

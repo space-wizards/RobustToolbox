@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.Containers;
 using Robust.Shared.Containers;
@@ -8,6 +10,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -64,10 +68,6 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(() => manager.GetContainer("dummy3"), Throws.TypeOf<KeyNotFoundException>());
 
             entManager.DeleteEntity(entity);
-
-            Assert.That(manager.Deleted, Is.True);
-            Assert.That(container.Deleted, Is.True);
-            Assert.That(container2.Deleted, Is.True);
         }
 
         [Test]
@@ -172,7 +172,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
             Assert.That(container.Insert(entity), Is.False);
-            Assert.That(container.CanInsert(entity), Is.False);
+            Assert.That(containerSys.CanInsert(entity, container), Is.False);
         }
 
         [Test]
@@ -186,7 +186,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
             Assert.That(container.Insert(mapEnt), Is.False);
-            Assert.That(container.CanInsert(mapEnt), Is.False);
+            Assert.That(containerSys.CanInsert(mapEnt, container), Is.False);
         }
 
         [Test]
@@ -200,7 +200,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 
             Assert.That(container.Insert(grid), Is.False);
-            Assert.That(container.CanInsert(grid), Is.False);
+            Assert.That(containerSys.CanInsert(grid, container), Is.False);
         }
 
         [Test]
@@ -284,27 +284,25 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             Assert.That(state.Containers, Has.Count.EqualTo(1));
             var cont = state.Containers.Values.First();
-            Assert.That(cont.Id, Is.EqualTo("dummy"));
+            Assert.That(state.Containers.Keys.First(), Is.EqualTo("dummy"));
             Assert.That(cont.OccludesLight, Is.True);
             Assert.That(cont.ShowContents, Is.True);
-            Assert.That(cont.ContainedEntities.Length, Is.EqualTo(1));
-            Assert.That(cont.ContainedEntities[0], Is.EqualTo(childEnt));
+            Assert.That(cont.ContainedEntities.Count, Is.EqualTo(1));
+            Assert.That(cont.ContainedEntities[0], Is.EqualTo(entManager.GetNetEntity(childEnt)));
         }
 
+        [SerializedType(nameof(ContainerOnlyContainer))]
         private sealed partial class ContainerOnlyContainer : BaseContainer
         {
             /// <summary>
             /// The generic container class uses a list of entities
             /// </summary>
             private readonly List<EntityUid> _containerList = new();
-            private readonly List<EntityUid> _expectedEntities = new();
 
-            public override string ContainerType => nameof(ContainerOnlyContainer);
+            public override int Count => _containerList.Count;
 
             /// <inheritdoc />
             public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
-
-            public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
             /// <inheritdoc />
             protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
@@ -324,6 +322,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
                 if (!_containerList.Contains(contained))
                     return false;
 
+                if (IoCManager.Resolve<IGameTiming>().ApplyingState)
+                    return true;
+
                 var flags = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(contained).Flags;
                 DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0);
                 return true;
@@ -341,10 +342,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
                 }
             }
 
-            public override bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
+            protected internal override bool CanInsert(EntityUid toinsert, bool assumeEmpty, IEntityManager entMan)
             {
-                IoCManager.Resolve(ref entMan);
-                return entMan.TryGetComponent(toinsert, out ContainerManagerComponent? _);
+                return entMan.HasComponent<ContainerManagerComponent>(toinsert);
             }
         }
     }

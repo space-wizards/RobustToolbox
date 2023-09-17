@@ -6,24 +6,27 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
 {
     [UsedImplicitly]
-    [SerializedType(ClassName)]
+    [SerializedType(nameof(ContainerSlot))]
     public sealed partial class ContainerSlot : BaseContainer
     {
-        private const string ClassName = "ContainerSlot";
+        public override int Count => ContainedEntity == null ? 0 : 1;
 
         /// <inheritdoc />
         public override IReadOnlyList<EntityUid> ContainedEntities
         {
             get
             {
-                if (ContainedEntity == null)
+                if (_containedEntity == null)
                     return Array.Empty<EntityUid>();
 
+                _containedEntityArray ??= new[] { _containedEntity.Value };
+                DebugTools.Assert(_containedEntityArray[0] == _containedEntity);
                 return _containedEntityArray;
             }
         }
@@ -36,39 +39,19 @@ namespace Robust.Shared.Containers
             {
                 _containedEntity = value;
                 if (value != null)
-                    _containedEntityArray[0] = value!.Value;
+                {
+                    _containedEntityArray ??= new EntityUid[1];
+                    _containedEntityArray[0] = value.Value;
+                }
             }
         }
 
-        public override List<EntityUid> ExpectedEntities => _expectedEntities;
-
+        [NonSerialized]
         private EntityUid? _containedEntity;
-        private readonly List<EntityUid> _expectedEntities = new();
+
         // Used by ContainedEntities to avoid allocating.
-        private readonly EntityUid[] _containedEntityArray = new EntityUid[1];
-
-        /// <inheritdoc />
-        public override string ContainerType => ClassName;
-
-        /// <inheritdoc />
-        public override bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
-        {
-            return (ContainedEntity == null) && CanInsertIfEmpty(toinsert, entMan);
-        }
-
-        /// <summary>
-        /// Checks if the entity can be inserted into this container, assuming that the container slot is empty.
-        /// </summary>
-        /// <remarks>
-        /// Useful if you need to know whether an item could be inserted into a slot, without having to actually eject
-        /// the currently contained entity first.
-        /// </remarks>
-        /// <param name="toinsert">The entity to attempt to insert.</param>
-        /// <returns>True if the entity could be inserted into an empty slot, false otherwise.</returns>
-        public bool CanInsertIfEmpty(EntityUid toinsert, IEntityManager? entMan = null)
-        {
-            return base.CanInsert(toinsert, entMan);
-        }
+        [NonSerialized]
+        private EntityUid[]? _containedEntityArray;
 
         /// <inheritdoc />
         public override bool Contains(EntityUid contained)
@@ -77,12 +60,18 @@ namespace Robust.Shared.Containers
                 return false;
 
 #if DEBUG
+            if (IoCManager.Resolve<IGameTiming>().ApplyingState)
+                return true;
+
             var entMan = IoCManager.Resolve<IEntityManager>();
             var flags = entMan.GetComponent<MetaDataComponent>(contained).Flags;
             DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0, $"Entity has bad container flags. Ent: {entMan.ToPrettyString(contained)}. Container: {ID}, Owner: {entMan.ToPrettyString(Owner)}");
 #endif
             return true;
         }
+
+        protected internal override bool CanInsert(EntityUid toInsert, bool assumeEmpty, IEntityManager entMan)
+            => ContainedEntity == null || assumeEmpty;
 
         /// <inheritdoc />
         protected override void InternalInsert(EntityUid toInsert, IEntityManager entMan)
@@ -91,7 +80,7 @@ namespace Robust.Shared.Containers
 
             #if DEBUG
             // TODO make this a proper debug assert when gun code no longer fudges client-side spawn prediction.
-            if (toInsert.IsClientSide() && !Owner.IsClientSide() && Manager.NetSyncEnabled)
+            if (entMan.IsClientSide(toInsert) && !entMan.IsClientSide(Owner) && Manager.NetSyncEnabled)
                 Logger.Warning("Inserting a client-side entity into a networked container slot. This will block the container slot and may cause issues.");
             #endif
             ContainedEntity = toInsert;

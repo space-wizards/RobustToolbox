@@ -175,7 +175,7 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             return _kinds.Keys;
         }
-        
+
         /// <inheritdoc />
         public T Index<T>(string id) where T : class, IPrototype
         {
@@ -192,6 +192,18 @@ namespace Robust.Shared.Prototypes
             {
                 throw new UnknownPrototypeException(id);
             }
+        }
+
+        /// <inheritdoc />
+        public EntityPrototype Index(EntProtoId id)
+        {
+            return Index<EntityPrototype>(id.Id);
+        }
+
+        /// <inheritdoc />
+        public T Index<T>(ProtoId<T> id) where T : class, IPrototype
+        {
+            return Index<T>(id.Id);
         }
 
         /// <inheritdoc />
@@ -583,6 +595,18 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
+        public bool HasIndex(EntProtoId id)
+        {
+            return HasIndex<EntityPrototype>(id.Id);
+        }
+
+        /// <inheritdoc />
+        public bool HasIndex<T>(ProtoId<T> id) where T : class, IPrototype
+        {
+            return HasIndex<T>(id.Id);
+        }
+
+        /// <inheritdoc />
         public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
         {
             var returned = TryIndex(typeof(T), id, out var proto);
@@ -599,6 +623,18 @@ namespace Robust.Shared.Prototypes
             }
 
             return index.Instances.TryGetValue(id, out prototype);
+        }
+
+        /// <inheritdoc />
+        public bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype)
+        {
+            return TryIndex(id.Id, out prototype);
+        }
+
+        /// <inheritdoc />
+        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
+        {
+            return TryIndex(id.Id, out prototype);
         }
 
         /// <inheritdoc />

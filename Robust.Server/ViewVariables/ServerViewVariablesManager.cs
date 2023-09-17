@@ -125,8 +125,10 @@ namespace Robust.Server.ViewVariables
                 case ViewVariablesComponentSelector componentSelector:
                 {
                     var compType = _reflectionManager.GetType(componentSelector.ComponentType);
+                    var entity = _entityManager.GetEntity(componentSelector.Entity);
+
                     if (compType == null ||
-                        !_entityManager.TryGetComponent(componentSelector.Entity, compType, out var component))
+                        !_entityManager.TryGetComponent(entity, compType, out var component))
                     {
                         Deny(ViewVariablesResponseCode.NoObject);
                         return;
@@ -137,7 +139,9 @@ namespace Robust.Server.ViewVariables
                 }
                 case ViewVariablesEntitySelector entitySelector:
                 {
-                    if (!_entityManager.EntityExists(entitySelector.Entity))
+                    var entity = _entityManager.GetEntity(entitySelector.Entity);
+
+                    if (!_entityManager.EntityExists(entity))
                     {
                         Deny(ViewVariablesResponseCode.NoObject);
                         return;

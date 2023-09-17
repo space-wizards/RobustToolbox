@@ -11,17 +11,17 @@ namespace Robust.Shared.Network
 {
     public static class NetMessageExt
     {
-        public static EntityCoordinates ReadEntityCoordinates(this NetIncomingMessage message)
+        public static NetCoordinates ReadNetCoordinates(this NetIncomingMessage message)
         {
-            var entityUid = new EntityUid(message.ReadInt32());
+            var entity = message.ReadNetEntity();
             var vector = message.ReadVector2();
 
-            return new EntityCoordinates(entityUid, vector);
+            return new NetCoordinates(entity, vector);
         }
 
-        public static void Write(this NetOutgoingMessage message, EntityCoordinates coordinates)
+        public static void Write(this NetOutgoingMessage message, NetCoordinates coordinates)
         {
-            message.Write(coordinates.EntityId);
+            message.Write(coordinates.NetEntity);
             message.Write(coordinates.Position);
         }
 
@@ -39,14 +39,14 @@ namespace Robust.Shared.Network
             message.Write(vector2.Y);
         }
 
-        public static EntityUid ReadEntityUid(this NetIncomingMessage message)
+        public static NetEntity ReadNetEntity(this NetIncomingMessage message)
         {
             return new(message.ReadInt32());
         }
 
-        public static void Write(this NetOutgoingMessage message, EntityUid entityUid)
+        public static void Write(this NetOutgoingMessage message, NetEntity entity)
         {
-            message.Write((int)entityUid);
+            message.Write((int)entity);
         }
 
         public static GameTick ReadGameTick(this NetIncomingMessage message)

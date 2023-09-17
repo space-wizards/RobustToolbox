@@ -6,6 +6,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Direction = Robust.Shared.Maths.Direction;
 
 namespace Robust.Client.Map;
 
@@ -61,9 +62,14 @@ public sealed class TileEdgeOverlay : Overlay
 
                         var neighborIndices = new Vector2i(tileRef.GridIndices.X + x, tileRef.GridIndices.Y + y);
                         var neighborTile = grid.GetTileRef(neighborIndices);
+                        var neighborDef = _tileDefManager[neighborTile.Tile.TypeId];
 
                         // If it's the same tile then no edge to be drawn.
                         if (tileRef.Tile.TypeId == neighborTile.Tile.TypeId)
+                            continue;
+
+                        // Don't draw if the the neighbor tile edges should draw over us (or if we have the same priority)
+                        if (neighborDef.EdgeSprites.Count != 0 && neighborDef.EdgeSpritePriority >= tileDef.EdgeSpritePriority)
                             continue;
 
                         var direction = new Vector2i(x, y).AsDirection();

@@ -46,10 +46,13 @@ namespace Robust.Shared.GameObjects
 
         public readonly bool Terminating;
 
-        public RemovedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating)
+        public readonly MetaDataComponent Meta;
+
+        public RemovedComponentEventArgs(ComponentEventArgs baseArgs, bool terminating, MetaDataComponent meta)
         {
             BaseArgs = baseArgs;
             Terminating = terminating;
+            Meta = meta;
         }
     }
 

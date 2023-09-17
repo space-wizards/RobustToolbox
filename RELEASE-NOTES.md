@@ -54,6 +54,157 @@ END TEMPLATE-->
 *None yet*
 
 
+## 160.1.0
+
+### New features
+
+* Add optional MetaDataComponent args to Entitymanager methods.
+
+### Internal
+
+* Move _netComponents onto MetaDataComponent.
+* Remove some component resolves internally on adding / removing components.
+
+
+## 160.0.2
+
+### Other
+
+* Transform component and containers have new convenience fields to make using VIewVariables easier.
+
+
+## 160.0.0
+
+### Breaking changes
+
+* ComponentReference has now been entirely removed.
+* Sensor / non-hard physics bodies are now included in EntityLookup by default.
+
+
+## 159.1.0
+
+
+## 159.0.3
+
+### Bugfixes
+
+* Fix potentially deleted entities having states re-applied when NetEntities come in.
+
+
+## 159.0.2
+
+### Bugfixes
+
+* Fix PointLight state handling not queueing ComponentTree updates.
+
+
+## 159.0.1
+
+### Bugfixes
+
+* Fix pending entity states not being removed when coming in (only on entity deletion).
+
+### Internal
+
+* Remove PhysicsComponent ref from Fixture.
+
+
+## 159.0.0
+
+### Breaking changes
+
+* Remove ComponentReference from PointLights.
+* Move more of UserInterfaceSystem to shared.
+* Mark some EntitySystem proxy methods as protected instead of public.
+
+### New features
+
+* Make entity deletion take in a nullable EntityUid.
+* Added a method to send predicted messages via BUIs.
+
+### Other
+
+* Add Obsoletions to more sourcegen serv4 methods.
+* Remove inactive reviewers from CODEOWNERs.
+
+
+## 158.0.0
+
+### Breaking changes
+
+* Remove SharedEyeComponent.
+* Add Tile Overlay edge priority.
+
+
+## 157.1.0
+
+### New features
+
+* UI tooltips now use rich text labels.
+
+
+## 157.0.0
+
+### Breaking changes
+
+* Unrevert container changes from 155.0.0.
+* Added server-client EntityUid separation. A given EntityUid will no longer refer to the same entity on the server & client.
+* EntityUid is no longer net-serializable, use NetEntity instead, EntityManager & entity systems have helper methods for converting between the two,
+
+
+## 156.0.0
+
+### Breaking changes
+
+* Revert container changes from 155.0.0.
+
+
+## 155.0.0
+
+### Breaking changes
+
+* MapInitEvent now gets raised for components that get added to entities that have already been map-initialized.
+
+### New features
+
+* VirtualWritableDirProvider now supports file renaming/moving.
+* Added a new command for toggling the replay UI (`replay_toggleui`).
+
+### Bugfixes
+
+* Fixed formatting of localization file errors.
+* Directed event subscriptions will no longer error if the corresponding component is queued for deletion.
+
+
+## 154.2.0
+
+
+
+### New features
+
+* Added support for advertising to multiple hubs simultaneously.
+* Added new functions to ContainerSystem that recursively look for a component on a contained entity's parents.
+
+### Bugfixes
+
+* Fix Direction.TurnCw/TurnCcw to South returning Invalid.
+
+
+## 154.1.0
+
+### New features
+
+* Add MathHelper.Max for TimeSpans.
+
+### Bugfixes
+
+* Make joint initialisation only log under IsFirstTimePredicted on client.
+
+### Other
+
+* Mark the proxy Dirty(component) as obsolete in line with EntityManager (Dirty(EntityUid, Component) should be used in its place).
+
+
 ## 154.0.0
 
 ### Breaking changes

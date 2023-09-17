@@ -190,6 +190,11 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorEntityUid();
             }
 
+            if (type == typeof(NetEntity))
+            {
+                return new VVPropEditorNetEntity();
+            }
+
             if (type == typeof(Color))
             {
                 return new VVPropEditorColor();
@@ -218,7 +223,7 @@ namespace Robust.Client.ViewVariables
         {
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
-            if (obj is EntityUid entity && _entityManager.EntityExists(entity))
+            if (obj is NetEntity netEntity && _entityManager.GetEntity(netEntity).IsValid())
             {
                 instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer, Sawmill);
             }
@@ -269,7 +274,7 @@ namespace Robust.Client.ViewVariables
             var type = Type.GetType(blob.ObjectType);
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
-            if (type != null && typeof(EntityUid).IsAssignableFrom(type))
+            if (type != null && typeof(NetEntity).IsAssignableFrom(type))
             {
                 instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer, Sawmill);
             }

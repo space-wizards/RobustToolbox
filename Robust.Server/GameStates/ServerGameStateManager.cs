@@ -63,7 +63,7 @@ namespace Robust.Server.GameStates
         public ushort TransformNetId { get; set; }
 
         public Action<ICommonSession, GameTick>? ClientAck { get; set; }
-        public Action<ICommonSession, GameTick, EntityUid?>? ClientRequestFull { get; set; }
+        public Action<ICommonSession, GameTick, NetEntity?>? ClientRequestFull { get; set; }
 
         public void PostInject()
         {
@@ -134,7 +134,7 @@ namespace Robust.Server.GameStates
             if (!_playerManager.TryGetSessionById(msg.MsgChannel.UserId, out var session))
                 return;
 
-            EntityUid? ent = msg.MissingEntity.IsValid() ? msg.MissingEntity : null;
+            NetEntity? ent = msg.MissingEntity.IsValid() ? msg.MissingEntity : null;
             ClientRequestFull?.Invoke(session, msg.Tick, ent);
         }
 
@@ -210,8 +210,6 @@ namespace Robust.Server.GameStates
             var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
             var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
             var oldestAckValue = GameTick.MaxValue.Value;
-            var tQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var mQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
 
             // Replays process game states in parallel with players
             Parallel.For(-1, players.Length, opts, _threadResourcesPool.Get, SendPlayer, _threadResourcesPool.Return);
@@ -225,7 +223,7 @@ namespace Robust.Server.GameStates
                     PvsEventSource.Log.WorkStart(_gameTiming.CurTick.Value, i, guid);
 
                     if (i >= 0)
-                        SendStateUpdate(i, resource, inputSystem, players[i], pvsData, mQuery, tQuery, ref oldestAckValue);
+                        SendStateUpdate(i, resource, inputSystem, players[i], pvsData, ref oldestAckValue);
                     else
                         _replay.Update();
 
@@ -245,7 +243,7 @@ namespace Robust.Server.GameStates
         {
             public HashSet<int>[] PlayerChunks;
             public EntityUid[][] ViewerEntities;
-            public (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] ChunkCache;
+            public (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[] ChunkCache;
         }
 
         private PvsData? GetPVSData(IPlayerSession[] players)
@@ -255,13 +253,11 @@ namespace Robust.Server.GameStates
             var chunksCount = chunks.Count;
             var chunkBatches = (int)MathF.Ceiling((float)chunksCount / ChunkBatchSize);
             var chunkCache =
-                new (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[chunksCount];
+                new (Dictionary<NetEntity, MetaDataComponent> metadata, RobustTree<NetEntity> tree)?[chunksCount];
 
             // Update the reused trees sequentially to avoid having to lock the dictionary per chunk.
             var reuse = ArrayPool<bool>.Shared.Rent(chunksCount);
 
-            var transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
             Parallel.For(0, chunkBatches,
                 new ParallelOptions { MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount },
                 i =>
@@ -272,8 +268,7 @@ namespace Robust.Server.GameStates
                     for (var j = start; j < end; ++j)
                     {
                         var (visMask, chunkIndexLocation) = chunks[j];
-                        reuse[j] = _pvs.TryCalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery,
-                            out var chunk);
+                        reuse[j] = _pvs.TryCalculateChunk(chunkIndexLocation, visMask, out var chunk);
                         chunkCache[j] = chunk;
 
 #if DEBUG
@@ -283,7 +278,8 @@ namespace Robust.Server.GameStates
                         // Each root nodes should simply be a map or a grid entity.
                         DebugTools.Assert(chunk.Value.tree.RootNodes.Count == 1,
                             $"Root node count is {chunk.Value.tree.RootNodes.Count} instead of 1.");
-                        var ent = chunk.Value.tree.RootNodes.FirstOrDefault();
+                        var nent = chunk.Value.tree.RootNodes.FirstOrDefault();
+                        var ent = _entityManager.GetEntity(nent);
                         DebugTools.Assert(_entityManager.EntityExists(ent), $"Root node does not exist. Node {ent}.");
                         DebugTools.Assert(_entityManager.HasComponent<MapComponent>(ent)
                                           || _entityManager.HasComponent<MapGridComponent>(ent));
@@ -306,16 +302,14 @@ namespace Robust.Server.GameStates
             InputSystem inputSystem,
             IPlayerSession session,
             PvsData? pvsData,
-            EntityQuery<MetaDataComponent> mQuery,
-            EntityQuery<TransformComponent> tQuery,
             ref uint oldestAckValue)
         {
             var channel = session.ConnectedClient;
             var sessionData = _pvs.PlayerData[session];
             var lastAck = sessionData.LastReceivedAck;
-            List<EntityUid>? leftPvs = null;
+            List<NetEntity>? leftPvs = null;
             List<EntityState>? entStates;
-            List<EntityUid>? deletions;
+            List<NetEntity>? deletions;
             GameTick fromTick;
 
             DebugTools.Assert(_pvs.CullingEnabled == (pvsData != null));
@@ -325,8 +319,6 @@ namespace Robust.Server.GameStates
                     session,
                     lastAck,
                     _gameTiming.CurTick,
-                    mQuery,
-                    tQuery,
                     pvsData.Value.ChunkCache,
                     pvsData.Value.PlayerChunks[i],
                     pvsData.Value.ViewerEntities[i]);

@@ -17,7 +17,7 @@ namespace Robust.Shared.GameStates
         public SessionStatus Status { get; set; }
         public short Ping { get; set; }
 
-        public EntityUid? ControlledEntity { get; set; }
+        public NetEntity? ControlledEntity { get; set; }
 
         public PlayerState Clone()
         {

@@ -62,8 +62,9 @@ namespace Robust.Client.Physics
             Log.Info($"Received grid fixture debug data");
             if (!_enableDebug) return;
 
-            _nodes[ev.Grid] = ev.Nodes;
-            _connections[ev.Grid] = ev.Connections;
+            var grid = GetEntity(ev.Grid);
+            _nodes[grid] = ev.Nodes;
+            _connections[grid] = ev.Connections;
         }
 
         private sealed class GridSplitNodeOverlay : Overlay

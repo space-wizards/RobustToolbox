@@ -99,10 +99,10 @@ namespace Robust.Server.GameStates
                 .Select(x => $"{x.Name} ({_entityManager.ToPrettyString(x.AttachedEntity)})");
 
             shell.WriteLine($@"Current tick: {_gameTiming.CurTick}
-Last Acked tick: {_lastOldestAck}
-Deletion history size: {_pvs.EntityPVSCollection.GetDeletedIndices(_lastOldestAck)?.Count ?? 0}
-Actual last acked tick: {ack}
-Last ack players: {string.Join(", ", players)}
+Stored oldest acked tick: {_lastOldestAck}
+Deletion history size: {_pvs.EntityPVSCollection.GetDeletedIndices(GameTick.First)?.Count ?? 0}
+Actual oldest: {ack}
+Oldest acked clients: {string.Join(", ", players)}
 ");
         }
 
@@ -168,15 +168,6 @@ Last ack players: {string.Join(", ", players)}
         /// <inheritdoc />
         public void SendGameStateUpdate()
         {
-            if (!_networkManager.IsConnected)
-            {
-                // Prevent deletions piling up if we have no clients.
-                _pvs.CullDeletionHistory(GameTick.MaxValue);
-                _mapManager.CullDeletionHistory(GameTick.MaxValue);
-                _pvs.CleanupDirty(Enumerable.Empty<IPlayerSession>());
-                return;
-            }
-
             var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
             // Update entity positions in PVS chunks/collections
@@ -216,14 +207,21 @@ Last ack players: {string.Join(", ", players)}
                 _pvs.CleanupDirty(players);
             }
 
-            // keep the deletion history buffers clean
-            if (oldestAck > _lastOldestAck)
+            if (oldestAck == GameTick.MaxValue)
             {
-                using var _ = _usageHistogram.WithLabels("Cull History").NewTimer();
-                _lastOldestAck = oldestAck;
-                _pvs.CullDeletionHistory(oldestAck);
-                _mapManager.CullDeletionHistory(oldestAck);
+                // There were no connected players?
+                // In that case we just clear all deletion history.
+                _pvs.CullDeletionHistory(GameTick.MaxValue);
+                _lastOldestAck = GameTick.Zero;
+                return;
             }
+
+            if (oldestAck == _lastOldestAck)
+                return;
+
+            _lastOldestAck = oldestAck;
+            using var __ = _usageHistogram.WithLabels("Cull History").NewTimer();
+            _pvs.CullDeletionHistory(oldestAck);
         }
 
         private GameTick SendStates(IPlayerSession[] players, PvsData? pvsData)

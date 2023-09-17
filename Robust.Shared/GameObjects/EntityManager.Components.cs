@@ -618,7 +618,9 @@ namespace Robust.Shared.GameObjects
             // _entCompIndex.Remove(uid) gets called later on anyways.
             _entCompIndex.Remove(entityUid, component);
 
-            DebugTools.Assert(metadata.EntityLastModifiedTick >= metadata.LastComponentRemoved);
+
+            DebugTools.Assert(_netMan.IsClient // Client side prediction can set LastComponentRemoved to some future tick,
+                              || metadata.EntityLastModifiedTick >= metadata.LastComponentRemoved);
         }
 
         /// <inheritdoc />

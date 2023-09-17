@@ -94,7 +94,8 @@ namespace Robust.Shared.GameObjects
         public GameTick LastStateApplied { get; internal set; } = GameTick.Zero;
 
         /// <summary>
-        ///     This is the most recent tick at which some component was removed from this entity.
+        ///     This is the most recent tick at which a networked component was removed from this entity.
+        ///     Currently only reliable server-side, client side prediction may cause the value to be wrong.
         /// </summary>
         [ViewVariables]
         public GameTick LastComponentRemoved { get; internal set; } = GameTick.Zero;

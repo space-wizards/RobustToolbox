@@ -54,6 +54,27 @@ END TEMPLATE-->
 *None yet*
 
 
+## 161.0.0
+
+### Breaking changes
+
+* Point light animations now need to use different component fields in order to animate the lights. `Enabled` should be replaced with `AnimatedEnable` and `Radius` should be replaced with `AnimatedRadius`
+
+### New features
+
+* EntProtoId is now net-serializable
+* Added print_pvs_ack command to debug PVS issues.
+
+### Bugfixes
+
+* Fixes AngleTypeParser not using InvariantCulture
+* Fixed a bug that was causing `MetaDataComponent.LastComponentRemoved` to be updated improperly.
+
+### Other
+
+* The string representation of client-side entities now looks nicer and simply uses a 'c' prefix.
+
+
 ## 160.1.0
 
 ### New features

@@ -611,8 +611,9 @@ namespace Robust.Shared.GameObjects
             {
                 metadata ??= MetaQuery.GetComponent(entityUid);
                 var netSet = metadata.NetComponents;
+                netSet.Remove(reg.NetID.Value);
 
-                if (netSet.Remove(reg.NetID.Value) && component.NetSyncEnabled)
+                if (component.NetSyncEnabled)
                     DirtyEntity(entityUid, metadata);
             }
 

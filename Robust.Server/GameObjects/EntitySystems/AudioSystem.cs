@@ -84,7 +84,7 @@ public sealed class AudioSystem : SharedAudioSystem
             return null;
 
         var filter = Filter.Pvs(source, entityManager: EntityManager, playerManager: PlayerManager, cfgManager: CfgManager).RemoveWhereAttachedEntity(e => e == user);
-        return Play(sound, filter, source, true, audioParams);
+        return PlayEntity(sound, filter, source, true, audioParams);
     }
 
     public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user,

@@ -60,16 +60,28 @@ public sealed class AudioSystem : SharedAudioSystem
         _xformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<AudioComponent, ComponentShutdown>(OnAudioShutdown);
+        SubscribeLocalEvent<AudioComponent, EntityPausedEvent>(OnAudioPaused);
+        SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
 
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
 
         _overlays.AddOverlay(new AudioOverlay(EntityManager, _playerManager, IoCManager.Resolve<IResourceCache>(), this, _xformSys));
     }
 
+    private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
+    {
+        throw new NotImplementedException();
+    }
+
     private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
     {
-        var pStream = (PlayingStream)component.Stream;
-        pStream.Source.Dispose();
+        var pStream = component.Stream;
+        pStream.Dispose();
     }
 
     public override void Shutdown()
@@ -461,7 +473,7 @@ public sealed class AudioSystem : SharedAudioSystem
         AudioParams? audioParams = null)
     {
         if (_timing.IsFirstTimePredicted || sound == null)
-            return Play(sound, Filter.Local(), source, false, audioParams);
+            return PlayEntity(sound, Filter.Local(), source, false, audioParams);
         return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
     }
 
@@ -553,7 +565,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
 public sealed class PlayingStream : IPlayingAudioStream
 {
-    public IClydeAudioSource Source = default!;
+    internal IClydeAudioSource Source = default!;
     public bool Done;
 
     public float Volume
@@ -592,5 +604,10 @@ public sealed class PlayingStream : IPlayingAudioStream
     public void Stop()
     {
         Source.StopPlaying();
+    }
+
+    public void Dispose()
+    {
+        Source.Dispose();
     }
 }

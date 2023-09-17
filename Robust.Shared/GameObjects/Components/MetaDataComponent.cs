@@ -8,6 +8,7 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
@@ -62,6 +63,12 @@ namespace Robust.Shared.GameObjects
         [DataField("name")] internal string? _entityName;
         [DataField("desc")] internal string? _entityDescription;
         internal EntityPrototype? _entityPrototype;
+
+        /// <summary>
+        /// The components attached to the entity that are currently networked.
+        /// </summary>
+        [ViewVariables]
+        internal readonly Dictionary<ushort, Component> NetComponents = new();
 
         /// <summary>
         /// Network identifier for this entity.

@@ -38,8 +38,7 @@ namespace Robust.Client.Graphics
         event Action<WindowDestroyedEventArgs> Destroyed;
 
         /// <summary>
-        /// Raised when the window has been definitively closed.
-        /// This means the window must not be used anymore (it is disposed).
+        /// Raised when the window has been resized.
         /// </summary>
         event Action<WindowResizedEventArgs> Resized;
     }

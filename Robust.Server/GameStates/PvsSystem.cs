@@ -313,7 +313,7 @@ internal sealed partial class PvsSystem : EntitySystem
         // since elements are cached grid-/map-relative, we don't need to update a given grids/maps children
         DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
-        var indices = PVSCollection<EntityUid>.GetChunkIndices(coordinates.Position);
+        var indices = PVSCollection<NetEntity>.GetChunkIndices(coordinates.Position);
         if (xform.GridUid != null)
             _entityPvsCollection.UpdateIndex(metadata.NetEntity, xform.GridUid.Value, indices, forceDirty: forceDirty);
         else

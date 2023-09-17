@@ -28,8 +28,9 @@ namespace Robust.Shared.Containers
         /// </summary>
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
 
+        // VV convenience field
         [ViewVariables]
-        public IReadOnlyList<NetEntity> NetContainedEntities => ContainedEntities
+        private IReadOnlyList<NetEntity> NetContainedEntities => ContainedEntities
             .Select(o => IoCManager.Resolve<IEntityManager>().GetNetEntity(o)).ToList();
 
         /// <summary>

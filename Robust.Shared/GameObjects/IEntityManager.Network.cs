@@ -23,6 +23,12 @@ public partial interface IEntityManager
     public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity);
 
     /// <summary>
+    /// Tries to returns the corresponding local <see cref="EntityUid"/> along with the metdata component.
+    /// </summary>
+    public bool TryGetEntityData(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity,
+        [NotNullWhen(true)] out MetaDataComponent? meta);
+
+    /// <summary>
     /// TryGet version of <see cref="GetNetEntity"/>
     /// </summary>
     public bool TryGetNetEntity(EntityUid uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null);

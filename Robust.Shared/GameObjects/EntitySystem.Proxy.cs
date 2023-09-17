@@ -915,9 +915,9 @@ public partial class EntitySystem
     #region NetEntities
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool IsClientSide(EntityUid entity)
+    protected bool IsClientSide(EntityUid entity, MetaDataComponent? meta = null)
     {
-        return EntityManager.IsClientSide(entity);
+        return EntityManager.IsClientSide(entity, meta);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

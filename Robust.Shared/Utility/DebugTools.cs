@@ -40,7 +40,7 @@ namespace Robust.Shared.Utility
 
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void AssertEquals(object? objA, object? objB)
+        public static void AssertEqual(object? objA, object? objB)
         {
             if (ReferenceEquals(objA, objB))
                 return;
@@ -51,7 +51,7 @@ namespace Robust.Shared.Utility
 
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void AssertEquals(object? objA, object? objB, string message)
+        public static void AssertEqual(object? objA, object? objB, string message)
         {
             if (ReferenceEquals(objA, objB))
                 return;
@@ -62,7 +62,7 @@ namespace Robust.Shared.Utility
 
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void AssertNotEquals(object? objA, object? objB)
+        public static void AssertNotEqual(object? objA, object? objB)
         {
             if (ReferenceEquals(objA, objB))
                 throw new DebugAssertException($"Expected: not {objB ?? "null"}");
@@ -75,7 +75,7 @@ namespace Robust.Shared.Utility
 
         [Conditional("DEBUG")]
         [AssertionMethod]
-        public static void AssertNotEquals(object? objA, object? objB, string message)
+        public static void AssertNotEqual(object? objA, object? objB, string message)
         {
             if (ReferenceEquals(objA, objB))
                 throw new DebugAssertException($"{message}\nExpected: not {objB ?? "null"}");

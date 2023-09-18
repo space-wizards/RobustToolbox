@@ -9,6 +9,7 @@ using Collections.Pooled;
 using Prometheus;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -42,6 +43,7 @@ namespace Robust.Shared.GameObjects
         [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
         [IoC.Dependency] private readonly ISerializationManager _serManager = default!;
         [IoC.Dependency] private readonly ProfManager _prof = default!;
+        [IoC.Dependency] private readonly INetManager _netMan = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
@@ -661,11 +663,12 @@ namespace Robust.Shared.GameObjects
             SetNetEntity(uid, netEntity, metadata);
 
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata, _metaReg, true);
+            AddComponentInternal(uid, metadata, _metaReg, true, metadata);
 
             // allocate the required TransformComponent
-            xform = _componentFactory.GetComponent<TransformComponent>();
-            xform.Owner = uid;
+            var xformComp = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
+            xformComp.Owner = uid;
+            AddComponentInternal(uid, xformComp, true, metadata);
 
             AddComponentInternal(uid, xform, _xformReg, true, metadata);
             return uid;

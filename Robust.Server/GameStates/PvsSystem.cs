@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.Configuration;
@@ -24,7 +25,7 @@ namespace Robust.Server.GameStates;
 internal sealed partial class PvsSystem : EntitySystem
 {
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
+    [Shared.IoC.Dependency] private readonly INetworkedMapManager _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IParallelManager _parallelManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
@@ -227,6 +228,7 @@ internal sealed partial class PvsSystem : EntitySystem
     public void CullDeletionHistory(GameTick oldestAck)
     {
         _entityPvsCollection.CullDeletionHistoryUntil(oldestAck);
+        _mapManager.CullDeletionHistory(oldestAck);
     }
 
     #region PVSCollection methods to maybe make public someday:tm:
@@ -313,7 +315,7 @@ internal sealed partial class PvsSystem : EntitySystem
         // since elements are cached grid-/map-relative, we don't need to update a given grids/maps children
         DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
 
-        var indices = PVSCollection<EntityUid>.GetChunkIndices(coordinates.Position);
+        var indices = PVSCollection<NetEntity>.GetChunkIndices(coordinates.Position);
         if (xform.GridUid != null)
             _entityPvsCollection.UpdateIndex(metadata.NetEntity, xform.GridUid.Value, indices, forceDirty: forceDirty);
         else
@@ -900,15 +902,22 @@ internal sealed partial class PvsSystem : EntitySystem
             // As every map is parented to uid 0 in the tree we still need to get their children, plus because we go top-down
             // we may find duplicate parents with children we haven't encountered before
             // on different chunks (this is especially common with direct grid children)
-            if (!toSend.ContainsKey(currentNodeIndex))
+
+            ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, currentNodeIndex, out var exists);
+            if (!exists)
             {
                 var (entered, shouldAdd) = ProcessEntry(in currentNodeIndex, lastAcked, lastSent, lastSeen,
                     ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
                 if (!shouldAdd)
+                {
+                    // In the majority of instances entities do get added.
+                    // So its better to add and maybe remove, rather than checking ContainsKey() and then maybe adding it.
+                    toSend.Remove(currentNodeIndex);
                     continue;
+                }
 
-                AddToSendSet(in currentNodeIndex, metaDataCache[currentNodeIndex], toSend, fromTick, in entered, ref entStateCount);
+                AddToSendSet(in currentNodeIndex, metaDataCache[currentNodeIndex], ref value, toSend, fromTick, in entered, ref entStateCount);
             }
 
             var node = tree[currentNodeIndex];
@@ -957,14 +966,15 @@ internal sealed partial class PvsSystem : EntitySystem
         // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
         // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
         // send the new parents, which may otherwise be delayed because of the PVS budget..
-        if (!toSend.ContainsKey(netEntity))
+        ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, netEntity, out var exists);
+        if (!exists)
         {
             // TODO PERFORMANCE.
             // ProcessEntry() unnecessarily checks lastSent.ContainsKey() and maybe lastSeen.Contains(). Given that at this
             // point the budgets are just ignored, this should just bypass those checks. But then again 99% of the time this
             // is just the player's own entity + maybe a singularity. So currently not all that performance intensive.
             var (entered, _) = ProcessEntry(in netEntity, lastAcked, lastSent, lastSeen, ref newEntityCount, ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
-            AddToSendSet(in netEntity, metadata, toSend, fromTick, in entered, ref entStateCount);
+            AddToSendSet(in netEntity, metadata, ref value, toSend, fromTick, in entered, ref entStateCount);
         }
 
         if (addChildren)
@@ -996,12 +1006,13 @@ internal sealed partial class PvsSystem : EntitySystem
             var metadata = _metaQuery.GetComponent(child);
             var childNetEntity = metadata.NetEntity;
 
-            if (!toSend.ContainsKey(childNetEntity))
+            ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(toSend, childNetEntity, out var exists);
+            if (!exists)
             {
                 var (entered, _) = ProcessEntry(in childNetEntity, lastAcked, lastSent, lastSeen, ref newEntityCount,
                     ref enteredEntityCount, newEntityBudget, enteredEntityBudget);
 
-                AddToSendSet(in childNetEntity, metadata, toSend, fromTick, in entered, ref entStateCount);
+                AddToSendSet(in childNetEntity, metadata, ref value, toSend, fromTick, in entered, ref entStateCount);
             }
 
             RecursivelyAddChildren(childXform, lastAcked, lastSent, toSend, lastSeen, fromTick, ref newEntityCount,
@@ -1044,10 +1055,13 @@ internal sealed partial class PvsSystem : EntitySystem
         return (entered, true);
     }
 
-    private void AddToSendSet(in NetEntity netEntity, MetaDataComponent metaDataComponent, Dictionary<NetEntity, PvsEntityVisibility> toSend, GameTick fromTick, in bool entered, ref int entStateCount)
+    private void AddToSendSet(in NetEntity netEntity, MetaDataComponent metaDataComponent,
+        ref PvsEntityVisibility vis, Dictionary<NetEntity, PvsEntityVisibility> toSend,
+        GameTick fromTick, in bool entered, ref int entStateCount)
     {
         if (metaDataComponent.EntityLifeStage >= EntityLifeStage.Terminating)
         {
+            toSend.Remove(netEntity);
             var rep = new EntityStringRepresentation(GetEntity(netEntity), metaDataComponent.EntityDeleted, metaDataComponent.EntityName, metaDataComponent.EntityPrototype?.ID);
             Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Trace:\n{Environment.StackTrace}");
             return;
@@ -1055,7 +1069,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         if (entered)
         {
-            toSend.Add(netEntity, PvsEntityVisibility.Entered);
+            vis = PvsEntityVisibility.Entered;
             entStateCount++;
             return;
         }
@@ -1063,12 +1077,12 @@ internal sealed partial class PvsSystem : EntitySystem
         if (metaDataComponent.EntityLastModifiedTick <= fromTick)
         {
             //entity has been sent before and hasnt been updated since
-            toSend.Add(netEntity, PvsEntityVisibility.StayedUnchanged);
+            vis = PvsEntityVisibility.StayedUnchanged;
             return;
         }
 
         //add us
-        toSend.Add(netEntity, PvsEntityVisibility.StayedChanged);
+        vis = PvsEntityVisibility.StayedChanged;
         entStateCount++;
     }
 
@@ -1204,7 +1218,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
         bool sendCompList = meta.LastComponentRemoved > fromTick;
         HashSet<ushort>? netComps = sendCompList ? new() : null;
 
-        foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
+        foreach (var (netId, component) in meta.NetComponents)
         {
             if (!component.NetSyncEnabled)
                 continue;
@@ -1253,7 +1267,7 @@ Transform last modified: {Transform(uid).LastModifiedTick}");
 
         HashSet<ushort> netComps = new();
 
-        foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
+        foreach (var (netId, component) in meta.NetComponents)
         {
             if (!component.NetSyncEnabled)
                 continue;

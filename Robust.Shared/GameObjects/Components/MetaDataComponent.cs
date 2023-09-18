@@ -65,6 +65,12 @@ namespace Robust.Shared.GameObjects
         internal EntityPrototype? _entityPrototype;
 
         /// <summary>
+        /// The components attached to the entity that are currently networked.
+        /// </summary>
+        [ViewVariables]
+        internal readonly Dictionary<ushort, Component> NetComponents = new();
+
+        /// <summary>
         /// Network identifier for this entity.
         /// </summary>
         [ViewVariables]
@@ -93,7 +99,8 @@ namespace Robust.Shared.GameObjects
         public GameTick LastStateApplied { get; internal set; } = GameTick.Zero;
 
         /// <summary>
-        ///     This is the most recent tick at which some component was removed from this entity.
+        ///     This is the most recent tick at which a networked component was removed from this entity.
+        ///     Currently only reliable server-side, client side prediction may cause the value to be wrong.
         /// </summary>
         [ViewVariables]
         public GameTick LastComponentRemoved { get; internal set; } = GameTick.Zero;

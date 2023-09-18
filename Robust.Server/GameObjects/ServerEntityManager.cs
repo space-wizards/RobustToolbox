@@ -139,9 +139,6 @@ namespace Robust.Server.GameObjects
         {
             _networkManager.RegisterNetMessage<MsgEntity>(HandleEntityNetworkMessage);
 
-            // For syncing component deletions.
-            ComponentRemoved += OnComponentRemoved;
-
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
 
             _configurationManager.OnValueChanged(CVars.NetLogLateMsg, b => _logLateMsgs = b, true);
@@ -166,15 +163,6 @@ namespace Robust.Server.GameObjects
         public uint GetLastMessageSequence(IPlayerSession session)
         {
             return _lastProcessedSequencesCmd[session];
-        }
-
-        private void OnComponentRemoved(RemovedComponentEventArgs e)
-        {
-            if (e.Terminating || !e.BaseArgs.Component.NetSyncEnabled)
-                return;
-
-            if (TryGetComponent(e.BaseArgs.Owner, out MetaDataComponent? meta))
-                meta.LastComponentRemoved = _gameTiming.CurTick;
         }
 
         /// <inheritdoc />

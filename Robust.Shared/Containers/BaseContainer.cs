@@ -11,7 +11,9 @@ using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Containers
@@ -25,8 +27,12 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Readonly collection of all the entities contained within this specific container
         /// </summary>
-        [ViewVariables]
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
+
+        // VV convenience field
+        [ViewVariables]
+        private IReadOnlyList<NetEntity> NetContainedEntities => ContainedEntities
+            .Select(o => IoCManager.Resolve<IEntityManager>().GetNetEntity(o)).ToList();
 
         /// <summary>
         /// Number of contained entities.
@@ -106,6 +112,7 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(ownerTransform == null || ownerTransform.Owner == Owner);
             DebugTools.Assert(physics == null || physics.Owner == toinsert);
             DebugTools.Assert(!ExpectedEntities.Contains(entMan.GetNetEntity(toinsert)));
+            DebugTools.Assert(Manager.Containers.ContainsKey(ID));
 
             var physicsQuery = entMan.GetEntityQuery<PhysicsComponent>();
             var transformQuery = entMan.GetEntityQuery<TransformComponent>();
@@ -115,6 +122,26 @@ namespace Robust.Shared.Containers
             var physicsSys = entMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
             var jointSys = entMan.EntitySysManager.GetEntitySystem<SharedJointSystem>();
             var containerSys = entMan.EntitySysManager.GetEntitySystem<SharedContainerSystem>();
+
+            // If someone is attempting to insert an entity into a container that is getting deleted, then we will
+            // automatically delete that entity. I.e., the insertion automatically "succeeds" and both entities get deleted.
+            // This is consistent with what happens if you attempt to attach an entity to a terminating parent.
+
+            if (!entMan.TryGetComponent(Owner, out MetaDataComponent? ownerMeta))
+            {
+                Logger.ErrorS("container",
+                    $"Attempted to insert an entity {entMan.ToPrettyString(toinsert)} into a non-existent entity.");
+                entMan.QueueDeleteEntity(toinsert);
+                return false;
+            }
+
+            if (ownerMeta.EntityLifeStage >= EntityLifeStage.Terminating)
+            {
+                Logger.ErrorS("container",
+                    $"Attempted to insert an entity {entMan.ToPrettyString(toinsert)} into an entity that is terminating. Entity: {entMan.ToPrettyString(Owner)}.");
+                entMan.QueueDeleteEntity(toinsert);
+                return false;
+            }
 
             //Verify we can insert into this container
             if (!force && !containerSys.CanInsert(toinsert, this))

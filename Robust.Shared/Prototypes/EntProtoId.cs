@@ -1,4 +1,6 @@
-﻿using Robust.Shared.Serialization.TypeSerializers.Implementations;
+﻿using System;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 
 namespace Robust.Shared.Prototypes;
 
@@ -10,6 +12,7 @@ namespace Robust.Shared.Prototypes;
 ///     This will be automatically validated by <see cref="EntProtoIdSerializer"/> if used in data fields.
 /// </remarks>
 /// <remarks><seealso cref="ProtoId{T}"/> for a wrapper of other prototype kinds.</remarks>
+[Serializable, NetSerializable]
 public readonly record struct EntProtoId(string Id)
 {
     public static implicit operator string(EntProtoId protoId)

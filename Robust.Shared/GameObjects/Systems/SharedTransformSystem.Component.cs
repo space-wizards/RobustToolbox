@@ -495,7 +495,7 @@ public abstract partial class SharedTransformSystem
                     throw new InvalidOperationException($"Attempted to parent entity {ToPrettyString(uid)} to non-existent entity {value.EntityId}");
                 }
 
-                if (newParent.LifeStage > ComponentLifeStage.Running || LifeStage(value.EntityId) > EntityLifeStage.MapInitialized)
+                if (newParent.LifeStage >= ComponentLifeStage.Stopping || LifeStage(value.EntityId) >= EntityLifeStage.Terminating)
                 {
                     DetachParentToNull(uid, xform);
                     if (_netMan.IsServer || IsClientSide(uid))

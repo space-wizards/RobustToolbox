@@ -73,6 +73,21 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
+    public bool TryGetEntityData(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity, [NotNullWhen(true)] out MetaDataComponent? meta)
+    {
+        if (NetEntityLookup.TryGetValue(nEntity, out var went))
+        {
+            entity = went.Item1;
+            meta = went.Item2;
+            return true;
+        }
+
+        entity = null;
+        meta = null;
+        return false;
+    }
+
+    /// <inheritdoc />
     public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         if (nEntity == null)

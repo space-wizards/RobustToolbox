@@ -24,7 +24,7 @@ namespace Robust.Server.GameStates;
 internal sealed partial class PvsSystem : EntitySystem
 {
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
+    [Shared.IoC.Dependency] private readonly INetworkedMapManager _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IParallelManager _parallelManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _serverGameStateManager = default!;
@@ -227,6 +227,7 @@ internal sealed partial class PvsSystem : EntitySystem
     public void CullDeletionHistory(GameTick oldestAck)
     {
         _entityPvsCollection.CullDeletionHistoryUntil(oldestAck);
+        _mapManager.CullDeletionHistory(oldestAck);
     }
 
     #region PVSCollection methods to maybe make public someday:tm:

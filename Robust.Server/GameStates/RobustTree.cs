@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Utility;
 
@@ -89,56 +89,76 @@ public sealed class RobustTree<T> where T : notnull
         throw new InvalidOperationException("Node neither had a parent nor was a RootNode.");
     }
 
-    public TreeNode Set(T rootNode)
+    public void Set(T rootNode)
     {
-        //root node, for now
-        if (_nodeIndex.TryGetValue(rootNode, out var node))
+        ref var node = ref CollectionsMarshal.GetValueRefOrAddDefault(_nodeIndex, rootNode, out var exists);
+
+        if (exists)
         {
             if(!RootNodes.Contains(rootNode))
                 throw new InvalidOperationException("Node already exists as non-root node.");
-            return node;
+            return;
         }
 
         node = new TreeNode(rootNode);
-        _nodeIndex.Add(rootNode, node);
-        RootNodes.Add(rootNode);
-        return node;
+        if(!RootNodes.Add(rootNode))
+            throw new InvalidOperationException("Non-existent node was already a root node?");
     }
 
-    public TreeNode Set(T child, T parent)
+    public void Set(T child, T parent)
     {
-        if (!_nodeIndex.TryGetValue(parent, out var parentNode))
-            parentNode = Set(parent);
-
-        if (parentNode.Children == null)
+        // Code block for where parentNode is a valid ref
         {
-            _nodeIndex[parent] = parentNode = parentNode.WithChildren(_pool.Get());
-        }
+            ref var parentNode = ref CollectionsMarshal.GetValueRefOrAddDefault(_nodeIndex, parent, out var parentExists);
 
-        if (_nodeIndex.TryGetValue(child, out var existingNode))
-        {
-            if (RootNodes.Contains(child))
+            // If parent does not exist we make it a new root node.
+            if (!parentExists)
             {
-                parentNode.Children!.Add(existingNode.Value);
-                RootNodes.Remove(child);
-                _parents.Add(child, parent);
-                return existingNode;
+                parentNode = new TreeNode(parent);
+                if (!RootNodes.Add(parent))
+                {
+                    _nodeIndex.Remove(parent);
+                    throw new InvalidOperationException("Non-existent node was already a root node?");
+                }
             }
 
-            if (!_parents.TryGetValue(child, out var previousParent) || _nodeIndex.TryGetValue(previousParent, out var previousParentNode))
-                throw new InvalidOperationException("Could not find old parent for non-root node.");
-
-            previousParentNode.Children?.Remove(existingNode.Value);
-            parentNode.Children!.Add(existingNode.Value);
-            _parents[child] = parent;
-            return existingNode;
+            var children = parentNode.Children;
+            if (children == null)
+            {
+                children = _pool.Get();
+                parentNode = parentNode.WithChildren(children);
+                DebugTools.AssertNotNull(_nodeIndex[parent].Children);
+            }
+            children.Add(child);
         }
 
-        existingNode = new TreeNode(child);
-        _nodeIndex.Add(child, existingNode);
-        parentNode.Children!.Add(existingNode.Value);
-        _parents.Add(child, parent);
-        return existingNode;
+        // No longer safe to access parentNode ref after this.
+
+        ref var node = ref CollectionsMarshal.GetValueRefOrAddDefault(_nodeIndex, child, out var childExists);
+        if (!childExists)
+        {
+            // This is the path that PVS should take 99% of the time.
+            node = new TreeNode(child);
+            _parents.Add(child, parent);
+            return;
+        }
+
+        if (RootNodes.Remove(child))
+        {
+            DebugTools.Assert(!_parents.ContainsKey(child));
+            _parents.Add(child, parent);
+            return;
+        }
+
+        ref var parentEntry = ref CollectionsMarshal.GetValueRefOrAddDefault(_parents, child, out var previousParentExists);
+        if (!previousParentExists || !_nodeIndex.TryGetValue(parentEntry!, out var previousParentNode))
+        {
+            parentEntry = parent;
+            throw new InvalidOperationException("Could not find old parent for non-root node.");
+        }
+
+        previousParentNode.Children?.Remove(child);
+        parentEntry = parent;
     }
 
     public readonly struct TreeNode : IEquatable<TreeNode>

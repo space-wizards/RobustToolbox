@@ -54,6 +54,18 @@ END TEMPLATE-->
 *None yet*
 
 
+## 161.1.0
+
+### New features
+
+* Add more DebugTools assert variations.
+
+### Bugfixes
+
+* Don't attempt to insert entities into deleted containers.
+* Try to fix oldestAck not being set correctly leading to deletion history getting bloated for pvs.
+
+
 ## 161.0.0
 
 ### Breaking changes

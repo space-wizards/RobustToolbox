@@ -45,8 +45,8 @@ namespace Robust.Shared.Utility
             if (ReferenceEquals(objA, objB))
                 return;
 
-            if (objA == null || ! objA.Equals(objB))
-                throw new DebugAssertException($"Expected: {objA ?? "null"} but was {objB ?? "null"}");
+            if (objA == null || !objA.Equals(objB))
+                throw new DebugAssertException($"Expected: {objB ?? "null"} but was {objA ?? "null"}");
         }
 
         [Conditional("DEBUG")]
@@ -56,8 +56,34 @@ namespace Robust.Shared.Utility
             if (ReferenceEquals(objA, objB))
                 return;
 
-            if (objA == null || ! objA.Equals(objB))
-                throw new DebugAssertException($"{message}\nExpected: {objA ?? "null"} but was {objB ?? "null"}");
+            if (objA == null || !objA.Equals(objB))
+                throw new DebugAssertException($"{message}\nExpected: {objB ?? "null"} but was {objA ?? "null"}");
+        }
+
+        [Conditional("DEBUG")]
+        [AssertionMethod]
+        public static void AssertNotEquals(object? objA, object? objB)
+        {
+            if (ReferenceEquals(objA, objB))
+                throw new DebugAssertException($"Expected: not {objB ?? "null"}");
+
+            if (objA == null || !objA.Equals(objB))
+                return;
+
+            throw new DebugAssertException($"Expected: not {objB}");
+        }
+
+        [Conditional("DEBUG")]
+        [AssertionMethod]
+        public static void AssertNotEquals(object? objA, object? objB, string message)
+        {
+            if (ReferenceEquals(objA, objB))
+                throw new DebugAssertException($"{message}\nExpected: not {objB ?? "null"}");
+
+            if (objA == null || !objA.Equals(objB))
+                return;
+
+            throw new DebugAssertException($"{message}\nExpected: not {objB}");
         }
 
         [Conditional("DEBUG")]

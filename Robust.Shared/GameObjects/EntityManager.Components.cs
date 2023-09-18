@@ -302,7 +302,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false, meta);
+            RemoveComponentImmediate((Component)comp, uid, false, true, meta);
             return true;
         }
 
@@ -316,7 +316,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            RemoveComponentImmediate((Component)comp, uid, false, meta);
+            RemoveComponentImmediate((Component)comp, uid, false, true, meta);
             return true;
         }
 
@@ -331,7 +331,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, Component component, MetaDataComponent? meta = null)
         {
-            RemoveComponentImmediate(component, uid, false, meta);
+            RemoveComponentImmediate(component, uid, false, true, meta);
         }
 
         /// <inheritdoc />
@@ -383,7 +383,7 @@ namespace Robust.Shared.GameObjects
             var objComps = _world.GetAllComponents(uid);
             foreach (Component comp in objComps)
             {
-                RemoveComponentImmediate(comp, uid, false, meta);
+                RemoveComponentImmediate(comp, uid, false, false, meta);
             }
         }
 
@@ -398,7 +398,7 @@ namespace Robust.Shared.GameObjects
 
                 try
                 {
-                    RemoveComponentImmediate(comp, uid, true, false, metadata);
+                    RemoveComponentImmediate(comp, uid, true, false, meta);
                 }
                 catch (Exception exc)
                 {
@@ -444,6 +444,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
+        /// WARNING: Do not call this unless you're sure of what you're doing!
+        /// </summary>
+        internal void RemoveComponentInternal(EntityUid uid, Component component, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
+        {
+            // I hate this but also didn't want the MetaQuery.GetComponent overhead.
+            // and with archetypes we want to avoid moves at all costs.
+            RemoveComponentImmediate(component, uid, terminating, archetypeChange, metadata);
+        }
+
+        /// <summary>
         /// Removes a component.
         /// </summary>
         /// <param name="terminating">Is the entity terminating.</param>
@@ -481,7 +491,7 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
-            DeleteComponent(uid, component, terminating, true, meta);
+            DeleteComponent(uid, component, terminating, archetypeChange, meta);
         }
 
         /// <inheritdoc />
@@ -522,7 +532,7 @@ namespace Robust.Shared.GameObjects
             _deleteSet.Clear();
         }
 
-        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating, MetaDataComponent? metadata = null)
+        private void DeleteComponent(EntityUid entityUid, Component component, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
         {
             if (!MetaQuery.ResolveInternal(entityUid, ref metadata))
                 return;
@@ -615,6 +625,7 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.AssertNull(meta);
                 return false;
+            }
 
             return HasComponent(uid.Value, netId, meta);
         }
@@ -691,7 +702,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IComponent GetComponentInternal(EntityUid uid, CompIdx type)
         {
-            if (TryGetComponentInternal(uid, type, out var component))
+            if (TryGetComponent(uid, type, out var component))
                 return component;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");

@@ -78,11 +78,6 @@ namespace Robust.Shared.GameObjects
         public NetEntity NetEntity { get; internal set; } = NetEntity.Invalid;
 
         /// <summary>
-        /// Stores networked components for this entity.
-        /// </summary>
-        internal Dictionary<ushort, Component> NetComponents = new();
-
-        /// <summary>
         /// When this entity was paused, if applicable. Note that this is the actual time, not the duration which gets
         /// returned by <see cref="MetaDataSystem.GetPauseTime"/>.
         /// </summary>

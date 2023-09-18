@@ -1175,7 +1175,7 @@ namespace Robust.Client.GameStates
                     {
                         comp = (Component) _compFactory.GetComponent(id);
                         comp.Owner = uid;
-                        _entityManager.AddComponent(uid, comp, true, metadata: meta);
+                        _entityManager.AddComponent(uid, comp, metadata: meta);
                     }
 
                     _compStateWork[id] = (comp, state, null);
@@ -1190,7 +1190,6 @@ namespace Robust.Client.GameStates
                 {
                     if (!meta.NetComponents.TryGetValue(compChange.NetID, out var comp))
                     {
-                        newComp.Owner = uid;
                         comp = (Component) _compFactory.GetComponent(compChange.NetID);
                         comp.Owner = uid;
                         addedComps.Add(comp);
@@ -1425,7 +1424,7 @@ namespace Robust.Client.GameStates
                 {
                     comp = (Component) _compFactory.GetComponent(id);
                     comp.Owner = uid;
-                    _entityManager.AddComponent(uid, comp, true, meta);
+                    _entityManager.AddComponent(uid, comp, meta);
                 }
 
                 var handleState = new ComponentHandleState(state, null);

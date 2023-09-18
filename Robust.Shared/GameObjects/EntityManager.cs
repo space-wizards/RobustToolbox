@@ -669,8 +669,8 @@ namespace Robust.Shared.GameObjects
             var xformComp = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
             xformComp.Owner = uid;
             AddComponentInternal(uid, xformComp, true, metadata);
+            xform = xformComp;
 
-            AddComponentInternal(uid, xform, _xformReg, true, metadata);
             return uid;
         }
 
@@ -807,7 +807,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (adds[i])
                 {
-                    AddComponentInternal(entity, Unsafe.As<Component>(comps[i]), compRegs[i], true, metadata: metadata);
+                    AddComponentInternal(entity, (Component) comps[i], compRegs[i], true, metadata: metadata);
                 }
             }
         }

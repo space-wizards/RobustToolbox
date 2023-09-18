@@ -1,7 +1,7 @@
 - type: entity
   id: debugRotation
   abstract: true
-  suffix: DEBUG
+  categories: [ debug ]
   components:
   - type: Sprite
     netsync: false

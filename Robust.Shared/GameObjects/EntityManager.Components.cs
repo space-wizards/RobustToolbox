@@ -572,7 +572,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
-            if (!_world.IsAlive(uid) || !_world.TryGet(uid, out T comp))
+            if (!IsAlive(uid) || !_world.TryGet(uid, out T comp))
                 return false;
 
             return !comp!.Deleted;
@@ -589,7 +589,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, Type type)
         {
-            if (!_world.IsAlive(uid) || !_world.TryGet(uid, type, out var comp))
+            if (!IsAlive(uid) || !_world.TryGet(uid, type, out var comp))
                 return false;
 
             return !Unsafe.As<IComponent>(comp).Deleted;
@@ -670,7 +670,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid) where T : IComponent
         {
-            if (_world.IsAlive(uid) && _world.TryGet(uid, out T comp))
+            if (IsAlive(uid) && _world.TryGet(uid, out T comp))
                 return comp;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
@@ -712,7 +712,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent
         {
-            if (_world.IsAlive(uid) && _world.TryGet(uid, out component))
+            if (IsAlive(uid) && _world.TryGet(uid, out component))
             {
                 if (!component!.Deleted)
                 {
@@ -749,7 +749,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (_world.IsAlive(uid) && _world.TryGet(uid, type, out var comp))
+            if (IsAlive(uid) && _world.TryGet(uid, type, out var comp))
             {
                 component = Unsafe.As<IComponent>(comp);
                 if (!component.Deleted)
@@ -764,7 +764,7 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (_world.IsAlive(uid) && _world.TryGet(uid, type.Type, out var comp))
+            if (IsAlive(uid) && _world.TryGet(uid, type.Type, out var comp))
             {
                 component = (IComponent) comp;
                 if (component != null! && !component.Deleted)

@@ -149,6 +149,12 @@ namespace Robust.Shared.GameObjects
             return DangerousEntityExtensions.CreateEntityStruct(self.Id - ArchUidOffset, 0);
         }
 
+        public static implicit operator EntityReference(EntityUid other)
+        {
+            var ent = new Entity(other.Id - ArchUidOffset, 0);
+            return new EntityReference(in ent, other.Version - ArchVersionOffset);
+        }
+
         public static implicit operator EntityUid(EntityReference other)
         {
             return new EntityUid(other);

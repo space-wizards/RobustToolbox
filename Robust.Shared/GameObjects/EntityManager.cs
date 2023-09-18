@@ -582,7 +582,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return _world.IsAlive(uid);
+            return ((EntityReference) uid).IsAlive(_world);
         }
 
         public bool EntityExists(EntityUid? uid)
@@ -601,7 +601,21 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !_world.IsAlive(uid) || !_world.TryGet(uid, out MetaDataComponent comp) || comp.EntityLifeStage >= EntityLifeStage.Terminating;
+            return !IsAlive(uid) || !_world.TryGet(uid, out MetaDataComponent comp) || comp.EntityLifeStage >= EntityLifeStage.Terminating;
+        }
+
+        /// <summary>
+        /// Returns whether the entity is alive inside of the ECS world.
+        /// </summary>
+        internal bool IsAlive(EntityUid uid)
+        {
+            return ((EntityReference) uid).IsAlive(_world);
+        }
+
+        internal bool TryAlive(EntityUid uid, out EntityReference entity)
+        {
+            entity = uid;
+            return entity.IsAlive(_world);
         }
 
         public bool Deleted([NotNullWhen(false)] EntityUid? uid)

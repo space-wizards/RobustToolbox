@@ -766,7 +766,7 @@ namespace Robust.Shared.GameObjects
         {
             if (IsAlive(uid) && _world.TryGet(uid, type.Type, out var comp))
             {
-                component = (IComponent) comp;
+                component = Unsafe.As<IComponent>(comp);
                 if (component != null! && !component.Deleted)
                     return true;
             }
@@ -831,7 +831,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var obj in _world.GetAllComponents(uid))
             {
-                var comp = Unsafe.As<Component>(obj);
+                var comp = Unsafe.As<IComponent>(obj);
 
                 if (comp.Deleted) continue;
 

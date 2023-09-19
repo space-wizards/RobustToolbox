@@ -1,0 +1,17 @@
+# debug related entities
+- type: entityCategory
+  id: debug
+  name: entity-category-name-debug
+  description: entity-category-desc-debug
+
+# entities that spawn other entities
+- type: entityCategory
+  id: spawner
+  name: entity-category-name-spawner
+  description: entity-category-desc-spawner
+
+# entities that should be hidden from the spawn menu
+- type: entityCategory
+  id: hideSpawnMenu
+  name: entity-category-name-hide
+  description: entity-category-desc-hide

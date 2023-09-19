@@ -32,6 +32,22 @@ namespace Robust.Shared.GameObjects
             return found;
         }
 
+        /// <inheritdoc cref="Resolve{TComp}"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected bool Resolve(EntityUid uid, [NotNullWhen(true)] ref MetaDataComponent? component,
+            bool logMissing = true)
+        {
+            return EntityManager.MetaQuery.Resolve(uid, ref component);
+        }
+
+        /// <inheritdoc cref="Resolve{TComp}"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected bool Resolve(EntityUid uid, [NotNullWhen(true)] ref TransformComponent? component,
+            bool logMissing = true)
+        {
+            return EntityManager.TransformQuery.Resolve(uid, ref component);
+        }
+
         /// <summary>
         ///     Resolves the components on the entity for the null component references.
         /// </summary>

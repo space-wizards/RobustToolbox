@@ -54,6 +54,76 @@ END TEMPLATE-->
 *None yet*
 
 
+## 162.1.1
+
+### Bugfixes
+
+* Fixes "NoSpawn" entities appearing in the spawn menu.
+
+
+## 162.1.0
+
+### New features
+
+* Mark ProtoId as NetSerializable.
+
+### Bugfixes
+
+* Temporarily revert NetForceAckThreshold change as it can lead to client stalling.
+* Fix eye visibility layers not updating on children when a parent changes.
+
+### Internal
+
+* Use CollectionsMarshal in RobustTree and AddComponentInternal.
+
+
+## 162.0.0
+
+### New features
+
+* Add entity categories for prototypes and deprecate the `noSpawn` tag.
+* Add missing proxy method for `TryGetEntityData`.
+* Add NetForceAckThreshold cvar to forcibly update acks for late clients.
+
+### Internal
+
+* Use CollectionMarshals in PVS and DynamicTree.
+* Make the proxy methods use MetaQuery / TransformQuery.
+
+
+## 161.1.0
+
+### New features
+
+* Add more DebugTools assert variations.
+
+### Bugfixes
+
+* Don't attempt to insert entities into deleted containers.
+* Try to fix oldestAck not being set correctly leading to deletion history getting bloated for pvs.
+
+
+## 161.0.0
+
+### Breaking changes
+
+* Point light animations now need to use different component fields in order to animate the lights. `Enabled` should be replaced with `AnimatedEnable` and `Radius` should be replaced with `AnimatedRadius`
+
+### New features
+
+* EntProtoId is now net-serializable
+* Added print_pvs_ack command to debug PVS issues.
+
+### Bugfixes
+
+* Fixes AngleTypeParser not using InvariantCulture
+* Fixed a bug that was causing `MetaDataComponent.LastComponentRemoved` to be updated improperly.
+
+### Other
+
+* The string representation of client-side entities now looks nicer and simply uses a 'c' prefix.
+
+
 ## 160.1.0
 
 ### New features

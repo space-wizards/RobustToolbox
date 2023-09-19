@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -285,17 +286,29 @@ namespace Robust.Shared.GameObjects
             var dict = _entTraitArray[type.Value];
             DebugTools.Assert(dict != null);
 
-            if (dict.TryGetValue(uid, out var duplicate))
+            // Code block to restrict access to ref comp.
             {
-                if (!overwrite && !duplicate.Deleted)
-                    throw new InvalidOperationException(
-                        $"Component reference type {component.GetType().Name} already occupied by {duplicate}");
+                ref var comp = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, uid, out var exists);
+                if (!exists)
+                {
+                    if (!overwrite && !comp!.Deleted)
+                    {
+                        throw new InvalidOperationException(
+                            $"Component reference type {reg.Name} already occupied by {comp}");
+                    }
 
-                RemoveComponentImmediate(duplicate, uid, false, metadata);
+                    // This will invalidate the comp ref as it removes the key from the dictionary.
+                    // This is inefficient, but component overriding rarely ever happens.
+                    RemoveComponentImmediate(comp!, uid, false, metadata);
+                    dict.Add(uid, component);
+                }
+                else
+                {
+                    comp = component;
+                }
             }
 
             // actually ADD the component
-            dict.Add(uid, component);
             _entCompIndex.Add(uid, component);
 
             // add the component to the netId grid

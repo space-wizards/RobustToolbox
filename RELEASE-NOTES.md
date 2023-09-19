@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 162.1.0
+
+### New features
+
+* Mark ProtoId as NetSerializable.
+
+### Bugfixes
+
+* Temporarily revert NetForceAckThreshold change as it can lead to client stalling.
+* Fix eye visibility layers not updating on children when a parent changes.
+
+### Internal
+
+* Use CollectionsMarshal in RobustTree and AddComponentInternal.
+
+
 ## 162.0.0
 
 ### New features

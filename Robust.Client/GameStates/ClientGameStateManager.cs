@@ -24,8 +24,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Components;
 using Robust.Shared.Profiling;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
@@ -71,6 +69,13 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly ILogManager _logMan = default!;
 
         private ISawmill _sawmill = default!;
+
+        /// <summary>
+        /// If we are waiting for a full game state from the server, we will automatically re-send full state requests
+        /// if they do not arrive in time. Ideally this should never happen, this here just in case a client gets
+        /// stuck waiting for a full state that the server doesn't know the client even wants.
+        /// </summary>
+        public static readonly TimeSpan FullStateTimeout = TimeSpan.FromSeconds(10);
 
         /// <inheritdoc />
         public int MinBufferSize => _processor.MinBufferSize;
@@ -226,6 +231,16 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public void ApplyGameState()
         {
+            // If we have been waiting for a full state for a long time, re-request a full state.
+            if (_processor.WaitingForFull
+                && _processor.LastFullStateRequested is {} last
+                && DateTime.UtcNow - last.Time > FullStateTimeout)
+            {
+                // Re-request a full state.
+                // We use the previous from-tick, just in case the full state is already on the way,
+                RequestFullState(null, last.Tick);
+            }
+
             // Calculate how many states we need to apply this tick.
             // Always at least one, but can be more based on StateBufferMergeThreshold.
             var curBufSize = ApplicableStateCount;
@@ -284,9 +299,9 @@ namespace Robust.Client.GameStates
                 }
 
                 // If we were waiting for a new state, we are now applying it.
-                if (_processor.LastFullStateRequested.HasValue)
+                if (_processor.WaitingForFull)
                 {
-                    _processor.LastFullStateRequested = null;
+                    _processor.OnFullStateReceived();
                     _timing.LastProcessedTick = curState.ToSequence;
                     DebugTools.Assert(curState.FromSequence == GameTick.Zero);
                     PartialStateReset(curState, true);
@@ -396,11 +411,11 @@ namespace Robust.Client.GameStates
             }
         }
 
-        public void RequestFullState(NetEntity? missingEntity = null)
+        public void RequestFullState(NetEntity? missingEntity = null, GameTick? tick = null)
         {
             _sawmill.Info("Requesting full server state");
             _network.ClientSendMessage(new MsgStateRequestFull { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? NetEntity.Invalid });
-            _processor.OnFullStateRequested();
+            _processor.OnFullStateRequested(tick ?? _timing.LastRealTick);
         }
 
         public void PredictTicks(GameTick predictionTarget)

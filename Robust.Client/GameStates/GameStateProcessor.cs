@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Timing;
@@ -25,17 +26,7 @@ namespace Robust.Client.GameStates
         private readonly Dictionary<GameTick, List<NetEntity>> _pvsDetachMessages = new();
         public GameState? LastFullState { get; private set; }
         public bool WaitingForFull => LastFullStateRequested.HasValue;
-        public GameTick? LastFullStateRequested
-        {
-            get => _lastFullStateRequested;
-            set
-            {
-                _lastFullStateRequested = value;
-                LastFullState = null;
-            }
-        }
-
-        public GameTick? _lastFullStateRequested = GameTick.Zero;
+        public (GameTick Tick, DateTime Time)? LastFullStateRequested { get; private set; } = (GameTick.Zero, DateTime.MaxValue);
 
         private int _bufferSize;
 
@@ -110,7 +101,7 @@ namespace Robust.Client.GameStates
                 return true;
             }
 
-            if (LastFullState == null && state.FromSequence == GameTick.Zero && state.ToSequence >= LastFullStateRequested!.Value)
+            if (LastFullState == null && state.FromSequence == GameTick.Zero && state.ToSequence >= LastFullStateRequested!.Value.Tick)
             {
                 LastFullState = state;
 
@@ -378,14 +369,20 @@ Had full state: {LastFullState != null}"
         {
             _stateBuffer.Clear();
             LastFullState = null;
-            LastFullStateRequested = GameTick.Zero;
+            LastFullStateRequested = (GameTick.Zero, DateTime.MaxValue);
         }
 
-        public void OnFullStateRequested()
+        public void OnFullStateRequested(GameTick tick)
         {
             _stateBuffer.Clear();
             LastFullState = null;
-            LastFullStateRequested = _timing.LastRealTick;
+            LastFullStateRequested = (tick, DateTime.UtcNow);
+        }
+
+        public void OnFullStateReceived()
+        {
+            LastFullState = null;
+            LastFullStateRequested = null;
         }
 
         public void MergeImplicitData(Dictionary<NetEntity, Dictionary<ushort, ComponentState>> implicitData)

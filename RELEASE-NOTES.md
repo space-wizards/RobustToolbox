@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 162.1.1
+
+### Bugfixes
+
+* Fixes "NoSpawn" entities appearing in the spawn menu.
+
+
 ## 162.1.0
 
 ### New features

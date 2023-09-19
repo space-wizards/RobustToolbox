@@ -75,13 +75,4 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
                 Dirty(uid, comp);
         }
     }
-
-    public override void SetVisibilityMask(EntityUid uid, int value, MetaDataComponent? meta = null)
-    {
-        if (!Resolve(uid, ref meta) || meta.VisibilityMask == value)
-            return;
-
-        base.SetVisibilityMask(uid, value, meta);
-        _pvsSystem.MarkDirty(uid);
-    }
 }

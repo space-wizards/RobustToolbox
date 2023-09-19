@@ -84,7 +84,7 @@ namespace Robust.Client.GameStates
         public int TargetBufferSize => _processor.TargetBufferSize;
 
         /// <inheritdoc />
-        public int ApplicableStateCount => _processor.GetApplicableStateCount();
+        public int GetApplicableStateCount() => _processor.GetApplicableStateCount();
         public int StateCount => _processor.StateCount;
 
         public bool IsPredictionEnabled { get; private set; }
@@ -243,7 +243,7 @@ namespace Robust.Client.GameStates
 
             // Calculate how many states we need to apply this tick.
             // Always at least one, but can be more based on StateBufferMergeThreshold.
-            var curBufSize = ApplicableStateCount;
+            var curBufSize = GetApplicableStateCount();
             var targetBufSize = TargetBufferSize;
 
             var bufferOverflow = curBufSize - targetBufSize - StateBufferMergeThreshold;
@@ -366,7 +366,7 @@ namespace Robust.Client.GameStates
             if (_processor.WaitingForFull)
                 _timing.TickTimingAdjustment = 0f;
             else
-                _timing.TickTimingAdjustment = (ApplicableStateCount - (float)TargetBufferSize) * 0.10f;
+                _timing.TickTimingAdjustment = (GetApplicableStateCount() - (float)TargetBufferSize) * 0.10f;
 
             // If we are about to process an another tick in the same frame, lets not bother unnecessarily running prediction ticks
             // Really the main-loop ticking just needs to be more specialized for clients.

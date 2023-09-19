@@ -386,7 +386,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-        	// Probably can't Unsafe.As<T> in case something on content overrides it.
+            // Can't Unsafe.As<T> in case something on content implements something with IComponent.
             RemoveComponent(uid, (Component)component, meta);
         }
 
@@ -431,7 +431,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void RemoveComponentDeferred(EntityUid owner, IComponent component)
         {
-            RemoveComponentDeferred(Unsafe.As<Component>(component), owner, false);
+            // Can't Unsafe.As<T> in case something on content implements something with IComponent.
+            RemoveComponentDeferred((Component)component, owner, false);
         }
 
         /// <inheritdoc />

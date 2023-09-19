@@ -289,7 +289,7 @@ namespace Robust.Shared.GameObjects
             // Code block to restrict access to ref comp.
             {
                 ref var comp = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, uid, out var exists);
-                if (!exists)
+                if (exists)
                 {
                     if (!overwrite && !comp!.Deleted)
                     {

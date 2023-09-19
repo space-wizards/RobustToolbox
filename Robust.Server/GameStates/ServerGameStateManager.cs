@@ -368,8 +368,6 @@ Oldest acked clients: {string.Join(", ", players)}
             stateUpdateMessage.State = state;
             stateUpdateMessage.CompressionContext = resources.CompressionContext;
 
-            _networkManager.ServerSendMessage(stateUpdateMessage, channel);
-
             // If the state is too big we let Lidgren send it reliably. This is to avoid a situation where a state is so
             // large that it (or part of it) consistently gets dropped. When we send reliably, we immediately update the
             // ack so that the next state will not also be huge.
@@ -391,6 +389,8 @@ Oldest acked clients: {string.Join(", ", players)}
                     _logger.Error($"Client {session} exceeded ack-tick threshold. Last ack: {lastAck}. Cur tick: {_gameTiming.CurTick}. Connect time: {connectedTime} minutes");
 #endif
             }
+
+            _networkManager.ServerSendMessage(stateUpdateMessage, channel);
 
             if (stateUpdateMessage.ShouldSendReliably())
             {

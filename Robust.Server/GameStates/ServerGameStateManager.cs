@@ -347,7 +347,7 @@ Oldest acked clients: {string.Join(", ", players)}
                 (entStates, deletions, fromTick) = _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
             }
 
-            var playerStates = _playerManager.GetPlayerStates(lastAck);
+            var playerStates = _playerManager.GetPlayerStates(fromTick);
 
             // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
             var lastInputCommand = inputSystem.GetLastInputCommand(session);

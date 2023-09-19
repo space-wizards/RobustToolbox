@@ -102,7 +102,7 @@ namespace Robust.Shared.Prototypes
         [Obsolete("Use the HideSpawnMenu")]
         public bool NoSpawn { get; private set; }
 
-        public bool HideSpawnMenu => Categories.Contains(HideCategory);
+        public bool HideSpawnMenu => Categories.Contains(HideCategory) || NoSpawn;
 
         [DataField("placement")]
         private EntityPlacementProperties PlacementProperties = new();

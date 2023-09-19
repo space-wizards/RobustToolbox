@@ -45,11 +45,6 @@ namespace Robust.Shared.Maths
         [NonSerialized]
         [FieldOffset(sizeof(float) * 0)] public System.Numerics.Vector4 AsVector4;
 
-        public readonly bool HasNan()
-        {
-            return Vector128.EqualsAny(AsVector4.AsVector128(), Vector128.Create(float.NaN));
-        }
-
         public readonly Vector2 BottomRight
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -151,6 +146,11 @@ namespace Robust.Shared.Maths
             var max = Vector2.Max(a, b);
 
             return new Box2(min, max);
+        }
+
+        public readonly bool HasNan()
+        {
+            return Vector128.EqualsAny(AsVector4.AsVector128(), Vector128.Create(float.NaN));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

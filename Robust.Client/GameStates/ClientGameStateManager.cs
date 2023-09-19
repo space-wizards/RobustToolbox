@@ -35,7 +35,7 @@ namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
     [UsedImplicitly]
-    public sealed class ClientGameStateManager : IClientGameStateManager, IPostInjectInit
+    public sealed class ClientGameStateManager : IClientGameStateManager
     {
         private GameStateProcessor _processor = default!;
 
@@ -79,7 +79,8 @@ namespace Robust.Client.GameStates
         public int TargetBufferSize => _processor.TargetBufferSize;
 
         /// <inheritdoc />
-        public int CurrentBufferSize => _processor.CalculateBufferSize(_timing.LastRealTick);
+        public int ApplicableStateCount => _processor.GetApplicableStateCount();
+        public int StateCount => _processor.StateCount;
 
         public bool IsPredictionEnabled { get; private set; }
         public bool PredictionNeedsResetting { get; private set; }
@@ -104,7 +105,8 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public void Initialize()
         {
-            _processor = new GameStateProcessor(_timing);
+            _processor = new GameStateProcessor(this, _timing, _logMan);
+            _sawmill = _logMan.GetSawmill(CVars.NetPredict.Name);
 
             _network.RegisterNetMessage<MsgState>(HandleStateMessage);
             _network.RegisterNetMessage<MsgStateLeavePvs>(HandlePvsLeaveMessage);
@@ -226,7 +228,7 @@ namespace Robust.Client.GameStates
         {
             // Calculate how many states we need to apply this tick.
             // Always at least one, but can be more based on StateBufferMergeThreshold.
-            var curBufSize = CurrentBufferSize;
+            var curBufSize = ApplicableStateCount;
             var targetBufSize = TargetBufferSize;
 
             var bufferOverflow = curBufSize - targetBufSize - StateBufferMergeThreshold;
@@ -349,7 +351,7 @@ namespace Robust.Client.GameStates
             if (_processor.WaitingForFull)
                 _timing.TickTimingAdjustment = 0f;
             else
-                _timing.TickTimingAdjustment = (CurrentBufferSize - (float)TargetBufferSize) * 0.10f;
+                _timing.TickTimingAdjustment = (ApplicableStateCount - (float)TargetBufferSize) * 0.10f;
 
             // If we are about to process an another tick in the same frame, lets not bother unnecessarily running prediction ticks
             // Really the main-loop ticking just needs to be more specialized for clients.
@@ -398,7 +400,7 @@ namespace Robust.Client.GameStates
         {
             _sawmill.Info("Requesting full server state");
             _network.ClientSendMessage(new MsgStateRequestFull { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? NetEntity.Invalid });
-            _processor.RequestFullState();
+            _processor.OnFullStateRequested();
         }
 
         public void PredictTicks(GameTick predictionTarget)
@@ -1415,11 +1417,6 @@ namespace Robust.Client.GameStates
             }
         }
         #endregion
-
-        void IPostInjectInit.PostInject()
-        {
-            _sawmill = _logMan.GetSawmill(CVars.NetPredict.Name);
-        }
     }
 
     public sealed class GameStateAppliedArgs : EventArgs

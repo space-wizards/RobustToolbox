@@ -206,7 +206,7 @@ internal sealed partial class PvsSystem : EntitySystem
         // return last acked to pool, but only if it is not still in the OverflowDictionary.
         if (sessionData.LastAcked != null && !sessionData.SentEntities.ContainsKey(sessionData.LastAcked.Value.Tick))
         {
-            DebugTools.Assert(sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
+            DebugTools.Assert(!sessionData.SentEntities.Values.Contains(sessionData.LastAcked.Value.Data));
             _visSetPool.Return(sessionData.LastAcked.Value.Data);
         }
 

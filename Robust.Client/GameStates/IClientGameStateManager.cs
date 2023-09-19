@@ -32,7 +32,12 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     Number of applicable game states currently in the state buffer.
         /// </summary>
-        int CurrentBufferSize { get; }
+        int ApplicableStateCount { get; }
+
+        /// <summary>
+        ///     Total number of game states currently in the state buffer.
+        /// </summary>
+        int StateCount { get; }
 
         /// <summary>
         ///     If the buffer size is this many states larger than the target buffer size,

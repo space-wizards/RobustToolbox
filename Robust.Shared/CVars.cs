@@ -177,7 +177,7 @@ namespace Robust.Shared
         /// next game state reliably and simply force update the acked tick,
         /// </summary>
         public static readonly CVarDef<int> NetForceAckThreshold =
-            CVarDef.Create("net.force_ack_threshold", 40, CVar.ARCHIVE | CVar.SERVERONLY);
+            CVarDef.Create("net.force_ack_threshold", 60, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /// <summary>
         /// This limits the number of new entities that can be sent to a client in a single game state. This exists to

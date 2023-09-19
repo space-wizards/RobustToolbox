@@ -381,11 +381,15 @@ Oldest acked clients: {string.Join(", ", players)}
             {
                 stateUpdateMessage.ForceSendReliably = true;
 
-                // Aside from the time shortly after connecting, this shouldn't be common. If it is happening,
-                // something is probably wrong. If it is more frequent than I think, this can be downgraded to a warning.
+                // Aside from the time shortly after connecting, this shouldn't be common. If it is happening.
+                // something is probably wrong (or we have a malicious client). Hence we log an error.
+                // If it is more frequent than I think, this can be downgraded to a warning.
+
+#if FULL_RELEASE
                 var connectedTime = (DateTime.UtcNow - session.ConnectedTime).TotalMinutes;
                 if (lastAck > GameTick.Zero && connectedTime > 1)
                     _logger.Error($"Client {session} exceeded ack-tick threshold. Last ack: {lastAck}. Cur tick: {_gameTiming.CurTick}. Connect time: {connectedTime} minutes");
+#endif
             }
 
             if (stateUpdateMessage.ShouldSendReliably())

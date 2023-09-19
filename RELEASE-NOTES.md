@@ -54,6 +54,20 @@ END TEMPLATE-->
 *None yet*
 
 
+## 162.0.0
+
+### New features
+
+* Add entity categories for prototypes and deprecate the `noSpawn` tag.
+* Add missing proxy method for `TryGetEntityData`.
+* Add NetForceAckThreshold cvar to forcibly update acks for late clients.
+
+### Internal
+
+* Use CollectionMarshals in PVS and DynamicTree.
+* Make the proxy methods use MetaQuery / TransformQuery.
+
+
 ## 161.1.0
 
 ### New features

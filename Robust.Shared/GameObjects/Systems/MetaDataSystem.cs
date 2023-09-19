@@ -15,10 +15,12 @@ public abstract class MetaDataSystem : EntitySystem
     private EntityPausedEvent _pausedEvent;
 
     private EntityQuery<MetaDataComponent> _metaQuery;
+    private EntityQuery<TransformComponent> _transformQuery;
 
     public override void Initialize()
     {
         _metaQuery = GetEntityQuery<MetaDataComponent>();
+        _transformQuery = GetEntityQuery<TransformComponent>();
         SubscribeLocalEvent<MetaDataComponent, ComponentHandleState>(OnMetaDataHandle);
         SubscribeLocalEvent<MetaDataComponent, ComponentGetState>(OnMetaDataGetState);
     }
@@ -147,12 +149,6 @@ public abstract class MetaDataSystem : EntitySystem
         RaiseLocalEvent(uid, ref ev, true);
 
         component.Flags &= ~ev.ToRemove;
-    }
-
-    public virtual void SetVisibilityMask(EntityUid uid, int value, MetaDataComponent? meta = null)
-    {
-        if (Resolve(uid, ref meta))
-            meta.VisibilityMask = value;
     }
 }
 

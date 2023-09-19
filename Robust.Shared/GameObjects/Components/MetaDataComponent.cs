@@ -189,15 +189,8 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         ///     Every entity will always have the first bit set to true.
         /// </remarks>
-        [Access(typeof(MetaDataSystem))]
+        [ViewVariables] // TODO access restrict wriiting to server-side visibility system
         public int VisibilityMask = 1;
-
-        [UsedImplicitly, ViewVariables(VVAccess.ReadWrite)]
-        private int VVVisibilityMask
-        {
-            get => VisibilityMask;
-            set => IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MetaDataSystem>().SetVisibilityMask(Owner, value, this);
-        }
 
         [ViewVariables]
         public bool EntityPaused => PauseTime != null;

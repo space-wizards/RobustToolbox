@@ -189,8 +189,8 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         ///     Every entity will always have the first bit set to true.
         /// </remarks>
-        [ViewVariables] // TODO access restrict wriiting to server-side visibility system
-        public int VisibilityMask = 1;
+        [ViewVariables] // TODO ACCESS RRestrict writing to server-side visibility system
+        public int VisibilityMask { get; internal set; }= 1;
 
         [ViewVariables]
         public bool EntityPaused => PauseTime != null;

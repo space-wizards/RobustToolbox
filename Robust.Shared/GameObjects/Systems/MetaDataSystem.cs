@@ -15,12 +15,10 @@ public abstract class MetaDataSystem : EntitySystem
     private EntityPausedEvent _pausedEvent;
 
     private EntityQuery<MetaDataComponent> _metaQuery;
-    private EntityQuery<TransformComponent> _transformQuery;
 
     public override void Initialize()
     {
         _metaQuery = GetEntityQuery<MetaDataComponent>();
-        _transformQuery = GetEntityQuery<TransformComponent>();
         SubscribeLocalEvent<MetaDataComponent, ComponentHandleState>(OnMetaDataHandle);
         SubscribeLocalEvent<MetaDataComponent, ComponentGetState>(OnMetaDataGetState);
     }

@@ -37,7 +37,7 @@ namespace Robust.Server.GameObjects
             component.Layer |= layer;
 
             if (refresh)
-                RefreshVisibility(uid, vis: component);
+                RefreshVisibility(uid, visibilityComponent: component);
         }
 
         [Obsolete("Use overload that takes an EntityUid instead")]
@@ -54,7 +54,7 @@ namespace Robust.Server.GameObjects
             component.Layer &= ~layer;
 
             if (refresh)
-                RefreshVisibility(uid, vis: component);
+                RefreshVisibility(uid, visibilityComponent: component);
         }
 
         [Obsolete("Use overload that takes an EntityUid instead")]
@@ -71,7 +71,7 @@ namespace Robust.Server.GameObjects
             component.Layer = layer;
 
             if (refresh)
-                RefreshVisibility(uid, vis: component);
+                RefreshVisibility(uid, visibilityComponent: component);
         }
 
         [Obsolete("Use overload that takes an EntityUid instead")]
@@ -91,14 +91,14 @@ namespace Robust.Server.GameObjects
         }
 
         public void RefreshVisibility(EntityUid uid,
-            MetaDataComponent? meta = null,
-            VisibilityComponent? vis = null)
+            VisibilityComponent? visibilityComponent = null,
+            MetaDataComponent? meta = null)
         {
             if (!_metaQuery.Resolve(uid, ref meta, false))
                 return;
 
             // Iterate up through parents and calculate the cumulative visibility mask.
-            var mask = GetParentVisibilityMask(uid, vis);
+            var mask = GetParentVisibilityMask(uid, visibilityComponent);
 
             // Iterate down through children and propagate mask changes.
             RecursivelyApplyVisibility(uid, mask, meta);
@@ -130,7 +130,7 @@ namespace Robust.Server.GameObjects
         [Obsolete("Use overload that takes an EntityUid instead")]
         public void RefreshVisibility(VisibilityComponent visibilityComponent)
         {
-            RefreshVisibility(visibilityComponent.Owner, null, visibilityComponent);
+            RefreshVisibility(visibilityComponent.Owner, visibilityComponent);
         }
 
         private int GetParentVisibilityMask(EntityUid uid, VisibilityComponent? visibilityComponent = null)

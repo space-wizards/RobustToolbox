@@ -182,7 +182,7 @@ namespace Robust.Shared.Physics
         public bool Update(in T item, Box2? newBox = null)
         {
             ref var proxy = ref CollectionsMarshal.GetValueRefOrNullRef(_nodeLookup, item);
-            if (!Unsafe.IsNullRef(ref proxy))
+            if (Unsafe.IsNullRef(ref proxy))
                 return false;
 
             newBox ??= _extractAabb(item);

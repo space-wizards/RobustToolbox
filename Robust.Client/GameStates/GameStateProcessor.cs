@@ -4,9 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 

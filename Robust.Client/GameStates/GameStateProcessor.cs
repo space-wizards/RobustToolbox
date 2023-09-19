@@ -18,7 +18,7 @@ namespace Robust.Client.GameStates
         public const int MaxBufferSize = 512;
 
         private readonly IClientGameTiming _timing;
-        private readonly ClientGameStateManager _state;
+        private readonly IClientGameStateManager _state;
         private readonly ISawmill _logger;
 
         private readonly List<GameState> _stateBuffer = new();
@@ -60,11 +60,11 @@ namespace Robust.Client.GameStates
         /// </summary>
         /// <param name="timing">Timing information of the current state.</param>
         /// <param name="clientGameStateManager"></param>
-        public GameStateProcessor(ClientGameStateManager state, IClientGameTiming timing, ILogManager log)
+        public GameStateProcessor(IClientGameStateManager state, IClientGameTiming timing, ISawmill logger)
         {
             _timing = timing;
             _state = state;
-            _logger = log.GetSawmill("state");
+            _logger = logger;
         }
 
         /// <inheritdoc />

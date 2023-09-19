@@ -110,8 +110,8 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public void Initialize()
         {
-            _processor = new GameStateProcessor(this, _timing, _logMan);
-            _sawmill = _logMan.GetSawmill(CVars.NetPredict.Name);
+            _sawmill = _logMan.GetSawmill("state");
+            _processor = new GameStateProcessor(this, _timing, _sawmill);
 
             _network.RegisterNetMessage<MsgState>(HandleStateMessage);
             _network.RegisterNetMessage<MsgStateLeavePvs>(HandlePvsLeaveMessage);

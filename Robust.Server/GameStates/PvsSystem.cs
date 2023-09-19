@@ -35,9 +35,15 @@ internal sealed partial class PvsSystem : EntitySystem
     public const float ChunkSize = 8;
 
     // TODO make this a cvar. Make it in terms of seconds and tie it to tick rate?
+    // Main issue is that I CBF figuring out the logic for handling it changing mid-game.
     public const int DirtyBufferSize = 20;
     // Note: If a client has ping higher than TickBuffer / TickRate, then the server will treat every entity as if it
     // had entered PVS for the first time. Note that due to the PVS budget, this buffer is easily overwhelmed.
+
+    /// <summary>
+    /// See <see cref="CVars.NetForceAckThreshold"/>.
+    /// </summary>
+    public int ForceAckThreshold { get; private set; }
 
     /// <summary>
     /// Maximum number of pooled objects
@@ -139,6 +145,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
         _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
+        _configManager.OnValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged, true);
 
         _serverGameStateManager.ClientAck += OnClientAck;
         _serverGameStateManager.ClientRequestFull += OnClientRequestFull;
@@ -156,6 +163,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
+        _configManager.UnsubValueChanged(CVars.NetForceAckThreshold, OnForceAckChanged);
 
         _serverGameStateManager.ClientAck -= OnClientAck;
         _serverGameStateManager.ClientRequestFull -= OnClientRequestFull;
@@ -209,6 +217,11 @@ internal sealed partial class PvsSystem : EntitySystem
     private void OnViewsizeChanged(float obj)
     {
         _viewSize = obj * 2;
+    }
+
+    private void OnForceAckChanged(int value)
+    {
+        ForceAckThreshold = value;
     }
 
     private void SetPvs(bool value)

@@ -373,6 +373,21 @@ Oldest acked clients: {string.Join(", ", players)}
             // If the state is too big we let Lidgren send it reliably. This is to avoid a situation where a state is so
             // large that it (or part of it) consistently gets dropped. When we send reliably, we immediately update the
             // ack so that the next state will not also be huge.
+            //
+            // We also do this if the client's last ack is too old. This helps prevent things like the entity deletion
+            // history from becoming too bloated if a bad client fails to send acks for whatever reason.
+
+            if (_gameTiming.CurTick.Value > lastAck.Value + _pvs.ForceAckThreshold)
+            {
+                stateUpdateMessage.ForceSendReliably = true;
+
+                // Aside from the time shortly after connecting, this shouldn't be common. If it is happening,
+                // something is probably wrong. If it is more frequent than I think, this can be downgraded to a warning.
+                var connectedTime = (DateTime.UtcNow - session.ConnectedTime).TotalMinutes;
+                if (lastAck > GameTick.Zero && connectedTime > 1)
+                    _logger.Error($"Client {session} exceeded ack-tick threshold. Last ack: {lastAck}. Cur tick: {_gameTiming.CurTick}. Connect time: {connectedTime} minutes");
+            }
+
             if (stateUpdateMessage.ShouldSendReliably())
             {
                 sessionData.LastReceivedAck = _gameTiming.CurTick;

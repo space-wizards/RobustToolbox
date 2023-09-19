@@ -650,16 +650,16 @@ internal sealed partial class PvsSystem : EntitySystem
         }
     }
 
-    private bool AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, MetaDataComponent mComp,
+    private void AddToChunkSetRecursively(in EntityUid uid, in NetEntity netEntity, MetaDataComponent mComp,
         int visMask, RobustTree<NetEntity> tree, Dictionary<NetEntity, MetaDataComponent> set)
     {
-        if (set.ContainsKey(netEntity))
-            return true;
-
-        // TODO: Don't need to know about parents so no longer need to use bool for this method.
-        // If the eye is missing ANY layer this entity or any of its parents belongs to, it is considered invisible.
+        // If the eye is missing ANY layer that this entity is on, or any layer that any of its parents belongs to, then
+        // it is considered invisible.
         if ((visMask & mComp.VisibilityMask) != mComp.VisibilityMask)
-            return false;
+            return;
+
+        if (!set.TryAdd(netEntity, mComp))
+            return; // already sending
 
         var xform = _xformQuery.GetComponent(uid);
 
@@ -669,8 +669,7 @@ internal sealed partial class PvsSystem : EntitySystem
         {
             DebugTools.Assert(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid));
             tree.Set(netEntity);
-            set.Add(netEntity, mComp);
-            return true;
+            return;
         }
 
         DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
@@ -679,15 +678,12 @@ internal sealed partial class PvsSystem : EntitySystem
         var parentMeta = _metaQuery.GetComponent(parent);
         var parentNetEntity = parentMeta.NetEntity;
 
-        if (!AddToChunkSetRecursively(in parent, in parentNetEntity, parentMeta, visMask, tree, set)) //did we just fail to add the parent?
-        {
-            return false; //we failed? suppose we dont get added either
-        }
+        // Child should have all o the same flags as the parent.
+        DebugTools.Assert((parentMeta.VisibilityMask & mComp.VisibilityMask) == parentMeta.VisibilityMask);
 
-        //i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles
+        // Add our parent.
+        AddToChunkSetRecursively(in parent, in parentNetEntity, parentMeta, visMask, tree, set);
         tree.Set(netEntity, parentNetEntity);
-        set.Add(netEntity, mComp);
-        return true;
     }
 
     internal (List<EntityState>? updates, List<NetEntity>? deletions, List<NetEntity>? leftPvs, GameTick fromTick)

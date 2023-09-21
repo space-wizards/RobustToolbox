@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Server.GameStates;
 using Robust.Shared.Audio;
@@ -9,129 +10,126 @@ using Robust.Shared.Player;
 using Robust.Shared.Players;
 
 namespace Robust.Server.GameObjects;
+
 [UsedImplicitly]
 public sealed class AudioSystem : SharedAudioSystem
 {
     [Dependency] private readonly PvsOverrideSystem _pvs = default!;
-    [Dependency] private readonly TransformSystem _transform = default!;
 
-    /// <inheritdoc />
-    public override IPlayingAudioStream? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
+    private void AddAudioFilter(EntityUid uid, Filter filter)
     {
-        var id = CacheIdentifier();
-        var msg = new PlayAudioGlobalMessage
-        {
-            FileName = filename,
-            AudioParams = audioParams ?? AudioParams.Default,
-            Identifier = id
-        };
-
-        _pvs.AddSessionOverride();
-        RaiseNetworkEvent(msg, playerFilter, recordReplay);
-
-        return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
+        var nent = GetNetEntity(uid);
+        _pvs.AddSessionOverrides(nent, filter);
     }
 
-    public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
+    private void SetupAudio(AudioComponent component, string fileName, AudioType audioType, AudioParams? audioParams)
     {
-        if(!EntityManager.TryGetComponent<TransformComponent>(uid, out var transform))
+        audioParams ??= AudioParams.Default;
+        component.FileName = fileName;
+        component.Params = audioParams.Value;
+        component.AudioType = audioType;
+    }
+
+    /// <inheritdoc />
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
+    {
+        var entity = Spawn(AudioEntity, MapCoordinates.Nullspace);
+        var audio = Comp<AudioComponent>(entity);
+        SetupAudio(audio, filename, AudioType.Global, audioParams);
+        AddAudioFilter(entity, playerFilter);
+
+        return (entity, audio.Stream);
+    }
+
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayEntity(string filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
+    {
+        if (!Exists(uid))
             return null;
 
-        var id = CacheIdentifier();
+        var entity = Spawn(AudioEntity, new EntityCoordinates(uid, Vector2.Zero));
+        var audio = Comp<AudioComponent>(entity);
+        SetupAudio(audio, filename, AudioType.Local, audioParams);
+        AddAudioFilter(entity, playerFilter);
 
-        var fallbackCoordinates = GetFallbackCoordinates(transform.MapPosition);
-
-        var msg = new PlayAudioEntityMessage
-        {
-            FileName = filename,
-            Coordinates = GetNetCoordinates(transform.Coordinates),
-            FallbackCoordinates = GetNetCoordinates(fallbackCoordinates),
-            NetEntity = GetNetEntity(uid),
-            AudioParams = audioParams ?? AudioParams.Default,
-            Identifier = id,
-        };
-
-        RaiseNetworkEvent(msg, playerFilter, recordReplay);
-
-        return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
+        return (entity, audio.Stream);
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayStatic(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        var id = CacheIdentifier();
+        if (!coordinates.IsValid(EntityManager))
+            return null;
 
-        var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(EntityManager, _transform));
+        var entity = Spawn(AudioEntity, coordinates);
+        var audio = Comp<AudioComponent>(entity);
+        SetupAudio(audio, filename, AudioType.Local, audioParams);
+        AddAudioFilter(entity, playerFilter);
 
-        var msg = new PlayAudioPositionalMessage
-        {
-            FileName = filename,
-            Coordinates = GetNetCoordinates(coordinates),
-            FallbackCoordinates = GetNetCoordinates(fallbackCoordinates),
-            AudioParams = audioParams ?? AudioParams.Default,
-            Identifier = id
-        };
-
-        RaiseNetworkEvent(msg, playerFilter, recordReplay);
-
-        return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
+        return (entity, audio.Stream);
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user)
     {
         if (sound == null)
             return null;
 
         var filter = Filter.Pvs(source, entityManager: EntityManager, playerManager: PlayerManager, cfgManager: CfgManager).RemoveWhereAttachedEntity(e => e == user);
-        return PlayEntity(sound, filter, source, true, audioParams);
+        return PlayEntity(GetSound(sound), filter, source, true, sound.Params);
     }
 
-    public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user,
-        AudioParams? audioParams = null)
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user)
     {
         if (sound == null)
             return null;
 
         var filter = Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager).RemoveWhereAttachedEntity(e => e == user);
-        return Play(sound, filter, coordinates, true, audioParams);
+        return PlayStatic(GetSound(sound), filter, coordinates, true, sound.Params);
     }
 
-    public override IPlayingAudioStream? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)
     {
         return PlayGlobal(filename, Filter.SinglePlayer(recipient), false, audioParams);
     }
 
-    public override IPlayingAudioStream? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)
     {
         if (TryComp(recipient, out ActorComponent? actor))
             return PlayGlobal(filename, actor.PlayerSession, audioParams);
+
         return null;
     }
 
-    public override IPlayingAudioStream? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        return Play(filename, Filter.SinglePlayer(recipient), uid, false, audioParams);
+        return PlayEntity(filename, Filter.SinglePlayer(recipient), uid, false, audioParams);
     }
 
-    public override IPlayingAudioStream? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
         if (TryComp(recipient, out ActorComponent? actor))
             return PlayEntity(filename, actor.PlayerSession, uid, audioParams);
+
         return null;
     }
 
-    public override IPlayingAudioStream? PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return Play(filename, Filter.SinglePlayer(recipient), coordinates, false, audioParams);
+        return PlayStatic(filename, Filter.SinglePlayer(recipient), coordinates, false, audioParams);
     }
 
-    public override IPlayingAudioStream? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         if (TryComp(recipient, out ActorComponent? actor))
             return PlayStatic(filename, actor.PlayerSession, coordinates, audioParams);
+
         return null;
     }
 }
 
-internal sealed class AudioSourceServer : IPlayingAudioStream {}
+internal sealed class AudioSourceServer : IPlayingAudioStream
+{
+    public void Dispose()
+    {
+    }
+}

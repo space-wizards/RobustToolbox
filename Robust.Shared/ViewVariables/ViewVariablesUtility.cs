@@ -40,7 +40,7 @@ namespace Robust.Shared.ViewVariables
 
             if (info.HasCustomAttribute<DataFieldAttribute>() || info.HasCustomAttribute<IncludeDataFieldAttribute>())
             {
-                access = VVAccess.ReadOnly;
+                access = VVAccess.ReadWrite;
                 return true;
             }
 

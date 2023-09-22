@@ -5,5 +5,9 @@ namespace Robust.Shared.Audio;
 /// </summary>
 public interface IPlayingAudioStream
 {
+    bool IsPlaying { get; }
+
+    bool Done { get; internal set; }
+
     void Dispose();
 }

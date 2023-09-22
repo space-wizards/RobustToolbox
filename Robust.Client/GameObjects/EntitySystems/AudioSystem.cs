@@ -33,7 +33,6 @@ public sealed class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IClydeAudio _clyde = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly IOverlayManager _overlays = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -44,7 +43,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <summary>
     /// Per-tick cache of relevant streams.
     /// </summary>
-    private readonly List<AudioComponent> _streams = new();
+    private readonly List<(EntityUid Entity, AudioComponent Component)> _streams = new();
 
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<TransformComponent> _xformQuery;
@@ -59,6 +58,7 @@ public sealed class AudioSystem : SharedAudioSystem
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
 
+        SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
         SubscribeLocalEvent<AudioComponent, ComponentShutdown>(OnAudioShutdown);
         SubscribeLocalEvent<AudioComponent, EntityPausedEvent>(OnAudioPaused);
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
@@ -68,26 +68,44 @@ public sealed class AudioSystem : SharedAudioSystem
         _overlays.AddOverlay(new AudioOverlay(EntityManager, _playerManager, IoCManager.Resolve<IResourceCache>(), this, _xformSys));
     }
 
+    public override void Shutdown()
+    {
+        CfgManager.UnsubValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged);
+        base.Shutdown();
+    }
+
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
     {
+        // TODO: OpenAL scrubbing through audio.
         throw new NotImplementedException();
     }
 
     private void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
     {
+        // TODO: OpenAL scrubbing through audio.
         throw new NotImplementedException();
+    }
+
+    private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
+    {
+        if (!Timing.IsFirstTimePredicted || !TryGetAudio(component.FileName, out var audioResource))
+            return;
+
+        var source = _clyde.CreateAudioSource(audioResource);
+
+        if (source == null)
+            return;
+
+        component.Stream = new PlayingStream()
+        {
+            Source = source,
+        };
     }
 
     private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
     {
         var pStream = component.Stream;
         pStream.Dispose();
-    }
-
-    public override void Shutdown()
-    {
-        CfgManager.UnsubValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged);
-        base.Shutdown();
     }
 
     private void OnRaycastLengthChanged(float value)
@@ -101,15 +119,16 @@ public sealed class AudioSystem : SharedAudioSystem
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 
         var query = AllEntityQuery<AudioComponent>();
+        _streams.Clear();
 
-        while (query.MoveNext(out var comp))
+        while (query.MoveNext(out var uid, out var comp))
         {
-            _streams.Add(comp);
+            _streams.Add((uid, comp));
         }
 
         try
         {
-            Parallel.ForEach(_streams, opts, comp => ProcessStream((PlayingStream) comp.Stream, ourPos));
+            Parallel.ForEach(_streams, opts, comp => ProcessStream(comp.Entity, comp.Component, comp.Component.Stream, ourPos));
         }
         catch (Exception e)
         {
@@ -121,36 +140,30 @@ public sealed class AudioSystem : SharedAudioSystem
             for (var i = _streams.Count - 1; i >= 0; i--)
             {
                 var comp = _streams[i];
-                var stream = (PlayingStream) comp.Stream;
+                var stream = comp.Component.Stream;
 
                 if (stream.Done)
                 {
-                    QueueDel(comp.Owner);
+                    QueueDel(comp.Entity);
                 }
             }
         }
     }
 
-    private void ProcessStream(PlayingStream stream, MapCoordinates listener)
+    private void ProcessStream(EntityUid entity, AudioComponent component, IPlayingAudioStream stream, MapCoordinates listener)
     {
-        if (!stream.Source.IsPlaying)
+        if (!stream.IsPlaying)
         {
             stream.Done = true;
             return;
         }
 
-        if (stream.Source.IsGlobal)
-        {
-            DebugTools.Assert(stream.TrackingCoordinates == null
-                && stream.TrackingEntity == null
-                && stream.TrackingFallbackCoordinates == null);
-
+        // TODO:
+        // - If it's global always play
+        // If it's attached to OUR map always play
+        //
+        if (component.AudioType == AudioType.Global)
             return;
-        }
-
-        DebugTools.Assert(stream.TrackingCoordinates != null
-            || stream.TrackingEntity != null
-            || stream.TrackingFallbackCoordinates != null);
 
         // Get audio Position
         if (!TryGetStreamPosition(stream, out var mapPos)
@@ -284,7 +297,7 @@ public sealed class AudioSystem : SharedAudioSystem
     #region Play AudioStream
     private bool TryGetAudio(string filename, [NotNullWhen(true)] out AudioResource? audio)
     {
-        if (_resourceCache.TryGetResource<AudioResource>(new ResPath(filename), out audio))
+        if (_resourceCache.TryGetResource(new ResPath(filename), out audio))
             return true;
 
         Log.Error($"Server tried to play audio file {filename} which does not exist.");
@@ -293,7 +306,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private bool TryCreateAudioSource(AudioStream stream, [NotNullWhen(true)] out IClydeAudioSource? source)
     {
-        if (!_timing.IsFirstTimePredicted)
+        if (!Timing.IsFirstTimePredicted)
         {
             source = null;
             Log.Error($"Tried to create audio source outside of prediction!");
@@ -472,7 +485,7 @@ public sealed class AudioSystem : SharedAudioSystem
     public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user,
         AudioParams? audioParams = null)
     {
-        if (_timing.IsFirstTimePredicted || sound == null)
+        if (Timing.IsFirstTimePredicted || sound == null)
             return PlayEntity(sound, Filter.Local(), source, false, audioParams);
         return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
     }
@@ -480,7 +493,7 @@ public sealed class AudioSystem : SharedAudioSystem
     public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user,
         AudioParams? audioParams = null)
     {
-        if (_timing.IsFirstTimePredicted || sound == null)
+        if (Timing.IsFirstTimePredicted || sound == null)
             return Play(sound, Filter.Local(), coordinates, false, audioParams);
         return null;
     }
@@ -566,7 +579,9 @@ public sealed class AudioSystem : SharedAudioSystem
 public sealed class PlayingStream : IPlayingAudioStream
 {
     internal IClydeAudioSource Source = default!;
-    public bool Done;
+
+    public bool IsPlaying { get; }
+    public bool Done { get; set; }
 
     public float Volume
     {

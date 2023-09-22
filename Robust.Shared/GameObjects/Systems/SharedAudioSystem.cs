@@ -1,5 +1,8 @@
+using System;
+using System.Collections.Generic;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
@@ -12,10 +15,20 @@ namespace Robust.Shared.GameObjects;
 public abstract class SharedAudioSystem : EntitySystem
 {
     [Dependency] protected readonly IConfigurationManager CfgManager = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] protected readonly IGameTiming Timing = default!;
     [Dependency] private   readonly IPrototypeManager _protoMan = default!;
+    [Dependency] private readonly IResourceManager _resource = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
     [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
+
+    private Dictionary<string, TimeSpan> _audioLengths = new();
+
+    /*
+     * TODO: Maybe just fuck it re-do everything.
+     * Shared needs a way to cache and get audio length.
+     * Should be able to derive creationtick > creation time of audio and
+     * Maybe make ISharedResourceCache and have some audio in shared ig.
+     */
 
     /// <summary>
     /// Just so we can have an entity that doesn't get serialized.
@@ -57,6 +70,11 @@ public abstract class SharedAudioSystem : EntitySystem
         return string.Empty;
     }
 
+    public TimeSpan GetAudioLength(string filename)
+    {
+
+    }
+
     /// <summary>
     /// Stops the specified audio entity from playing.
     /// </summary>
@@ -65,7 +83,7 @@ public abstract class SharedAudioSystem : EntitySystem
         if (!Resolve(uid, ref component))
             return;
 
-        if (!_timing.IsFirstTimePredicted)
+        if (!Timing.IsFirstTimePredicted)
             return;
 
         QueueDel(uid);

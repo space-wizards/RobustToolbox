@@ -1,6 +1,5 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Audio;
 
@@ -16,6 +15,8 @@ public sealed partial class AudioComponent : Component
 
     [AutoNetworkedField]
     public string FileName;
+
+    [AutoNetworkedField]
     public AudioParams Params = AudioParams.Default;
 }
 

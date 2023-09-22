@@ -30,13 +30,13 @@ namespace Robust.Client.GameObjects;
 public sealed class AudioSystem : SharedAudioSystem
 {
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
-    [Dependency] private readonly IClydeAudio _clyde = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
+    [Dependency] private readonly IClientResourceCache _resourceCache = default!;
     [Dependency] private readonly IOverlayManager _overlays = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+    [Dependency] private readonly IClydeAudioInternal _audio = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
@@ -65,7 +65,15 @@ public sealed class AudioSystem : SharedAudioSystem
 
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
 
-        _overlays.AddOverlay(new AudioOverlay(EntityManager, _playerManager, IoCManager.Resolve<IResourceCache>(), this, _xformSys));
+        _overlays.AddOverlay(new AudioOverlay(EntityManager, _playerManager, IoCManager.Resolve<IClientResourceCache>(), this, _xformSys));
+    }
+
+    /// <summary>
+    /// Sets the volume for the entire game.
+    /// </summary>
+    public void SetMasterVolume(float value)
+    {
+        throw new NotImplementedException();
     }
 
     public override void Shutdown()
@@ -91,7 +99,7 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!Timing.IsFirstTimePredicted || !TryGetAudio(component.FileName, out var audioResource))
             return;
 
-        var source = _clyde.CreateAudioSource(audioResource);
+        var source = _audio.CreateAudioSource(audioResource);
 
         if (source == null)
             return;
@@ -115,6 +123,21 @@ public sealed class AudioSystem : SharedAudioSystem
 
     public override void FrameUpdate(float frameTime)
     {
+        _audio.SetPosition();
+        var eye = _eyeManager.CurrentEye;
+        var vec = eye.Position.Position;
+        AL.Listener(ALListener3f.Position, vec.X, vec.Y, -5);
+        var rot2d = eye.Rotation.ToVec();
+        AL.Listener(ALListenerfv.Orientation, new []{0, 0, -1, rot2d.X, rot2d.Y, 0});
+
+        // Default orientation: at: (0, 0, -1)  up: (0, 1, 0)
+        var rot = eye.Rotation.ToVec();
+        var at = new Vector3(0f, 0f, -1f);
+        var up = new Vector3(rot.Y, rot.X, 0f);
+        AL.Listener(ALListenerfv.Orientation, ref at, ref up);
+
+        _audio.();
+
         var ourPos = _eyeManager.CurrentEye.Position;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 

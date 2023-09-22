@@ -17,12 +17,12 @@ public sealed class TileEdgeOverlay : Overlay
 {
     private readonly IEntityManager _entManager;
     private readonly IMapManager _mapManager;
-    private readonly IResourceCache _resource;
+    private readonly IClientResourceCache _resource;
     private readonly ITileDefinitionManager _tileDefManager;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowEntities;
 
-    public TileEdgeOverlay(IEntityManager entManager, IMapManager mapManager, IResourceCache resource, ITileDefinitionManager tileDefManager)
+    public TileEdgeOverlay(IEntityManager entManager, IMapManager mapManager, IClientResourceCache resource, ITileDefinitionManager tileDefManager)
     {
         _entManager = entManager;
         _mapManager = mapManager;

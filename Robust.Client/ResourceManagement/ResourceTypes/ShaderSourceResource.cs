@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.ResourceManagement;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -20,7 +21,7 @@ namespace Robust.Client.ResourceManagement
         [ViewVariables]
         internal ParsedShader ParsedShader { get; private set; } = default!;
 
-        public override void Load(IResourceCache cache, ResPath path)
+        public override void Load(IClientResourceCache cache, ResPath path)
         {
             using (var stream = cache.ContentFileRead(path))
             using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
@@ -31,7 +32,7 @@ namespace Robust.Client.ResourceManagement
             ClydeHandle = ((IClydeInternal)cache.Clyde).LoadShader(ParsedShader, path.ToString());
         }
 
-        public override void Reload(IResourceCache cache, ResPath path, CancellationToken ct = default)
+        public override void Reload(IClientResourceCache cache, ResPath path, CancellationToken ct = default)
         {
             ct = ct != default ? ct : new CancellationTokenSource(30000).Token;
 

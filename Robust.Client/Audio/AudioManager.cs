@@ -5,14 +5,14 @@ using System.Runtime.CompilerServices;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using OpenTK.Mathematics;
-using Robust.Client.Audio;
+using Robust.Client.Graphics;
 using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Log;
 
-namespace Robust.Client.Graphics.Audio
+namespace Robust.Client.Audio
 {
-    internal sealed partial class ClydeAudio : IClydeAudio, IClydeAudioInternal
+    internal sealed partial class AudioManager : SharedAudioManager, IClydeAudioInternal
     {
         private ALDevice _openALDevice;
         private ALContext _openALContext;
@@ -28,8 +28,10 @@ namespace Robust.Client.Graphics.Audio
         private readonly HashSet<string> _alcDeviceExtensions = new();
         private readonly HashSet<string> _alContextExtensions = new();
 
-        // The base gain value for a listener, used to boost the default volume.
-        private const float _baseGain = 2f;
+        /// <summary>
+        /// The base gain value for a listener, used to boost the default volume.
+        /// </summary>
+        public const float BaseGain = 2f;
 
         public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
         public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -174,23 +176,6 @@ namespace Robust.Client.Graphics.Audio
             }
         }
 
-        private void _updateAudio()
-        {
-            var eye = _eyeManager.CurrentEye;
-            var vec = eye.Position.Position;
-            AL.Listener(ALListener3f.Position, vec.X, vec.Y, -5);
-            var rot2d = eye.Rotation.ToVec();
-            AL.Listener(ALListenerfv.Orientation, new []{0, 0, -1, rot2d.X, rot2d.Y, 0});
-
-            // Default orientation: at: (0, 0, -1)  up: (0, 1, 0)
-            var rot = eye.Rotation.ToVec();
-            var at = new Vector3(0f, 0f, -1f);
-            var up = new Vector3(rot.Y, rot.X, 0f);
-            AL.Listener(ALListenerfv.Orientation, ref at, ref up);
-
-            _flushALDisposeQueues();
-        }
-
         private static void RemoveEfx((int sourceHandle, int filterHandle) handles)
         {
             if (handles.filterHandle != 0) EFX.DeleteFilter(handles.filterHandle);
@@ -198,7 +183,7 @@ namespace Robust.Client.Graphics.Audio
 
         public void SetMasterVolume(float newVolume)
         {
-            AL.Listener(ALListenerf.Gain, _baseGain * newVolume);
+            AL.Listener(ALListenerf.Gain, BaseGain * newVolume);
         }
 
         public void SetAudioAttenuation(int value)
@@ -250,7 +235,7 @@ namespace Robust.Client.Graphics.Audio
 
             // ReSharper disable once PossibleInvalidOperationException
             // TODO: This really shouldn't be indexing based on the ClydeHandle...
-            AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle!.Value.Value].BufferHandle);
+            AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle!.Value].BufferHandle);
 
             var audioSource = new AudioSource(this, source, stream);
             _audioSources.Add(source, new WeakReference<AudioSource>(audioSource));
@@ -292,7 +277,7 @@ namespace Robust.Client.Graphics.Audio
             }
         }
 
-        public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
+        public override AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
         {
             var vorbis = _readOggVorbis(stream);
 
@@ -332,7 +317,7 @@ namespace Robust.Client.Graphics.Audio
             return new AudioStream(handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
         }
 
-        public AudioStream LoadAudioWav(Stream stream, string? name = null)
+        public override AudioStream LoadAudioWav(Stream stream, string? name = null)
         {
             var wav = _readWav(stream);
 
@@ -390,7 +375,7 @@ namespace Robust.Client.Graphics.Audio
             return new AudioStream(handle, length, wav.NumChannels, name);
         }
 
-        public AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
+        public override AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
         {
             var fmt = channels switch
             {

@@ -12,6 +12,7 @@ using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects;
+
 public abstract class SharedAudioSystem : EntitySystem
 {
     [Dependency] protected readonly IConfigurationManager CfgManager = default!;

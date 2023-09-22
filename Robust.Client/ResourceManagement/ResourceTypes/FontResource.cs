@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using Robust.Client.Graphics;
 using Robust.Shared.IoC;
+using Robust.Shared.ResourceManagement;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.ResourceManagement
@@ -9,7 +10,7 @@ namespace Robust.Client.ResourceManagement
     {
         internal IFontFaceHandle FontFaceHandle { get; private set; } = default!;
 
-        public override void Load(IResourceCache cache, ResPath path)
+        public override void Load(IClientResourceCache cache, ResPath path)
         {
             if (!cache.TryContentFileRead(path, out var stream))
             {

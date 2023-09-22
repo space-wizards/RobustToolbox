@@ -7,6 +7,7 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.ResourceManagement;
 using Robust.Shared.Resources;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -34,7 +35,7 @@ namespace Robust.Client.ResourceManagement
         /// </summary>
         public const uint MAXIMUM_RSI_VERSION = RsiLoading.MAXIMUM_RSI_VERSION;
 
-        public override void Load(IResourceCache cache, ResPath path)
+        public override void Load(IClientResourceCache cache, ResPath path)
         {
             var loadStepData = new LoadStepData {Path = path};
             LoadPreTexture(cache, loadStepData);
@@ -49,7 +50,7 @@ namespace Robust.Client.ResourceManagement
             loadStepData.AtlasSheet.Dispose();
         }
 
-        internal static void LoadPreTexture(IResourceCache cache, LoadStepData data)
+        internal static void LoadPreTexture(IClientResourceCache cache, LoadStepData data)
         {
             var manifestPath = data.Path / "meta.json";
             RsiLoading.RsiMetadata metadata;
@@ -212,7 +213,7 @@ namespace Robust.Client.ResourceManagement
             }
         }
 
-        internal void LoadFinish(IResourceCache cache, LoadStepData data)
+        internal void LoadFinish(IClientResourceCache cache, LoadStepData data)
         {
             RSI = data.Rsi;
 

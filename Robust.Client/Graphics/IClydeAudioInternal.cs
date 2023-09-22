@@ -1,16 +1,24 @@
-using System;
-using Robust.Client.Input;
-using Robust.Client.UserInterface;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Timing;
+using Robust.Client.ResourceManagement;
 
-namespace Robust.Client.Graphics
+namespace Robust.Client.Graphics;
+
+/// <summary>
+/// Handles clientside audio.
+/// </summary>
+internal interface IClydeAudioInternal
 {
-    internal interface IClydeAudioInternal : IClydeAudio
-    {
-        bool InitializePostWindowing();
-        void FrameProcess(FrameEventArgs eventArgs);
-        void Shutdown();
-    }
+    void InitializePostWindowing();
+    void Shutdown();
+
+    /// <summary>
+    /// Flushes all pending queues for disposing of AL sources.
+    /// </summary>
+    void FlushALDisposeQueues();
+
+    IClydeAudioSource CreateAudioSource(AudioResource audioResource);
+
+    /// <summary>
+    /// Sets position for the audio listener.
+    /// </summary>
+    void SetPosition();
 }

@@ -18,7 +18,7 @@ namespace Robust.Client.UserInterface.Themes;
 [Prototype("uiTheme")]
 public sealed class UITheme : IPrototype
 {
-    private IResourceCache? _cache;
+    private IClientResourceCache? _cache;
     private IUserInterfaceManager? _uiMan;
 
     //this is used for ease of access
@@ -37,7 +37,7 @@ public sealed class UITheme : IPrototype
     public Dictionary<string, Color>? Colors { get; }
     public ResPath Path => _path == default ? new ResPath(DefaultPath+"/"+ID) : _path;
 
-    private void ValidateFilePath(IResourceCache resourceCache)
+    private void ValidateFilePath(IClientResourceCache resourceCache)
     {
         var foundFolders = resourceCache.ContentFindFiles(Path.ToRootedPath());
         if (!foundFolders.Any()) throw new Exception("UITheme: "+ID+" not found in resources!");

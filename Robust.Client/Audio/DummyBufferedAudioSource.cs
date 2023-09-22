@@ -1,19 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-using Robust.Client.Audio;
-using Robust.Client.Input;
-using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Timing;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using Color = Robust.Shared.Maths.Color;
+using Robust.Client.Graphics;
 
-namespace Robust.Client.Graphics.Audio
+namespace Robust.Client.Audio
 {
     /// <summary>
     ///     Hey look, it's ClydeAudio.BufferedAudioSource's evil twin brother!

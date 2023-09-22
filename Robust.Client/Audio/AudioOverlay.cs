@@ -26,7 +26,7 @@ public sealed class AudioOverlay : Overlay
 
     private Font _font;
 
-    public AudioOverlay(IEntityManager entManager, IPlayerManager playerManager, IResourceCache cache, AudioSystem audio, SharedTransformSystem transform)
+    public AudioOverlay(IEntityManager entManager, IPlayerManager playerManager, IClientResourceCache cache, AudioSystem audio, SharedTransformSystem transform)
     {
         _entManager = entManager;
         _playerManager = playerManager;

@@ -53,7 +53,7 @@ namespace Robust.Client.GameStates
         public NetGraphOverlay()
         {
             IoCManager.InjectDependencies(this);
-            var cache = IoCManager.Resolve<IResourceCache>();
+            var cache = IoCManager.Resolve<IClientResourceCache>();
             _font = new VectorFont(cache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
 
             _gameStateManager.GameStateApplied += HandleGameStateApplied;

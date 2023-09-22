@@ -1,4 +1,5 @@
 using System;
+using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Configuration;
 using Robust.Client.Console;
@@ -6,7 +7,6 @@ using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Audio;
 using Robust.Client.Graphics.Clyde;
 using Robust.Client.Input;
 using Robust.Client.Map;
@@ -74,7 +74,7 @@ namespace Robust.Client
             deps.Register<IGameControllerInternal, GameController>();
             deps.Register<IResourceManager, ResourceCache>();
             deps.Register<IResourceManagerInternal, ResourceCache>();
-            deps.Register<IResourceCache, ResourceCache>();
+            deps.Register<IClientResourceCache, ResourceCache>();
             deps.Register<IResourceCacheInternal, ResourceCache>();
             deps.Register<IClientNetManager, NetManager>();
             deps.Register<EntityManager, ClientEntityManager>();
@@ -107,8 +107,7 @@ namespace Robust.Client
                     deps.Register<IClyde, ClydeHeadless>();
                     deps.Register<IClipboardManager, ClydeHeadless>();
                     deps.Register<IClydeInternal, ClydeHeadless>();
-                    deps.Register<IClydeAudio, ClydeAudioHeadless>();
-                    deps.Register<IClydeAudioInternal, ClydeAudioHeadless>();
+                    deps.Register<IClydeAudioInternal, HeadlessAudioManager>();
                     deps.Register<IInputManager, InputManager>();
                     deps.Register<IFileDialogManager, DummyFileDialogManager>();
                     deps.Register<IUriOpener, UriOpenerDummy>();
@@ -117,8 +116,7 @@ namespace Robust.Client
                     deps.Register<IClyde, Clyde>();
                     deps.Register<IClipboardManager, Clyde>();
                     deps.Register<IClydeInternal, Clyde>();
-                    deps.Register<IClydeAudio, FallbackProxyClydeAudio>();
-                    deps.Register<IClydeAudioInternal, FallbackProxyClydeAudio>();
+                    deps.Register<IClydeAudioInternal, AudioManager>();
                     deps.Register<IInputManager, ClydeInputManager>();
                     deps.Register<IFileDialogManager, FileDialogManager>();
                     deps.Register<IUriOpener, UriOpener>();

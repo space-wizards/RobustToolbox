@@ -1,31 +1,21 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
-using OpenTK.Mathematics;
-using Robust.Client.Audio;
-using Robust.Shared;
-using Robust.Shared.Configuration;
-using Robust.Shared.IoC;
+using Robust.Client.Graphics;
 using Robust.Shared.Audio;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Vector2 = System.Numerics.Vector2;
 using Robust.Shared.Utility;
+using Vector2 = System.Numerics.Vector2;
 
-namespace Robust.Client.Graphics.Audio
+namespace Robust.Client.Audio
 {
-    internal partial class ClydeAudio
+    internal partial class AudioManager
     {
         private sealed class AudioSource : IClydeAudioSource
         {
             private int SourceHandle;
-            private readonly ClydeAudio _master;
+            private readonly AudioManager _master;
             private readonly AudioStream _sourceStream;
             private int FilterHandle;
 #if DEBUG
@@ -36,7 +26,7 @@ namespace Robust.Client.Graphics.Audio
 
             private bool IsEfxSupported => _master.IsEfxSupported;
 
-            public AudioSource(ClydeAudio master, int sourceHandle, AudioStream sourceStream)
+            public AudioSource(AudioManager master, int sourceHandle, AudioStream sourceStream)
             {
                 _master = master;
                 SourceHandle = sourceHandle;
@@ -298,7 +288,7 @@ namespace Robust.Client.Graphics.Audio
             private int? SourceHandle = null;
             private int[] BufferHandles;
             private Dictionary<int, int> BufferMap = new();
-            private readonly ClydeAudio _master;
+            private readonly AudioManager _master;
             private bool _mono = true;
             private bool _float = false;
             private int FilterHandle;
@@ -309,7 +299,7 @@ namespace Robust.Client.Graphics.Audio
 
             private bool IsEfxSupported => _master.IsEfxSupported;
 
-            public BufferedAudioSource(ClydeAudio master, int sourceHandle, int[] bufferHandles, bool floatAudio = false)
+            public BufferedAudioSource(AudioManager master, int sourceHandle, int[] bufferHandles, bool floatAudio = false)
             {
                 _master = master;
                 SourceHandle = sourceHandle;

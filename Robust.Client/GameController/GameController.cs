@@ -639,11 +639,6 @@ namespace Robust.Client
                 }
             }
 
-            using (_prof.Group("ClydeAudio"))
-            {
-                _clydeAudio.FrameProcess(frameEventArgs);
-            }
-
             using (_prof.Group("Clyde"))
             {
                 _clyde.FrameProcess(frameEventArgs);

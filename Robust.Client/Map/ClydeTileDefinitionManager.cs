@@ -22,7 +22,7 @@ namespace Robust.Client.Map
 {
     internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
     {
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly IClientResourceCache _resourceCache = default!;
 
         private Texture? _tileTextureAtlas;
 

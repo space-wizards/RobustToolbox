@@ -4,6 +4,7 @@ using System.Numerics;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Graphics;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio.Sources;

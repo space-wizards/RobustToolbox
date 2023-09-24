@@ -3,6 +3,7 @@ using Robust.Shared.Audio.Sources;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Audio;
 
@@ -43,6 +44,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <summary>
     /// Audio source that interacts with OpenAL.
     /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
     internal IAudioSource Source = default!;
 
     /*
@@ -67,14 +69,22 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// </summary>
     [AutoNetworkedField]
     [DataField]
-    public bool Looping { get; set; }
+    public bool Looping
+    {
+        get => Source.Looping;
+        set => Source.Looping = value;
+    }
 
     /// <summary>
     /// <see cref="IAudioSource.Global"/>
     /// </summary>
     [AutoNetworkedField]
     [DataField]
-    public bool Global { get; set; }
+    public bool Global
+    {
+        get => Source.Global;
+        set => Source.Global = value;
+    }
 
     /// <summary>
     /// <see cref="IAudioSource.Position"/>
@@ -82,6 +92,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <remarks>
     /// Not replicated as audio always tracks the entity's position.
     /// </remarks>
+    [ViewVariables(VVAccess.ReadOnly)]
     public Vector2 Position
     {
         get => Source.Position;
@@ -93,39 +104,86 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// </summary>
     [AutoNetworkedField]
     [DataField]
-    public float Pitch { get; set; }
+    public float Pitch
+    {
+        get => Source.Pitch;
+        set => Source.Pitch = value;
+    }
 
+    /// <summary>
+    /// <see cref="IAudioSource.Volume"/>
+    /// </summary>
     [AutoNetworkedField]
     [DataField]
-    public float Volume { get; set; }
+    public float Volume
+    {
+        get => Source.Volume;
+        set => Source.Volume = value;
+    }
 
+    /// <summary>
+    /// <see cref="IAudioSource.Gain"/>
+    /// </summary>
     [AutoNetworkedField]
     [DataField]
-    public float Gain { get; set; }
+    public float Gain
+    {
+        get => Source.Gain;
+        set => Source.Gain = value;
+    }
 
+    /// <summary>
+    /// <see cref="IAudioSource.MaxDistance"/>
+    /// </summary>
     [AutoNetworkedField]
     [DataField]
-    public float MaxDistance { get; set; }
+    public float MaxDistance
+    {
+        get => Source.MaxDistance;
+        set => Source.MaxDistance = value;
+    }
 
+    /// <summary>
+    /// <see cref="IAudioSource.RolloffFactor"/>
+    /// </summary>
     [AutoNetworkedField]
     [DataField]
-    public float RolloffFactor { get; set; }
+    public float RolloffFactor
+    {
+        get => Source.RolloffFactor;
+        set => Source.RolloffFactor = value;
+    }
 
+    /// <summary>
+    /// <see cref="IAudioSource.ReferenceDistance"/>
+    /// </summary>
     [AutoNetworkedField]
     [DataField]
-    public float ReferenceDistance { get; set; }
+    public float ReferenceDistance
+    {
+        get => Source.ReferenceDistance;
+        set => Source.ReferenceDistance = value;
+    }
 
-
-    [AutoNetworkedField]
-    [DataField]
-    public float Occlusion { get; set; }
+    /// <summary>
+    /// <see cref="IAudioSource.Occlusion"/>
+    /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
+    public float Occlusion
+    {
+        get => Source.Occlusion;
+        set => Source.Occlusion = value;
+    }
 
     /// <summary>
     /// <see cref="IAudioSource.PlaybackPosition"/>
     /// </summary>
-    [AutoNetworkedField]
-    [DataField]
-    public float PlaybackPosition { get; set; }
+    [ViewVariables(VVAccess.ReadOnly)]
+    public float PlaybackPosition
+    {
+        get => Source.PlaybackPosition;
+        set => Source.PlaybackPosition = value;
+    }
 
     /// <summary>
     /// <see cref="IAudioSource.Velocity"/>
@@ -133,7 +191,12 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <remarks>
     /// Not replicated.
     /// </remarks>
-    public Vector2 Velocity { get; set; }
+    [ViewVariables(VVAccess.ReadOnly)]
+    public Vector2 Velocity
+    {
+        get => Source.Velocity;
+        set => Source.Velocity = value;
+    }
 
     #endregion
 

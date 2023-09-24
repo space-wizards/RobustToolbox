@@ -6,6 +6,9 @@ namespace Robust.Shared.Audio.Sources;
 /// <summary>
 /// Engine audio source that directly interacts with OpenAL.
 /// </summary>
+/// <remarks>
+/// This should probably not be exposed to content.
+/// </remarks>
 internal interface IAudioSource : IDisposable
 {
     /// <summary>
@@ -14,7 +17,7 @@ internal interface IAudioSource : IDisposable
     bool Playing { get; set; }
 
     /// <summary>
-    /// Will the audio source loop when finished playing/
+    /// Will the audio source loop when finished playing?
     /// </summary>
     bool Looping { get; set; }
 

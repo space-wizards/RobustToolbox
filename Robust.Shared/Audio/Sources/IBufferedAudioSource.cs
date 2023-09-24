@@ -1,8 +1,6 @@
 using System;
-using Robust.Client.Audio.Sources;
-using Robust.Shared.Audio.Sources;
 
-namespace Robust.Client.Graphics;
+namespace Robust.Shared.Audio.Sources;
 
 internal interface IBufferedAudioSource : IAudioSource
 {

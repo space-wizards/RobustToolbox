@@ -5,6 +5,7 @@ using NFluidsynth;
 using Robust.Client.Graphics;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;

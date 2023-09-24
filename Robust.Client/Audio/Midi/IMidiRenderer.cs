@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 

@@ -52,8 +52,8 @@ internal sealed class MidiRenderer : IMidiRenderer
 
     private IMidiRenderer? _master;
     public MidiRendererState RendererState => _rendererState;
-    public IClydeBufferedAudioSource Source { get; set; }
-    IClydeBufferedAudioSource IMidiRenderer.Source => Source;
+    public IBufferedAudioSource Source { get; set; }
+    IBufferedAudioSource IMidiRenderer.Source => Source;
 
     [ViewVariables]
     public bool Disposed { get; private set; } = false;

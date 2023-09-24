@@ -1,12 +1,12 @@
 using System;
 using Robust.Client.Graphics;
 
-namespace Robust.Client.Audio
+namespace Robust.Client.Audio.Sources
 {
     /// <summary>
-    ///     Hey look, it's ClydeAudio.BufferedAudioSource's evil twin brother!
+    ///     Hey look, it's Audio.BufferedAudioSource's evil twin brother!
     /// </summary>
-    internal sealed class DummyBufferedAudioSource : DummyAudioSource, IClydeBufferedAudioSource
+    internal sealed class DummyBufferedAudioSource : DummyAudioSource, IBufferedAudioSource
     {
         public new static DummyBufferedAudioSource Instance { get; } = new();
         public int SampleRate { get; set; } = 0;

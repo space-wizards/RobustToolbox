@@ -217,7 +217,7 @@ namespace Robust.Client.ResourceManagement
         {
             RSI = data.Rsi;
 
-            if (cache is IResourceCacheInternal cacheInternal)
+            if (cache is IClientResourceCacheInternal cacheInternal)
             {
                 cacheInternal.RsiLoaded(new RsiLoadedEventArgs(data.Path, this, data.AtlasSheet, data.CallbackOffsets));
             }

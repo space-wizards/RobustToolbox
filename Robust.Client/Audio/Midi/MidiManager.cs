@@ -41,7 +41,7 @@ internal sealed partial class MidiManager : IMidiManager
     [ViewVariables] private TimeSpan _nextPositionUpdate = TimeSpan.Zero;
 
     [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IResourceCacheInternal _resourceManager = default!;
+    [Dependency] private readonly IClientResourceCacheInternal _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IConfigurationManager _cfgMan = default!;
     [Dependency] private readonly IClydeAudio _clydeAudio = default!;

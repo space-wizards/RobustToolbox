@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime;
 using System.Threading.Tasks;
+using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.GameObjects;
@@ -48,7 +49,7 @@ namespace Robust.Client
     internal sealed partial class GameController : IGameControllerInternal
     {
         [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
-        [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
+        [Dependency] private readonly IClientResourceCacheInternal _resourceCache = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
@@ -68,7 +69,7 @@ namespace Robust.Client
         [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariablesManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IClydeAudioInternal _clydeAudio = default!;
+        [Dependency] private readonly IAudioInternal _audio = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
@@ -111,7 +112,7 @@ namespace Robust.Client
             DebugTools.AssertNotNull(_resourceManifest);
 
             _clyde.InitializePostWindowing();
-            _clydeAudio.InitializePostWindowing();
+            _audio.InitializePostWindowing();
             _clyde.SetWindowTitle(
                 Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
 
@@ -778,7 +779,7 @@ namespace Robust.Client
         internal void CleanupWindowThread()
         {
             _clyde.Shutdown();
-            _clydeAudio.Shutdown();
+            _audio.Shutdown();
         }
 
         private sealed record ResourceManifestData(

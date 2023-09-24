@@ -20,7 +20,7 @@ public sealed class AudioOverlay : Overlay
     public override OverlaySpace Space => OverlaySpace.ScreenSpace;
 
     private IEntityManager _entManager;
-    private IPlayerManager _playerManager = default!;
+    private IPlayerManager _playerManager;
     private AudioSystem _audio;
     private SharedTransformSystem _transform;
 

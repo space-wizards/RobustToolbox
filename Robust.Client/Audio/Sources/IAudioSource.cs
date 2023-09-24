@@ -2,9 +2,12 @@ using System;
 using System.Numerics;
 using JetBrains.Annotations;
 
-namespace Robust.Client.Graphics;
+namespace Robust.Client.Audio.Sources;
 
-internal interface IClydeAudioSource : IDisposable
+/// <summary>
+/// Engine audio source that directly interacts with OpenAL.
+/// </summary>
+internal interface IAudioSource : IDisposable
 {
     void StartPlaying();
     void StopPlaying();

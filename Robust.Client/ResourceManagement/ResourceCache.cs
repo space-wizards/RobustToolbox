@@ -15,7 +15,7 @@ namespace Robust.Client.ResourceManagement;
 /// <summary>
 /// Handles caching of <see cref="BaseResource"/>
 /// </summary>
-internal sealed partial class ResourceCache : IResourceCacheInternal, IDisposable
+internal sealed partial class ResourceCache : IClientResourceCacheInternal, IDisposable
 {
     private readonly Dictionary<Type, Dictionary<ResPath, BaseResource>> _cachedResources =
         new();
@@ -217,12 +217,5 @@ internal sealed partial class ResourceCache : IResourceCacheInternal, IDisposabl
     public void RsiLoaded(RsiLoadedEventArgs eventArgs)
     {
         OnRsiLoaded?.Invoke(eventArgs);
-    }
-
-    public void MountLoaderApi(IFileApi api, string apiPrefix, ResPath? prefix=null)
-    {
-        prefix ??= ResPath.Root;
-        var root = new LoaderApiLoader(api, apiPrefix);
-        AddRoot(prefix.Value, root);
     }
 }

@@ -57,7 +57,7 @@ namespace Robust.Client.ResourceManagement
         {
             _texture = data.Texture;
 
-            if (cache is IResourceCacheInternal cacheInternal)
+            if (cache is IClientResourceCacheInternal cacheInternal)
             {
                 cacheInternal.TextureLoaded(new TextureLoadedEventArgs(data.Path, data.Image, this));
             }

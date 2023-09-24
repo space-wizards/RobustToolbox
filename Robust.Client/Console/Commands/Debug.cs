@@ -644,7 +644,7 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ReloadShadersCommand : LocalizedCommands
     {
-        [Dependency] private readonly IResourceCacheInternal _res = default!;
+        [Dependency] private readonly IClientResourceCacheInternal _res = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
 
         public override string Command => "rldshader";

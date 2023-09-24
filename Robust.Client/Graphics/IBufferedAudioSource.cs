@@ -1,8 +1,9 @@
 using System;
+using Robust.Client.Audio.Sources;
 
 namespace Robust.Client.Graphics
 {
-    public interface IClydeBufferedAudioSource : IClydeAudioSource
+    public interface IBufferedAudioSource : IAudioSource
     {
         int SampleRate { get; set; }
         int GetNumberOfBuffersProcessed();

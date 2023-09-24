@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
+using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
@@ -36,7 +37,7 @@ public sealed class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-    [Dependency] private readonly IClydeAudioInternal _audio = default!;
+    [Dependency] private readonly IAudioInternal _audio = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
@@ -123,22 +124,11 @@ public sealed class AudioSystem : SharedAudioSystem
 
     public override void FrameUpdate(float frameTime)
     {
-        _audio.SetPosition();
         var eye = _eyeManager.CurrentEye;
-        var vec = eye.Position.Position;
-        AL.Listener(ALListener3f.Position, vec.X, vec.Y, -5);
-        var rot2d = eye.Rotation.ToVec();
-        AL.Listener(ALListenerfv.Orientation, new []{0, 0, -1, rot2d.X, rot2d.Y, 0});
+        _audio.SetRotation(eye.Rotation);
+        _audio.SetPosition(eye.Position.Position);
 
-        // Default orientation: at: (0, 0, -1)  up: (0, 1, 0)
-        var rot = eye.Rotation.ToVec();
-        var at = new Vector3(0f, 0f, -1f);
-        var up = new Vector3(rot.Y, rot.X, 0f);
-        AL.Listener(ALListenerfv.Orientation, ref at, ref up);
-
-        _audio.();
-
-        var ourPos = _eyeManager.CurrentEye.Position;
+        var ourPos = eye.Position;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 
         var query = AllEntityQuery<AudioComponent>();
@@ -327,7 +317,7 @@ public sealed class AudioSystem : SharedAudioSystem
         return false;
     }
 
-    private bool TryCreateAudioSource(AudioStream stream, [NotNullWhen(true)] out IClydeAudioSource? source)
+    private bool TryCreateAudioSource(AudioStream stream, [NotNullWhen(true)] out IAudioSource? source)
     {
         if (!Timing.IsFirstTimePredicted)
         {
@@ -341,7 +331,7 @@ public sealed class AudioSystem : SharedAudioSystem
         return source != null;
     }
 
-    private PlayingStream CreateAndStartPlayingStream(IClydeAudioSource source, AudioParams? audioParams, AudioStream stream)
+    private PlayingStream CreateAndStartPlayingStream(IAudioSource source, AudioParams? audioParams, AudioStream stream)
     {
         ApplyAudioParams(audioParams, source, stream);
         source.StartPlaying();
@@ -521,7 +511,7 @@ public sealed class AudioSystem : SharedAudioSystem
         return null;
     }
 
-    private void ApplyAudioParams(AudioParams? audioParams, IClydeAudioSource source, AudioStream audio)
+    private void ApplyAudioParams(AudioParams? audioParams, IAudioSource source, AudioStream audio)
     {
         if (!audioParams.HasValue)
             return;
@@ -601,7 +591,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
 public sealed class PlayingStream : IPlayingAudioStream
 {
-    internal IClydeAudioSource Source = default!;
+    internal IAudioSource Source = default!;
 
     public bool IsPlaying { get; }
     public bool Done { get; set; }

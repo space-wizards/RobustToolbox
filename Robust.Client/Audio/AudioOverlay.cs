@@ -1,10 +1,10 @@
 using System.Numerics;
 using System.Text;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Audio;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -50,31 +50,17 @@ public sealed class AudioOverlay : Overlay
         if (listenerPos.MapId != args.MapId)
             return;
 
-        foreach (var stream in _audio.PlayingStreams)
+        var query = _entManager.AllEntityQueryEnumerator<AudioComponent>();
+
+        while (query.MoveNext(out var uid, out var comp))
         {
-            MapId mapId;
+            MapId mapId = MapId.Nullspace;
             Vector2 audioPos;
 
-            if (_entManager.TryGetComponent<TransformComponent>(stream.TrackingEntity, out var xform))
+            if (_entManager.TryGetComponent<TransformComponent>(uid, out var xform))
             {
                 mapId = xform.MapID;
-                audioPos = _transform.GetWorldPosition(stream.TrackingEntity.Value);
-            }
-            else if (stream.TrackingCoordinates != null)
-            {
-                var mapPos = stream.TrackingCoordinates.Value.ToMap(_entManager);
-                mapId = mapPos.MapId;
-                audioPos = mapPos.Position;
-            }
-            else if (stream.TrackingFallbackCoordinates != null)
-            {
-                var mapPos = stream.TrackingFallbackCoordinates.Value.ToMap(_entManager);
-                mapId = mapPos.MapId;
-                audioPos = mapPos.Position;
-            }
-            else
-            {
-                continue;
+                audioPos = _transform.GetWorldPosition(uid);
             }
 
             if (mapId != args.MapId)

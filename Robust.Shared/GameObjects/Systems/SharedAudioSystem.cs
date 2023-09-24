@@ -22,15 +22,6 @@ public abstract class SharedAudioSystem : EntitySystem
     [Dependency] protected readonly IRobustRandom RandMan = default!;
     [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
 
-    private Dictionary<string, TimeSpan> _audioLengths = new();
-
-    /*
-     * TODO: Maybe just fuck it re-do everything.
-     * Shared needs a way to cache and get audio length.
-     * Should be able to derive creationtick > creation time of audio and
-     * Maybe make ISharedResourceCache and have some audio in shared ig.
-     */
-
     /// <summary>
     /// Just so we can have an entity that doesn't get serialized.
     /// </summary>

@@ -41,7 +41,7 @@ internal partial class AudioManager
         }
     }
 
-    private void DeleteSourceOnMainThread(int sourceHandle, int filterHandle)
+    internal void DeleteSourceOnMainThread(int sourceHandle, int filterHandle)
     {
         _sourceDisposeQueue.Enqueue((sourceHandle, filterHandle));
     }

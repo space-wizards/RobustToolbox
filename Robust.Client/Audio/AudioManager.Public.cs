@@ -7,6 +7,7 @@ using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio;
@@ -223,6 +224,16 @@ internal partial class AudioManager
         var attToString = attenuation == Attenuation.Default ? Attenuation.InverseDistanceClamped : attenuation;
 
         OpenALSawmill.Info($"Set audio attenuation to {attToString.ToString()}");
+    }
+
+    internal void RemoveAudioSource(int handle)
+    {
+        _audioSources.Remove(handle);
+    }
+
+    internal void RemoveBufferedAudioSource(int handle)
+    {
+        _bufferedAudioSources.Remove(handle);
     }
 
     public IAudioSource? CreateAudioSource(AudioResource resource)

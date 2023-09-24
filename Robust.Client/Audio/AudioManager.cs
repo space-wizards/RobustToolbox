@@ -1,24 +1,24 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio.Sources;
-using Robust.Client.Graphics;
-using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio;
 
 internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
 {
+    /*
+     * TODO: Make AudioSource properties.
+     * Kill IPlayingAudioStream or do something with it.
+     */
+
     [Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
     [Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
 
@@ -148,7 +148,7 @@ internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
         }
     }
 
-    private void _checkAlError([CallerMemberName] string callerMember = "",
+    internal void _checkAlError([CallerMemberName] string callerMember = "",
         [CallerLineNumber] int callerLineNumber = -1)
     {
         var error = AL.GetError();

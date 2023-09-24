@@ -1,4 +1,5 @@
 using System.Numerics;
+using Robust.Shared.Audio.Sources;
 
 namespace Robust.Client.Audio.Sources;
 
@@ -11,7 +12,7 @@ internal class DummyAudioSource : IAudioSource
     public static DummyAudioSource Instance { get; } = new();
 
     public bool IsPlaying => default;
-    public bool IsLooping { get; set; }
+    public bool Looping { get; set; }
 
     public void Dispose()
     {
@@ -28,7 +29,7 @@ internal class DummyAudioSource : IAudioSource
         // Nada.
     }
 
-    public bool IsGlobal { get; }
+    public bool Global { get; }
 
     public bool SetPosition(Vector2 position)
     {
@@ -50,7 +51,7 @@ internal class DummyAudioSource : IAudioSource
         // Nada.
     }
 
-    public void SetVolumeDirect(float gain)
+    public void SetGain(float gain)
     {
         // Nada.
     }

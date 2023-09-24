@@ -3,6 +3,7 @@ using System.Numerics;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -10,10 +11,15 @@ namespace Robust.Client.Audio.Sources;
 
 internal sealed class AudioSource : IAudioSource
 {
+    /*
+     * This may look weird having all these methods here however
+     * we need to handle disposing plus checking for errors hence we get this.
+     */
+
     private int SourceHandle;
+    private int FilterHandle;
     private readonly AudioManager _master;
     private readonly AudioStream _sourceStream;
-    private int FilterHandle;
 #if DEBUG
     private bool _didPositionWarning;
 #endif
@@ -30,6 +36,7 @@ internal sealed class AudioSource : IAudioSource
         AL.GetSource(SourceHandle, ALSourcef.Gain, out _gain);
     }
 
+    /// <inheritdoc />
     public void StartPlaying()
     {
         _checkDisposed();
@@ -37,6 +44,7 @@ internal sealed class AudioSource : IAudioSource
         _master._checkAlError();
     }
 
+    /// <inheritdoc />
     public void StopPlaying()
     {
         if (_isDisposed()) return;
@@ -44,6 +52,7 @@ internal sealed class AudioSource : IAudioSource
         _master._checkAlError();
     }
 
+    /// <inheritdoc />
     public bool IsPlaying
     {
         get
@@ -54,7 +63,8 @@ internal sealed class AudioSource : IAudioSource
         }
     }
 
-    public bool IsLooping
+    /// <inheritdoc />
+    public bool Looping
     {
         get
         {
@@ -71,7 +81,8 @@ internal sealed class AudioSource : IAudioSource
         }
     }
 
-    public bool IsGlobal
+    /// <inheritdoc />
+    public bool Global
     {
         get
         {
@@ -82,6 +93,7 @@ internal sealed class AudioSource : IAudioSource
         }
     }
 
+    /// <inheritdoc />
     public void SetGlobal()
     {
         _checkDisposed();
@@ -89,21 +101,15 @@ internal sealed class AudioSource : IAudioSource
         _master._checkAlError();
     }
 
+    /// <inheritdoc />
     public void SetVolume(float decibels)
     {
-        _checkDisposed();
-        var priorOcclusion = 1f;
-        if (!IsEfxSupported)
-        {
-            AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
-            priorOcclusion = priorGain / _gain;
-        }
-        _gain =  MathF.Pow(10, decibels / 10);
-        AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
-        _master._checkAlError();
+        var gain = MathF.Pow(10, decibels / 10);
+        SetGain(gain);
     }
 
-    public void SetVolumeDirect(float gain)
+    /// <inheritdoc />
+    public void SetGain(float gain)
     {
         _checkDisposed();
         var priorOcclusion = 1f;
@@ -112,11 +118,13 @@ internal sealed class AudioSource : IAudioSource
             AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
             priorOcclusion = priorGain / _gain;
         }
+
         _gain = gain;
         AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
         _master._checkAlError();
     }
 
+    /// <inheritdoc />
     public void SetMaxDistance(float distance)
     {
         _checkDisposed();
@@ -124,6 +132,7 @@ internal sealed class AudioSource : IAudioSource
         _master._checkAlError();
     }
 
+    /// <inheritdoc />
     public void SetRolloffFactor(float rolloffFactor)
     {
         _checkDisposed();
@@ -131,6 +140,7 @@ internal sealed class AudioSource : IAudioSource
         _master._checkAlError();
     }
 
+    /// <inheritdoc />
     public void SetReferenceDistance(float refDistance)
     {
         _checkDisposed();
@@ -138,6 +148,7 @@ internal sealed class AudioSource : IAudioSource
         _master._checkAlError();
     }
 
+    /// <inheritdoc />
     public void SetOcclusion(float blocks)
     {
         _checkDisposed();
@@ -168,6 +179,7 @@ internal sealed class AudioSource : IAudioSource
         AL.Source(SourceHandle, ALSourcei.EfxDirectFilter, FilterHandle);
     }
 
+    /// <inheritdoc />
     public void SetPlaybackPosition(float seconds)
     {
         _checkDisposed();
@@ -175,6 +187,7 @@ internal sealed class AudioSource : IAudioSource
         _master._checkAlError();
     }
 
+    /// <inheritdoc />
     public bool SetPosition(Vector2 position)
     {
         _checkDisposed();
@@ -213,6 +226,7 @@ internal sealed class AudioSource : IAudioSource
         return false;
     }
 
+    /// <inheritdoc />
     public void SetVelocity(Vector2 velocity)
     {
         _checkDisposed();
@@ -229,6 +243,7 @@ internal sealed class AudioSource : IAudioSource
         _master._checkAlError();
     }
 
+    /// <inheritdoc />
     public void SetPitch(float pitch)
     {
         _checkDisposed();

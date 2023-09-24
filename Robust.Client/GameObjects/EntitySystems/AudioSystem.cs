@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
@@ -11,6 +10,7 @@ using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -23,7 +23,6 @@ using Robust.Shared.Players;
 using Robust.Shared.Random;
 using Robust.Shared.Replays;
 using Robust.Shared.Threading;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects;
@@ -526,7 +525,7 @@ public sealed class AudioSystem : SharedAudioSystem
         source.SetRolloffFactor(audioParams.Value.RolloffFactor);
         source.SetMaxDistance(audioParams.Value.MaxDistance);
         source.SetReferenceDistance(audioParams.Value.ReferenceDistance);
-        source.IsLooping = audioParams.Value.Loop;
+        source.Looping = audioParams.Value.Loop;
 
         // TODO clamp the offset inside of SetPlaybackPosition() itself.
         var offset = audioParams.Value.PlayOffsetSeconds;
@@ -586,56 +585,5 @@ public sealed class AudioSystem : SharedAudioSystem
     public override IPlayingAudioStream? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
-    }
-}
-
-public sealed class PlayingStream : IPlayingAudioStream
-{
-    internal IAudioSource Source = default!;
-
-    public bool IsPlaying { get; }
-    public bool Done { get; set; }
-
-    public float Volume
-    {
-        get => _volume;
-        set
-        {
-            _volume = value;
-            Source.SetVolume(value);
-        }
-    }
-
-    private float _volume;
-
-    public float MaxDistance;
-    public float ReferenceDistance;
-    public float RolloffFactor;
-
-    public Attenuation Attenuation
-    {
-        get => _attenuation;
-        set
-        {
-            if (value == _attenuation) return;
-            _attenuation = value;
-            if (_attenuation != Attenuation.Default)
-            {
-                // Need to disable default attenuation when using a custom one
-                // Damn Sloth wanting linear ambience sounds so they smoothly cut-off and are short-range
-                Source.SetRolloffFactor(0f);
-            }
-        }
-    }
-    private Attenuation _attenuation = Attenuation.Default;
-
-    public void Stop()
-    {
-        Source.StopPlaying();
-    }
-
-    public void Dispose()
-    {
-        Source.Dispose();
     }
 }

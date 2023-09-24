@@ -3,6 +3,7 @@ using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio;

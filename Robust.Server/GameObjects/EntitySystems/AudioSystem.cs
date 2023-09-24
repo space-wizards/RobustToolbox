@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Server.GameStates;
@@ -31,7 +30,7 @@ public sealed class AudioSystem : SharedAudioSystem
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
         var entity = Spawn(AudioEntity, MapCoordinates.Nullspace);
         var audio = Comp<AudioComponent>(entity);
@@ -124,12 +123,5 @@ public sealed class AudioSystem : SharedAudioSystem
             return PlayStatic(filename, actor.PlayerSession, coordinates, audioParams);
 
         return null;
-    }
-}
-
-internal sealed class AudioSourceServer : IPlayingAudioStream
-{
-    public void Dispose()
-    {
     }
 }

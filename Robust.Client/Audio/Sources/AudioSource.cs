@@ -16,14 +16,29 @@ internal sealed class AudioSource : IAudioSource
      * we need to handle disposing plus checking for errors hence we get this.
      */
 
+    /// <summary>
+    /// Handle to the AL source.
+    /// </summary>
     private int SourceHandle;
+
+    /// <summary>
+    /// Source to the EFX filter if applicable.
+    /// </summary>
     private int FilterHandle;
+
     private readonly AudioManager _master;
+
+    /// <summary>
+    /// Underlying stream to the audio.
+    /// </summary>
     private readonly AudioStream _sourceStream;
 #if DEBUG
     private bool _didPositionWarning;
 #endif
 
+    /// <summary>
+    /// Prior gain that was set.
+    /// </summary>
     private float _gain;
 
     private bool IsEfxSupported => _master.IsEfxSupported;
@@ -37,29 +52,29 @@ internal sealed class AudioSource : IAudioSource
     }
 
     /// <inheritdoc />
-    public void StartPlaying()
-    {
-        _checkDisposed();
-        AL.SourcePlay(SourceHandle);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void StopPlaying()
-    {
-        if (_isDisposed()) return;
-        AL.SourceStop(SourceHandle);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public bool IsPlaying
+    public bool Playing
     {
         get
         {
             _checkDisposed();
             var state = AL.GetSourceState(SourceHandle);
             return state == ALSourceState.Playing;
+        }
+        set
+        {
+            _checkDisposed();
+
+            if (value)
+            {
+                AL.SourcePlay(SourceHandle);
+            }
+            else
+            {
+                AL.SourceStop(SourceHandle);
+            }
+
+
+            _master._checkAlError();
         }
     }
 
@@ -91,79 +106,217 @@ internal sealed class AudioSource : IAudioSource
             _master._checkAlError();
             return value;
         }
-    }
-
-    /// <inheritdoc />
-    public void SetGlobal()
-    {
-        _checkDisposed();
-        AL.Source(SourceHandle, ALSourceb.SourceRelative, true);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetVolume(float decibels)
-    {
-        var gain = MathF.Pow(10, decibels / 10);
-        SetGain(gain);
-    }
-
-    /// <inheritdoc />
-    public void SetGain(float gain)
-    {
-        _checkDisposed();
-        var priorOcclusion = 1f;
-        if (!IsEfxSupported)
+        set
         {
-            AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
-            priorOcclusion = priorGain / _gain;
+            _checkDisposed();
+            AL.Source(SourceHandle, ALSourceb.SourceRelative, value);
+            _master._checkAlError();
         }
-
-        _gain = gain;
-        AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
-        _master._checkAlError();
     }
 
     /// <inheritdoc />
-    public void SetMaxDistance(float distance)
+    public Vector2 Position
     {
-        _checkDisposed();
-        AL.Source(SourceHandle, ALSourcef.MaxDistance, distance);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetRolloffFactor(float rolloffFactor)
-    {
-        _checkDisposed();
-        AL.Source(SourceHandle, ALSourcef.RolloffFactor, rolloffFactor);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetReferenceDistance(float refDistance)
-    {
-        _checkDisposed();
-        AL.Source(SourceHandle, ALSourcef.ReferenceDistance, refDistance);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetOcclusion(float blocks)
-    {
-        _checkDisposed();
-        var cutoff = MathF.Exp(-blocks * 1);
-        var gain = MathF.Pow(cutoff, 0.1f);
-        if (IsEfxSupported)
+        get
         {
-            SetOcclusionEfx(gain, cutoff);
+            _checkDisposed();
+            AL.GetSource(SourceHandle, ALSource3f.Position, out var x, out var y, out _);
+            _master._checkAlError();
+            return new Vector2(x, y);
         }
-        else
+        set
         {
-            gain *= gain * gain;
-            AL.Source(SourceHandle, ALSourcef.Gain, _gain * gain);
+            _checkDisposed();
+
+            var (x, y) = value;
+
+            if (!AreFinite(x, y))
+            {
+                return;
+            }
+#if DEBUG
+            // OpenAL doesn't seem to want to play stereo positionally.
+            // Log a warning if people try to.
+            if (_sourceStream.ChannelCount > 1 && !_didPositionWarning)
+            {
+                _didPositionWarning = true;
+                _master.OpenALSawmill.Warning("Attempting to set position on audio source with multiple audio channels! Stream: '{0}'.  Make sure the audio is MONO, not stereo.",
+                    _sourceStream.Name);
+                // warning isn't enough, people just ignore it :(
+                DebugTools.Assert(false, $"Attempting to set position on audio source with multiple audio channels! Stream: '{_sourceStream.Name}'. Make sure the audio is MONO, not stereo.");
+            }
+#endif
+
+            AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
+            _master._checkAlError();
         }
-        _master._checkAlError();
+    }
+
+    /// <inheritdoc />
+    public float Pitch { get; set; }
+
+    /// <inheritdoc />
+    public float Volume
+    {
+        get
+        {
+            // TODO: Sloth
+            throw new NotImplementedException();
+        }
+        set => Gain = MathF.Pow(10, value / 10);
+    }
+
+    /// <inheritdoc />
+    public float Gain
+    {
+        get
+        {
+            _checkDisposed();
+            AL.GetSource(SourceHandle, ALSourcef.Gain, out var gain);
+            _master._checkAlError();
+            return gain;
+        }
+        set
+        {
+            _checkDisposed();
+            var priorOcclusion = 1f;
+            if (!IsEfxSupported)
+            {
+                AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
+                priorOcclusion = priorGain / _gain;
+            }
+
+            _gain = value;
+            AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
+            _master._checkAlError();
+        }
+    }
+
+    /// <inheritdoc />
+    public float MaxDistance
+    {
+        get
+        {
+            _checkDisposed();
+            AL.GetSource(SourceHandle, ALSourcef.MaxDistance, out var value);
+            _master._checkAlError();
+            return value;
+        }
+        set
+        {
+            _checkDisposed();
+            AL.Source(SourceHandle, ALSourcef.MaxDistance, value);
+            _master._checkAlError();
+        }
+    }
+
+    /// <inheritdoc />
+    public float RolloffFactor
+    {
+        get
+        {
+            _checkDisposed();
+            AL.GetSource(SourceHandle, ALSourcef.RolloffFactor, out var value);
+            _master._checkAlError();
+            return value;
+        }
+        set
+        {
+            _checkDisposed();
+            AL.Source(SourceHandle, ALSourcef.RolloffFactor, value);
+            _master._checkAlError();
+        }
+    }
+
+    /// <inheritdoc />
+    public float ReferenceDistance
+    {
+        get
+        {
+            _checkDisposed();
+            AL.GetSource(SourceHandle, ALSourcef.ReferenceDistance, out var value);
+            _master._checkAlError();
+            return value;
+        }
+        set
+        {
+            _checkDisposed();
+            AL.Source(SourceHandle, ALSourcef.ReferenceDistance, value);
+            _master._checkAlError();
+        }
+    }
+
+    /// <inheritdoc />
+    public float Occlusion
+    {
+        get
+        {
+            _checkDisposed();
+            AL.GetSource(SourceHandle, ALSourcef.MaxDistance, out var value);
+            _master._checkAlError();
+            return value;
+        }
+        set
+        {
+            _checkDisposed();
+            var cutoff = MathF.Exp(-value * 1);
+            var gain = MathF.Pow(cutoff, 0.1f);
+            if (IsEfxSupported)
+            {
+                SetOcclusionEfx(gain, cutoff);
+            }
+            else
+            {
+                gain *= gain * gain;
+                AL.Source(SourceHandle, ALSourcef.Gain, _gain * gain);
+            }
+            _master._checkAlError();
+        }
+    }
+
+    /// <inheritdoc />
+    public float PlaybackPosition
+    {
+        get
+        {
+            _checkDisposed();
+            AL.GetSource(SourceHandle, ALSourcef.SecOffset, out var value);
+            _master._checkAlError();
+            return value;
+        }
+        set
+        {
+            _checkDisposed();
+            AL.Source(SourceHandle, ALSourcef.SecOffset, value);
+            _master._checkAlError();
+        }
+    }
+
+    /// <inheritdoc />
+    public Vector2 Velocity
+    {
+        get
+        {
+            _checkDisposed();
+
+            AL.GetSource(SourceHandle, ALSource3f.Velocity, out var x, out var y, out _);
+            _master._checkAlError();
+            return new Vector2(x, y);
+        }
+        set
+        {
+            _checkDisposed();
+
+            var (x, y) = value;
+
+            if (!AreFinite(x, y))
+            {
+                return;
+            }
+
+            AL.Source(SourceHandle, ALSource3f.Velocity, x, y, 0);
+            _master._checkAlError();
+        }
     }
 
     private void SetOcclusionEfx(float gain, float cutoff)
@@ -179,43 +332,6 @@ internal sealed class AudioSource : IAudioSource
         AL.Source(SourceHandle, ALSourcei.EfxDirectFilter, FilterHandle);
     }
 
-    /// <inheritdoc />
-    public void SetPlaybackPosition(float seconds)
-    {
-        _checkDisposed();
-        AL.Source(SourceHandle, ALSourcef.SecOffset, seconds);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public bool SetPosition(Vector2 position)
-    {
-        _checkDisposed();
-
-        var (x, y) = position;
-
-        if (!AreFinite(x, y))
-        {
-            return false;
-        }
-#if DEBUG
-        // OpenAL doesn't seem to want to play stereo positionally.
-        // Log a warning if people try to.
-        if (_sourceStream.ChannelCount > 1 && !_didPositionWarning)
-        {
-            _didPositionWarning = true;
-            _master.OpenALSawmill.Warning("Attempting to set position on audio source with multiple audio channels! Stream: '{0}'.  Make sure the audio is MONO, not stereo.",
-                _sourceStream.Name);
-            // warning isn't enough, people just ignore it :(
-            DebugTools.Assert(false, $"Attempting to set position on audio source with multiple audio channels! Stream: '{_sourceStream.Name}'. Make sure the audio is MONO, not stereo.");
-        }
-#endif
-
-        AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
-        _master._checkAlError();
-        return true;
-    }
-
     private static bool AreFinite(float x, float y)
     {
         if (float.IsFinite(x) && float.IsFinite(y))
@@ -224,31 +340,6 @@ internal sealed class AudioSource : IAudioSource
         }
 
         return false;
-    }
-
-    /// <inheritdoc />
-    public void SetVelocity(Vector2 velocity)
-    {
-        _checkDisposed();
-
-        var (x, y) = velocity;
-
-        if (!AreFinite(x, y))
-        {
-            return;
-        }
-
-        AL.Source(SourceHandle, ALSource3f.Velocity, x, y, 0);
-
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetPitch(float pitch)
-    {
-        _checkDisposed();
-        AL.Source(SourceHandle, ALSourcef.Pitch, pitch);
-        _master._checkAlError();
     }
 
     ~AudioSource()
@@ -271,9 +362,11 @@ internal sealed class AudioSource : IAudioSource
         }
         else
         {
-            if (FilterHandle != 0) EFX.DeleteFilter(FilterHandle);
+            if (FilterHandle != 0)
+                EFX.DeleteFilter(FilterHandle);
+
             AL.DeleteSource(SourceHandle);
-            _master._audioSources.Remove(SourceHandle);
+            _master.RemoveAudioSource(SourceHandle);
             _master._checkAlError();
         }
 

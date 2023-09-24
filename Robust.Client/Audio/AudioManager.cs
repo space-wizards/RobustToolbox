@@ -9,6 +9,7 @@ using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio;
 

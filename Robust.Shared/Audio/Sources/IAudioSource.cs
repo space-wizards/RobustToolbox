@@ -7,7 +7,7 @@ namespace Robust.Shared.Audio.Sources;
 /// Engine audio source that directly interacts with OpenAL.
 /// </summary>
 /// <remarks>
-/// This should probably not be exposed to content.
+/// This just exists so client can interact with OpenAL and server can interact with nothing.
 /// </remarks>
 internal interface IAudioSource : IDisposable
 {

@@ -1,15 +1,11 @@
 using System;
 using System.Numerics;
-using JetBrains.Annotations;
 
 namespace Robust.Shared.Audio.Sources;
 
 /// <summary>
 /// Engine audio source that directly interacts with OpenAL.
 /// </summary>
-/// <remarks>
-/// Not implemented on server.
-/// </remarks>
 internal interface IAudioSource : IDisposable
 {
     /// <summary>
@@ -25,7 +21,7 @@ internal interface IAudioSource : IDisposable
     /// <summary>
     /// Is the audio source relative to the listener or to the world (global or local).
     /// </summary>
-    bool Global { get; }
+    bool Global { get; set; }
 
     /// <summary>
     /// Position of the audio relative to listener.

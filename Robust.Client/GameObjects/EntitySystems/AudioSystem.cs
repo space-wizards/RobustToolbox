@@ -22,6 +22,7 @@ using Robust.Shared.Player;
 using Robust.Shared.Players;
 using Robust.Shared.Random;
 using Robust.Shared.Replays;
+using Robust.Shared.ResourceManagement.ResourceTypes;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 
@@ -64,8 +65,6 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
 
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
-
-        _overlays.AddOverlay(new AudioOverlay(EntityManager, _playerManager, IoCManager.Resolve<IClientResourceCache>(), this, _xformSys));
     }
 
     /// <summary>
@@ -73,7 +72,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// </summary>
     public void SetMasterVolume(float value)
     {
-        throw new NotImplementedException();
+        _audio.SetMasterVolume(value);
     }
 
     public override void Shutdown()
@@ -104,16 +103,13 @@ public sealed class AudioSystem : SharedAudioSystem
         if (source == null)
             return;
 
-        component.Stream = new PlayingStream()
-        {
-            Source = source,
-        };
+        component.Source = source;
     }
 
     private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
     {
-        var pStream = component.Stream;
-        pStream.Dispose();
+        // Breaks with prediction?
+        component.Source.Dispose();
     }
 
     private void OnRaycastLengthChanged(float value)

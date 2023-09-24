@@ -1,7 +1,6 @@
 using System;
-using Robust.Client.Graphics;
 
-namespace Robust.Client.Audio.Sources
+namespace Robust.Shared.Audio.Sources
 {
     /// <summary>
     ///     Hey look, it's Audio.BufferedAudioSource's evil twin brother!

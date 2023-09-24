@@ -1,12 +1,11 @@
-﻿using System;
-using Robust.Shared.Utility;
+using System;
 using System.IO;
 using Robust.Shared.Audio;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
-using Robust.Shared.ResourceManagement;
+using Robust.Shared.Utility;
 
-namespace Robust.Client.ResourceManagement;
+namespace Robust.Shared.ResourceManagement.ResourceTypes;
 
 public sealed class AudioResource : BaseResource
 {

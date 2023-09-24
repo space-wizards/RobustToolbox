@@ -2,6 +2,7 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Server.GameStates;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -15,60 +16,70 @@ public sealed class AudioSystem : SharedAudioSystem
 {
     [Dependency] private readonly PvsOverrideSystem _pvs = default!;
 
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
+    }
+
+    private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
+    {
+        component.Source = new DummyAudioSource();
+    }
+
     private void AddAudioFilter(EntityUid uid, Filter filter)
     {
         var nent = GetNetEntity(uid);
         _pvs.AddSessionOverrides(nent, filter);
     }
 
-    private void SetupAudio(AudioComponent component, string fileName, AudioType audioType, AudioParams? audioParams)
+    private void SetupAudio(AudioComponent component, string fileName, AudioParams? audioParams)
     {
         audioParams ??= AudioParams.Default;
         component.FileName = fileName;
         component.Params = audioParams.Value;
-        component.AudioType = audioType;
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
         var entity = Spawn(AudioEntity, MapCoordinates.Nullspace);
         var audio = Comp<AudioComponent>(entity);
-        SetupAudio(audio, filename, AudioType.Global, audioParams);
+        SetupAudio(audio, filename, audioParams);
         AddAudioFilter(entity, playerFilter);
 
-        return (entity, audio.Stream);
+        return (entity, audio);
     }
 
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayEntity(string filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
     {
         if (!Exists(uid))
             return null;
 
         var entity = Spawn(AudioEntity, new EntityCoordinates(uid, Vector2.Zero));
         var audio = Comp<AudioComponent>(entity);
-        SetupAudio(audio, filename, AudioType.Local, audioParams);
+        SetupAudio(audio, filename, audioParams);
         AddAudioFilter(entity, playerFilter);
 
-        return (entity, audio.Stream);
+        return (entity, audio);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayStatic(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
         if (!coordinates.IsValid(EntityManager))
             return null;
 
         var entity = Spawn(AudioEntity, coordinates);
         var audio = Comp<AudioComponent>(entity);
-        SetupAudio(audio, filename, AudioType.Local, audioParams);
+        SetupAudio(audio, filename, audioParams);
         AddAudioFilter(entity, playerFilter);
 
-        return (entity, audio.Stream);
+        return (entity, audio);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user)
+    public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user)
     {
         if (sound == null)
             return null;
@@ -77,7 +88,7 @@ public sealed class AudioSystem : SharedAudioSystem
         return PlayEntity(GetSound(sound), filter, source, true, sound.Params);
     }
 
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user)
+    public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user)
     {
         if (sound == null)
             return null;
@@ -86,12 +97,12 @@ public sealed class AudioSystem : SharedAudioSystem
         return PlayStatic(GetSound(sound), filter, coordinates, true, sound.Params);
     }
 
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)
     {
         return PlayGlobal(filename, Filter.SinglePlayer(recipient), false, audioParams);
     }
 
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)
     {
         if (TryComp(recipient, out ActorComponent? actor))
             return PlayGlobal(filename, actor.PlayerSession, audioParams);
@@ -99,12 +110,12 @@ public sealed class AudioSystem : SharedAudioSystem
         return null;
     }
 
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
     {
         return PlayEntity(filename, Filter.SinglePlayer(recipient), uid, false, audioParams);
     }
 
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
         if (TryComp(recipient, out ActorComponent? actor))
             return PlayEntity(filename, actor.PlayerSession, uid, audioParams);
@@ -112,12 +123,12 @@ public sealed class AudioSystem : SharedAudioSystem
         return null;
     }
 
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         return PlayStatic(filename, Filter.SinglePlayer(recipient), coordinates, false, audioParams);
     }
 
-    public override (EntityUid Entity, IPlayingAudioStream Stream)? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         if (TryComp(recipient, out ActorComponent? actor))
             return PlayStatic(filename, actor.PlayerSession, coordinates, audioParams);

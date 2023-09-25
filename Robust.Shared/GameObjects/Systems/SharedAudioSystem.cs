@@ -36,11 +36,6 @@ public abstract class SharedAudioSystem : EntitySystem
     [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
 
     /// <summary>
-    /// Just so we can have an entity that doesn't get serialized.
-    /// </summary>
-    protected static readonly EntProtoId AudioEntity = new("AudioEntity");
-
-    /// <summary>
     /// Default max range at which the sound can be heard.
     /// </summary>
     public const float DefaultSoundRange = 25;
@@ -86,6 +81,13 @@ public abstract class SharedAudioSystem : EntitySystem
     }
 
     #region AudioParams
+
+    protected void SetupAudio(EntityUid uid, AudioComponent component, string fileName, AudioParams? audioParams)
+    {
+        audioParams ??= AudioParams.Default;
+        component.FileName = fileName;
+        component.Params = audioParams.Value;
+    }
 
     /// <summary>
     /// Sets the audio params volume for an entity.

@@ -7,6 +7,7 @@ using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;

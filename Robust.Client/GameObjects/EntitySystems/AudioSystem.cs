@@ -159,8 +159,6 @@ public sealed class AudioSystem : SharedAudioSystem
         // TODO: If it's a grid then check if we're on a tile
         // if we are then set it as global
         // if not then get nearest edge to grid and use that as distance / cut off at maxdistance.
-        throw new NotImplementedException();
-
         if (!component.Playing)
         {
             component.Done = true;
@@ -454,13 +452,13 @@ public sealed class AudioSystem : SharedAudioSystem
     private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(IAudioSource source, AudioParams? audioParams, AudioStream stream)
     {
         var audioP = audioParams ?? AudioParams.Default;
+        var entity = Spawn(null, MapCoordinates.Nullspace);
+        var comp = AddComp<AudioComponent>(entity);
+        SetupAudio(entity, comp, string.Empty, audioP);
         ApplyAudioParams(audioP, source, stream);
-        source.StartPlaying();
-
-        var entity = Spawn(AudioEntity, MapCoordinates.Nullspace);
-        var comp = Comp<AudioComponent>(entity);
         comp.Params = audioP;
 
+        source.StartPlaying();
         return (entity, comp);
     }
 

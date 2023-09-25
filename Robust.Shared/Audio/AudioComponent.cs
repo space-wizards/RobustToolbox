@@ -82,7 +82,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <see cref="IAudioSource.Global"/>
     /// </summary>
     [AutoNetworkedField]
-    [DataField]
     public bool Global
     {
         get => Source.Global;

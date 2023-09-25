@@ -25,6 +25,7 @@ using Robust.Client.WebViewHook;
 using Robust.LoaderApi;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;

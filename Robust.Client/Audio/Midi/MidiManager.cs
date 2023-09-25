@@ -10,6 +10,7 @@ using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Audio.Midi;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;

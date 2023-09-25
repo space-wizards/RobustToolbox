@@ -33,19 +33,12 @@ public sealed class AudioSystem : SharedAudioSystem
         _pvs.AddSessionOverrides(nent, filter);
     }
 
-    private void SetupAudio(AudioComponent component, string fileName, AudioParams? audioParams)
-    {
-        audioParams ??= AudioParams.Default;
-        component.FileName = fileName;
-        component.Params = audioParams.Value;
-    }
-
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        var entity = Spawn(AudioEntity, MapCoordinates.Nullspace);
-        var audio = Comp<AudioComponent>(entity);
-        SetupAudio(audio, filename, audioParams);
+        var entity = Spawn(null, MapCoordinates.Nullspace);
+        var audio = AddComp<AudioComponent>(entity);
+        SetupAudio(entity, audio, filename, audioParams);
         AddAudioFilter(entity, playerFilter);
 
         return (entity, audio);
@@ -56,9 +49,9 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!Exists(uid))
             return null;
 
-        var entity = Spawn(AudioEntity, new EntityCoordinates(uid, Vector2.Zero));
-        var audio = Comp<AudioComponent>(entity);
-        SetupAudio(audio, filename, audioParams);
+        var entity = Spawn(null, new EntityCoordinates(uid, Vector2.Zero));
+        var audio = AddComp<AudioComponent>(entity);
+        SetupAudio(entity, audio, filename, audioParams);
         AddAudioFilter(entity, playerFilter);
 
         return (entity, audio);
@@ -70,9 +63,9 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!coordinates.IsValid(EntityManager))
             return null;
 
-        var entity = Spawn(AudioEntity, coordinates);
-        var audio = Comp<AudioComponent>(entity);
-        SetupAudio(audio, filename, audioParams);
+        var entity = Spawn(null, coordinates);
+        var audio = AddComp<AudioComponent>(entity);
+        SetupAudio(entity, audio, filename, audioParams);
         AddAudioFilter(entity, playerFilter);
 
         return (entity, audio);

@@ -1,10 +1,8 @@
 using System.Numerics;
-using Robust.Shared.Audio;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
-using Robust.Shared.ResourceManagement.ResourceTypes;
 
-namespace Robust.Client.Audio;
+namespace Robust.Shared.Audio;
 
 /// <summary>
 /// Handles clientside audio.

@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using NFluidsynth;
 using Robust.Client.Graphics;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Audio.Midi;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.GameObjects;

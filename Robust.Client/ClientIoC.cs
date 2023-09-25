@@ -110,6 +110,7 @@ namespace Robust.Client
                     deps.Register<IClipboardManager, ClydeHeadless>();
                     deps.Register<IClydeInternal, ClydeHeadless>();
                     deps.Register<IAudioInternal, HeadlessAudioManager>();
+                    deps.Register<SharedAudioManager, HeadlessAudioManager>();
                     deps.Register<IInputManager, InputManager>();
                     deps.Register<IFileDialogManager, DummyFileDialogManager>();
                     deps.Register<IUriOpener, UriOpenerDummy>();
@@ -119,6 +120,7 @@ namespace Robust.Client
                     deps.Register<IClipboardManager, Clyde>();
                     deps.Register<IClydeInternal, Clyde>();
                     deps.Register<IAudioInternal, AudioManager>();
+                    deps.Register<SharedAudioManager, AudioManager>();
                     deps.Register<IInputManager, ClydeInputManager>();
                     deps.Register<IFileDialogManager, FileDialogManager>();
                     deps.Register<IUriOpener, UriOpener>();

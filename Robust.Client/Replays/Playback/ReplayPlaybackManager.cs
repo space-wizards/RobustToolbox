@@ -11,6 +11,7 @@ using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Client.Upload;
 using Robust.Shared;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;

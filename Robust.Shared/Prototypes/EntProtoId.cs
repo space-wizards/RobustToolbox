@@ -24,4 +24,21 @@ public readonly record struct EntProtoId(string Id)
     {
         return new EntProtoId(id);
     }
+    public static bool operator ==(EntProtoId? first, string? second)
+    {
+        if (!first.HasValue)
+            return second == null;
+
+        return first.Value.Equals(second);
+    }
+
+    public static bool operator !=(EntProtoId? first, string? second)
+    {
+        return !(first == second);
+    }
+
+    public bool Equals(string? other)
+    {
+        return Id == other;
+    }
 }

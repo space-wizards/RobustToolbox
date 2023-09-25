@@ -25,6 +25,11 @@ public readonly record struct ProtoId<T>(string Id) : IEquatable<string> where T
         return new ProtoId<T>(id);
     }
 
+    public static implicit operator ProtoId<T>?(string? id)
+    {
+        return id == null ? default(ProtoId<T>?) : new ProtoId<T>(id);
+    }
+
     public static bool operator ==(ProtoId<T>? first, string? second)
     {
         if (!first.HasValue)

@@ -51,4 +51,8 @@ internal sealed class HeadlessAudioManager : SharedAudioManager, IAudioInternal
     public void SetMasterVolume(float value)
     {
     }
+
+    public void StopAllAudio()
+    {
+    }
 }

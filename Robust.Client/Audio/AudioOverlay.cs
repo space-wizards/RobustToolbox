@@ -54,8 +54,8 @@ public sealed class AudioOverlay : Overlay
 
         while (query.MoveNext(out var uid, out var comp))
         {
-            MapId mapId = MapId.Nullspace;
-            Vector2 audioPos;
+            var mapId = MapId.Nullspace;
+            var audioPos = Vector2.Zero;
 
             if (_entManager.TryGetComponent<TransformComponent>(uid, out var xform))
             {
@@ -68,18 +68,16 @@ public sealed class AudioOverlay : Overlay
 
             var screenPos = args.ViewportControl.WorldToScreen(audioPos);
             var distance = audioPos - listenerPos.Position;
-            var posOcclusion = _audio.GetOcclusion(stream, listenerPos, distance, distance.Length());
-            var posVolume = _audio.GetPositionalVolume(stream, distance.Length());
+            var posOcclusion = _audio.GetOcclusion(uid, listenerPos, distance, distance.Length());
 
             output.Clear();
             output.AppendLine("Audio Source");
             output.AppendLine("Runtime:");
             output.AppendLine($"- Occlusion: {posOcclusion:0.0000}");
-            output.AppendLine($"- Volume: {posVolume:0.0000}");
             output.AppendLine("Params:");
-            output.AppendLine($"- Volume: {stream.Volume:0.0000}");
-            output.AppendLine($"- Reference distance: {stream.ReferenceDistance}");
-            output.AppendLine($"- Max distance: {stream.MaxDistance}");
+            output.AppendLine($"- Volume: {comp.Volume:0.0000}");
+            output.AppendLine($"- Reference distance: {comp.ReferenceDistance}");
+            output.AppendLine($"- Max distance: {comp.MaxDistance}");
             var outputText = output.ToString().Trim();
             var dimensions = screenHandle.GetDimensions(_font, outputText, 1f);
             var buffer = new Vector2(3f, 3f);

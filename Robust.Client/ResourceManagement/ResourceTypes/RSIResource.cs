@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
@@ -35,26 +36,27 @@ namespace Robust.Client.ResourceManagement
         /// </summary>
         public const uint MAXIMUM_RSI_VERSION = RsiLoading.MAXIMUM_RSI_VERSION;
 
-        public override void Load(IClientResourceCache cache, ResPath path)
+        public override void Load(IDependencyCollection dependencies, ResPath path)
         {
             var loadStepData = new LoadStepData {Path = path};
-            LoadPreTexture(cache, loadStepData);
+            var manager = dependencies.Resolve<IResourceManager>();
+            LoadPreTexture(manager, loadStepData);
 
-            loadStepData.AtlasTexture = cache.Clyde.LoadTextureFromImage(
+            loadStepData.AtlasTexture = dependencies.Resolve<IClyde>().LoadTextureFromImage(
                 loadStepData.AtlasSheet,
                 loadStepData.Path.ToString());
 
             LoadPostTexture(loadStepData);
-            LoadFinish(cache, loadStepData);
+            LoadFinish(dependencies.Resolve<IClientResourceCacheInternal>(), loadStepData);
 
             loadStepData.AtlasSheet.Dispose();
         }
 
-        internal static void LoadPreTexture(IClientResourceCache cache, LoadStepData data)
+        internal static void LoadPreTexture(IResourceManager manager, LoadStepData data)
         {
             var manifestPath = data.Path / "meta.json";
             RsiLoading.RsiMetadata metadata;
-            using (var manifestFile = cache.ContentFileRead(manifestPath))
+            using (var manifestFile = manager.ContentFileRead(manifestPath))
             {
                 metadata = RsiLoading.LoadRsiMetadata(manifestFile);
             }
@@ -87,7 +89,7 @@ namespace Robust.Client.ResourceManagement
                 var stateObject = metadata.States[index];
                 // Load image from disk.
                 var texPath = data.Path / (stateObject.StateId + ".png");
-                using (var stream = cache.ContentFileRead(texPath))
+                using (var stream = manager.ContentFileRead(texPath))
                 {
                     reg.Src = Image.Load<Rgba32>(stream);
                 }
@@ -213,14 +215,10 @@ namespace Robust.Client.ResourceManagement
             }
         }
 
-        internal void LoadFinish(IClientResourceCache cache, LoadStepData data)
+        internal void LoadFinish(IClientResourceCacheInternal cache, LoadStepData data)
         {
             RSI = data.Rsi;
-
-            if (cache is IClientResourceCacheInternal cacheInternal)
-            {
-                cacheInternal.RsiLoaded(new RsiLoadedEventArgs(data.Path, this, data.AtlasSheet, data.CallbackOffsets));
-            }
+            cache.RsiLoaded(new RsiLoadedEventArgs(data.Path, this, data.AtlasSheet, data.CallbackOffsets));
         }
 
         /// <summary>

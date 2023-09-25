@@ -81,12 +81,12 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <summary>
     /// Stops the specified audio entity from playing.
     /// </summary>
-    public void Stop(EntityUid uid, AudioComponent? component = null)
+    public void Stop(EntityUid? uid, AudioComponent? component = null)
     {
-        if (!Resolve(uid, ref component))
+        if (uid == null || !Resolve(uid.Value, ref component))
             return;
 
-        if (!Timing.IsFirstTimePredicted || (_netManager.IsClient && IsClientSide(uid)))
+        if (!Timing.IsFirstTimePredicted || (_netManager.IsClient && IsClientSide(uid.Value)))
             return;
 
         QueueDel(uid);

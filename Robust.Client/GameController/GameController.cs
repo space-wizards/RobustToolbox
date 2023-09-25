@@ -50,6 +50,7 @@ namespace Robust.Client
     {
         [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
         [Dependency] private readonly IClientResourceCacheInternal _resourceCache = default!;
+        [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
@@ -149,7 +150,7 @@ namespace Robust.Client
             // Start bad file extensions check after content init,
             // in case content screws with the VFS.
             var checkBadExtensions = ProgramShared.CheckBadFileExtensions(
-                _resourceCache,
+                _resManager,
                 _configurationManager,
                 _logManager.GetSawmill("res"));
 
@@ -291,7 +292,7 @@ namespace Robust.Client
         private ResourceManifestData LoadResourceManifest()
         {
             // Parses /manifest.yml for game-specific settings that cannot be exclusively set up by content code.
-            if (!_resourceCache.TryContentFileRead("/manifest.yml", out var stream))
+            if (!_resManager.TryContentFileRead("/manifest.yml", out var stream))
                 return ResourceManifestData.Default;
 
             var yamlStream = new YamlStream();
@@ -433,13 +434,13 @@ namespace Robust.Client
             _parallelMgr.Initialize();
             _prof.Initialize();
 
-            _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
+            _resManager.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)
                 : Options.MountOptions;
 
-            ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory,
+            ProgramShared.DoMounts(_resManager, mountOptions, Options.ContentBuildDirectory,
                 Options.AssemblyDirectory,
                 Options.LoadContentResources, _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
 
@@ -449,12 +450,12 @@ namespace Robust.Client
                 {
                     foreach (var (api, prefix) in mounts)
                     {
-                        _resourceCache.MountLoaderApi(api, "", new(prefix));
+                        _resourceCache.MountLoaderApi(_resManager, api, "", new(prefix));
                     }
                 }
 
                 _stringSerializer.EnableCaching = false;
-                _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
+                _resourceCache.MountLoaderApi(_resManager, _loaderArgs.FileApi, "Resources/");
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
             }
 

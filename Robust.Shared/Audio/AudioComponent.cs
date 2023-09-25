@@ -17,6 +17,9 @@ public sealed partial class AudioComponent : Component, IAudioSource
     [DataField]
     public string FileName;
 
+    /// <summary>
+    /// Audio params. Set this if you want to adjust default volume, max distance, etc.
+    /// </summary>
     [AutoNetworkedField]
     [DataField]
     public AudioParams Params = AudioParams.Default;
@@ -89,8 +92,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// </summary>
     public float MaxDistance
     {
-        get => Params.MaxDistance;
-        set => Params.MaxDistance = value;
+        get => Source.MaxDistance;
+        set => Source.MaxDistance = value;
     }
 
     /// <summary>
@@ -98,8 +101,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// </summary>
     public float RolloffFactor
     {
-        get => Params.RolloffFactor;
-        set => Params.RolloffFactor = value;
+        get => Source.RolloffFactor;
+        set => Source.RolloffFactor = value;
     }
 
     /// <summary>
@@ -107,8 +110,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// </summary>
     public float ReferenceDistance
     {
-        get => Params.ReferenceDistance;
-        set => Params.ReferenceDistance = value;
+        get => Source.ReferenceDistance;
+        set => Source.ReferenceDistance = value;
     }
 
     /// <summary>

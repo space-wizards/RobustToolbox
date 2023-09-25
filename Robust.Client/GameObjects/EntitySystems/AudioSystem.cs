@@ -202,9 +202,6 @@ public sealed class AudioSystem : SharedAudioSystem
         var occlusion = GetOcclusion(entity, listener, delta, distance);
         component.Occlusion = occlusion;
 
-        // Update attenuation dependent volume.
-        component.Gain = GetPositionalVolume(component, distance);
-
         // Update audio positions.
         component.Position = mapPos.Position;
 
@@ -230,50 +227,6 @@ public sealed class AudioSystem : SharedAudioSystem
         }
 
         return occlusion;
-    }
-
-    internal float GetPositionalVolume(AudioComponent component, float distance)
-    {
-        // OpenAL also limits the distance to <= AL_MAX_DISTANCE, but since we cull
-        // sources that are further away than stream.MaxDistance, we don't do that.
-        distance = MathF.Max(component.ReferenceDistance, distance);
-        float gain;
-
-        // Technically these are formulas for gain not decibels but EHHHHHHHH.
-        switch (component.Attenuation)
-        {
-            case Attenuation.Default:
-                gain = 1f;
-                break;
-            // You thought I'd implement clamping per source? Hell no that's just for the overall OpenAL setting
-            // I didn't even wanna implement this much for linear but figured it'd be cleaner.
-            case Attenuation.InverseDistanceClamped:
-            case Attenuation.InverseDistance:
-                gain = component.ReferenceDistance
-                       / (component.ReferenceDistance
-                          + component.RolloffFactor * (distance - component.ReferenceDistance));
-
-                break;
-            case Attenuation.LinearDistanceClamped:
-            case Attenuation.LinearDistance:
-                gain = 1f
-                        - component.RolloffFactor
-                        * (distance - component.ReferenceDistance)
-                        / (component.MaxDistance - component.ReferenceDistance);
-
-                break;
-            case Attenuation.ExponentDistanceClamped:
-            case Attenuation.ExponentDistance:
-                gain = MathF.Pow(distance / component.ReferenceDistance, -component.RolloffFactor);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(
-                    $"No implemented attenuation for {component.Attenuation}");
-        }
-
-        var volume = MathF.Pow(10, component.Volume / 10);
-        var actualGain = MathF.Max(0f, volume * gain);
-        return actualGain;
     }
 
     private bool TryGetAudio(string filename, [NotNullWhen(true)] out AudioResource? audio)

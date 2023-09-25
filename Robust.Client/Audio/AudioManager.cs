@@ -30,7 +30,7 @@ internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
 
     private readonly List<LoadedAudioSample> _audioSampleBuffers = new();
 
-    private readonly Dictionary<int, WeakReference<AudioSource>> _audioSources =
+    private readonly Dictionary<int, WeakReference<BaseAudioSource>> _audioSources =
         new();
 
     private readonly Dictionary<int, WeakReference<BufferedAudioSource>> _bufferedAudioSources =

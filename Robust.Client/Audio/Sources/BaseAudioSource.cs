@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.Audio.Sources;
 
 [Virtual]
-internal class AudioSource : IAudioSource
+internal class BaseAudioSource : IAudioSource
 {
     /*
      * This may look weird having all these methods here however
@@ -45,7 +45,7 @@ internal class AudioSource : IAudioSource
 
     private bool IsEfxSupported => _master.IsEfxSupported;
 
-    public AudioSource(AudioManager master, int sourceHandle, AudioStream sourceStream)
+    public BaseAudioSource(AudioManager master, int sourceHandle, AudioStream sourceStream)
     {
         _master = master;
         SourceHandle = sourceHandle;
@@ -345,7 +345,7 @@ internal class AudioSource : IAudioSource
         return false;
     }
 
-    ~AudioSource()
+    ~BaseAudioSource()
     {
         Dispose(false);
     }
@@ -385,7 +385,7 @@ internal class AudioSource : IAudioSource
     {
         if (SourceHandle == -1)
         {
-            throw new ObjectDisposedException(nameof(AudioSource));
+            throw new ObjectDisposedException(nameof(BaseAudioSource));
         }
     }
 }

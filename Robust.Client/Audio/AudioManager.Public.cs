@@ -251,8 +251,8 @@ internal partial class AudioManager
         // TODO: This really shouldn't be indexing based on the ClydeHandle...
         AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) resource.AudioStream.ClydeHandle!.Value].BufferHandle);
 
-        var audioSource = new AudioSource(this, source, resource.AudioStream);
-        _audioSources.Add(source, new WeakReference<AudioSource>(audioSource));
+        var audioSource = new BaseAudioSource(this, source, resource.AudioStream);
+        _audioSources.Add(source, new WeakReference<BaseAudioSource>(audioSource));
         return audioSource;
     }
 
@@ -261,7 +261,10 @@ internal partial class AudioManager
         var source = AL.GenSource();
 
         if (!AL.IsSource(source))
-            throw new Exception("Failed to generate source. Too many simultaneous audio streams?");
+        {
+            OpenALSawmill.Error("Failed to generate source. Too many simultaneous audio streams? {0}", Environment.StackTrace);
+            return null;
+        }
 
         // ReSharper disable once PossibleInvalidOperationException
 
@@ -276,7 +279,7 @@ internal partial class AudioManager
         {
             if (source.TryGetTarget(out var target))
             {
-                target.StopPlaying();
+                target.Playing = false;
             }
         }
 
@@ -284,31 +287,34 @@ internal partial class AudioManager
         {
             if (source.TryGetTarget(out var target))
             {
-                target.StopPlaying();
+                target.Playing = false;
             }
         }
     }
 
     public void DisposeAllAudio()
     {
+        // TODO: Do we even need to stop?
         foreach (var source in _audioSources.Values)
         {
             if (source.TryGetTarget(out var target))
             {
-                target.StopPlaying();
+                target.Playing = false;
                 target.Dispose();
             }
         }
+
         _audioSources.Clear();
 
         foreach (var source in _bufferedAudioSources.Values)
         {
             if (source.TryGetTarget(out var target))
             {
-                target.StopPlaying();
+                target.Playing = false;
                 target.Dispose();
             }
         }
+
         _bufferedAudioSources.Clear();
     }
 }

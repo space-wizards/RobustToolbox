@@ -9,7 +9,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio.Sources;
 
-internal sealed class BufferedAudioSource : AudioSource, IBufferedAudioSource
+internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSource
 {
     private int? SourceHandle = null;
     private int[] BufferHandles;

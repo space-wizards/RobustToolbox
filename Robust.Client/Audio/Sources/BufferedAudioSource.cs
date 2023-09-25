@@ -9,7 +9,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio.Sources;
 
-internal sealed class BufferedAudioSource : IBufferedAudioSource
+internal sealed class BufferedAudioSource : AudioSource, IBufferedAudioSource
 {
     private int? SourceHandle = null;
     private int[] BufferHandles;
@@ -40,204 +40,33 @@ internal sealed class BufferedAudioSource : IBufferedAudioSource
     }
 
     /// <inheritdoc />
-    public void StartPlaying()
-    {
-        _checkDisposed();
-        // ReSharper disable once PossibleInvalidOperationException
-        AL.SourcePlay(stackalloc int[] {SourceHandle!.Value});
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void StopPlaying()
-    {
-        if (_isDisposed()) return;
-        // ReSharper disable once PossibleInvalidOperationException
-        AL.SourceStop(SourceHandle!.Value);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public bool IsPlaying
+    public override bool Playing
     {
         get
         {
             _checkDisposed();
-            // ReSharper disable once PossibleInvalidOperationException
             var state = AL.GetSourceState(SourceHandle!.Value);
+            _master._checkAlError();
             return state == ALSourceState.Playing;
         }
-    }
-
-    /// <inheritdoc />
-    public bool Looping
-    {
-        get => throw new NotImplementedException();
-        set => throw new NotImplementedException();
-    }
-
-    /// <inheritdoc />
-    public void SetGlobal()
-    {
-        _checkDisposed();
-        _mono = false;
-        // ReSharper disable once PossibleInvalidOperationException
-        AL.Source(SourceHandle!.Value, ALSourceb.SourceRelative, true);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetVolume(float decibels)
-    {
-        var gain = MathF.Pow(10, decibels / 10);
-        SetGain(gain);
-    }
-
-    /// <inheritdoc />
-    public void SetGain(float gain)
-    {
-        _checkDisposed();
-        var priorOcclusion = 1f;
-        if (!IsEfxSupported)
+        set
         {
-            AL.GetSource(SourceHandle!.Value, ALSourcef.Gain, out var priorGain);
-            priorOcclusion = priorGain / _gain;
+            if (value)
+            {
+                _checkDisposed();
+                // IDK why this stackallocs but gonna leave it for now.
+                AL.SourcePlay(stackalloc int[] {SourceHandle!.Value});
+                _master._checkAlError();
+            }
+            else
+            {
+                if (_isDisposed())
+                    return;
+
+                AL.SourceStop(SourceHandle!.Value);
+                _master._checkAlError();
+            }
         }
-        _gain = gain;
-        AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * priorOcclusion);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetMaxDistance(float distance)
-    {
-        _checkDisposed();
-        AL.Source(SourceHandle!.Value, ALSourcef.MaxDistance, distance);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetRolloffFactor(float rolloffFactor)
-    {
-        _checkDisposed();
-        AL.Source(SourceHandle!.Value, ALSourcef.RolloffFactor, rolloffFactor);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetReferenceDistance(float refDistance)
-    {
-        _checkDisposed();
-        AL.Source(SourceHandle!.Value, ALSourcef.ReferenceDistance, refDistance);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetOcclusion(float blocks)
-    {
-        _checkDisposed();
-        var cutoff = MathF.Exp(-blocks * 1.5f);
-        var gain = MathF.Pow(cutoff, 0.1f);
-        if (IsEfxSupported)
-        {
-            SetOcclusionEfx(gain, cutoff);
-        }
-        else
-        {
-            gain *= gain * gain;
-            AL.Source(SourceHandle!.Value, ALSourcef.Gain, gain * _gain);
-        }
-
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    private void SetOcclusionEfx(float gain, float cutoff)
-    {
-        if (FilterHandle == 0)
-        {
-            FilterHandle = EFX.GenFilter();
-            EFX.Filter(FilterHandle, FilterInteger.FilterType, (int) FilterType.Lowpass);
-        }
-        EFX.Filter(FilterHandle, FilterFloat.LowpassGain, gain);
-        EFX.Filter(FilterHandle, FilterFloat.LowpassGainHF, cutoff);
-        AL.Source(SourceHandle!.Value, ALSourcei.EfxDirectFilter, FilterHandle);
-    }
-
-    /// <inheritdoc />
-    public void SetPlaybackPosition(float seconds)
-    {
-        _checkDisposed();
-        // ReSharper disable once PossibleInvalidOperationException
-        AL.Source(SourceHandle!.Value, ALSourcef.SecOffset, seconds);
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public bool Global
-    {
-        get
-        {
-            _checkDisposed();
-            AL.GetSource(SourceHandle!.Value, ALSourceb.SourceRelative, out var value);
-            _master._checkAlError();
-            return value;
-        }
-    }
-
-    /// <inheritdoc />
-    public bool SetPosition(Vector2 position)
-    {
-        _checkDisposed();
-
-        var (x, y) = position;
-
-        if (!AreFinite(x, y))
-        {
-            return false;
-        }
-
-        _mono = true;
-        // ReSharper disable once PossibleInvalidOperationException
-        AL.Source(SourceHandle!.Value, ALSource3f.Position, x, y, 0);
-        _master._checkAlError();
-        return true;
-    }
-
-    private static bool AreFinite(float x, float y)
-    {
-        if (float.IsFinite(x) && float.IsFinite(y))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    /// <inheritdoc />
-    public void SetVelocity(Vector2 velocity)
-    {
-        _checkDisposed();
-
-        var (x, y) = velocity;
-
-        if (!AreFinite(x, y))
-        {
-            return;
-        }
-
-        AL.Source(SourceHandle!.Value, ALSource3f.Velocity, x, y, 0);
-
-        _master._checkAlError();
-    }
-
-    /// <inheritdoc />
-    public void SetPitch(float pitch)
-    {
-        _checkDisposed();
-        // ReSharper disable once PossibleInvalidOperationException
-        AL.Source(SourceHandle!.Value, ALSourcef.Pitch, pitch);
-        _master._checkAlError();
     }
 
     ~BufferedAudioSource()
@@ -245,13 +74,13 @@ internal sealed class BufferedAudioSource : IBufferedAudioSource
         Dispose(false);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
-    private void Dispose(bool disposing)
+    protected override void Dispose(bool disposing)
     {
         if (SourceHandle == null) return;
 
@@ -274,19 +103,6 @@ internal sealed class BufferedAudioSource : IBufferedAudioSource
         SourceHandle = null;
     }
 
-    private bool _isDisposed()
-    {
-        return SourceHandle == null;
-    }
-
-    private void _checkDisposed()
-    {
-        if (SourceHandle == null)
-        {
-            throw new ObjectDisposedException(nameof(AudioSource));
-        }
-    }
-
     public int GetNumberOfBuffersProcessed()
     {
         _checkDisposed();
@@ -300,11 +116,14 @@ internal sealed class BufferedAudioSource : IBufferedAudioSource
         _checkDisposed();
         var entries = Math.Min(Math.Min(handles.Length, BufferHandles.Length), GetNumberOfBuffersProcessed());
         fixed (int* ptr = handles)
-            // ReSharper disable once PossibleInvalidOperationException
+        {
             AL.SourceUnqueueBuffers(SourceHandle!.Value, entries, ptr);
+        }
 
         for (var i = 0; i < entries; i++)
+        {
             handles[i] = BufferMap[handles[i]];
+        }
     }
 
     public unsafe void WriteBuffer(int handle, ReadOnlySpan<ushort> data)
@@ -315,8 +134,10 @@ internal sealed class BufferedAudioSource : IBufferedAudioSource
             throw new InvalidOperationException("Can't write ushort numbers to buffers when buffer type is float!");
 
         if (handle >= BufferHandles.Length)
+        {
             throw new ArgumentOutOfRangeException(nameof(handle),
                 $"Got {handle}. Expected less than {BufferHandles.Length}");
+        }
 
         fixed (ushort* ptr = data)
         {
@@ -333,8 +154,10 @@ internal sealed class BufferedAudioSource : IBufferedAudioSource
             throw new InvalidOperationException("Can't write float numbers to buffers when buffer type is ushort!");
 
         if (handle >= BufferHandles.Length)
+        {
             throw new ArgumentOutOfRangeException(nameof(handle),
                 $"Got {handle}. Expected less than {BufferHandles.Length}");
+        }
 
         fixed (float* ptr = data)
         {
@@ -360,7 +183,9 @@ internal sealed class BufferedAudioSource : IBufferedAudioSource
 
         fixed (int* ptr = realHandles)
             // ReSharper disable once PossibleInvalidOperationException
+        {
             AL.SourceQueueBuffers(SourceHandle!.Value, handles.Length, ptr);
+        }
     }
 
     public unsafe void EmptyBuffers()

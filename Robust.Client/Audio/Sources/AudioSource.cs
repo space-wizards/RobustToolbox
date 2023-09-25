@@ -10,7 +10,8 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio.Sources;
 
-internal sealed class AudioSource : IAudioSource
+[Virtual]
+internal class AudioSource : IAudioSource
 {
     /*
      * This may look weird having all these methods here however
@@ -53,12 +54,13 @@ internal sealed class AudioSource : IAudioSource
     }
 
     /// <inheritdoc />
-    public bool Playing
+    public virtual bool Playing
     {
         get
         {
             _checkDisposed();
             var state = AL.GetSourceState(SourceHandle);
+            _master._checkAlError();
             return state == ALSourceState.Playing;
         }
         set
@@ -374,12 +376,12 @@ internal sealed class AudioSource : IAudioSource
         SourceHandle = -1;
     }
 
-    private bool _isDisposed()
+    protected bool _isDisposed()
     {
         return SourceHandle == -1;
     }
 
-    private void _checkDisposed()
+    protected void _checkDisposed()
     {
         if (SourceHandle == -1)
         {

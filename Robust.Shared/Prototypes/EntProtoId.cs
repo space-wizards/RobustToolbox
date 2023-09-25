@@ -37,6 +37,16 @@ public readonly record struct EntProtoId(string Id)
         return !(first == second);
     }
 
+    public static bool operator ==(EntProtoId first, string? second)
+    {
+        return first.Id == second;
+    }
+
+    public static bool operator !=(EntProtoId first, string? second)
+    {
+        return !(first == second);
+    }
+
     public bool Equals(string? other)
     {
         return Id == other;

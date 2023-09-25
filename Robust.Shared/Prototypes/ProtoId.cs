@@ -38,6 +38,16 @@ public readonly record struct ProtoId<T>(string Id) : IEquatable<string> where T
         return !(first == second);
     }
 
+    public static bool operator ==(ProtoId<T> first, string? second)
+    {
+        return first.Id == second;
+    }
+
+    public static bool operator !=(ProtoId<T> first, string? second)
+    {
+        return !(first == second);
+    }
+
     public bool Equals(string? other)
     {
         return Id == other;

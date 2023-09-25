@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Threading.Tasks;
 using Robust.Client.Audio;
-using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
@@ -136,7 +135,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
         try
         {
-            Parallel.ForEach(_streams, opts, comp => ProcessStream(comp.Entity, comp.Component, comp.Component.Stream, ourPos));
+            Parallel.ForEach(_streams, opts, comp => ProcessStream(comp.Entity, comp.Component, ourPos));
         }
         catch (Exception e)
         {
@@ -147,31 +146,30 @@ public sealed class AudioSystem : SharedAudioSystem
         {
             for (var i = _streams.Count - 1; i >= 0; i--)
             {
-                var comp = _streams[i];
-                var stream = comp.Component.Stream;
+                var (entity, comp) = _streams[i];
 
-                if (stream.Done)
+                if (comp.Done)
                 {
-                    QueueDel(comp.Entity);
+                    QueueDel(entity);
                 }
             }
         }
     }
 
-    private void ProcessStream(EntityUid entity, AudioComponent component, IPlayingAudioStream stream, MapCoordinates listener)
+    private void ProcessStream(EntityUid entity, AudioComponent component, MapCoordinates listener)
     {
-        if (!stream.IsPlaying)
+        if (!component.Playing)
         {
-            stream.Done = true;
+            component.Done = true;
             return;
         }
 
         // TODO:
-        // - If it's global always play
-        // If it's attached to OUR map always play
-        //
-        if (component.AudioType == AudioType.Global)
-            return;
+        // If it's global play it
+        // If it's not global and can't resolve position don't play it.
+
+        // TODO: Server needs a way to network "global" sounds and shit.
+        // Need to do comp state manually me-thinks.
 
         // Get audio Position
         if (!TryGetStreamPosition(stream, out var mapPos)
@@ -349,7 +347,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(string filename, AudioParams? audioParams = null, bool recordReplay = true)
+    private (EntityUid Entity, AudioComponent Component)? Play(string filename, AudioParams? audioParams = null, bool recordReplay = true)
     {
         if (recordReplay && _replayRecording.IsRecording)
         {
@@ -368,7 +366,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// </summary>
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(AudioStream stream, AudioParams? audioParams = null)
+    private (EntityUid Entity, AudioComponent Component)? Play(AudioStream stream, AudioParams? audioParams = null)
     {
         if (!TryCreateAudioSource(stream, out var source))
         {
@@ -388,7 +386,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="entity">The entity "emitting" the audio.</param>
     /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(string filename, EntityUid entity, EntityCoordinates? fallbackCoordinates,
+    private (EntityUid Entity, AudioComponent Component)? Play(string filename, EntityUid entity, EntityCoordinates? fallbackCoordinates,
         AudioParams? audioParams = null, bool recordReplay = true)
     {
         if (recordReplay && _replayRecording.IsRecording)
@@ -412,7 +410,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="entity">The entity "emitting" the audio.</param>
     /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(AudioStream stream, EntityUid entity, EntityCoordinates? fallbackCoordinates = null,
+    private (EntityUid Entity, AudioComponent Component)? Play(AudioStream stream, EntityUid entity, EntityCoordinates? fallbackCoordinates = null,
         AudioParams? audioParams = null)
     {
         if (!TryCreateAudioSource(stream, out var source))
@@ -442,7 +440,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(string filename, EntityCoordinates coordinates,
+    private (EntityUid Entity, AudioComponent Component)? Play(string filename, EntityCoordinates coordinates,
         EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null, bool recordReplay = true)
     {
         if (recordReplay && _replayRecording.IsRecording)
@@ -466,7 +464,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
     /// <param name="audioParams"></param>
-    private IPlayingAudioStream? Play(AudioStream stream, EntityCoordinates coordinates,
+    private (EntityUid Entity, AudioComponent Component)? Play(AudioStream stream, EntityCoordinates coordinates,
         EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null)
     {
         if (!TryCreateAudioSource(stream, out var source))
@@ -490,7 +488,7 @@ public sealed class AudioSystem : SharedAudioSystem
     #endregion
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user,
+    public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user,
         AudioParams? audioParams = null)
     {
         if (Timing.IsFirstTimePredicted || sound == null)
@@ -498,8 +496,7 @@ public sealed class AudioSystem : SharedAudioSystem
         return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
     }
 
-    public override IPlayingAudioStream? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user,
-        AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user)
     {
         if (Timing.IsFirstTimePredicted || sound == null)
             return Play(sound, Filter.Local(), coordinates, false, audioParams);
@@ -530,55 +527,55 @@ public sealed class AudioSystem : SharedAudioSystem
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
         return Play(filename, audioParams);
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityUid entity, bool recordReplay, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? Play(string filename, Filter playerFilter, EntityUid entity, bool recordReplay, AudioParams? audioParams = null)
     {
         return Play(filename, entity, null, audioParams);
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? Play(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? Play(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
         return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)
     {
         return Play(filename, audioParams);
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)
     {
         return Play(filename, audioParams);
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
     {
         return Play(filename, uid, null, audioParams);
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
         return Play(filename, uid, null, audioParams);
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
     }
 
     /// <inheritdoc />
-    public override IPlayingAudioStream? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
     }

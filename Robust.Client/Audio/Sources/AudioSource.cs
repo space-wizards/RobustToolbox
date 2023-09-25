@@ -5,6 +5,7 @@ using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio.Sources;

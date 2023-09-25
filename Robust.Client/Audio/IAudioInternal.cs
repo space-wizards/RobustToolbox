@@ -33,6 +33,5 @@ internal interface IAudioInternal
     /// <summary>
     /// Sets rotation for the audio listener.
     /// </summary>
-    /// <param name="angle"></param>
     void SetRotation(Angle angle);
 }

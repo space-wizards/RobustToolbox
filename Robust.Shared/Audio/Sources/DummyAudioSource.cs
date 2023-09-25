@@ -1,4 +1,5 @@
 using System.Numerics;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Audio.Sources;
 
@@ -6,7 +7,8 @@ namespace Robust.Shared.Audio.Sources;
 ///     Hey look, it's AudioSource's evil twin brother!
 /// </summary>
 [Virtual]
-internal class DummyAudioSource : IAudioSource
+[DataDefinition]
+internal partial class DummyAudioSource : IAudioSource
 {
     public static DummyAudioSource Instance { get; } = new();
 
@@ -15,33 +17,42 @@ internal class DummyAudioSource : IAudioSource
     }
 
     /// <inheritdoc />
+    [DataField]
     public bool Playing { get; set; }
 
     /// <inheritdoc />
+    [DataField]
     public bool Looping { get; set; }
 
     /// <inheritdoc />
+    [DataField]
     public bool Global { get; set; }
 
     /// <inheritdoc />
     public Vector2 Position { get; set; }
 
     /// <inheritdoc />
+    [DataField]
     public float Pitch { get; set; }
 
     /// <inheritdoc />
+    [DataField]
     public float Volume { get; set; }
 
     /// <inheritdoc />
+    [DataField]
     public float Gain { get; set; }
 
     /// <inheritdoc />
+    [DataField]
     public float MaxDistance { get; set; }
 
     /// <inheritdoc />
+    [DataField]
     public float RolloffFactor { get; set; }
 
     /// <inheritdoc />
+    [DataField]
     public float ReferenceDistance { get; set; }
 
     /// <inheritdoc />

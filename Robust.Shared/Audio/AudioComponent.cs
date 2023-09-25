@@ -13,6 +13,8 @@ namespace Robust.Shared.Audio;
 [RegisterComponent, NetworkedComponent, Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IAudioSource
 {
+    private Attenuation _attenuation = Attenuation.Default;
+
     [AutoNetworkedField]
     [DataField]
     public Attenuation Attenuation
@@ -31,8 +33,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
         }
     }
 
-    private Attenuation _attenuation = Attenuation.Default;
-
     [AutoNetworkedField]
     [DataField]
     public string FileName;
@@ -40,6 +40,11 @@ public sealed partial class AudioComponent : Component, IAudioSource
     [AutoNetworkedField]
     [DataField]
     public AudioParams Params = AudioParams.Default;
+
+    /// <summary>
+    /// Used on engine to determine every frame if audio is done playing.
+    /// </summary>
+    internal bool Done;
 
     /// <summary>
     /// Audio source that interacts with OpenAL.

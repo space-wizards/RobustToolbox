@@ -84,8 +84,9 @@ public sealed class AudioSystem : SharedAudioSystem
         if (sound == null)
             return null;
 
-        var filter = Filter.Pvs(source, entityManager: EntityManager, playerManager: PlayerManager, cfgManager: CfgManager).RemoveWhereAttachedEntity(e => e == user);
-        return PlayEntity(GetSound(sound), filter, source, true, audioParams ?? sound.Params);
+        var audio = PlayPvs(GetSound(sound), source, audioParams ?? sound.Params);
+        audio.Value.Component.ExcludedEntity = user;
+        return audio;
     }
 
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user, AudioParams? audioParams = null)
@@ -93,8 +94,9 @@ public sealed class AudioSystem : SharedAudioSystem
         if (sound == null)
             return null;
 
-        var filter = Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager).RemoveWhereAttachedEntity(e => e == user);
-        return PlayStatic(GetSound(sound), filter, coordinates, true, audioParams ?? sound.Params);
+        var audio = PlayPvs(GetSound(sound), coordinates, audioParams ?? sound.Params);
+        audio.Value.Component.ExcludedEntity = user;
+        return audio;
     }
 
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)

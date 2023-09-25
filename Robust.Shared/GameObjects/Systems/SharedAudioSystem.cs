@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -22,6 +23,10 @@ namespace Robust.Shared.GameObjects;
 /// </remarks>
 public abstract class SharedAudioSystem : EntitySystem
 {
+    /*
+     * TODO: Need to use SessionSpecific or the likes for predicted audio so we don't accidentally send it to clients.
+     */
+
     [Dependency] protected readonly IConfigurationManager CfgManager = default!;
     [Dependency] protected readonly IGameTiming Timing = default!;
     [Dependency] private readonly INetManager _netManager = default!;
@@ -44,6 +49,18 @@ public abstract class SharedAudioSystem : EntitySystem
     /// Used in the PAS to designate the physics collision mask of occluders.
     /// </summary>
     public int OcclusionCollisionMask { get; set; }
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
+    }
+
+    private void OnAudioGetStateAttempt(EntityUid uid, AudioComponent component, ref ComponentGetStateAttemptEvent args)
+    {
+        if (component.ExcludedEntity != null && args.Player?.AttachedEntity == component.ExcludedEntity)
+            args.Cancelled = true;
+    }
 
     /// <summary>
     /// Resolves the filepath to a sound file.

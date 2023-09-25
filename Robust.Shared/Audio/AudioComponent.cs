@@ -13,6 +13,17 @@ namespace Robust.Shared.Audio;
 [RegisterComponent, NetworkedComponent, Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IAudioSource
 {
+    #region Filter
+
+    public override bool SessionSpecific => true;
+
+    /// <summary>
+    /// If this sound was predicted do we exclude it from a specific entity.
+    /// </summary>
+    public EntityUid? ExcludedEntity;
+
+    #endregion
+
     [AutoNetworkedField]
     [DataField]
     public string FileName;
@@ -131,6 +142,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <see cref="IAudioSource.Volume"/>
     /// </summary>
     [ViewVariables]
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
     public float Volume
     {
         get => Source.Volume;
@@ -141,6 +153,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <see cref="IAudioSource.Gain"/>
     /// </summary>
     [ViewVariables]
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
     public float Gain
     {
         get => Source.Gain;
@@ -151,6 +164,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <see cref="IAudioSource.Occlusion"/>
     /// </summary>
     [ViewVariables]
+    [Access(Other = AccessPermissions.ReadWriteExecute)]
     public float Occlusion
     {
         get => Source.Occlusion;

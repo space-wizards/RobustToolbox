@@ -156,6 +156,11 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
     {
+        // TODO: If it's a grid then check if we're on a tile
+        // if we are then set it as global
+        // if not then get nearest edge to grid and use that as distance / cut off at maxdistance.
+        throw new NotImplementedException();
+
         if (!component.Playing)
         {
             component.Done = true;

@@ -27,7 +27,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     ///     client-specific overrides.
     /// </summary>
     /// <param name="removeExistingOverride">Whether or not to supersede existing overrides.</param>
-    public void AddSessionOverride(NetEntity entity, ICommonSession session,bool removeExistingOverride = true)
+    public void AddSessionOverride(NetEntity entity, ICommonSession session, bool removeExistingOverride = true)
     {
         _pvs.EntityPVSCollection.UpdateIndex(entity, session, removeExistingOverride);
     }

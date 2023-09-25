@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
@@ -47,8 +48,6 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <summary>
     /// Resolves the filepath to a sound file.
     /// </summary>
-    /// <param name="specifier"></param>
-    /// <returns></returns>
     public string GetSound(SoundSpecifier specifier)
     {
         switch (specifier)
@@ -69,6 +68,25 @@ public abstract class SharedAudioSystem : EntitySystem
         return string.Empty;
     }
 
+    #region AudioParams
+
+    /// <summary>
+    /// Sets the audio params volume for an entity.
+    /// </summary>
+    public void SetVolume(EntityUid? entity, float value, AudioComponent? component = null)
+    {
+        if (entity == null || !Resolve(entity.Value, ref component))
+            return;
+
+        if (component.Params.Volume.Equals(value))
+            return;
+
+        component.Params.Volume = value;
+        Dirty(entity.Value, component);
+    }
+
+    #endregion
+
     /// <summary>
     /// Gets the timespan of the specified audio.
     /// </summary>
@@ -81,15 +99,19 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <summary>
     /// Stops the specified audio entity from playing.
     /// </summary>
-    public void Stop(EntityUid? uid, AudioComponent? component = null)
+    /// <remarks>
+    /// Returns null so you can inline the call.
+    /// </remarks>
+    public EntityUid? Stop(EntityUid? uid, AudioComponent? component = null)
     {
         if (uid == null || !Resolve(uid.Value, ref component))
-            return;
+            return null;
 
         if (!Timing.IsFirstTimePredicted || (_netManager.IsClient && IsClientSide(uid.Value)))
-            return;
+            return null;
 
         QueueDel(uid);
+        return null;
     }
 
     /// <summary>
@@ -97,14 +119,16 @@ public abstract class SharedAudioSystem : EntitySystem
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="playerFilter">The set of players that will hear the sound.</param>
-    protected abstract (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null);
+    [return: NotNullIfNotNull("filename")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file globally, without position.
     /// </summary>
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="playerFilter">The set of players that will hear the sound.</param>
-    public (EntityUid Entity, AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, Filter playerFilter, bool recordReplay)
+    [return: NotNullIfNotNull("sound")]
+    public (EntityUid Entity, AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
         return sound == null ? null : PlayGlobal(GetSound(sound), playerFilter, recordReplay, sound.Params);
     }
@@ -114,13 +138,15 @@ public abstract class SharedAudioSystem : EntitySystem
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
-    protected abstract (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null);
+    [return: NotNullIfNotNull("filename")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file globally, without position.
     /// </summary>
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
+    [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, ICommonSession recipient)
     {
         return sound == null ? null : PlayGlobal(GetSound(sound), recipient, sound.Params);
@@ -131,14 +157,16 @@ public abstract class SharedAudioSystem : EntitySystem
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
-    protected abstract (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null);
+    [return: NotNullIfNotNull("filename")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file globally, without position.
     /// </summary>
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
-    public (EntityUid Entity, AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, EntityUid recipient)
+    [return: NotNullIfNotNull("sound")]
+    public (EntityUid Entity, AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, EntityUid recipient, AudioParams? audioParams = null)
     {
         return sound == null ? null : PlayGlobal(GetSound(sound), recipient, sound.Params);
     }
@@ -149,7 +177,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="playerFilter">The set of players that will hear the sound.</param>
     /// <param name="uid">The UID of the entity "emitting" the audio.</param>
-    protected abstract (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null);
+    [return: NotNullIfNotNull("filename")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file following an entity.
@@ -157,7 +186,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
     /// <param name="uid">The UID of the entity "emitting" the audio.</param>
-    protected abstract (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null);
+    [return: NotNullIfNotNull("filename")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file following an entity.
@@ -165,7 +195,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
     /// <param name="uid">The UID of the entity "emitting" the audio.</param>
-    protected abstract (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null);
+    [return: NotNullIfNotNull("filename")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file following an entity.
@@ -173,7 +204,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="playerFilter">The set of players that will hear the sound.</param>
     /// <param name="uid">The UID of the entity "emitting" the audio.</param>
-    public (EntityUid Entity, AudioComponent Component)? PlayEntity(SoundSpecifier? sound, Filter playerFilter, EntityUid uid, bool recordReplay)
+    [return: NotNullIfNotNull("sound")]
+    public (EntityUid Entity, AudioComponent Component)? PlayEntity(SoundSpecifier? sound, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
     {
         return sound == null ? null : PlayEntity(GetSound(sound), playerFilter, uid, recordReplay, sound.Params);
     }
@@ -184,7 +216,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
     /// <param name="uid">The UID of the entity "emitting" the audio.</param>
-    public (EntityUid Entity, AudioComponent Component)? PlayEntity(SoundSpecifier? sound, ICommonSession recipient, EntityUid uid)
+    [return: NotNullIfNotNull("sound")]
+    public (EntityUid Entity, AudioComponent Component)? PlayEntity(SoundSpecifier? sound, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
     {
         return sound == null ? null : PlayEntity(GetSound(sound), recipient, uid, sound.Params);
     }
@@ -195,7 +228,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
     /// <param name="uid">The UID of the entity "emitting" the audio.</param>
-    public (EntityUid Entity, AudioComponent Component)? PlayEntity(SoundSpecifier? sound, EntityUid recipient, EntityUid uid)
+    [return: NotNullIfNotNull("sound")]
+    public (EntityUid Entity, AudioComponent Component)? PlayEntity(SoundSpecifier? sound, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
         return sound == null ? null : PlayEntity(GetSound(sound), recipient, uid, sound.Params);
     }
@@ -205,7 +239,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// </summary>
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="uid">The UID of the entity "emitting" the audio.</param>
-    public (EntityUid Entity, AudioComponent Component)? PlayPvs(SoundSpecifier? sound, EntityUid uid)
+    [return: NotNullIfNotNull("sound")]
+    public (EntityUid Entity, AudioComponent Component)? PlayPvs(SoundSpecifier? sound, EntityUid uid, AudioParams? audioParams = null)
     {
         return sound == null ? null : PlayPvs(GetSound(sound), uid, sound.Params);
     }
@@ -215,9 +250,21 @@ public abstract class SharedAudioSystem : EntitySystem
     /// </summary>
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="coordinates">The EntityCoordinates to attach the audio source to.</param>
-    public (EntityUid Entity, AudioComponent Component)? PlayPvs(SoundSpecifier? sound, EntityCoordinates coordinates)
+    [return: NotNullIfNotNull("sound")]
+    public (EntityUid Entity, AudioComponent Component)? PlayPvs(SoundSpecifier? sound, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayStatic(GetSound(sound), Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager), coordinates, true, sound.Params);
+        return sound == null ? null : PlayPvs(GetSound(sound), coordinates, audioParams ?? sound.Params);
+    }
+
+    /// <summary>
+    /// Play an audio file at the specified EntityCoordinates for every entity in PVS range.
+    /// </summary>
+    /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
+    /// <param name="coordinates">The EntityCoordinates to attach the audio source to.</param>
+    [return: NotNullIfNotNull("filename")]
+    public (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    {
+        return  PlayStatic(filename, Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager), coordinates, true, audioParams);
     }
 
     /// <summary>
@@ -225,6 +272,7 @@ public abstract class SharedAudioSystem : EntitySystem
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="uid">The UID of the entity "emitting" the audio.</param>
+    [return: NotNullIfNotNull("filename")]
     public (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityUid uid, AudioParams? audioParams = null)
     {
         return PlayEntity(filename, Filter.Pvs(uid, entityManager: EntityManager, playerManager:PlayerManager, cfgManager:CfgManager), uid, true, audioParams);
@@ -238,7 +286,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="source">The UID of the entity "emitting" the audio.</param>
     /// <param name="user">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
-    public abstract (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user);
+    [return: NotNullIfNotNull("sound")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null);
 
     /// <summary>
     /// Plays a predicted sound following an EntityCoordinates. The server will send the sound to every player in PVS range,
@@ -248,7 +297,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="coordinates">The entitycoordinates "emitting" the audio</param>
     /// <param name="user">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
-    public abstract (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user);
+    [return: NotNullIfNotNull("sound")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file at a static position.
@@ -256,7 +306,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="playerFilter">The set of players that will hear the sound.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
-    protected abstract (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null);
+    [return: NotNullIfNotNull("filename")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file at a static position.
@@ -264,7 +315,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
-    protected abstract (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null);
+    [return: NotNullIfNotNull("filename")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file at a static position.
@@ -272,7 +324,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
-    protected abstract (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null);
+    [return: NotNullIfNotNull("filename")]
+    public abstract (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null);
 
     /// <summary>
     /// Play an audio file at a static position.
@@ -280,7 +333,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="playerFilter">The set of players that will hear the sound.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
-    public (EntityUid Entity, AudioComponent Component)? PlayStatic(SoundSpecifier? sound, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay)
+    [return: NotNullIfNotNull("sound")]
+    public (EntityUid Entity, AudioComponent Component)? PlayStatic(SoundSpecifier? sound, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
         return sound == null ? null : PlayStatic(GetSound(sound), playerFilter, coordinates, recordReplay);
     }
@@ -291,7 +345,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
-    public (EntityUid Entity, AudioComponent Component)? PlayStatic(SoundSpecifier? sound, ICommonSession recipient, EntityCoordinates coordinates)
+    [return: NotNullIfNotNull("sound")]
+    public (EntityUid Entity, AudioComponent Component)? PlayStatic(SoundSpecifier? sound, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         return sound == null ? null : PlayStatic(GetSound(sound), recipient, coordinates, sound.Params);
     }
@@ -302,7 +357,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
-    public (EntityUid Entity, AudioComponent Component)? PlayStatic(SoundSpecifier? sound, EntityUid recipient, EntityCoordinates coordinates)
+    [return: NotNullIfNotNull("sound")]
+    public (EntityUid Entity, AudioComponent Component)? PlayStatic(SoundSpecifier? sound, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
         return sound == null ? null : PlayStatic(GetSound(sound), recipient, coordinates, sound.Params);
     }

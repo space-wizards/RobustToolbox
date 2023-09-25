@@ -5,11 +5,9 @@ using System.Threading;
 using OpenTK.Audio.OpenAL;
 using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
-using Robust.Client.ResourceManagement;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
-using Robust.Shared.ResourceManagement.ResourceTypes;
 
 namespace Robust.Client.Audio;
 
@@ -272,6 +270,7 @@ internal partial class AudioManager
         return audioSource;
     }
 
+    /// <inheritdoc />
     public void StopAllAudio()
     {
         foreach (var source in _audioSources.Values)

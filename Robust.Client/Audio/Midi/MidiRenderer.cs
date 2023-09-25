@@ -489,7 +489,7 @@ internal sealed class MidiRenderer : IMidiRenderer
             }
         }
 
-        if (!Source.IsPlaying) Source.StartPlaying();
+        Source.StartPlaying();
     }
 
     public void ApplyState(MidiRendererState state, bool filterChannels = false)

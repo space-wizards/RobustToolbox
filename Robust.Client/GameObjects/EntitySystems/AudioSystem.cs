@@ -515,10 +515,10 @@ public sealed class AudioSystem : SharedAudioSystem
     private void ApplyAudioParams(AudioParams audioParams, IAudioSource source, AudioStream audio)
     {
         if (audioParams.Variation.HasValue)
-            source.Pitch = audioParams.PitchScale
+            source.Pitch = audioParams.Pitch
                            * (float) RandMan.NextGaussian(1, audioParams.Variation.Value);
         else
-            source.Pitch = audioParams.PitchScale;
+            source.Pitch = audioParams.Pitch;
 
         source.Volume = audioParams.Volume;
         source.RolloffFactor = audioParams.RolloffFactor;

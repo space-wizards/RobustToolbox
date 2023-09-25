@@ -13,26 +13,6 @@ namespace Robust.Shared.Audio;
 [RegisterComponent, NetworkedComponent, Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IAudioSource
 {
-    private Attenuation _attenuation = Attenuation.Default;
-
-    [AutoNetworkedField]
-    [DataField]
-    public Attenuation Attenuation
-    {
-        get => _attenuation;
-        set
-        {
-            if (value == _attenuation) return;
-            _attenuation = value;
-            if (_attenuation != Attenuation.Default)
-            {
-                // Need to disable default attenuation when using a custom one
-                // Damn Sloth wanting linear ambience sounds so they smoothly cut-off and are short-range
-                Source.RolloffFactor = 0f;
-            }
-        }
-    }
-
     [AutoNetworkedField]
     [DataField]
     public string FileName;
@@ -54,6 +34,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     /*
      * Values for IAudioSource stored on the component and sent to IAudioSource as applicable.
+     * Most of these aren't networked as they double AudioParams data and these just interact with IAudioSource.
      */
 
     #region Source
@@ -66,7 +47,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <summary>
     /// <see cref="IAudioSource.Playing"/>
     /// </summary>
-    [ViewVariables(VVAccess.ReadOnly)]
+    [ViewVariables]
     public bool Playing
     {
         get => Source.Playing;
@@ -76,8 +57,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <summary>
     /// <see cref="IAudioSource.Looping"/>
     /// </summary>
-    [AutoNetworkedField]
-    [DataField]
+    [ViewVariables]
     public bool Looping
     {
         get => Source.Looping;
@@ -96,23 +76,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
     }
 
     /// <summary>
-    /// <see cref="IAudioSource.Position"/>
-    /// </summary>
-    /// <remarks>
-    /// Not replicated as audio always tracks the entity's position.
-    /// </remarks>
-    [ViewVariables(VVAccess.ReadOnly)]
-    public Vector2 Position
-    {
-        get => Source.Position;
-        set => Source.Position = value;
-    }
-
-    /// <summary>
     /// <see cref="IAudioSource.Pitch"/>
     /// </summary>
-    [AutoNetworkedField]
-    [DataField]
     public float Pitch
     {
         get => Source.Pitch;
@@ -120,28 +85,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
     }
 
     /// <summary>
-    /// <see cref="IAudioSource.Volume"/>
-    /// </summary>
-    public float Volume
-    {
-        get => Source.Volume;
-        set => Source.Volume = value;
-    }
-
-    /// <summary>
-    /// <see cref="IAudioSource.Gain"/>
-    /// </summary>
-    public float Gain
-    {
-        get => Source.Gain;
-        set => Source.Gain = value;
-    }
-
-    /// <summary>
     /// <see cref="IAudioSource.MaxDistance"/>
     /// </summary>
-    [AutoNetworkedField]
-    [DataField]
     public float MaxDistance
     {
         get => Params.MaxDistance;
@@ -151,8 +96,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <summary>
     /// <see cref="IAudioSource.RolloffFactor"/>
     /// </summary>
-    [AutoNetworkedField]
-    [DataField]
     public float RolloffFactor
     {
         get => Params.RolloffFactor;
@@ -162,8 +105,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <summary>
     /// <see cref="IAudioSource.ReferenceDistance"/>
     /// </summary>
-    [AutoNetworkedField]
-    [DataField]
     public float ReferenceDistance
     {
         get => Params.ReferenceDistance;
@@ -171,9 +112,42 @@ public sealed partial class AudioComponent : Component, IAudioSource
     }
 
     /// <summary>
+    /// <see cref="IAudioSource.Position"/>
+    /// </summary>
+    /// <remarks>
+    /// Not replicated as audio always tracks the entity's position.
+    /// </remarks>
+    [ViewVariables]
+    public Vector2 Position
+    {
+        get => Source.Position;
+        set => Source.Position = value;
+    }
+
+    /// <summary>
+    /// <see cref="IAudioSource.Volume"/>
+    /// </summary>
+    [ViewVariables]
+    public float Volume
+    {
+        get => Source.Volume;
+        set => Source.Volume = value;
+    }
+
+    /// <summary>
+    /// <see cref="IAudioSource.Gain"/>
+    /// </summary>
+    [ViewVariables]
+    public float Gain
+    {
+        get => Source.Gain;
+        set => Source.Gain = value;
+    }
+
+    /// <summary>
     /// <see cref="IAudioSource.Occlusion"/>
     /// </summary>
-    [ViewVariables(VVAccess.ReadOnly)]
+    [ViewVariables]
     public float Occlusion
     {
         get => Source.Occlusion;
@@ -183,7 +157,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <summary>
     /// <see cref="IAudioSource.PlaybackPosition"/>
     /// </summary>
-    [ViewVariables(VVAccess.ReadOnly)]
+    [ViewVariables]
     public float PlaybackPosition
     {
         get => Source.PlaybackPosition;
@@ -196,7 +170,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <remarks>
     /// Not replicated.
     /// </remarks>
-    [ViewVariables(VVAccess.ReadOnly)]
+    [ViewVariables]
     public Vector2 Velocity
     {
         get => Source.Velocity;

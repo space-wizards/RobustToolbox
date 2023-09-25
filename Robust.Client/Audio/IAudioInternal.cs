@@ -34,4 +34,9 @@ internal interface IAudioInternal
     void SetRotation(Angle angle);
 
     void SetMasterVolume(float value);
+
+    /// <summary>
+    /// Stops all audio from playing.
+    /// </summary>
+    void StopAllAudio();
 }

@@ -311,7 +311,7 @@ public sealed class AudioSystem : SharedAudioSystem
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user)
     {
         if (Timing.IsFirstTimePredicted || sound == null)
-            return Play(sound, Filter.Local(), coordinates, false);
+            return PlayStatic(sound, Filter.Local(), coordinates, false);
         return null;
     }
 
@@ -341,19 +341,19 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        return Play(filename, audioParams);
+        return PlayGlobal(filename, audioParams);
     }
 
     /// <inheritdoc />
-    protected override (EntityUid Entity, AudioComponent Component)? Play(string filename, Filter playerFilter, EntityUid entity, bool recordReplay, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, Filter playerFilter, EntityUid entity, bool recordReplay, AudioParams? audioParams = null)
     {
-        return Play(filename, entity, null, audioParams);
+        return PlayEntity(filename, entity, null, audioParams);
     }
 
     /// <inheritdoc />
-    protected override (EntityUid Entity, AudioComponent Component)? Play(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
+    protected override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        return Play(filename, coordinates, audioParams);
+        return PlayStatic(filename, coordinates, audioParams);
     }
 
     /// <inheritdoc />

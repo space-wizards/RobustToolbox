@@ -59,10 +59,19 @@ public sealed partial class AudioComponent : Component, IAudioSource
     #region Source
 
     /// <summary>
+    /// Starts playing if the source is not already playing.
+    /// </summary>
+    public void StartPlaying()
+    {
+        if (Playing)
+            return;
+
+        Playing = true;
+    }
+
+    /// <summary>
     /// <see cref="IAudioSource.Playing"/>
     /// </summary>
-    [AutoNetworkedField]
-    [DataField]
     public bool Playing
     {
         get => Source.Playing;

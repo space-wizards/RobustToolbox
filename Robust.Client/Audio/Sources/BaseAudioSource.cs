@@ -2,7 +2,6 @@ using System;
 using System.Numerics;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
-using Robust.Shared.Audio;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -10,8 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio.Sources;
 
-[Virtual]
-internal class BaseAudioSource : IAudioSource
+internal abstract class BaseAudioSource : IAudioSource
 {
     /*
      * This may look weird having all these methods here however
@@ -21,22 +19,14 @@ internal class BaseAudioSource : IAudioSource
     /// <summary>
     /// Handle to the AL source.
     /// </summary>
-    private int SourceHandle;
+    protected int SourceHandle;
 
     /// <summary>
     /// Source to the EFX filter if applicable.
     /// </summary>
-    private int FilterHandle;
+    protected int FilterHandle;
 
-    private readonly AudioManager _master;
-
-    /// <summary>
-    /// Underlying stream to the audio.
-    /// </summary>
-    private readonly AudioStream _sourceStream;
-#if DEBUG
-    private bool _didPositionWarning;
-#endif
+    protected readonly AudioManager _master;
 
     /// <summary>
     /// Prior gain that was set.
@@ -45,11 +35,10 @@ internal class BaseAudioSource : IAudioSource
 
     private bool IsEfxSupported => _master.IsEfxSupported;
 
-    public BaseAudioSource(AudioManager master, int sourceHandle, AudioStream sourceStream)
+    protected BaseAudioSource(AudioManager master, int sourceHandle)
     {
         _master = master;
         SourceHandle = sourceHandle;
-        _sourceStream = sourceStream;
         AL.GetSource(SourceHandle, ALSourcef.Gain, out _gain);
     }
 
@@ -118,7 +107,7 @@ internal class BaseAudioSource : IAudioSource
     }
 
     /// <inheritdoc />
-    public Vector2 Position
+    public virtual Vector2 Position
     {
         get
         {
@@ -137,18 +126,6 @@ internal class BaseAudioSource : IAudioSource
             {
                 return;
             }
-#if DEBUG
-            // OpenAL doesn't seem to want to play stereo positionally.
-            // Log a warning if people try to.
-            if (_sourceStream.ChannelCount > 1 && !_didPositionWarning)
-            {
-                _didPositionWarning = true;
-                _master.OpenALSawmill.Warning("Attempting to set position on audio source with multiple audio channels! Stream: '{0}'.  Make sure the audio is MONO, not stereo.",
-                    _sourceStream.Name);
-                // warning isn't enough, people just ignore it :(
-                DebugTools.Assert(false, $"Attempting to set position on audio source with multiple audio channels! Stream: '{_sourceStream.Name}'. Make sure the audio is MONO, not stereo.");
-            }
-#endif
 
             AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
             _master._checkAlError();
@@ -335,7 +312,7 @@ internal class BaseAudioSource : IAudioSource
         AL.Source(SourceHandle, ALSourcei.EfxDirectFilter, FilterHandle);
     }
 
-    private static bool AreFinite(float x, float y)
+    protected static bool AreFinite(float x, float y)
     {
         if (float.IsFinite(x) && float.IsFinite(y))
         {
@@ -356,25 +333,7 @@ internal class BaseAudioSource : IAudioSource
         GC.SuppressFinalize(this);
     }
 
-    private void Dispose(bool disposing)
-    {
-        if (!disposing)
-        {
-            // We can't run this code inside the finalizer thread so tell Clyde to clear it up later.
-            _master.DeleteSourceOnMainThread(SourceHandle, FilterHandle);
-        }
-        else
-        {
-            if (FilterHandle != 0)
-                EFX.DeleteFilter(FilterHandle);
-
-            AL.DeleteSource(SourceHandle);
-            _master.RemoveAudioSource(SourceHandle);
-            _master._checkAlError();
-        }
-
-        SourceHandle = -1;
-    }
+    protected abstract void Dispose(bool disposing);
 
     protected bool _isDisposed()
     {

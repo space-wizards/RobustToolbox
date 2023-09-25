@@ -128,7 +128,7 @@ internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
         _cfg.OnValueChanged(CVars.AudioAttenuation, SetAudioAttenuation, true);
     }
 
-    private bool IsMainThread()
+    internal bool IsMainThread()
     {
         return Thread.CurrentThread == _gameThread;
     }

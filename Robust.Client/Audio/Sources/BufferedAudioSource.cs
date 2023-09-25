@@ -25,7 +25,7 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
 
     private bool IsEfxSupported => _master.IsEfxSupported;
 
-    public BufferedAudioSource(AudioManager master, int sourceHandle, int[] bufferHandles, bool floatAudio = false)
+    public BufferedAudioSource(AudioManager master, int sourceHandle, int[] bufferHandles, bool floatAudio = false) : base(master, sourceHandle)
     {
         _master = master;
         SourceHandle = sourceHandle;
@@ -74,32 +74,33 @@ internal sealed class BufferedAudioSource : BaseAudioSource, IBufferedAudioSourc
         Dispose(false);
     }
 
-    public override void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
     protected override void Dispose(bool disposing)
     {
-        if (SourceHandle == null) return;
+        if (SourceHandle == null)
+            return;
 
         if (!_master.IsMainThread())
         {
             // We can't run this code inside another thread so tell Clyde to clear it up later.
             _master.DeleteBufferedSourceOnMainThread(SourceHandle.Value, FilterHandle);
-            for (var i = 0; i < BufferHandles.Length; i++)
-                _master.DeleteAudioBufferOnMainThread(BufferHandles[i]);
+
+            foreach (var handle in BufferHandles)
+            {
+                _master.DeleteAudioBufferOnMainThread(handle);
+            }
         }
         else
         {
-            if (FilterHandle != 0) EFX.DeleteFilter(FilterHandle);
+            if (FilterHandle != 0)
+                EFX.DeleteFilter(FilterHandle);
+
             AL.DeleteSource(SourceHandle.Value);
             AL.DeleteBuffers(BufferHandles);
-            _master._bufferedAudioSources.Remove(SourceHandle.Value);
+            _master.RemoveBufferedAudioSource(SourceHandle.Value);
             _master._checkAlError();
         }
 
+        FilterHandle = 0;
         SourceHandle = null;
     }
 

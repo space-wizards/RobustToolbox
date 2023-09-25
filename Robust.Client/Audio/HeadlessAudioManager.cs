@@ -47,4 +47,8 @@ internal sealed class HeadlessAudioManager : SharedAudioManager, IAudioInternal
     public void SetRotation(Angle angle)
     {
     }
+
+    public void SetMasterVolume(float value)
+    {
+    }
 }

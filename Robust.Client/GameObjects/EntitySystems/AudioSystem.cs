@@ -43,7 +43,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <summary>
     /// Per-tick cache of relevant streams.
     /// </summary>
-    private readonly List<(EntityUid Entity, AudioComponent Component)> _streams = new();
+    private readonly List<(EntityUid Entity, AudioComponent Component, TransformComponent Xform)> _streams = new();
 
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<TransformComponent> _xformQuery;
@@ -83,13 +83,11 @@ public sealed class AudioSystem : SharedAudioSystem
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
     {
         // TODO: OpenAL scrubbing through audio.
-        throw new NotImplementedException();
     }
 
     private void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
     {
         // TODO: OpenAL scrubbing through audio.
-        throw new NotImplementedException();
     }
 
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
@@ -125,17 +123,17 @@ public sealed class AudioSystem : SharedAudioSystem
         var ourPos = eye.Position;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
 
-        var query = AllEntityQuery<AudioComponent>();
+        var query = AllEntityQuery<AudioComponent, TransformComponent>();
         _streams.Clear();
 
-        while (query.MoveNext(out var uid, out var comp))
+        while (query.MoveNext(out var uid, out var comp, out var xform))
         {
-            _streams.Add((uid, comp));
+            _streams.Add((uid, comp, xform));
         }
 
         try
         {
-            Parallel.ForEach(_streams, opts, comp => ProcessStream(comp.Entity, comp.Component, ourPos));
+            Parallel.ForEach(_streams, opts, comp => ProcessStream(comp.Entity, comp.Component, comp.Xform, ourPos));
         }
         catch (Exception e)
         {
@@ -144,9 +142,9 @@ public sealed class AudioSystem : SharedAudioSystem
         }
         finally
         {
-            for (var i = _streams.Count - 1; i >= 0; i--)
+            foreach (var stream in _streams)
             {
-                var (entity, comp) = _streams[i];
+                var (entity, comp, _) = stream;
 
                 if (comp.Done)
                 {
@@ -156,7 +154,7 @@ public sealed class AudioSystem : SharedAudioSystem
         }
     }
 
-    private void ProcessStream(EntityUid entity, AudioComponent component, MapCoordinates listener)
+    private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
     {
         if (!component.Playing)
         {
@@ -164,59 +162,63 @@ public sealed class AudioSystem : SharedAudioSystem
             return;
         }
 
-        // TODO:
-        // If it's global play it
-        // If it's not global and can't resolve position don't play it.
-
-        // TODO: Server needs a way to network "global" sounds and shit.
-        // Need to do comp state manually me-thinks.
-
-        // Get audio Position
-        if (!TryGetStreamPosition(stream, out var mapPos)
-            || mapPos == MapCoordinates.Nullspace
-            || mapPos.Value.MapId != listener.MapId)
+        // If it's global but on another map (that isn't nullspace) then stop playing it.
+        if (component.Global)
         {
-            stream.Done = true;
+            if (xform.MapID != MapId.Nullspace && listener.MapId != xform.MapID)
+            {
+                component.Playing = false;
+                return;
+            }
+
+            // Resume playing.
+            component.StartPlaying();
             return;
         }
 
+        // Non-global sounds, stop playing if on another map.
+        // Not relevant to us.
+        if (listener.MapId != xform.MapID)
+        {
+            component.Playing = false;
+            return;
+        }
+
+        var mapPos = xform.MapPosition;
+
         // Max distance check
-        var delta = mapPos.Value.Position - listener.Position;
+        var delta = mapPos.Position - listener.Position;
         var distance = delta.Length();
 
-        if (distance > stream.MaxDistance)
+        // Out of range so just clip it for us.
+        if (distance > component.MaxDistance)
         {
-            stream.Source.SetVolumeDirect(0);
+            // Still keeps the source playing, just with no volume.
+            component.Source.Gain = 0f;
             return;
         }
 
         // Update audio occlusion
-        var occlusion = GetOcclusion(stream, listener, delta, distance);
-        stream.Source.SetOcclusion(occlusion);
+        var occlusion = GetOcclusion(entity, listener, delta, distance);
+        component.Occlusion = occlusion;
 
         // Update attenuation dependent volume.
-        stream.Source.SetVolumeDirect(GetPositionalVolume(stream, distance));
+        component.Gain = GetPositionalVolume(component, distance);
 
         // Update audio positions.
-        var audioPos = stream.Attenuation != Attenuation.NoAttenuation ? mapPos.Value : listener;
-        if (!stream.Source.SetPosition(audioPos.Position))
-        {
-            Log.Warning("Interrupting positional audio, can't set position.");
-            stream.Source.StopPlaying();
-            return;
-        }
+        component.Position = mapPos.Position;
 
         // Make race cars go NYYEEOOOOOMMMMM
-        if (stream.TrackingEntity != null && _physicsQuery.TryGetComponent(stream.TrackingEntity, out var physicsComp))
+        if (_physicsQuery.TryGetComponent(entity, out var physicsComp))
         {
             // This actually gets the tracked entity's xform & iterates up though the parents for the second time. Bit
             // inefficient.
-            var velocity = _physics.GetMapLinearVelocity(stream.TrackingEntity.Value, physicsComp, null, _xformQuery, _physicsQuery);
-            stream.Source.SetVelocity(velocity);
+            var velocity = _physics.GetMapLinearVelocity(entity, physicsComp, xform, _xformQuery, _physicsQuery);
+            component.Velocity = velocity;
         }
     }
 
-    internal float GetOcclusion(PlayingStream stream, MapCoordinates listener, Vector2 delta, float distance)
+    internal float GetOcclusion(EntityUid entity, MapCoordinates listener, Vector2 delta, float distance)
     {
         float occlusion = 0;
 
@@ -224,21 +226,21 @@ public sealed class AudioSystem : SharedAudioSystem
         {
             var rayLength = MathF.Min(distance, _maxRayLength);
             var ray = new CollisionRay(listener.Position, delta / distance, OcclusionCollisionMask);
-            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, rayLength, stream.TrackingEntity);
+            occlusion = _physics.IntersectRayPenetration(listener.MapId, ray, rayLength, entity);
         }
 
         return occlusion;
     }
 
-    internal float GetPositionalVolume(PlayingStream stream, float distance)
+    internal float GetPositionalVolume(AudioComponent component, float distance)
     {
         // OpenAL also limits the distance to <= AL_MAX_DISTANCE, but since we cull
         // sources that are further away than stream.MaxDistance, we don't do that.
-        distance = MathF.Max(stream.ReferenceDistance, distance);
+        distance = MathF.Max(component.ReferenceDistance, distance);
         float gain;
 
         // Technically these are formulas for gain not decibels but EHHHHHHHH.
-        switch (stream.Attenuation)
+        switch (component.Attenuation)
         {
             case Attenuation.Default:
                 gain = 1f;
@@ -247,60 +249,33 @@ public sealed class AudioSystem : SharedAudioSystem
             // I didn't even wanna implement this much for linear but figured it'd be cleaner.
             case Attenuation.InverseDistanceClamped:
             case Attenuation.InverseDistance:
-                gain = stream.ReferenceDistance
-                        / (stream.ReferenceDistance
-                            + stream.RolloffFactor * (distance - stream.ReferenceDistance));
+                gain = component.ReferenceDistance
+                       / (component.ReferenceDistance
+                          + component.RolloffFactor * (distance - component.ReferenceDistance));
 
                 break;
             case Attenuation.LinearDistanceClamped:
             case Attenuation.LinearDistance:
                 gain = 1f
-                        - stream.RolloffFactor
-                        * (distance - stream.ReferenceDistance)
-                        / (stream.MaxDistance - stream.ReferenceDistance);
+                        - component.RolloffFactor
+                        * (distance - component.ReferenceDistance)
+                        / (component.MaxDistance - component.ReferenceDistance);
 
                 break;
             case Attenuation.ExponentDistanceClamped:
             case Attenuation.ExponentDistance:
-                gain = MathF.Pow(distance / stream.ReferenceDistance, -stream.RolloffFactor);
+                gain = MathF.Pow(distance / component.ReferenceDistance, -component.RolloffFactor);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(
-                    $"No implemented attenuation for {stream.Attenuation}");
+                    $"No implemented attenuation for {component.Attenuation}");
         }
 
-        var volume = MathF.Pow(10, stream.Volume / 10);
+        var volume = MathF.Pow(10, component.Volume / 10);
         var actualGain = MathF.Max(0f, volume * gain);
         return actualGain;
     }
 
-    private bool TryGetStreamPosition(PlayingStream stream, [NotNullWhen(true)] out MapCoordinates? mapPos)
-    {
-        if (stream.TrackingCoordinates != null)
-        {
-            mapPos = stream.TrackingCoordinates.Value.ToMap(EntityManager);
-            if (mapPos != MapCoordinates.Nullspace)
-                return true;
-        }
-
-        if (_xformQuery.TryGetComponent(stream.TrackingEntity, out var xform)
-            && xform.MapID != MapId.Nullspace)
-        {
-            mapPos = new MapCoordinates(_xformSys.GetWorldPosition(xform), xform.MapID);
-            return true;
-        }
-
-        if (stream.TrackingFallbackCoordinates != null)
-        {
-            mapPos = stream.TrackingFallbackCoordinates.Value.ToMap(EntityManager);
-            return mapPos != MapCoordinates.Nullspace;
-        }
-
-        mapPos = MapCoordinates.Nullspace;
-        return false;
-    }
-
-    #region Play AudioStream
     private bool TryGetAudio(string filename, [NotNullWhen(true)] out AudioResource? audio)
     {
         if (_resourceCache.TryGetResource(new ResPath(filename), out audio))
@@ -320,186 +295,23 @@ public sealed class AudioSystem : SharedAudioSystem
             return false;
         }
 
-        source = _clyde.CreateAudioSource(stream);
+        source = _audio.CreateAudioSource(stream);
         return source != null;
     }
 
-    private PlayingStream CreateAndStartPlayingStream(IAudioSource source, AudioParams? audioParams, AudioStream stream)
-    {
-        ApplyAudioParams(audioParams, source, stream);
-        source.StartPlaying();
-        var playing = new PlayingStream
-        {
-            Source = source,
-            Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
-            MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
-            ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
-            RolloffFactor = audioParams?.RolloffFactor ?? 1f,
-            Volume = audioParams?.Volume ?? 0
-        };
-
-        _playingClydeStreams.Add(playing);
-        return playing;
-    }
-
-    /// <summary>
-    ///     Play an audio file globally, without position.
-    /// </summary>
-    /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
-    /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? Play(string filename, AudioParams? audioParams = null, bool recordReplay = true)
-    {
-        if (recordReplay && _replayRecording.IsRecording)
-        {
-            _replayRecording.RecordReplayMessage(new PlayAudioGlobalMessage
-            {
-                FileName = filename,
-                AudioParams = audioParams ?? AudioParams.Default
-            });
-        }
-
-        return TryGetAudio(filename, out var audio) ? Play(audio, audioParams) : default;
-    }
-
-    /// <summary>
-    ///     Play an audio stream globally, without position.
-    /// </summary>
-    /// <param name="stream">The audio stream to play.</param>
-    /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? Play(AudioStream stream, AudioParams? audioParams = null)
-    {
-        if (!TryCreateAudioSource(stream, out var source))
-        {
-            Log.Error($"Error setting up global audio for {stream.Name}: {0}", Environment.StackTrace);
-            return null;
-        }
-
-        source.SetGlobal();
-
-        return CreateAndStartPlayingStream(source, audioParams, stream);
-    }
-
-    /// <summary>
-    ///     Play an audio file following an entity.
-    /// </summary>
-    /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
-    /// <param name="entity">The entity "emitting" the audio.</param>
-    /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
-    /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? Play(string filename, EntityUid entity, EntityCoordinates? fallbackCoordinates,
-        AudioParams? audioParams = null, bool recordReplay = true)
-    {
-        if (recordReplay && _replayRecording.IsRecording)
-        {
-            _replayRecording.RecordReplayMessage(new PlayAudioEntityMessage
-            {
-                FileName = filename,
-                NetEntity = GetNetEntity(entity),
-                FallbackCoordinates = GetNetCoordinates(fallbackCoordinates) ?? default,
-                AudioParams = audioParams ?? AudioParams.Default
-            });
-        }
-
-        return TryGetAudio(filename, out var audio) ? Play(audio, entity, fallbackCoordinates, audioParams) : default;
-    }
-
-    /// <summary>
-    ///     Play an audio stream following an entity.
-    /// </summary>
-    /// <param name="stream">The audio stream to play.</param>
-    /// <param name="entity">The entity "emitting" the audio.</param>
-    /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
-    /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? Play(AudioStream stream, EntityUid entity, EntityCoordinates? fallbackCoordinates = null,
-        AudioParams? audioParams = null)
-    {
-        if (!TryCreateAudioSource(stream, out var source))
-        {
-            Log.Error($"Error setting up entity audio for {stream.Name} / {ToPrettyString(entity)}: {0}", Environment.StackTrace);
-            return null;
-        }
-
-        var query = GetEntityQuery<TransformComponent>();
-        var xform = query.GetComponent(entity);
-        var worldPos = _xformSys.GetWorldPosition(xform, query);
-        fallbackCoordinates ??= GetFallbackCoordinates(new MapCoordinates(worldPos, xform.MapID));
-
-        if (!source.SetPosition(worldPos))
-            return Play(stream, fallbackCoordinates.Value, fallbackCoordinates.Value, audioParams);
-
-        var playing = CreateAndStartPlayingStream(source, audioParams, stream);
-        playing.TrackingEntity = entity;
-        playing.TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null;
-        return playing;
-    }
-
-    /// <summary>
-    ///     Play an audio file at a static position.
-    /// </summary>
-    /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
-    /// <param name="coordinates">The coordinates at which to play the audio.</param>
-    /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
-    /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? Play(string filename, EntityCoordinates coordinates,
-        EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null, bool recordReplay = true)
-    {
-        if (recordReplay && _replayRecording.IsRecording)
-        {
-            _replayRecording.RecordReplayMessage(new PlayAudioPositionalMessage
-            {
-                FileName = filename,
-                Coordinates = GetNetCoordinates(coordinates),
-                FallbackCoordinates = GetNetCoordinates(fallbackCoordinates),
-                AudioParams = audioParams ?? AudioParams.Default
-            });
-        }
-
-        return TryGetAudio(filename, out var audio) ? Play(audio, coordinates, fallbackCoordinates, audioParams) : default;
-    }
-
-    /// <summary>
-    ///     Play an audio stream at a static position.
-    /// </summary>
-    /// <param name="stream">The audio stream to play.</param>
-    /// <param name="coordinates">The coordinates at which to play the audio.</param>
-    /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
-    /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? Play(AudioStream stream, EntityCoordinates coordinates,
-        EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null)
-    {
-        if (!TryCreateAudioSource(stream, out var source))
-        {
-            Log.Error($"Error setting up coordinates audio for {stream.Name} / {coordinates}: {0}", Environment.StackTrace);
-            return null;
-        }
-
-        if (!source.SetPosition(fallbackCoordinates.Position))
-        {
-            source.Dispose();
-            Log.Warning($"Can't play positional audio \"{stream.Name}\", can't set position.");
-            return null;
-        }
-
-        var playing = CreateAndStartPlayingStream(source, audioParams, stream);
-        playing.TrackingCoordinates = coordinates;
-        playing.TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null;
-        return playing;
-    }
-    #endregion
-
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user,
-        AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user)
     {
         if (Timing.IsFirstTimePredicted || sound == null)
-            return PlayEntity(sound, Filter.Local(), source, false, audioParams);
+            return PlayEntity(sound, Filter.Local(), source, false);
+
         return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
     }
 
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user)
     {
         if (Timing.IsFirstTimePredicted || sound == null)
-            return Play(sound, Filter.Local(), coordinates, false, audioParams);
+            return Play(sound, Filter.Local(), coordinates, false);
         return null;
     }
 
@@ -509,21 +321,21 @@ public sealed class AudioSystem : SharedAudioSystem
             return;
 
         if (audioParams.Value.Variation.HasValue)
-            source.SetPitch(audioParams.Value.PitchScale
-                            * (float) RandMan.NextGaussian(1, audioParams.Value.Variation.Value));
+            source.Pitch = audioParams.Value.PitchScale
+                            * (float) RandMan.NextGaussian(1, audioParams.Value.Variation.Value);
         else
-            source.SetPitch(audioParams.Value.PitchScale);
+            source.Pitch = audioParams.Value.PitchScale;
 
-        source.SetVolume(audioParams.Value.Volume);
-        source.SetRolloffFactor(audioParams.Value.RolloffFactor);
-        source.SetMaxDistance(audioParams.Value.MaxDistance);
-        source.SetReferenceDistance(audioParams.Value.ReferenceDistance);
+        source.Volume = audioParams.Value.Volume;
+        source.RolloffFactor = audioParams.Value.RolloffFactor;
+        source.MaxDistance = audioParams.Value.MaxDistance;
+        source.ReferenceDistance = audioParams.Value.ReferenceDistance;
         source.Looping = audioParams.Value.Loop;
 
         // TODO clamp the offset inside of SetPlaybackPosition() itself.
         var offset = audioParams.Value.PlayOffsetSeconds;
         offset = Math.Clamp(offset, 0f, (float) audio.Length.TotalSeconds);
-        source.SetPlaybackPosition(offset);
+        source.PlaybackPosition = offset;
     }
 
     /// <inheritdoc />
@@ -541,7 +353,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? Play(string filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
+        return Play(filename, coordinates, audioParams);
     }
 
     /// <inheritdoc />
@@ -571,12 +383,12 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
+        return Play(filename, coordinates, audioParams);
     }
 
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(EntityManager)), audioParams);
+        return Play(filename, coordinates, audioParams);
     }
 }

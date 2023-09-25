@@ -237,7 +237,7 @@ internal partial class AudioManager
         _bufferedAudioSources.Remove(handle);
     }
 
-    public IAudioSource? CreateAudioSource(AudioResource resource)
+    public IAudioSource? CreateAudioSource(AudioStream stream)
     {
         var source = AL.GenSource();
 
@@ -249,9 +249,9 @@ internal partial class AudioManager
 
         // ReSharper disable once PossibleInvalidOperationException
         // TODO: This really shouldn't be indexing based on the ClydeHandle...
-        AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) resource.AudioStream.ClydeHandle!.Value].BufferHandle);
+        AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle!.Value].BufferHandle);
 
-        var audioSource = new BaseAudioSource(this, source, resource.AudioStream);
+        var audioSource = new AudioSource(this, source, stream);
         _audioSources.Add(source, new WeakReference<BaseAudioSource>(audioSource));
         return audioSource;
     }

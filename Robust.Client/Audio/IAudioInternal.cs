@@ -1,7 +1,5 @@
 using System.Numerics;
-using Robust.Client.Audio.Sources;
-using Robust.Client.Graphics;
-using Robust.Client.ResourceManagement;
+using Robust.Shared.Audio;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 using Robust.Shared.ResourceManagement.ResourceTypes;
@@ -21,7 +19,7 @@ internal interface IAudioInternal
     /// </summary>
     void FlushALDisposeQueues();
 
-    IAudioSource? CreateAudioSource(AudioResource audioResource);
+    IAudioSource? CreateAudioSource(AudioStream stream);
 
     IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio=false);
 
@@ -34,4 +32,6 @@ internal interface IAudioInternal
     /// Sets rotation for the audio listener.
     /// </summary>
     void SetRotation(Angle angle);
+
+    void SetMasterVolume(float value);
 }

@@ -31,7 +31,7 @@ internal sealed class AudioSource : BaseAudioSource
         {
             _checkDisposed();
             AL.GetSource(SourceHandle, ALSource3f.Position, out var x, out var y, out _);
-            _master._checkAlError();
+            Master._checkAlError();
             return new Vector2(x, y);
         }
         set
@@ -50,7 +50,7 @@ internal sealed class AudioSource : BaseAudioSource
             if (_sourceStream.ChannelCount > 1 && !_didPositionWarning)
             {
                 _didPositionWarning = true;
-                _master.OpenALSawmill.Warning("Attempting to set position on audio source with multiple audio channels! Stream: '{0}'.  Make sure the audio is MONO, not stereo.",
+                Master.OpenALSawmill.Warning("Attempting to set position on audio source with multiple audio channels! Stream: '{0}'.  Make sure the audio is MONO, not stereo.",
                     _sourceStream.Name);
                 // warning isn't enough, people just ignore it :(
                 DebugTools.Assert(false, $"Attempting to set position on audio source with multiple audio channels! Stream: '{_sourceStream.Name}'. Make sure the audio is MONO, not stereo.");
@@ -58,7 +58,7 @@ internal sealed class AudioSource : BaseAudioSource
 #endif
 
             AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
-            _master._checkAlError();
+            Master._checkAlError();
         }
     }
 
@@ -72,7 +72,7 @@ internal sealed class AudioSource : BaseAudioSource
         if (!disposing)
         {
             // We can't run this code inside the finalizer thread so tell Clyde to clear it up later.
-            _master.DeleteSourceOnMainThread(SourceHandle, FilterHandle);
+            Master.DeleteSourceOnMainThread(SourceHandle, FilterHandle);
         }
         else
         {
@@ -80,8 +80,8 @@ internal sealed class AudioSource : BaseAudioSource
                 EFX.DeleteFilter(FilterHandle);
 
             AL.DeleteSource(SourceHandle);
-            _master.RemoveAudioSource(SourceHandle);
-            _master._checkAlError();
+            Master.RemoveAudioSource(SourceHandle);
+            Master._checkAlError();
         }
 
         FilterHandle = 0;

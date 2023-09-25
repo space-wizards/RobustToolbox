@@ -61,17 +61,12 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <summary>
     /// Starts playing if the source is not already playing.
     /// </summary>
-    public void StartPlaying()
-    {
-        if (Playing)
-            return;
-
-        Playing = true;
-    }
+    public void StartPlaying() => Source.StartPlaying();
 
     /// <summary>
     /// <see cref="IAudioSource.Playing"/>
     /// </summary>
+    [ViewVariables(VVAccess.ReadOnly)]
     public bool Playing
     {
         get => Source.Playing;
@@ -127,8 +122,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <summary>
     /// <see cref="IAudioSource.Volume"/>
     /// </summary>
-    [AutoNetworkedField]
-    [DataField]
     public float Volume
     {
         get => Source.Volume;
@@ -138,8 +131,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <summary>
     /// <see cref="IAudioSource.Gain"/>
     /// </summary>
-    [AutoNetworkedField]
-    [DataField]
     public float Gain
     {
         get => Source.Gain;
@@ -153,8 +144,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
     [DataField]
     public float MaxDistance
     {
-        get => Source.MaxDistance;
-        set => Source.MaxDistance = value;
+        get => Params.MaxDistance;
+        set => Params.MaxDistance = value;
     }
 
     /// <summary>
@@ -164,8 +155,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
     [DataField]
     public float RolloffFactor
     {
-        get => Source.RolloffFactor;
-        set => Source.RolloffFactor = value;
+        get => Params.RolloffFactor;
+        set => Params.RolloffFactor = value;
     }
 
     /// <summary>
@@ -175,8 +166,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
     [DataField]
     public float ReferenceDistance
     {
-        get => Source.ReferenceDistance;
-        set => Source.ReferenceDistance = value;
+        get => Params.ReferenceDistance;
+        set => Params.ReferenceDistance = value;
     }
 
     /// <summary>
@@ -216,6 +207,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     public void Dispose()
     {
-        Source?.Dispose();
+        Source.Dispose();
     }
 }

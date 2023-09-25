@@ -17,7 +17,11 @@ internal partial class DummyAudioSource : IAudioSource
     }
 
     /// <inheritdoc />
-    [DataField]
+    public void StartPlaying()
+    {
+    }
+
+    /// <inheritdoc />
     public bool Playing { get; set; }
 
     /// <inheritdoc />
@@ -36,11 +40,9 @@ internal partial class DummyAudioSource : IAudioSource
     public float Pitch { get; set; }
 
     /// <inheritdoc />
-    [DataField]
     public float Volume { get; set; }
 
     /// <inheritdoc />
-    [DataField]
     public float Gain { get; set; }
 
     /// <inheritdoc />

@@ -12,6 +12,11 @@ namespace Robust.Shared.Audio.Sources;
 internal interface IAudioSource : IDisposable
 {
     /// <summary>
+    /// Tries to start playing the audio if not already playing.
+    /// </summary>
+    void StartPlaying();
+
+    /// <summary>
     /// Is the audio source currently playing.
     /// </summary>
     bool Playing { get; set; }

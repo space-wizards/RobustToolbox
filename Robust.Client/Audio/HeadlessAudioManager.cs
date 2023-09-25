@@ -27,13 +27,13 @@ internal sealed class HeadlessAudioManager : SharedAudioManager, IAudioInternal
     }
 
     /// <inheritdoc />
-    public IAudioSource CreateAudioSource(AudioResource audioResource)
+    public IAudioSource? CreateAudioSource(AudioStream stream)
     {
         return DummyAudioSource.Instance;
     }
 
     /// <inheritdoc />
-    public IBufferedAudioSource? CreateBufferedAudioSource(int buffers, bool floatAudio = false)
+    public IBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio = false)
     {
         return DummyBufferedAudioSource.Instance;
     }

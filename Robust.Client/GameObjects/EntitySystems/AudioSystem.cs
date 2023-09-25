@@ -312,30 +312,134 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         if (Timing.IsFirstTimePredicted || sound == null)
             return PlayStatic(sound, Filter.Local(), coordinates, false);
+
         return null;
     }
 
-    private void ApplyAudioParams(AudioParams? audioParams, IAudioSource source, AudioStream audio)
+    /// <summary>
+    ///     Play an audio file globally, without position.
+    /// </summary>
+    /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+    /// <param name="audioParams"></param>
+    private (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, AudioParams? audioParams = null, bool recordReplay = true)
     {
-        if (!audioParams.HasValue)
-            return;
+        /* left here just in case uhh yeah idk how replays handle clientside entity spawns.
+        if (recordReplay && _replayRecording.IsRecording)
+        {
+            _replayRecording.RecordReplayMessage(new PlayAudioGlobalMessage
+            {
+                FileName = filename,
+                AudioParams = audioParams ?? AudioParams.Default
+            });
+        }
+        */
 
-        if (audioParams.Value.Variation.HasValue)
-            source.Pitch = audioParams.Value.PitchScale
-                            * (float) RandMan.NextGaussian(1, audioParams.Value.Variation.Value);
-        else
-            source.Pitch = audioParams.Value.PitchScale;
+        return TryGetAudio(filename, out var audio) ? PlayGlobal(audio, audioParams) : default;
+    }
 
-        source.Volume = audioParams.Value.Volume;
-        source.RolloffFactor = audioParams.Value.RolloffFactor;
-        source.MaxDistance = audioParams.Value.MaxDistance;
-        source.ReferenceDistance = audioParams.Value.ReferenceDistance;
-        source.Looping = audioParams.Value.Loop;
+    /// <summary>
+    ///     Play an audio stream globally, without position.
+    /// </summary>
+    /// <param name="stream">The audio stream to play.</param>
+    /// <param name="audioParams"></param>
+    private (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, AudioParams? audioParams = null)
+    {
+        if (!TryCreateAudioSource(stream, out var source))
+        {
+            Log.Error($"Error setting up global audio for {stream.Name}: {0}", Environment.StackTrace);
+            return null;
+        }
 
-        // TODO clamp the offset inside of SetPlaybackPosition() itself.
-        var offset = audioParams.Value.PlayOffsetSeconds;
-        offset = Math.Clamp(offset, 0f, (float) audio.Length.TotalSeconds);
-        source.PlaybackPosition = offset;
+        source.Global = true;
+
+        return CreateAndStartPlayingStream(source, audioParams, stream);
+    }
+
+
+
+    /// <summary>
+    ///     Play an audio file following an entity.
+    /// </summary>
+    /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+    /// <param name="entity">The entity "emitting" the audio.</param>
+    private (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, EntityUid entity, AudioParams? audioParams = null, bool recordReplay = true)
+    {
+        /*
+        if (recordReplay && _replayRecording.IsRecording)
+        {
+            _replayRecording.RecordReplayMessage(new PlayAudioEntityMessage
+            {
+                FileName = filename,
+                NetEntity = GetNetEntity(entity),
+                AudioParams = audioParams ?? AudioParams.Default
+            });
+        }
+        */
+
+        return TryGetAudio(filename, out var audio) ? PlayEntity(audio, entity, audioParams) : default;
+    }
+
+    /// <summary>
+    ///     Play an audio stream following an entity.
+    /// </summary>
+    /// <param name="stream">The audio stream to play.</param>
+    /// <param name="entity">The entity "emitting" the audio.</param>
+    /// <param name="audioParams"></param>
+    private (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
+    {
+        if (!TryCreateAudioSource(stream, out var source))
+        {
+            Log.Error($"Error setting up entity audio for {stream.Name} / {ToPrettyString(entity)}: {0}", Environment.StackTrace);
+            return null;
+        }
+
+        var playing = CreateAndStartPlayingStream(source, audioParams, stream);
+        _xformSys.SetCoordinates(playing.Entity, new EntityCoordinates(entity, Vector2.Zero));
+
+        return playing;
+    }
+
+    /// <summary>
+    ///     Play an audio file at a static position.
+    /// </summary>
+    /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+    /// <param name="coordinates">The coordinates at which to play the audio.</param>
+    /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
+    /// <param name="audioParams"></param>
+    private (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, EntityCoordinates coordinates, AudioParams? audioParams = null, bool recordReplay = true)
+    {
+        /*
+        if (recordReplay && _replayRecording.IsRecording)
+        {
+            _replayRecording.RecordReplayMessage(new PlayAudioPositionalMessage
+            {
+                FileName = filename,
+                Coordinates = GetNetCoordinates(coordinates),
+                AudioParams = audioParams ?? AudioParams.Default
+            });
+        }
+        */
+
+        return TryGetAudio(filename, out var audio) ? PlayStatic(audio, coordinates, audioParams) : default;
+    }
+
+    /// <summary>
+    ///     Play an audio stream at a static position.
+    /// </summary>
+    /// <param name="stream">The audio stream to play.</param>
+    /// <param name="coordinates">The coordinates at which to play the audio.</param>
+    /// <param name="audioParams"></param>
+    private (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    {
+        if (!TryCreateAudioSource(stream, out var source))
+        {
+            Log.Error($"Error setting up coordinates audio for {stream.Name} / {coordinates}: {0}", Environment.StackTrace);
+            return null;
+        }
+
+        var playing = CreateAndStartPlayingStream(source, audioParams, stream);
+        _xformSys.SetCoordinates(playing.Entity, coordinates);
+        return playing;
     }
 
     /// <inheritdoc />
@@ -347,7 +451,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, Filter playerFilter, EntityUid entity, bool recordReplay, AudioParams? audioParams = null)
     {
-        return PlayEntity(filename, entity, null, audioParams);
+        return PlayEntity(filename, entity, audioParams);
     }
 
     /// <inheritdoc />
@@ -359,36 +463,72 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, ICommonSession recipient, AudioParams? audioParams = null)
     {
-        return Play(filename, audioParams);
+        return PlayGlobal(filename, audioParams);
     }
 
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, EntityUid recipient, AudioParams? audioParams = null)
     {
-        return Play(filename, audioParams);
+        return PlayGlobal(filename, audioParams);
     }
 
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        return Play(filename, uid, null, audioParams);
+        return PlayEntity(filename, uid, audioParams);
     }
 
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? PlayEntity(string filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        return Play(filename, uid, null, audioParams);
+        return PlayEntity(filename, uid, audioParams);
     }
 
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return Play(filename, coordinates, audioParams);
+        return PlayStatic(filename, coordinates, audioParams);
     }
 
     /// <inheritdoc />
     protected override (EntityUid Entity, AudioComponent Component)? PlayStatic(string filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return Play(filename, coordinates, audioParams);
+        return PlayStatic(filename, coordinates, audioParams);
+    }
+
+    private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(IAudioSource source, AudioParams? audioParams, AudioStream stream)
+    {
+        var audioP = audioParams ?? AudioParams.Default;
+        ApplyAudioParams(audioP, source, stream);
+        source.StartPlaying();
+
+        var entity = Spawn(AudioEntity, MapCoordinates.Nullspace);
+        var comp = Comp<AudioComponent>(entity);
+        comp.Params = audioP;
+
+        return (entity, comp);
+    }
+
+    /// <summary>
+    /// Applies the audioparams to the underlying audio source.
+    /// </summary>
+    private void ApplyAudioParams(AudioParams audioParams, IAudioSource source, AudioStream audio)
+    {
+        if (audioParams.Variation.HasValue)
+            source.Pitch = audioParams.PitchScale
+                           * (float) RandMan.NextGaussian(1, audioParams.Variation.Value);
+        else
+            source.Pitch = audioParams.PitchScale;
+
+        source.Volume = audioParams.Volume;
+        source.RolloffFactor = audioParams.RolloffFactor;
+        source.MaxDistance = audioParams.MaxDistance;
+        source.ReferenceDistance = audioParams.ReferenceDistance;
+        source.Looping = audioParams.Loop;
+
+        // TODO clamp the offset inside of SetPlaybackPosition() itself.
+        var offset = audioParams.PlayOffsetSeconds;
+        offset = Math.Clamp(offset, 0f, (float) audio.Length.TotalSeconds);
+        source.PlaybackPosition = offset;
     }
 }

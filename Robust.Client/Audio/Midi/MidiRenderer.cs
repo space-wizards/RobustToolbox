@@ -248,7 +248,7 @@ internal sealed class MidiRenderer : IMidiRenderer
     public event Action? OnMidiPlayerFinished;
 
     internal MidiRenderer(Settings settings, SoundFontLoader soundFontLoader, bool mono,
-        IMidiManager midiManager, IClydeAudio clydeAudio, ITaskManager taskManager, ISawmill midiSawmill)
+        IMidiManager midiManager, IAudioInternal clydeAudio, ITaskManager taskManager, ISawmill midiSawmill)
     {
         _midiManager = midiManager;
         _taskManager = taskManager;

@@ -41,10 +41,10 @@ internal sealed partial class MidiManager : IMidiManager
     [ViewVariables] private TimeSpan _nextPositionUpdate = TimeSpan.Zero;
 
     [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IClientResourceCacheInternal _resourceManager = default!;
+    [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IConfigurationManager _cfgMan = default!;
-    [Dependency] private readonly IClydeAudio _clydeAudio = default!;
+    [Dependency] private readonly IAudioInternal _audio = default!;
     [Dependency] private readonly ITaskManager _taskManager = default!;
     [Dependency] private readonly ILogManager _logger = default!;
     [Dependency] private readonly IParallelManager _parallel = default!;
@@ -273,7 +273,7 @@ internal sealed partial class MidiManager : IMidiManager
         {
             soundfontLoader.SetCallbacks(_soundfontLoaderCallbacks);
 
-            var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _clydeAudio, _taskManager, _midiSawmill);
+            var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _audio, _taskManager, _midiSawmill);
 
             _midiSawmill.Debug($"Loading fallback soundfont {FallbackSoundfont}");
             // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
@@ -351,7 +351,7 @@ internal sealed partial class MidiManager : IMidiManager
                 renderer.LoadSoundfont(file.ToString());
             }
 
-            renderer.Source.SetVolume(Volume);
+            renderer.Source.Volume = _volume;
 
             lock (_renderers)
             {
@@ -374,6 +374,7 @@ internal sealed partial class MidiManager : IMidiManager
 
         // Update positions of streams every frame.
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
+        // so TRUE
 
         lock (_renderers)
         {
@@ -415,11 +416,13 @@ internal sealed partial class MidiManager : IMidiManager
                 return;
 
             if (_volumeDirty)
-                renderer.Source.SetVolume(Volume);
+            {
+                renderer.Source.Volume = Volume;
+            }
 
             if (!renderer.Mono)
             {
-                renderer.Source.SetGlobal();
+                renderer.Source.Global = true;
                 return;
             }
 
@@ -434,14 +437,19 @@ internal sealed partial class MidiManager : IMidiManager
                     return;
                 }
 
-                if (!renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.Position))
+                var position = renderer.TrackingCoordinates.Value;
+
+                if (position.MapId == MapId.Nullspace)
                 {
                     return;
                 }
 
+                renderer.Source.Position = position.Position;
+
                 var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value,
                     xformQuery: transQuery, physicsQuery: physicsQuery);
-                renderer.Source.SetVelocity(vel);
+
+                renderer.Source.Velocity = vel;
             }
 
             if (renderer.TrackingCoordinates != null && renderer.TrackingCoordinates.Value.MapId == _eyeManager.CurrentMap)
@@ -465,11 +473,11 @@ internal sealed partial class MidiManager : IMidiManager
                         renderer.TrackingEntity);
                 }
 
-                renderer.Source.SetOcclusion(occlusion);
+                renderer.Source.Occlusion = occlusion;
             }
             else
             {
-                renderer.Source.SetOcclusion(float.MaxValue);
+                renderer.Source.Occlusion = float.MaxValue;
             }
 
         }

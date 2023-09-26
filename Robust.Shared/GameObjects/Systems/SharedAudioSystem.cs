@@ -12,6 +12,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.ResourceManagement.ResourceTypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -51,6 +52,24 @@ public abstract class SharedAudioSystem : EntitySystem
         SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
     }
 
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+        // TODO: Move TimedDespawn to engine
+        var query = EntityQueryEnumerator<AudioComponent, MetaDataComponent>();
+
+        while (query.MoveNext(out var uid, out var comp, out var metadata))
+        {
+            var length = GetAudioLength(comp.FileName);
+            var created = Timing.TickPeriod.TotalSeconds * metadata.CreationTick.Value;
+
+            if (Timing.CurTime > TimeSpan.FromSeconds(created) + length)
+            {
+                QueueDel(uid);
+            }
+        }
+    }
+
     private void OnAudioGetStateAttempt(EntityUid uid, AudioComponent component, ref ComponentGetStateAttemptEvent args)
     {
         if (component.ExcludedEntity != null && args.Player?.AttachedEntity == component.ExcludedEntity)
@@ -84,6 +103,7 @@ public abstract class SharedAudioSystem : EntitySystem
 
     protected void SetupAudio(EntityUid uid, AudioComponent component, string fileName, AudioParams? audioParams)
     {
+        DebugTools.Assert(!string.IsNullOrEmpty(fileName));
         audioParams ??= AudioParams.Default;
         component.FileName = fileName;
         component.Params = audioParams.Value;

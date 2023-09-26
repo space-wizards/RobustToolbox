@@ -40,6 +40,11 @@ internal abstract class BaseAudioSource : IAudioSource
         AL.GetSource(SourceHandle, ALSourcef.Gain, out _gain);
     }
 
+    public void Pause()
+    {
+        AL.SourcePause(SourceHandle);
+    }
+
     /// <inheritdoc />
     public void StartPlaying()
     {

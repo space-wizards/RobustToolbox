@@ -10,7 +10,7 @@ namespace Robust.Shared.Audio;
 /// <summary>
 /// Stores the audio data for an audio entity.
 /// </summary>
-[RegisterComponent, NetworkedComponent, Access(typeof(SharedAudioSystem))]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState, Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IAudioSource
 {
     #region Filter
@@ -53,6 +53,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     #region Source
 
+    public void Pause() => Source.Pause();
+
     /// <summary>
     /// Starts playing if the source is not already playing.
     /// </summary>
@@ -82,11 +84,7 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// <see cref="IAudioSource.Global"/>
     /// </summary>
     [AutoNetworkedField]
-    public bool Global
-    {
-        get => Source.Global;
-        set => Source.Global = value;
-    }
+    public bool Global { get; set; }
 
     /// <summary>
     /// <see cref="IAudioSource.Pitch"/>

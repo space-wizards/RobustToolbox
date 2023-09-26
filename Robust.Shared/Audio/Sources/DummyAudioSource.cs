@@ -17,6 +17,11 @@ internal partial class DummyAudioSource : IAudioSource
     }
 
     /// <inheritdoc />
+    public void Pause()
+    {
+    }
+
+    /// <inheritdoc />
     public void StartPlaying()
     {
     }

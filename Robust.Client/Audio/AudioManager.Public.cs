@@ -16,6 +16,7 @@ internal partial class AudioManager
     public void InitializePostWindowing()
     {
         _gameThread = Thread.CurrentThread;
+        InitializeAudio();
     }
 
     public void Shutdown()

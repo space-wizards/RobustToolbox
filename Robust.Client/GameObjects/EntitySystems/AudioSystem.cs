@@ -62,8 +62,14 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeLocalEvent<AudioComponent, ComponentShutdown>(OnAudioShutdown);
         SubscribeLocalEvent<AudioComponent, EntityPausedEvent>(OnAudioPaused);
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
+        SubscribeLocalEvent<AudioComponent, AfterAutoHandleStateEvent>(OnAudioState);
 
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
+    }
+
+    private void OnAudioState(EntityUid uid, AudioComponent component, ref AfterAutoHandleStateEvent args)
+    {
+        component.Source.Global = component.Global;
     }
 
     /// <summary>
@@ -82,17 +88,17 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
     {
-        // TODO: OpenAL scrubbing through audio.
+        component.Pause();
     }
 
     private void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
     {
-        // TODO: OpenAL scrubbing through audio.
+        component.StartPlaying();
     }
 
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
-        if (!Timing.IsFirstTimePredicted || !TryGetAudio(component.FileName, out var audioResource))
+        if ((!Timing.ApplyingState && !Timing.IsFirstTimePredicted) || !TryGetAudio(component.FileName, out var audioResource))
             return;
 
         var source = _audio.CreateAudioSource(audioResource);
@@ -101,6 +107,10 @@ public sealed class AudioSystem : SharedAudioSystem
             return;
 
         component.Source = source;
+        if (!IsPaused(uid))
+        {
+            component.StartPlaying();
+        }
     }
 
     private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
@@ -452,12 +462,12 @@ public sealed class AudioSystem : SharedAudioSystem
     private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(IAudioSource source, AudioParams? audioParams, AudioStream stream)
     {
         var audioP = audioParams ?? AudioParams.Default;
-        var entity = Spawn(null, MapCoordinates.Nullspace);
-        var comp = AddComp<AudioComponent>(entity);
-        SetupAudio(entity, comp, string.Empty, audioP);
+        var entity = EntityManager.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
+        var comp = EntityManager.AddComponent<AudioComponent>(entity);
+        SetupAudio(entity, comp, stream.Name!, audioP);
         ApplyAudioParams(audioP, source, stream);
         comp.Params = audioP;
-
+        EntityManager.InitializeAndStartEntity(entity);
         source.StartPlaying();
         return (entity, comp);
     }

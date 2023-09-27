@@ -1415,14 +1415,15 @@ namespace Robust.Client.GameStates
             }
 
             // ensure we don't have any extra components
-            RemQueue<Component> toRemove = new();
+            _toRemove.Clear();
+
             foreach (var (id, comp) in meta.NetComponents)
             {
                 if (comp.NetSyncEnabled && !lastState.ContainsKey(id))
-                    toRemove.Add(comp);
+                    _toRemove.Add(comp);
             }
 
-            foreach (var comp in toRemove)
+            foreach (var comp in _toRemove)
             {
                 _entities.RemoveComponent(uid, comp);
             }

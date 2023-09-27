@@ -56,6 +56,7 @@ namespace Robust.Client.GameStates
         private readonly List<EntityUid> _toDelete = new();
         private readonly List<Component> _toRemove = new();
         private readonly Dictionary<NetEntity, Dictionary<ushort, ComponentState>> _outputData = new();
+        private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
 
         private readonly ObjectPool<Dictionary<ushort, ComponentState>> _compDataPool =
             new DefaultObjectPool<Dictionary<ushort, ComponentState>>(new DictPolicy<ushort, ComponentState>(), 256);
@@ -790,7 +791,7 @@ namespace Robust.Client.GameStates
                 _toApply[uid] = (meta.NetEntity, meta, false, GameTick.Zero, null, null);
             }
 
-            var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);
+            _queuedBroadphaseUpdates.Clear();
 
             // Apply entity states.
             using (_prof.Group("Apply States"))
@@ -810,7 +811,7 @@ namespace Robust.Client.GameStates
                     DebugTools.Assert(xform.Broadphase == BroadphaseData.Invalid);
                     xform.Broadphase = null;
                     if (!_toApply.TryGetValue(xform.ParentUid, out var parent) || !parent.EnteringPvs)
-                        queuedBroadphaseUpdates.Add((entity, xform));
+                        _queuedBroadphaseUpdates.Add((entity, xform));
                 }
 
                 _prof.WriteValue("Count", ProfData.Int32(_toApply.Count));
@@ -821,7 +822,7 @@ namespace Robust.Client.GameStates
             {
                 try
                 {
-                    foreach (var (uid, xform) in queuedBroadphaseUpdates)
+                    foreach (var (uid, xform) in _queuedBroadphaseUpdates)
                     {
                         lookupSys.FindAndAddToEntityTree(uid, true, xform);
                     }

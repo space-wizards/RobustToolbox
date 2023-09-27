@@ -1,5 +1,6 @@
 ## ViewVariablesInstanceEntity
 
+view-variables = View Variables
 view-variable-instance-entity-server-components-add-component-button-placeholder = Add Component
 view-variable-instance-entity-client-variables-tab-title = Client Variables
 view-variable-instance-entity-client-components-tab-title = Client Components

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
@@ -759,25 +760,29 @@ namespace Robust.Client.GameStates
                     if (es.EntityLastModified != nextState.ToSequence)
                         continue;
 
-                    if (_toApply.TryGetValue(uid.Value, out var state))
-                        _toApply[uid.Value] = (es.NetEntity, meta, state.EnteringPvs, state.LastApplied, state.curState, es);
+                    ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_toApply, uid.Value, out var exists);
+
+                    if (exists)
+                        state = (es.NetEntity, meta, state.EnteringPvs, state.LastApplied, state.curState, es);
                     else
-                        _toApply[uid.Value] = (es.NetEntity, meta, false, GameTick.Zero, null, es);
+                        state = (es.NetEntity, meta, false, GameTick.Zero, null, es);
                 }
             }
 
             // Check pending states and see if we need to force any entities to re-run component states.
             foreach (var uid in _pendingReapplyNetStates.Keys)
             {
-                // State already being re-applied so don't bulldoze it.
-                if (_toApply.ContainsKey(uid))
-                    continue;
-
                 // Original entity referencing the NetEntity may have been deleted.
                 if (!metas.TryGetComponent(uid, out var meta))
                     continue;
 
-                _toApply[uid] = (meta.NetEntity, meta, false, GameTick.Zero, null, null);
+                // State already being re-applied so don't bulldoze it.
+                ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_toApply, uid, out var exists);
+
+                if (exists)
+                    continue;
+
+                state = (meta.NetEntity, meta, false, GameTick.Zero, null, null);
             }
 
             var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);
@@ -1198,10 +1203,13 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    if (_compStateWork.TryGetValue(compState.NetID, out var state))
-                        _compStateWork[compState.NetID] = (comp, state.curState, compState.State);
+                    ref var state =
+                        ref CollectionsMarshal.GetValueRefOrAddDefault(_compStateWork, compState.NetID, out var exists);
+
+                    if (exists)
+                        state = (comp, state.curState, compState.State);
                     else
-                        _compStateWork[compState.NetID] = (comp, null, compState.State);
+                        state = (comp, null, compState.State);
                 }
             }
 
@@ -1218,14 +1226,19 @@ namespace Robust.Client.GameStates
                     if (netId == null)
                         continue;
 
-                    if (_compStateWork.ContainsKey(netId.Value) ||
-                        !meta.NetComponents.TryGetValue(netId.Value, out var comp) ||
+                    if (!meta.NetComponents.TryGetValue(netId.Value, out var comp) ||
                         !lastState.TryGetValue(netId.Value, out var lastCompState))
                     {
                         continue;
                     }
 
-                    _compStateWork[netId.Value] = (comp, lastCompState, null);
+                    ref var compState =
+                        ref CollectionsMarshal.GetValueRefOrAddDefault(_compStateWork, netId.Value, out var exists);
+
+                    if (exists)
+                        continue;
+
+                    compState = (comp, lastCompState, null);
                 }
             }
 

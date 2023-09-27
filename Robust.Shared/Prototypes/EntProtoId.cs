@@ -30,29 +30,6 @@ public readonly record struct EntProtoId(string Id)
         return id == null ? default(EntProtoId?) : new EntProtoId(id);
     }
 
-    public static bool operator ==(EntProtoId? first, string? second)
-    {
-        if (!first.HasValue)
-            return second == null;
-
-        return first.Value.Equals(second);
-    }
-
-    public static bool operator !=(EntProtoId? first, string? second)
-    {
-        return !(first == second);
-    }
-
-    public static bool operator ==(EntProtoId first, string? second)
-    {
-        return first.Id == second;
-    }
-
-    public static bool operator !=(EntProtoId first, string? second)
-    {
-        return !(first == second);
-    }
-
     public bool Equals(string? other)
     {
         return Id == other;

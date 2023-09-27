@@ -30,29 +30,6 @@ public readonly record struct ProtoId<T>(string Id) : IEquatable<string> where T
         return id == null ? default(ProtoId<T>?) : new ProtoId<T>(id);
     }
 
-    public static bool operator ==(ProtoId<T>? first, string? second)
-    {
-        if (!first.HasValue)
-            return second == null;
-
-        return first.Value.Equals(second);
-    }
-
-    public static bool operator !=(ProtoId<T>? first, string? second)
-    {
-        return !(first == second);
-    }
-
-    public static bool operator ==(ProtoId<T> first, string? second)
-    {
-        return first.Id == second;
-    }
-
-    public static bool operator !=(ProtoId<T> first, string? second)
-    {
-        return !(first == second);
-    }
-
     public bool Equals(string? other)
     {
         return Id == other;

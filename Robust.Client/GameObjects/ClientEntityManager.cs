@@ -43,9 +43,9 @@ namespace Robust.Client.GameObjects
             base.FlushEntities();
         }
 
-        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName)
+        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, out MetaDataComponent metadata)
         {
-            return base.CreateEntity(prototypeName);
+            return base.CreateEntity(prototypeName, out metadata);
         }
 
         void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)

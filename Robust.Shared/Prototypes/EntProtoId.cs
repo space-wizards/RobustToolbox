@@ -24,4 +24,14 @@ public readonly record struct EntProtoId(string Id)
     {
         return new EntProtoId(id);
     }
+
+    public static implicit operator EntProtoId?(string? id)
+    {
+        return id == null ? default(EntProtoId?) : new EntProtoId(id);
+    }
+
+    public bool Equals(string? other)
+    {
+        return Id == other;
+    }
 }

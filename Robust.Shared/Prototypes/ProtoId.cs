@@ -13,7 +13,7 @@ namespace Robust.Shared.Prototypes;
 /// </remarks>
 /// <remarks><seealso cref="EntProtoId"/> for an <see cref="EntityPrototype"/> alias.</remarks>
 [Serializable]
-public readonly record struct ProtoId<T>(string Id) where T : class, IPrototype
+public readonly record struct ProtoId<T>(string Id) : IEquatable<string> where T : class, IPrototype
 {
     public static implicit operator string(ProtoId<T> protoId)
     {
@@ -23,5 +23,15 @@ public readonly record struct ProtoId<T>(string Id) where T : class, IPrototype
     public static implicit operator ProtoId<T>(string id)
     {
         return new ProtoId<T>(id);
+    }
+
+    public static implicit operator ProtoId<T>?(string? id)
+    {
+        return id == null ? default(ProtoId<T>?) : new ProtoId<T>(id);
+    }
+
+    public bool Equals(string? other)
+    {
+        return Id == other;
     }
 }

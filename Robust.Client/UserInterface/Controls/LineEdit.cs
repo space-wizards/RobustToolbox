@@ -612,7 +612,7 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (Editable)
                     {
-                        OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+                        ForceSubmitText();
                     }
 
                     args.Handle();

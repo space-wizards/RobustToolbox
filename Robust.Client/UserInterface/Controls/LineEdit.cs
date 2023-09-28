@@ -98,6 +98,11 @@ namespace Robust.Client.UserInterface.Controls
                 OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
         }
 
+        public void ForceSubmitText()
+        {
+            OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+        }
+
         /// <summary>
         ///     The text
         /// </summary>

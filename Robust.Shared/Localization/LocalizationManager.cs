@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using Linguini.Bundle;
 using Linguini.Bundle.Builder;
 using Linguini.Bundle.Errors;
@@ -55,7 +54,6 @@ namespace Robust.Shared.Localization
             return msg;
         }
 
-
         public string GetString(string messageId, params (string, object)[] args0)
         {
             if (_defaultCulture == null)
@@ -68,6 +66,11 @@ namespace Robust.Shared.Localization
             }
 
             return msg;
+        }
+
+        public bool HasString(string messageId)
+        {
+            return HasMessage(messageId, out _);
         }
 
         public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value)

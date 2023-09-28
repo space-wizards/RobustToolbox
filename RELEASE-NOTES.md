@@ -54,6 +54,24 @@ END TEMPLATE-->
 *None yet*
 
 
+## 162.2.0
+
+### New features
+
+* Add support for automatically networking entity lists and sets.
+* Add nullable conversion operators for ProtoIds.
+* Add LocId serializer for validation.
+
+### Bugfixes
+
+* Fix deleting a contact inside of collision events throwing.
+* Localize VV.
+
+### Internal
+
+* Use CollectionsMarshal in GameStateManager.
+
+
 ## 162.1.1
 
 ### Bugfixes

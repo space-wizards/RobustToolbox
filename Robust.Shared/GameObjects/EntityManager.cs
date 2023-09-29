@@ -311,19 +311,19 @@ namespace Robust.Shared.GameObjects
 
         public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, overrides);
+            return CreateEntity(prototypeName, out _, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, overrides);
+            return CreateEntity(prototypeName, out _, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, overrides);
+            var newEntity = CreateEntity(prototypeName, out _, overrides);
             _xforms.SetCoordinates(newEntity, TransformQuery.GetComponent(newEntity), coordinates, unanchor: false);
             return newEntity;
         }
@@ -331,7 +331,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null)
         {
-            var newEntity = CreateEntity(prototypeName, overrides);
+            var newEntity = CreateEntity(prototypeName, out _, overrides);
             var transform = TransformQuery.GetComponent(newEntity);
 
             if (coordinates.MapId == MapId.Nullspace)
@@ -656,23 +656,23 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, IEntityLoadContext? context = null)
+        private protected virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return AllocEntity(out _);
+                return AllocEntity(out metadata);
 
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            return CreateEntity(prototype, context);
+            return CreateEntity(prototype, out metadata, context);
         }
 
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected EntityUid CreateEntity(EntityPrototype prototype, IEntityLoadContext? context = null)
+        private protected EntityUid CreateEntity(EntityPrototype prototype, out MetaDataComponent metadata, IEntityLoadContext? context = null)
         {
-            var entity = AllocEntity(prototype, out var metadata);
+            var entity = AllocEntity(prototype, out metadata);
             try
             {
                 EntityPrototype.LoadEntity(metadata.EntityPrototype, entity, ComponentFactory, this, _serManager, context);

@@ -10,7 +10,7 @@ Don't change the format without looking at the script!
 
 ### Breaking changes
 
-*None yet*
+* Removed cloneData from AutoNetworkedFieldAttribute. This is now automatically inferred.
 
 ### New features
 

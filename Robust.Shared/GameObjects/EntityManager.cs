@@ -480,6 +480,9 @@ namespace Robust.Shared.GameObjects
             TransformComponent transform,
             TransformComponent? parentXform)
         {
+            DebugTools.Assert(transform.ParentUid.IsValid() == (parentXform != null));
+            DebugTools.Assert(parentXform == null || parentXform.ChildEntities.Contains(uid));
+
             // Note about this method: #if EXCEPTION_TOLERANCE is not used here because we're gonna it in the future...
 
             // Detach the base entity to null before iterating over children
@@ -502,6 +505,7 @@ namespace Robust.Shared.GameObjects
                 {
                     var childMeta = MetaQuery.GetComponent(child);
                     var childXform = TransformQuery.GetComponent(child);
+                    DebugTools.AssertEqual(childXform.ParentUid, uid);
                     RecursiveDeleteEntity(child, childMeta, childXform, transform);
                 }
                 catch(Exception e)

@@ -54,6 +54,29 @@ END TEMPLATE-->
 *None yet*
 
 
+## 163.0.0
+
+### Breaking changes
+
+* Moved TimedDespawn to engine for a component that deletes the attached entity after a timer has elapsed.
+
+### New features
+
+* Add ExecuteCommand for integration tests.
+* Allow adding / removing widgets of cub-controls.
+* Give maps / grids a default name to help with debugging.
+* Use ToPrettyString in component resolve errors to help with debugging.
+
+### Bugfixes
+
+* Fix console backspace exception.
+* Fix rendering invalid maps spamming exceptions every frame.
+
+### Internal
+
+* Move ClientGameStatemanager local variables to fields to avoid re-allocating every tick.
+
+
 ## 162.2.1
 
 

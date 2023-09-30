@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Removed cloneData from AutoNetworkedFieldAttribute. This is now automatically inferred.
 
 ### New features
 
@@ -52,6 +52,17 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 164.0.0
+
+### Breaking changes
+
+* Make automatic component states infer cloneData.
+
+### Internal
+
+* Reduce Transform GetComponents in RecursiveDeleteEntity.
 
 
 ## 163.0.0

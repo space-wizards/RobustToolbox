@@ -189,8 +189,6 @@ namespace Robust.Shared.Physics.Systems
                 _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase, physicsMap);
             }
 
-
-
             if (updates)
             {
                 var resetMass = fixture.Density > 0f;

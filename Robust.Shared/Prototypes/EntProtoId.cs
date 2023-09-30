@@ -13,7 +13,7 @@ namespace Robust.Shared.Prototypes;
 /// </remarks>
 /// <remarks><seealso cref="ProtoId{T}"/> for a wrapper of other prototype kinds.</remarks>
 [Serializable, NetSerializable]
-public readonly record struct EntProtoId(string Id)
+public readonly record struct EntProtoId(string Id) : IEquatable<string>, IComparable<EntProtoId>
 {
     public static implicit operator string(EntProtoId protoId)
     {
@@ -23,5 +23,20 @@ public readonly record struct EntProtoId(string Id)
     public static implicit operator EntProtoId(string id)
     {
         return new EntProtoId(id);
+    }
+
+    public static implicit operator EntProtoId?(string? id)
+    {
+        return id == null ? default(EntProtoId?) : new EntProtoId(id);
+    }
+
+    public bool Equals(string? other)
+    {
+        return Id == other;
+    }
+
+    public int CompareTo(EntProtoId other)
+    {
+        return string.Compare(Id, other.Id, StringComparison.Ordinal);
     }
 }

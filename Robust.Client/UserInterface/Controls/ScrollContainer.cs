@@ -50,13 +50,13 @@ namespace Robust.Client.UserInterface.Controls
             Action<Range> ev = _scrollValueChanged;
             _hScrollBar = new HScrollBar
             {
-                Visible = false,
+                Visible = _hScrollEnabled,
                 VerticalAlignment = VAlignment.Bottom,
                 HorizontalAlignment = HAlignment.Stretch
             };
             _vScrollBar = new VScrollBar
             {
-                Visible = false,
+                Visible = _vScrollEnabled,
                 VerticalAlignment = VAlignment.Stretch,
                 HorizontalAlignment = HAlignment.Right
             };

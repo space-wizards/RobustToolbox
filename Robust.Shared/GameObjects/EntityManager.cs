@@ -435,8 +435,13 @@ namespace Robust.Shared.GameObjects
             // Notify all entities they are being terminated prior to detaching & deleting
             RecursiveFlagEntityTermination(e, meta);
 
+            var xform = TransformQuery.GetComponent(e);
+            TransformComponent? parentXform = null;
+            if (xform.ParentUid.IsValid())
+                TransformQuery.Resolve(xform.ParentUid, ref parentXform);
+
             // Then actually delete them
-            RecursiveDeleteEntity(e, meta);
+            RecursiveDeleteEntity(e, meta, xform, parentXform);
         }
 
         private void RecursiveFlagEntityTermination(
@@ -471,11 +476,11 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(
             EntityUid uid,
-            MetaDataComponent metadata)
+            MetaDataComponent metadata,
+            TransformComponent transform,
+            TransformComponent? parentXform)
         {
             // Note about this method: #if EXCEPTION_TOLERANCE is not used here because we're gonna it in the future...
-            var netEntity = GetNetEntity(uid, metadata);
-            var transform = TransformQuery.GetComponent(uid);
 
             // Detach the base entity to null before iterating over children
             // This also ensures that the entity-lookup updates don't have to be re-run for every child (which recurses up the transform hierarchy).
@@ -483,7 +488,7 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    _xforms.DetachParentToNull(uid, transform);
+                    _xforms.DetachParentToNull(uid, transform, parentXform);
                 }
                 catch (Exception e)
                 {
@@ -495,7 +500,9 @@ namespace Robust.Shared.GameObjects
             {
                 try
                 {
-                    RecursiveDeleteEntity(child, MetaQuery.GetComponent(child));
+                    var childMeta = MetaQuery.GetComponent(child);
+                    var childXform = TransformQuery.GetComponent(child);
+                    RecursiveDeleteEntity(child, childMeta, childXform, transform);
                 }
                 catch(Exception e)
                 {
@@ -538,7 +545,7 @@ namespace Robust.Shared.GameObjects
             _eventBus.OnEntityDeleted(uid);
             Entities.Remove(uid);
             // Need to get the ID above before MetadataComponent shutdown but only remove it after everything else is done.
-            NetEntityLookup.Remove(netEntity);
+            NetEntityLookup.Remove(metadata.NetEntity);
         }
 
         public virtual void QueueDeleteEntity(EntityUid? uid)

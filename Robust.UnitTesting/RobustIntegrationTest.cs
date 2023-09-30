@@ -22,6 +22,7 @@ using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
@@ -269,6 +270,7 @@ namespace Robust.UnitTesting
             public ISharedPlayerManager PlayerMan { get; private set; } = default!;
             public IGameTiming Timing { get; private set; } = default!;
             public IMapManager MapMan { get; private set; } = default!;
+            public IConsoleHost ConsoleHost { get; private set; } = default!;
 
             protected virtual void ResolveIoC(IDependencyCollection deps)
             {
@@ -278,6 +280,7 @@ namespace Robust.UnitTesting
                 PlayerMan = deps.Resolve<ISharedPlayerManager>();
                 Timing = deps.Resolve<IGameTiming>();
                 MapMan = deps.Resolve<IMapManager>();
+                ConsoleHost = deps.Resolve<IConsoleHost>();
             }
 
             public T System<T>() where T : IEntitySystem
@@ -293,6 +296,11 @@ namespace Robust.UnitTesting
             public MetaDataComponent MetaData(EntityUid uid)
             {
                 return EntMan.GetComponent<MetaDataComponent>(uid);
+            }
+
+            public async Task ExecuteCommand(string cmd)
+            {
+                await WaitPost(() => ConsoleHost.ExecuteCommand(cmd));
             }
 
             /// <summary>

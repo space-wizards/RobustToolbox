@@ -16,12 +16,15 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string MemberAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
         private const string GlobalEntityUidName = "global::Robust.Shared.GameObjects.EntityUid";
         private const string GlobalNullableEntityUidName = "global::Robust.Shared.GameObjects.EntityUid?";
-        private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
-        private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
+        private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
+        private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
+        private const string GlobalEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.EntityUid>";
+        private const string GlobalNetEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.NetEntity>";
+        private const string GlobalEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.EntityUid>";
+        private const string GlobalNetEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.NetEntity>";
 
         private static string GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
         {
-            // Debugger.Launch();
             var nameSpace = classSymbol.ContainingNamespace.ToDisplayString();
             var componentName = classSymbol.Name;
             var stateName = $"{componentName}_AutoState";
@@ -171,6 +174,26 @@ namespace Robust.Shared.CompNetworkGenerator
                             handleStateSetters.Append($@"
             component.{name} = state.{name};");
                         }
+
+                        break;
+                    case GlobalEntityUidSetName:
+                        stateFields.Append($@"
+        public {GlobalNetEntityUidSetName} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = GetNetEntitySet(component.{name}),");
+                        handleStateSetters.Append($@"
+            component.{name} = EnsureEntitySet<{componentName}>(state.{name}, uid);");
+
+                        break;
+                    case GlobalEntityUidListName:
+                        stateFields.Append($@"
+        public {GlobalNetEntityUidListName} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = GetNetEntityList(component.{name}),");
+                        handleStateSetters.Append($@"
+            component.{name} = EnsureEntityList<{componentName}>(state.{name}, uid);");
 
                         break;
                 }

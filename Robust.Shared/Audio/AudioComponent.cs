@@ -36,11 +36,6 @@ public sealed partial class AudioComponent : Component, IAudioSource
     public AudioParams Params = AudioParams.Default;
 
     /// <summary>
-    /// Used on engine to determine every frame if audio is done playing.
-    /// </summary>
-    internal bool Done;
-
-    /// <summary>
     /// Audio source that interacts with OpenAL.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]

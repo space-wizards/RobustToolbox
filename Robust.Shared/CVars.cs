@@ -993,7 +993,7 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<int> AudioAttenuation =
-            CVarDef.Create("audio.attenuation", (int) Attenuation.Default, CVar.REPLICATED | CVar.ARCHIVE);
+            CVarDef.Create("audio.attenuation", (int) Attenuation.LinearDistanceClamped, CVar.REPLICATED | CVar.ARCHIVE);
 
         /// <summary>
         /// Audio device to try to output audio to by default.

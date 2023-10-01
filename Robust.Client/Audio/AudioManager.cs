@@ -125,7 +125,6 @@ internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
         IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
         _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
-        _cfg.OnValueChanged(CVars.AudioAttenuation, SetAudioAttenuation, true);
     }
 
     internal bool IsMainThread()

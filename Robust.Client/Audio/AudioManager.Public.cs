@@ -189,43 +189,6 @@ internal partial class AudioManager
         AL.Listener(ALListenerf.Gain, BaseGain * newVolume);
     }
 
-    public void SetAudioAttenuation(int value)
-    {
-        var attenuation = (Attenuation) value;
-
-        switch (attenuation)
-        {
-            case Attenuation.NoAttenuation:
-                AL.DistanceModel(ALDistanceModel.None);
-                break;
-            case Attenuation.InverseDistance:
-                AL.DistanceModel(ALDistanceModel.InverseDistance);
-                break;
-            case Attenuation.Default:
-            case Attenuation.InverseDistanceClamped:
-                AL.DistanceModel(ALDistanceModel.InverseDistanceClamped);
-                break;
-            case Attenuation.LinearDistance:
-                AL.DistanceModel(ALDistanceModel.LinearDistance);
-                break;
-            case Attenuation.LinearDistanceClamped:
-                AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
-                break;
-            case Attenuation.ExponentDistance:
-                AL.DistanceModel(ALDistanceModel.ExponentDistance);
-                break;
-            case Attenuation.ExponentDistanceClamped:
-                AL.DistanceModel(ALDistanceModel.ExponentDistanceClamped);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException($"No implementation to set {attenuation.ToString()} for DistanceModel!");
-        }
-
-        var attToString = attenuation == Attenuation.Default ? Attenuation.InverseDistanceClamped : attenuation;
-
-        OpenALSawmill.Info($"Set audio attenuation to {attToString.ToString()}");
-    }
-
     internal void RemoveAudioSource(int handle)
     {
         _audioSources.Remove(handle);

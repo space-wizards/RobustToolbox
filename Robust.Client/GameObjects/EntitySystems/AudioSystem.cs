@@ -150,18 +150,6 @@ public sealed class AudioSystem : SharedAudioSystem
             Log.Error($"Caught exception while processing entity streams.");
             _runtimeLog.LogException(e, $"{nameof(AudioSystem)}.{nameof(FrameUpdate)}");
         }
-        finally
-        {
-            foreach (var stream in _streams)
-            {
-                var (entity, comp, _) = stream;
-
-                if (comp.Done)
-                {
-                    QueueDel(entity);
-                }
-            }
-        }
     }
 
     private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
@@ -171,7 +159,6 @@ public sealed class AudioSystem : SharedAudioSystem
         // if not then get nearest edge to grid and use that as distance / cut off at maxdistance.
         if (!component.Playing)
         {
-            component.Done = true;
             return;
         }
 

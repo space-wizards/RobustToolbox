@@ -11,10 +11,7 @@ namespace Robust.Shared.Audio
     {
         // https://hackage.haskell.org/package/OpenAL-1.7.0.5/docs/Sound-OpenAL-AL-Attenuation.html
 
-        /// <summary>
-        /// Default to the overall attenuation. If set project-wide will use InverseDistanceClamped. This is what you typically want for an audio source.
-        /// </summary>
-        Default = 0,
+        Invalid = 0,
         NoAttenuation = 1 << 0,
         InverseDistance = 1 << 1,
         InverseDistanceClamped = 1 << 2,
@@ -35,7 +32,7 @@ namespace Robust.Shared.Audio
         ///     The DistanceModel to use for this specific source.
         /// </summary>
         [DataField]
-        public Attenuation Attenuation { get; set; } = Default.Attenuation;
+        public Attenuation Attenuation { get; set; } = Attenuation.LinearDistanceClamped;
 
         /// <summary>
         ///     Base volume to play the audio at, in dB.

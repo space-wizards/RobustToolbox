@@ -38,4 +38,6 @@ public readonly record struct LocId(string Id) : IEquatable<string>, IComparable
     {
         return string.Compare(Id, other.Id, StringComparison.Ordinal);
     }
+
+    public override string ToString() => Id ?? String.Empty;
 }

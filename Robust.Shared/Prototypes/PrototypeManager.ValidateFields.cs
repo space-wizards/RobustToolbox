@@ -60,23 +60,17 @@ public partial class PrototypeManager
         if (!TryGetFieldPrototype(field, out var proto, out var canBeNull, out var canBeEmpty))
             return;
 
-        if (field.FieldType != typeof(string))
-        {
-            errors.Add($"Prototype id field failed validation. Field is not a string. Field: {field.Name} in {type.FullName}");
-            return;
-        }
-
         if (!TryGetFieldValue(field, type, ref instance, errors, out var value))
             return;
 
-        if (value == null)
+        var id = value?.ToString();
+
+        if (id == null)
         {
             if (!canBeNull)
-                errors.Add($"Prototype id field failed validation. Const/Static fields should not be null. Field: {field.Name} in {type.FullName}");
+                errors.Add($"Prototype id field failed validation. Fields should not be null. Field: {field.Name} in {type.FullName}");
             return;
         }
-
-        var id = (string) value;
 
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -141,7 +135,6 @@ public partial class PrototypeManager
         canBeNull = false;
         canBeEmpty = false;
 
-        // Check for a [PrototypeId] attribute.
         var attrib = field.GetCustomAttribute(typeof(ValidatePrototypeIdAttribute<>), false);
         if (attrib != null)
         {
@@ -149,16 +142,39 @@ public partial class PrototypeManager
             return true;
         }
 
-        // Next, check for a data field attribute.
         if (!field.TryGetCustomAttribute(out DataFieldAttribute? dataField))
             return false;
 
+        var fieldType = field.FieldType;
+        canBeEmpty = dataField.Required;
         DebugTools.Assert(!field.IsStatic);
+
+        // Resolve nullable structs
+        if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            fieldType = fieldType.GetGenericArguments().Single();
+            canBeNull = true;
+        }
+
+        if (fieldType == typeof(EntProtoId))
+        {
+            proto = typeof(EntityPrototype);
+            return true;
+        }
+
+        if (fieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(ProtoId<>))
+        {
+            proto = field.FieldType.GetGenericArguments().Single();
+            return true;
+        }
+
+        // As far as I know there is no way to check for the nullability of a string field, so we will assume that null
+        // values imply that the field itself is properly marked as nullable.
+        canBeNull = true;
 
         if (dataField.CustomTypeSerializer == null)
             return false;
 
-        // Check that this is a prototype id serializer
         if (!dataField.CustomTypeSerializer.IsGenericType)
             return false;
 
@@ -166,12 +182,6 @@ public partial class PrototypeManager
             return false;
 
         proto = dataField.CustomTypeSerializer.GetGenericArguments().First();
-        canBeEmpty = dataField.Required;
-
-        // We will assume null values imply that the field itself is marked as nullable.
-        // Unless someone can tell me how to figure out the nullability of a string field.
-        canBeNull = true;
-
         return true;
     }
 }

@@ -36,6 +36,7 @@ public abstract class SharedAudioSystem : EntitySystem
     [Dependency] private readonly IResourceCache _resource = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
     [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
+    [Dependency] private readonly MetaDataSystem _metadata = default!;
 
     /// <summary>
     /// Default max range at which the sound can be heard.
@@ -118,6 +119,7 @@ public abstract class SharedAudioSystem : EntitySystem
         var length = GetAudioLength(fileName);
         var despawn = AddComp<TimedDespawnComponent>(uid);
         despawn.Lifetime = (float) length.TotalSeconds;
+        _metadata.SetEntityName(uid, "Audio");
     }
 
     /// <summary>
@@ -154,7 +156,8 @@ public abstract class SharedAudioSystem : EntitySystem
     /// </remarks>
     public EntityUid? Stop(EntityUid? uid, AudioComponent? component = null)
     {
-        if (uid == null || !Resolve(uid.Value, ref component))
+        // One morbillion warnings for logging missing.
+        if (uid == null || !Resolve(uid.Value, ref component, false))
             return null;
 
         if (!Timing.IsFirstTimePredicted || (_netManager.IsClient && IsClientSide(uid.Value)))
@@ -314,7 +317,7 @@ public abstract class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("filename")]
     public (EntityUid Entity, AudioComponent Component)? PlayPvs(string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return  PlayStatic(filename, Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager), coordinates, true, audioParams);
+        return PlayStatic(filename, Filter.Pvs(coordinates, entityMan: EntityManager, playerMan: PlayerManager), coordinates, true, audioParams);
     }
 
     /// <summary>

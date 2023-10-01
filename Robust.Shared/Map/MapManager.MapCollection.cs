@@ -236,8 +236,10 @@ internal partial class MapManager
 
                 var mapComp = EntityManager.AddComponent<MapComponent>(newEnt);
                 mapComp.MapId = actualId;
-                EntityManager.Dirty(mapComp);
-                EntityManager.InitializeComponents(newEnt);
+                var meta = EntityManager.GetComponent<MetaDataComponent>(newEnt);
+                EntityManager.System<MetaDataSystem>().SetEntityName(newEnt, $"map {actualId}", meta);
+                EntityManager.Dirty(newEnt, mapComp, meta);
+                EntityManager.InitializeComponents(newEnt, meta);
                 EntityManager.StartComponents(newEnt);
                 _sawmill.Debug($"Binding map {actualId} to entity {newEnt}");
             }

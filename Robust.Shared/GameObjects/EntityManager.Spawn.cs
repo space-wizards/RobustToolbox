@@ -95,7 +95,7 @@ public partial class EntityManager
         ComponentRegistry? overrides = null)
     {
         uid = null;
-        if (!_xformQuery.Resolve(target, ref xform))
+        if (!TransformQuery.Resolve(target, ref xform))
             return false;
 
         if (!xform.ParentUid.IsValid())
@@ -157,7 +157,7 @@ public partial class EntityManager
 
     public EntityUid SpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
     {
-        xform ??= _xformQuery.GetComponent(target);
+        xform ??= TransformQuery.GetComponent(target);
         if (!xform.ParentUid.IsValid())
             return Spawn(protoName);
 
@@ -181,7 +181,7 @@ public partial class EntityManager
              || !container.Insert(uid, this))
         {
 
-            xform ??= _xformQuery.GetComponent(containerUid);
+            xform ??= TransformQuery.GetComponent(containerUid);
             if (xform.ParentUid.IsValid())
                 _xforms.PlaceNextToOrDrop(uid, containerUid, targetXform: xform);
         }

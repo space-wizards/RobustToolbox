@@ -32,20 +32,6 @@ public sealed class AutoGenerateComponentStateAttribute : Attribute
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public sealed class AutoNetworkedFieldAttribute : Attribute
 {
-    /// <summary>
-    ///     Determines whether the data should be wrapped in a new() when setting in get/handlestate
-    ///     e.g. for cloning collections like dictionaries or hashsets which is sometimes necessary.
-    /// </summary>
-    /// <remarks>
-    ///     This should only be true if the type actually has a constructor that takes in itself.
-    /// </remarks>
-    [UsedImplicitly]
-    public bool CloneData;
-
-    public AutoNetworkedFieldAttribute(bool cloneData=false)
-    {
-        CloneData = cloneData;
-    }
 }
 
 /// <summary>

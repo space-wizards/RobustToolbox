@@ -312,12 +312,17 @@ public abstract partial class SharedPhysicsSystem
 
     public void DestroyContact(Contact contact)
     {
+        // Don't recursive update or we're in for a bad time.
+        if ((contact.Flags & ContactFlags.Deleting) != 0x0)
+            return;
+
         Fixture fixtureA = contact.FixtureA!;
         Fixture fixtureB = contact.FixtureB!;
         var bodyA = contact.BodyA!;
         var bodyB = contact.BodyB!;
         var aUid = contact.EntityA;
         var bUid = contact.EntityB;
+        contact.Flags |= ContactFlags.Deleting;
 
         if (contact.IsTouching)
         {

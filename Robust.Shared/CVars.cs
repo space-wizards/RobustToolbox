@@ -1014,7 +1014,7 @@ namespace Robust.Shared
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         public static readonly CVarDef<float> AudioZOffset =
-            CVarDef.Create("audio.z_offset", -5f, CVar.CLIENTONLY);
+            CVarDef.Create("audio.z_offset", -1f, CVar.REPLICATED);
 
 
         /*

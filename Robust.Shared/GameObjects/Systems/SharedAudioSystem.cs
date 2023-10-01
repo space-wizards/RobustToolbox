@@ -47,16 +47,41 @@ public abstract class SharedAudioSystem : EntitySystem
     /// </summary>
     public int OcclusionCollisionMask { get; set; }
 
+    public float ZOffset;
+
     public override void Initialize()
     {
         base.Initialize();
+        CfgManager.OnValueChanged(CVars.AudioZOffset, SetZOffset, true);
         SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+        CfgManager.UnsubValueChanged(CVars.AudioZOffset, SetZOffset);
+    }
+
+    private void SetZOffset(float obj)
+    {
+        ZOffset = obj;
     }
 
     private void OnAudioGetStateAttempt(EntityUid uid, AudioComponent component, ref ComponentGetStateAttemptEvent args)
     {
         if (component.ExcludedEntity != null && args.Player?.AttachedEntity == component.ExcludedEntity)
             args.Cancelled = true;
+    }
+
+    /// <summary>
+    /// Considers Z-offset for audio and gets the adjusted distance.
+    /// </summary>
+    /// <remarks>
+    /// Really it's just doing pythagoras for you.
+    /// </remarks>
+    public float GetAudioDistance(float length)
+    {
+        return MathF.Sqrt(MathF.Pow(length, 2) + MathF.Pow(ZOffset, 2));
     }
 
     /// <summary>
@@ -267,7 +292,7 @@ public abstract class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, AudioComponent Component)? PlayPvs(SoundSpecifier? sound, EntityUid uid, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayPvs(GetSound(sound), uid, sound.Params);
+        return sound == null ? null : PlayPvs(GetSound(sound), uid, audioParams ?? sound.Params);
     }
 
     /// <summary>

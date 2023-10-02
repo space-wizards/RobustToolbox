@@ -82,6 +82,12 @@ public sealed class AudioSystem : SharedAudioSystem
         _audio.SetMasterVolume(value);
     }
 
+    protected override void SetZOffset(float obj)
+    {
+        base.SetZOffset(obj);
+        _audio.SetZOffset(obj);
+    }
+
     public override void Shutdown()
     {
         CfgManager.UnsubValueChanged(CVars.AudioAttenuation, OnAudioAttenuation);

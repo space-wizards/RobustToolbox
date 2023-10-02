@@ -46,11 +46,23 @@ internal sealed class HeadlessAudioManager : SharedAudioManager, IAudioInternal
     {
     }
 
+    /// <inheritdoc />
     public void SetMasterVolume(float value)
     {
     }
 
+    /// <inheritdoc />
+    public void SetAttenuation(Attenuation attenuation)
+    {
+    }
+
+    /// <inheritdoc />
     public void StopAllAudio()
+    {
+    }
+
+    /// <inheritdoc />
+    public void SetZOffset(float f)
     {
     }
 }

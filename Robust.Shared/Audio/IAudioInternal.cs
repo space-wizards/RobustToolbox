@@ -38,4 +38,9 @@ internal interface IAudioInternal
     /// Stops all audio from playing.
     /// </summary>
     void StopAllAudio();
+
+    /// <summary>
+    /// Sets the Z-offset for the audio listener.
+    /// </summary>
+    void SetZOffset(float f);
 }

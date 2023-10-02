@@ -13,6 +13,13 @@ namespace Robust.Client.Audio;
 
 internal partial class AudioManager
 {
+    private float _zOffset;
+
+    public void SetZOffset(float offset)
+    {
+        _zOffset = offset;
+    }
+
     public void InitializePostWindowing()
     {
         _gameThread = Thread.CurrentThread;
@@ -39,7 +46,7 @@ internal partial class AudioManager
     /// <inheritdoc/>
     public void SetPosition(Vector2 position)
     {
-        AL.Listener(ALListener3f.Position, position.X, position.Y, -5);
+        AL.Listener(ALListener3f.Position, position.X, position.Y, _zOffset);
     }
 
     /// <inheritdoc/>

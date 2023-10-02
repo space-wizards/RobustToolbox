@@ -11,7 +11,6 @@ using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.ResourceManagement.ResourceTypes;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -63,7 +62,7 @@ public abstract class SharedAudioSystem : EntitySystem
         CfgManager.UnsubValueChanged(CVars.AudioZOffset, SetZOffset);
     }
 
-    private void SetZOffset(float obj)
+    protected virtual void SetZOffset(float obj)
     {
         ZOffset = obj;
     }

@@ -36,9 +36,8 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        var entity = Spawn(null, MapCoordinates.Nullspace);
-        var audio = AddComp<AudioComponent>(entity);
-        SetupAudio(entity, audio, filename, audioParams);
+        var entity = Spawn("Audio", MapCoordinates.Nullspace);
+        var audio = SetupAudio(entity, filename, audioParams);
         AddAudioFilter(entity, playerFilter);
 
         return (entity, audio);
@@ -49,9 +48,8 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!Exists(uid))
             return null;
 
-        var entity = Spawn(null, new EntityCoordinates(uid, Vector2.Zero));
-        var audio = AddComp<AudioComponent>(entity);
-        SetupAudio(entity, audio, filename, audioParams);
+        var entity = Spawn("Audio", new EntityCoordinates(uid, Vector2.Zero));
+        var audio = SetupAudio(entity, filename, audioParams);
         AddAudioFilter(entity, playerFilter);
 
         return (entity, audio);
@@ -63,9 +61,8 @@ public sealed class AudioSystem : SharedAudioSystem
         if (!coordinates.IsValid(EntityManager))
             return null;
 
-        var entity = Spawn(null, coordinates);
-        var audio = AddComp<AudioComponent>(entity);
-        SetupAudio(entity, audio, filename, audioParams);
+        var entity = Spawn("Audio", coordinates);
+        var audio = SetupAudio(entity, filename, audioParams);
         AddAudioFilter(entity, playerFilter);
 
         return (entity, audio);

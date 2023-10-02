@@ -11,6 +11,7 @@ using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.ResourceManagement.ResourceTypes;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Spawners;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -110,16 +111,17 @@ public abstract class SharedAudioSystem : EntitySystem
 
     #region AudioParams
 
-    protected void SetupAudio(EntityUid uid, AudioComponent component, string fileName, AudioParams? audioParams)
+    protected AudioComponent SetupAudio(EntityUid uid, string fileName, AudioParams? audioParams)
     {
         DebugTools.Assert(!string.IsNullOrEmpty(fileName));
         audioParams ??= AudioParams.Default;
-        component.FileName = fileName;
-        component.Params = audioParams.Value;
+        var comp = AddComp<AudioComponent>(uid);
+        comp.FileName = fileName;
+        comp.Params = audioParams.Value;
         var length = GetAudioLength(fileName);
         var despawn = AddComp<TimedDespawnComponent>(uid);
         despawn.Lifetime = (float) length.TotalSeconds;
-        _metadata.SetEntityName(uid, "Audio");
+        return comp;
     }
 
     /// <summary>

@@ -186,7 +186,39 @@ internal partial class AudioManager
 
     public void SetMasterVolume(float newVolume)
     {
-        AL.Listener(ALListenerf.Gain, BaseGain * newVolume);
+        AL.Listener(ALListenerf.Gain, BaseGainMultiplier * newVolume);
+    }
+
+    public void SetAttenuation(Attenuation attenuation)
+    {
+        switch (attenuation)
+        {
+            case Attenuation.NoAttenuation:
+                AL.DistanceModel(ALDistanceModel.None);
+                break;
+            case Attenuation.InverseDistance:
+                AL.DistanceModel(ALDistanceModel.InverseDistance);
+                break;
+            case Attenuation.InverseDistanceClamped:
+                AL.DistanceModel(ALDistanceModel.InverseDistanceClamped);
+                break;
+            case Attenuation.LinearDistance:
+                AL.DistanceModel(ALDistanceModel.LinearDistance);
+                break;
+            case Attenuation.LinearDistanceClamped:
+                AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
+                break;
+            case Attenuation.ExponentDistance:
+                AL.DistanceModel(ALDistanceModel.ExponentDistance);
+                break;
+            case Attenuation.ExponentDistanceClamped:
+                AL.DistanceModel(ALDistanceModel.ExponentDistanceClamped);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException($"No implementation to set {attenuation.ToString()} for DistanceModel!");
+        }
+
+        OpenALSawmill.Info($"Set audio attenuation to {attenuation.ToString()}");
     }
 
     internal void RemoveAudioSource(int handle)

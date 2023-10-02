@@ -15,11 +15,6 @@ namespace Robust.Client.Audio;
 
 internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
 {
-    /*
-     * TODO: Make AudioSource properties.
-     * Kill IPlayingAudioStream or do something with it.
-     */
-
     [Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
     [Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
 
@@ -42,7 +37,7 @@ internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
     /// <summary>
     /// The base gain value for a listener, used to boost the default volume.
     /// </summary>
-    public const float BaseGain = 2f;
+    public const float BaseGainMultiplier = 2f;
 
     public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
     public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -134,7 +129,8 @@ internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
 
     private static void RemoveEfx((int sourceHandle, int filterHandle) handles)
     {
-        if (handles.filterHandle != 0) EFX.DeleteFilter(handles.filterHandle);
+        if (handles.filterHandle != 0)
+            EFX.DeleteFilter(handles.filterHandle);
     }
 
     private void _checkAlcError(ALDevice device,

@@ -64,6 +64,7 @@ public sealed class AudioSystem : SharedAudioSystem
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
         SubscribeLocalEvent<AudioComponent, AfterAutoHandleStateEvent>(OnAudioState);
 
+        CfgManager.OnValueChanged(CVars.AudioAttenuation, OnAudioAttenuation, true);
         CfgManager.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
     }
 
@@ -83,6 +84,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
     public override void Shutdown()
     {
+        CfgManager.UnsubValueChanged(CVars.AudioAttenuation, OnAudioAttenuation);
         CfgManager.UnsubValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged);
         base.Shutdown();
     }
@@ -122,6 +124,11 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         // Breaks with prediction?
         component.Source.Dispose();
+    }
+
+    private void OnAudioAttenuation(int obj)
+    {
+        _audio.SetAttenuation((Attenuation) obj);
     }
 
     private void OnRaycastLengthChanged(float value)

@@ -32,6 +32,7 @@ internal interface IAudioInternal
     void SetRotation(Angle angle);
 
     void SetMasterVolume(float value);
+    void SetAttenuation(Attenuation attenuation);
 
     /// <summary>
     /// Stops all audio from playing.

@@ -111,11 +111,11 @@ public sealed class AudioSystem : SharedAudioSystem
             source = new DummyAudioSource();
         }
 
+        // Need to set all initial data for first frame.
         component.Source = source;
-        if (!IsPaused(uid))
-        {
-            component.StartPlaying();
-        }
+        ApplyAudioParams(component.Params, component);
+        component.Source.Global = component.Global;
+        // Start playing it first frame as that handles audio properly.
     }
 
     private void OnAudioShutdown(EntityUid uid, AudioComponent component, ComponentShutdown args)
@@ -159,20 +159,12 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
     {
-        // TODO: If it's a grid then check if we're on a tile
-        // if we are then set it as global
-        // if not then get nearest edge to grid and use that as distance / cut off at maxdistance.
-        if (!component.Playing)
-        {
-            return;
-        }
-
         // If it's global but on another map (that isn't nullspace) then stop playing it.
         if (component.Global)
         {
             if (xform.MapID != MapId.Nullspace && listener.MapId != xform.MapID)
             {
-                component.Playing = false;
+                component.StopPlaying();
                 return;
             }
 
@@ -185,10 +177,11 @@ public sealed class AudioSystem : SharedAudioSystem
         // Not relevant to us.
         if (listener.MapId != xform.MapID)
         {
-            component.Playing = false;
+            component.StopPlaying();
             return;
         }
 
+        component.StartPlaying();
         var mapPos = xform.MapPosition;
 
         // Max distance check
@@ -459,16 +452,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// </summary>
     private void ApplyAudioParams(AudioParams audioParams, IAudioSource source)
     {
-        if (audioParams.Variation.HasValue)
-        {
-            source.Pitch = audioParams.Pitch
-                           * (float) RandMan.NextGaussian(1, audioParams.Variation.Value);
-        }
-        else
-        {
-            source.Pitch = audioParams.Pitch;
-        }
-
+        source.Pitch = audioParams.Pitch;
         source.Volume = audioParams.Volume;
         source.RolloffFactor = audioParams.RolloffFactor;
         source.MaxDistance = audioParams.MaxDistance;

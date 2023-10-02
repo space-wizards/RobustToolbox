@@ -37,7 +37,6 @@ public abstract class SharedAudioSystem : EntitySystem
     [Dependency] private readonly IResourceCache _resource = default!;
     [Dependency] protected readonly IRobustRandom RandMan = default!;
     [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
-    [Dependency] private readonly MetaDataSystem _metadata = default!;
 
     /// <summary>
     /// Default max range at which the sound can be heard.

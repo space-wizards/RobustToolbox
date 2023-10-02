@@ -19,6 +19,11 @@ internal interface IAudioSource : IDisposable
     void StartPlaying();
 
     /// <summary>
+    /// Stops playing a source if it is currently playing.
+    /// </summary>
+    void StopPlaying();
+
+    /// <summary>
     /// Is the audio source currently playing.
     /// </summary>
     bool Playing { get; set; }

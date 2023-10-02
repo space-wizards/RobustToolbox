@@ -55,6 +55,15 @@ internal abstract class BaseAudioSource : IAudioSource
     }
 
     /// <inheritdoc />
+    public void StopPlaying()
+    {
+        if (!Playing)
+            return;
+
+        Playing = false;
+    }
+
+    /// <inheritdoc />
     public virtual bool Playing
     {
         get

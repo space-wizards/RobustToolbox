@@ -50,10 +50,11 @@ public sealed partial class AudioComponent : Component, IAudioSource
 
     public void Pause() => Source.Pause();
 
-    /// <summary>
-    /// Starts playing if the source is not already playing.
-    /// </summary>
+    /// <inheritdoc />
     public void StartPlaying() => Source.StartPlaying();
+
+    /// <inheritdoc />
+    public void StopPlaying() => Source.StopPlaying();
 
     /// <summary>
     /// <see cref="IAudioSource.Playing"/>

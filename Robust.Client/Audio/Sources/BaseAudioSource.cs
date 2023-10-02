@@ -152,8 +152,9 @@ internal abstract class BaseAudioSource : IAudioSource
     {
         get
         {
-            // TODO: Sloth
-            throw new NotImplementedException();
+            var gain = Gain;
+            var volume = 10f * MathF.Log10(gain);
+            return volume;
         }
         set => Gain = MathF.Pow(10, value / 10);
     }

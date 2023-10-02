@@ -162,7 +162,7 @@ public abstract class SharedAudioSystem : EntitySystem
         if (uid == null || !Resolve(uid.Value, ref component, false))
             return null;
 
-        if (!Timing.IsFirstTimePredicted || (_netManager.IsClient && IsClientSide(uid.Value)))
+        if (!Timing.IsFirstTimePredicted || (_netManager.IsClient && !IsClientSide(uid.Value)))
             return null;
 
         QueueDel(uid);
@@ -262,7 +262,7 @@ public abstract class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, AudioComponent Component)? PlayEntity(SoundSpecifier? sound, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayEntity(GetSound(sound), playerFilter, uid, recordReplay, sound.Params);
+        return sound == null ? null : PlayEntity(GetSound(sound), playerFilter, uid, recordReplay, audioParams ?? sound.Params);
     }
 
     /// <summary>
@@ -274,7 +274,7 @@ public abstract class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, AudioComponent Component)? PlayEntity(SoundSpecifier? sound, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayEntity(GetSound(sound), recipient, uid, sound.Params);
+        return sound == null ? null : PlayEntity(GetSound(sound), recipient, uid, audioParams ?? sound.Params);
     }
 
     /// <summary>
@@ -286,7 +286,7 @@ public abstract class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, AudioComponent Component)? PlayEntity(SoundSpecifier? sound, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayEntity(GetSound(sound), recipient, uid, sound.Params);
+        return sound == null ? null : PlayEntity(GetSound(sound), recipient, uid, audioParams ?? sound.Params);
     }
 
     /// <summary>
@@ -403,7 +403,7 @@ public abstract class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, AudioComponent Component)? PlayStatic(SoundSpecifier? sound, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayStatic(GetSound(sound), recipient, coordinates, sound.Params);
+        return sound == null ? null : PlayStatic(GetSound(sound), recipient, coordinates, audioParams ?? sound.Params);
     }
 
     /// <summary>
@@ -415,6 +415,6 @@ public abstract class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, AudioComponent Component)? PlayStatic(SoundSpecifier? sound, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayStatic(GetSound(sound), recipient, coordinates, sound.Params);
+        return sound == null ? null : PlayStatic(GetSound(sound), recipient, coordinates, audioParams ?? sound.Params);
     }
 }

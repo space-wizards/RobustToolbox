@@ -1,14 +1,34 @@
+using Robust.Client.Audio;
+using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
+using Robust.Client.Player;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
-namespace Robust.Client.Audio;
+namespace Robust.Client.Commands;
 
-public sealed class ShowAudioCommand : IConsoleCommand
+/// <summary>
+/// Shows a debug overlay for audio sources.
+/// </summary>
+public sealed class ShowAudioCommand : LocalizedCommands
 {
-    public string Command => "showaudio";
-    public string Description => "Shows audio details for nearby streams";
-    public string Help => Command;
-    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    [Dependency] private readonly IClientResourceCache _client = default!;
+    [Dependency] private readonly IEntityManager _entManager = default!;
+    [Dependency] private readonly IOverlayManager _overlayManager = default!;
+    [Dependency] private readonly IPlayerManager _playerMgr = default!;
+    public override string Command => "showaudio";
+    public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        throw new System.NotImplementedException();
+        if (_overlayManager.HasOverlay<AudioOverlay>())
+            _overlayManager.RemoveOverlay<AudioOverlay>();
+        else
+            _overlayManager.AddOverlay(new AudioOverlay(
+                _entManager,
+                _playerMgr,
+                _client,
+                _entManager.System<AudioSystem>(),
+                _entManager.System<SharedTransformSystem>()));
     }
 }

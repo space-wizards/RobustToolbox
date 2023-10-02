@@ -69,6 +69,7 @@ public sealed class AudioSystem : SharedAudioSystem
 
     private void OnAudioState(EntityUid uid, AudioComponent component, ref AfterAutoHandleStateEvent args)
     {
+        ApplyAudioParams(component.Params, component);
         component.Source.Global = component.Global;
     }
 
@@ -104,7 +105,11 @@ public sealed class AudioSystem : SharedAudioSystem
         var source = _audio.CreateAudioSource(audioResource);
 
         if (source == null)
-            return;
+        {
+            Log.Error($"Error creating audio source for {audioResource}");
+            DebugTools.Assert(false);
+            source = new DummyAudioSource();
+        }
 
         component.Source = source;
         if (!IsPaused(uid))
@@ -297,15 +302,11 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, AudioParams? audioParams = null)
     {
-        if (!TryCreateAudioSource(stream, out var source))
-        {
-            Log.Error($"Error setting up global audio for {stream.Name}: {0}", Environment.StackTrace);
-            return null;
-        }
-
-        source.Global = true;
-
-        return CreateAndStartPlayingStream(source, audioParams, stream);
+        var (entity, component) = CreateAndStartPlayingStream(audioParams, stream);
+        component.Global = true;
+        component.Source.Global = true;
+        Dirty(entity, component);
+        return (entity, component);
     }
 
     /// <summary>
@@ -338,13 +339,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
     {
-        if (!TryCreateAudioSource(stream, out var source))
-        {
-            Log.Error($"Error setting up entity audio for {stream.Name} / {ToPrettyString(entity)}: {0}", Environment.StackTrace);
-            return null;
-        }
-
-        var playing = CreateAndStartPlayingStream(source, audioParams, stream);
+        var playing = CreateAndStartPlayingStream(audioParams, stream);
         _xformSys.SetCoordinates(playing.Entity, new EntityCoordinates(entity, Vector2.Zero));
 
         return playing;
@@ -381,13 +376,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <param name="audioParams"></param>
     private (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        if (!TryCreateAudioSource(stream, out var source))
-        {
-            Log.Error($"Error setting up coordinates audio for {stream.Name} / {coordinates}: {0}", Environment.StackTrace);
-            return null;
-        }
-
-        var playing = CreateAndStartPlayingStream(source, audioParams, stream);
+        var playing = CreateAndStartPlayingStream(audioParams, stream);
         _xformSys.SetCoordinates(playing.Entity, coordinates);
         return playing;
     }
@@ -446,14 +435,21 @@ public sealed class AudioSystem : SharedAudioSystem
         return PlayStatic(filename, coordinates, audioParams);
     }
 
-    private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(IAudioSource source, AudioParams? audioParams, AudioStream stream)
+    private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(AudioParams? audioParams, AudioStream stream)
     {
         var audioP = audioParams ?? AudioParams.Default;
         var entity = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
         var comp = SetupAudio(entity, stream.Name!, audioP);
-        ApplyAudioParams(audioP, source, stream);
-        comp.Params = audioP;
         EntityManager.InitializeAndStartEntity(entity);
+        var source = comp.Source;
+
+        // TODO clamp the offset inside of SetPlaybackPosition() itself.
+        var offset = audioP.PlayOffsetSeconds;
+        offset = Math.Clamp(offset, 0f, (float) stream.Length.TotalSeconds);
+        source.PlaybackPosition = offset;
+
+        ApplyAudioParams(audioP, comp);
+        comp.Params = audioP;
         source.StartPlaying();
         return (entity, comp);
     }
@@ -461,7 +457,7 @@ public sealed class AudioSystem : SharedAudioSystem
     /// <summary>
     /// Applies the audioparams to the underlying audio source.
     /// </summary>
-    private void ApplyAudioParams(AudioParams audioParams, IAudioSource source, AudioStream audio)
+    private void ApplyAudioParams(AudioParams audioParams, IAudioSource source)
     {
         if (audioParams.Variation.HasValue)
         {
@@ -478,10 +474,5 @@ public sealed class AudioSystem : SharedAudioSystem
         source.MaxDistance = audioParams.MaxDistance;
         source.ReferenceDistance = audioParams.ReferenceDistance;
         source.Looping = audioParams.Loop;
-
-        // TODO clamp the offset inside of SetPlaybackPosition() itself.
-        var offset = audioParams.PlayOffsetSeconds;
-        offset = Math.Clamp(offset, 0f, (float) audio.Length.TotalSeconds);
-        source.PlaybackPosition = offset;
     }
 }

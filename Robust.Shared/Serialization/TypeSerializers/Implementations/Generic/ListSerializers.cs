@@ -223,7 +223,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             }
         }
 
-        public SortedSet<T> CreateCopy(ISerializationManager serializationManager, SortedSet<T> source,
+        SortedSet<T> ITypeCopyCreator<SortedSet<T>>.CreateCopy(ISerializationManager serializationManager, SortedSet<T> source,
             SerializationHookContext hookCtx,
             ISerializationContext? context = null)
         {

@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects;
@@ -12,6 +13,7 @@ namespace Robust.Shared.GameObjects;
 public sealed class EntityTimerSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly SharedTransformSystem _xform = default!;
     [Dependency] private readonly MetaDataSystem _metaData = default!;
 
@@ -32,18 +34,22 @@ public sealed class EntityTimerSystem : EntitySystem
                 continue;
 
             var target = _xform.GetParentUid(uid);
-            RaiseLocalEvent(target, timer.Event);
+            RaiseLocalEvent(target, (object)timer.Event);
 
             // deletion behavior based on type
             if (!_repeatingQuery.TryGetComponent(uid, out var repeating))
             {
-                QueueDel(uid);
+                Log.Info("Deleting regular timer after firing");
+
+                if (_net.IsServer)
+                    QueueDel(uid);
                 continue;
             }
 
             if (repeating.TotalRepetitions >= repeating.MaxRepetitions)
             {
-                QueueDel(uid);
+                if (_net.IsServer)
+                    QueueDel(uid);
                 continue;
             }
 
@@ -70,6 +76,10 @@ public sealed class EntityTimerSystem : EntitySystem
         if (!CheckAttachedEntityValid(attachedTo))
             return null;
 
+        // can't spawn entity timers on the client (? change)
+        if (!_net.IsServer)
+            return null;
+
         // Timer ent will have the same lifetime as the entity it is attached to.
         var timerEnt = Spawn();
 
@@ -85,6 +95,7 @@ public sealed class EntityTimerSystem : EntitySystem
 
         _xform.SetParent(timerEnt, attachedTo.Value);
 
+        Log.Info($"Spawned {ToPrettyString(timerEnt)}");
         return timerEnt;
     }
 
@@ -96,6 +107,9 @@ public sealed class EntityTimerSystem : EntitySystem
     ) where TEvent: BaseEntityTimerEvent
     {
         if (!CheckAttachedEntityValid(attachedTo))
+            return null;
+
+        if (!_net.IsServer)
             return null;
 
         // Timer ent will have the same lifetime as the entity it is attached to.

@@ -18,7 +18,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         ITypeSerializer<IReadOnlyList<T>, SequenceDataNode>,
         ITypeSerializer<IReadOnlyCollection<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableList<T>, SequenceDataNode>,
+        ITypeSerializer<SortedSet<T>, SequenceDataNode>,
         ITypeCopier<List<T>>,
+        ITypeCopyCreator<SortedSet<T>>,
         ITypeCopyCreator<IReadOnlyList<T>>,
         ITypeCopyCreator<IReadOnlyCollection<T>>,
         ITypeCopyCreator<ImmutableList<T>>
@@ -45,6 +47,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public DataNode Write(ISerializationManager serializationManager, List<T> value,
+            IDependencyCollection dependencies, bool alwaysWrite = false,
+            ISerializationContext? context = null)
+        {
+            return WriteInternal(serializationManager, value, alwaysWrite, context);
+        }
+
+        public DataNode Write(ISerializationManager serializationManager, SortedSet<T> value,
             IDependencyCollection dependencies, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -110,6 +119,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return Validate(serializationManager, node, context);
         }
 
+        ValidationNode ITypeValidator<SortedSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+            SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
+        {
+            return Validate(serializationManager, node, context);
+        }
+
         ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode sequenceDataNode, ISerializationContext? context)
         {
             var list = new List<ValidationNode>();
@@ -138,6 +153,22 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             }
 
             return list;
+        }
+
+        SortedSet<T> ITypeReader<SortedSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
+            SequenceDataNode node,
+            IDependencyCollection dependencies,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context, ISerializationManager.InstantiationDelegate<SortedSet<T>>? instanceProvider)
+        {
+            var set = instanceProvider != null ? instanceProvider() : new SortedSet<T>();
+
+            foreach (var dataNode in node.Sequence)
+            {
+                set.Add(serializationManager.Read<T>(dataNode, hookCtx, context));
+            }
+
+            return set;
         }
 
         IReadOnlyCollection<T> ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(
@@ -190,6 +221,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
                 ref var val = ref sourceSpan[i];
                 target.Add(serializationManager.CreateCopy(val, hookCtx, context));
             }
+        }
+
+        public SortedSet<T> CreateCopy(ISerializationManager serializationManager, SortedSet<T> source,
+            SerializationHookContext hookCtx,
+            ISerializationContext? context = null)
+        {
+            var target = new SortedSet<T>();
+
+            foreach (var val in source)
+            {
+                target.Add(serializationManager.CreateCopy(val, hookCtx, context));
+            }
+
+            return target;
         }
 
         public IReadOnlyList<T> CreateCopy(ISerializationManager serializationManager, IReadOnlyList<T> source,

@@ -101,6 +101,7 @@ public abstract class SharedEyeSystem : EntitySystem
         if (!Resolve(uid, ref eyeComponent))
             return;
 
+        value &= ~EyeComponent.PvsIgnoreVisibilityFlag;
         if (eyeComponent.VisibilityMask.Equals(value))
             return;
 

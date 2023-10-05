@@ -48,6 +48,8 @@ namespace Robust.Shared.GameObjects
         public Vector2 Offset;
 
         public const int DefaultVisibilityMask = 1;
+        /// <summary>A single visibility flag that should _never_ be added to <see cref="VisibilityMask"/>.</summary>
+        public const int PvsIgnoreVisibilityFlag = 1 << 31;
 
         /// <summary>
         ///     The visibility mask for this eye.

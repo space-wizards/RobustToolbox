@@ -79,7 +79,7 @@ public sealed class EntityTimerSystem : EntitySystem
         // TODO not sure how pause should be handled exactly for this use case
         AddComp(timerEnt, new EntityTimerComponent
         {
-            Event = new EntityTimerEvent<TEvent> { Data = args, Timer = timerEnt },
+            Event = new EntityTimerEvent<TEvent>(args, timerEnt),
             AbsoluteTime = _timing.CurTime - _metaData.GetPauseTime(attachedTo.Value) + delay,
         });
 
@@ -106,14 +106,14 @@ public sealed class EntityTimerSystem : EntitySystem
 
         AddComp(timerEnt, new EntityTimerComponent
         {
-            Event = new RepeatingEntityTimerEvent<TEvent> { Data = args, Timer = timerEnt },
+            Event = new RepeatingEntityTimerEvent<TEvent>(args, timerEnt),
             AbsoluteTime = _timing.CurTime - _metaData.GetPauseTime(attachedTo.Value) + delay,
         });
 
         AddComp(timerEnt, new RepeatingEntityTimerComponent
         {
             MaxRepetitions = maxRepetitions,
-            NextDelay = delay
+            Delay = delay
         });
 
         return timerEnt;

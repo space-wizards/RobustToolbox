@@ -101,7 +101,7 @@ public abstract class SharedEyeSystem : EntitySystem
         if (!Resolve(uid, ref eyeComponent))
             return;
 
-        value &= ~EyeComponent.PvsIgnoreVisibilityFlag;
+        value &= ~EyeComponent.PvsIgnoreVisibilityFlag; // Ensures that setting the MSB (most significant bit) on entities visibility masks is a safe way to render them invisible to clients without risking someone setting an eye to ~0 and revealing them all.
         if (eyeComponent.VisibilityMask.Equals(value))
             return;
 

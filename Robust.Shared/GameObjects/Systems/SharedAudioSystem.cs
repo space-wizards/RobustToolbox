@@ -40,7 +40,7 @@ public abstract class SharedAudioSystem : EntitySystem
     /// <summary>
     /// Default max range at which the sound can be heard.
     /// </summary>
-    public const float DefaultSoundRange = 25;
+    public const float DefaultSoundRange = 20;
 
     /// <summary>
     /// Used in the PAS to designate the physics collision mask of occluders.
@@ -52,7 +52,8 @@ public abstract class SharedAudioSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        CfgManager.OnValueChanged(CVars.AudioZOffset, SetZOffset, true);
+        ZOffset = CfgManager.GetCVar(CVars.AudioZOffset);
+        CfgManager.OnValueChanged(CVars.AudioZOffset, SetZOffset);
         SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
     }
 
@@ -62,9 +63,23 @@ public abstract class SharedAudioSystem : EntitySystem
         CfgManager.UnsubValueChanged(CVars.AudioZOffset, SetZOffset);
     }
 
-    protected virtual void SetZOffset(float obj)
+    protected virtual void SetZOffset(float value)
     {
-        ZOffset = obj;
+        var query = AllEntityQuery<AudioComponent>();
+        var oldZOffset = ZOffset;
+        ZOffset = value;
+
+        while (query.MoveNext(out var uid, out var audio))
+        {
+            // Pythagoras back to normal then adjust.
+            var maxDistance = MathF.Pow(audio.Params.MaxDistance, 2) - oldZOffset;
+            var refDistance = MathF.Pow(audio.Params.ReferenceDistance, 2) - oldZOffset;
+
+            audio.Params.MaxDistance = maxDistance;
+            audio.Params.ReferenceDistance = refDistance;
+            audio.Params = GetAdjustedParams(audio.Params);
+            Dirty(uid, audio);
+        }
     }
 
     private void OnAudioGetStateAttempt(EntityUid uid, AudioComponent component, ref ComponentGetStateAttemptEvent args)
@@ -115,12 +130,31 @@ public abstract class SharedAudioSystem : EntitySystem
         audioParams ??= AudioParams.Default;
         var comp = AddComp<AudioComponent>(uid);
         comp.FileName = fileName;
-        comp.Params = audioParams.Value;
-        var length = GetAudioLength(fileName);
-        var despawn = AddComp<TimedDespawnComponent>(uid);
-        // Don't want to clip audio too short due to imprecision.
-        despawn.Lifetime = (float) length.TotalSeconds + 0.01f;
+        comp.Params = GetAdjustedParams(audioParams.Value);
+
+        if (!audioParams.Value.Loop)
+        {
+            var length = GetAudioLength(fileName);
+
+            var despawn = AddComp<TimedDespawnComponent>(uid);
+            // Don't want to clip audio too short due to imprecision.
+            despawn.Lifetime = (float) length.TotalSeconds + 0.01f;
+        }
+
         return comp;
+    }
+
+    /// <summary>
+    /// Accounts for ZOffset on audio distance.
+    /// </summary>
+    private AudioParams GetAdjustedParams(AudioParams audioParams)
+    {
+        var maxDistance = GetAudioDistance(audioParams.MaxDistance);
+        var refDistance = GetAudioDistance(audioParams.ReferenceDistance);
+
+        return audioParams
+            .WithMaxDistance(maxDistance)
+            .WithReferenceDistance(refDistance);
     }
 
     /// <summary>

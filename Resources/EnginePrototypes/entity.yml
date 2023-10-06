@@ -2,3 +2,4 @@
   id: Audio
   name: Audio
   desc: Audio entity used by engine
+  save: false

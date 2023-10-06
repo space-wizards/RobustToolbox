@@ -33,7 +33,6 @@ public sealed class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IClientResourceCache _resourceCache = default!;
-    [Dependency] private readonly IOverlayManager _overlays = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IPlayerManager _playerManager = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -56,6 +55,10 @@ public sealed class AudioSystem : SharedAudioSystem
     public override void Initialize()
     {
         base.Initialize();
+
+        UpdatesOutsidePrediction = true;
+        // Need to run after Eye updates so we have an accurate listener position.
+        UpdatesAfter.Add(typeof(EyeSystem));
 
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         _despawnQuery = GetEntityQuery<TimedDespawnComponent>();
@@ -85,10 +88,10 @@ public sealed class AudioSystem : SharedAudioSystem
         _audio.SetMasterVolume(value);
     }
 
-    protected override void SetZOffset(float obj)
+    protected override void SetZOffset(float value)
     {
-        base.SetZOffset(obj);
-        _audio.SetZOffset(obj);
+        base.SetZOffset(value);
+        _audio.SetZOffset(value);
     }
 
     public override void Shutdown()

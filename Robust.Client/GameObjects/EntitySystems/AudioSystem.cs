@@ -22,6 +22,7 @@ using Robust.Shared.Players;
 using Robust.Shared.Random;
 using Robust.Shared.Replays;
 using Robust.Shared.ResourceManagement.ResourceTypes;
+using Robust.Shared.Spawners;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 
@@ -46,6 +47,7 @@ public sealed class AudioSystem : SharedAudioSystem
     private readonly List<(EntityUid Entity, AudioComponent Component, TransformComponent Xform)> _streams = new();
 
     private EntityQuery<PhysicsComponent> _physicsQuery;
+    private EntityQuery<TimedDespawnComponent> _despawnQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
     private float _maxRayLength;
@@ -56,6 +58,7 @@ public sealed class AudioSystem : SharedAudioSystem
         base.Initialize();
 
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
+        _despawnQuery = GetEntityQuery<TimedDespawnComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
@@ -170,8 +173,33 @@ public sealed class AudioSystem : SharedAudioSystem
         }
     }
 
+    private bool ResumeStream(EntityUid entity, AudioComponent component, float timeRemaining)
+    {
+        // This exists so if we turn-off / turn-on audio we don't just accidentally replay it on the final tick and clip it.
+        // We should be able to go between maps and just have audio resume where it began cleanly ideally.
+
+        if (component.Playing)
+            return true;
+
+        if (timeRemaining < 0.1f)
+            return false;
+
+        component.Playing = true;
+
+        if (!timeRemaining.Equals(float.MaxValue))
+            component.Source.PlaybackPosition = (float) (GetAudioLength(component.FileName).TotalSeconds - timeRemaining);
+
+        return true;
+    }
+
     private void ProcessStream(EntityUid entity, AudioComponent component, TransformComponent xform, MapCoordinates listener)
     {
+        float timeRemaining = float.MaxValue;
+        if (_despawnQuery.TryGetComponent(entity, out var despawn))
+        {
+            timeRemaining = despawn.Lifetime;
+        }
+
         // If it's global but on another map (that isn't nullspace) then stop playing it.
         if (component.Global)
         {
@@ -182,7 +210,7 @@ public sealed class AudioSystem : SharedAudioSystem
             }
 
             // Resume playing.
-            component.StartPlaying();
+            ResumeStream(entity, component, timeRemaining);
             return;
         }
 
@@ -194,7 +222,9 @@ public sealed class AudioSystem : SharedAudioSystem
             return;
         }
 
-        component.StartPlaying();
+        if (!ResumeStream(entity, component, timeRemaining))
+            return;
+
         var mapPos = xform.MapPosition;
 
         // Max distance check

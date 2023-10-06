@@ -118,7 +118,8 @@ public abstract class SharedAudioSystem : EntitySystem
         comp.Params = audioParams.Value;
         var length = GetAudioLength(fileName);
         var despawn = AddComp<TimedDespawnComponent>(uid);
-        despawn.Lifetime = (float) length.TotalSeconds;
+        // Don't want to clip audio too short due to imprecision.
+        despawn.Lifetime = (float) length.TotalSeconds + 0.01f;
         return comp;
     }
 

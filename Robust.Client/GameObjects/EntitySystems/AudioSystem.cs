@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Threading.Tasks;
+using OpenTK.Audio.OpenAL;
+using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
@@ -99,6 +101,12 @@ public sealed class AudioSystem : SharedAudioSystem
         CfgManager.UnsubValueChanged(CVars.AudioAttenuation, OnAudioAttenuation);
         CfgManager.UnsubValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged);
         base.Shutdown();
+    }
+
+    public void CreateEffect()
+    {
+        var slot = EFX.GenEffect();
+        var aux = EFX.GenAuxiliaryEffectSlot();
     }
 
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)

@@ -3,7 +3,7 @@ using System;
 namespace Robust.Shared.Serialization.Manager.Attributes;
 
 /// <summary>
-///     Makes a type always be copied by reference when calling
+///     Makes a type always be copied by reference when using it as the generic type in
 ///     <see cref="ISerializationManager.CopyTo"/> and <see cref="ISerializationManager.CreateCopy"/>.
 ///     This means that the source instance is returned directly.
 ///     <remarks>

@@ -1,8 +1,14 @@
 namespace Robust.Shared.Audio.Effects;
 
-public sealed class DummyAuxiliaryAudio : IAuxiliaryAudio
+/// <inheritdoc />
+internal sealed class DummyAuxiliaryAudio : IAuxiliaryAudio
 {
     public void Dispose()
+    {
+    }
+
+    /// <inheritdoc />
+    public void SetEffect(IAudioEffect? effectCompEffect)
     {
     }
 }

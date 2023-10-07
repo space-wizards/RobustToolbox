@@ -16,4 +16,17 @@ internal sealed class AuxiliaryAudio : IAuxiliaryAudio
             Handle = -1;
         }
     }
+
+    /// <inheritdoc />
+    public void SetEffect(IAudioEffect? effectCompEffect)
+    {
+        if (effectCompEffect is AudioEffect effect)
+        {
+            EFX.AuxiliaryEffectSlot(Handle, EffectSlotInteger.Effect, effect.Handle);
+        }
+        else
+        {
+            EFX.AuxiliaryEffectSlot(Handle, EffectSlotInteger.Effect, 0);
+        }
+    }
 }

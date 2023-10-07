@@ -13,6 +13,7 @@ public sealed partial class AudioSystem
         SubscribeLocalEvent<AudioEffectComponent, ComponentShutdown>(OnEffectShutdown);
 
         SubscribeLocalEvent<AudioAuxiliaryComponent, ComponentStartup>(OnAuxiliaryStartup);
+        SubscribeLocalEvent<AudioAuxiliaryComponent, AfterAutoHandleStateEvent>(OnAuxiliaryAuto);
     }
 
     private void OnEffectStartup(EntityUid uid, AudioEffectComponent component, ComponentStartup args)
@@ -32,19 +33,15 @@ public sealed partial class AudioSystem
         component.Auxiliary = new AuxiliaryAudio();
     }
 
-    /*
-    public void SetEffect(AuxiliaryEffect auxiliary)
+    private void OnAuxiliaryAuto(EntityUid uid, AudioAuxiliaryComponent component, ref AfterAutoHandleStateEvent args)
     {
-        EFX.Effect();
-
-        EFX.Source(sourceHandle, EFXSourceInteger3.AuxiliarySendFilter, auxiliarySlot, 0, 0);
+        if (TryComp<AudioEffectComponent>(component.Effect, out var effectComp))
+        {
+            component.Auxiliary.SetEffect(effectComp.Effect);
+        }
+        else
+        {
+            component.Auxiliary.SetEffect(null);
+        }
     }
-
-    public void SetAuxiliary(EntityUid entity, AudioComponent component, AuxiliaryEffect auxiliary)
-    {
-        // value2 is for send slot
-        // value3 is for optional EFX.Filter
-        EFX.Source(component.Source.Handle, EFXSourceInteger3.AuxiliarySendFilter, auxiliary.Handle, 0, 0);
-    }
-    */
 }

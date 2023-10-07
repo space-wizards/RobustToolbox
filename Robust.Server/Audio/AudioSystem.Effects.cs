@@ -21,4 +21,18 @@ public sealed partial class AudioSystem
     {
         component.Auxiliary = new DummyAuxiliaryAudio();
     }
+
+    public override (EntityUid Entity, AudioAuxiliaryComponent Component) CreateAuxiliary()
+    {
+        var (ent, comp) = base.CreateAuxiliary();
+        _pvs.AddGlobalOverride(GetNetEntity(ent));
+        return (ent, comp);
+    }
+
+    public override (EntityUid Entity, AudioEffectComponent Component) CreateEffect()
+    {
+        var (ent, comp) = base.CreateEffect();
+        _pvs.AddGlobalOverride(GetNetEntity(ent));
+        return (ent, comp);
+    }
 }

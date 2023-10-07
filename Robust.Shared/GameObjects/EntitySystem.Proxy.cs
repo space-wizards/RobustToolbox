@@ -399,9 +399,9 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull("uid")]
-    protected EntityStringRepresentation? ToPrettyString(EntityUid? uid)
+    protected EntityStringRepresentation? ToPrettyString(EntityUid? uid, MetaDataComponent? metadata = null)
     {
-        return EntityManager.ToPrettyString(uid);
+        return EntityManager.ToPrettyString(uid, metadata);
     }
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
@@ -414,13 +414,18 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)
+        => EntityManager.ToPrettyString(uid, metadata);
+
+    /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid)
-        => ToPrettyString((EntityUid?) uid).Value;
+        => EntityManager.ToPrettyString(uid);
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(NetEntity netEntity)
-        => ToPrettyString((NetEntity?) netEntity).Value;
+        => EntityManager.ToPrettyString(netEntity);
 
     #endregion
 

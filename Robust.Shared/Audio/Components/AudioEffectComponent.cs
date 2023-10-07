@@ -13,7 +13,7 @@ namespace Robust.Shared.Audio.Components;
 [RegisterComponent, NetworkedComponent, Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioEffectComponent : Component, IAudioEffect
 {
-    internal IAudioEffect Effect = default!;
+    internal IAudioEffect Effect = new DummyAudioEffect();
 
     public void Dispose()
     {

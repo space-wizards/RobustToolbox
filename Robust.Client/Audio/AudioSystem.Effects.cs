@@ -9,14 +9,14 @@ public sealed partial class AudioSystem
 {
     private void InitializeEffect()
     {
-        SubscribeLocalEvent<AudioEffectComponent, ComponentStartup>(OnEffectStartup);
+        SubscribeLocalEvent<AudioEffectComponent, ComponentInit>(OnEffectInit);
         SubscribeLocalEvent<AudioEffectComponent, ComponentShutdown>(OnEffectShutdown);
 
-        SubscribeLocalEvent<AudioAuxiliaryComponent, ComponentStartup>(OnAuxiliaryStartup);
+        SubscribeLocalEvent<AudioAuxiliaryComponent, ComponentInit>(OnAuxiliaryInit);
         SubscribeLocalEvent<AudioAuxiliaryComponent, AfterAutoHandleStateEvent>(OnAuxiliaryAuto);
     }
 
-    private void OnEffectStartup(EntityUid uid, AudioEffectComponent component, ComponentStartup args)
+    private void OnEffectInit(EntityUid uid, AudioEffectComponent component, ComponentInit args)
     {
         var effect = new AudioEffect(_audio);
         EFX.Effect(effect.Handle, EffectInteger.EffectType, (int) EffectType.EaxReverb);
@@ -28,7 +28,7 @@ public sealed partial class AudioSystem
         component.Effect.Dispose();
     }
 
-    private void OnAuxiliaryStartup(EntityUid uid, AudioAuxiliaryComponent component, ComponentStartup args)
+    private void OnAuxiliaryInit(EntityUid uid, AudioAuxiliaryComponent component, ComponentInit args)
     {
         component.Auxiliary = new AuxiliaryAudio();
     }
@@ -42,6 +42,32 @@ public sealed partial class AudioSystem
         else
         {
             component.Auxiliary.SetEffect(null);
+        }
+    }
+
+    public override void SetAuxiliary(EntityUid uid, AudioComponent audio, EntityUid? auxUid)
+    {
+        base.SetAuxiliary(uid, audio, auxUid);
+        if (TryComp<AudioAuxiliaryComponent>(audio.Auxiliary, out var auxComp))
+        {
+            audio.Source.SetAuxiliary(auxComp.Auxiliary);
+        }
+        else
+        {
+            audio.Source.SetAuxiliary(null);
+        }
+    }
+
+    public override void SetEffect(EntityUid auxUid, AudioAuxiliaryComponent aux, EntityUid? effectUid)
+    {
+        base.SetEffect(auxUid, aux, effectUid);
+        if (TryComp<AudioEffectComponent>(aux.Effect, out var effectComp))
+        {
+            aux.Auxiliary.SetEffect(effectComp.Effect);
+        }
+        else
+        {
+            aux.Auxiliary.SetEffect(null);
         }
     }
 }

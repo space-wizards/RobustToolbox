@@ -32,7 +32,7 @@ public abstract partial class SharedAudioSystem
     /// <summary>
     /// Sets the auxiliary effect slot for a specified audio source.
     /// </summary>
-    public void SetAuxiliary(EntityUid uid, AudioComponent audio, EntityUid? auxUid)
+    public virtual void SetAuxiliary(EntityUid uid, AudioComponent audio, EntityUid? auxUid)
     {
         DebugTools.Assert(auxUid == null || HasComp<AudioAuxiliaryComponent>(auxUid));
         audio.Auxiliary = auxUid;
@@ -42,7 +42,7 @@ public abstract partial class SharedAudioSystem
     /// <summary>
     /// Sets the audio effect for a specified auxiliary effect slot.
     /// </summary>
-    public void SetEffect(EntityUid auxUid, AudioAuxiliaryComponent aux, EntityUid? effectUid)
+    public virtual void SetEffect(EntityUid auxUid, AudioAuxiliaryComponent aux, EntityUid? effectUid)
     {
         DebugTools.Assert(effectUid == null || HasComp<AudioEffectComponent>(effectUid));
         aux.Effect = effectUid;
@@ -52,7 +52,7 @@ public abstract partial class SharedAudioSystem
     /// <summary>
     /// Applies an EAX reverb effect preset to an audio effect.
     /// </summary>
-    public void SetPreset(EntityUid effectUid, AudioEffectComponent effectComp, ReverbProperties preset)
+    public void SetEffectPreset(EntityUid effectUid, AudioEffectComponent effectComp, ReverbProperties preset)
     {
         effectComp.Density = preset.Density;
         effectComp.Diffusion = preset.Diffusion;

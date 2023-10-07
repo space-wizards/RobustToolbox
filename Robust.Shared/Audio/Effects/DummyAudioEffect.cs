@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 namespace Robust.Shared.Audio.Effects;
 
 /// <inheritdoc />
-public sealed class DummyAudioEffect : IAudioEffect
+internal sealed class DummyAudioEffect : IAudioEffect
 {
     public void Dispose()
     {

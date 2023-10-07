@@ -7,5 +7,5 @@ internal interface IAuxiliaryAudio : IDisposable
     /// <summary>
     /// Sets the audio effect for this auxiliary audio slot.
     /// </summary>
-    void SetEffect(IAudioEffect? effectCompEffect);
+    void SetEffect(IAudioEffect? effect);
 }

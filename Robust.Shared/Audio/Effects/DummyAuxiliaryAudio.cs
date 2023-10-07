@@ -8,7 +8,7 @@ internal sealed class DummyAuxiliaryAudio : IAuxiliaryAudio
     }
 
     /// <inheritdoc />
-    public void SetEffect(IAudioEffect? effectCompEffect)
+    public void SetEffect(IAudioEffect? effect)
     {
     }
 }

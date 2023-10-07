@@ -18,5 +18,5 @@ public sealed partial class AudioAuxiliaryComponent : Component
     [DataField, AutoNetworkedField]
     public EntityUid? Effect;
 
-    internal IAuxiliaryAudio Auxiliary = default!;
+    internal IAuxiliaryAudio Auxiliary = new DummyAuxiliaryAudio();
 }

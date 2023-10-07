@@ -4,7 +4,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Client.GameObjects
 {
@@ -117,7 +116,7 @@ namespace Robust.Client.GameObjects
 
                 if (compTrack.ComponentType == null)
                 {
-                    _sawmill.Error($"Attempted to play a component animation without any component specified.");
+                    _sawmill.Error("Attempted to play a component animation without any component specified.");
                     return;
                 }
 
@@ -136,8 +135,14 @@ namespace Robust.Client.GameObjects
                 // In principle there is nothing wrong with this, as long as the property of the component being
                 // animated is not part of the networked state and setting it does not dirty the component. Hence only a
                 // warning in debug mode.
-                if (reg.NetID != null)
-                    _sawmill.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(component.Owner)}");
+                if (reg.NetID != null && compTrack.Property != null)
+                {
+                    if (animatedComp.GetType().GetProperty(compTrack.Property) is { } property &&
+                        property.HasCustomAttribute<AutoNetworkedFieldAttribute>())
+                    {
+                        _sawmill.Warning($"Playing a component animation on a networked component {reg.Name} belonging to {ToPrettyString(component.Owner)}");
+                    }
+                }
             }
 #endif
 

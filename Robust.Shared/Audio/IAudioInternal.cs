@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 
@@ -43,4 +44,6 @@ internal interface IAudioInternal
     /// Sets the Z-offset for the audio listener.
     /// </summary>
     void SetZOffset(float f);
+
+    void _checkAlError([CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1);
 }

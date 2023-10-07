@@ -1,4 +1,5 @@
 using System.Numerics;
+using Robust.Shared.Audio.Effects;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Audio.Sources;
@@ -75,4 +76,8 @@ internal partial class DummyAudioSource : IAudioSource
 
     /// <inheritdoc />
     public Vector2 Velocity { get; set; }
+
+    public void SetAuxiliary(IAuxiliaryAudio? audio)
+    {
+    }
 }

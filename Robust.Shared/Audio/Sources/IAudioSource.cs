@@ -1,5 +1,7 @@
 using System;
 using System.Numerics;
+using Robust.Shared.Audio.Effects;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Audio.Sources;
 
@@ -72,4 +74,9 @@ internal interface IAudioSource : IDisposable
     /// Audio source velocity. Used for the doppler effect.
     /// </summary>
     Vector2 Velocity { get; set; }
+
+    /// <summary>
+    /// Set the auxiliary sendfilter for this audio source.
+    /// </summary>
+    void SetAuxiliary(IAuxiliaryAudio? audio);
 }

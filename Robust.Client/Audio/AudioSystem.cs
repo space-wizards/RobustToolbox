@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Threading.Tasks;
-using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
-using Robust.Client.Audio;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
+using Robust.Shared.Audio.Components;
 using Robust.Shared.Audio.Sources;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -21,17 +22,22 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
-using Robust.Shared.Random;
 using Robust.Shared.Replays;
 using Robust.Shared.ResourceManagement.ResourceTypes;
 using Robust.Shared.Spawners;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
+using AudioComponent = Robust.Shared.Audio.Components.AudioComponent;
 
-namespace Robust.Client.GameObjects;
+namespace Robust.Client.Audio;
 
-public sealed class AudioSystem : SharedAudioSystem
+public sealed partial class AudioSystem : SharedAudioSystem
 {
+    /*
+     * There's still a lot more OpenAL can do in terms of filters, auxiliary slots, etc.
+     * but exposing the whole thing in an easy way is a lot of effort.
+     */
+
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IClientResourceCache _resourceCache = default!;
@@ -58,6 +64,7 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         base.Initialize();
 
+        InitializeEffect();
         UpdatesOutsidePrediction = true;
         // Need to run after Eye updates so we have an accurate listener position.
         UpdatesAfter.Add(typeof(EyeSystem));
@@ -80,6 +87,15 @@ public sealed class AudioSystem : SharedAudioSystem
     {
         ApplyAudioParams(component.Params, component);
         component.Source.Global = component.Global;
+
+        if (TryComp<AudioAuxiliaryComponent>(component.Auxiliary, out var auxComp))
+        {
+            component.Source.SetAuxiliary(auxComp.Auxiliary);
+        }
+        else
+        {
+            component.Source.SetAuxiliary(null);
+        }
     }
 
     /// <summary>
@@ -101,12 +117,6 @@ public sealed class AudioSystem : SharedAudioSystem
         CfgManager.UnsubValueChanged(CVars.AudioAttenuation, OnAudioAttenuation);
         CfgManager.UnsubValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged);
         base.Shutdown();
-    }
-
-    public void CreateEffect()
-    {
-        var slot = EFX.GenEffect();
-        var aux = EFX.GenAuxiliaryEffectSlot();
     }
 
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)

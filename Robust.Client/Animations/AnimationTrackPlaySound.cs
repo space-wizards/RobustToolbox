@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Client.Audio;
 using Robust.Client.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;

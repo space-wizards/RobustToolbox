@@ -65,4 +65,9 @@ internal sealed class HeadlessAudioManager : SharedAudioManager, IAudioInternal
     public void SetZOffset(float f)
     {
     }
+
+    /// <inheritdoc />
+    public void _checkAlError(string callerMember = "", int callerLineNumber = -1)
+    {
+    }
 }

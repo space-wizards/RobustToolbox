@@ -1,24 +1,26 @@
 using System.Numerics;
-using JetBrains.Annotations;
+using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Sources;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
+using AudioComponent = Robust.Shared.Audio.Components.AudioComponent;
 
-namespace Robust.Server.GameObjects;
+namespace Robust.Server.Audio;
 
-[UsedImplicitly]
-public sealed class AudioSystem : SharedAudioSystem
+public sealed partial class AudioSystem : SharedAudioSystem
 {
     [Dependency] private readonly PvsOverrideSystem _pvs = default!;
 
     public override void Initialize()
     {
         base.Initialize();
+        InitializeEffect();
         SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
     }
 

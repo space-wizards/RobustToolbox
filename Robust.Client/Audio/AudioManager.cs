@@ -144,8 +144,7 @@ internal sealed partial class AudioManager : SharedAudioManager, IAudioInternal
         }
     }
 
-    internal void _checkAlError([CallerMemberName] string callerMember = "",
-        [CallerLineNumber] int callerLineNumber = -1)
+    public void _checkAlError([CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1)
     {
         var error = AL.GetError();
         if (error != ALError.NoError)

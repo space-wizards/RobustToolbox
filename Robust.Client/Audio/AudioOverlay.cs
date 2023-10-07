@@ -9,6 +9,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using AudioComponent = Robust.Shared.Audio.Components.AudioComponent;
 
 namespace Robust.Client.Audio;
 

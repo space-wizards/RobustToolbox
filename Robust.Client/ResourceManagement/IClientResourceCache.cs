@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Client.Graphics;
 using Robust.Shared.Audio;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Client.ResourceManagement;
 

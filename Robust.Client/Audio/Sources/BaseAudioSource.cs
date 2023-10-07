@@ -2,6 +2,8 @@ using System;
 using System.Numerics;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
+using Robust.Client.Audio.Effects;
+using Robust.Shared.Audio.Effects;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Maths;
 
@@ -319,6 +321,22 @@ internal abstract class BaseAudioSource : IAudioSource
             AL.Source(SourceHandle, ALSource3f.Velocity, x, y, 0);
             Master._checkAlError();
         }
+    }
+
+    public void SetAuxiliary(IAuxiliaryAudio? audio)
+    {
+        _checkDisposed();
+
+        if (audio is AuxiliaryAudio impAudio)
+        {
+            EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, impAudio.Handle, 0, 0);
+        }
+        else
+        {
+            EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, 0, 0, 0);
+        }
+
+        Master._checkAlError();
     }
 
     private void SetOcclusionEfx(float gain, float cutoff)

@@ -1,12 +1,13 @@
-using System;
 using System.Numerics;
+using Robust.Shared.Audio.Effects;
 using Robust.Shared.Audio.Sources;
+using Robust.Shared.Audio.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Audio;
+namespace Robust.Shared.Audio.Components;
 
 /// <summary>
 /// Stores the audio data for an audio entity.
@@ -26,8 +27,8 @@ public sealed partial class AudioComponent : Component, IAudioSource
     #endregion
 
     [AutoNetworkedField]
-    [DataField]
-    public string FileName;
+    [DataField(required: true)]
+    public string FileName = string.Empty;
 
     /// <summary>
     /// Audio params. Set this if you want to adjust default volume, max distance, etc.
@@ -41,6 +42,12 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
     internal IAudioSource Source = default!;
+
+    /// <summary>
+    /// Auxiliary entity to pass audio to.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public EntityUid? Auxiliary;
 
     /*
      * Values for IAudioSource stored on the component and sent to IAudioSource as applicable.
@@ -186,6 +193,11 @@ public sealed partial class AudioComponent : Component, IAudioSource
     {
         get => Source.Velocity;
         set => Source.Velocity = value;
+    }
+
+    void IAudioSource.SetAuxiliary(IAuxiliaryAudio? audio)
+    {
+        Source.SetAuxiliary(audio);
     }
 
     #endregion

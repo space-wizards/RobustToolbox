@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.ResourceManagement;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Audio;
+namespace Robust.Shared.GameObjects;
 
 /// <summary>
 /// Handles caching of <see cref="BaseResource"/>

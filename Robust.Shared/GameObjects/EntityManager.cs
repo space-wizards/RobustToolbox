@@ -757,10 +757,8 @@ namespace Robust.Shared.GameObjects
             if (uid == null)
                 return null;
 
-            if (!_entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()].TryGetValue(uid.Value, out var component))
+            if (!MetaQuery.TryGetComponent(uid.Value, out var metadata))
                 return new EntityStringRepresentation(uid.Value, true);
-
-            var metadata = (MetaDataComponent) component;
 
             return ToPrettyString(uid.Value, metadata);
         }

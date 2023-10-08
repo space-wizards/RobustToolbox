@@ -17,6 +17,7 @@ internal sealed class AudioEffect : IAudioEffect
     {
         Handle = EFX.GenEffect();
         _master = manager;
+        EFX.Effect(Handle, EffectInteger.EffectType, (int) EffectType.EaxReverb);
     }
 
     public void Dispose()

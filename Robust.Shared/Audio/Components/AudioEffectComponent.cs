@@ -5,15 +5,17 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Audio.Components;
 
 /// <summary>
 /// Stores OpenAL audio effect data that can be bound to an <see cref="AudioAuxiliaryComponent"/>.
 /// </summary>
-[RegisterComponent, NetworkedComponent, Access(typeof(SharedAudioSystem))]
+[RegisterComponent, NetworkedComponent, Access(typeof(SharedAudioSystem)), AutoGenerateComponentState]
 public sealed partial class AudioEffectComponent : Component, IAudioEffect
 {
+    [ViewVariables]
     internal IAudioEffect Effect = new DummyAudioEffect();
 
     /// <inheritdoc />
@@ -149,7 +151,7 @@ public sealed partial class AudioEffectComponent : Component, IAudioEffect
     public float ModulationTime
     {
         get => Effect.ModulationTime;
-        set => Effect.Density = value;
+        set => Effect.ModulationTime = value;
     }
 
     /// <inheritdoc />

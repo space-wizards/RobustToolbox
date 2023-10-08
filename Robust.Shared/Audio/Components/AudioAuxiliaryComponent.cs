@@ -3,6 +3,7 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Audio.Components;
 
@@ -18,5 +19,6 @@ public sealed partial class AudioAuxiliaryComponent : Component
     [DataField, AutoNetworkedField]
     public EntityUid? Effect;
 
+    [ViewVariables]
     internal IAuxiliaryAudio Auxiliary = new DummyAuxiliaryAudio();
 }
